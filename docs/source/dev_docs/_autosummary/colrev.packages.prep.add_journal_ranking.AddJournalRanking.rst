@@ -1,7 +1,7 @@
 colrev.packages.prep.add\_journal\_ranking.AddJournalRanking
 ============================================================
 
-.. currentmodule:: colrev.packages.prep.add_journal_ranking
+.. currentmodule:: colrev.packages.add_journal_ranking.add_journal_ranking
 
 .. autoclass:: AddJournalRanking
    :members:

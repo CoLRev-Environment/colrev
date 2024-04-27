@@ -63,7 +63,6 @@ class ReviewManager:
         """Force mode variable (bool)"""
         self.verbose_mode = verbose_mode
         """Verbose mode variable (bool)"""
-        """Debug mode variable (bool)"""
         self.high_level_operation = high_level_operation
         """A high-level operation was called (bool)"""
         # Note : mostly for formatting output
@@ -584,16 +583,6 @@ class ReviewManager:
         import colrev.ops.pull
 
         return colrev.ops.pull.Pull(review_manager=self)
-
-    def get_review_types(
-        self, *, review_type: str
-    ) -> colrev.ops.review_types.ReviewTypes:  # pragma: no cover
-        """Get a ReviewTypes object"""
-        import colrev.ops.review_types
-
-        return colrev.ops.review_types.ReviewTypes(
-            review_manager=self, review_type=review_type
-        )
 
     def get_connecting_review_manager(
         self,

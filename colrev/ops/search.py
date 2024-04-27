@@ -229,7 +229,7 @@ class Search(colrev.process.operation.Operation):
         write_file(records_dict=records, filename=source.filename)
 
     # pylint: disable=no-self-argument
-    def check_source_selection_exists(var_name: str) -> typing.Callable:  # type: ignore
+    def _check_source_selection_exists(var_name: str) -> typing.Callable:  # type: ignore
         """Check if the source selection exists"""
 
         # pylint: disable=no-self-argument
@@ -285,11 +285,12 @@ class Search(colrev.process.operation.Operation):
         data: str,
     ) -> list:
         results_list = []
-        for (
-            endpoint,
-            endpoint_class,
-        ) in search_sources.items():
-            res = endpoint_class.heuristic(filepath, data)  # type: ignore
+        for endpoint in search_sources:
+            search_source_class = self.package_manager.load_package_endpoint(
+                package_type=PackageEndpointType.search_source,
+                package_identifier=endpoint,
+            )
+            res = search_source_class.heuristic(filepath, data)  # type: ignore
             self.review_manager.logger.debug(f"- {endpoint}: {res['confidence']}")
             if res["confidence"] == 0.0:
                 continue
@@ -389,8 +390,6 @@ class Search(colrev.process.operation.Operation):
         {"filepath": ({"search_source": SourceCandidate1", "confidence": 0.98},..]}
         """
 
-        # pylint: disable=redefined-outer-name
-
         new_search_files = self._get_new_search_files()
         if not new_search_files:
             self.review_manager.logger.info("No new search files...")
@@ -398,16 +397,8 @@ class Search(colrev.process.operation.Operation):
 
         self.review_manager.logger.debug("Load available search_source endpoints...")
 
-        search_source_identifiers = self.package_manager.discover_packages(
-            package_type=PackageEndpointType.search_source,
-            installed_only=True,
-        )
-
-        search_sources = self.package_manager.load_packages(
-            package_type=PackageEndpointType.search_source,
-            selected_packages=[{"endpoint": p} for p in search_source_identifiers],
-            operation=self,
-            instantiate_objects=False,
+        search_sources = self.package_manager.discover_packages(
+            package_type=PackageEndpointType.search_source
         )
 
         heuristic_results = {}
@@ -423,7 +414,7 @@ class Search(colrev.process.operation.Operation):
 
         return heuristic_results
 
-    @check_source_selection_exists(  # pylint: disable=too-many-function-args
+    @_check_source_selection_exists(  # pylint: disable=too-many-function-args
         "selection_str"
     )
     @colrev.process.operation.Operation.decorate()
@@ -447,17 +438,14 @@ class Search(colrev.process.operation.Operation):
 
         # Reload the settings because the search sources may have been updated
         self.review_manager.settings = self.review_manager.load_settings()
-
         for source in self._get_search_sources(selection_str=selection_str):
-            endpoint_dict = self.package_manager.load_packages(
+            search_source_class = self.package_manager.load_package_endpoint(
                 package_type=PackageEndpointType.search_source,
-                selected_packages=[source.get_dict()],
-                operation=self,
-                only_ci_supported=self.review_manager.in_ci_environment(),
+                package_identifier=source.endpoint,
             )
-            if source.endpoint.lower() not in endpoint_dict:
-                continue
-            endpoint = endpoint_dict[source.endpoint.lower()]
+            endpoint = search_source_class(
+                source_operation=self, settings=source.get_dict()
+            )
 
             if not self.review_manager.high_level_operation:
                 print()

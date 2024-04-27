@@ -1,7 +1,7 @@
 colrev.packages.pdf\_get.unpaywall
 ==================================
 
-.. automodule:: colrev.packages.pdf_get.unpaywall
+.. automodule:: colrev.packages.unpaywall.unpaywall
 
 
 

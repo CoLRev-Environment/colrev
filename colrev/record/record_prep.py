@@ -9,7 +9,6 @@ from nameparser import HumanName
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.packages.prep.utils as prep_utils
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
@@ -17,6 +16,39 @@ from colrev.constants import FieldValues
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
     import colrev.record.qm.quality_model
+
+
+NO_CAPS = ["of", "for", "the", "and"]
+ALL_CAPS = ["IEEE", "ACM", "M&A", "B2B", "B2C", "C2C", "I"]
+ALL_CAPS_DICT = {r"U\.S\.": "U.S."}
+
+
+def capitalize_entities(input_str: str) -> str:
+    """Utility function to capitalize entities"""
+
+    for all_cap in ALL_CAPS:
+        input_str = re.sub(
+            rf"\b{all_cap.lower()}\b", all_cap.upper(), input_str, flags=re.IGNORECASE
+        )
+
+    for all_cap, repl in ALL_CAPS_DICT.items():
+        input_str = re.sub(
+            rf"\b{all_cap.lower()}\b", repl, input_str, flags=re.IGNORECASE
+        )
+
+    for no_cap in NO_CAPS:
+        if input_str.lower().startswith(no_cap):
+            continue
+        input_str = re.sub(
+            rf"\b{no_cap.lower()}\b", no_cap, input_str, flags=re.IGNORECASE
+        )
+
+    input_str = input_str.replace(" i'", " I'").replace("'S ", "'s ")
+
+    input_str = re.sub(r"it-(\w)", r"IT-\1", input_str, flags=re.IGNORECASE)
+    input_str = re.sub(r"is-(\w)", r"IS-\1", input_str, flags=re.IGNORECASE)
+
+    return input_str
 
 
 class PrepRecord(colrev.record.record.Record):
@@ -104,7 +136,7 @@ class PrepRecord(colrev.record.record.Record):
                 parameter="case", value=case, options=["sentence", "title"]
             )
 
-        self.data[key] = prep_utils.capitalize_entities(self.data[key])
+        self.data[key] = capitalize_entities(self.data[key])
 
     def unify_pages_field(self) -> None:
         """Unify the format of the page field"""

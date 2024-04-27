@@ -57,15 +57,16 @@ def test_search_add_source(  # type: ignore
 
     package_manager = search_operation.review_manager.get_package_manager()
 
-    search_source = package_manager.load_packages(
+    search_source_class = package_manager.load_package_endpoint(
         package_type=PackageEndpointType.search_source,
-        selected_packages=[{"endpoint": add_source.endpoint}],
-        operation=search_operation,
-        instantiate_objects=False,
+        package_identifier=add_source.endpoint,
     )
-    s_obj = search_source[add_source.endpoint]
+    endpoint = search_source_class(
+        source_operation=search_operation, settings=add_source.get_dict()
+    )
+
     query = {"issn": "1234-5678"}
-    s_obj.add_endpoint(search_operation, query)  # type: ignore
+    endpoint.add_endpoint(search_operation, query)  # type: ignore
 
     search_operation.review_manager.settings.sources.pop()
 

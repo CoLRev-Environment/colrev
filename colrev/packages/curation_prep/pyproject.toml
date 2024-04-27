@@ -1,0 +1,13 @@
+[project]
+name = "colrev.curation_prep"
+description = "CoLRev package for curation_prep"
+version = "0.1.0"
+authors = [
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+]
+documentation = "README.md"
+colrev_doc_link = "README.md"
+
+[tool.colrev]
+dev_status = "maturing"
+prep = "colrev.packages.curation_prep.curation_prep:CurationPrep"

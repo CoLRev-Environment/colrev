@@ -1,7 +1,7 @@
 colrev.packages.search\_sources.eric.ERICSearchSource
 =====================================================
 
-.. currentmodule:: colrev.packages.search_sources.eric
+.. currentmodule:: colrev.packages.eric.eric
 
 .. autoclass:: ERICSearchSource
    :members:

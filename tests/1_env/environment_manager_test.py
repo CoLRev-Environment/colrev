@@ -13,7 +13,7 @@ import colrev.env.environment_manager
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
-from colrev.packages.pdf_get.unpaywall import Unpaywall
+from colrev.packages.unpaywall.unpaywall import Unpaywall
 
 # flake8: noqa: E501
 

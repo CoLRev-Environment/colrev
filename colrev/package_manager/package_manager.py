@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import importlib.util
 import json
-import sys
 import typing
-from copy import deepcopy
 from pathlib import Path
+from typing import Any
 
-from zope.interface.verify import verifyObject
+import toml
+import zope.interface.exceptions
+from zope.interface.verify import verifyClass
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -18,40 +19,105 @@ import colrev.package_manager.interfaces
 import colrev.process.operation
 import colrev.record.record
 import colrev.settings
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import OperationsType
 from colrev.constants import PackageEndpointType
 
 # Inspiration for package descriptions:
 # https://github.com/rstudio/reticulate/blob/
 # 9ebca7ecc028549dadb3d51d2184f9850f6f9f9d/DESCRIPTION
 
-# pylint: disable=too-few-public-methods
+
+PACKAGE_TYPE_OVERVIEW = colrev.package_manager.interfaces.PACKAGE_TYPE_OVERVIEW
 
 
 class Package:
     """A Python package for CoLRev"""
 
-    def __init__(self, *, module: str) -> None:
-        self.module = module
-        print(f"Loading package endpoints from {module}")
-        module_spec = importlib.util.find_spec(module)
-        endpoints_path = Path(module_spec.origin).parent / Path(  # type:ignore
-            ".colrev_endpoints.json"
-        )
-        if not endpoints_path.is_file():  # pragma: no cover
-            print(f"File does not exist: {endpoints_path}")
-            raise AttributeError
+    def __init__(self, package_dir: Path) -> None:
+        self.package_dir = package_dir
+        self.config = self._load_config()
+        self.name = self.config["project"]["name"]
+        self.version = self.config["project"]["version"]
+        self.status = self.config["tool"]["colrev"]["dev_status"]
 
-        with open(endpoints_path, encoding="utf-8") as file:
-            self.package_endpoints = json.load(file)
+    def _load_config(self) -> dict:
+        config_path = self.package_dir / "pyproject.toml"
+        if not self.package_dir.is_dir():
+            raise colrev_exceptions.MissingDependencyError(
+                f"Package {self.package_dir} not a CoLRev package "
+                "(directory does not exist)"
+            )
+        if not config_path.is_file():
+            raise colrev_exceptions.MissingDependencyError(
+                f"Package {self.package_dir} not a CoLRev package "
+                "(pyproject.toml missing)"
+            )
+        with open(config_path, encoding="utf-8") as file:
+            config = toml.load(file)
+        if "tool" not in config or "colrev" not in config["tool"]:
+            raise colrev_exceptions.MissingDependencyError(
+                f"Package {self.package_dir} not a CoLRev package "
+                "(section tool.colrev missing in pyproject.toml)"
+            )
+        colrev_details = config["tool"]["colrev"]
+        if "dev_status" not in colrev_details:
+            raise colrev_exceptions.MissingDependencyError(
+                f"Package {self.package_dir} not a CoLRev package "
+                "(dev_status missing in tool.colrev)"
+            )
+        return config
+
+    def _has_endpoint(self, endpoint_type: PackageEndpointType) -> bool:
+
+        return endpoint_type.value in self.config["tool"]["colrev"]
+
+    def _get_endpoint(self, endpoint_type: PackageEndpointType) -> str:
+        return self.config["tool"]["colrev"][endpoint_type.value]
+
+    def _endpoint_verified(
+        self, endpoint_class: Any, endpoint_type: PackageEndpointType, identifier: str
+    ) -> bool:
+        interface_definition = PACKAGE_TYPE_OVERVIEW[endpoint_type]["import_name"]
+        try:
+            verifyClass(interface_definition, endpoint_class)  # type: ignore
+            return True
+        except zope.interface.exceptions.BrokenImplementation as exc:
+            print(f"Error registering endpoint {identifier}: {exc}")
+        return False
+
+    def add_to_type_identifier_endpoint_dict(
+        self, type_identifier_endpoint_dict: dict
+    ) -> None:
+        """Add the package to the type_identifier_endpoint_dict dict"""
+        if "tool" not in self.config or "colrev" not in self.config["tool"]:
+            return
+
+        for endpoint_type in PackageEndpointType:
+            if self._has_endpoint(endpoint_type):
+                type_identifier_endpoint_dict[endpoint_type][self.name] = (
+                    self._get_endpoint(endpoint_type)
+                )
+
+    def get_endpoint_cls(self, package_type: PackageEndpointType) -> Any:
+        """Get the endpoint class for a package type"""
+        if not self._has_endpoint(package_type):
+            raise colrev_exceptions.MissingDependencyError(
+                f"Package {self.name} does not have a {package_type} endpoint"
+            )
+
+        endpoint_path = self._get_endpoint(package_type)
+        module_name, class_name = endpoint_path.split(":")
+        module = importlib.import_module(module_name)
+        cls = getattr(module, class_name)
+        if not self._endpoint_verified(cls, package_type, self.name):
+            raise colrev_exceptions.MissingDependencyError(
+                f"Endpoint {class_name} in {module_name} "
+                f"does not implement the {package_type} interface"
+            )
+        return cls
 
 
 class PackageManager:
     """The PackageManager provides functionality for package lookup and discovery"""
-
-    package: typing.Dict[str, typing.Dict[str, typing.Dict]]
 
     def __init__(self) -> None:
         self.type_identifier_endpoint_dict = self._load_type_identifier_endpoint_dict()
@@ -59,214 +125,45 @@ class PackageManager:
         #   {'colrev.blank': {'endpoint': 'colrev.packages.review_types.blank.BlankReview'},
         #     ...
         # }
-        self._flag_installed_packages()
+        self.endpoints: typing.Dict[PackageEndpointType, dict] = {}
+
+    def _get_package_dir(self, package_identifier: str) -> Path:
+        if package_identifier.startswith("colrev."):
+            colrev_package_module = importlib.import_module("colrev.packages")
+            if colrev_package_module.__file__:
+                colrev_package_dir = Path(colrev_package_module.__file__).parent
+                return colrev_package_dir / package_identifier[7:]
+            raise colrev_exceptions.MissingDependencyError(
+                "Could not find the colrev package"
+            )
+
+        raise NotImplementedError
+
+    def _get_packages_dirs(self) -> list:
+        colrev_package_module = importlib.import_module("colrev.packages")
+        if colrev_package_module.__file__:
+            colrev_package_dir = Path(colrev_package_module.__file__).parent
+            # Add other packages to package_dirs later
+            return [
+                package_dir
+                for package_dir in colrev_package_dir.iterdir()
+                if package_dir.is_dir() and not str(package_dir.name).startswith("__")
+            ]
+        raise colrev_exceptions.MissingDependencyError(
+            "Could not find the colrev package"
+        )
 
     def _load_type_identifier_endpoint_dict(self) -> dict:
-        filedata = colrev.env.utils.get_package_file_content(
-            module="colrev.packages", filename=Path("package_endpoints.json")
-        )
-        if not filedata:  # pragma: no cover
-            raise colrev_exceptions.CoLRevException(
-                "Package index not available (packages/package_endpoints.json)"
-            )
 
-        package_dict = json.loads(filedata.decode("utf-8"))
+        type_identifier_endpoint_dict: typing.Dict[
+            PackageEndpointType, typing.Dict[str, Any]
+        ] = {endpoint_type: {} for endpoint_type in PackageEndpointType}
 
-        packages: typing.Dict[PackageEndpointType, dict] = {}
-        for key, package_list in package_dict.items():
-            packages[PackageEndpointType[key]] = {}
-            for package_item in package_list:
-                assert " " not in package_item["package_endpoint_identifier"]
-                assert " " not in package_item["endpoint"]
-                assert package_item["package_endpoint_identifier"].islower()
-                packages[PackageEndpointType[key]][
-                    package_item["package_endpoint_identifier"]
-                ] = {"endpoint": package_item["endpoint"]}
+        for package_dir in self._get_packages_dirs():
+            package = Package(package_dir)
+            package.add_to_type_identifier_endpoint_dict(type_identifier_endpoint_dict)
 
-        return packages
-
-    def _flag_installed_packages(self) -> None:
-        for package_type, package_list in self.type_identifier_endpoint_dict.items():
-            for package_identifier, package in package_list.items():
-                try:
-                    self.load_package_endpoint(
-                        package_type=package_type, package_identifier=package_identifier
-                    )
-                    package["installed"] = True
-                except (AttributeError, ModuleNotFoundError) as exc:
-                    if hasattr(exc, "name"):
-                        if package_identifier.split(".")[0] != exc.name:  # type: ignore
-                            print(f"Error loading package {package_identifier}: {exc}")
-
-                    package["installed"] = False
-
-    def load_package_endpoint(  # type: ignore
-        self, *, package_type: PackageEndpointType, package_identifier: str
-    ):
-        """Load a package endpoint"""
-
-        package_identifier = package_identifier.lower()
-        if package_identifier not in self.type_identifier_endpoint_dict[package_type]:
-            raise colrev_exceptions.MissingDependencyError(
-                f"{package_identifier} ({package_type}) not available"
-            )
-
-        package_str = self.type_identifier_endpoint_dict[package_type][
-            package_identifier
-        ]["endpoint"]
-        package_module = package_str.rsplit(".", 1)[0]
-        package_class = package_str.rsplit(".", 1)[-1]
-        imported_package = importlib.import_module(package_module)
-        package_class = getattr(imported_package, package_class)
-        return package_class
-
-    def _build_packages_dict(
-        self,
-        *,
-        selected_packages: list,
-        package_type: PackageEndpointType,
-        ignore_not_available: bool,
-    ) -> typing.Dict:
-        # avoid changes in the config
-        selected_packages = deepcopy(selected_packages)
-
-        custom_classes = colrev.package_manager.interfaces.PACKAGE_TYPE_OVERVIEW[
-            package_type
-        ]
-
-        packages_dict: typing.Dict = {}
-        for selected_package in selected_packages:
-            package_identifier = selected_package["endpoint"].lower()
-            packages_dict[package_identifier] = {}
-
-            packages_dict[package_identifier]["settings"] = selected_package
-
-            # 1. Load built-in packages
-            if not Path(package_identifier + ".py").is_file():
-                if (
-                    package_identifier
-                    not in self.type_identifier_endpoint_dict[package_type]
-                ):
-                    raise colrev_exceptions.MissingDependencyError(
-                        "Built-in dependency "
-                        + f"{package_identifier} ({package_type}) not in package_endpoints.json. "
-                    )
-                if not self.type_identifier_endpoint_dict[package_type][
-                    package_identifier
-                ][
-                    "installed"
-                ]:  # pragma: no cover
-                    raise colrev_exceptions.MissingDependencyError(
-                        f"Dependency {package_identifier} ({package_type}) not found. "
-                        f"Please install it\n  pip install {package_identifier.split('.')[0]}"
-                    )
-                packages_dict[package_identifier]["endpoint"] = (
-                    self.load_package_endpoint(
-                        package_type=package_type, package_identifier=package_identifier
-                    )
-                )
-
-            # 2. Load custom packages in the directory
-            elif Path(package_identifier + ".py").is_file():
-                try:
-                    # to import custom packages from the project dir
-                    sys.path.append(".")
-                    packages_dict[package_identifier]["settings"] = selected_package
-                    packages_dict[package_identifier]["endpoint"] = (
-                        importlib.import_module(package_identifier, ".")
-                    )
-                    try:
-                        packages_dict[package_identifier]["endpoint"] = getattr(  # type: ignore
-                            packages_dict[package_identifier]["endpoint"],
-                            custom_classes["custom_class"],
-                        )
-                    except AttributeError as exc:
-                        # Note : these may also be (package name) conflicts
-                        if not ignore_not_available:
-                            raise colrev_exceptions.MissingDependencyError(
-                                f"Dependency {package_identifier} not available"
-                            ) from exc
-                        print(f"Skipping broken package ({package_identifier})")
-                        packages_dict.pop(package_identifier, None)
-
-                except ModuleNotFoundError as exc:  # pragma: no cover
-                    if ignore_not_available:
-                        print(f"Could not load {selected_package}")
-                        del packages_dict[package_identifier]
-                        continue
-                    raise colrev_exceptions.MissingDependencyError(
-                        "Dependency "
-                        + f"{package_identifier} ({package_type}) not found. "
-                        "Please install it\n  pip install "
-                        f"{package_identifier.split('.')[0]}"
-                    ) from exc
-
-        return packages_dict
-
-    # pylint: disable=too-many-arguments
-    def load_packages(
-        self,
-        *,
-        package_type: PackageEndpointType,
-        selected_packages: list,
-        operation: colrev.process.operation.Operation,
-        ignore_not_available: bool = False,
-        instantiate_objects: bool = True,
-        only_ci_supported: bool = False,
-    ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
-        """Load the packages for a particular package_type (called by operations)"""
-        # selected_packages = [{'endpoint': 'colrev.literature_review'}]
-
-        packages_dict = self._build_packages_dict(
-            selected_packages=selected_packages,
-            package_type=package_type,
-            ignore_not_available=ignore_not_available,
-        )
-
-        package_details = colrev.package_manager.interfaces.PACKAGE_TYPE_OVERVIEW[
-            package_type
-        ]
-        endpoint_class = package_details["import_name"]  # type: ignore
-        to_remove = []
-        for package_identifier, package_class in packages_dict.items():
-            params = {
-                package_details["operation_name"]: operation,
-                "settings": package_class["settings"],
-            }
-            if package_type == "search_source":
-                del params["check_operation"]
-
-            if "endpoint" not in package_class:
-                raise colrev_exceptions.MissingDependencyError(
-                    f"{package_identifier} is not available"
-                )
-
-            if instantiate_objects:
-                try:
-                    packages_dict[package_identifier] = package_class["endpoint"](
-                        **params
-                    )
-                    if only_ci_supported:
-                        if not packages_dict[package_identifier].ci_supported:
-                            to_remove.append(package_identifier)
-                            continue
-                    verifyObject(endpoint_class, packages_dict[package_identifier])
-                except colrev_exceptions.ServiceNotAvailableException as sna_exc:
-                    if sna_exc.dep == "docker":
-                        print(
-                            f"{Colors.ORANGE}Docker not available. Deactivate "
-                            f"{package_identifier}{Colors.END}"
-                        )
-                        to_remove.append(package_identifier)
-                    else:
-                        raise sna_exc
-            else:
-                packages_dict[package_identifier] = package_class["endpoint"]
-
-        packages_dict = {k: v for k, v in packages_dict.items() if k not in to_remove}
-
-        # {'colrev.literature_review': LiteratureReview(ci_supported=True)}
-        return packages_dict
+        return type_identifier_endpoint_dict
 
     def _load_python_packages(self) -> list:
         filedata = colrev.env.utils.get_package_file_content(
@@ -280,7 +177,7 @@ class PackageManager:
         packages = []
         for package in package_list:
             try:
-                packages.append(Package(module=package["module"]))
+                packages.append(Package(package["module"]))
             except json.decoder.JSONDecodeError as exc:  # pragma: no cover
                 print(f"Invalid json {exc}")
                 continue
@@ -301,133 +198,21 @@ class PackageManager:
         )
         doc_reg_manager.update()
 
-    def discover_packages(
-        self, *, package_type: PackageEndpointType, installed_only: bool = False
-    ) -> typing.Dict:
-        """Discover packages (for cli usage)
+    def discover_packages(self, *, package_type: PackageEndpointType) -> typing.Dict:
+        """Discover packages (for cli usage)"""
 
-        returns: Dictionary with package_identifier as key"""
+        return self.type_identifier_endpoint_dict[package_type]
 
-        discovered_packages = self.type_identifier_endpoint_dict[package_type]
-        for package_identifier, package in discovered_packages.items():
-            if installed_only and not package["installed"]:
-                continue
-            package_class = self.load_package_endpoint(
-                package_type=package_type, package_identifier=package_identifier
+    def load_package_endpoint(  # type: ignore
+        self, *, package_type: PackageEndpointType, package_identifier: str
+    ):
+        """Load a package endpoint"""
+
+        if not package_identifier.startswith("colrev."):
+            raise colrev_exceptions.MissingDependencyError(
+                f"{package_identifier} is not a CoLRev package"
             )
-            discovered_packages[package_identifier] = package
-            discovered_packages[package_identifier][
-                "description"
-            ] = package_class.__doc__
-            discovered_packages[package_identifier]["installed"] = package["installed"]
 
-        return discovered_packages
-
-    def _get_endpoint_with_type(
-        self, operation: colrev.process.operation.Operation
-    ) -> tuple:
-        settings = operation.review_manager.settings
-        package_type_dict = {
-            OperationsType.search: {
-                "package_type": PackageEndpointType.search_source,
-                "endpoint_location": settings.sources,
-            },
-            OperationsType.prep: {
-                "package_type": PackageEndpointType.prep,
-                "endpoint_location": settings.prep.prep_rounds[
-                    0
-                ].prep_package_endpoints,
-            },
-            OperationsType.prep_man: {
-                "package_type": PackageEndpointType.prep_man,
-                "endpoint_location": settings.prep.prep_man_package_endpoints,
-            },
-            OperationsType.dedupe: {
-                "package_type": PackageEndpointType.dedupe,
-                "endpoint_location": settings.dedupe.dedupe_package_endpoints,
-            },
-            OperationsType.prescreen: {
-                "package_type": PackageEndpointType.prescreen,
-                "endpoint_location": settings.prescreen.prescreen_package_endpoints,
-            },
-            OperationsType.pdf_get: {
-                "package_type": PackageEndpointType.pdf_get,
-                "endpoint_location": settings.pdf_get.pdf_get_package_endpoints,
-            },
-            OperationsType.pdf_get_man: {
-                "package_type": PackageEndpointType.pdf_get_man,
-                "endpoint_location": settings.pdf_get.pdf_get_man_package_endpoints,
-            },
-            OperationsType.pdf_prep: {
-                "package_type": PackageEndpointType.pdf_prep,
-                "endpoint_location": settings.pdf_prep.pdf_prep_package_endpoints,
-            },
-            OperationsType.pdf_prep_man: {
-                "package_type": PackageEndpointType.pdf_prep_man,
-                "endpoint_location": settings.pdf_prep.pdf_prep_man_package_endpoints,
-            },
-            OperationsType.screen: {
-                "package_type": PackageEndpointType.screen,
-                "endpoint_location": settings.screen.screen_package_endpoints,
-            },
-            OperationsType.data: {
-                "package_type": PackageEndpointType.data,
-                "endpoint_location": settings.data.data_package_endpoints,
-            },
-        }
-        endpoints_in_settings = package_type_dict[operation.type]["endpoint_location"]
-        package_type = package_type_dict[operation.type]["package_type"]
-        return endpoints_in_settings, package_type
-
-    def add_package_to_settings(
-        self,
-        *,
-        operation: colrev.process.operation.Operation,
-        package_identifier: str,
-        params: str,
-    ) -> dict:
-        """Add a package_endpoint (for cli usage)"""
-
-        endpoints_in_settings, package_type = self._get_endpoint_with_type(operation)
-
-        operation.review_manager.logger.info(
-            f"{Colors.GREEN}Add {operation.type} "
-            f"package:{Colors.END} {package_identifier}"
-        )
-
-        endpoint_dict = self.load_packages(
-            package_type=package_type,  # type: ignore
-            selected_packages=[{"endpoint": package_identifier}],
-            operation=operation,
-            instantiate_objects=False,
-        )
-
-        e_class = endpoint_dict[package_identifier]
-        if hasattr(endpoint_dict[package_identifier], "add_endpoint"):
-            params_dict = {}
-            if params:
-                if params.startswith("http"):
-                    params_dict = {Fields.URL: params}
-                else:
-                    for item in params.split(";"):
-                        key, value = item.split("=")
-                        params_dict[key] = value
-            add_source = e_class.add_endpoint(  # type: ignore
-                operation=operation, params=params_dict
-            )
-            operation.review_manager.settings.sources.append(add_source)
-            operation.review_manager.save_settings()
-            operation.review_manager.dataset.add_changes(
-                add_source.filename, ignore_missing=True
-            )
-            add_package = add_source.to_dict()
-
-        else:
-            add_package = {"endpoint": package_identifier}
-            endpoints_in_settings.append(add_package)  # type: ignore
-
-        operation.review_manager.save_settings()
-        operation.review_manager.dataset.create_commit(
-            msg=f"Add {operation.type} {package_identifier}",
-        )
-        return add_package
+        module_path = self._get_package_dir(package_identifier)
+        package = Package(module_path)
+        return package.get_endpoint_cls(package_type)

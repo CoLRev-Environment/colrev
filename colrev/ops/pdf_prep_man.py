@@ -327,12 +327,14 @@ class PDFPrepMan(colrev.process.operation.Operation):
             self.review_manager.settings.pdf_prep.pdf_prep_man_package_endpoints
         )
         for pdf_prep_man_package_endpoint in pdf_prep_man_package_endpoints:
-            endpoint_dict = package_manager.load_packages(
-                package_type=PackageEndpointType.pdf_prep_man,
-                selected_packages=pdf_prep_man_package_endpoints,
-                operation=self,
-            )
 
-            endpoint = endpoint_dict[pdf_prep_man_package_endpoint["endpoint"]]
+            pdf_prep_man_class = package_manager.load_package_endpoint(
+                package_type=PackageEndpointType.pdf_prep_man,
+                package_identifier=pdf_prep_man_package_endpoint["endpoint"],
+            )
+            endpoint = pdf_prep_man_class(
+                pdf_prep_man_operation=self,
+                settings=pdf_prep_man_package_endpoint,
+            )
 
             records = endpoint.pdf_prep_man(records)  # type: ignore

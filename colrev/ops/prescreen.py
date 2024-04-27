@@ -5,9 +5,8 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-import colrev.exceptions as colrev_exceptions
-import colrev.packages.prescreen.conditional_prescreen
-import colrev.packages.prescreen.prescreen_table
+import colrev.packages.conditional_prescreen.conditional_prescreen
+import colrev.packages.prescreen_table.prescreen_table
 import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
@@ -39,7 +38,7 @@ class Prescreen(colrev.process.operation.Operation):
     def export_table(self, *, export_table_format: str = "csv") -> None:
         """Export a table with records to prescreen"""
 
-        endpoint = colrev.packages.prescreen.prescreen_table.TablePrescreen(
+        endpoint = colrev.packages.prescreen_table.prescreen_table.TablePrescreen(
             prescreen_operation=self, settings={"endpoint": "export_table"}
         )
         records = self.review_manager.dataset.load_records_dict()
@@ -52,7 +51,7 @@ class Prescreen(colrev.process.operation.Operation):
     def import_table(self, *, import_table_path: str) -> None:
         """Import a table with prescreened records"""
 
-        endpoint = colrev.packages.prescreen.prescreen_table.TablePrescreen(
+        endpoint = colrev.packages.prescreen_table.prescreen_table.TablePrescreen(
             prescreen_operation=self, settings={"endpoint": "import_table"}
         )
         records = self.review_manager.dataset.load_records_dict()
@@ -97,7 +96,7 @@ class Prescreen(colrev.process.operation.Operation):
             if RecordState.md_processed == r[Fields.STATUS]
         ]
 
-        endpoint = colrev.packages.prescreen.conditional_prescreen.ConditionalPrescreen(
+        endpoint = colrev.packages.conditional_prescreen.conditional_prescreen.ConditionalPrescreen(
             prescreen_operation=self, settings={"endpoint": "include_all"}
         )
         endpoint.run_prescreen(records, [])
@@ -345,26 +344,14 @@ class Prescreen(colrev.process.operation.Operation):
             self.review_manager.logger.debug(
                 f"Run {prescreen_package_endpoint['endpoint']}"
             )
-            endpoint_dict = package_manager.load_packages(
-                package_type=PackageEndpointType.prescreen,
-                selected_packages=prescreen_package_endpoints,
-                operation=self,
-                only_ci_supported=self.review_manager.in_ci_environment(),
-            )
-            if prescreen_package_endpoint["endpoint"] not in endpoint_dict:
-                self.review_manager.logger.info(
-                    f'Skip {prescreen_package_endpoint["endpoint"]} (not available)'
-                )
-                if self.review_manager.in_ci_environment():
-                    raise colrev_exceptions.ServiceNotAvailableException(
-                        dep="colrev presceen",
-                        detailed_trace="presceen not available in ci environment",
-                    )
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    dep="colrev presceen", detailed_trace="presceen not available"
-                )
 
-            endpoint = endpoint_dict[prescreen_package_endpoint["endpoint"]]
+            prescreen_class = package_manager.load_package_endpoint(
+                package_type=PackageEndpointType.prescreen,
+                package_identifier=prescreen_package_endpoint["endpoint"],
+            )
+            endpoint = prescreen_class(
+                prescreen_operation=self, settings=prescreen_package_endpoint
+            )
 
             selected_record_ids = [
                 r[Fields.ID]

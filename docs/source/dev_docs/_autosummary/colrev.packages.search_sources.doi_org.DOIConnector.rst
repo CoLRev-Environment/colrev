@@ -1,7 +1,7 @@
 colrev.packages.search\_sources.doi\_org.DOIConnector
 =====================================================
 
-.. currentmodule:: colrev.packages.search_sources.doi_org
+.. currentmodule:: colrev.packages.doi_org.doi_org
 
 .. autoclass:: DOIConnector
    :members:

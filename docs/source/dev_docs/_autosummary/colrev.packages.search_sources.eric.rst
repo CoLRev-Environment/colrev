@@ -1,7 +1,7 @@
 colrev.packages.search\_sources.eric
 ====================================
 
-.. automodule:: colrev.packages.search_sources.eric
+.. automodule:: colrev.packages.eric.eric
 
 
 

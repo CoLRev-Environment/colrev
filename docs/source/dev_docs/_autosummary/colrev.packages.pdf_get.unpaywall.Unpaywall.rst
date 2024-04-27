@@ -1,7 +1,7 @@
 colrev.packages.pdf\_get.unpaywall.Unpaywall
 ============================================
 
-.. currentmodule:: colrev.packages.pdf_get.unpaywall
+.. currentmodule:: colrev.packages.unpaywall.unpaywall
 
 .. autoclass:: Unpaywall
    :members:

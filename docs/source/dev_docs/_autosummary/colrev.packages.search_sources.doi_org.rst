@@ -1,7 +1,7 @@
 colrev.packages.search\_sources.doi\_org
 ========================================
 
-.. automodule:: colrev.packages.search_sources.doi_org
+.. automodule:: colrev.packages.doi_org.doi_org
 
 
 

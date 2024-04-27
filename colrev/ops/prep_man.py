@@ -284,10 +284,11 @@ class PrepMan(colrev.process.operation.Operation):
         for (
             prep_man_package_endpoint
         ) in self.review_manager.settings.prep.prep_man_package_endpoints:
-            endpoint_dict = package_manager.load_packages(
+            prep_man_class = package_manager.load_package_endpoint(
                 package_type=PackageEndpointType.prep_man,
-                selected_packages=self.review_manager.settings.prep.prep_man_package_endpoints,
-                operation=self,
+                package_identifier=prep_man_package_endpoint["endpoint"],
             )
-            endpoint = endpoint_dict[prep_man_package_endpoint["endpoint"]]
+            endpoint = prep_man_class(
+                prep_man_operation=self, settings=prep_man_package_endpoint
+            )
             records = endpoint.prepare_manual(records)  # type: ignore

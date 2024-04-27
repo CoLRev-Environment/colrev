@@ -26,6 +26,7 @@ import colrev.ops.check
 import colrev.package_manager.package_manager
 import colrev.record.record
 import colrev.review_manager
+import colrev.ui_cli.add_package_to_settings
 import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
@@ -243,7 +244,6 @@ def exit(
     type=click.Choice(
         package_manager.discover_packages(
             package_type=PackageEndpointType.review_type,
-            installed_only=True,
         )
     ),
     default="colrev.literature_review",
@@ -447,7 +447,6 @@ def retrieve(
     type=click.Choice(
         package_manager.discover_packages(
             package_type=PackageEndpointType.search_source,
-            installed_only=True,
         )
     ),
     help="""Search source to be added.""",
@@ -536,9 +535,16 @@ def search(
         return
 
     if add:
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=reimported
+        import colrev.ui_cli.add_package_to_settings
+
         package_manager = review_manager.get_package_manager()
-        source_dict = package_manager.add_package_to_settings(
-            operation=search_operation, package_identifier=add, params=params
+        source_dict = colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+            package_manager,
+            operation=search_operation,
+            package_identifier=add,
+            params=params,
         )
         search_operation.main(selection_str=str(source_dict["filename"]), rerun=False)
         return
@@ -631,7 +637,6 @@ def load(
     type=click.Choice(
         package_manager.discover_packages(
             package_type=PackageEndpointType.prep,
-            installed_only=True,
         )
     ),
     help="""Prep package to be added.""",
@@ -742,8 +747,11 @@ def prep(
             return
         if add:
             package_manager = review_manager.get_package_manager()
-            package_manager.add_package_to_settings(
-                operation=prep_operation, package_identifier=add, params=params
+            colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+                package_manager,
+                operation=prep_operation,
+                package_identifier=add,
+                params=params,
             )
             return
         if skip:
@@ -765,7 +773,6 @@ def prep(
     type=click.Choice(
         package_manager.discover_packages(
             package_type=PackageEndpointType.prep_man,
-            installed_only=True,
         )
     ),
     help="""Prep-man script  to be added.""",
@@ -833,8 +840,11 @@ def prep_man(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_package_to_settings(
-            operation=prep_man_operation, package_identifier=add, params=params
+        colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+            package_manager,
+            operation=prep_man_operation,
+            package_identifier=add,
+            params=params,
         )
         return
 
@@ -858,7 +868,6 @@ def _view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
     type=click.Choice(
         package_manager.discover_packages(
             package_type=PackageEndpointType.dedupe,
-            installed_only=True,
         ),
         case_sensitive=False,
     ),
@@ -949,8 +958,11 @@ def dedupe(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_package_to_settings(
-            operation=dedupe_operation, package_identifier=add, params=params
+        colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+            package_manager,
+            operation=dedupe_operation,
+            package_identifier=add,
+            params=params,
         )
         return
 
@@ -1009,7 +1021,6 @@ def dedupe(
     type=click.Choice(
         package_manager.discover_packages(
             package_type=PackageEndpointType.prescreen,
-            installed_only=True,
         )
     ),
     help="""Prescreen package to be added.""",
@@ -1142,8 +1153,11 @@ def prescreen(
         print("Activated custom_prescreen_script.py.")
     elif add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_package_to_settings(
-            operation=prescreen_operation, package_identifier=add, params=params
+        colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+            package_manager,
+            operation=prescreen_operation,
+            package_identifier=add,
+            params=params,
         )
     else:
         review_manager.logger.info("Prescreen")
@@ -1169,7 +1183,6 @@ def prescreen(
     type=click.Choice(
         package_manager.discover_packages(
             package_type=PackageEndpointType.screen,
-            installed_only=True,
         )
     ),
     help="""Screen package to be added.""",
@@ -1266,8 +1279,11 @@ def screen(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_package_to_settings(
-            operation=screen_operation, package_identifier=add, params=params
+        colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+            package_manager,
+            operation=screen_operation,
+            package_identifier=add,
+            params=params,
         )
         return
 
@@ -1440,7 +1456,6 @@ def pdfs(
     type=click.Choice(
         package_manager.discover_packages(
             package_type=PackageEndpointType.pdf_get,
-            installed_only=True,
         )
     ),
     help="""PDF-get package to be added.""",
@@ -1526,8 +1541,11 @@ def pdf_get(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_package_to_settings(
-            operation=pdf_get_operation, package_identifier=add, params=params
+        colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+            package_manager,
+            operation=pdf_get_operation,
+            package_identifier=add,
+            params=params,
         )
         return
     if relink_pdfs:
@@ -1554,7 +1572,6 @@ def pdf_get(
     type=click.Choice(
         package_manager.discover_packages(
             package_type=PackageEndpointType.pdf_get_man,
-            installed_only=True,
         )
     ),
     help="""PDF-get-man package to be added.""",
@@ -1620,8 +1637,11 @@ def pdf_get_man(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_package_to_settings(
-            operation=pdf_get_man_operation, package_identifier=add, params=params
+        colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+            package_manager,
+            operation=pdf_get_man_operation,
+            package_identifier=add,
+            params=params,
         )
         return
 
@@ -1696,7 +1716,6 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
     type=click.Choice(
         package_manager.discover_packages(
             package_type=PackageEndpointType.pdf_prep,
-            installed_only=True,
         )
     ),
     help="""PDF-prep package to be added.""",
@@ -1784,7 +1803,8 @@ def pdf_prep(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_package_to_settings(
+        colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+            package_manager,
             operation=pdf_prep_operation,
             package_identifier=add,
             params=params,
@@ -1837,7 +1857,6 @@ def _delete_first_pages_cli(
     type=click.Choice(
         package_manager.discover_packages(
             package_type=PackageEndpointType.pdf_prep_man,
-            installed_only=True,
         )
     ),
     help="""PDF-prep-man package to be added.""",
@@ -1923,8 +1942,11 @@ def pdf_prep_man(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_package_to_settings(
-            operation=pdf_prep_man_operation, package_identifier=add, params=params
+        colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+            package_manager,
+            operation=pdf_prep_man_operation,
+            package_identifier=add,
+            params=params,
         )
     if delete_first_page:
         _delete_first_pages_cli(pdf_prep_man_operation, delete_first_page)
@@ -1952,7 +1974,6 @@ def pdf_prep_man(
     type=click.Choice(
         package_manager.discover_packages(
             package_type=PackageEndpointType.data,
-            installed_only=True,
         )
     ),
     help="Data package to be added.",
@@ -2038,7 +2059,8 @@ def data(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_package_to_settings(
+        colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+            package_manager,
             operation=data_operation,
             package_identifier=add,
             params=params,

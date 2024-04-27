@@ -1,0 +1,14 @@
+[project]
+name = "colrev.open_alex"
+description = "CoLRev package for open_alex"
+version = "0.1.0"
+authors = [
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+]
+documentation = "README.md"
+colrev_doc_link = "README.md"
+
+[tool.colrev]
+dev_status = "maturing"
+search_source = "colrev.packages.open_alex.open_alex:OpenAlexSearchSource"
+prep = "colrev.packages.open_alex.open_alex_metadata_prep:OpenAlexMetadataPrep"

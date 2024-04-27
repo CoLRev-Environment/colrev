@@ -835,14 +835,18 @@ class Prep(colrev.process.operation.Operation):
             self.review_manager.logger.info(f"Prepare ({prep_round.name})")
 
         package_manager = self.review_manager.get_package_manager()
-        self.prep_package_endpoints: dict[str, typing.Any] = (
-            package_manager.load_packages(
+
+        self.prep_package_endpoints: dict[str, typing.Any] = {}
+        for prep_package_endpoint in prep_round.prep_package_endpoints:
+
+            prep_class = package_manager.load_package_endpoint(
                 package_type=PackageEndpointType.prep,
-                selected_packages=prep_round.prep_package_endpoints,
-                operation=self,
-                only_ci_supported=self.review_manager.in_ci_environment(),
+                package_identifier=prep_package_endpoint["endpoint"],
             )
-        )
+            self.prep_package_endpoints[prep_package_endpoint["endpoint"]] = prep_class(
+                prep_operation=self, settings=prep_package_endpoint
+            )
+
         non_available_endpoints = [
             x["endpoint"].lower()
             for x in prep_round.prep_package_endpoints

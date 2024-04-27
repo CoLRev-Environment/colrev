@@ -55,16 +55,15 @@ class CLISourceAdder:
                 source_candidates=source_candidates
             )
 
-        endpoint_dict = self.package_manager.load_packages(
+        search_source_class = self.package_manager.load_package_endpoint(
             package_type=PackageEndpointType.search_source,
-            selected_packages=[heuristic_source_dict["source_candidate"].get_dict()],
-            operation=self.search_operation,
-            only_ci_supported=self.review_manager.in_ci_environment(),
+            package_identifier=heuristic_source_dict["source_candidate"],
+        )
+        endpoint = search_source_class(
+            source_operation=self,
+            settings=heuristic_source_dict["source_candidate"].get_dict(),
         )
 
-        endpoint = endpoint_dict[
-            heuristic_source_dict["source_candidate"].endpoint.lower()
-        ]
         params = {"search_file": filename}
         source = endpoint.add_endpoint(  # type: ignore
             operation=self.search_operation,

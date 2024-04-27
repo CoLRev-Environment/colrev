@@ -1,0 +1,14 @@
+[project]
+name = "colrev.crossref" # This is the identifier of the package
+description = "Crossref package for CoLRev"
+version = "0.1.0"
+authors = [
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+]
+documentation = "link to docs"
+colrev_doc_link = "link to be used for the colrev docs"
+
+[tool.colrev]
+dev_status = "maturing"
+search_source = "colrev.packages.crossref.crossref_search_source:CrossrefSearchSource"
+prep = "colrev.packages.crossref.crossref_prep:CrossrefMetadataPrep"

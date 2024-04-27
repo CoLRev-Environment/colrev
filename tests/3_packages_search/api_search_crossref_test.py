@@ -6,7 +6,7 @@ import pytest
 import requests_mock
 
 import colrev.ops.prep
-import colrev.packages.search_sources.crossref
+import colrev.packages.crossref.crossref_search_source
 from colrev.constants import SearchType
 
 # pylint: disable=line-too-long
@@ -15,7 +15,7 @@ from colrev.constants import SearchType
 @pytest.fixture(scope="package", name="crossref_search_source")
 def fixture_crossref_search_source(
     prep_operation: colrev.ops.prep.Prep,
-) -> colrev.packages.search_sources.crossref.CrossrefSearchSource:
+) -> colrev.packages.crossref.crossref_search_source.CrossrefSearchSource:
     """Fixture for crossref SearchSource"""
     settings = {
         "endpoint": "colrev.crossref",
@@ -24,7 +24,7 @@ def fixture_crossref_search_source(
         "search_parameters": {},
         "comment": "",
     }
-    instance = colrev.packages.search_sources.crossref.CrossrefSearchSource(
+    instance = colrev.packages.crossref.crossref_search_source.CrossrefSearchSource(
         source_operation=prep_operation, settings=settings
     )
     return instance
@@ -139,7 +139,7 @@ def fixture_crossref_search_source(
 def test_crossref_query(  # type: ignore
     doi: str,
     expected_dict: dict,
-    crossref_search_source: colrev.packages.search_sources.crossref.CrossrefSearchSource,
+    crossref_search_source: colrev.packages.crossref.crossref_search_source.CrossrefSearchSource,
     helpers,
 ) -> None:
     """Test the crossref query_doi()"""

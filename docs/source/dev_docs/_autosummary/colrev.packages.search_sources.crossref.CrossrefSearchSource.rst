@@ -1,7 +1,7 @@
 colrev.packages.search\_sources.crossref.CrossrefSearchSource
 =============================================================
 
-.. currentmodule:: colrev.packages.search_sources.crossref
+.. currentmodule:: colrev.packages.crossref.crossref_search_source
 
 .. autoclass:: CrossrefSearchSource
    :members:

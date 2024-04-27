@@ -1,7 +1,7 @@
 colrev.packages.prep.year\_vol\_iss\_prep
 =========================================
 
-.. automodule:: colrev.packages.prep.year_vol_iss_prep
+.. automodule:: colrev.packages.year_vol_iss_prep.year_vol_iss_prep
 
 
 

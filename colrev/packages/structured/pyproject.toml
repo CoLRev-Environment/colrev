@@ -1,0 +1,13 @@
+[project]
+name = "colrev.structured"
+description = "CoLRev package for structured"
+version = "0.1.0"
+authors = [
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+]
+documentation = "README.md"
+colrev_doc_link = "README.md"
+
+[tool.colrev]
+dev_status = "maturing"
+data = "colrev.packages.structured.structured:StructuredData"

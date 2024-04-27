@@ -7,17 +7,17 @@ import pytest
 
 import colrev.env.environment_manager
 import colrev.env.tei_parser
-import colrev.packages.pdf_get.unpaywall
+import colrev.packages.unpaywall.unpaywall
 import colrev.review_manager
 
 
 @pytest.fixture(name="unpaywall")
 def fixture_unpaywall(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> colrev.packages.pdf_get.unpaywall.Unpaywall:
+) -> colrev.packages.unpaywall.unpaywall.Unpaywall:
     """Fixture for Unpaywall"""
 
-    return colrev.packages.pdf_get.unpaywall.Unpaywall(
+    return colrev.packages.unpaywall.unpaywall.Unpaywall(
         pdf_get_operation=base_repo_review_manager.get_pdf_get_operation(),
         settings={"endpoint": "colrev.unpaywall"},
     )

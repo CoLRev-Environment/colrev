@@ -1,7 +1,7 @@
 colrev.packages.prep.exclude\_languages
 =======================================
 
-.. automodule:: colrev.packages.prep.exclude_languages
+.. automodule:: colrev.packages.exclude_languages.exclude_languages
 
 
 

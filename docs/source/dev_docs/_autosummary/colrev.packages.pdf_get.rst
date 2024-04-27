@@ -28,5 +28,5 @@ colrev.packages.pdf\_get
 
    colrev.packages.pdf_get.download_from_website
    colrev.packages.pdf_get.local_index_pdf_get
-   colrev.packages.pdf_get.unpaywall
+   colrev.packages.unpaywall.unpaywall
    colrev.packages.pdf_get.website_screenshot

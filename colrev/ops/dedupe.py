@@ -686,26 +686,14 @@ class Dedupe(colrev.process.operation.Operation):
         ) in self.review_manager.settings.dedupe.dedupe_package_endpoints:
             # Note : load package/script at this point because the same script
             # may run with different parameters
-            endpoint_dict = package_manager.load_packages(
-                package_type=PackageEndpointType.dedupe,
-                selected_packages=[dedupe_package_endpoint],
-                operation=self,
-                only_ci_supported=self.review_manager.in_ci_environment(),
-            )
-            if dedupe_package_endpoint["endpoint"] not in endpoint_dict:
-                self.review_manager.logger.info(
-                    f'Skip {dedupe_package_endpoint["endpoint"]} (not available)'
-                )
-                if self.review_manager.in_ci_environment():
-                    raise colrev_exceptions.ServiceNotAvailableException(
-                        dep="colrev dedupe",
-                        detailed_trace="dedupe not available in ci environment",
-                    )
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    dep="colrev dedupe", detailed_trace="dedupe not available"
-                )
 
-            endpoint = endpoint_dict[dedupe_package_endpoint["endpoint"]]
+            dedupe_class = package_manager.load_package_endpoint(
+                package_type=PackageEndpointType.dedupe,
+                package_identifier=dedupe_package_endpoint["endpoint"],
+            )
+            endpoint = dedupe_class(
+                dedupe_operation=self, settings=dedupe_package_endpoint
+            )
 
             endpoint.run_dedupe()  # type: ignore
             if not self.review_manager.high_level_operation:

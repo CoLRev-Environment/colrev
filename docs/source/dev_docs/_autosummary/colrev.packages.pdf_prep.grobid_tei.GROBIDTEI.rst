@@ -1,7 +1,7 @@
 colrev.packages.pdf\_prep.grobid\_tei.GROBIDTEI
 ===============================================
 
-.. currentmodule:: colrev.packages.pdf_prep.grobid_tei
+.. currentmodule:: colrev.packages.grobid_tei.grobid_tei
 
 .. autoclass:: GROBIDTEI
    :members:

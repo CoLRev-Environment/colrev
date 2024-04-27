@@ -111,19 +111,6 @@ class Initializer:
         if "." not in formatted_review_type:
             formatted_review_type = "colrev." + formatted_review_type
 
-        try:
-            res = self.review_manager.get_review_types(
-                review_type=formatted_review_type
-            )
-        except colrev.exceptions.MissingDependencyError as exc:
-            res = self.review_manager.get_review_types(
-                review_type="colrev.literature_review"
-            )
-            raise colrev_exceptions.ParameterError(
-                parameter="init.review_type",
-                value=f"'{formatted_review_type}'",
-                options=list(res.all_available_packages_names.keys()),
-            ) from exc
         return formatted_review_type
 
     def _check_init_precondition(self) -> None:
@@ -293,11 +280,18 @@ class Initializer:
 
         # Principle: adapt values provided by the default settings.json
         # instead of creating a new settings.json
-
-        review_types = self.review_manager.get_review_types(
-            review_type=self.review_type
+        package_manager = self.review_manager.get_package_manager()
+        review_type_class = package_manager.load_package_endpoint(
+            package_type=PackageEndpointType.review_type,
+            package_identifier=self.review_type,
         )
-        settings = review_types.packages[self.review_type].initialize(settings=settings)
+        check_operation = colrev.ops.check.CheckOperation(self.review_manager)
+        review_type_object = review_type_class(
+            operation=check_operation,
+            settings={"endpoint": settings.project.review_type},
+        )
+
+        settings = review_type_object.initialize(settings=settings)
         self.review_manager.save_settings()
 
         project_title = self.review_manager.settings.project.title
@@ -309,14 +303,7 @@ class Initializer:
             )
         else:
             package_manager = self.review_manager.get_package_manager()
-            check_operation = colrev.ops.check.CheckOperation(self.review_manager)
-            review_type_endpoint = package_manager.load_packages(
-                package_type=PackageEndpointType.review_type,
-                selected_packages=[{"endpoint": self.review_type}],
-                operation=check_operation,
-                ignore_not_available=False,
-            )
-            r_type_suffix = str(review_type_endpoint[self.review_type])
+            r_type_suffix = str(review_type_object)
 
             colrev.env.utils.inplace_change(
                 filename=Path("readme.md"),

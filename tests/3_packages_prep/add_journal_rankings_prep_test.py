@@ -6,18 +6,20 @@ import pytest
 
 import colrev.env.local_index_builder
 import colrev.ops.prep
-import colrev.packages.prep.add_journal_ranking
+import colrev.packages.add_journal_ranking.add_journal_ranking
 from colrev.constants import Fields
 
 
 @pytest.fixture(scope="package", name="ajr_instance")
 def elp(  # type: ignore
     prep_operation: colrev.ops.prep.Prep, session_mocker
-) -> colrev.packages.prep.add_journal_ranking.AddJournalRanking:
+) -> colrev.packages.add_journal_ranking.add_journal_ranking.AddJournalRanking:
     """Fixture returning an AddJournalRanking instance"""
     settings = {"endpoint": "colrev.add_journal_ranking"}
-    ajr_instance = colrev.packages.prep.add_journal_ranking.AddJournalRanking(
-        prep_operation=prep_operation, settings=settings
+    ajr_instance = (
+        colrev.packages.add_journal_ranking.add_journal_ranking.AddJournalRanking(
+            prep_operation=prep_operation, settings=settings
+        )
     )
     temp_sqlite = prep_operation.review_manager.path.parent / Path(
         "sqlite_index_test.db"
@@ -52,7 +54,7 @@ def elp(  # type: ignore
     ],
 )
 def test_prep_exclude_languages(
-    ajr_instance: colrev.packages.prep.add_journal_ranking.AddJournalRanking,
+    ajr_instance: colrev.packages.add_journal_ranking.add_journal_ranking.AddJournalRanking,
     input_value: dict,
     expected: dict,
 ) -> None:

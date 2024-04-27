@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
-import colrev.packages.pdf_prep.grobid_tei
+import colrev.packages.grobid_tei.grobid_tei
 import colrev.process.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -69,7 +69,7 @@ class Data(colrev.process.operation.Operation):
                 }
             )
 
-        tei_path = colrev.packages.pdf_prep.grobid_tei.GROBIDTEI.TEI_PATH_RELATIVE
+        tei_path = colrev.packages.grobid_tei.grobid_tei.GROBIDTEI.TEI_PATH_RELATIVE
         required_records_ids = self.get_record_ids_for_synthesis(records)
 
         missing = []
@@ -344,20 +344,12 @@ class Data(colrev.process.operation.Operation):
                     f"Data: {data_package_endpoint['endpoint'].replace('colrev.', '')}"
                 )
 
-            endpoint_dict = self.package_manager.load_packages(
+            data_class = self.package_manager.load_package_endpoint(
                 package_type=PackageEndpointType.data,
-                selected_packages=[data_package_endpoint],
-                operation=self,
-                only_ci_supported=self.review_manager.in_ci_environment(),
+                package_identifier=data_package_endpoint["endpoint"],
             )
 
-            if data_package_endpoint["endpoint"] not in endpoint_dict:
-                self.review_manager.logger.info(
-                    f'Skip {data_package_endpoint["endpoint"]} (not available)'
-                )
-                continue
-
-            endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
+            endpoint = data_class(data_operation=self, settings=data_package_endpoint)
 
             endpoint.update_data(  # type: ignore
                 records, synthesized_record_status_matrix, silent_mode=silent_mode

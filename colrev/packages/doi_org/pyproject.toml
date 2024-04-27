@@ -1,0 +1,12 @@
+[project]
+name = "colrev.doi_org"
+description = "CoLRev package for doi_org"
+version = "0.1.0"
+authors = [
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+]
+documentation = "README.md"
+colrev_doc_link = "README.md"
+
+[tool.colrev]
+dev_status = "maturing"

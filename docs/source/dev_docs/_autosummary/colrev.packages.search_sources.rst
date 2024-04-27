@@ -31,11 +31,11 @@ colrev.packages.search\_sources
    colrev.packages.search_sources.aisel
    colrev.packages.search_sources.arxiv
    colrev.packages.search_sources.colrev_project
-   colrev.packages.search_sources.crossref
+   colrev.packages.crossref.crossref_search_source
    colrev.packages.search_sources.dblp
-   colrev.packages.search_sources.doi_org
+   colrev.packages.doi_org.doi_org
    colrev.packages.search_sources.ebsco_host
-   colrev.packages.search_sources.eric
+   colrev.packages.eric.eric
    colrev.packages.search_sources.europe_pmc
    colrev.packages.search_sources.files_dir
    colrev.packages.search_sources.google_scholar

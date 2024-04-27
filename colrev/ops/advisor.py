@@ -388,14 +388,15 @@ class Advisor:
                 for (
                     data_package_endpoint
                 ) in self.review_manager.settings.data.data_package_endpoints:
-                    endpoint_dict = package_manager.load_packages(
+
+                    data_class = package_manager.load_package_endpoint(
                         package_type=PackageEndpointType.data,
-                        selected_packages=[data_package_endpoint],
-                        operation=check_operation,
+                        package_identifier=data_package_endpoint["endpoint"],
                     )
-                    if data_package_endpoint["endpoint"] not in endpoint_dict:
-                        continue
-                    endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
+
+                    endpoint = data_class(
+                        data_operation=check_operation, settings=data_package_endpoint
+                    )
 
                     advice = endpoint.get_advice()  # type: ignore
                     if advice:

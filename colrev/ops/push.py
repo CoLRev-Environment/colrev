@@ -98,14 +98,13 @@ class Push(colrev.process.operation.Operation):
 
             source = source_l[0]
 
-            # pylint: disable=duplicate-code
-            endpoint_dict = package_manager.load_packages(
+            search_source_class = package_manager.load_package_endpoint(
                 package_type=PackageEndpointType.search_source,
-                selected_packages=[source.get_dict()],
-                operation=self,
+                package_identifier=source.endpoint,
             )
-
-            endpoint = endpoint_dict[source.endpoint.lower()]
+            endpoint = search_source_class(
+                source_operation=self, settings=source.get_dict()
+            )
 
             correct_function = getattr(endpoint, "apply_correction", None)
             if callable(correct_function):
@@ -120,7 +119,7 @@ class Push(colrev.process.operation.Operation):
                     f"{Colors.GREEN}Push record corrections to {source_prefix}{Colors.END}"
                 )
                 self.review_manager.logger.debug(
-                    f"No correction function in {endpoint_dict}"
+                    f"No correction function in {source.endpoint}"
                 )
                 self._share_correction(source=source, change_list=change_itemsets)
 

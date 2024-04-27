@@ -26,7 +26,7 @@ colrev.packages.prep
    :template: custom-module-template.rst
    :recursive:
 
-   colrev.packages.prep.add_journal_ranking
+   colrev.packages.add_journal_ranking.add_journal_ranking
    colrev.packages.prep.citeas_prep
    colrev.packages.prep.crossref_metadata_prep
    colrev.packages.prep.curation_prep
@@ -36,7 +36,7 @@ colrev.packages.prep
    colrev.packages.prep.europe_pmc_prep
    colrev.packages.prep.exclude_collections
    colrev.packages.prep.exclude_complementary_materials
-   colrev.packages.prep.exclude_languages
+   colrev.packages.exclude_languages.exclude_languages
    colrev.packages.prep.exclude_non_latin_alphabets
    colrev.packages.prep.general_polish
    colrev.packages.prep.local_index_prep
@@ -48,4 +48,4 @@ colrev.packages.prep
    colrev.packages.prep.semantic_scholar_prep
    colrev.packages.prep.source_specific_prep
    colrev.packages.prep.utils
-   colrev.packages.prep.year_vol_iss_prep
+   colrev.packages.year_vol_iss_prep.year_vol_iss_prep

@@ -190,19 +190,15 @@ class PDFGet(colrev.process.operation.Operation):
         for (
             pdf_get_package_endpoint
         ) in self.review_manager.settings.pdf_get.pdf_get_package_endpoints:
-            endpoint_dict = self.package_manager.load_packages(
-                package_type=PackageEndpointType.pdf_get,
-                selected_packages=[pdf_get_package_endpoint],
-                operation=self,
-                only_ci_supported=self.review_manager.in_ci_environment(),
-            )
-            if pdf_get_package_endpoint["endpoint"] not in endpoint_dict:
-                self.review_manager.logger.info(
-                    f'Skip {pdf_get_package_endpoint["endpoint"]} (not available)'
-                )
-                continue
 
-            endpoint = endpoint_dict[pdf_get_package_endpoint["endpoint"]]
+            pdf_get_class = self.package_manager.load_package_endpoint(
+                package_type=PackageEndpointType.pdf_get,
+                package_identifier=pdf_get_package_endpoint["endpoint"],
+            )
+            endpoint = pdf_get_class(
+                pdf_get_operation=self, settings=pdf_get_package_endpoint
+            )
+
             endpoint.get_pdf(record)  # type: ignore
 
             if Fields.FILE in record.data:

@@ -11,7 +11,7 @@ from pathlib import Path
 import requests
 
 import colrev.exceptions as colrev_exceptions
-import colrev.packages.pdf_prep.grobid_tei
+import colrev.packages.grobid_tei.grobid_tei
 import colrev.process.operation
 import colrev.record.record_pdf
 from colrev.constants import Colors
@@ -364,7 +364,7 @@ class PDFPrep(colrev.process.operation.Operation):
         """Generate TEI documents for included records"""
 
         self.review_manager.logger.info("Generate TEI documents")
-        endpoint = colrev.packages.pdf_prep.grobid_tei.GROBIDTEI(
+        endpoint = colrev.packages.grobid_tei.grobid_tei.GROBIDTEI(
             pdf_prep_operation=self, settings={"endpoint": "colrev.grobid_tei"}
         )
         records = self.review_manager.dataset.load_records_dict()
@@ -425,12 +425,20 @@ class PDFPrep(colrev.process.operation.Operation):
         pdf_prep_data = self._get_data(batch_size=batch_size)
 
         package_manager = self.review_manager.get_package_manager()
-        self.pdf_prep_package_endpoints = package_manager.load_packages(
-            package_type=PackageEndpointType.pdf_prep,
-            selected_packages=self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints,
-            operation=self,
-            only_ci_supported=self.review_manager.in_ci_environment(),
-        )
+        self.pdf_prep_package_endpoints = {}
+        for (
+            pdf_prep_package_endpoint
+        ) in self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints:
+
+            pdf_prep_class = package_manager.load_package_endpoint(
+                package_type=PackageEndpointType.pdf_prep,
+                package_identifier=pdf_prep_package_endpoint["endpoint"],
+            )
+            self.pdf_prep_package_endpoints[pdf_prep_package_endpoint["endpoint"]] = (
+                pdf_prep_class(
+                    pdf_prep_operation=self, settings=pdf_prep_package_endpoint
+                )
+            )
 
         self.review_manager.logger.info(
             "PDFs to prep".ljust(38) + f'{pdf_prep_data["nr_tasks"]} PDFs'

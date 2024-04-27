@@ -1,0 +1,13 @@
+[project]
+name = "colrev.doi_metadata_prep"
+description = "CoLRev package for doi_metadata_prep"
+version = "0.1.0"
+authors = [
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+]
+documentation = "README.md"
+colrev_doc_link = "README.md"
+
+[tool.colrev]
+dev_status = "maturing"
+prep = "colrev.packages.doi_metadata_prep.doi_metadata_prep:DOIMetadataPrep"

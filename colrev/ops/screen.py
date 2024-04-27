@@ -5,7 +5,6 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
@@ -439,26 +438,13 @@ class Screen(colrev.process.operation.Operation):
         for (
             screen_package_endpoint
         ) in self.review_manager.settings.screen.screen_package_endpoints:
-            endpoint_dict = package_manager.load_packages(
+            screen_class = package_manager.load_package_endpoint(
                 package_type=PackageEndpointType.screen,
-                selected_packages=self.review_manager.settings.screen.screen_package_endpoints,
-                operation=self,
-                only_ci_supported=self.review_manager.in_ci_environment(),
+                package_identifier=screen_package_endpoint["endpoint"],
             )
-            if screen_package_endpoint["endpoint"] not in endpoint_dict:
-                self.review_manager.logger.info(
-                    f'Skip {screen_package_endpoint["endpoint"]} (not available)'
-                )
-                if self.review_manager.in_ci_environment():
-                    raise colrev_exceptions.ServiceNotAvailableException(
-                        dep="colrev sceen",
-                        detailed_trace="sceen not available in ci environment",
-                    )
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    dep="colrev sceen", detailed_trace="sceen not available"
-                )
-
-            endpoint = endpoint_dict[screen_package_endpoint["endpoint"]]
+            endpoint = screen_class(
+                screen_operation=self, settings=screen_package_endpoint
+            )
 
             selected_auto_include_ids = self._auto_include(records)
 

@@ -241,7 +241,6 @@ class SQLiteIndexRecord(SQLiteIndex):
         records_to_return = []
 
         selected_row = None
-        print(f"{self.SELECT_ALL_QUERY} {query}")
         cur.execute(f"{self.SELECT_ALL_QUERY} {query}")
         for row in cur.fetchall():
             selected_row = row
@@ -335,7 +334,6 @@ class SQLiteIndexTOC(SQLiteIndex):
 
         try:
             cur = self._get_cursor()
-            print(query)
             cur.execute(query, (argument,))
             results = cur.fetchall()
 

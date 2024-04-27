@@ -1,7 +1,7 @@
 colrev.packages.prep.exclude\_languages.ExcludeLanguagesPrep
 ============================================================
 
-.. currentmodule:: colrev.packages.prep.exclude_languages
+.. currentmodule:: colrev.packages.exclude_languages.exclude_languages
 
 .. autoclass:: ExcludeLanguagesPrep
    :members:

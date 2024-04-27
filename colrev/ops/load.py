@@ -368,14 +368,15 @@ class Load(colrev.process.operation.Operation):
             sources_settings.append(source)
         sources = []
         for source in sources_settings:
-            endpoint_dict = self.package_manager.load_packages(
+
+            search_source_class = self.package_manager.load_package_endpoint(
                 package_type=PackageEndpointType.search_source,
-                selected_packages=[source.get_dict()],
-                operation=self,
+                package_identifier=source.endpoint,
             )
-            # if source.endpoint.lower() not in endpoint_dict:
-            #     raise ...
-            endpoint = endpoint_dict[source.endpoint.lower()]
+            endpoint = search_source_class(
+                source_operation=self, settings=source.get_dict()
+            )
+
             s_type = endpoint.search_source.search_type  # type: ignore
             if s_type == SearchType.MD and not include_md:
                 continue

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Tests of the CoLRev init operation"""
 import os
+import shutil
 from pathlib import Path
 
 import pytest
@@ -31,10 +32,13 @@ def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
             light=True,
         )
 
-    with pytest.raises(colrev_exceptions.ParameterError):
+    with pytest.raises(colrev_exceptions.MissingDependencyError):
         colrev.ops.init.Initializer(
             review_type="misspelled_review", target_path=tmp_path
         )
+
+    shutil.rmtree(tmp_path)
+    os.mkdir(tmp_path)
 
     colrev.ops.init.Initializer(
         review_type="literature_review",

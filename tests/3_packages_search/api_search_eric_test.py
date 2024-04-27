@@ -6,7 +6,7 @@ import pytest
 import requests_mock
 
 import colrev.ops.prep
-import colrev.packages.search_sources.eric
+import colrev.packages.eric.eric
 from colrev.constants import SearchType
 
 # pylint: disable=line-too-long
@@ -15,7 +15,7 @@ from colrev.constants import SearchType
 @pytest.fixture(scope="package", name="eric_search_source")
 def fixture_eric_search_source(
     prep_operation: colrev.ops.prep.Prep,
-) -> colrev.packages.search_sources.eric.ERICSearchSource:
+) -> colrev.packages.eric.eric.ERICSearchSource:
     """Fixture for eric SearchSource"""
     settings = {
         "endpoint": "colrev.eric",
@@ -24,14 +24,14 @@ def fixture_eric_search_source(
         "search_parameters": {"query": "blockchain"},
         "comment": "",
     }
-    instance = colrev.packages.search_sources.eric.ERICSearchSource(
+    instance = colrev.packages.eric.eric.ERICSearchSource(
         source_operation=prep_operation, settings=settings
     )
     return instance
 
 
 def test_eric(  # type: ignore
-    eric_search_source: colrev.packages.search_sources.eric.ERICSearchSource,
+    eric_search_source: colrev.packages.eric.eric.ERICSearchSource,
     helpers,
 ) -> None:
     """Test eric"""

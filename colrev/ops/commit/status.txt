@@ -46,7 +46,7 @@ screen
 {% if status_stats.currently.pdf_prepared > 0 or status_stats.overall.pdf_prepared > 0 %}{{ END }}{% endif %}
 {{ "{:>10}".format(status_stats.overall.rev_included) }} included
 
-{% if status_stats.currently.pdf_prepared > 0 %}{{ ORANGE }}{{ status_stats.currently.pdf_prepared }} to screen{{ END }} {% endif %}
+      {% if status_stats.currently.pdf_prepared > 0 %}{{ ORANGE }}{{ status_stats.currently.pdf_prepared }} to screen{{ END }} {% endif %}
 
 {% if status_stats.currently.rev_excluded > 0 %}[
 {{ status_stats.currently.rev_excluded }} excluded]{% endif %}
