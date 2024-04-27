@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Tests of the CoLRev init operation"""
 import os
-import shutil
 from pathlib import Path
 
 import pytest
@@ -36,6 +35,7 @@ def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
         colrev.ops.init.Initializer(
             review_type="misspelled_review", target_path=tmp_path
         )
+
 
 def test_repo_init(tmp_path) -> None:  # type: ignore
     """Test repo init"""

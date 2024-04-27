@@ -16,18 +16,6 @@ colrev.package\_manager.package\_manager.PackageManager
    .. autosummary::
       :nosignatures:
 
-      ~PackageManager.add_package_to_settings
       ~PackageManager.discover_packages
       ~PackageManager.load_package_endpoint
-      ~PackageManager.load_packages
       ~PackageManager.update_package_list
-
-
-
-
-
-   .. rubric:: Attributes
-
-   .. autosummary::
-
-      ~PackageManager.package

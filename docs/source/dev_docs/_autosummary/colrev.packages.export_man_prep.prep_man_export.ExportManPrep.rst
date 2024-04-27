@@ -1,0 +1,42 @@
+colrev.packages.export\_man\_prep.prep\_man\_export.ExportManPrep
+=================================================================
+
+.. currentmodule:: colrev.packages.export_man_prep.prep_man_export
+
+.. autoclass:: ExportManPrep
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+
+      ~ExportManPrep.all_json_schemas
+      ~ExportManPrep.field_mapping
+      ~ExportManPrep.from_dict
+      ~ExportManPrep.from_json
+      ~ExportManPrep.from_object
+      ~ExportManPrep.json_schema
+      ~ExportManPrep.prepare_manual
+      ~ExportManPrep.register_field_encoders
+      ~ExportManPrep.to_dict
+      ~ExportManPrep.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ExportManPrep.RELATIVE_PREP_MAN_INFO_PATH
+      ~ExportManPrep.RELATIVE_PREP_MAN_INFO_PATH_XLS
+      ~ExportManPrep.RELATIVE_PREP_MAN_PATH
+      ~ExportManPrep.ci_supported
+      ~ExportManPrep.settings

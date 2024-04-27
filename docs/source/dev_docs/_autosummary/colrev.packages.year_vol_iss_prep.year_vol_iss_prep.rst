@@ -1,0 +1,23 @@
+colrev.packages.year\_vol\_iss\_prep.year\_vol\_iss\_prep
+=========================================================
+
+.. automodule:: colrev.packages.year_vol_iss_prep.year_vol_iss_prep
+
+
+
+
+
+
+
+
+
+
+
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+
+      YearVolIssPrep

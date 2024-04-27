@@ -15,3 +15,6 @@ colrev.package\_manager.package\_manager.Package
 
    .. autosummary::
       :nosignatures:
+
+      ~Package.add_to_type_identifier_endpoint_dict
+      ~Package.get_endpoint_cls

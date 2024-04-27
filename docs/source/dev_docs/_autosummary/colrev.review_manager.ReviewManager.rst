@@ -49,12 +49,10 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_remove_operation
       ~ReviewManager.get_repare
       ~ReviewManager.get_resources
-      ~ReviewManager.get_review_types
       ~ReviewManager.get_screen_operation
       ~ReviewManager.get_search_operation
       ~ReviewManager.get_status_operation
       ~ReviewManager.get_status_stats
-      ~ReviewManager.get_sync_operation
       ~ReviewManager.get_tei
       ~ReviewManager.get_trace_operation
       ~ReviewManager.get_upgrade
@@ -84,5 +82,4 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.path
       ~ReviewManager.force_mode
       ~ReviewManager.verbose_mode
-      ~ReviewManager.debug_mode
       ~ReviewManager.high_level_operation

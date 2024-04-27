@@ -20,7 +20,6 @@ colrev.ops.search.Search
       ~Search.add_db_source
       ~Search.add_most_likely_sources
       ~Search.check_precondition
-      ~Search.check_source_selection_exists
       ~Search.conclude
       ~Search.decorate
       ~Search.get_new_sources_heuristic_list

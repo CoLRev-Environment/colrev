@@ -50,13 +50,10 @@ colrev.ops
    colrev.ops.push
    colrev.ops.remove
    colrev.ops.repare
-   colrev.ops.review_types
    colrev.ops.screen
    colrev.ops.search
    colrev.ops.search_api_feed
-   colrev.ops.search_sources
    colrev.ops.status
-   colrev.ops.sync
    colrev.ops.trace
    colrev.ops.upgrade
    colrev.ops.validate

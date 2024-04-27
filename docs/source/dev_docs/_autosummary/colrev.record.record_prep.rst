@@ -9,6 +9,14 @@ colrev.record.record\_prep
 
 
 
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+
+      capitalize_entities
+
 
 
 

@@ -26,6 +26,7 @@ colrev.ui\_cli
    :template: custom-module-template.rst
    :recursive:
 
+   colrev.ui_cli.add_package_to_settings
    colrev.ui_cli.cli
    colrev.ui_cli.cli_add_source
    colrev.ui_cli.cli_status_printer

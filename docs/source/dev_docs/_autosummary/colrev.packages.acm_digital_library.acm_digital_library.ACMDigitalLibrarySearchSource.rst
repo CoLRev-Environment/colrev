@@ -1,0 +1,50 @@
+colrev.packages.acm\_digital\_library.acm\_digital\_library.ACMDigitalLibrarySearchSource
+=========================================================================================
+
+.. currentmodule:: colrev.packages.acm_digital_library.acm_digital_library
+
+.. autoclass:: ACMDigitalLibrarySearchSource
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+
+      ~ACMDigitalLibrarySearchSource.add_endpoint
+      ~ACMDigitalLibrarySearchSource.all_json_schemas
+      ~ACMDigitalLibrarySearchSource.field_mapping
+      ~ACMDigitalLibrarySearchSource.from_dict
+      ~ACMDigitalLibrarySearchSource.from_json
+      ~ACMDigitalLibrarySearchSource.from_object
+      ~ACMDigitalLibrarySearchSource.heuristic
+      ~ACMDigitalLibrarySearchSource.json_schema
+      ~ACMDigitalLibrarySearchSource.load
+      ~ACMDigitalLibrarySearchSource.prep_link_md
+      ~ACMDigitalLibrarySearchSource.prepare
+      ~ACMDigitalLibrarySearchSource.register_field_encoders
+      ~ACMDigitalLibrarySearchSource.search
+      ~ACMDigitalLibrarySearchSource.to_dict
+      ~ACMDigitalLibrarySearchSource.to_json
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ACMDigitalLibrarySearchSource.ci_supported
+      ~ACMDigitalLibrarySearchSource.db_url
+      ~ACMDigitalLibrarySearchSource.docs_link
+      ~ACMDigitalLibrarySearchSource.endpoint
+      ~ACMDigitalLibrarySearchSource.heuristic_status
+      ~ACMDigitalLibrarySearchSource.search_types
+      ~ACMDigitalLibrarySearchSource.short_name
+      ~ACMDigitalLibrarySearchSource.source_identifier
