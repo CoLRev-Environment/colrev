@@ -37,8 +37,8 @@ def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
             review_type="misspelled_review", target_path=tmp_path
         )
 
-    shutil.rmtree(tmp_path)
-    os.mkdir(tmp_path)
+def test_repo_init(tmp_path) -> None:  # type: ignore
+    """Test repo init"""
 
     colrev.ops.init.Initializer(
         review_type="literature_review",
