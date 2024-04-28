@@ -146,6 +146,7 @@ Testing
 -----------
 
 * Tests for built-in packages are currently in the tests of the CoLRev packages.
+* See `tests/REAMDE.md <https://github.com/CoLRev-Environment/colrev/tree/main/tests>` for details.
 
 Documentation
 -----------------
