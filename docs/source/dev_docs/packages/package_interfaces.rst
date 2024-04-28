@@ -4,38 +4,38 @@ Package interfaces
 .. autointerface:: colrev.package_manager.interfaces.GeneralInterface
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.ReviewTypePackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.ReviewTypeInterface
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.SearchSourceInterface
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.PrepPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.PrepInterface
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.PrepManPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.PrepManInterface
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.DedupePackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.DedupeInterface
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.PrescreenPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.PrescreenInterface
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.PDFGetPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.PDFGetInterface
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.PDFGetManPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.PDFGetManInterface
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.PDFPrepPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.PDFPrepInterface
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.PDFPrepManPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.PDFPrepManInterface
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.ScreenPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.ScreenInterface
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.DataPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.DataInterface
    :members:

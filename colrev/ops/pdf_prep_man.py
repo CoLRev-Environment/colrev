@@ -12,10 +12,10 @@ from PyPDF2.errors import PdfReadError
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
-from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
@@ -329,7 +329,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
         for pdf_prep_man_package_endpoint in pdf_prep_man_package_endpoints:
 
             pdf_prep_man_class = package_manager.get_package_endpoint_class(
-                package_type=PackageEndpointType.pdf_prep_man,
+                package_type=EndpointType.pdf_prep_man,
                 package_identifier=pdf_prep_man_package_endpoint["endpoint"],
             )
             endpoint = pdf_prep_man_class(

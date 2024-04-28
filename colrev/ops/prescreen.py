@@ -10,9 +10,9 @@ import colrev.packages.prescreen_table.prescreen_table
 import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
-from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
@@ -346,7 +346,7 @@ class Prescreen(colrev.process.operation.Operation):
             )
 
             prescreen_class = package_manager.get_package_endpoint_class(
-                package_type=PackageEndpointType.prescreen,
+                package_type=EndpointType.prescreen,
                 package_identifier=prescreen_package_endpoint["endpoint"],
             )
             endpoint = prescreen_class(

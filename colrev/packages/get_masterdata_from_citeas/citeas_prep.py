@@ -21,9 +21,7 @@ from colrev.constants import Fields
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
 @dataclass
 class CiteAsPrep(JsonSchemaMixin):
     """Prepares records based on citeas.org metadata"""

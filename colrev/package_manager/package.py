@@ -17,14 +17,14 @@ import colrev.package_manager.interfaces
 import colrev.process.operation
 import colrev.record.record
 import colrev.settings
-from colrev.constants import PackageEndpointType
+from colrev.constants import EndpointType
 
 # Inspiration for package descriptions:
 # https://github.com/rstudio/reticulate/blob/
 # 9ebca7ecc028549dadb3d51d2184f9850f6f9f9d/DESCRIPTION
 
 
-PACKAGE_TYPE_OVERVIEW = colrev.package_manager.interfaces.PACKAGE_TYPE_OVERVIEW
+ENDPOINT_OVERVIEW = colrev.package_manager.interfaces.ENDPOINT_OVERVIEW
 
 
 class Package:
@@ -65,18 +65,18 @@ class Package:
             )
         return config
 
-    def has_endpoint(self, endpoint_type: PackageEndpointType) -> bool:
+    def has_endpoint(self, endpoint_type: EndpointType) -> bool:
         """Check if the package has a specific endpoint type"""
         return endpoint_type.value in self.config["tool"]["colrev"]
 
-    def get_endpoint(self, endpoint_type: PackageEndpointType) -> str:
+    def get_endpoint(self, endpoint_type: EndpointType) -> str:
         """Get the endpoint for a package type"""
         return self.config["tool"]["colrev"][endpoint_type.value]
 
     def _endpoint_verified(
-        self, endpoint_class: Any, endpoint_type: PackageEndpointType, identifier: str
+        self, endpoint_class: Any, endpoint_type: EndpointType, identifier: str
     ) -> bool:
-        interface_definition = PACKAGE_TYPE_OVERVIEW[endpoint_type]["import_name"]
+        interface_definition = ENDPOINT_OVERVIEW[endpoint_type]["import_name"]
         try:
             verifyClass(interface_definition, endpoint_class)  # type: ignore
             return True
@@ -84,7 +84,7 @@ class Package:
             print(f"Error registering endpoint {identifier}: {exc}")
         return False
 
-    def get_endpoint_class(self, package_type: PackageEndpointType) -> Any:
+    def get_endpoint_class(self, package_type: EndpointType) -> Any:
         """Get the endpoint class for a package type"""
         if not self.has_endpoint(package_type):
             raise colrev_exceptions.MissingDependencyError(
@@ -109,7 +109,7 @@ class Package:
         if "tool" not in self.config or "colrev" not in self.config["tool"]:
             return
 
-        for endpoint_type in PackageEndpointType:
+        for endpoint_type in EndpointType:
             if self.has_endpoint(endpoint_type):
                 type_identifier_endpoint_dict[endpoint_type][self.name] = (
                     self.get_endpoint(endpoint_type)

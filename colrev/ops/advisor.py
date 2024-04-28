@@ -13,10 +13,10 @@ from git.exc import NoSuchPathError
 
 import colrev.ops.check
 import colrev.process.operation
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import Filepaths
-from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 if typing.TYPE_CHECKING:  # pragma: no cover
@@ -390,7 +390,7 @@ class Advisor:
                 ) in self.review_manager.settings.data.data_package_endpoints:
 
                     data_class = package_manager.get_package_endpoint_class(
-                        package_type=PackageEndpointType.data,
+                        package_type=EndpointType.data,
                         package_identifier=data_package_endpoint["endpoint"],
                     )
 

@@ -12,8 +12,8 @@ import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+from colrev.constants import EndpointType
 from colrev.constants import Fields
-from colrev.constants import PackageEndpointType
 
 # pylint: disable=duplicate-code
 
@@ -21,9 +21,7 @@ from colrev.constants import PackageEndpointType
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
 @dataclass
 class SourceSpecificPrep(JsonSchemaMixin):
     """Prepares records based on the prepare scripts specified by the SearchSource"""
@@ -65,7 +63,7 @@ class SourceSpecificPrep(JsonSchemaMixin):
             #     continue
             # endpoint = self.search_sources.packages[source.endpoint]
             search_source_class = self.package_manager.get_package_endpoint_class(
-                package_type=PackageEndpointType.search_source,
+                package_type=EndpointType.search_source,
                 package_identifier=source.endpoint,
             )
             endpoint = search_source_class(

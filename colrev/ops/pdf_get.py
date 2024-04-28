@@ -13,10 +13,10 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record_pdf
 from colrev.constants import Colors
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
-from colrev.constants import PackageEndpointType
 from colrev.constants import PDFPathType
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
@@ -192,7 +192,7 @@ class PDFGet(colrev.process.operation.Operation):
         ) in self.review_manager.settings.pdf_get.pdf_get_package_endpoints:
 
             pdf_get_class = self.package_manager.get_package_endpoint_class(
-                package_type=PackageEndpointType.pdf_get,
+                package_type=EndpointType.pdf_get,
                 package_identifier=pdf_get_package_endpoint["endpoint"],
             )
             endpoint = pdf_get_class(

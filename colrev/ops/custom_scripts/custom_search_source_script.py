@@ -15,9 +15,7 @@ import colrev.record.record
 from colrev.constants import Fields
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 class CustomSearch:
     """Class for custom search scripts"""
 

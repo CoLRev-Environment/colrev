@@ -38,9 +38,7 @@ from colrev.constants import SearchType
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
 class BackwardSearchSource(JsonSchemaMixin):
     """Backward search extracting references from PDFs using GROBID

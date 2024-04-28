@@ -23,9 +23,7 @@ from colrev.constants import SearchType
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
 class TransportResearchInternationalDocumentation(JsonSchemaMixin):
     """Transport Research International Documentation"""

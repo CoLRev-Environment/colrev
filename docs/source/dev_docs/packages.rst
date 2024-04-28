@@ -118,29 +118,29 @@ The following endpoint - interface pairs are available:
    * - Endpoint
      - Interface
    * - review_type
-     - `ReviewTypePackageEndpointInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.ReviewTypePackageEndpointInterface>`_
+     - `ReviewTypeInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.ReviewTypeInterface>`_
    * - search_source
-     - `SearchSourcePackageEndpointInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface>`_
+     - `SearchSourceInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface>`_
    * - prep
-     - `PrepPackageEndpointInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PrepPackageEndpointInterface>`_
+     - `PrepInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PrepInterface>`_
    * - prep_man
-     - `PrepManPackageEndpointInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PrepManPackageEndpointInterface>`_
+     - `PrepManInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PrepManInterface>`_
    * - dedupe
-     - `DedupePackageEndpointInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.DedupePackageEndpointInterface>`_
+     - `DedupeInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.DedupeInterface>`_
    * - prescreen
-     - `PrescreenPackageEndpointInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PrescreenPackageEndpointInterface>`_
+     - `PrescreenInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PrescreenInterface>`_
    * - pdf_get
-     - `PDFGetPackageEndpointInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PDFGetPackageEndpointInterface>`_
+     - `PDFGetInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PDFGetInterface>`_
    * - pdf_get_man
-     - `PDFGetManPackageEndpointInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PDFGetManPackageEndpointInterface>`_
+     - `PDFGetManInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PDFGetManInterface>`_
    * - pdf_prep
-     - `PDFPrepPackageEndpointInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PDFPrepPackageEndpointInterface>`_
+     - `PDFPrepInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PDFPrepInterface>`_
    * - pdf_prep_man
-     - `PDFPrepManPackageEndpointInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PDFPrepManPackageEndpointInterface>`_
+     - `PDFPrepManInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PDFPrepManInterface>`_
    * - screen
-     - `ScreenPackageEndpointInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.ScreenPackageEndpointInterface>`_
+     - `ScreenInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.ScreenInterface>`_
    * - data
-     - `DataPackageEndpointInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.DataPackageEndpointInterface>`_
+     - `DataInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.DataInterface>`_
 
 Testing
 -----------

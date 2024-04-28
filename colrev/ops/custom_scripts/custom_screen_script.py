@@ -20,9 +20,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.ScreenPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.ScreenInterface)
 class CustomScreen:
     """Class for custom screen scripts"""
 

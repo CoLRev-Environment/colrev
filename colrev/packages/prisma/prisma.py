@@ -23,9 +23,7 @@ import colrev.package_manager.package_settings
 from colrev.constants import Filepaths
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.DataPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
 @dataclass
 class PRISMA(JsonSchemaMixin):
     """Create a PRISMA diagram"""

@@ -16,9 +16,7 @@ import colrev.record.record
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrescreenPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
 class CustomPrescreen:
     """Class for custom prescreen scripts"""
 

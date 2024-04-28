@@ -20,9 +20,7 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrescreenPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
 @dataclass
 class CoLRevCLIPrescreen(JsonSchemaMixin):
     """CLI-based prescreen"""

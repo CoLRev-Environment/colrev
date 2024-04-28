@@ -20,9 +20,7 @@ from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.DataPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
 @dataclass
 class GithubPages(JsonSchemaMixin):
     """Export the literature review into a Github Page"""

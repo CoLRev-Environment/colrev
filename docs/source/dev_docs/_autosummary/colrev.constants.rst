@@ -23,6 +23,7 @@ colrev.constants
       Colors
       DefectCodes
       ENTRYTYPES
+      EndpointType
       ExitCodes
       FieldSet
       FieldValues
@@ -34,7 +35,6 @@ colrev.constants
       OperationsType
       PDFDefectCodes
       PDFPathType
-      PackageEndpointType
       RecordState
       ScreenCriterionType
       SearchSourceHeuristicStatus

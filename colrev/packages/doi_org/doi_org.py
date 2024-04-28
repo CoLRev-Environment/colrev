@@ -19,7 +19,7 @@ from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 
 # Note: not (yet) implemented as a full search_source
-# (including SearchSourcePackageEndpointInterface, packages_endpoints.json)
+# (including SearchSourceInterface, packages_endpoints.json)
 
 # pylint: disable=too-few-public-methods
 

@@ -25,9 +25,7 @@ from colrev.constants import RecordState
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.DedupePackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.DedupeInterface)
 @dataclass
 class CurationDedupe(JsonSchemaMixin):
     """Deduplication endpoint for curations with full journals/proceedings

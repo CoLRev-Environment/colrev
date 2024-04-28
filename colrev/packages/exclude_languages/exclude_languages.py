@@ -22,9 +22,7 @@ from colrev.constants import RecordState
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
 @dataclass
 class ExcludeLanguagesPrep(JsonSchemaMixin):
     """Prepares records by excluding ones that are not in the languages_to_include"""

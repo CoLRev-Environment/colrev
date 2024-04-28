@@ -19,9 +19,7 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PDFPrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PDFPrepInterface)
 @dataclass
 class GROBIDTEI(JsonSchemaMixin):
     """Prepare PDFs by creating an annotated TEI document"""

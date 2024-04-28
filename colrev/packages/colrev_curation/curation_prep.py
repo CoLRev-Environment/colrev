@@ -20,9 +20,7 @@ from colrev.constants import RecordState
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
 @dataclass
 class CurationPrep(JsonSchemaMixin):
     """Preparation of curations"""

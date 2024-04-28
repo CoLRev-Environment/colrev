@@ -35,9 +35,7 @@ class Field(JsonSchemaMixin):
     data_type: str
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.DataPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
 @dataclass
 class StructuredData(JsonSchemaMixin):
     """Summarize the literature in a structured data extraction (a table)"""

@@ -21,9 +21,7 @@ from colrev.constants import Fields
 from colrev.constants import RecordState
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.ScreenPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.ScreenInterface)
 @dataclass
 class TableScreen(JsonSchemaMixin):
     """Screen documents using tables (exported and imported)"""

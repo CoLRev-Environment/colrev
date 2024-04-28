@@ -25,10 +25,10 @@ import colrev.process.operation
 import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import OperationsType
-from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
@@ -149,7 +149,7 @@ class Prep(colrev.process.operation.Operation):
         *,
         prior: colrev.record.record_prep.PrepRecord,
         preparation_record: colrev.record.record_prep.PrepRecord,
-        prep_package_endpoint: colrev.package_manager.interfaces.PrepPackageEndpointInterface,
+        prep_package_endpoint: colrev.package_manager.interfaces.PrepInterface,
     ) -> None:
         if not self.debug_mode:
             return
@@ -840,7 +840,7 @@ class Prep(colrev.process.operation.Operation):
         for prep_package_endpoint in prep_round.prep_package_endpoints:
 
             prep_class = package_manager.get_package_endpoint_class(
-                package_type=PackageEndpointType.prep,
+                package_type=EndpointType.prep,
                 package_identifier=prep_package_endpoint["endpoint"],
             )
             self.prep_package_endpoints[prep_package_endpoint["endpoint"]] = prep_class(

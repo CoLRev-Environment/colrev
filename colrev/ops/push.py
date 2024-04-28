@@ -7,10 +7,10 @@ from pathlib import Path
 
 import colrev.process.operation
 from colrev.constants import Colors
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
-from colrev.constants import PackageEndpointType
 
 
 class Push(colrev.process.operation.Operation):
@@ -99,7 +99,7 @@ class Push(colrev.process.operation.Operation):
             source = source_l[0]
 
             search_source_class = package_manager.get_package_endpoint_class(
-                package_type=PackageEndpointType.search_source,
+                package_type=EndpointType.search_source,
                 package_identifier=source.endpoint,
             )
             endpoint = search_source_class(

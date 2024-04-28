@@ -27,9 +27,7 @@ from colrev.constants import SearchType
 # https://dev.springernature.com/
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
 class SpringerLinkSearchSource(JsonSchemaMixin):
     """Springer Link"""

@@ -20,9 +20,7 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
 @dataclass
 class ExcludeComplementaryMaterialsPrep(JsonSchemaMixin):
     """Prepares records by excluding complementary materials

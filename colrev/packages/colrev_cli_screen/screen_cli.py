@@ -22,9 +22,7 @@ from colrev.constants import Fields
 from colrev.constants import ScreenCriterionType
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.ScreenPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.ScreenInterface)
 @dataclass
 class CoLRevCLIScreen(JsonSchemaMixin):
     """Screen documents using a CLI"""

@@ -17,7 +17,7 @@ import colrev.package_manager.package
 import colrev.process.operation
 import colrev.record.record
 import colrev.settings
-from colrev.constants import PackageEndpointType
+from colrev.constants import EndpointType
 from colrev.constants import SearchType
 
 if typing.TYPE_CHECKING:  # pragma: no cover
@@ -39,7 +39,7 @@ class DocRegistryManager:
         self.packages = packages
 
         self.package_endpoints_json: typing.Dict[str, list] = {
-            x.name: [] for x in colrev.package_manager.interfaces.PACKAGE_TYPE_OVERVIEW
+            x.name: [] for x in colrev.package_manager.interfaces.ENDPOINT_OVERVIEW
         }
         self.docs_for_index: typing.Dict[str, list] = {}
 
@@ -62,7 +62,7 @@ class DocRegistryManager:
     ) -> None:
         # package_endpoints_json: should be updated based on the package classes etc.
 
-        for endpoint_type in PackageEndpointType:
+        for endpoint_type in EndpointType:
             if not package.has_endpoint(endpoint_type):
                 continue
 
@@ -90,7 +90,7 @@ class DocRegistryManager:
                 "ci_supported": endpoint_class.ci_supported,
             }
 
-            if endpoint_type == PackageEndpointType.search_source:
+            if endpoint_type == EndpointType.search_source:
                 endpoint_item["search_types"] = [
                     x.value for x in endpoint_class.search_types
                 ]

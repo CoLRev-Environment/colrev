@@ -19,9 +19,7 @@ from colrev.constants import RecordState
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrescreenPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
 @dataclass
 class ConditionalPrescreen(JsonSchemaMixin):
     """Conditional prescreen (currently: include all)"""

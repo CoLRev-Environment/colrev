@@ -15,9 +15,7 @@ import colrev.record.record
 from colrev.constants import Fields
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
 @dataclass
 class AddJournalRanking(JsonSchemaMixin):
     """Class for add _journal_ranking"""

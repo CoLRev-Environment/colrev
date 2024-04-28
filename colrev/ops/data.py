@@ -10,10 +10,10 @@ import pandas as pd
 import colrev.packages.grobid_tei.grobid_tei
 import colrev.process.operation
 from colrev.constants import Colors
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import OperationsType
-from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
@@ -345,7 +345,7 @@ class Data(colrev.process.operation.Operation):
                 )
 
             data_class = self.package_manager.get_package_endpoint_class(
-                package_type=PackageEndpointType.data,
+                package_type=EndpointType.data,
                 package_identifier=data_package_endpoint["endpoint"],
             )
 

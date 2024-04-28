@@ -24,9 +24,7 @@ from colrev.constants import PDFDefectCodes
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PDFPrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PDFPrepInterface)
 @dataclass
 class OCRMyPDF(JsonSchemaMixin):
     """Prepare PDFs by applying OCR based on OCRmyPDF"""

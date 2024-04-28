@@ -20,9 +20,7 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
 @dataclass
 class LocalIndexPrep(JsonSchemaMixin):
     """Prepares records based on LocalIndex metadata"""

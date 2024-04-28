@@ -25,9 +25,7 @@ from colrev.constants import Fields
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
 @dataclass
 class DOIFromURLsPrep(JsonSchemaMixin):
     """Prepares records by retrieving its DOI from the website (URL)"""

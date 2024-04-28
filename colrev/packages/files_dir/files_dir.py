@@ -39,9 +39,7 @@ from colrev.writer.write_utils import write_file
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
 class FilesSearchSource(JsonSchemaMixin):
     """Files directories (PDFs based on GROBID)"""

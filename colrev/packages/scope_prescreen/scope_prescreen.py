@@ -25,9 +25,7 @@ from colrev.constants import RecordState
 # to check: https://asistdl.onlinelibrary.wiley.com/doi/full/10.1002/asi.24816
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrescreenPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
 @dataclass
 class ScopePrescreen(JsonSchemaMixin):
     """Rule-based prescreen (scope)"""

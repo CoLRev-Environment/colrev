@@ -609,7 +609,7 @@ class ShareStatReq(Enum):
 
 
 # pylint: disable=colrev-missed-constant-usage
-class PackageEndpointType(Enum):
+class EndpointType(Enum):
     """An enum for the types of PackageEndpoints"""
 
     # pylint: disable=C0103

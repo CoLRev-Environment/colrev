@@ -17,9 +17,7 @@ import colrev.record.record
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrepManPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrepManInterface)
 @dataclass
 class CurationJupyterNotebookManPrep(JsonSchemaMixin):
     """Manual preparation based on a Jupyter Notebook"""

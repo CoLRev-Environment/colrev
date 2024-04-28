@@ -22,9 +22,7 @@ from colrev.constants import SearchType
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
 class TaylorAndFrancisSearchSource(JsonSchemaMixin):
     """Taylor and Francis"""

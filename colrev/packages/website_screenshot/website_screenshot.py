@@ -27,9 +27,7 @@ from colrev.constants import RecordState
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PDFGetPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PDFGetInterface)
 @dataclass
 class WebsiteScreenshot(JsonSchemaMixin):
     """Get PDFs from website screenshot (for "online" ENTRYTYPES)"""

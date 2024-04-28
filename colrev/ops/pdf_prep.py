@@ -15,10 +15,10 @@ import colrev.packages.grobid_tei.grobid_tei
 import colrev.process.operation
 import colrev.record.record_pdf
 from colrev.constants import Colors
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
-from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
@@ -431,7 +431,7 @@ class PDFPrep(colrev.process.operation.Operation):
         ) in self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints:
 
             pdf_prep_class = package_manager.get_package_endpoint_class(
-                package_type=PackageEndpointType.pdf_prep,
+                package_type=EndpointType.pdf_prep,
                 package_identifier=pdf_prep_package_endpoint["endpoint"],
             )
             self.pdf_prep_package_endpoints[pdf_prep_package_endpoint["endpoint"]] = (

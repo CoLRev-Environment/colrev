@@ -8,9 +8,9 @@ from pathlib import Path
 import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
-from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
@@ -439,7 +439,7 @@ class Screen(colrev.process.operation.Operation):
             screen_package_endpoint
         ) in self.review_manager.settings.screen.screen_package_endpoints:
             screen_class = package_manager.get_package_endpoint_class(
-                package_type=PackageEndpointType.screen,
+                package_type=EndpointType.screen,
                 package_identifier=screen_package_endpoint["endpoint"],
             )
             endpoint = screen_class(

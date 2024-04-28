@@ -31,9 +31,9 @@ import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
-from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
 
@@ -243,7 +243,7 @@ def exit(
     "--type",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=PackageEndpointType.review_type,
+            package_type=EndpointType.review_type,
         )
     ),
     default="colrev.literature_review",
@@ -446,7 +446,7 @@ def retrieve(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=PackageEndpointType.search_source,
+            package_type=EndpointType.search_source,
         )
     ),
     help="""Search source to be added.""",
@@ -636,7 +636,7 @@ def load(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=PackageEndpointType.prep,
+            package_type=EndpointType.prep,
         )
     ),
     help="""Prep package to be added.""",
@@ -772,7 +772,7 @@ def prep(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=PackageEndpointType.prep_man,
+            package_type=EndpointType.prep_man,
         )
     ),
     help="""Prep-man script  to be added.""",
@@ -867,7 +867,7 @@ def _view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=PackageEndpointType.dedupe,
+            package_type=EndpointType.dedupe,
         ),
         case_sensitive=False,
     ),
@@ -1020,7 +1020,7 @@ def dedupe(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=PackageEndpointType.prescreen,
+            package_type=EndpointType.prescreen,
         )
     ),
     help="""Prescreen package to be added.""",
@@ -1182,7 +1182,7 @@ def prescreen(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=PackageEndpointType.screen,
+            package_type=EndpointType.screen,
         )
     ),
     help="""Screen package to be added.""",
@@ -1455,7 +1455,7 @@ def pdfs(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=PackageEndpointType.pdf_get,
+            package_type=EndpointType.pdf_get,
         )
     ),
     help="""PDF-get package to be added.""",
@@ -1571,7 +1571,7 @@ def pdf_get(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=PackageEndpointType.pdf_get_man,
+            package_type=EndpointType.pdf_get_man,
         )
     ),
     help="""PDF-get-man package to be added.""",
@@ -1715,7 +1715,7 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=PackageEndpointType.pdf_prep,
+            package_type=EndpointType.pdf_prep,
         )
     ),
     help="""PDF-prep package to be added.""",
@@ -1856,7 +1856,7 @@ def _delete_first_pages_cli(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=PackageEndpointType.pdf_prep_man,
+            package_type=EndpointType.pdf_prep_man,
         )
     ),
     help="""PDF-prep-man package to be added.""",
@@ -1973,7 +1973,7 @@ def pdf_prep_man(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=PackageEndpointType.data,
+            package_type=EndpointType.data,
         )
     ),
     help="Data package to be added.",

@@ -23,9 +23,7 @@ from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.DataPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
 @dataclass
 class ColrevCuration(JsonSchemaMixin):
     """CoLRev Curation"""

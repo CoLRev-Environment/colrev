@@ -44,9 +44,7 @@ class BibFormats(Enum):
     rdf_bibliontology = "rdf_bibliontology"
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.DataPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
 @dataclass
 class BibliographyExport(JsonSchemaMixin):
     """Export the sample references in Endpoint format"""

@@ -18,9 +18,7 @@ from colrev.constants import Fields
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.ReviewTypePackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
 @dataclass
 class CuratedMasterdata(JsonSchemaMixin):
     """Curated masterdata"""

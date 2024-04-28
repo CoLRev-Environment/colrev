@@ -13,11 +13,11 @@
 #     package_manager = base_repo_review_manager.get_package_manager()
 #     load_operation = base_repo_review_manager.get_load_operation()
 #     review_type_identifiers = package_manager.discover_packages(
-#         package_type=PackageEndpointType.review_type,
+#         package_type=EndpointType.review_type,
 #         installed_only=True,
 #     )
 #     package_manager.load_packages(
-#         package_type=PackageEndpointType.review_type,
+#         package_type=EndpointType.review_type,
 #         selected_packages=[
 #             {
 #                 "endpoint": p,
@@ -36,11 +36,11 @@
 #         notify_state_transition_operation=False
 #     )
 #     search_source_identifiers = package_manager.discover_packages(
-#         package_type=PackageEndpointType.search_source,
+#         package_type=EndpointType.search_source,
 #         installed_only=True,
 #     )
 #     package_manager.load_packages(
-#         package_type=PackageEndpointType.search_source,
+#         package_type=EndpointType.search_source,
 #         selected_packages=[
 #             {
 #                 "endpoint": p,
@@ -64,11 +64,11 @@
 #         notify_state_transition_operation=False
 #     )
 #     prep_identifiers = package_manager.discover_packages(
-#         package_type=PackageEndpointType.prep,
+#         package_type=EndpointType.prep,
 #         installed_only=True,
 #     )
 #     package_manager.load_packages(
-#         package_type=PackageEndpointType.prep,
+#         package_type=EndpointType.prep,
 #         selected_packages=[
 #             {
 #                 "endpoint": p,
@@ -87,11 +87,11 @@
 #         notify_state_transition_operation=False
 #     )
 #     prep_man_identifiers = package_manager.discover_packages(
-#         package_type=PackageEndpointType.prep_man,
+#         package_type=EndpointType.prep_man,
 #         installed_only=True,
 #     )
 #     package_manager.load_packages(
-#         package_type=PackageEndpointType.prep_man,
+#         package_type=EndpointType.prep_man,
 #         selected_packages=[
 #             {
 #                 "endpoint": p,
@@ -110,11 +110,11 @@
 #         notify_state_transition_operation=False
 #     )
 #     dedupe_identifiers = package_manager.discover_packages(
-#         package_type=PackageEndpointType.dedupe,
+#         package_type=EndpointType.dedupe,
 #         installed_only=True,
 #     )
 #     package_manager.load_packages(
-#         package_type=PackageEndpointType.dedupe,
+#         package_type=EndpointType.dedupe,
 #         selected_packages=[
 #             {"endpoint": p}
 #             for p in dedupe_identifiers
@@ -138,11 +138,11 @@
 #         notify_state_transition_operation=False
 #     )
 #     prescreen_identifiers = package_manager.discover_packages(
-#         package_type=PackageEndpointType.prescreen,
+#         package_type=EndpointType.prescreen,
 #         installed_only=True,
 #     )
 #     package_manager.load_packages(
-#         package_type=PackageEndpointType.prescreen,
+#         package_type=EndpointType.prescreen,
 #         selected_packages=[
 #             {
 #                 "endpoint": p,
@@ -163,11 +163,11 @@
 #         notify_state_transition_operation=False
 #     )
 #     pdf_get_identifiers = package_manager.discover_packages(
-#         package_type=PackageEndpointType.pdf_get,
+#         package_type=EndpointType.pdf_get,
 #         installed_only=True,
 #     )
 #     package_manager.load_packages(
-#         package_type=PackageEndpointType.pdf_get,
+#         package_type=EndpointType.pdf_get,
 #         selected_packages=[
 #             {
 #                 "endpoint": p,
@@ -186,11 +186,11 @@
 #         notify_state_transition_operation=False
 #     )
 #     pdf_get_man_identifiers = package_manager.discover_packages(
-#         package_type=PackageEndpointType.pdf_get_man,
+#         package_type=EndpointType.pdf_get_man,
 #         installed_only=True,
 #     )
 #     package_manager.load_packages(
-#         package_type=PackageEndpointType.pdf_get_man,
+#         package_type=EndpointType.pdf_get_man,
 #         selected_packages=[
 #             {
 #                 "endpoint": p,
@@ -209,11 +209,11 @@
 #         notify_state_transition_operation=False
 #     )
 #     pdf_prep_identifiers = package_manager.discover_packages(
-#         package_type=PackageEndpointType.pdf_prep,
+#         package_type=EndpointType.pdf_prep,
 #         installed_only=True,
 #     )
 #     package_manager.load_packages(
-#         package_type=PackageEndpointType.pdf_prep,
+#         package_type=EndpointType.pdf_prep,
 #         selected_packages=[
 #             {
 #                 "endpoint": p,
@@ -232,11 +232,11 @@
 #         notify_state_transition_operation=False
 #     )
 #     pdf_prep_man_identifiers = package_manager.discover_packages(
-#         package_type=PackageEndpointType.pdf_prep_man,
+#         package_type=EndpointType.pdf_prep_man,
 #         installed_only=True,
 #     )
 #     package_manager.load_packages(
-#         package_type=PackageEndpointType.pdf_prep_man,
+#         package_type=EndpointType.pdf_prep_man,
 #         selected_packages=[
 #             {
 #                 "endpoint": p,
@@ -255,11 +255,11 @@
 #         notify_state_transition_operation=False
 #     )
 #     screen_identifiers = package_manager.discover_packages(
-#         package_type=PackageEndpointType.screen,
+#         package_type=EndpointType.screen,
 #         installed_only=True,
 #     )
 #     package_manager.load_packages(
-#         package_type=PackageEndpointType.screen,
+#         package_type=EndpointType.screen,
 #         selected_packages=[
 #             {
 #                 "endpoint": p,
@@ -278,11 +278,11 @@
 #         notify_state_transition_operation=False
 #     )
 #     data_identifiers = package_manager.discover_packages(
-#         package_type=PackageEndpointType.data,
+#         package_type=EndpointType.data,
 #         installed_only=True,
 #     )
 #     package_manager.load_packages(
-#         package_type=PackageEndpointType.data,
+#         package_type=EndpointType.data,
 #         selected_packages=[
 #             {
 #                 "endpoint": p,
@@ -348,10 +348,10 @@
 # ) -> None:
 #     package_manager = base_repo_review_manager.get_package_manager()
 #     package_manager.dynamically_load_endpoints()
-#     assert PackageEndpointType.search_source in package_manager.endpoints
+#     assert EndpointType.search_source in package_manager.endpoints
 #     assert (
 #         "colrev.crossref"
-#         in package_manager.endpoints[PackageEndpointType.search_source]
+#         in package_manager.endpoints[EndpointType.search_source]
 #     )
 # def test_pyproject_endpoints(
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,

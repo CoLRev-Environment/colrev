@@ -43,9 +43,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 # pylint: disable=too-many-lines
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
 class SemanticScholarSearchSource(JsonSchemaMixin):
     """Semantic Scholar API Search Source"""
@@ -57,7 +55,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     endpoint = "colrev.semanticscholar"
     ci_supported: bool = True
 
-    # SearchSourcePackageEndpointInterface constants
+    # SearchSourceInterface constants
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/packages/search_sources/semanticscholar.md"

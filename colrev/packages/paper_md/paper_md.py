@@ -33,9 +33,7 @@ from colrev.writer.write_utils import write_file
 
 
 # pylint: disable=too-many-instance-attributes
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.DataPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
 @dataclass
 class PaperMarkdown(JsonSchemaMixin):
     """Synthesize the literature in a markdown paper
@@ -376,7 +374,7 @@ class PaperMarkdown(JsonSchemaMixin):
         # check_operation = colrev.ops.check.CheckOperation(self.review_manager)
 
         # review_type_class = package_manager.get_package_endpoint_class(
-        #     package_type=PackageEndpointType.review_type,
+        #     package_type=EndpointType.review_type,
         #     package_identifier=self.review_type,
         # )
         # check_operation = colrev.ops.check.CheckOperation(self.review_manager)
@@ -384,7 +382,7 @@ class PaperMarkdown(JsonSchemaMixin):
         # review_type_class(operation=check_operation, settings={"endpoint": review_type})
 
         # review_type_endpoint = package_manager.load_packages(
-        #     package_type=PackageEndpointType.review_type,
+        #     package_type=EndpointType.review_type,
         #     selected_packages=[{"endpoint": review_type}],
         #     operation=check_operation,
         #     ignore_not_available=False,

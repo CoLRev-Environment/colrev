@@ -10,9 +10,7 @@ import colrev.package_manager.package_settings
 import colrev.process.operation
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.DataPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
 class CustomData:
     """Class for custom data scripts"""
 

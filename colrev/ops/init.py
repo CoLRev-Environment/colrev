@@ -23,9 +23,9 @@ import colrev.ops.check
 import colrev.review_manager
 import colrev.settings
 from colrev.constants import Colors
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
-from colrev.constants import PackageEndpointType
 
 # pylint: disable=too-few-public-methods
 
@@ -282,7 +282,7 @@ class Initializer:
         # instead of creating a new settings.json
         package_manager = self.review_manager.get_package_manager()
         review_type_class = package_manager.get_package_endpoint_class(
-            package_type=PackageEndpointType.review_type,
+            package_type=EndpointType.review_type,
             package_identifier=self.review_type,
         )
         check_operation = colrev.ops.check.CheckOperation(self.review_manager)

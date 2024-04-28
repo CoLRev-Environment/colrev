@@ -37,9 +37,7 @@ from colrev.constants import SearchType
 # pylint: disable=unused-argument
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
 class EuropePMCSearchSource(JsonSchemaMixin):
     """Europe PMC"""

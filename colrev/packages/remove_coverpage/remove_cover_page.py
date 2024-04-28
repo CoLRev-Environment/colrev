@@ -23,9 +23,7 @@ from colrev.constants import Filepaths
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PDFPrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PDFPrepInterface)
 @dataclass
 class PDFCoverPage(JsonSchemaMixin):
     """Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers)"""

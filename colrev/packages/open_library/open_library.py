@@ -23,16 +23,14 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 # Note: not (yet) implemented as a full search_source
-# (including SearchSourcePackageEndpointInterface, packages_endpoints.json)
+# (including SearchSourceInterface, packages_endpoints.json)
 
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=unused-argument
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
 class OpenLibrarySearchSource(JsonSchemaMixin):
     """OpenLibrary API"""

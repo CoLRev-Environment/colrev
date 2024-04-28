@@ -19,9 +19,7 @@ from colrev.constants import Fields
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
 @dataclass
 class RemoveError500URLsPrep(JsonSchemaMixin):
     """Prepares records by removing urls that are not available"""

@@ -9,56 +9,56 @@ import colrev.process.operation
 import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
-from colrev.constants import PackageEndpointType
 
 
 def _get_endpoint_with_type(operation: colrev.process.operation.Operation) -> tuple:
     settings = operation.review_manager.settings
     package_type_dict = {
         OperationsType.search: {
-            "package_type": PackageEndpointType.search_source,
+            "package_type": EndpointType.search_source,
             "endpoint_location": settings.sources,
         },
         OperationsType.prep: {
-            "package_type": PackageEndpointType.prep,
+            "package_type": EndpointType.prep,
             "endpoint_location": settings.prep.prep_rounds[0].prep_package_endpoints,
         },
         OperationsType.prep_man: {
-            "package_type": PackageEndpointType.prep_man,
+            "package_type": EndpointType.prep_man,
             "endpoint_location": settings.prep.prep_man_package_endpoints,
         },
         OperationsType.dedupe: {
-            "package_type": PackageEndpointType.dedupe,
+            "package_type": EndpointType.dedupe,
             "endpoint_location": settings.dedupe.dedupe_package_endpoints,
         },
         OperationsType.prescreen: {
-            "package_type": PackageEndpointType.prescreen,
+            "package_type": EndpointType.prescreen,
             "endpoint_location": settings.prescreen.prescreen_package_endpoints,
         },
         OperationsType.pdf_get: {
-            "package_type": PackageEndpointType.pdf_get,
+            "package_type": EndpointType.pdf_get,
             "endpoint_location": settings.pdf_get.pdf_get_package_endpoints,
         },
         OperationsType.pdf_get_man: {
-            "package_type": PackageEndpointType.pdf_get_man,
+            "package_type": EndpointType.pdf_get_man,
             "endpoint_location": settings.pdf_get.pdf_get_man_package_endpoints,
         },
         OperationsType.pdf_prep: {
-            "package_type": PackageEndpointType.pdf_prep,
+            "package_type": EndpointType.pdf_prep,
             "endpoint_location": settings.pdf_prep.pdf_prep_package_endpoints,
         },
         OperationsType.pdf_prep_man: {
-            "package_type": PackageEndpointType.pdf_prep_man,
+            "package_type": EndpointType.pdf_prep_man,
             "endpoint_location": settings.pdf_prep.pdf_prep_man_package_endpoints,
         },
         OperationsType.screen: {
-            "package_type": PackageEndpointType.screen,
+            "package_type": EndpointType.screen,
             "endpoint_location": settings.screen.screen_package_endpoints,
         },
         OperationsType.data: {
-            "package_type": PackageEndpointType.data,
+            "package_type": EndpointType.data,
             "endpoint_location": settings.data.data_package_endpoints,
         },
     }

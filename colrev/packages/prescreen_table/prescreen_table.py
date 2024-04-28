@@ -23,9 +23,7 @@ from colrev.constants import RecordState
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrescreenPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
 @dataclass
 class TablePrescreen(JsonSchemaMixin):
     """Table-based prescreen (exported and imported)"""

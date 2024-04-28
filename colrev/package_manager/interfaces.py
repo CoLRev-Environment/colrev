@@ -7,7 +7,7 @@ from pathlib import Path
 
 import zope.interface
 
-from colrev.constants import PackageEndpointType
+from colrev.constants import EndpointType
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.process.operation
@@ -31,7 +31,7 @@ class GeneralInterface(zope.interface.Interface):  # pylint: disable=inherit-non
 
 
 # pylint: disable=too-few-public-methods
-class ReviewTypePackageEndpointInterface(
+class ReviewTypeInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for ReviewTypes"""
@@ -42,7 +42,7 @@ class ReviewTypePackageEndpointInterface(
         return settings  # pragma: no cover
 
 
-class SearchSourcePackageEndpointInterface(
+class SearchSourceInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for SearchSources"""
@@ -102,7 +102,7 @@ class SearchSourcePackageEndpointInterface(
 
 
 # pylint: disable=too-few-public-methods
-class PrepPackageEndpointInterface(
+class PrepInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for prep operations"""
@@ -123,7 +123,7 @@ class PrepPackageEndpointInterface(
 
 
 # pylint: disable=too-few-public-methods
-class PrepManPackageEndpointInterface(
+class PrepManInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for prep-man operations"""
@@ -136,7 +136,7 @@ class PrepManPackageEndpointInterface(
 
 
 # pylint: disable=too-few-public-methods
-class DedupePackageEndpointInterface(
+class DedupeInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for dedupe operations"""
@@ -150,7 +150,7 @@ class DedupePackageEndpointInterface(
 
 
 # pylint: disable=too-few-public-methods
-class PrescreenPackageEndpointInterface(
+class PrescreenInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for prescreen operations"""
@@ -163,7 +163,7 @@ class PrescreenPackageEndpointInterface(
 
 
 # pylint: disable=too-few-public-methods
-class PDFGetPackageEndpointInterface(
+class PDFGetInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-get operations"""
@@ -177,7 +177,7 @@ class PDFGetPackageEndpointInterface(
 
 
 # pylint: disable=too-few-public-methods
-class PDFGetManPackageEndpointInterface(
+class PDFGetManInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-get-man operations"""
@@ -191,7 +191,7 @@ class PDFGetManPackageEndpointInterface(
 
 
 # pylint: disable=too-few-public-methods
-class PDFPrepPackageEndpointInterface(
+class PDFPrepInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-prep operations"""
@@ -209,7 +209,7 @@ class PDFPrepPackageEndpointInterface(
 
 
 # pylint: disable=too-few-public-methods
-class PDFPrepManPackageEndpointInterface(
+class PDFPrepManInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-prep-man operations"""
@@ -223,7 +223,7 @@ class PDFPrepManPackageEndpointInterface(
 
 
 # pylint: disable=too-few-public-methods
-class ScreenPackageEndpointInterface(
+class ScreenInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for screen operations"""
@@ -235,7 +235,7 @@ class ScreenPackageEndpointInterface(
         """Run the screen operation"""
 
 
-class DataPackageEndpointInterface(
+class DataInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for data operations"""
@@ -273,64 +273,64 @@ class DataPackageEndpointInterface(
         """Get advice on how to operate the data package endpoint"""
 
 
-PACKAGE_TYPE_OVERVIEW = {
-    PackageEndpointType.review_type: {
-        "import_name": ReviewTypePackageEndpointInterface,
+ENDPOINT_OVERVIEW = {
+    EndpointType.review_type: {
+        "import_name": ReviewTypeInterface,
         "custom_class": "CustomReviewType",
         "operation_name": "operation",
     },
-    PackageEndpointType.search_source: {
-        "import_name": SearchSourcePackageEndpointInterface,
+    EndpointType.search_source: {
+        "import_name": SearchSourceInterface,
         "custom_class": "CustomSearchSource",
         "operation_name": "source_operation",
     },
-    PackageEndpointType.prep: {
-        "import_name": PrepPackageEndpointInterface,
+    EndpointType.prep: {
+        "import_name": PrepInterface,
         "custom_class": "CustomPrep",
         "operation_name": "prep_operation",
     },
-    PackageEndpointType.prep_man: {
-        "import_name": PrepManPackageEndpointInterface,
+    EndpointType.prep_man: {
+        "import_name": PrepManInterface,
         "custom_class": "CustomPrepMan",
         "operation_name": "prep_man_operation",
     },
-    PackageEndpointType.dedupe: {
-        "import_name": DedupePackageEndpointInterface,
+    EndpointType.dedupe: {
+        "import_name": DedupeInterface,
         "custom_class": "CustomDedupe",
         "operation_name": "dedupe_operation",
     },
-    PackageEndpointType.prescreen: {
-        "import_name": PrescreenPackageEndpointInterface,
+    EndpointType.prescreen: {
+        "import_name": PrescreenInterface,
         "custom_class": "CustomPrescreen",
         "operation_name": "prescreen_operation",
     },
-    PackageEndpointType.pdf_get: {
-        "import_name": PDFGetPackageEndpointInterface,
+    EndpointType.pdf_get: {
+        "import_name": PDFGetInterface,
         "custom_class": "CustomPDFGet",
         "operation_name": "pdf_get_operation",
     },
-    PackageEndpointType.pdf_get_man: {
-        "import_name": PDFGetManPackageEndpointInterface,
+    EndpointType.pdf_get_man: {
+        "import_name": PDFGetManInterface,
         "custom_class": "CustomPDFGetMan",
         "operation_name": "pdf_get_man_operation",
     },
-    PackageEndpointType.pdf_prep: {
-        "import_name": PDFPrepPackageEndpointInterface,
+    EndpointType.pdf_prep: {
+        "import_name": PDFPrepInterface,
         "custom_class": "CustomPDFPrep",
         "operation_name": "pdf_prep_operation",
     },
-    PackageEndpointType.pdf_prep_man: {
-        "import_name": PDFPrepManPackageEndpointInterface,
+    EndpointType.pdf_prep_man: {
+        "import_name": PDFPrepManInterface,
         "custom_class": "CustomPDFPrepMan",
         "operation_name": "pdf_prep_man_operation",
     },
-    PackageEndpointType.screen: {
-        "import_name": ScreenPackageEndpointInterface,
+    EndpointType.screen: {
+        "import_name": ScreenInterface,
         "custom_class": "CustomScreen",
         "operation_name": "screen_operation",
     },
-    PackageEndpointType.data: {
-        "import_name": DataPackageEndpointInterface,
+    EndpointType.data: {
+        "import_name": DataInterface,
         "custom_class": "CustomData",
         "operation_name": "data_operation",
     },

@@ -23,9 +23,7 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PDFGetPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PDFGetInterface)
 @dataclass
 class Unpaywall(JsonSchemaMixin):
     """Get PDFs from unpaywall.org"""

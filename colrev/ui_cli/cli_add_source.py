@@ -8,7 +8,7 @@ import inquirer
 
 import colrev.record.record
 from colrev.constants import Colors
-from colrev.constants import PackageEndpointType
+from colrev.constants import EndpointType
 
 # pylint: disable=too-few-public-methods
 
@@ -56,7 +56,7 @@ class CLISourceAdder:
             )
 
         search_source_class = self.package_manager.get_package_endpoint_class(
-            package_type=PackageEndpointType.search_source,
+            package_type=EndpointType.search_source,
             package_identifier=heuristic_source_dict["source_candidate"],
         )
         endpoint = search_source_class(

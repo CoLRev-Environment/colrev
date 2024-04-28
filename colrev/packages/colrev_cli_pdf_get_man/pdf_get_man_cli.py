@@ -24,9 +24,7 @@ from colrev.constants import RecordState
 # pylint: disable=unused-argument
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PDFGetManPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PDFGetManInterface)
 @dataclass
 class CoLRevCLIPDFGetMan(JsonSchemaMixin):
     """Get PDFs manually based on a CLI"""

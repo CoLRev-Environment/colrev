@@ -11,10 +11,10 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.settings
 from colrev.constants import Colors
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
-from colrev.constants import PackageEndpointType
 from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
 
@@ -287,7 +287,7 @@ class Search(colrev.process.operation.Operation):
         results_list = []
         for endpoint in search_sources:
             search_source_class = self.package_manager.get_package_endpoint_class(
-                package_type=PackageEndpointType.search_source,
+                package_type=EndpointType.search_source,
                 package_identifier=endpoint,
             )
             res = search_source_class.heuristic(filepath, data)  # type: ignore
@@ -398,7 +398,7 @@ class Search(colrev.process.operation.Operation):
         self.review_manager.logger.debug("Load available search_source endpoints...")
 
         search_sources = self.package_manager.discover_packages(
-            package_type=PackageEndpointType.search_source
+            package_type=EndpointType.search_source
         )
 
         heuristic_results = {}
@@ -440,7 +440,7 @@ class Search(colrev.process.operation.Operation):
         self.review_manager.settings = self.review_manager.load_settings()
         for source in self._get_search_sources(selection_str=selection_str):
             search_source_class = self.package_manager.get_package_endpoint_class(
-                package_type=PackageEndpointType.search_source,
+                package_type=EndpointType.search_source,
                 package_identifier=source.endpoint,
             )
             endpoint = search_source_class(

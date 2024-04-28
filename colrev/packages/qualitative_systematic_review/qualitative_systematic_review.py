@@ -22,9 +22,7 @@ from colrev.packages.pdf_backward_search.pdf_backward_search import (
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.ReviewTypePackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
 @dataclass
 class QualitativeSystematicReview(JsonSchemaMixin):
     """Qualitative systematic review"""

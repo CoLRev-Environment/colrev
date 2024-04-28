@@ -24,9 +24,7 @@ from colrev.constants import RecordState
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
 @dataclass
 class YearVolIssPrep(JsonSchemaMixin):
     """Prepares records based on year-volume-issue dependency"""

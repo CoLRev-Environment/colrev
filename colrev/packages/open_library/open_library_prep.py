@@ -18,9 +18,7 @@ from colrev.constants import Fields
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
 @dataclass
 class OpenLibraryMetadataPrep(JsonSchemaMixin):
     """Prepares records based on openlibrary.org metadata"""

@@ -18,9 +18,7 @@ from colrev.constants import RecordState
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PDFPrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PDFPrepInterface)
 class CustomPDFPrep:
     """Class for custom pdf-prep scripts"""
 

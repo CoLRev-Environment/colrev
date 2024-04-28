@@ -12,10 +12,10 @@ import colrev.process.operation
 import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import OperationsType
-from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 from colrev.constants import SearchType
 
@@ -158,7 +158,7 @@ class Load(colrev.process.operation.Operation):
         self,
         source_records_list: list,
         *,
-        source: colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface,
+        source: colrev.package_manager.interfaces.SearchSourceInterface,
     ) -> None:
         # pylint: disable=too-many-branches
         if len(source_records_list) == 0:
@@ -215,7 +215,7 @@ class Load(colrev.process.operation.Operation):
 
     def setup_source_for_load(
         self,
-        source: colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface,
+        source: colrev.package_manager.interfaces.SearchSourceInterface,
         *,
         select_new_records: bool = True,
     ) -> None:
@@ -257,7 +257,7 @@ class Load(colrev.process.operation.Operation):
 
     def load_source_records(
         self,
-        source: colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface,
+        source: colrev.package_manager.interfaces.SearchSourceInterface,
         *,
         keep_ids: bool,
     ) -> None:
@@ -333,7 +333,7 @@ class Load(colrev.process.operation.Operation):
 
     def _add_source_to_settings(
         self,
-        source: colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface,
+        source: colrev.package_manager.interfaces.SearchSourceInterface,
     ) -> None:
 
         # Add to settings (if new filename)
@@ -370,7 +370,7 @@ class Load(colrev.process.operation.Operation):
         for source in sources_settings:
 
             search_source_class = self.package_manager.get_package_endpoint_class(
-                package_type=PackageEndpointType.search_source,
+                package_type=EndpointType.search_source,
                 package_identifier=source.endpoint,
             )
             endpoint = search_source_class(
@@ -387,7 +387,7 @@ class Load(colrev.process.operation.Operation):
     def _validate_load(
         self,
         *,
-        source: colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface,
+        source: colrev.package_manager.interfaces.SearchSourceInterface,
     ) -> None:
         imported_origins = self._get_currently_imported_origin_list()
         imported = len(imported_origins) - source.search_source.len_before

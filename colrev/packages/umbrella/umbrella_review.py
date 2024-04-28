@@ -16,9 +16,7 @@ import colrev.record.record
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.ReviewTypePackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
 @dataclass
 class UmbrellaReview(JsonSchemaMixin):
     """Umbrella review"""

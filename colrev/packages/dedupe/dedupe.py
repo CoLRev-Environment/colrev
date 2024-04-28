@@ -27,9 +27,7 @@ from colrev.constants import RecordState
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.DedupePackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.DedupeInterface)
 @dataclass
 class Dedupe(JsonSchemaMixin):
     """Default deduplication"""

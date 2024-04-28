@@ -10,7 +10,7 @@ from typing import Any
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.doc_registry_manager
 import colrev.package_manager.package
-from colrev.constants import PackageEndpointType
+from colrev.constants import EndpointType
 
 
 class PackageManager:
@@ -18,11 +18,11 @@ class PackageManager:
 
     def __init__(self) -> None:
         self.type_identifier_endpoint_dict = self._load_type_identifier_endpoint_dict()
-        # {PackageEndpointType.review_type:
+        # {EndpointType.review_type:
         #   {'colrev.blank': {'endpoint': 'colrev.packages.review_types.blank.BlankReview'},
         #     ...
         # }
-        self.endpoints: typing.Dict[PackageEndpointType, dict] = {}
+        self.endpoints: typing.Dict[EndpointType, dict] = {}
 
     def _get_package_dir(self, package_identifier: str) -> Path:
         if package_identifier.startswith("colrev."):
@@ -53,8 +53,8 @@ class PackageManager:
     def _load_type_identifier_endpoint_dict(self) -> dict:
 
         type_identifier_endpoint_dict: typing.Dict[
-            PackageEndpointType, typing.Dict[str, Any]
-        ] = {endpoint_type: {} for endpoint_type in PackageEndpointType}
+            EndpointType, typing.Dict[str, Any]
+        ] = {endpoint_type: {} for endpoint_type in EndpointType}
 
         for package_dir in self._get_packages_dirs():
             package = colrev.package_manager.package.Package(package_dir)
@@ -94,13 +94,13 @@ class PackageManager:
         )
         doc_reg_manager.update()
 
-    def discover_packages(self, *, package_type: PackageEndpointType) -> typing.Dict:
+    def discover_packages(self, *, package_type: EndpointType) -> typing.Dict:
         """Discover packages (for cli usage)"""
 
         return self.type_identifier_endpoint_dict[package_type]
 
     def get_package_endpoint_class(  # type: ignore
-        self, *, package_type: PackageEndpointType, package_identifier: str
+        self, *, package_type: EndpointType, package_identifier: str
     ):
         """Load a package endpoint"""
 

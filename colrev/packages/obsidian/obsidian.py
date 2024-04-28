@@ -17,9 +17,7 @@ import colrev.record.record
 from colrev.constants import Fields
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.DataPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
 @dataclass
 class Obsidian(JsonSchemaMixin):
     """Export the sample into an Obsidian database"""

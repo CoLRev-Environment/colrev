@@ -18,9 +18,7 @@ import colrev.record.record
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrepPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
 @dataclass
 class EuropePMCMetadataPrep(JsonSchemaMixin):
     """Prepares records based on Europe PCM metadata"""

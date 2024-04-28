@@ -31,9 +31,7 @@ from colrev.writer.write_utils import write_file
 # pylint: disable=too-many-instance-attributes
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PrepManPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PrepManInterface)
 @dataclass
 class ExportManPrep(JsonSchemaMixin):
     """Manual preparation based on exported and imported metadata (and PDFs if any)"""

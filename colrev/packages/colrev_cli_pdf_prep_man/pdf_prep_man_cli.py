@@ -28,9 +28,7 @@ from colrev.constants import RecordState
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(
-    colrev.package_manager.interfaces.PDFPrepManPackageEndpointInterface
-)
+@zope.interface.implementer(colrev.package_manager.interfaces.PDFPrepManInterface)
 @dataclass
 class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     """Manually prepare PDFs based on a CLI (not yet implemented)"""
