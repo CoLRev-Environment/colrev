@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.eric.eric:ERICSearchSource"
+search_source = "colrev.packages.eric.src.eric:ERICSearchSource"

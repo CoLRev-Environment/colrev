@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.pdf_backward_search.pdf_backward_search:BackwardSearchSource"
+search_source = "colrev.packages.pdf_backward_search.src.pdf_backward_search:BackwardSearchSource"

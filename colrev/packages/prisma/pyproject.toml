@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-data = "colrev.packages.prisma.prisma:PRISMA"
+data = "colrev.packages.prisma.src.prisma:PRISMA"

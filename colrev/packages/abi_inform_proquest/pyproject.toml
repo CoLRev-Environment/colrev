@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.abi_inform_proquest.abi_inform_proquest:ABIInformProQuestSearchSource"
+search_source = "colrev.packages.abi_inform_proquest.src.abi_inform_proquest:ABIInformProQuestSearchSource"

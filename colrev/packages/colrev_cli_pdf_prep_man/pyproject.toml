@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-pdf_prep_man = "colrev.packages.colrev_cli_pdf_prep_man.pdf_prep_man_cli:CoLRevCLIPDFManPrep"
+pdf_prep_man = "colrev.packages.colrev_cli_pdf_prep_man.src.pdf_prep_man_cli:CoLRevCLIPDFManPrep"

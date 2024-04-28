@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.acm_digital_library.acm_digital_library:ACMDigitalLibrarySearchSource"
+search_source = "colrev.packages.acm_digital_library.src.acm_digital_library:ACMDigitalLibrarySearchSource"

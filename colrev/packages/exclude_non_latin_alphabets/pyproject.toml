@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-prep = "colrev.packages.exclude_non_latin_alphabets.exclude_non_latin_alphabets:ExcludeNonLatinAlphabetsPrep"
+prep = "colrev.packages.exclude_non_latin_alphabets.src.exclude_non_latin_alphabets:ExcludeNonLatinAlphabetsPrep"

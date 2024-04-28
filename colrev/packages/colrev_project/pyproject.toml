@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.colrev_project.colrev_project:ColrevProjectSearchSource"
+search_source = "colrev.packages.colrev_project.src.colrev_project:ColrevProjectSearchSource"

@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-review_type = "colrev.packages.umbrella.umbrella_review:UmbrellaReview"
+review_type = "colrev.packages.umbrella.src.umbrella_review:UmbrellaReview"

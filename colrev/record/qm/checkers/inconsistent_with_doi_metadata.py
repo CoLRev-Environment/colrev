@@ -5,7 +5,7 @@ from __future__ import annotations
 from rapidfuzz import fuzz
 
 import colrev.exceptions as colrev_exceptions
-import colrev.packages.crossref.crossref_search_source as crossref_connector
+import colrev.packages.crossref.src.crossref_search_source as crossref_connector
 import colrev.record.qm.quality_model
 from colrev.constants import DefectCodes
 from colrev.constants import Fields

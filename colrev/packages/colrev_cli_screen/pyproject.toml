@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-screen = "colrev.packages.colrev_cli_screen.screen_cli:CoLRevCLIScreen"
+screen = "colrev.packages.colrev_cli_screen.src.screen_cli:CoLRevCLIScreen"

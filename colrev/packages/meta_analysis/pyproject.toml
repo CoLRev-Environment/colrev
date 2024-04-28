@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-review_type = "colrev.packages.meta_analysis.meta_analysis:MetaAnalysis"
+review_type = "colrev.packages.meta_analysis.src.meta_analysis:MetaAnalysis"

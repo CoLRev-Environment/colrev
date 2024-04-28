@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-prep = "colrev.packages.general_polish.general_polish:GeneralPolishPrep"
+prep = "colrev.packages.general_polish.src.general_polish:GeneralPolishPrep"

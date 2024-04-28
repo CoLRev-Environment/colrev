@@ -5,8 +5,8 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-import colrev.packages.conditional_prescreen.conditional_prescreen
-import colrev.packages.prescreen_table.prescreen_table
+import colrev.packages.conditional_prescreen.src.conditional_prescreen
+import colrev.packages.prescreen_table.src.prescreen_table
 import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
@@ -14,6 +14,10 @@ from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+
+ConditionalPrescreen = (
+    colrev.packages.conditional_prescreen.src.conditional_prescreen.ConditionalPrescreen
+)
 
 
 class Prescreen(colrev.process.operation.Operation):
@@ -38,7 +42,7 @@ class Prescreen(colrev.process.operation.Operation):
     def export_table(self, *, export_table_format: str = "csv") -> None:
         """Export a table with records to prescreen"""
 
-        endpoint = colrev.packages.prescreen_table.prescreen_table.TablePrescreen(
+        endpoint = colrev.packages.prescreen_table.src.prescreen_table.TablePrescreen(
             prescreen_operation=self, settings={"endpoint": "export_table"}
         )
         records = self.review_manager.dataset.load_records_dict()
@@ -51,7 +55,7 @@ class Prescreen(colrev.process.operation.Operation):
     def import_table(self, *, import_table_path: str) -> None:
         """Import a table with prescreened records"""
 
-        endpoint = colrev.packages.prescreen_table.prescreen_table.TablePrescreen(
+        endpoint = colrev.packages.prescreen_table.src.prescreen_table.TablePrescreen(
             prescreen_operation=self, settings={"endpoint": "import_table"}
         )
         records = self.review_manager.dataset.load_records_dict()
@@ -96,7 +100,7 @@ class Prescreen(colrev.process.operation.Operation):
             if RecordState.md_processed == r[Fields.STATUS]
         ]
 
-        endpoint = colrev.packages.conditional_prescreen.conditional_prescreen.ConditionalPrescreen(
+        endpoint = ConditionalPrescreen(
             prescreen_operation=self, settings={"endpoint": "include_all"}
         )
         endpoint.run_prescreen(records, [])

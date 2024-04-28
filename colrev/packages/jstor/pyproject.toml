@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.jstor.jstor:JSTORSearchSource"
+search_source = "colrev.packages.jstor.src.jstor:JSTORSearchSource"

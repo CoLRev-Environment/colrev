@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-prep = "colrev.packages.get_doi_from_urls.doi_from_urls_prep:DOIFromURLsPrep"
+prep = "colrev.packages.get_doi_from_urls.src.doi_from_urls_prep:DOIFromURLsPrep"

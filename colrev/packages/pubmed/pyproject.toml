@@ -10,5 +10,5 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.pubmed.pubmed:PubMedSearchSource"
-prep = "colrev.packages.pubmed.pubmed_metadata_prep:PubmedMetadataPrep"
+search_source = "colrev.packages.pubmed.src.pubmed:PubMedSearchSource"
+prep = "colrev.packages.pubmed.src.pubmed_metadata_prep:PubmedMetadataPrep"

@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.ieee.ieee:IEEEXploreSearchSource"
+search_source = "colrev.packages.ieee.src.ieee:IEEEXploreSearchSource"

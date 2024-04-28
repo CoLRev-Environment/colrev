@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-prescreen = "colrev.packages.prescreen_table.prescreen_table:TablePrescreen"
+prescreen = "colrev.packages.prescreen_table.src.prescreen_table:TablePrescreen"

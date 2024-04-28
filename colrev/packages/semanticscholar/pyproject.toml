@@ -10,5 +10,5 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.semanticscholar.semanticscholar_search_source:SemanticScholarSearchSource"
-prep = "colrev.packages.semanticscholar.semantic_scholar_prep:SemanticScholarPrep"
+search_source = "colrev.packages.semanticscholar.src.semanticscholar_search_source:SemanticScholarSearchSource"
+prep = "colrev.packages.semanticscholar.src.semantic_scholar_prep:SemanticScholarPrep"

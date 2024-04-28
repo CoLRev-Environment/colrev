@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.ebsco_host.ebsco_host:EbscoHostSearchSource"
+search_source = "colrev.packages.ebsco_host.src.ebsco_host:EbscoHostSearchSource"

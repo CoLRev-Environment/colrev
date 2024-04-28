@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-prep = "colrev.packages.get_year_from_vol_iss_jour.year_vol_iss_prep:YearVolIssPrep"
+prep = "colrev.packages.get_year_from_vol_iss_jour.src.year_vol_iss_prep:YearVolIssPrep"

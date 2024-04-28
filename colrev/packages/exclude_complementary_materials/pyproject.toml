@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-prep = "colrev.packages.exclude_complementary_materials.exclude_complementary_materials:ExcludeComplementaryMaterialsPrep"
+prep = "colrev.packages.exclude_complementary_materials.src.exclude_complementary_materials:ExcludeComplementaryMaterialsPrep"

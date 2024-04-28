@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-dedupe = "colrev.packages.dedupe.dedupe:Dedupe"
+dedupe = "colrev.packages.dedupe.src.dedupe:Dedupe"

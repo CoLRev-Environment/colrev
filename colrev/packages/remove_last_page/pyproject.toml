@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-pdf_prep = "colrev.packages.remove_last_page.remove_last_page:PDFLastPage"
+pdf_prep = "colrev.packages.remove_last_page.src.remove_last_page:PDFLastPage"

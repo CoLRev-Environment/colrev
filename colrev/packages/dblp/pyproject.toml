@@ -10,5 +10,5 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.dblp.dblp:DBLPSearchSource"
-prep = "colrev.packages.dblp.dblp_metadata_prep:DBLPMetadataPrep"
+search_source = "colrev.packages.dblp.src.dblp:DBLPSearchSource"
+prep = "colrev.packages.dblp.src.dblp_metadata_prep:DBLPMetadataPrep"

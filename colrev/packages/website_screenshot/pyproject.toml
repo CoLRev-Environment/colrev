@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-pdf_get = "colrev.packages.website_screenshot.website_screenshot:WebsiteScreenshot"
+pdf_get = "colrev.packages.website_screenshot.src.website_screenshot:WebsiteScreenshot"

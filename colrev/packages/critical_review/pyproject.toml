@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-review_type = "colrev.packages.critical_review.critical_review:CriticalReview"
+review_type = "colrev.packages.critical_review.src.critical_review:CriticalReview"

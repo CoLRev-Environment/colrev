@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-prep = "colrev.packages.source_specific_prep.source_specific_prep:SourceSpecificPrep"
+prep = "colrev.packages.source_specific_prep.src.source_specific_prep:SourceSpecificPrep"

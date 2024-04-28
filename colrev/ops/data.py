@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
-import colrev.packages.grobid_tei.grobid_tei
+import colrev.packages.grobid_tei.src.grobid_tei
 import colrev.process.operation
 from colrev.constants import Colors
 from colrev.constants import EndpointType
@@ -69,7 +69,7 @@ class Data(colrev.process.operation.Operation):
                 }
             )
 
-        tei_path = colrev.packages.grobid_tei.grobid_tei.GROBIDTEI.TEI_PATH_RELATIVE
+        tei_path = colrev.packages.grobid_tei.src.grobid_tei.GROBIDTEI.TEI_PATH_RELATIVE
         required_records_ids = self.get_record_ids_for_synthesis(records)
 
         missing = []

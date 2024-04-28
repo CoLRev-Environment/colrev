@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-dedupe = "colrev.packages.curation_missing_dedupe.curation_missing_dedupe:CurationMissingDedupe"
+dedupe = "colrev.packages.curation_missing_dedupe.src.curation_missing_dedupe:CurationMissingDedupe"

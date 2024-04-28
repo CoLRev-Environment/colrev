@@ -10,5 +10,5 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.open_library.open_library:OpenLibrarySearchSource"
-prep = "colrev.packages.open_library.open_library_prep:OpenLibraryMetadataPrep"
+search_source = "colrev.packages.open_library.src.open_library:OpenLibrarySearchSource"
+prep = "colrev.packages.open_library.src.open_library_prep:OpenLibraryMetadataPrep"

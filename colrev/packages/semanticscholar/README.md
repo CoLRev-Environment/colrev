@@ -56,6 +56,13 @@ So far, the `rerun` functionality, which provides a more efficient way of redoin
 
 Additionally, the result file has not been adapted to author search yet. Although it is still possible to search for authors by their S2-ID, the result file will not include any useful information but the url to the authors' web page in Semantic Scholar.
 
+## prep
+
+Note: This document is currently under development. It will contain the following elements.
+
+- description
+- example
+
 ## Links
 - [SemanticScholar](https://www.semanticscholar.org)
 - [SemanticScholarAPI](https://www.semanticscholar.org/product/api/tutorial#searching-and-retrieving-paper-details)

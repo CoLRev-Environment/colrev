@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.open_citations_forward_search.open_citations_forward_search:OpenCitationsSearchSource"
+search_source = "colrev.packages.open_citations_forward_search.src.open_citations_forward_search:OpenCitationsSearchSource"

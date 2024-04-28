@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-screen = "colrev.packages.screen_table.screen_table:TableScreen"
+screen = "colrev.packages.screen_table.src.screen_table:TableScreen"

@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-prep = "colrev.packages.remove_urls_with_500_errors.remove_urls_with_500_errors:RemoveError500URLsPrep"
+prep = "colrev.packages.remove_urls_with_500_errors.src.remove_urls_with_500_errors:RemoveError500URLsPrep"

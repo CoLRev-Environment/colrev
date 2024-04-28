@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.web_of_science.web_of_science:WebOfScienceSearchSource"
+search_source = "colrev.packages.web_of_science.src.web_of_science:WebOfScienceSearchSource"

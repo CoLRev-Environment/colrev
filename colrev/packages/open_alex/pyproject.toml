@@ -10,5 +10,5 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.open_alex.open_alex:OpenAlexSearchSource"
-prep = "colrev.packages.open_alex.open_alex_metadata_prep:OpenAlexMetadataPrep"
+search_source = "colrev.packages.open_alex.src.open_alex:OpenAlexSearchSource"
+prep = "colrev.packages.open_alex.src.open_alex_metadata_prep:OpenAlexMetadataPrep"

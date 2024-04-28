@@ -3,7 +3,7 @@
 import pytest
 
 import colrev.ops.prep
-import colrev.packages.exclude_languages.exclude_languages
+import colrev.packages.exclude_languages.src.exclude_languages
 from colrev.constants import Fields
 
 # flake8: noqa
@@ -12,11 +12,11 @@ from colrev.constants import Fields
 @pytest.fixture(scope="package", name="elp_elp")
 def elp(
     prep_operation: colrev.ops.prep.Prep,
-) -> colrev.packages.exclude_languages.exclude_languages.ExcludeLanguagesPrep:
+) -> colrev.packages.exclude_languages.src.exclude_languages.ExcludeLanguagesPrep:
     """Fixture returning an ExcludeLanguagesPrep instance"""
     settings = {"endpoint": "colrev.exclude_languages"}
     elp_instance = (
-        colrev.packages.exclude_languages.exclude_languages.ExcludeLanguagesPrep(
+        colrev.packages.exclude_languages.src.exclude_languages.ExcludeLanguagesPrep(
             prep_operation=prep_operation, settings=settings
         )
     )
@@ -119,7 +119,7 @@ def elp(
     ],
 )
 def test_prep_exclude_languages(
-    elp_elp: colrev.packages.exclude_languages.exclude_languages.ExcludeLanguagesPrep,
+    elp_elp: colrev.packages.exclude_languages.src.exclude_languages.ExcludeLanguagesPrep,
     input_value: dict,
     expected: dict,
 ) -> None:

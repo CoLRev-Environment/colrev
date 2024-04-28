@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-data = "colrev.packages.bibliography_export.bibliography_export:BibliographyExport"
+data = "colrev.packages.bibliography_export.src.bibliography_export:BibliographyExport"

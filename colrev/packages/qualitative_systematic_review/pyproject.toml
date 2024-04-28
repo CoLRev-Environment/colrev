@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-review_type = "colrev.packages.qualitative_systematic_review.qualitative_systematic_review:QualitativeSystematicReview"
+review_type = "colrev.packages.qualitative_systematic_review.src.qualitative_systematic_review:QualitativeSystematicReview"

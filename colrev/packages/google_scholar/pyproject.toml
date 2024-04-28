@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.google_scholar.google_scholar:GoogleScholarSearchSource"
+search_source = "colrev.packages.google_scholar.src.google_scholar:GoogleScholarSearchSource"

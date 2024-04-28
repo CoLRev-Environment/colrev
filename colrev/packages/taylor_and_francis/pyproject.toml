@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.taylor_and_francis.taylor_and_francis:TaylorAndFrancisSearchSource"
+search_source = "colrev.packages.taylor_and_francis.src.taylor_and_francis:TaylorAndFrancisSearchSource"

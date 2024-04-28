@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-prep = "colrev.packages.exclude_languages.exclude_languages:ExcludeLanguagesPrep"
+prep = "colrev.packages.exclude_languages.src.exclude_languages:ExcludeLanguagesPrep"

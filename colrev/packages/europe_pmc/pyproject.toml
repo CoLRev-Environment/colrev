@@ -10,5 +10,5 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.europe_pmc.europe_pmc:EuropePMCSearchSource"
-prep = "colrev.packages.europe_pmc.europe_pmc_prep:EuropePMCMetadataPrep"
+search_source = "colrev.packages.europe_pmc.src.europe_pmc:EuropePMCSearchSource"
+prep = "colrev.packages.europe_pmc.src.europe_pmc_prep:EuropePMCMetadataPrep"

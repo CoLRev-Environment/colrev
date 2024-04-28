@@ -10,5 +10,5 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.crossref.crossref_search_source:CrossrefSearchSource"
-prep = "colrev.packages.crossref.crossref_prep:CrossrefMetadataPrep"
+search_source = "colrev.packages.crossref.src.crossref_search_source:CrossrefSearchSource"
+prep = "colrev.packages.crossref.src.crossref_prep:CrossrefMetadataPrep"

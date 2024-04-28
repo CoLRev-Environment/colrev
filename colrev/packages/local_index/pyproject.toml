@@ -10,6 +10,6 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-search_source = "colrev.packages.local_index.local_index:LocalIndexSearchSource"
-prep = "colrev.packages.local_index.local_index_prep:LocalIndexPrep"
-pdf_get = "colrev.packages.local_index.local_index_pdf_get:LocalIndexPDFGet"
+search_source = "colrev.packages.local_index.src.local_index:LocalIndexSearchSource"
+prep = "colrev.packages.local_index.src.local_index_prep:LocalIndexPrep"
+pdf_get = "colrev.packages.local_index.src.local_index_pdf_get:LocalIndexPDFGet"

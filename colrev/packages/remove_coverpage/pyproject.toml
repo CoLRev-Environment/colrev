@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-pdf_prep = "colrev.packages.remove_coverpage.remove_cover_page:PDFCoverPage"
+pdf_prep = "colrev.packages.remove_coverpage.src.remove_cover_page:PDFCoverPage"

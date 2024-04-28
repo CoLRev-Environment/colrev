@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-prescreen = "colrev.packages.scope_prescreen.scope_prescreen:ScopePrescreen"
+prescreen = "colrev.packages.scope_prescreen.src.scope_prescreen:ScopePrescreen"

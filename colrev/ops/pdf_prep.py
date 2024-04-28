@@ -11,7 +11,7 @@ from pathlib import Path
 import requests
 
 import colrev.exceptions as colrev_exceptions
-import colrev.packages.grobid_tei.grobid_tei
+import colrev.packages.grobid_tei.src.grobid_tei
 import colrev.process.operation
 import colrev.record.record_pdf
 from colrev.constants import Colors
@@ -364,7 +364,7 @@ class PDFPrep(colrev.process.operation.Operation):
         """Generate TEI documents for included records"""
 
         self.review_manager.logger.info("Generate TEI documents")
-        endpoint = colrev.packages.grobid_tei.grobid_tei.GROBIDTEI(
+        endpoint = colrev.packages.grobid_tei.src.grobid_tei.GROBIDTEI(
             pdf_prep_operation=self, settings={"endpoint": "colrev.grobid_tei"}
         )
         records = self.review_manager.dataset.load_records_dict()
