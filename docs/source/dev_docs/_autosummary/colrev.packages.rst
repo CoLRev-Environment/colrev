@@ -33,9 +33,10 @@ colrev.packages
    colrev.packages.arxiv
    colrev.packages.bibliography_export
    colrev.packages.blank
-   colrev.packages.citeas
+   colrev.packages.colrev_cli_pdf_get_man
    colrev.packages.colrev_cli_pdf_prep_man
    colrev.packages.colrev_cli_prescreen
+   colrev.packages.colrev_cli_screen
    colrev.packages.colrev_curation
    colrev.packages.colrev_project
    colrev.packages.conceptual_review
@@ -43,14 +44,11 @@ colrev.packages
    colrev.packages.critical_review
    colrev.packages.crossref
    colrev.packages.curated_masterdata
-   colrev.packages.curation_dedupe
-   colrev.packages.curation_jupyter_prep_man
+   colrev.packages.curation_full_outlet_dedupe
    colrev.packages.curation_missing_dedupe
-   colrev.packages.curation_prep
    colrev.packages.dblp
    colrev.packages.dedupe
    colrev.packages.descriptive_review
-   colrev.packages.doi_metadata_prep
    colrev.packages.doi_org
    colrev.packages.download_from_website
    colrev.packages.ebsco_host
@@ -64,6 +62,9 @@ colrev.packages
    colrev.packages.files_dir
    colrev.packages.general_polish
    colrev.packages.get_doi_from_urls
+   colrev.packages.get_masterdata_from_citeas
+   colrev.packages.get_masterdata_from_doi
+   colrev.packages.get_year_from_vol_iss_jour
    colrev.packages.github_pages
    colrev.packages.google_scholar
    colrev.packages.grobid_tei
@@ -71,7 +72,7 @@ colrev.packages
    colrev.packages.jstor
    colrev.packages.literature_review
    colrev.packages.local_index
-   colrev.packages.meta-analysis
+   colrev.packages.meta_analysis
    colrev.packages.narrative_review
    colrev.packages.obsidian
    colrev.packages.ocrmypdf
@@ -80,7 +81,7 @@ colrev.packages
    colrev.packages.open_library
    colrev.packages.paper_md
    colrev.packages.pdf_backward_search
-   colrev.packages.pdf_get_man_cli
+   colrev.packages.prep_man_curation_jupyter
    colrev.packages.prescreen_table
    colrev.packages.prisma
    colrev.packages.psycinfo
@@ -94,7 +95,6 @@ colrev.packages
    colrev.packages.scope_prescreen
    colrev.packages.scoping_review
    colrev.packages.scopus
-   colrev.packages.screen_cli
    colrev.packages.screen_table
    colrev.packages.screen_utils
    colrev.packages.semanticscholar
@@ -106,10 +106,9 @@ colrev.packages
    colrev.packages.taylor_and_francis
    colrev.packages.theoretical_review
    colrev.packages.trid
-   colrev.packages.umbrella_review
+   colrev.packages.umbrella
    colrev.packages.unknown_source
    colrev.packages.unpaywall
    colrev.packages.web_of_science
    colrev.packages.website_screenshot
    colrev.packages.wiley
-   colrev.packages.year_vol_iss_prep

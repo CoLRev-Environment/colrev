@@ -687,7 +687,7 @@ class Dedupe(colrev.process.operation.Operation):
             # Note : load package/script at this point because the same script
             # may run with different parameters
 
-            dedupe_class = package_manager.load_package_endpoint(
+            dedupe_class = package_manager.get_package_endpoint_class(
                 package_type=PackageEndpointType.dedupe,
                 package_identifier=dedupe_package_endpoint["endpoint"],
             )

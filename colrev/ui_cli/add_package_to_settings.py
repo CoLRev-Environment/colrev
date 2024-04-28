@@ -83,7 +83,7 @@ def add_package_to_settings(
         f"package:{Colors.END} {package_identifier}"
     )
 
-    e_class = package_manager.load_package_endpoint(
+    e_class = package_manager.get_package_endpoint_class(
         package_type=package_type,
         package_identifier=package_identifier,
     )

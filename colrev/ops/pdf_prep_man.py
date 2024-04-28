@@ -328,7 +328,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
         )
         for pdf_prep_man_package_endpoint in pdf_prep_man_package_endpoints:
 
-            pdf_prep_man_class = package_manager.load_package_endpoint(
+            pdf_prep_man_class = package_manager.get_package_endpoint_class(
                 package_type=PackageEndpointType.pdf_prep_man,
                 package_identifier=pdf_prep_man_package_endpoint["endpoint"],
             )

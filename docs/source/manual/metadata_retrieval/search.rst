@@ -137,10 +137,10 @@ The development of additional SearchSources is tracked in the `SearchSource road
 DB searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
+.. datatemplate:json:: ../../search_source_types.json
 
     {{ make_list_table_from_mappings(
-        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
         data['DB'],
         title='',
         columns=[55,25,20]
@@ -151,10 +151,10 @@ DB searches
 API searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
+.. datatemplate:json:: ../../search_source_types.json
 
     {{ make_list_table_from_mappings(
-        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
         data['API'],
         title='',
         columns=[55,25,20]
@@ -165,10 +165,10 @@ API searches
 TOC searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
+.. datatemplate:json:: ../../search_source_types.json
 
     {{ make_list_table_from_mappings(
-        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
         data['TOC'],
         title='',
         columns=[55,25,20]
@@ -179,10 +179,10 @@ TOC searches
 BACKWARD_SEARCH searches
 ----------------------------------------
 
-.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
+.. datatemplate:json:: ../../search_source_types.json
 
     {{ make_list_table_from_mappings(
-        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
         data['BACKWARD_SEARCH'],
         title='',
         columns=[55,25,20]
@@ -193,10 +193,10 @@ BACKWARD_SEARCH searches
 FORWARD_SEARCH searches
 ----------------------------------------
 
-.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
+.. datatemplate:json:: ../../search_source_types.json
 
     {{ make_list_table_from_mappings(
-        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
         data['FORWARD_SEARCH'],
         title='',
         columns=[55,25,20]
@@ -207,10 +207,10 @@ FORWARD_SEARCH searches
 FILES searches
 -------------------
 
-.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
+.. datatemplate:json:: ../../search_source_types.json
 
     {{ make_list_table_from_mappings(
-        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
         data['FILES'],
         title='',
         columns=[55,25,20]
@@ -222,10 +222,10 @@ FILES searches
 OTHER searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
+.. datatemplate:json:: ../../search_source_types.json
 
     {{ make_list_table_from_mappings(
-        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
         data['OTHER'],
         title='',
         columns=[55,25,20]
@@ -237,10 +237,10 @@ OTHER searches
 MD searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
+.. datatemplate:json:: ../../search_source_types.json
 
     {{ make_list_table_from_mappings(
-        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
         data['MD'],
         title='',
         columns=[55,25,20]

@@ -79,7 +79,6 @@ prep
    packages/colrev.exclude_languages.rst
    packages/colrev.exclude_non_latin_alphabets.rst
    packages/colrev.general_polish.rst
-   packages/colrev.get_doi_from_sem_scholar.rst
    packages/colrev.get_doi_from_urls.rst
    packages/colrev.get_masterdata_from_citeas.rst
    packages/colrev.get_masterdata_from_doi.rst
@@ -90,6 +89,7 @@ prep
    packages/colrev.pubmed.rst
    packages/colrev.remove_broken_ids.rst
    packages/colrev.remove_urls_with_500_errors.rst
+   packages/colrev.semanticscholar.rst
    packages/colrev.source_specific_prep.rst
 
 prep_man

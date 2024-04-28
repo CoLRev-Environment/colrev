@@ -1,5 +1,5 @@
 [project]
-name = "colrev.blank_review"
+name = "colrev.blank"
 description = "CoLRev package for blank_review"
 version = "0.1.0"
 authors = [
@@ -10,4 +10,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
-review_type = "colrev.packages.blank_review.blank_review:BlankReview"
+review_type = "colrev.packages.blank.blank:BlankReview"

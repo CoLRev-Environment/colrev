@@ -198,7 +198,7 @@ class PDFGetMan(colrev.process.operation.Operation):
         package_manager = self.review_manager.get_package_manager()
 
         for pdf_get_man_package_endpoint in pdf_get_man_package_endpoints:
-            pdf_get_man_class = package_manager.load_package_endpoint(
+            pdf_get_man_class = package_manager.get_package_endpoint_class(
                 package_type=PackageEndpointType.pdf_get_man,
                 package_identifier=pdf_get_man_package_endpoint["endpoint"],
             )

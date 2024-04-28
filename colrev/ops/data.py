@@ -344,7 +344,7 @@ class Data(colrev.process.operation.Operation):
                     f"Data: {data_package_endpoint['endpoint'].replace('colrev.', '')}"
                 )
 
-            data_class = self.package_manager.load_package_endpoint(
+            data_class = self.package_manager.get_package_endpoint_class(
                 package_type=PackageEndpointType.data,
                 package_identifier=data_package_endpoint["endpoint"],
             )

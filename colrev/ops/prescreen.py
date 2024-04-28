@@ -345,7 +345,7 @@ class Prescreen(colrev.process.operation.Operation):
                 f"Run {prescreen_package_endpoint['endpoint']}"
             )
 
-            prescreen_class = package_manager.load_package_endpoint(
+            prescreen_class = package_manager.get_package_endpoint_class(
                 package_type=PackageEndpointType.prescreen,
                 package_identifier=prescreen_package_endpoint["endpoint"],
             )

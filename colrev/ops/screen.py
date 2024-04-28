@@ -438,7 +438,7 @@ class Screen(colrev.process.operation.Operation):
         for (
             screen_package_endpoint
         ) in self.review_manager.settings.screen.screen_package_endpoints:
-            screen_class = package_manager.load_package_endpoint(
+            screen_class = package_manager.get_package_endpoint_class(
                 package_type=PackageEndpointType.screen,
                 package_identifier=screen_package_endpoint["endpoint"],
             )

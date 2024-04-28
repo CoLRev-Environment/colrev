@@ -17,5 +17,5 @@ colrev.package\_manager.package\_manager.PackageManager
       :nosignatures:
 
       ~PackageManager.discover_packages
-      ~PackageManager.load_package_endpoint
+      ~PackageManager.get_package_endpoint_class
       ~PackageManager.update_package_list

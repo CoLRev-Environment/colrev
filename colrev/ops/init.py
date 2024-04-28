@@ -281,7 +281,7 @@ class Initializer:
         # Principle: adapt values provided by the default settings.json
         # instead of creating a new settings.json
         package_manager = self.review_manager.get_package_manager()
-        review_type_class = package_manager.load_package_endpoint(
+        review_type_class = package_manager.get_package_endpoint_class(
             package_type=PackageEndpointType.review_type,
             package_identifier=self.review_type,
         )

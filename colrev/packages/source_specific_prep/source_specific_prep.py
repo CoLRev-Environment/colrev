@@ -64,7 +64,7 @@ class SourceSpecificPrep(JsonSchemaMixin):
             # if source.endpoint not in self.search_sources.packages:
             #     continue
             # endpoint = self.search_sources.packages[source.endpoint]
-            search_source_class = self.package_manager.load_package_endpoint(
+            search_source_class = self.package_manager.get_package_endpoint_class(
                 package_type=PackageEndpointType.search_source,
                 package_identifier=source.endpoint,
             )

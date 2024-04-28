@@ -430,7 +430,7 @@ class PDFPrep(colrev.process.operation.Operation):
             pdf_prep_package_endpoint
         ) in self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints:
 
-            pdf_prep_class = package_manager.load_package_endpoint(
+            pdf_prep_class = package_manager.get_package_endpoint_class(
                 package_type=PackageEndpointType.pdf_prep,
                 package_identifier=pdf_prep_package_endpoint["endpoint"],
             )

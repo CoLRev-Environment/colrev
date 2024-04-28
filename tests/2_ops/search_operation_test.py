@@ -57,7 +57,7 @@ def test_search_add_source(  # type: ignore
 
     package_manager = search_operation.review_manager.get_package_manager()
 
-    search_source_class = package_manager.load_package_endpoint(
+    search_source_class = package_manager.get_package_endpoint_class(
         package_type=PackageEndpointType.search_source,
         package_identifier=add_source.endpoint,
     )

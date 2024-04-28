@@ -3,7 +3,7 @@
 import pytest
 
 import colrev.ops.prep
-import colrev.packages.year_vol_iss_prep.year_vol_iss_prep
+import colrev.packages.get_year_from_vol_iss_jour.year_vol_iss_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import OperationsType
@@ -12,11 +12,11 @@ from colrev.constants import OperationsType
 @pytest.fixture(name="yvip")
 def get_yvip(
     prep_operation: colrev.ops.prep.Prep,
-) -> colrev.packages.year_vol_iss_prep.year_vol_iss_prep.YearVolIssPrep:
+) -> colrev.packages.get_year_from_vol_iss_jour.year_vol_iss_prep.YearVolIssPrep:
     """Get the YearVolIssPrep fixture"""
     settings = {"endpoint": "colrev.exclude_languages"}
     prep_operation.review_manager.notified_next_operation = OperationsType.check
-    yvip = colrev.packages.year_vol_iss_prep.year_vol_iss_prep.YearVolIssPrep(
+    yvip = colrev.packages.get_year_from_vol_iss_jour.year_vol_iss_prep.YearVolIssPrep(
         prep_operation=prep_operation, settings=settings
     )
     return yvip
@@ -63,7 +63,7 @@ def get_yvip(
     ],
 )
 def test_prep_year_vol_iss(
-    yvip: colrev.packages.year_vol_iss_prep.year_vol_iss_prep.YearVolIssPrep,
+    yvip: colrev.packages.get_year_from_vol_iss_jour.year_vol_iss_prep.YearVolIssPrep,
     input_rec: dict,
     expected: dict,
     prep_operation: colrev.ops.prep.Prep,

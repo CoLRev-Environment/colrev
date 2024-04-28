@@ -284,7 +284,7 @@ class PrepMan(colrev.process.operation.Operation):
         for (
             prep_man_package_endpoint
         ) in self.review_manager.settings.prep.prep_man_package_endpoints:
-            prep_man_class = package_manager.load_package_endpoint(
+            prep_man_class = package_manager.get_package_endpoint_class(
                 package_type=PackageEndpointType.prep_man,
                 package_identifier=prep_man_package_endpoint["endpoint"],
             )

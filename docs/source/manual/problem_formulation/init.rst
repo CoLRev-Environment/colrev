@@ -24,10 +24,10 @@ With this parameter, the ``settings.json`` file is created with reasonable defau
 
 The specific setup of the available review types is available in the following table:
 
-.. datatemplate:json:: ../../../../colrev/packages/package_endpoints.json
+.. datatemplate:json:: ../../package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("Review type", "short_description"), ("Status", "status_linked")],
+        [("Identifier", "package_endpoint_identifier"), ("Review type", "short_description"), ("Status", "status")],
         data['review_type'],
         title='',
         columns=[25,55,20]

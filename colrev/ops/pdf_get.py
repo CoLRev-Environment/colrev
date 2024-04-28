@@ -191,7 +191,7 @@ class PDFGet(colrev.process.operation.Operation):
             pdf_get_package_endpoint
         ) in self.review_manager.settings.pdf_get.pdf_get_package_endpoints:
 
-            pdf_get_class = self.package_manager.load_package_endpoint(
+            pdf_get_class = self.package_manager.get_package_endpoint_class(
                 package_type=PackageEndpointType.pdf_get,
                 package_identifier=pdf_get_package_endpoint["endpoint"],
             )

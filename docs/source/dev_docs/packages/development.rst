@@ -138,7 +138,6 @@ Built-in packages development process
             "package_endpoint_identifier": "colrev.asreview_prescreen",
             "endpoint": "colrev.packages.prescreen.asreview.ASReviewPrescreen",
             "status": "|EXPERIMENTAL|",
-            "status_linked": "|EXPERIMENTAL|",
             "short_description": "ASReview-based prescreen (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/prescreen/asreview.md>`_)",
             "ci_supported": false
         },

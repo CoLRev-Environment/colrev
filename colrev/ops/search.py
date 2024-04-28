@@ -286,7 +286,7 @@ class Search(colrev.process.operation.Operation):
     ) -> list:
         results_list = []
         for endpoint in search_sources:
-            search_source_class = self.package_manager.load_package_endpoint(
+            search_source_class = self.package_manager.get_package_endpoint_class(
                 package_type=PackageEndpointType.search_source,
                 package_identifier=endpoint,
             )
@@ -439,7 +439,7 @@ class Search(colrev.process.operation.Operation):
         # Reload the settings because the search sources may have been updated
         self.review_manager.settings = self.review_manager.load_settings()
         for source in self._get_search_sources(selection_str=selection_str):
-            search_source_class = self.package_manager.load_package_endpoint(
+            search_source_class = self.package_manager.get_package_endpoint_class(
                 package_type=PackageEndpointType.search_source,
                 package_identifier=source.endpoint,
             )

@@ -51,10 +51,10 @@ To export the bibliography in different formats, run any of the following:
 
 The following options for ``data`` are available:
 
-.. datatemplate:json:: ../../../../colrev/packages/package_endpoints.json
+.. datatemplate:json:: ../../package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("Data packages", "short_description"), ("Status", "status_linked")],
+        [("Identifier", "package_endpoint_identifier"), ("Data packages", "short_description"), ("Status", "status")],
         data['data'],
         title='',
         columns=[25,55,20]

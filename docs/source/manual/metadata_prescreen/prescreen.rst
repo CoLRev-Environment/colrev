@@ -41,10 +41,10 @@ or in general (using ``colrev prescreen --include_all_always``).
 
 The following options for ``prescreen`` are available:
 
-.. datatemplate:json:: ../../../../colrev/packages/package_endpoints.json
+.. datatemplate:json:: ../../package_endpoints.json
 
     {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("Prescreen packages", "short_description"), ("Status", "status_linked")],
+        [("Identifier", "package_endpoint_identifier"), ("Prescreen packages", "short_description"), ("Status", "status")],
         data['prescreen'],
         title='',
         columns=[25,55,20]

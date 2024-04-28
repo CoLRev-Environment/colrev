@@ -11,3 +11,4 @@ colrev_doc_link = "README.md"
 [tool.colrev]
 dev_status = "maturing"
 data = "colrev.packages.colrev_curation.colrev_curation:ColrevCuration"
+prep = "colrev.packages.colrev_curation.curation_prep:CurationPrep"

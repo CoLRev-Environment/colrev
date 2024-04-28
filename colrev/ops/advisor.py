@@ -389,7 +389,7 @@ class Advisor:
                     data_package_endpoint
                 ) in self.review_manager.settings.data.data_package_endpoints:
 
-                    data_class = package_manager.load_package_endpoint(
+                    data_class = package_manager.get_package_endpoint_class(
                         package_type=PackageEndpointType.data,
                         package_identifier=data_package_endpoint["endpoint"],
                     )

@@ -5,8 +5,8 @@ version = "0.1.0"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]
-documentation = "link to docs"
-colrev_doc_link = "link to be used for the colrev docs"
+documentation = "README.md"
+colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "maturing"
