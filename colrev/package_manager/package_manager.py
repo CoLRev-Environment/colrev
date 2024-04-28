@@ -7,14 +7,9 @@ import typing
 from pathlib import Path
 from typing import Any
 
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.doc_registry_manager
-import colrev.package_manager.interfaces
 import colrev.package_manager.package
-import colrev.process.operation
-import colrev.record.record
-import colrev.settings
 from colrev.constants import PackageEndpointType
 
 
@@ -68,6 +63,7 @@ class PackageManager:
         return type_identifier_endpoint_dict
 
     def _load_python_packages(self) -> list:
+        # import colrev.env.utils
         # filedata = colrev.env.utils.get_package_file_content(
         #     module="colrev.packages", filename=Path("packages.json")
         # )
@@ -87,7 +83,7 @@ class PackageManager:
         return packages
 
     def update_package_list(self) -> None:
-        """Generates the packages/package_endpoints.json
+        """Generates the package_endpoints.json
         based on the packages in packages/packages.json
         and the endpoints.json files in the top directory of each package."""
 

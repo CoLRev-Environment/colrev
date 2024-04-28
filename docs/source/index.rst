@@ -101,10 +101,9 @@ The manual is available under the `Creative Commons Attribution-NonCommercial-No
    :maxdepth: 1
 
    dev_docs/setup
-   dev_docs/api
    dev_docs/packages
    dev_docs/dev_status
-   dev_docs/linters
+   dev_docs/api
    Github repository <https://github.com/CoLRev-Environment/colrev>
    PyPI <https://pypi.org/project/colrev/>
 

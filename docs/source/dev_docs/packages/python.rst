@@ -1,4 +1,4 @@
-Python
+Programmatic Python
 ==================================
 
 Programmatic use of CoLRev in other Python applications is supported. The following code block illustrates the required steps.
