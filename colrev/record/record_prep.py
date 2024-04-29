@@ -61,6 +61,8 @@ class PrepRecord(colrev.record.record.Record):
         def mostly_upper_case(input_string: str) -> bool:
             input_string = input_string.replace(".", "").replace(",", "")
             words = input_string.split()
+            if len(words) == 0:
+                return False
             return sum(word.isupper() for word in words) / len(words) > 0.8
 
         input_string = input_string.replace("\n", " ")
