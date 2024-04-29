@@ -142,11 +142,7 @@ The following endpoint - interface pairs are available:
    * - data
      - `DataInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.DataInterface>`_
 
-Testing
------------
-
-* Tests for built-in packages are currently in the tests of the CoLRev packages.
-* See `tests/REAMDE.md <https://github.com/CoLRev-Environment/colrev/tree/main/tests>` for details.
+* Set ``ci_supported`` flag to True/False depending on, if this package is not able to run in CI environment
 
 Documentation
 -----------------
@@ -154,6 +150,12 @@ Documentation
 * Link the documentation (`README.md`) in the pyproject.toml.
 * To integrate the package documentation into the official CoLRev documentation, run the ``colrev env --update_package_list`` command. This updates the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/docs/source/package_endpoints.json>`_, and the `search_source_types.json.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/docs/source/search_source_types.json.json>`_, which are used to generate the documentation pages.
 * See `tests/REAMDE.md <https://github.com/CoLRev-Environment/colrev/tree/main/docs>` for details on building the CoLRev docs.
+
+Testing
+-----------
+
+* Tests for built-in packages are currently in the tests of the CoLRev packages.
+* See `tests/REAMDE.md <https://github.com/CoLRev-Environment/colrev/tree/main/tests>` for details.
 
 Publication
 ------------
@@ -164,18 +166,13 @@ Best practices
 ------------------
 
 * Remember to install CoLRev in editable mode, so that changes are immediately available (run `pip install -e /path/to/cloned/colrev`)
-* Recommendations:
-
-  * Use the `colrev constants <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/constants.py>`__
-  * Get paths from review_manager
-  * Use the ``logger`` and ``colrev_report_logger`` to help users examine and validate the process, including links to the docs where instructions for tracing and fixing errors are available.
-
 * Check the other package implementations for getting a good idea on how to proceed
-* Set ``ci_supported`` flag to True/False depending on, if this package is not able to run in CI environment, as asreview is not able to run in CI env, it's ``ci_supported`` flag is False
+* Use the `colrev constants <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/constants.py>`__
+* Get paths from review_manager
+* Use the ``logger`` and ``colrev_report_logger`` to help users examine and validate the process, including links to the docs where instructions for tracing and fixing errors are available.
 * Before committing do a pre-commit test
-* Poetry is used for dependency management (run `poetry add <package_name>` to add a new dependency)
+* Use poetry for dependency management (run `poetry add <package_name>` to add a new dependency)
 * Once the package development is completed, make a PR to the CoLRev, with brief description of the package.
-
 
 Package development resources
 ------------------------------
