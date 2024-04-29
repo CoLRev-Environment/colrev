@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 ### Fixed
 -->
 
+## 0.12.2 - 2024-04-29
+
+- Update CoLRev packages (including interfaces, development docs etc.)
+- Refactoring (local-index)
+- Implement json-loader
+- Make ui_web (dash, blinker) optional to prevent errors in WSL
+- Bugfixes
+
 ## 0.12.1 - 2024-04-17
 
 - Refactor and test (dataset, records, provenance, local_index)
