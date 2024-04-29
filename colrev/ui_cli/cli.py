@@ -345,10 +345,10 @@ def dashboard(
     verbose: bool,
 ) -> None:
     """Allows to track project progress through dashboard"""
-    import colrev.ui_web.dashboard
+    import colrev.packages.ui_web.src.dashboard
 
     try:
-        colrev.ui_web.dashboard.main()
+        colrev.packages.ui_web.src.dashboard.main()
     except colrev_exceptions.NoRecordsError:
         print("No records imported yet.")
     except colrev_exceptions.CoLRevException as exc:
@@ -2583,7 +2583,7 @@ def settings(
     # review_manager = colrev.review_manager.ReviewManager(
     #     force_mode=True, verbose_mode=verbose
     # )
-    # settings_operation = colrev.ui_web.settings_editor.SettingsEditor(
+    # settings_operation = colrev.packages.ui_web.src.settings_editor.SettingsEditor(
     #     review_manager=review_manager
     # )
     # settings_operation.open_settings_editor()
@@ -2815,12 +2815,12 @@ def show(  # type: ignore
 #     """CoLRev web interface."""
 
 #
-#     import colrev.ui_web.settings_editor
+#     import colrev.packages.ui_web.src.settings_editor
 
 #     review_manager = colrev.review_manager.ReviewManager(
 #         force_mode=force, verbose_mode=verbose
 #     )
-#     se_instance = colrev.ui_web.settings_editor.SettingsEditor(
+#     se_instance = colrev.packages.ui_web.src.settings_editor.SettingsEditor(
 #         review_manager=review_manager
 #     )
 #     se_instance.open_settings_editor()

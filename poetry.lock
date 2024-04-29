@@ -191,7 +191,7 @@ name = "blinker"
 version = "1.8.1"
 description = "Fast, simple object-to-object and broadcast signaling"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "blinker-1.8.1-py3-none-any.whl", hash = "sha256:5f1cdeff423b77c31b89de0565cd03e5275a03028f44b2b15f912632a58cced6"},
@@ -657,7 +657,7 @@ name = "dash"
 version = "2.16.1"
 description = "A Python framework for building reactive web-apps. Developed by Plotly."
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "dash-2.16.1-py3-none-any.whl", hash = "sha256:8a9d2a618e415113c0b2a4d25d5dc4df5cb921f733b33dde75559db2316b1df1"},
@@ -691,7 +691,7 @@ name = "dash-core-components"
 version = "2.0.0"
 description = "Core component suite for Dash"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "dash_core_components-2.0.0-py3-none-any.whl", hash = "sha256:52b8e8cce13b18d0802ee3acbc5e888cb1248a04968f962d63d070400af2e346"},
@@ -703,7 +703,7 @@ name = "dash-html-components"
 version = "2.0.0"
 description = "Vanilla HTML components for Dash"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "dash_html_components-2.0.0-py3-none-any.whl", hash = "sha256:b42cc903713c9706af03b3f2548bda4be7307a7cf89b7d6eae3da872717d1b63"},
@@ -715,7 +715,7 @@ name = "dash-table"
 version = "5.0.0"
 description = "Dash table"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "dash_table-5.0.0-py3-none-any.whl", hash = "sha256:19036fa352bb1c11baf38068ec62d172f0515f73ca3276c79dee49b95ddc16c9"},
@@ -916,7 +916,7 @@ name = "flask"
 version = "3.0.3"
 description = "A simple framework for building complex web applications."
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "flask-3.0.3-py3-none-any.whl", hash = "sha256:34e815dfaa43340d1d15a5c3a02b8476004037eb4840b34910c6e21679d288f3"},
@@ -1182,7 +1182,7 @@ name = "importlib-metadata"
 version = "7.1.0"
 description = "Read metadata from Python packages"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "importlib_metadata-7.1.0-py3-none-any.whl", hash = "sha256:30962b96c0c223483ed6cc7280e7f0199feb01a0e40cfae4d4450fc6fab1f570"},
@@ -1265,7 +1265,7 @@ name = "itsdangerous"
 version = "2.2.0"
 description = "Safely pass data to untrusted environments and back."
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "itsdangerous-2.2.0-py3-none-any.whl", hash = "sha256:c6242fc49e35958c8b15141343aa660db5fc54d4f13a1db01a3f5891b98700ef"},
@@ -2091,7 +2091,7 @@ name = "plotly"
 version = "5.21.0"
 description = "An open-source, interactive data visualization library for Python"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "plotly-5.21.0-py3-none-any.whl", hash = "sha256:a33f41fd5922e45b2b253f795b200d14452eb625790bb72d0a72cf1328a6abbf"},
@@ -2817,7 +2817,7 @@ name = "retrying"
 version = "1.3.4"
 description = "Retrying"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "retrying-1.3.4-py3-none-any.whl", hash = "sha256:8cc4d43cb8e1125e0ff3344e9de678fefd85db3b750b81b2240dc0183af37b35"},
@@ -3626,7 +3626,7 @@ name = "werkzeug"
 version = "3.0.2"
 description = "The comprehensive WSGI web application library."
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "werkzeug-3.0.2-py3-none-any.whl", hash = "sha256:3aac3f5da756f93030740bc235d3e09449efcf65f2f55e3602e1d851b8f48795"},
@@ -3712,8 +3712,9 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [extras]
 dev = ["coverage", "pylint", "pytest", "pytest-mock", "pytest-skip-slow", "requests-mock", "types-click"]
 docs = ["Sphinx", "repoze-sphinx-autointerface", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinx_collapse", "sphinxcontrib.datatemplates"]
+web-ui = ["dash"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4"
-content-hash = "f879830bee664aad366c57ceb14e6a1a2e1ef2cce3782d22cb5e2af541dc9eac"
+content-hash = "94e6384013ed2bb4cb294c99f25091ef37db2a56599b689cdd16f88fedcb5416"
