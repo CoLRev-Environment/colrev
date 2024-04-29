@@ -147,14 +147,14 @@ lxml = ["lxml"]
 
 [[package]]
 name = "bib-dedupe"
-version = "0.7.3"
+version = "0.7.4"
 description = "Identify and merge duplicates in bibliographic records"
 category = "main"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "bib_dedupe-0.7.3-py3-none-any.whl", hash = "sha256:14e922eb3b51b4337ad1714b0b4822667b1a4ef75567c7137ab1dd9fbbc508e7"},
-    {file = "bib_dedupe-0.7.3.tar.gz", hash = "sha256:69e826ad2f0a8052bad28397c540e265ea365047e9fa040030d229349a8e4d4f"},
+    {file = "bib_dedupe-0.7.4-py3-none-any.whl", hash = "sha256:b87ece52e3f17f101ff86c3fc05537db57f58749374def2c1c979a6851bc2729"},
+    {file = "bib_dedupe-0.7.4.tar.gz", hash = "sha256:b1889e6791763daf5754f6f62082b16ad408fa01375b04df3a4466b381b48c0a"},
 ]
 
 [package.dependencies]
@@ -188,14 +188,14 @@ wcwidth = ">=0.1.4"
 
 [[package]]
 name = "blinker"
-version = "1.7.0"
+version = "1.8.1"
 description = "Fast, simple object-to-object and broadcast signaling"
 category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "blinker-1.7.0-py3-none-any.whl", hash = "sha256:c3f865d4d54db7abc53758a01601cf343fe55b84c1de4e3fa910e420b438d5b9"},
-    {file = "blinker-1.7.0.tar.gz", hash = "sha256:e6820ff6fa4e4d1d8e2747c2283749c3f547e4fee112b98555cdcdae32996182"},
+    {file = "blinker-1.8.1-py3-none-any.whl", hash = "sha256:5f1cdeff423b77c31b89de0565cd03e5275a03028f44b2b15f912632a58cced6"},
+    {file = "blinker-1.8.1.tar.gz", hash = "sha256:da44ec748222dcd0105ef975eed946da197d5bdf8bafb6aa92f5bc89da63fa25"},
 ]
 
 [[package]]
@@ -558,17 +558,19 @@ toml = ["tomli"]
 
 [[package]]
 name = "crossrefapi"
-version = "1.5.0"
+version = "1.6.0"
 description = "Library that implements the endpoints of the Crossref API"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.8,<4.0"
 files = [
-    {file = "crossrefapi-1.5.0.tar.gz", hash = "sha256:db4b688d97ec624a243e52532e0ade6172185d2a778c9c7bc458b7ee129bb884"},
+    {file = "crossrefapi-1.6.0-py3-none-any.whl", hash = "sha256:d0b096548d976676a4f5de87ab05dd79981ae92485449acfd072c18a0bf14e61"},
+    {file = "crossrefapi-1.6.0.tar.gz", hash = "sha256:996f80af061782ecdba7368593e3b287f8a6d4e156bd64d76d84291023354995"},
 ]
 
 [package.dependencies]
-requests = ">=2.11.1"
+requests = ">=2.31.0,<3.0.0"
+urllib3 = "1.26.16"
 
 [[package]]
 name = "cryptography"
@@ -2705,14 +2707,14 @@ setuptools = ">=41.0"
 
 [[package]]
 name = "referencing"
-version = "0.34.0"
+version = "0.35.0"
 description = "JSON Referencing + Python"
 category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "referencing-0.34.0-py3-none-any.whl", hash = "sha256:d53ae300ceddd3169f1ffa9caf2cb7b769e92657e4fafb23d34b93679116dfd4"},
-    {file = "referencing-0.34.0.tar.gz", hash = "sha256:5773bd84ef41799a5a8ca72dc34590c041eb01bf9aa02632b4a973fb0181a844"},
+    {file = "referencing-0.35.0-py3-none-any.whl", hash = "sha256:8080727b30e364e5783152903672df9b6b091c926a146a759080b62ca3126cd6"},
+    {file = "referencing-0.35.0.tar.gz", hash = "sha256:191e936b0c696d0af17ad7430a3dc68e88bc11be6514f4757dc890f04ab05889"},
 ]
 
 [package.dependencies]
@@ -3554,18 +3556,18 @@ six = "*"
 
 [[package]]
 name = "urllib3"
-version = "1.26.18"
+version = "1.26.16"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 files = [
-    {file = "urllib3-1.26.18-py2.py3-none-any.whl", hash = "sha256:34b97092d7e0a3a8cf7cd10e386f401b3737364026c45e622aa02903dffe0f07"},
-    {file = "urllib3-1.26.18.tar.gz", hash = "sha256:f8ecc1bba5667413457c529ab955bf8c67b45db799d159066261719e328580a0"},
+    {file = "urllib3-1.26.16-py2.py3-none-any.whl", hash = "sha256:8d36afa7616d8ab714608411b4a3b13e58f463aee519024578e062e141dce20f"},
+    {file = "urllib3-1.26.16.tar.gz", hash = "sha256:8f135f6502756bde6b2a9b28989df5fbe87c9970cecaa69041edcce7f0589b14"},
 ]
 
 [package.extras]
-brotli = ["brotli (==1.0.9)", "brotli (>=1.0.9)", "brotlicffi (>=0.8.0)", "brotlipy (>=0.6.0)"]
+brotli = ["brotli (>=1.0.9)", "brotlicffi (>=0.8.0)", "brotlipy (>=0.6.0)"]
 secure = ["certifi", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "ipaddress", "pyOpenSSL (>=0.14)", "urllib3-secure-extra"]
 socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
@@ -3714,4 +3716,4 @@ docs = ["Sphinx", "repoze-sphinx-autointerface", "sphinx-autodoc-typehints", "sp
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4"
-content-hash = "9b7bd501cfbec325a1a1e616ee2b37a0b026f0e2436fad800d4553be4ec3859d"
+content-hash = "f879830bee664aad366c57ceb14e6a1a2e1ef2cce3782d22cb5e2af541dc9eac"
