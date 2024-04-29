@@ -86,7 +86,7 @@ class GithubPages(JsonSchemaMixin):
         self.git_repo.git.rm("-rf", Path("."))
 
         colrev.env.utils.retrieve_package_file(
-            template_file=Path("packages/data/github_pages/README.md"),
+            template_file=Path("packages/github_pages/github_pages/README.md"),
             target=Path("README.md"),
         )
         project_title = self.review_manager.settings.project.title
@@ -98,13 +98,13 @@ class GithubPages(JsonSchemaMixin):
         self.review_manager.dataset.add_changes(Path("README.md"))
 
         colrev.env.utils.retrieve_package_file(
-            template_file=Path("packages/data/github_pages/index.html"),
+            template_file=Path("packages/github_pages/github_pages/index.html"),
             target=Path("index.html"),
         )
         self.review_manager.dataset.add_changes(Path("index.html"))
 
         colrev.env.utils.retrieve_package_file(
-            template_file=Path("packages/data/github_pages/_config.yml"),
+            template_file=Path("packages/github_pages/github_pages/_config.yml"),
             target=Path("_config.yml"),
         )
         colrev.env.utils.inplace_change(
@@ -115,7 +115,7 @@ class GithubPages(JsonSchemaMixin):
         self.review_manager.dataset.add_changes(Path("_config.yml"))
 
         colrev.env.utils.retrieve_package_file(
-            template_file=Path("packages/data/github_pages/about.md"),
+            template_file=Path("packages/github_pages/github_pages/about.md"),
             target=Path("about.md"),
         )
         self.review_manager.dataset.add_changes(Path("about.md"))
@@ -147,7 +147,9 @@ class GithubPages(JsonSchemaMixin):
         self.git_repo.git.checkout(self.GH_PAGES_BRANCH_NAME)
         if not Path("pre-commit-config.yaml").is_file():
             colrev.env.utils.retrieve_package_file(
-                template_file=Path("packages/data/github_pages/pre-commit-config.yaml"),
+                template_file=Path(
+                    "packages/github_pages/github_pages/pre-commit-config.yaml"
+                ),
                 target=Path(".pre-commit-config.yaml"),
             )
             self.review_manager.dataset.add_changes(Path(".pre-commit-config.yaml"))

@@ -144,18 +144,27 @@ class PaperMarkdown(JsonSchemaMixin):
 
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
-    def _retrieve_default_word_template(self) -> Path:
+    def _retrieve_default_word_template(self, word_template: Path) -> bool:
+
+        if word_template.is_file():
+            return True
+
         template_name = self.data_dir / Path("APA-7.docx")
 
         filedata = colrev.env.utils.get_package_file_content(
-            module="colrev.packages.paper_md", filename=Path("paper_md/APA-7.docx")
+            module="colrev.packages.paper_md.paper_md", filename=Path("APA-7.docx")
         )
 
         if filedata:
             with open(template_name, "wb") as file:
                 file.write(filedata)
+        else:
+            self.review_manager.logger.error(
+                f"Could not retrieve {template_name} from the package"
+            )
+            return False
         self.review_manager.dataset.add_changes(template_name)
-        return template_name
+        return True
 
     def _retrieve_default_csl(self) -> None:
         csl_link = ""
@@ -702,9 +711,9 @@ class PaperMarkdown(JsonSchemaMixin):
 
         word_template = self.settings.word_template
 
-        if not word_template.is_file():
-            self._retrieve_default_word_template()
-        assert word_template.is_file()
+        if not self._retrieve_default_word_template(word_template):
+            self.review_manager.logger.error(f"Word template {word_template} not found")
+            return
 
         output_relative_path = self.settings.paper_output.relative_to(
             self.review_manager.path

@@ -9,6 +9,7 @@ from pathlib import Path
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.env.utils
 import colrev.ops.pdf_get
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
