@@ -2,21 +2,26 @@
 """dashboard table and graphs for synthesized records"""
 from __future__ import annotations
 
-import dash
+import dash  # pylint: disable=import-error
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from dash import callback
-from dash import dash_table
-from dash import dcc
-from dash import html
-from dash import Input
-from dash import Output
+import plotly.express as px  # pylint: disable=import-error
+import plotly.graph_objects as go  # pylint: disable=import-error
+from dash import callback  # pylint: disable=import-error
+from dash import dash_table  # pylint: disable=import-error
+from dash import dcc  # pylint: disable=import-error
+from dash import html  # pylint: disable=import-error
+from dash import Input  # pylint: disable=import-error
+from dash import Output  # pylint: disable=import-error
 
 import colrev.record.record
 import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import RecordState
+
+
+# dash dependencies optional
+# install with pip install colrev[ui_web]
+# will fail if not installed
 
 dash.register_page(__name__)
 

@@ -4,14 +4,18 @@ from __future__ import annotations
 
 from datetime import datetime
 
-import dash
+import dash  # pylint: disable=import-error
 import pandas as pd
-import plotly.express as px
-from dash import dcc
-from dash import html
+import plotly.express as px  # pylint: disable=import-error
+from dash import dcc  # pylint: disable=import-error
+from dash import html  # pylint: disable=import-error
 
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
+
+# dash dependencies optional
+# install with pip install colrev[ui_web]
+# will fail if not installed
 
 dash.register_page(__name__, path="/")
 
