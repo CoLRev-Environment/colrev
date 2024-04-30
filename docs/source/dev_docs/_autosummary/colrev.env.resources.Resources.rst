@@ -17,13 +17,3 @@ colrev.env.resources.Resources
       :nosignatures:
 
       ~Resources.install_curated_resource
-
-
-
-
-
-   .. rubric:: Attributes
-
-   .. autosummary::
-
-      ~Resources.curations_path
