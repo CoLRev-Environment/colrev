@@ -13,6 +13,7 @@ import colrev.env.environment_manager
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
+from colrev.constants import Filepaths
 from colrev.packages.unpaywall.src.unpaywall import Unpaywall
 
 # flake8: noqa: E501
@@ -193,18 +194,38 @@ def test_get_environment_details(
     env_man.environment_registry["local_index"]["repos"] = [
         {
             "repo_name": "international-conference-on-information-systems",
-            "repo_source_path": "/home/gerit/colrev/curated_metadata/international-conference-on-information-systems",
-            "repo_source_url": "https://github.com/CoLRev-curations/international-conference-on-information-systems",
+            "repo_source_path": str(
+                Filepaths.CURATIONS_PATH.joinpath(
+                    "international-conference-on-information-systems"
+                )
+            ),
+            "repo_source_url": str(
+                Filepaths.CURATIONS_PATH.joinpath(
+                    "international-conference-on-information-systems"
+                )
+            ),
         },
         {
             "repo_name": "european-journal-of-information-systems",
-            "repo_source_path": "/home/gerit/colrev/curated_metadata/european-journal-of-information-systems",
-            "repo_source_url": "https://github.com/CoLRev-curations/european-journal-of-information-systems",
+            "repo_source_path": str(
+                Filepaths.CURATIONS_PATH.joinpath(
+                    "european-journal-of-information-systems"
+                )
+            ),
+            "repo_source_url": str(
+                Filepaths.CURATIONS_PATH.joinpath(
+                    "european-journal-of-information-systems"
+                )
+            ),
         },
         {
             "repo_name": "information-systems-journal",
-            "repo_source_path": "/home/gerit/colrev/curated_metadata/information-systems-journal",
-            "repo_source_url": "https://github.com/CoLRev-curations/information-systems-journal",
+            "repo_source_path": str(
+                Filepaths.CURATIONS_PATH.joinpath("information-systems-journal")
+            ),
+            "repo_source_url": str(
+                Filepaths.CURATIONS_PATH.joinpath("information-systems-journal")
+            ),
         },
     ]
     env_man.save_environment_registry(updated_registry=env_man.environment_registry)
@@ -228,17 +249,27 @@ def test_get_curated_outlets(
     env_man.environment_registry["local_index"]["repos"] = [
         {
             "repo_name": "international-conference-on-information-systems",
-            "repo_source_path": "/home/gerit/colrev/curated_metadata/international-conference-on-information-systems",
+            "repo_source_path": str(
+                Filepaths.CURATIONS_PATH.joinpath(
+                    "international-conference-on-information-systems"
+                )
+            ),
             "repo_source_url": "https://github.com/CoLRev-curations/international-conference-on-information-systems",
         },
         {
             "repo_name": "european-journal-of-information-systems",
-            "repo_source_path": "/home/gerit/colrev/curated_metadata/european-journal-of-information-systems",
+            "repo_source_path": str(
+                Filepaths.CURATIONS_PATH.joinpath(
+                    "european-journal-of-information-systems"
+                )
+            ),
             "repo_source_url": "https://github.com/CoLRev-curations/european-journal-of-information-systems",
         },
         {
             "repo_name": "information-systems-journal",
-            "repo_source_path": "/home/gerit/colrev/curated_metadata/information-systems-journal",
+            "repo_source_path": str(
+                Filepaths.CURATIONS_PATH.joinpath("information-systems-journal")
+            ),
             "repo_source_url": "https://github.com/CoLRev-curations/information-systems-journal",
         },
     ]
