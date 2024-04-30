@@ -26,6 +26,7 @@ colrev.constants.Filepaths
    .. autosummary::
 
       ~Filepaths.CORRECTIONS_DIR
+      ~Filepaths.CURATIONS_PATH
       ~Filepaths.DATA_DIR
       ~Filepaths.DEDUPE_DIR
       ~Filepaths.GIT_IGNORE_FILE
