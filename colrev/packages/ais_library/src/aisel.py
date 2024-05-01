@@ -369,7 +369,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                     "T": Fields.TITLE,
                     "A": Fields.AUTHOR,
                     "D": Fields.YEAR,
-                    "B": Fields.JOURNAL,
+                    "B": Fields.BOOKTITLE,
                     "V": Fields.VOLUME,
                     "N": Fields.NUMBER,
                     "P": Fields.PAGES,

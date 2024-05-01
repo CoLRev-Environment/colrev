@@ -704,6 +704,10 @@ class Record:
         qm: colrev.record.qm.quality_model.QualityModel,
     ) -> None:
         """Change the ENTRYTYPE"""
+        if new_entrytype == self.data.get(Fields.ENTRYTYPE, "NA"):
+            if Fields.MD_PROV in self.data:
+                self.align_provenance()
+            return  # otherwise, IGNORE:missing would be reset
         for value in self.data.get(Fields.MD_PROV, {}).values():
             if any(
                 x in value["note"]
