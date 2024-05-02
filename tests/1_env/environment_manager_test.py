@@ -184,11 +184,36 @@ def test_register_ports() -> None:
         env_man.register_ports(["3000", "3001", "3002"])
 
 
+def test_repo_registry(tmp_path) -> None:  # type: ignore
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    env_man.environment_registry = {"local_index": {"repos": []}}
+    actual = env_man.local_repos()
+    assert actual == []
+
+    os.chdir(tmp_path)
+    git_repo = git.Repo.init()
+
+    remote_url = "https://github.com/your-username/your-repo.git"
+    git_repo.create_remote("origin", remote_url)
+
+    env_man.register_repo(path_to_register=tmp_path)
+    assert (
+        env_man.environment_registry["local_index"]["repos"][0]["repo_source_url"]
+        == remote_url
+    )
+
+    # Test if the repo is already registered
+    env_man.register_repo(path_to_register=tmp_path)
+    assert len(env_man.environment_registry["local_index"]["repos"]) == 1
+
+
 def test_get_environment_details(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    if base_repo_review_manager.in_ci_environment():
+    # Note: test only runs locally on my machine
+    if "gerit" not in str(base_repo_review_manager.path):
         return
+
     env_man = colrev.env.environment_manager.EnvironmentManager()
     env_man.environment_registry = {"local_index": {"repos": []}}
     env_man.environment_registry["local_index"]["repos"] = [
@@ -241,7 +266,8 @@ def test_get_environment_details(
 def test_get_curated_outlets(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    if base_repo_review_manager.in_ci_environment():
+    # Note: test only runs locally on my machine
+    if "gerit" not in str(base_repo_review_manager.path):
         return
 
     env_man = colrev.env.environment_manager.EnvironmentManager()
@@ -282,26 +308,3 @@ def test_get_curated_outlets(
         "European Journal of Information Systems",
         "Information Systems Journal",
     ]
-
-
-def test_repo_registry(tmp_path) -> None:  # type: ignore
-    env_man = colrev.env.environment_manager.EnvironmentManager()
-    env_man.environment_registry = {"local_index": {"repos": []}}
-    actual = env_man.local_repos()
-    assert actual == []
-
-    os.chdir(tmp_path)
-    git_repo = git.Repo.init()
-
-    remote_url = "https://github.com/your-username/your-repo.git"
-    git_repo.create_remote("origin", remote_url)
-
-    env_man.register_repo(path_to_register=tmp_path)
-    assert (
-        env_man.environment_registry["local_index"]["repos"][0]["repo_source_url"]
-        == remote_url
-    )
-
-    # Test if the repo is already registered
-    env_man.register_repo(path_to_register=tmp_path)
-    assert len(env_man.environment_registry["local_index"]["repos"]) == 1
