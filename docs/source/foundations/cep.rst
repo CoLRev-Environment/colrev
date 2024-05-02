@@ -18,3 +18,11 @@ Proposals under active discussion and revision:
 +-------+----------------------------------------------------+------------------------------+
 | 003   | :doc:`Search sources <cep/cep003_search_sources>`  | Gerit Wagner                 |
 +-------+----------------------------------------------------+------------------------------+
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Numerical index
+
+    cep/cep001_framework
+    cep/cep002_data_schema
+    cep/cep003_search_sources
