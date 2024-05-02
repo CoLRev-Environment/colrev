@@ -300,13 +300,12 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         self._validate_source()
 
-        ais_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
-            source_identifier=self.source_identifier,
-            update_only=(not rerun),
-        )
-
         if self.search_source.search_type == SearchType.API:
+            ais_feed = self.search_source.get_api_feed(
+                review_manager=self.review_manager,
+                source_identifier=self.source_identifier,
+                update_only=(not rerun),
+            )
             self._run_api_search(
                 ais_feed=ais_feed,
                 rerun=rerun,
