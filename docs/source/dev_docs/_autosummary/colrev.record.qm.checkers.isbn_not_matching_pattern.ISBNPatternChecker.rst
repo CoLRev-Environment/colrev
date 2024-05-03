@@ -1,4 +1,4 @@
-colrev.record.qm.checkers.isbn\_not\_matching\_pattern.ISBNPatternChecker
+﻿colrev.record.qm.checkers.isbn\_not\_matching\_pattern.ISBNPatternChecker
 =========================================================================
 
 .. currentmodule:: colrev.record.qm.checkers.isbn_not_matching_pattern

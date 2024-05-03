@@ -1,4 +1,4 @@
-colrev.record.qm.checkers.name\_format\_separators.NameFormatSeparatorsChecker
+﻿colrev.record.qm.checkers.name\_format\_separators.NameFormatSeparatorsChecker
 ==============================================================================
 
 .. currentmodule:: colrev.record.qm.checkers.name_format_separators

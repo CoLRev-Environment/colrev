@@ -1,4 +1,4 @@
-colrev.record.qm.checkers.language\_unknown.LanguageChecker
+﻿colrev.record.qm.checkers.language\_unknown.LanguageChecker
 ===========================================================
 
 .. currentmodule:: colrev.record.qm.checkers.language_unknown

@@ -1,4 +1,4 @@
-colrev.record.qm.checkers.name\_format\_titles.NameFormatTitleChecker
+﻿colrev.record.qm.checkers.name\_format\_titles.NameFormatTitleChecker
 =====================================================================
 
 .. currentmodule:: colrev.record.qm.checkers.name_format_titles

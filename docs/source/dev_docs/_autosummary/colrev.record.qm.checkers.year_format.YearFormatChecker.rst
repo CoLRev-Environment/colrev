@@ -1,4 +1,4 @@
-colrev.record.qm.checkers.year\_format.YearFormatChecker
+﻿colrev.record.qm.checkers.year\_format.YearFormatChecker
 ========================================================
 
 .. currentmodule:: colrev.record.qm.checkers.year_format

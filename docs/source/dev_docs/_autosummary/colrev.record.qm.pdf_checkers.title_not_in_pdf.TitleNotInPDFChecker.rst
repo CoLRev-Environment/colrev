@@ -1,4 +1,4 @@
-colrev.record.qm.pdf\_checkers.title\_not\_in\_pdf.TitleNotInPDFChecker
+﻿colrev.record.qm.pdf\_checkers.title\_not\_in\_pdf.TitleNotInPDFChecker
 =======================================================================
 
 .. currentmodule:: colrev.record.qm.pdf_checkers.title_not_in_pdf

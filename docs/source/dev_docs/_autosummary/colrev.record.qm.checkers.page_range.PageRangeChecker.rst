@@ -1,4 +1,4 @@
-colrev.record.qm.checkers.page\_range.PageRangeChecker
+﻿colrev.record.qm.checkers.page\_range.PageRangeChecker
 ======================================================
 
 .. currentmodule:: colrev.record.qm.checkers.page_range

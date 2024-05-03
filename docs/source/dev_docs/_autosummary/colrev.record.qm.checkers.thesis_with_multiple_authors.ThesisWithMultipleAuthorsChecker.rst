@@ -1,4 +1,4 @@
-colrev.record.qm.checkers.thesis\_with\_multiple\_authors.ThesisWithMultipleAuthorsChecker
+﻿colrev.record.qm.checkers.thesis\_with\_multiple\_authors.ThesisWithMultipleAuthorsChecker
 ==========================================================================================
 
 .. currentmodule:: colrev.record.qm.checkers.thesis_with_multiple_authors

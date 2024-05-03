@@ -1,4 +1,4 @@
-colrev.record.qm.checkers.record\_not\_in\_toc.RecordNotInTOCChecker
+﻿colrev.record.qm.checkers.record\_not\_in\_toc.RecordNotInTOCChecker
 ====================================================================
 
 .. currentmodule:: colrev.record.qm.checkers.record_not_in_toc

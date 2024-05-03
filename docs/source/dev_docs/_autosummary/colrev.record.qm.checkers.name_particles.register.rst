@@ -1,4 +1,4 @@
-colrev.record.qm.checkers.name\_particles.register
+﻿colrev.record.qm.checkers.name\_particles.register
 ==================================================
 
 .. currentmodule:: colrev.record.qm.checkers.name_particles

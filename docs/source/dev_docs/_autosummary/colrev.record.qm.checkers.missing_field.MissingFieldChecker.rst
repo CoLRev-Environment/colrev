@@ -1,4 +1,4 @@
-colrev.record.qm.checkers.missing\_field.MissingFieldChecker
+﻿colrev.record.qm.checkers.missing\_field.MissingFieldChecker
 ============================================================
 
 .. currentmodule:: colrev.record.qm.checkers.missing_field
