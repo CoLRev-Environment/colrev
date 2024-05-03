@@ -9,5 +9,5 @@ documentation = "README.md"
 colrev_doc_link = "README.md"
 
 [tool.colrev]
-dev_status = "maturing"
+dev_status = "experimental"
 prep_man = "colrev.packages.prep_man_curation_jupyter.src.curation_jupyter_prep_man:CurationJupyterNotebookManPrep"

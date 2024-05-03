@@ -13,7 +13,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.arxiv",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "SearchSource for arXiv (:doc:`instructions </manual/packages/colrev.arxiv>`)",
             "ci_supported": true,
             "search_types": [
@@ -53,7 +53,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.eric",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "ERIC API (:doc:`instructions </manual/packages/colrev.eric>`)",
             "ci_supported": true,
             "search_types": [
@@ -73,7 +73,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.ieee",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "IEEEXplore (:doc:`instructions </manual/packages/colrev.ieee>`)",
             "ci_supported": true,
             "search_types": [
@@ -92,7 +92,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_alex",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "OpenAlex API (:doc:`instructions </manual/packages/colrev.open_alex>`)",
             "ci_supported": true,
             "search_types": [
@@ -113,7 +113,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.semanticscholar",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Semantic Scholar API Search Source (:doc:`instructions </manual/packages/colrev.semanticscholar>`)",
             "ci_supported": true,
             "search_types": [
@@ -133,7 +133,7 @@
     "DB": [
         {
             "package_endpoint_identifier": "colrev.abi_inform_proquest",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "ABI/INFORM (ProQuest) (:doc:`instructions </manual/packages/colrev.abi_inform_proquest>`)",
             "ci_supported": false,
             "search_types": [
@@ -142,7 +142,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.acm_digital_library",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "ACM digital Library (:doc:`instructions </manual/packages/colrev.acm_digital_library>`)",
             "ci_supported": false,
             "search_types": [
@@ -162,7 +162,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.ebsco_host",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "EBSCOHost (:doc:`instructions </manual/packages/colrev.ebsco_host>`)",
             "ci_supported": false,
             "search_types": [
@@ -182,7 +182,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.google_scholar",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "GoogleScholar (:doc:`instructions </manual/packages/colrev.google_scholar>`)",
             "ci_supported": false,
             "search_types": [
@@ -191,7 +191,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.jstor",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "JSTOR (:doc:`instructions </manual/packages/colrev.jstor>`)",
             "ci_supported": false,
             "search_types": [
@@ -200,7 +200,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.psycinfo",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "PsycINFO (:doc:`instructions </manual/packages/colrev.psycinfo>`)",
             "ci_supported": false,
             "search_types": [
@@ -220,7 +220,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.scopus",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Scopus (:doc:`instructions </manual/packages/colrev.scopus>`)",
             "ci_supported": false,
             "search_types": [
@@ -229,7 +229,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.springer_link",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Springer Link (:doc:`instructions </manual/packages/colrev.springer_link>`)",
             "ci_supported": false,
             "search_types": [
@@ -238,7 +238,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.taylor_and_francis",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Taylor and Francis (:doc:`instructions </manual/packages/colrev.taylor_and_francis>`)",
             "ci_supported": false,
             "search_types": [
@@ -247,7 +247,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.trid",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Transport Research International Documentation (:doc:`instructions </manual/packages/colrev.trid>`)",
             "ci_supported": false,
             "search_types": [
@@ -269,7 +269,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.web_of_science",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Web of Science (:doc:`instructions </manual/packages/colrev.web_of_science>`)",
             "ci_supported": false,
             "search_types": [
@@ -278,7 +278,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.wiley",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Wiley (:doc:`instructions </manual/packages/colrev.wiley>`)",
             "ci_supported": false,
             "search_types": [
@@ -454,7 +454,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_alex",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "OpenAlex API (:doc:`instructions </manual/packages/colrev.open_alex>`)",
             "ci_supported": true,
             "search_types": [
@@ -464,7 +464,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_library",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "OpenLibrary API (:doc:`instructions </manual/packages/colrev.open_library>`)",
             "ci_supported": true,
             "search_types": [

@@ -9,5 +9,5 @@ documentation = "README.md"
 colrev_doc_link = "README.md"
 
 [tool.colrev]
-dev_status = "maturing"
+dev_status = "experimental"
 dedupe = "colrev.packages.curation_full_outlet_dedupe.src.curation_dedupe:CurationDedupe"

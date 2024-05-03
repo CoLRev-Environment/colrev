@@ -9,5 +9,5 @@ documentation = "README.md"
 colrev_doc_link = "README.md"
 
 [tool.colrev]
-dev_status = "maturing"
+dev_status = "experimental"
 prep = "colrev.packages.add_journal_ranking.src.add_journal_ranking:AddJournalRanking"

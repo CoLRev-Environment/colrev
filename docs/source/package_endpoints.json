@@ -8,25 +8,25 @@
         },
         {
             "package_endpoint_identifier": "colrev.conceptual_review",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Conceptual review (:doc:`instructions </manual/packages/colrev.conceptual_review>`)",
             "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.critical_review",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Critical review (:doc:`instructions </manual/packages/colrev.critical_review>`)",
             "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.curated_masterdata",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Curated masterdata (:doc:`instructions </manual/packages/colrev.curated_masterdata>`)",
             "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.descriptive_review",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Descriptive review (:doc:`instructions </manual/packages/colrev.descriptive_review>`)",
             "ci_supported": true
         },
@@ -38,25 +38,25 @@
         },
         {
             "package_endpoint_identifier": "colrev.meta_analysis",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Meta-analysis (:doc:`instructions </manual/packages/colrev.meta_analysis>`)",
             "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.narrative_review",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Narrative review (:doc:`instructions </manual/packages/colrev.narrative_review>`)",
             "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.qualitative_systematic_review",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Qualitative systematic review (:doc:`instructions </manual/packages/colrev.qualitative_systematic_review>`)",
             "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.scientometric",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Scientometric study (:doc:`instructions </manual/packages/colrev.scientometric>`)",
             "ci_supported": true
         },
@@ -68,13 +68,13 @@
         },
         {
             "package_endpoint_identifier": "colrev.theoretical_review",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Theoretical review (:doc:`instructions </manual/packages/colrev.theoretical_review>`)",
             "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.umbrella",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Umbrella review (:doc:`instructions </manual/packages/colrev.umbrella>`)",
             "ci_supported": true
         }
@@ -82,7 +82,7 @@
     "search_source": [
         {
             "package_endpoint_identifier": "colrev.abi_inform_proquest",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "ABI/INFORM (ProQuest) (:doc:`instructions </manual/packages/colrev.abi_inform_proquest>`)",
             "ci_supported": false,
             "search_types": [
@@ -91,7 +91,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.acm_digital_library",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "ACM digital Library (:doc:`instructions </manual/packages/colrev.acm_digital_library>`)",
             "ci_supported": false,
             "search_types": [
@@ -111,7 +111,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.arxiv",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "SearchSource for arXiv (:doc:`instructions </manual/packages/colrev.arxiv>`)",
             "ci_supported": true,
             "search_types": [
@@ -151,7 +151,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.ebsco_host",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "EBSCOHost (:doc:`instructions </manual/packages/colrev.ebsco_host>`)",
             "ci_supported": false,
             "search_types": [
@@ -160,7 +160,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.eric",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "ERIC API (:doc:`instructions </manual/packages/colrev.eric>`)",
             "ci_supported": true,
             "search_types": [
@@ -189,7 +189,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.google_scholar",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "GoogleScholar (:doc:`instructions </manual/packages/colrev.google_scholar>`)",
             "ci_supported": false,
             "search_types": [
@@ -198,7 +198,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.ieee",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "IEEEXplore (:doc:`instructions </manual/packages/colrev.ieee>`)",
             "ci_supported": true,
             "search_types": [
@@ -207,7 +207,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.jstor",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "JSTOR (:doc:`instructions </manual/packages/colrev.jstor>`)",
             "ci_supported": false,
             "search_types": [
@@ -226,7 +226,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_alex",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "OpenAlex API (:doc:`instructions </manual/packages/colrev.open_alex>`)",
             "ci_supported": true,
             "search_types": [
@@ -245,7 +245,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_library",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "OpenLibrary API (:doc:`instructions </manual/packages/colrev.open_library>`)",
             "ci_supported": true,
             "search_types": [
@@ -263,7 +263,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.psycinfo",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "PsycINFO (:doc:`instructions </manual/packages/colrev.psycinfo>`)",
             "ci_supported": false,
             "search_types": [
@@ -283,7 +283,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.scopus",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Scopus (:doc:`instructions </manual/packages/colrev.scopus>`)",
             "ci_supported": false,
             "search_types": [
@@ -292,7 +292,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.semanticscholar",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Semantic Scholar API Search Source (:doc:`instructions </manual/packages/colrev.semanticscholar>`)",
             "ci_supported": true,
             "search_types": [
@@ -301,7 +301,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.springer_link",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Springer Link (:doc:`instructions </manual/packages/colrev.springer_link>`)",
             "ci_supported": false,
             "search_types": [
@@ -319,7 +319,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.taylor_and_francis",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Taylor and Francis (:doc:`instructions </manual/packages/colrev.taylor_and_francis>`)",
             "ci_supported": false,
             "search_types": [
@@ -328,7 +328,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.trid",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Transport Research International Documentation (:doc:`instructions </manual/packages/colrev.trid>`)",
             "ci_supported": false,
             "search_types": [
@@ -350,7 +350,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.web_of_science",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Web of Science (:doc:`instructions </manual/packages/colrev.web_of_science>`)",
             "ci_supported": false,
             "search_types": [
@@ -359,7 +359,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.wiley",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Wiley (:doc:`instructions </manual/packages/colrev.wiley>`)",
             "ci_supported": false,
             "search_types": [
@@ -370,7 +370,7 @@
     "prep": [
         {
             "package_endpoint_identifier": "colrev.add_journal_ranking",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Class for add _journal_ranking (:doc:`instructions </manual/packages/colrev.add_journal_ranking>`)",
             "ci_supported": false
         },
@@ -424,31 +424,31 @@
         },
         {
             "package_endpoint_identifier": "colrev.general_polish",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Prepares records by applying polishing rules (:doc:`instructions </manual/packages/colrev.general_polish>`)",
             "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.get_doi_from_urls",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Prepares records by retrieving its DOI from the website (URL) (:doc:`instructions </manual/packages/colrev.get_doi_from_urls>`)",
             "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.get_masterdata_from_citeas",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on citeas.org metadata (:doc:`instructions </manual/packages/colrev.get_masterdata_from_citeas>`)",
             "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.get_masterdata_from_doi",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on doi.org metadata (:doc:`instructions </manual/packages/colrev.get_masterdata_from_doi>`)",
             "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.get_year_from_vol_iss_jour",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on year-volume-issue dependency (:doc:`instructions </manual/packages/colrev.get_year_from_vol_iss_jour>`)",
             "ci_supported": true
         },
@@ -460,13 +460,13 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_alex",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on OpenAlex metadata (:doc:`instructions </manual/packages/colrev.open_alex>`)",
             "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.open_library",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on openlibrary.org metadata (:doc:`instructions </manual/packages/colrev.open_library>`)",
             "ci_supported": true
         },
@@ -490,7 +490,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.semanticscholar",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on SemanticScholar metadata (:doc:`instructions </manual/packages/colrev.semanticscholar>`)",
             "ci_supported": true
         },
@@ -510,7 +510,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.prep_man_curation_jupyter",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Manual preparation based on a Jupyter Notebook (:doc:`instructions </manual/packages/colrev.prep_man_curation_jupyter>`)",
             "ci_supported": false
         }
@@ -518,13 +518,13 @@
     "dedupe": [
         {
             "package_endpoint_identifier": "colrev.curation_full_outlet_dedupe",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Deduplication endpoint for curations with full journals/proceedings (:doc:`instructions </manual/packages/colrev.curation_full_outlet_dedupe>`)",
             "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.curation_missing_dedupe",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Deduplication of remaining records in a curated metadata repository (:doc:`instructions </manual/packages/colrev.curation_missing_dedupe>`)",
             "ci_supported": false
         },
@@ -582,7 +582,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.website_screenshot",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Get PDFs from website screenshot (for \"online\" ENTRYTYPES) (:doc:`instructions </manual/packages/colrev.website_screenshot>`)",
             "ci_supported": false
         }
@@ -646,7 +646,7 @@
     "data": [
         {
             "package_endpoint_identifier": "colrev.bibliography_export",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Export the sample references in Endpoint format (:doc:`instructions </manual/packages/colrev.bibliography_export>`)",
             "ci_supported": false
         },
@@ -664,7 +664,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.obsidian",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Export the sample into an Obsidian database (:doc:`instructions </manual/packages/colrev.obsidian>`)",
             "ci_supported": false
         },
@@ -676,13 +676,13 @@
         },
         {
             "package_endpoint_identifier": "colrev.prisma",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Create a PRISMA diagram (:doc:`instructions </manual/packages/colrev.prisma>`)",
             "ci_supported": false
         },
         {
             "package_endpoint_identifier": "colrev.structured",
-            "status": "|MATURING|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Summarize the literature in a structured data extraction (a table) (:doc:`instructions </manual/packages/colrev.structured>`)",
             "ci_supported": false
         }
