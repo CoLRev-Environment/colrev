@@ -268,7 +268,7 @@ class Advisor:
                     )
                 if transitioned_record["type"] == "invalid_transition":
                     msg = (
-                        f"Resolve invalid transition ({transitioned_record['ID']}): "
+                        f"Resolve invalid transition ({transitioned_record['origin']}): "
                         + f"{transitioned_record['source']} to "
                         + f"{transitioned_record['dest']}"
                     )
