@@ -224,19 +224,19 @@ class StatusStats:
                     committed_origin, "no_source_state"
                 ),
             }
+
+            if transitioned_record["source"] == transitioned_record["dest"]:
+                continue # no_transition
+
             operations_type = [
                 x["trigger"]
                 for x in ProcessModel.transitions
                 if x["source"] == transitioned_record["source"]
                 and x["dest"] == transitioned_record["dest"]
             ]
-            if (
-                len(operations_type) == 0
-                and transitioned_record["source"] != transitioned_record["dest"]
-            ):
+            if len(operations_type) == 0:
                 transitioned_record["type"] = "invalid_transition"
-
-            if len(operations_type) > 0:
+            else:
                 transitioned_record["type"] = operations_type[0]
 
             transitioned_records.append(transitioned_record)
