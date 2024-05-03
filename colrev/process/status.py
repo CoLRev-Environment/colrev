@@ -226,7 +226,7 @@ class StatusStats:
             }
 
             if transitioned_record["source"] == transitioned_record["dest"]:
-                continue # no_transition
+                continue  # no_transition
 
             operations_type = [
                 x["trigger"]
