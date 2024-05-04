@@ -1,4 +1,4 @@
-﻿colrev.record.qm.checkers.name\_abbreviated.NameAbbreviatedChecker
+colrev.record.qm.checkers.name\_abbreviated.NameAbbreviatedChecker
 ==================================================================
 
 .. currentmodule:: colrev.record.qm.checkers.name_abbreviated

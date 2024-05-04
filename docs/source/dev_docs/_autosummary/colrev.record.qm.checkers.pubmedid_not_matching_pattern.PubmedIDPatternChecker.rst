@@ -1,4 +1,4 @@
-﻿colrev.record.qm.checkers.pubmedid\_not\_matching\_pattern.PubmedIDPatternChecker
+colrev.record.qm.checkers.pubmedid\_not\_matching\_pattern.PubmedIDPatternChecker
 =================================================================================
 
 .. currentmodule:: colrev.record.qm.checkers.pubmedid_not_matching_pattern

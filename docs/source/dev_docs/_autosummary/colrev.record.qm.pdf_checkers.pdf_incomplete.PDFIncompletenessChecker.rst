@@ -1,4 +1,4 @@
-﻿colrev.record.qm.pdf\_checkers.pdf\_incomplete.PDFIncompletenessChecker
+colrev.record.qm.pdf\_checkers.pdf\_incomplete.PDFIncompletenessChecker
 =======================================================================
 
 .. currentmodule:: colrev.record.qm.pdf_checkers.pdf_incomplete
