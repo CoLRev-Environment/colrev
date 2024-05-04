@@ -1,4 +1,4 @@
-﻿colrev.record.qm.checkers.mostly\_all\_caps.MostlyAllCapsFieldChecker
+colrev.record.qm.checkers.mostly\_all\_caps.MostlyAllCapsFieldChecker
 =====================================================================
 
 .. currentmodule:: colrev.record.qm.checkers.mostly_all_caps

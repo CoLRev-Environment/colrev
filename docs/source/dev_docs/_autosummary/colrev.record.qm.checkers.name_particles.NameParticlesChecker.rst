@@ -1,4 +1,4 @@
-﻿colrev.record.qm.checkers.name\_particles.NameParticlesChecker
+colrev.record.qm.checkers.name\_particles.NameParticlesChecker
 ==============================================================
 
 .. currentmodule:: colrev.record.qm.checkers.name_particles
