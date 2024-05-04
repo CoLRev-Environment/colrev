@@ -1,4 +1,4 @@
-﻿colrev.record.qm.checkers.language\_format\_error.LanguageFormatChecker
+colrev.record.qm.checkers.language\_format\_error.LanguageFormatChecker
 =======================================================================
 
 .. currentmodule:: colrev.record.qm.checkers.language_format_error
