@@ -322,8 +322,8 @@ class SQLiteIndexTOC(SQLiteIndex):
     def get_toc_items(self, toc_key: str = "", partial_toc_key: str = "") -> list:
         """Get TOC items from the index"""
         if partial_toc_key != "":
-            query = f"{self.SELECT_ALL_QUERY} {LocalIndexFields.TOC_KEY} LIKE ?%"
-            argument = partial_toc_key
+            query = f"{self.SELECT_ALL_QUERY} {LocalIndexFields.TOC_KEY} LIKE ?"
+            argument = partial_toc_key + "%"
         elif toc_key != "":
             query = (
                 f"SELECT * FROM {self.INDEX_NAME} WHERE {LocalIndexFields.TOC_KEY}=?"

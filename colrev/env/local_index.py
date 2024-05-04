@@ -178,7 +178,9 @@ class LocalIndex:
 
         if not toc_items and search_across_tocs:
             try:
-                partial_toc_key = toc_key.replace("|-", "")
+
+                partial_toc_key = toc_key.rsplit("|", 1)[0]
+
                 toc_items = sqlite_index_toc.get_toc_items(
                     partial_toc_key=partial_toc_key
                 )
