@@ -2,13 +2,11 @@
 """Tests of the record similarity functionality"""
 import pytest
 
-import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-from colrev.constants import RecordState
 
 # flake8: noqa
 

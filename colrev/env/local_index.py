@@ -20,7 +20,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.ops.check
 import colrev.record.record
-import colrev.review_manager
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import Filepaths
