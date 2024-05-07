@@ -66,7 +66,7 @@ Clone and install CoLRev with the following commands (using the shell / ``Ctrl``
 ::
 
    # Build the docs locally (optional)
-   cd docs
+   cd ~/Desktop/colrev/docs
    make html
 
 Test CoLRev in a demo project with the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
