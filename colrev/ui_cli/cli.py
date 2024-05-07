@@ -1431,11 +1431,6 @@ def pdfs(
     )
     pdf_get_operation.main()
 
-    print()
-
-    pdf_prep_operation = review_manager.get_pdf_prep_operation()
-    pdf_prep_operation.main()
-
 
 @main.command(help_priority=12)
 @click.option(
