@@ -160,7 +160,7 @@ def load(  # type: ignore
     """Load a file and return records as a dictionary"""
 
     if not filename.exists():
-        raise colrev_exceptions.ImportException(f"File not found: {filename.name}")
+        raise FileNotFoundError
 
     if filename.suffix == ".bib":
         parser = colrev.loader.bib.BIBLoader  # type: ignore
