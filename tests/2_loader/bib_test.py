@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the load utils for bib files"""
+import logging
 import os
 from pathlib import Path
 
@@ -23,13 +24,19 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         )
 
     # only supports bib
-    with pytest.raises(colrev_exceptions.ImportException):
-        colrev.loader.load_utils.load(
-            filename=Path("table.ptvc"),
-        )
+    with pytest.raises(NotImplementedError):
+        os.makedirs("data/search", exist_ok=True)
+        Path("data/search/bib_tests.xy").touch()
+        try:
+            colrev.loader.load_utils.load(
+                filename=Path("data/search/bib_tests.xy"),
+                logger=logging.getLogger(__name__),
+            )
+        finally:
+            Path("data/search/bib_tests.xy").unlink()
 
     # file must exist
-    with pytest.raises(colrev_exceptions.ImportException):
+    with pytest.raises(FileNotFoundError):
         colrev.loader.load_utils.load(
             filename=Path("non-existent.bib"),
         )

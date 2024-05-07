@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """Tests of the enl load utils"""
+import logging
 import os
 from pathlib import Path
 
 import pytest
 
-import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
 from colrev.constants import ENTRYTYPES
@@ -18,15 +18,21 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
     os.chdir(tmp_path)
 
     # only supports enl
-    with pytest.raises(colrev_exceptions.ImportException):
-        colrev.loader.load_utils.load(
-            filename=Path("table.ptvc"),
-        )
+    with pytest.raises(NotImplementedError):
+        os.makedirs("data/search", exist_ok=True)
+        Path("data/search/table.ptvc").touch()
+        try:
+            colrev.loader.load_utils.load(
+                filename=Path("data/search/table.ptvc"),
+            )
+        finally:
+            Path("data/search/table.ptvc").unlink()
 
     # file must exist
-    with pytest.raises(colrev_exceptions.ImportException):
+    with pytest.raises(FileNotFoundError):
         colrev.loader.load_utils.load(
-            filename=Path("non-existent.enl"),
+            filename=Path("data/search/bib_tests.xy"),
+            logger=logging.getLogger(__name__),
         )
 
     def entrytype_setter(record_dict: dict) -> None:
