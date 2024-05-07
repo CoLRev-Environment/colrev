@@ -15,8 +15,9 @@ Install the following tools mandatory for CoLRev (using the shell / ``Ctrl``\ +\
    # If you are using Ubuntu with WSL2, please run the command "code" afterwards
    # It will add Visual Studio Code (aka VS Code Server for x64) to your Windows Start Menu with WSL2 compatibility
 
-   # Add $HOME/.local/bin to PATH and load it into the current terminal session with source
-   echo 'export PATH="$PATH:$HOME/.local/bin"' >> $HOME/.bashrc
+   # Add $HOME/.local/bin to the beginning of PATH environment variable and make it persistent within ~/.bashrc
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> $HOME/.bashrc
+   # load it into the current terminal session with source. Or just open a new terminal session.
    source ~/.bashrc
 
    # Setup python and pip package manager
