@@ -23,6 +23,8 @@ Install the following tools mandatory for CoLRev (using the shell / ``Ctrl``\ +\
    # Setup python and pip package manager
    sudo apt install python-is-python3
    sudo apt install python3-pip
+
+.. these lines are obsolete/redundant, will get handled later by "$ pip install -e .[dev,docs]"
    python3 -m pip install --upgrade pip
    python3 -m pip install poetry
    python3 -m pip install --upgrade paramiko
