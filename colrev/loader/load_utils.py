@@ -134,7 +134,6 @@ import tempfile
 import typing
 from pathlib import Path
 
-import colrev.exceptions as colrev_exceptions
 import colrev.loader.bib
 import colrev.loader.enl
 import colrev.loader.json
