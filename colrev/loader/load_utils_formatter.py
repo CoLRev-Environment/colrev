@@ -162,7 +162,10 @@ class LoadFormatter:
 
         self._apply_strict_requirements(record=record)
 
-        if record.data[Fields.STATUS] != RecordState.md_retrieved:
+        if (
+            Fields.STATUS in record.data
+            and record.data[Fields.STATUS] != RecordState.md_retrieved
+        ):
             return
 
         self._unescape_field_values(record=record)
