@@ -217,7 +217,7 @@ Defect codes
 
 Defect codes are stored in the field provenance. They can be ignored as false positives based on the `IGNORE:` prefix.
 
-The standardized defect codes are in the `QualityModel <https://colrev.readthedocs.io/en/latest/manual/appendix/quality_model.html>_ and `PDFQualityModel <https://colrev.readthedocs.io/en/latest/resources/pdf_quality_model.html>`_
+The standardized defect codes are in the `QualityModel <https://colrev.readthedocs.io/en/latest/manual/appendix/quality_model.html>`_ and `PDFQualityModel <https://colrev.readthedocs.io/en/latest/resources/pdf_quality_model.html>`_.
 
 .. _test data:
 

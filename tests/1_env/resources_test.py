@@ -14,15 +14,15 @@ def test_install_curated_resource_empty(tmp_path):  # type: ignore
 
     with patch("git.Repo.clone_from", return_value=mock_git) as mock_method:
         resource_manager = resources.Resources()
-        resource_manager.curations_path = tmp_path
-        repo_dir = resource_manager.curations_path / Path(
-            curated_resource.split("/")[-1]
-        )
+        original_curations_path = Filepaths.CURATIONS_PATH
+        Filepaths.CURATIONS_PATH = tmp_path
+        repo_dir = Filepaths.CURATIONS_PATH / Path(curated_resource.split("/")[-1])
 
         resource_manager.install_curated_resource(curated_resource=curated_resource)
         mock_method.assert_called_once()
         if repo_dir.exists():
             shutil.rmtree(repo_dir)
+        Filepaths.CURATIONS_PATH = original_curations_path
 
 
 def test_install_curated_resource_with_records(tmp_path, mocker):  # type: ignore

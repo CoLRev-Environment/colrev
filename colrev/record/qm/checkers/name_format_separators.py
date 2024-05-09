@@ -47,11 +47,9 @@ class NameFormatSeparatorsChecker:
         if "," not in record.data[key]:
             return True
 
-        sanitized_names_list = re.sub(
-            "[^a-zA-Z, ;1]+",
-            "",
-            colrev.env.utils.remove_accents(record.data[key]),
-        ).split(" and ")
+        santized_names = colrev.env.utils.remove_accents(record.data[key])
+        sanitized_names = re.sub(r"[{}]", "", santized_names)
+        sanitized_names_list = sanitized_names.split(" and ")
 
         if not all(
             re.findall(
@@ -63,13 +61,9 @@ class NameFormatSeparatorsChecker:
         ):
             return True
 
-        # At least two capital letters per name
+        # At least one upper case letter per name part
         if not all(
-            re.findall(
-                r"[A-Z]+",
-                name_part,
-                re.UNICODE,
-            )
+            any(char.isupper() for char in name_part)
             for sanitized_name in sanitized_names_list
             for name_part in sanitized_name.split(",")
         ):

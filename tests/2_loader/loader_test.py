@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.review_manager
 import colrev.settings
@@ -16,7 +15,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
     """Test the load utils for bib files"""
     os.chdir(tmp_path)
 
-    with pytest.raises(colrev_exceptions.ImportException):
+    with pytest.raises(FileNotFoundError):
         colrev.loader.load_utils.load(
             filename=Path("data/search/bib_data.bib"),
             logger=logging.getLogger(__name__),
@@ -26,10 +25,15 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("data/search/bib_tests.xy"),
     )
     with pytest.raises(NotImplementedError):
-        colrev.loader.load_utils.load(
-            filename=Path("data/search/bib_tests.xy"),
-            logger=logging.getLogger(__name__),
-        )
+        os.makedirs("data/search", exist_ok=True)
+        Path("data/search/bib_tests.xy").touch()
+        try:
+            colrev.loader.load_utils.load(
+                filename=Path("data/search/bib_tests.xy"),
+                logger=logging.getLogger(__name__),
+            )
+        finally:
+            Path("data/search/bib_tests.xy").unlink()
 
     helpers.retrieve_test_file(
         source=Path("2_loader/data/bib_data.bib"),

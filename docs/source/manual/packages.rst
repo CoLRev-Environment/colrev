@@ -1,16 +1,49 @@
 Packages
 =====================
 
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 12pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+
+.. datatemplate:json:: ../packages_overview.json
+
+    {{ make_list_table_from_mappings(
+        [("Type", "endpoint_type"), ("Identifier", "package_endpoint_identifier"), ("Short description", "short_description"), ("Status", "status")],
+        data,
+        title='',
+        columns=[10,20,50,20]
+        ) }}
+
+
+.. raw:: html
+
+    <script>
+    $(document).ready(function() {
+        var tables = $('table');
+        tables.addClass('sortable');  // Add a custom class to all tables
+        tables.DataTable({
+            "pageLength": 50,  // Set the default number of entries per page
+            "order": []        // Disable initial sorting
+        });
+    });
+    </script>
+
+
+..
+   Note: everything following this line will be replaced by doc_registry_manager
+
 .. toctree::
+   :hidden:
    :maxdepth: 1
    :caption: Package Index
 
 
-review_type
------------------------------
-
-.. toctree::
-   :maxdepth: 1
 
    packages/colrev.blank.rst
    packages/colrev.conceptual_review.rst
@@ -26,11 +59,6 @@ review_type
    packages/colrev.theoretical_review.rst
    packages/colrev.umbrella.rst
 
-search_source
------------------------------
-
-.. toctree::
-   :maxdepth: 1
 
    packages/colrev.abi_inform_proquest.rst
    packages/colrev.acm_digital_library.rst
@@ -63,11 +91,6 @@ search_source
    packages/colrev.web_of_science.rst
    packages/colrev.wiley.rst
 
-prep
------------------------------
-
-.. toctree::
-   :maxdepth: 1
 
    packages/colrev.add_journal_ranking.rst
    packages/colrev.colrev_curation.rst
@@ -92,88 +115,43 @@ prep
    packages/colrev.semanticscholar.rst
    packages/colrev.source_specific_prep.rst
 
-prep_man
------------------------------
-
-.. toctree::
-   :maxdepth: 1
 
    packages/colrev.export_man_prep.rst
    packages/colrev.prep_man_curation_jupyter.rst
 
-dedupe
------------------------------
-
-.. toctree::
-   :maxdepth: 1
 
    packages/colrev.curation_full_outlet_dedupe.rst
    packages/colrev.curation_missing_dedupe.rst
    packages/colrev.dedupe.rst
 
-prescreen
------------------------------
-
-.. toctree::
-   :maxdepth: 1
 
    packages/colrev.colrev_cli_prescreen.rst
    packages/colrev.conditional_prescreen.rst
    packages/colrev.prescreen_table.rst
    packages/colrev.scope_prescreen.rst
 
-pdf_get
------------------------------
-
-.. toctree::
-   :maxdepth: 1
 
    packages/colrev.download_from_website.rst
    packages/colrev.local_index.rst
    packages/colrev.unpaywall.rst
    packages/colrev.website_screenshot.rst
 
-pdf_get_man
------------------------------
-
-.. toctree::
-   :maxdepth: 1
 
    packages/colrev.colrev_cli_pdf_get_man.rst
 
-pdf_prep
------------------------------
-
-.. toctree::
-   :maxdepth: 1
 
    packages/colrev.grobid_tei.rst
    packages/colrev.ocrmypdf.rst
    packages/colrev.remove_coverpage.rst
    packages/colrev.remove_last_page.rst
 
-pdf_prep_man
------------------------------
-
-.. toctree::
-   :maxdepth: 1
 
    packages/colrev.colrev_cli_pdf_prep_man.rst
 
-screen
------------------------------
-
-.. toctree::
-   :maxdepth: 1
 
    packages/colrev.colrev_cli_screen.rst
    packages/colrev.screen_table.rst
 
-data
------------------------------
-
-.. toctree::
-   :maxdepth: 1
 
    packages/colrev.bibliography_export.rst
    packages/colrev.colrev_curation.rst

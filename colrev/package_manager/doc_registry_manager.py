@@ -139,12 +139,6 @@ class DocRegistryManager:
             "data",
         ]:
             new_doc.append("")
-            new_doc.append(endpoint_type)
-            new_doc.append("-----------------------------")
-            new_doc.append("")
-
-            new_doc.append(".. toctree::")
-            new_doc.append("   :maxdepth: 1")
             new_doc.append("")
 
             doc_items = self.docs_for_index[endpoint_type]
@@ -217,9 +211,39 @@ class DocRegistryManager:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
 
+    def _update_packages_overview(self) -> None:
+        packages_overview = []
+        # for key, packages in self.package_endpoints_json.items():
+
+        for endpoint_type in [
+            "review_type",
+            "search_source",
+            "prep",
+            "dedupe",
+            "prescreen",
+            "pdf_get",
+            "pdf_prep",
+            "screen",
+            "data",
+        ]:
+            packages = self.package_endpoints_json[endpoint_type]
+            for package in packages:
+                package["endpoint_type"] = endpoint_type
+                packages_overview.append(package)
+
+        packages_overview_json_file = self._colrev_path / Path(
+            "docs/source/packages_overview.json"
+        )
+        packages_overview_json_file.unlink(missing_ok=True)
+        json_object = json.dumps(packages_overview, indent=4)
+        with open(packages_overview_json_file, "w", encoding="utf-8") as file:
+            file.write(json_object)
+            file.write("\n")  # to avoid pre-commit/eof-fix changes
+
     def update(self) -> None:
         """Update the package endpoints and the package status."""
 
         self._extract_search_source_types()
         self._update_package_endpoints_json()
+        self._update_packages_overview()
         self._write_docs_for_index()

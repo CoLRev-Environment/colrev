@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 from colrev.constants import Fields
 
@@ -33,16 +32,18 @@ def test_load_ris_entries(tmp_path, helpers):  # type: ignore
             record_dict[key] = str(value)
 
     # only supports ris
-    with pytest.raises(colrev_exceptions.ImportException):
-        colrev.loader.load_utils.load(
-            filename=Path("table.ptvc"),
-            unique_id_field="DO",
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
-        )
+    with pytest.raises(NotImplementedError):
+        os.makedirs("data/search", exist_ok=True)
+        Path("data/search/table.ptvc").touch()
+        try:
+            colrev.loader.load_utils.load(
+                filename=Path("data/search/table.ptvc"),
+            )
+        finally:
+            Path("data/search/table.ptvc").unlink()
 
     # file must exist
-    with pytest.raises(colrev_exceptions.ImportException):
+    with pytest.raises(FileNotFoundError):
         colrev.loader.load_utils.load(
             filename=Path("non-existent.ris"),
             unique_id_field="doi",

@@ -9,21 +9,21 @@ import git
 import colrev.env.environment_manager
 import colrev.process.operation
 import colrev.record.record
+from colrev.constants import Filepaths
 
 
 class Resources:
     """Class for curated CoLRev resourcs (metadata repositories, annotators)"""
 
     # pylint: disable=too-few-public-methods
-    curations_path = Path.home().joinpath("colrev/curated_metadata")
 
     def install_curated_resource(self, *, curated_resource: str) -> bool:
         """Install a curated resource"""
 
         if "http" not in curated_resource:
             curated_resource = "https://github.com/" + curated_resource
-        self.curations_path.mkdir(exist_ok=True, parents=True)
-        repo_dir = self.curations_path / Path(curated_resource.split("/")[-1])
+        Filepaths.CURATIONS_PATH.mkdir(exist_ok=True, parents=True)
+        repo_dir = Filepaths.CURATIONS_PATH / Path(curated_resource.split("/")[-1])
         if repo_dir.is_dir():
             print(f"Repo already exists ({repo_dir})")
             return False

@@ -450,7 +450,8 @@ class Search(colrev.process.operation.Operation):
             if not self.review_manager.high_level_operation:
                 print()
             self.review_manager.logger.info(
-                f"search [{source.endpoint} > data/search/{source.filename.name}]"
+                f"search [{source.endpoint}:{source.search_type} > "
+                f"data/search/{source.filename.name}]"
             )
 
             try:

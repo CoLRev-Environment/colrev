@@ -13,6 +13,7 @@ import colrev.env.environment_manager
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
+from colrev.constants import Filepaths
 from colrev.packages.unpaywall.src.unpaywall import Unpaywall
 
 # flake8: noqa: E501
@@ -183,76 +184,6 @@ def test_register_ports() -> None:
         env_man.register_ports(["3000", "3001", "3002"])
 
 
-def test_get_environment_details(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> None:
-    if base_repo_review_manager.in_ci_environment():
-        return
-    env_man = colrev.env.environment_manager.EnvironmentManager()
-    env_man.environment_registry = {"local_index": {"repos": []}}
-    env_man.environment_registry["local_index"]["repos"] = [
-        {
-            "repo_name": "international-conference-on-information-systems",
-            "repo_source_path": "/home/gerit/colrev/curated_metadata/international-conference-on-information-systems",
-            "repo_source_url": "https://github.com/CoLRev-curations/international-conference-on-information-systems",
-        },
-        {
-            "repo_name": "european-journal-of-information-systems",
-            "repo_source_path": "/home/gerit/colrev/curated_metadata/european-journal-of-information-systems",
-            "repo_source_url": "https://github.com/CoLRev-curations/european-journal-of-information-systems",
-        },
-        {
-            "repo_name": "information-systems-journal",
-            "repo_source_path": "/home/gerit/colrev/curated_metadata/information-systems-journal",
-            "repo_source_url": "https://github.com/CoLRev-curations/information-systems-journal",
-        },
-    ]
-    env_man.save_environment_registry(updated_registry=env_man.environment_registry)
-
-    ret = env_man.get_environment_details()
-
-    assert "index" in ret
-    assert "local_repos" in ret
-    assert "repos" in ret["local_repos"]
-    assert "broken_links" in ret["local_repos"]
-
-
-def test_get_curated_outlets(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> None:
-    if base_repo_review_manager.in_ci_environment():
-        return
-
-    env_man = colrev.env.environment_manager.EnvironmentManager()
-    env_man.environment_registry = {"local_index": {"repos": []}}
-    env_man.environment_registry["local_index"]["repos"] = [
-        {
-            "repo_name": "international-conference-on-information-systems",
-            "repo_source_path": "/home/gerit/colrev/curated_metadata/international-conference-on-information-systems",
-            "repo_source_url": "https://github.com/CoLRev-curations/international-conference-on-information-systems",
-        },
-        {
-            "repo_name": "european-journal-of-information-systems",
-            "repo_source_path": "/home/gerit/colrev/curated_metadata/european-journal-of-information-systems",
-            "repo_source_url": "https://github.com/CoLRev-curations/european-journal-of-information-systems",
-        },
-        {
-            "repo_name": "information-systems-journal",
-            "repo_source_path": "/home/gerit/colrev/curated_metadata/information-systems-journal",
-            "repo_source_url": "https://github.com/CoLRev-curations/information-systems-journal",
-        },
-    ]
-    env_man.save_environment_registry(updated_registry=env_man.environment_registry)
-
-    ret = env_man.get_curated_outlets()
-    print(ret)
-    assert ret == [
-        "International Conference on Information Systems",
-        "European Journal of Information Systems",
-        "Information Systems Journal",
-    ]
-
-
 def test_repo_registry(tmp_path) -> None:  # type: ignore
     env_man = colrev.env.environment_manager.EnvironmentManager()
     env_man.environment_registry = {"local_index": {"repos": []}}
@@ -274,3 +205,106 @@ def test_repo_registry(tmp_path) -> None:  # type: ignore
     # Test if the repo is already registered
     env_man.register_repo(path_to_register=tmp_path)
     assert len(env_man.environment_registry["local_index"]["repos"]) == 1
+
+
+def test_get_environment_details(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    # Note: test only runs locally on my machine
+    if "gerit" not in str(base_repo_review_manager.path):
+        return
+
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    env_man.environment_registry = {"local_index": {"repos": []}}
+    env_man.environment_registry["local_index"]["repos"] = [
+        {
+            "repo_name": "international-conference-on-information-systems",
+            "repo_source_path": str(
+                Filepaths.CURATIONS_PATH.joinpath(
+                    "international-conference-on-information-systems"
+                )
+            ),
+            "repo_source_url": str(
+                Filepaths.CURATIONS_PATH.joinpath(
+                    "international-conference-on-information-systems"
+                )
+            ),
+        },
+        {
+            "repo_name": "european-journal-of-information-systems",
+            "repo_source_path": str(
+                Filepaths.CURATIONS_PATH.joinpath(
+                    "european-journal-of-information-systems"
+                )
+            ),
+            "repo_source_url": str(
+                Filepaths.CURATIONS_PATH.joinpath(
+                    "european-journal-of-information-systems"
+                )
+            ),
+        },
+        {
+            "repo_name": "information-systems-journal",
+            "repo_source_path": str(
+                Filepaths.CURATIONS_PATH.joinpath("information-systems-journal")
+            ),
+            "repo_source_url": str(
+                Filepaths.CURATIONS_PATH.joinpath("information-systems-journal")
+            ),
+        },
+    ]
+    env_man.save_environment_registry(updated_registry=env_man.environment_registry)
+
+    ret = env_man.get_environment_details()
+
+    assert "index" in ret
+    assert "local_repos" in ret
+    assert "repos" in ret["local_repos"]
+    assert "broken_links" in ret["local_repos"]
+
+
+def test_get_curated_outlets(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    # Note: test only runs locally on my machine
+    if "gerit" not in str(base_repo_review_manager.path):
+        return
+
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    env_man.environment_registry = {"local_index": {"repos": []}}
+    env_man.environment_registry["local_index"]["repos"] = [
+        {
+            "repo_name": "international-conference-on-information-systems",
+            "repo_source_path": str(
+                Filepaths.CURATIONS_PATH.joinpath(
+                    "international-conference-on-information-systems"
+                )
+            ),
+            "repo_source_url": "https://github.com/CoLRev-curations/international-conference-on-information-systems",
+        },
+        {
+            "repo_name": "european-journal-of-information-systems",
+            "repo_source_path": str(
+                Filepaths.CURATIONS_PATH.joinpath(
+                    "european-journal-of-information-systems"
+                )
+            ),
+            "repo_source_url": "https://github.com/CoLRev-curations/european-journal-of-information-systems",
+        },
+        {
+            "repo_name": "information-systems-journal",
+            "repo_source_path": str(
+                Filepaths.CURATIONS_PATH.joinpath("information-systems-journal")
+            ),
+            "repo_source_url": "https://github.com/CoLRev-curations/information-systems-journal",
+        },
+    ]
+    env_man.save_environment_registry(updated_registry=env_man.environment_registry)
+
+    ret = env_man.get_curated_outlets()
+    print(ret)
+    assert ret == [
+        "International Conference on Information Systems",
+        "European Journal of Information Systems",
+        "Information Systems Journal",
+    ]

@@ -53,6 +53,7 @@ extensions = [
     "sphinxcontrib.datatemplates",
     "sphinx_collapse",
     "repoze.sphinx.autointerface",
+    "sphinx_design",
 ]
 
 
@@ -78,7 +79,12 @@ templates_path = ["_templates"]
 html_static_path = ["_static"]
 # html_logo = "logo_small.png"
 html_favicon = "favicon.png"
-html_css_files = ["css/custom.css"]  # Override some CSS settings
+html_css_files = [
+    "css/custom.css",
+    "css/jquery.dataTables.min.css",
+]
+
+html_js_files = ["js/jquery-3.5.1.js", "js/jquery.dataTables.min.js", "js/main.js"]
 
 # Readthedocs theme
 # on_rtd is whether on readthedocs.org,

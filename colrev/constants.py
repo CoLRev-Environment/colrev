@@ -35,6 +35,8 @@ class Filepaths:
 
     # Environment-specific paths
     LOCAL_ENVIRONMENT_DIR = Path.home().joinpath("colrev")
+    CURATIONS_PATH = LOCAL_ENVIRONMENT_DIR.joinpath("curated_metadata")
+
     LOCAL_INDEX_SQLITE_FILE = LOCAL_ENVIRONMENT_DIR / Path("sqlite_index.db")
     TEI_INDEX_DIR = LOCAL_ENVIRONMENT_DIR / Path(".tei_index/")
 

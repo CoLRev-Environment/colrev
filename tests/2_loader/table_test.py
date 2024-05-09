@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 from colrev.constants import Fields
 
@@ -36,7 +35,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
             record_dict[key] = str(value)
 
     # only supports csv/xlsx
-    with pytest.raises(colrev_exceptions.ImportException):
+    with pytest.raises(FileNotFoundError):
         colrev.loader.load_utils.load(
             filename=Path("table.ptvc"),
             unique_id_field="pmid",
@@ -45,7 +44,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         )
 
     # file must exist
-    with pytest.raises(colrev_exceptions.ImportException):
+    with pytest.raises(FileNotFoundError):
         colrev.loader.load_utils.load(
             filename=Path("non-existent.xlsx"),
             unique_id_field="INCREMENTAL",

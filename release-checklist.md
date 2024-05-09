@@ -41,7 +41,9 @@ For all releases:
 ```
 mkdir example && cd example
 colrev init --example
-colrev retrieve
+colrev load
+colrev prep
+colrev dedupe
 colrev prescreen --include_all
 colrev pdfs
 colrev pdfs --discard

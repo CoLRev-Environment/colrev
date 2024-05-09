@@ -57,8 +57,14 @@ class PackageManager:
         ] = {endpoint_type: {} for endpoint_type in EndpointType}
 
         for package_dir in self._get_packages_dirs():
-            package = colrev.package_manager.package.Package(package_dir)
-            package.add_to_type_identifier_endpoint_dict(type_identifier_endpoint_dict)
+            try:
+                package = colrev.package_manager.package.Package(package_dir)
+                package.add_to_type_identifier_endpoint_dict(
+                    type_identifier_endpoint_dict
+                )
+            except colrev_exceptions.MissingDependencyError as exc:
+                print(exc)
+                continue
 
         return type_identifier_endpoint_dict
 

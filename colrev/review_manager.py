@@ -429,13 +429,27 @@ class ReviewManager:
         self,
         *,
         notify_state_transition_operation: bool = True,
+        polish: bool = False,
+        cpu: int = 4,
+        debug: bool = False,
     ) -> colrev.ops.prep.Prep:  # pragma: no cover
         """Get a prep operation object"""
+        if debug:
+            import colrev.ops.prep_debug
+
+            return colrev.ops.prep_debug.PrepDebug(
+                review_manager=self,
+                notify_state_transition_operation=notify_state_transition_operation,
+                polish=polish,
+            )
+
         import colrev.ops.prep
 
         return colrev.ops.prep.Prep(
             review_manager=self,
             notify_state_transition_operation=notify_state_transition_operation,
+            polish=polish,
+            cpu=cpu,
         )
 
     def get_prep_man_operation(

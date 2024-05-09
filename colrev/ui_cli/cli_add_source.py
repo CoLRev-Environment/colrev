@@ -57,7 +57,7 @@ class CLISourceAdder:
 
         search_source_class = self.package_manager.get_package_endpoint_class(
             package_type=EndpointType.search_source,
-            package_identifier=heuristic_source_dict["source_candidate"],
+            package_identifier=heuristic_source_dict["source_candidate"].endpoint,
         )
         endpoint = search_source_class(
             source_operation=self,

@@ -2,9 +2,13 @@
 """CoLRev dashboard operation: track project progress through dashboard"""
 from __future__ import annotations
 
-import dash
-from dash import Dash
-from dash import html
+import dash  # pylint: disable=import-error
+from dash import Dash  # pylint: disable=import-error
+from dash import html  # pylint: disable=import-error
+
+# dash dependencies optional
+# install with pip install colrev[ui_web]
+# will fail if not installed
 
 
 # pylint: disable=too-few-public-methods

@@ -9,5 +9,5 @@ documentation = "README.md"
 colrev_doc_link = "README.md"
 
 [tool.colrev]
-dev_status = "maturing"
+dev_status = "experimental"
 search_source = "colrev.packages.trid.src.trid:TransportResearchInternationalDocumentation"

@@ -12,7 +12,6 @@ from zope.interface.verify import verifyClass
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.doc_registry_manager
 import colrev.package_manager.interfaces
 import colrev.process.operation
 import colrev.record.record

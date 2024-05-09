@@ -1,9 +1,9 @@
 import logging
+import os
 from pathlib import Path
 
 import pytest
 
-import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
 from colrev.constants import SearchType
@@ -15,14 +15,18 @@ def test_load_md(  # type: ignore
     """Test the load utils for md files"""
 
     # only supports md
-    with pytest.raises(colrev_exceptions.ImportException):
-        colrev.loader.load_utils.load(
-            filename=Path("table.ptvc"),
-            logger=logging.getLogger(__name__),
-        )
+    with pytest.raises(NotImplementedError):
+        os.makedirs("data/search", exist_ok=True)
+        Path("data/search/table.ptvc").touch()
+        try:
+            colrev.loader.load_utils.load(
+                filename=Path("data/search/table.ptvc"),
+            )
+        finally:
+            Path("data/search/table.ptvc").unlink()
 
     # file must exist
-    with pytest.raises(colrev_exceptions.ImportException):
+    with pytest.raises(FileNotFoundError):
         colrev.loader.load_utils.load(
             filename=Path("non-existent.md"),
             logger=logging.getLogger(__name__),

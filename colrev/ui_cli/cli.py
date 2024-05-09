@@ -679,19 +679,6 @@ def load(
     help="Setup template for custom prep script.",
 )
 @click.option(
-    "-df",
-    "--debug_file",
-    type=click.Path(exists=True),
-    help="Debug the preparation step for a selected record (in a file).",
-)
-@click.option(
-    "--skip",
-    is_flag=True,
-    default=False,
-    help="Skip the preparation.",
-    hidden=True,
-)
-@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -714,10 +701,8 @@ def prep(
     keep_ids: bool,
     polish: bool,
     debug: str,
-    debug_file: Path,
     cpu: int,
     setup_custom_script: bool,
-    skip: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -731,13 +716,18 @@ def prep(
             ctx,
             {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL},
         )
-        prep_operation = review_manager.get_prep_operation()
 
-        if debug or debug_file:
-            prep_operation.main(
-                keep_ids=keep_ids, debug_ids=debug, debug_file=debug_file
+        if debug:
+            review_manager.force_mode = True
+            debug_prep_operation = review_manager.get_prep_operation(
+                polish=polish,
+                cpu=cpu,
+                debug=True,
             )
+            debug_prep_operation.run_debug(debug_ids=debug)  # type: ignore
             return
+
+        prep_operation = review_manager.get_prep_operation(polish=polish, cpu=cpu)
         if setup_custom_script:
             prep_operation.setup_custom_script()
             print("Activated custom_prep_script.py.")
@@ -754,10 +744,8 @@ def prep(
                 params=params,
             )
             return
-        if skip:
-            prep_operation.skip_prep()
 
-        prep_operation.main(keep_ids=keep_ids, cpu=cpu, polish=polish)
+        prep_operation.main(keep_ids=keep_ids)
 
     except colrev_exceptions.ServiceNotAvailableException as exc:
         print(exc)
@@ -1442,11 +1430,6 @@ def pdfs(
         notify_state_transition_operation=True
     )
     pdf_get_operation.main()
-
-    print()
-
-    pdf_prep_operation = review_manager.get_pdf_prep_operation()
-    pdf_prep_operation.main()
 
 
 @main.command(help_priority=12)

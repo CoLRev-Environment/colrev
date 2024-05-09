@@ -375,7 +375,7 @@ def test_change_entrytype_inproceedings_2(
         Fields.D_PROV: {},
         Fields.MD_PROV: {
             Fields.AUTHOR: {"source": "files.bib/000025", "note": ""},
-            Fields.TITLE: {"source": "files.bib/000025", "note": "language-unknown"},
+            Fields.TITLE: {"source": "files.bib/000025", "note": ""},
             Fields.BOOKTITLE: {"source": "manual", "note": ""},
             Fields.YEAR: {"source": "generic_field_requirements", "note": ""},
             Fields.PAGES: {"source": "manual", "note": ""},
@@ -1424,3 +1424,32 @@ def test_is_retracted() -> None:
 
     record.data["warning"] = "Withdrawn (according to DBLP)"
     assert record.is_retracted()
+
+
+def test_ignored_defect(
+    quality_model: colrev.record.qm.quality_model.QualityModel,
+) -> None:
+    record_dict = {
+        Fields.ID: "r1",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.STATUS: RecordState.md_retrieved,
+        Fields.D_PROV: {
+            Fields.AUTHOR: {
+                "source": "import.bib/id_0001a",
+                "note": f"IGNORE:{DefectCodes.MISSING}",
+            }
+        },
+        Fields.ORIGIN: ["import.bib/id_0001"],
+        Fields.YEAR: "2020",
+        Fields.TITLE: "EDITORIAL",
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.VOLUME: "45",
+        Fields.NUMBER: "1",
+        Fields.PAGES: "1--3",
+    }
+
+    record = colrev.record.record.Record(record_dict)
+    record.change_entrytype(
+        ENTRYTYPES.ARTICLE, qm=quality_model
+    )  # Should not change anything
+    assert record.ignored_defect(key=Fields.AUTHOR, defect=DefectCodes.MISSING)

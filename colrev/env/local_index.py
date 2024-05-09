@@ -20,7 +20,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.ops.check
 import colrev.record.record
-import colrev.review_manager
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -178,7 +177,9 @@ class LocalIndex:
 
         if not toc_items and search_across_tocs:
             try:
-                partial_toc_key = toc_key.replace("|-", "")
+
+                partial_toc_key = toc_key.rsplit("|", 1)[0]
+
                 toc_items = sqlite_index_toc.get_toc_items(
                     partial_toc_key=partial_toc_key
                 )

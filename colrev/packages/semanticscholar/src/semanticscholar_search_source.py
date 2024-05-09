@@ -40,7 +40,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
-# pylint: disable=too-many-lines
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)

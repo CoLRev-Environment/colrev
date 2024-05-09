@@ -431,8 +431,12 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             record_dict[Fields.TITLE] = record_dict.pop("Title", "")
             record_dict[Fields.AUTHOR] = record_dict.pop("Authors", "")
             record_dict[Fields.ABSTRACT] = record_dict.pop("Abstract", "")
-            record_dict[Fields.JOURNAL] = record_dict.pop("Publication", "")
             record_dict[Fields.DOI] = record_dict.pop("DOI", "")
+
+            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+                record_dict[Fields.JOURNAL] = record_dict.pop("Publication", "")
+            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
+                record_dict[Fields.BOOKTITLE] = record_dict.pop("Publication", "")
 
             record_dict.pop("Category", None)
             record_dict.pop("Affiliations", None)

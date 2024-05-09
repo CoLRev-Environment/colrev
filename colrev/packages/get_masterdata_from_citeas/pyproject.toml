@@ -9,5 +9,5 @@ documentation = "README.md"
 colrev_doc_link = "README.md"
 
 [tool.colrev]
-dev_status = "maturing"
+dev_status = "experimental"
 prep = "colrev.packages.get_masterdata_from_citeas.src.citeas_prep:CiteAsPrep"

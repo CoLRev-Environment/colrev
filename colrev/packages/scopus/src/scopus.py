@@ -13,6 +13,7 @@ import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -100,7 +101,34 @@ class ScopusSearchSource(JsonSchemaMixin):
         return record
 
     def _load_bib(self) -> dict:
+
+        def entrytype_setter(record_dict: dict) -> None:
+            if "document_type" in record_dict:
+                if record_dict["document_type"] == "Conference Paper":
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+
+                elif record_dict["document_type"] == "Conference Review":
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.PROCEEDINGS
+
+                elif record_dict["document_type"] == "Article":
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+
         def field_mapper(record_dict: dict) -> None:
+
+            if record_dict[Fields.ENTRYTYPE] in [
+                ENTRYTYPES.INPROCEEDINGS,
+                ENTRYTYPES.PROCEEDINGS,
+            ]:
+                record_dict[Fields.BOOKTITLE] = record_dict.pop(Fields.JOURNAL, None)
+
+            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK:
+                if (
+                    Fields.JOURNAL in record_dict
+                    and Fields.BOOKTITLE not in record_dict
+                ):
+                    record_dict[Fields.BOOKTITLE] = record_dict.pop(Fields.TITLE, None)
+                    record_dict[Fields.TITLE] = record_dict.pop(Fields.JOURNAL, None)
+
             if "art_number" in record_dict:
                 record_dict[f"{self.endpoint}.art_number"] = record_dict.pop(
                     "art_number"
@@ -114,12 +142,28 @@ class ScopusSearchSource(JsonSchemaMixin):
             if "source" in record_dict:
                 record_dict[f"{self.endpoint}.source"] = record_dict.pop("source")
 
+            if "Start_Page" in record_dict and "End_Page" in record_dict:
+                if (
+                    record_dict["Start_Page"] != "nan"
+                    and record_dict["End_Page"] != "nan"
+                ):
+                    record_dict[Fields.PAGES] = (
+                        record_dict["Start_Page"] + "--" + record_dict["End_Page"]
+                    )
+                    record_dict[Fields.PAGES] = record_dict[Fields.PAGES].replace(
+                        ".0", ""
+                    )
+                    del record_dict["Start_Page"]
+                    del record_dict["End_Page"]
+
         records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             unique_id_field="ID",
+            entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
             logger=self.review_manager.logger,
         )
+
         return records
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
@@ -134,60 +178,5 @@ class ScopusSearchSource(JsonSchemaMixin):
         self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Scopus"""
-
-        if "conference" == record.data[Fields.ENTRYTYPE]:
-            record.data[Fields.ENTRYTYPE] = "inproceedings"
-
-        if "book" == record.data[Fields.ENTRYTYPE]:
-            if Fields.JOURNAL in record.data and Fields.BOOKTITLE not in record.data:
-                record.rename_field(key=Fields.TITLE, new_key=Fields.BOOKTITLE)
-                record.rename_field(key=Fields.JOURNAL, new_key=Fields.TITLE)
-
-        if "colrev.scopus.document_type" in record.data:
-            if record.data["colrev.scopus.document_type"] == "Conference Paper":
-                record.change_entrytype(
-                    new_entrytype="inproceedings", qm=self.quality_model
-                )
-
-            elif record.data["colrev.scopus.document_type"] == "Conference Review":
-                record.change_entrytype(
-                    new_entrytype="proceedings", qm=self.quality_model
-                )
-
-            elif record.data["colrev.scopus.document_type"] == "Article":
-                record.change_entrytype("article", qm=self.quality_model)
-
-            record.remove_field(key="colrev.scopus.document_type")
-
-        if (
-            "colrev.scopus.Start_Page" in record.data
-            and "colrev.scopus.End_Page" in record.data
-        ):
-            if (
-                record.data["colrev.scopus.Start_Page"] != "nan"
-                and record.data["colrev.scopus.End_Page"] != "nan"
-            ):
-                record.data[Fields.PAGES] = (
-                    record.data["colrev.scopus.Start_Page"]
-                    + "--"
-                    + record.data["colrev.scopus.End_Page"]
-                )
-                record.data[Fields.PAGES] = record.data[Fields.PAGES].replace(".0", "")
-                record.remove_field(key="colrev.scopus.Start_Page")
-                record.remove_field(key="colrev.scopus.End_Page")
-
-        if "colrev.scopus.note" in record.data:
-            if "cited By " in record.data["colrev.scopus.note"]:
-                record.rename_field(key="colrev.scopus.note", new_key=Fields.CITED_BY)
-                record.data[Fields.CITED_BY] = record.data[Fields.CITED_BY].replace(
-                    "cited By ", ""
-                )
-
-        if Fields.AUTHOR in record.data:
-            record.data[Fields.AUTHOR] = record.data[Fields.AUTHOR].replace(
-                "; ", " and "
-            )
-
-        record.remove_field(key="colrev.scopus.source")
 
         return record

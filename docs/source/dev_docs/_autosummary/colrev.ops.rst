@@ -44,6 +44,7 @@ colrev.ops
    colrev.ops.pdf_prep
    colrev.ops.pdf_prep_man
    colrev.ops.prep
+   colrev.ops.prep_debug
    colrev.ops.prep_man
    colrev.ops.prescreen
    colrev.ops.pull

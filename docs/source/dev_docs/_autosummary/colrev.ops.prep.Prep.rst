@@ -24,7 +24,6 @@ colrev.ops.prep.Prep
       ~Prep.prepare
       ~Prep.set_ids
       ~Prep.setup_custom_script
-      ~Prep.skip_prep
 
 
 
@@ -34,7 +33,6 @@ colrev.ops.prep.Prep
 
    .. autosummary::
 
-      ~Prep.debug_mode
       ~Prep.max_retries_on_error
       ~Prep.pad
       ~Prep.polish

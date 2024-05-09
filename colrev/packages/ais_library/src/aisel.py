@@ -19,11 +19,11 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
-from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.packages.ais_library.src import ais_load_utils
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -218,10 +218,14 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
     def _get_ais_query_return(self) -> list:
         def query_from_params(params: dict) -> str:
+
             final = ""
-            for i in params["query"]:
-                final = f"{final} {i['operator']} {i['field']}:{i['term']}".strip()
-                final = final.replace("All fields:", "")
+            if isinstance(params["query"], str):
+                final = params["query"]
+            else:
+                for i in params["query"]:
+                    final = f"{final} {i['operator']} {i['field']}:{i['term']}".strip()
+                    final = final.replace("All fields:", "")
 
             if "start_date" in params["query"]:
                 final = f"{final}&start_date={params['query']['start_date']}"
@@ -248,7 +252,15 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         # Note: the following writes the enl to the feed file (bib).
         # This file is replaced by ais_feed.save()
-        records = self._load_enl()
+
+        records = colrev.loader.load_utils.loads(
+            response.text,
+            implementation="enl",
+            id_labeler=ais_load_utils.enl_id_labeler,
+            entrytype_setter=ais_load_utils.enl_entrytype_setter,
+            field_mapper=ais_load_utils.enl_field_mapper,
+            logger=self.review_manager.logger,
+        )
 
         return list(records.values())
 
@@ -300,13 +312,12 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         self._validate_source()
 
-        ais_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
-            source_identifier=self.source_identifier,
-            update_only=(not rerun),
-        )
-
         if self.search_source.search_type == SearchType.API:
+            ais_feed = self.search_source.get_api_feed(
+                review_manager=self.review_manager,
+                source_identifier=self.source_identifier,
+                update_only=(not rerun),
+            )
             self._run_api_search(
                 ais_feed=ais_feed,
                 rerun=rerun,
@@ -328,91 +339,14 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         return record
 
     def _load_enl(self) -> dict:
-        def id_labeler(records: list) -> None:
-            for record_dict in records:
-                record_dict["ID"] = record_dict["U"].replace(
-                    "https://aisel.aisnet.org/", ""
-                )
 
-        def entrytype_setter(record_dict: dict) -> None:
-            if "0" not in record_dict:
-                keys_to_check = ["V", "N"]
-                if any(k in record_dict for k in keys_to_check):
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-                else:
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
-            else:
-                if record_dict["0"] == "Journal Article":
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-                elif record_dict["0"] == "Inproceedings":
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
-                else:
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
-
-        def field_mapper(record_dict: dict) -> None:
-
-            key_maps = {
-                ENTRYTYPES.ARTICLE: {
-                    "T": Fields.TITLE,
-                    "A": Fields.AUTHOR,
-                    "D": Fields.YEAR,
-                    "B": Fields.JOURNAL,
-                    "V": Fields.VOLUME,
-                    "N": Fields.NUMBER,
-                    "P": Fields.PAGES,
-                    "X": Fields.ABSTRACT,
-                    "U": Fields.URL,
-                    "8": "date",
-                    "0": "type",
-                },
-                ENTRYTYPES.INPROCEEDINGS: {
-                    "T": Fields.TITLE,
-                    "A": Fields.AUTHOR,
-                    "D": Fields.YEAR,
-                    "B": Fields.JOURNAL,
-                    "V": Fields.VOLUME,
-                    "N": Fields.NUMBER,
-                    "P": Fields.PAGES,
-                    "X": Fields.ABSTRACT,
-                    "U": Fields.URL,
-                    "8": "date",
-                    "0": "type",
-                },
-            }
-
-            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
-            for ris_key in list(record_dict.keys()):
-                if ris_key in key_map:
-                    standard_key = key_map[ris_key]
-                    record_dict[standard_key] = record_dict.pop(ris_key)
-
-            if Fields.AUTHOR in record_dict and isinstance(
-                record_dict[Fields.AUTHOR], list
-            ):
-                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
-            if Fields.EDITOR in record_dict and isinstance(
-                record_dict[Fields.EDITOR], list
-            ):
-                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
-            if Fields.KEYWORDS in record_dict and isinstance(
-                record_dict[Fields.KEYWORDS], list
-            ):
-                record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
-
-            record_dict.pop("type", None)
-
-            for key, value in record_dict.items():
-                record_dict[key] = str(value)
-
-        records = colrev.loader.load_utils.load(
+        return colrev.loader.load_utils.load(
             filename=self.search_source.filename,
-            id_labeler=id_labeler,
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
+            id_labeler=ais_load_utils.enl_id_labeler,
+            entrytype_setter=ais_load_utils.enl_entrytype_setter,
+            field_mapper=ais_load_utils.enl_field_mapper,
             logger=self.review_manager.logger,
         )
-
-        return records
 
     def _load_bib(self) -> dict:
 
