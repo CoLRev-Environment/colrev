@@ -1,6 +1,6 @@
 [project]
-name = "colrev.chatgpt"
-description = "CoLRev package for ChatGPT"
+name = "colrev.genai"
+description = "CoLRev package for GenAI"
 version = "0.1.0"
 authors = [
     { name = "Julian Prester", email = "julian.prester@sydney.edu.au" },
@@ -11,5 +11,5 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "experimental"
-prescreen = "colrev.packages.chatgpt.src.chatgpt_prescreen:ChatGPTPrescreen"
-screen = "colrev.packages.chatgpt.src.chatgpt_screen:ChatGPTScreen"
+prescreen = "colrev.packages.genai.src.genai_prescreen:GenAIPrescreen"
+screen = "colrev.packages.genai.src.genai_screen:GenAIScreen"

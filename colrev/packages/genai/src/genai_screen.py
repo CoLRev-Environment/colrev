@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Screen based on ChatGPT"""
+"""Screen based on GenAI"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,8 +17,8 @@ from colrev.constants import RecordState
 
 @zope.interface.implementer(colrev.package_manager.interfaces.ScreenInterface)
 @dataclass
-class ChatGPTScreen(JsonSchemaMixin):
-    """Screen documents using ChatGPT"""
+class GenAIScreen(JsonSchemaMixin):
+    """Screen documents using GenAI"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = False
@@ -37,7 +37,7 @@ class ChatGPTScreen(JsonSchemaMixin):
         # TODO : load API-Key and initialize connection here
 
     def run_screen(self, records: dict, split: list) -> dict:
-        """Screen records based on ChatGPT"""
+        """Screen records based on GenAI"""
 
         # TODO : add logic based on records and split here
 
@@ -51,6 +51,6 @@ class ChatGPTScreen(JsonSchemaMixin):
             # record.data[Fields.SCREENING_CRITERIA] = screening_criteria_field
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(msg="Screen (ChatGPT)")
+        self.review_manager.dataset.create_commit(msg="Screen (GenAI)")
 
         return records

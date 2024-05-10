@@ -1,4 +1,4 @@
-# ChatGPT
+# GenAI
 
 ## prescreen
 
@@ -8,7 +8,7 @@ Note: This document is currently under development. It will contain the followin
 - example
 
 ```
-colrev settings -m "prescreen.prescreen_package_endpoints=[{'endpoint': 'colrev.chatgpt'}]"
+colrev settings -m "prescreen.prescreen_package_endpoints=[{'endpoint': 'colrev.genai'}]"
 ```
 
 ## screen
@@ -19,7 +19,7 @@ Note: This document is currently under development. It will contain the followin
 - example
 
 ```
-colrev settings -m "screen.screen_package_endpoints=[{'endpoint': 'colrev.chatgpt'}]"
+colrev settings -m "screen.screen_package_endpoints=[{'endpoint': 'colrev.genai'}]"
 ```
 
 ## Links

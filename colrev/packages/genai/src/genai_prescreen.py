@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Prescreen based on ChatGPT"""
+"""Prescreen based on GenAI"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -20,8 +20,8 @@ from colrev.constants import RecordState
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
 @dataclass
-class ChatGPTPrescreen(JsonSchemaMixin):
-    """ChatGPT-based prescreen"""
+class GenAIPrescreen(JsonSchemaMixin):
+    """GenAI-based prescreen"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = False
@@ -43,7 +43,7 @@ class ChatGPTPrescreen(JsonSchemaMixin):
         records: dict,
         split: list,
     ) -> dict:
-        """Prescreen records based on ChatGPT"""
+        """Prescreen records based on GenAI"""
 
         # TODO : add logic based on records and split here
 
@@ -53,6 +53,6 @@ class ChatGPTPrescreen(JsonSchemaMixin):
             # record.set_status(RecordState.rev_prescreen_excluded)
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(msg="Pre-screen (ChatGPT)")
+        self.review_manager.dataset.create_commit(msg="Pre-screen (GenAI)")
 
         return records
