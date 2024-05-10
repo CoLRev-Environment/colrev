@@ -182,30 +182,33 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 )
                 return add_source
 
-        # if search_type == SearchType.API:
+        if search_type == SearchType.DB:
+            return operation.add_db_source(
+                search_source_cls=cls,
+                params=params,
+            )
 
         raise NotImplementedError
 
     def search(self, rerun: bool) -> None:
         """Run a search of IEEEXplore"""
 
-        ieee_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
-            source_identifier=self.source_identifier,
-            update_only=(not rerun),
-        )
-
         if self.search_source.search_type == SearchType.API:
+            ieee_feed = self.search_source.get_api_feed(
+                review_manager=self.review_manager,
+                source_identifier=self.source_identifier,
+                update_only=(not rerun),
+            )
             self._run_api_search(ieee_feed=ieee_feed, rerun=rerun)
 
-        if self.search_source.search_type == SearchType.DB:
+        elif self.search_source.search_type == SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,
             )
-            return
 
-        raise NotImplementedError
+        else:
+            raise NotImplementedError
 
     def _get_api_key(self) -> str:
         api_key = self.review_manager.environment_manager.get_settings_by_key(
