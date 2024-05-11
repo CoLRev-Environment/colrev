@@ -114,7 +114,7 @@ class PDFLastPage(JsonSchemaMixin):
         if last_pages:
             original = self.review_manager.path / Path(record.data[Fields.FILE])
             file_copy = self.review_manager.path / Path(
-                record.data[Fields.FILE].replace(".pdf", "_wo_lp.pdf")
+                record.data[Fields.FILE].replace(".pdf", "_with_lp.pdf")
             )
             shutil.copy(original, file_copy)
 

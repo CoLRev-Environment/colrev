@@ -361,12 +361,12 @@ class FilesSearchSource(JsonSchemaMixin):
 
         if (
             "_ocr.pdf" == str(file_path)[-8:]
-            or "_wo_cp.pdf" == str(file_path)[-10:]
-            or "_wo_lp.pdf" == str(file_path)[-10:]
+            or "_with_cp.pdf" == str(file_path)[-10:]
+            or "_with_lp.pdf" == str(file_path)[-10:]
             or "_backup.pdf" == str(file_path)[-11:]
         ):
             self.review_manager.logger.info(
-                f"Skipping PDF with _ocr.pdf/_wo_cp.pdf: {file_path}"
+                f"Skipping PDF with _ocr.pdf/_with_cp.pdf: {file_path}"
             )
             return True
 

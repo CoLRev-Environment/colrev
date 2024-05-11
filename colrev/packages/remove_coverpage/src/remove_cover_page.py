@@ -179,7 +179,7 @@ class PDFCoverPage(JsonSchemaMixin):
         if coverpages:
             original = self.review_manager.path / Path(record.data[Fields.FILE])
             file_copy = self.review_manager.path / Path(
-                record.data[Fields.FILE].replace(".pdf", "_wo_cp.pdf")
+                record.data[Fields.FILE].replace(".pdf", "_with_cp.pdf")
             )
             shutil.copy(original, file_copy)
             record.extract_pages(
