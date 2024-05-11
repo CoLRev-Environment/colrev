@@ -1669,14 +1669,12 @@ def pdf_get_man(
 
 
 def _print_pdf_hashes(*, pdf_path: Path) -> None:
-    from PyPDF2 import PdfFileReader
-    import colrev.record.record_pdf
 
-    try:
-        pdf_reader = PdfFileReader(str(pdf_path), strict=False)
-    except ValueError:
-        print("Could not read PDF")
-        return
+    import colrev.record.record_pdf
+    import pymupdf
+
+    doc = pymupdf.Document(pdf_path)
+    last_page_nr = doc.page_count
 
     assert Path(pdf_path).suffix == ".pdf"
     record = colrev.record.record_pdf.PDFRecord({"file": pdf_path})
@@ -1685,7 +1683,6 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
     first_page_average_hash_32 = record.get_pdf_hash(page_nr=1, hash_size=32)
     print(f"first page: {first_page_average_hash_32}")
 
-    last_page_nr = len(pdf_reader.pages)
     last_page_average_hash_16 = record.get_pdf_hash(page_nr=last_page_nr, hash_size=16)
     print(f"last page: {last_page_average_hash_16}")
     last_page_average_hash_32 = record.get_pdf_hash(page_nr=last_page_nr, hash_size=32)

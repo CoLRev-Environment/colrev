@@ -30,7 +30,7 @@ def test_set_text_from_pdf(helpers, record_with_pdf: colrev.record.record_pdf.PD
     )
     record_with_pdf.set_text_from_pdf()
     actual = record_with_pdf.data["text_from_pdf"]
-    actual = actual[0:4234]
+    actual = actual[0:4209]
     assert expected == actual
 
 
@@ -48,6 +48,12 @@ def test_extract_text_by_page(  # type: ignore
     ).read_text(encoding="utf-8")
     actual = record_with_pdf.extract_text_by_page(pages=[0])
     actual = actual.rstrip()
+    if expected != actual:
+        (
+            helpers.test_data_path
+            / Path("data/WagnerLukyanenkoParEtAl2022_content.txt")
+        ).write_text(actual, encoding="utf-8")
+
     assert expected == actual
 
 

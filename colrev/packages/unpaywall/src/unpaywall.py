@@ -7,11 +7,10 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+import pymupdf
 import requests
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
-from pdfminer.high_level import extract_text
-from pdfminer.pdftypes import PDFException
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -99,11 +98,13 @@ class Unpaywall(JsonSchemaMixin):
         return best_loc["url_for_pdf"]
 
     def _is_pdf(self, *, path_to_file: Path) -> bool:
-        try:
-            extract_text(str(path_to_file))
-            return True
-        except (PDFException, TypeError):
-            return False
+        # try:
+        with pymupdf.open(path_to_file) as doc:
+            doc.load_page(0).get_text()
+        return True
+        # TODO : errors from pdfminer (replaced by pymupdf)
+        # except (PDFException, TypeError):
+        #     return False
 
     def get_pdf(
         self, record: colrev.record.record.Record
