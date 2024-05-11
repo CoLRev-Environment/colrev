@@ -83,7 +83,7 @@ class PDFLastPage(JsonSchemaMixin):
             if str(last_page_average_hash_16) in last_page_hashes:
                 last_pages.append(last_page_nr)
 
-            res = doc.pages(last_page_nr).get_text()  # pylint: disable=no-member
+            res = doc.load_page(last_page_nr).get_text()  # pylint: disable=no-member
             last_page_text = res.replace(" ", "").replace("\n", "").lower()
 
             # ME Sharpe last page

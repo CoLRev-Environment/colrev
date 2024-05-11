@@ -142,10 +142,10 @@ class PDFCoverPage(JsonSchemaMixin):
         if str(first_page_average_hash_16) in first_page_hashes:
             coverpages.append(0)
 
-        res = doc.pages(0).get_text()
+        res = doc.load_page(0).get_text()
         page0 = res.replace(" ", "").replace("\n", "").lower()
 
-        res = doc.pages(1).get_text()
+        res = doc.load_page(1).get_text()
         page1 = res.replace(" ", "").replace("\n", "").lower()
 
         # input(page0)

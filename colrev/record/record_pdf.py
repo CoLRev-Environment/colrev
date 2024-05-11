@@ -87,6 +87,13 @@ class PDFRecord(colrev.record.record.Record):
         doc = pymupdf.Document(pdf_path)
         all_pages_list = list(range(doc.page_count))
 
+        if save_to_path:
+            save_doc = pymupdf.Document()
+            for page in pages:
+                save_doc.insert_pdf(doc, from_page=page, to_page=page)
+            save_doc.save(save_to_path / Path(pdf_path).name)
+            save_doc.close()
+
         saved_pdf_pages = []
 
         for page in pages:
@@ -94,14 +101,9 @@ class PDFRecord(colrev.record.record.Record):
             saved_pdf_pages.append(page)
 
         doc.select(all_pages_list)
-        doc.save(pdf_path)
+        # pylint: disable=no-member
+        doc.save(pdf_path, incremental=True, encryption=pymupdf.PDF_ENCRYPT_KEEP)
         doc.close()
-
-        if save_to_path:
-            doc = pymupdf.Document(pdf_path)
-            doc.select(saved_pdf_pages)
-            doc.save(save_to_path / Path(pdf_path).name)
-            doc.close()
 
     def extract_pages(
         self,
