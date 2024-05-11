@@ -754,6 +754,22 @@ def test_name_format_separators(
     name_format_separators_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
 
+    v_t_record.data[Fields.AUTHOR] = (
+        "Aguirre‐Urreta, Miguel I. and Rönkkö, Mikko and Marakas, George M."
+    )
+    name_format_separators_checker.run(record=v_t_record)
+    assert not v_t_record.has_quality_defects()
+
+    v_t_record.data[Fields.AUTHOR] = "Córdoba, José‐Rodrigo"
+    name_format_separators_checker.run(record=v_t_record)
+    assert not v_t_record.has_quality_defects()
+
+    v_t_record.data[Fields.AUTHOR] = (
+        'Zahedi, Fatemeh "Mariam" and Abbasi, Ahmed and Chen, Yan'
+    )
+    name_format_separators_checker.run(record=v_t_record)
+    assert not v_t_record.has_quality_defects()
+
     # Name format issues due to "I N T R  O D " in the author field
     v_t_record.data[Fields.AUTHOR] = "I N T R O D"
     name_format_separators_checker.run(record=v_t_record)
