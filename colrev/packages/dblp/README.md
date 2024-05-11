@@ -1,5 +1,9 @@
 # DBLP
 
+| SearchSource                                 | Scope                                   | Size        |
+|----------------------------------------------|-----------------------------------------|-------------|
+| [dblp](https://dblp.org/) (curated metadata) | Compter science, Information Technology | > 5,750,000 |
+
 ## search
 
 ### API search

@@ -1,5 +1,9 @@
 # Semantic Scholar
 
+| SearchSource        | Scope              | Size            |
+|---------------------|--------------------|-----------------|
+| Semantic Scholar    | Cross-disciplinary | > 175,000,000   |
+
 This class supports the search function for Semantic Scholar via an unofficial python client (link below).
 
 ## search

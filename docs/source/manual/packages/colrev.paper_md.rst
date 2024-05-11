@@ -40,3 +40,17 @@ Once record citations are moved from the to-do list to other parts of the manusc
 
 Links
 -----
+
+
+.. image:: https://img.shields.io/github/commit-activity/y/jgm/pandoc?color=green&style=plastic
+   :target: https://img.shields.io/github/commit-activity/y/jgm/pandoc?color=green&style=plastic
+   :alt: pandocactivity
+
+`pandoc <https://github.com/jgm/pandoc>`_ to convert Markdown to PDF or Word (License: `GPL 2 <https://github.com/jgm/pandoc/blob/main/COPYRIGHT>`_\ )
+
+
+.. image:: https://img.shields.io/github/commit-activity/y/citation-style-language/styles?color=green&style=plastic
+   :target: https://img.shields.io/github/commit-activity/y/citation-style-language/styles?color=green&style=plastic
+   :alt: cslactivity
+
+`CSL <https://github.com/citation-style-language/styles>`_ to format citations (License: `CC BY-SA 3.0 <https://github.com/citation-style-language/styles>`_\ )

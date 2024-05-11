@@ -466,6 +466,7 @@ class Load(colrev.process.operation.Operation):
 
             except FileNotFoundError:
                 self.review_manager.logger.info(" Nothing to load")
+                print()
             except colrev_exceptions.ImportException as exc:
                 print(exc)
 

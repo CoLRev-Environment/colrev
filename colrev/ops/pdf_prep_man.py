@@ -5,13 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
-from PyPDF2 import PdfFileReader
-from PyPDF2 import PdfFileWriter
-from PyPDF2.errors import PdfReadError
+import pymupdf
 
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
+import colrev.record.record_pdf
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -235,19 +234,13 @@ class PDFPrepMan(colrev.process.operation.Operation):
         cp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
-        try:
-            pdf_reader = PdfFileReader(str(filepath), strict=False)
-            writer_cp = PdfFileWriter()
-            writer_cp.addPage(pdf_reader.getPage(0))
-            writer = PdfFileWriter()
-            for i in range(1, len(pdf_reader.pages)):
-                writer.addPage(pdf_reader.getPage(i))
-            with open(filepath, "wb") as outfile:
-                writer.write(outfile)
-            with open(cp_path / filepath.name, "wb") as outfile:
-                writer_cp.write(outfile)
-        except PdfReadError as exc:
-            raise colrev_exceptions.InvalidPDFException(filepath) from exc
+        doc1 = pymupdf.Document(str(filepath))
+        if doc1.page_count > 0:
+            colrev.record.record_pdf.PDFRecord.extract_pages_from_pdf(
+                pages=[0],
+                pdf_path=filepath,
+                save_to_path=cp_path,
+            )
 
     def extract_lastpage(self, *, filepath: Path) -> None:
         """Extract last page from PDF"""
@@ -255,38 +248,23 @@ class PDFPrepMan(colrev.process.operation.Operation):
         lp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".lastpages")
         lp_path.mkdir(exist_ok=True)
 
-        try:
-            pdf_reader = PdfFileReader(str(filepath), strict=False)
-            writer_lp = PdfFileWriter()
-            writer_lp.addPage(pdf_reader.getPage(len(pdf_reader.pages) - 1))
-            writer = PdfFileWriter()
-            for i in range(0, len(pdf_reader.pages) - 1):
-                writer.addPage(pdf_reader.getPage(i))
-            with open(filepath, "wb") as outfile:
-                writer.write(outfile)
-            with open(lp_path / filepath.name, "wb") as outfile:
-                writer_lp.write(outfile)
-        except PdfReadError as exc:
-            raise colrev_exceptions.InvalidPDFException(filepath) from exc
+        doc1 = pymupdf.Document(str(filepath))
+        if doc1.page_count > 0:
+            colrev.record.record_pdf.PDFRecord.extract_pages_from_pdf(
+                pages=[doc1.page_count - 1],
+                pdf_path=filepath,
+                save_to_path=lp_path,
+            )
 
     def extract_pages(self, *, filepath: Path, pages_to_remove: list) -> None:
         """Extract pages from PDF"""
 
-        try:
-            pdf_reader = PdfFileReader(str(filepath), strict=False)
-            pages_to_add = [
-                x
-                for x in list(range(0, len(pdf_reader.pages)))
-                if x not in pages_to_remove
-            ]
-            writer = PdfFileWriter()
-            for i in pages_to_add:
-                writer.addPage(pdf_reader.getPage(i))
-            with open(filepath, "wb") as outfile:
-                writer.write(outfile)
-
-        except PdfReadError as exc:
-            raise colrev_exceptions.InvalidPDFException(filepath) from exc
+        doc1 = pymupdf.Document(str(filepath))
+        if doc1.page_count > 0:
+            colrev.record.record_pdf.PDFRecord.extract_pages_from_pdf(
+                pages=pages_to_remove,
+                pdf_path=filepath,
+            )
 
     def set_pdf_man_prepared(self, record: colrev.record.record.Record) -> None:
         """Set the PDF to manually prepared"""
