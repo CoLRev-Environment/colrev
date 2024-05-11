@@ -49,31 +49,17 @@ class PDFRecord(colrev.record.record.Record):
     def set_nr_pages_in_pdf(self) -> None:
         """Set the pages_in_file field based on the PDF"""
         pdf_path = Path(self.data[Fields.FILE]).absolute()
-        # try:
         with pymupdf.open(pdf_path) as doc:
             pages_in_file = doc.page_count
         self.data[Fields.NR_PAGES_IN_FILE] = pages_in_file
-        # except PDFSyntaxError:  # pragma: no cover
-        #     self.data.pop(Fields.NR_PAGES_IN_FILE, None)
 
     def set_text_from_pdf(self) -> None:
         """Set the text_from_pdf field based on the PDF"""
         self.data[Fields.TEXT_FROM_PDF] = ""
-        # try:
         self.set_nr_pages_in_pdf()
         text = self.extract_text_by_page(pages=[0, 1, 2])
         text_from_pdf = text.replace("\n", " ").replace("\x0c", "")
         self.data[Fields.TEXT_FROM_PDF] = text_from_pdf
-
-        # TODO : errors from pdfminer (replaced by pymupdf)
-        # except PDFSyntaxError:  # pragma: no cover
-        #     self.add_field_provenance_note(key=Fields.FILE, note="pdf_reader_error")
-        #     # pylint: disable=colrev-direct-status-assign
-        #     self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
-        # except PDFTextExtractionNotAllowed:  # pragma: no cover
-        #     self.add_field_provenance_note(key=Fields.FILE, note="pdf_protected")
-        #     # pylint: disable=colrev-direct-status-assign
-        #     self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
     @classmethod
     def extract_pages_from_pdf(

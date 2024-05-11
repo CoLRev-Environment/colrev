@@ -98,13 +98,9 @@ class Unpaywall(JsonSchemaMixin):
         return best_loc["url_for_pdf"]
 
     def _is_pdf(self, *, path_to_file: Path) -> bool:
-        # try:
         with pymupdf.open(path_to_file) as doc:
             doc.load_page(0).get_text()
         return True
-        # TODO : errors from pdfminer (replaced by pymupdf)
-        # except (PDFException, TypeError):
-        #     return False
 
     def get_pdf(
         self, record: colrev.record.record.Record
