@@ -744,6 +744,16 @@ def test_name_format_separators(
     name_format_separators_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
 
+    v_t_record.data[Fields.AUTHOR] = "Du, Wenyu (Derek) and Pan, Shan L. and Wu, Junjie"
+    name_format_separators_checker.run(record=v_t_record)
+    assert not v_t_record.has_quality_defects()
+
+    v_t_record.data[Fields.AUTHOR] = (
+        'Lee, Jeongsik "Jay" and Park, Hyunwoo and Zaggl, Michael'
+    )
+    name_format_separators_checker.run(record=v_t_record)
+    assert not v_t_record.has_quality_defects()
+
     # Name format issues due to "I N T R  O D " in the author field
     v_t_record.data[Fields.AUTHOR] = "I N T R O D"
     name_format_separators_checker.run(record=v_t_record)

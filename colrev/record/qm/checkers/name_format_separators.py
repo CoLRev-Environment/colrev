@@ -48,7 +48,7 @@ class NameFormatSeparatorsChecker:
             return True
 
         santized_names = colrev.env.utils.remove_accents(record.data[key])
-        sanitized_names = re.sub(r"[{}]", "", santized_names)
+        sanitized_names = re.sub(r"[{}]|\(\w*\b\)|\"\w*\"", "", santized_names)
         sanitized_names_list = sanitized_names.split(" and ")
 
         if not all(
