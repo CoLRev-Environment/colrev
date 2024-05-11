@@ -9,9 +9,9 @@ import tempfile
 import typing
 from pathlib import Path
 
-import fitz
 import imagehash
 import pdfminer
+import pymupdf
 from pdfminer.converter import TextConverter
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfdocument import PDFTextExtractionNotAllowed
@@ -151,7 +151,7 @@ class PDFRecord(colrev.record.record.Record):
         with tempfile.NamedTemporaryFile(suffix=".png") as temp_file:
             file_name = temp_file.name
             try:
-                doc: fitz.Document = fitz.open(pdf_path)
+                doc: pymupdf.Document = pymupdf.open(pdf_path)
                 # Starting with page 1
                 for page_no, page in enumerate(doc, 1):
                     if page_no == page_nr:
@@ -167,7 +167,7 @@ class PDFRecord(colrev.record.record.Record):
                             return average_hash_str
                 # Page not found
                 raise colrev_exceptions.PDFHashError(path=pdf_path)  # pragma: no cover
-            except fitz.fitz.FileDataError as exc:
+            except pymupdf.FileDataError as exc:
                 raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
             except RuntimeError as exc:
                 raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
