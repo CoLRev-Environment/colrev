@@ -1,6 +1,6 @@
 {"version": 2, "width": 168, "height": 37, "timestamp": 1715247430, "env": {"SHELL": "/bin/bash", "TERM": "xterm-256color"}}
 [1.56692, "o", "\u001b]0;username@local_machine: ~/microsourcing_review\u0007\u001b[01;32musername@local_machine\u001b[00m:\u001b[01;34m~/microsourcing_review\u001b[00m$ "]
-[1.0, "m", "CoLRev init"]1
+[1.0, "m", "CoLRev init"]
 [2.011628, "o", "c"]
 [2.072667, "o", "o"]
 [2.238835, "o", "l"]
