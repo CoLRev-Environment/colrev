@@ -26,6 +26,7 @@ colrev.record.record\_pdf.PDFRecord
       ~PDFRecord.copy_prep_rec
       ~PDFRecord.defects
       ~PDFRecord.extract_pages
+      ~PDFRecord.extract_pages_from_pdf
       ~PDFRecord.extract_text_by_page
       ~PDFRecord.format_bib_style
       ~PDFRecord.get_colrev_id
