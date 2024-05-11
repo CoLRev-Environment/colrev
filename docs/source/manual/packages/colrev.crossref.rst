@@ -2,6 +2,17 @@
 Crossref
 ========
 
+.. list-table::
+   :header-rows: 1
+
+   * - SearchSource
+     - Scope
+     - Size
+   * - `Crossref <https://www.crossref.org/>`_ (metadata deposited by publishers)
+     - Cross-disciplinary
+     - > 125,000,000
+
+
 search
 ------
 
@@ -35,6 +46,15 @@ Note: This document is currently under development. It will contain the followin
 * description
 * example
 
+Debugging
+---------
+
+To test the metadata provided for a particular ``DOI`` use:
+
+.. code-block::
+
+   https://api.crossref.org/works/DOI
+
 Links
 -----
 
@@ -43,9 +63,3 @@ Links
 * `License <https://www.crossref.org/documentation/retrieve-metadata/rest-api/rest-api-metadata-license-information/>`_
 * `Crossref types <https://api.crossref.org/types>`_
 * `Issue: AND Operators not yet supported <https://github.com/fabiobatalha/crossrefapi/issues/20>`_
-
-To test the metadata provided for a particular ``DOI`` use:
-
-.. code-block::
-
-   https://api.crossref.org/works/DOI

@@ -1,5 +1,9 @@
 # Europe PMC
 
+| SearchSource                         | Scope                                     | Size         |
+|--------------------------------------|-------------------------------------------|--------------|
+| [Europe PMC](https://europepmc.org/) | Including PubMed Central (PMC) (metadata) | > 40,000,000 |
+
 ## search
 
 ### API search
