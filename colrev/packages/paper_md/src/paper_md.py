@@ -748,11 +748,11 @@ class PaperMarkdown(JsonSchemaMixin):
     ) -> None:
         """Update the data/paper"""
 
-        if silent_mode:
-            return
-
-        if self.review_manager.dataset.has_changes(
-            self.paper_relative_path, change_type="unstaged"
+        if (
+            self.review_manager.dataset.repo_initialized()
+            and self.review_manager.dataset.has_changes(
+                self.paper_relative_path, change_type="unstaged"
+            )
         ):
             self.review_manager.logger.warning(
                 f"{Colors.RED}Skipping updates of "
