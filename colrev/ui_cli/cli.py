@@ -1242,6 +1242,13 @@ def prescreen(
     help="Screen a split sample",
 )
 @click.option(
+    "-abstracts",
+    "--add_abstracts_from_tei",
+    is_flag=True,
+    default=False,
+    help="Add abstracts from TEI files",
+)
+@click.option(
     "-scs",
     "--setup_custom_script",
     is_flag=True,
@@ -1274,6 +1281,7 @@ def screen(
     delete_criterion: str,
     create_split: int,
     split: str,
+    add_abstracts_from_tei: bool,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
@@ -1287,6 +1295,9 @@ def screen(
         ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
     )
     screen_operation = review_manager.get_screen_operation()
+
+    if add_abstracts_from_tei:
+        screen_operation.add_abstracts_from_tei()
 
     if add:
         package_manager = review_manager.get_package_manager()
