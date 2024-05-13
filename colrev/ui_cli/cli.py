@@ -546,16 +546,21 @@ def search(
             package_identifier=add,
             params=params,
         )
-        search_operation.main(selection_str=str(source_dict["filename"]), rerun=False)
+        if not Path(source_dict["filename"]).is_file():
+            search_operation.main(
+                selection_str=str(source_dict["filename"]), rerun=False
+            )
         return
 
-    if not skip:
-        import colrev.ui_cli.cli_add_source
-
-        cli_source_adder = colrev.ui_cli.cli_add_source.CLISourceAdder(
-            search_operation=search_operation
+    if skip:
+        existing_sources = ",".join(
+            str(
+                source.filename
+                for source in search_operation.review_manager.settings.sources
+            )
         )
-        cli_source_adder.add_new_sources()
+        search_operation.main(selection_str=existing_sources, rerun=rerun)
+        return
 
     if setup_custom_script:
         import colrev.ui_cli.setup_custom_scripts
@@ -572,6 +577,24 @@ def search(
             search_operation=search_operation, bws=bws
         )
         return
+
+    import colrev.ui_cli.cli_add_source
+
+    cli_source_adder = colrev.ui_cli.cli_add_source.CLISourceAdder(
+        search_operation=search_operation
+    )
+    sources_added = cli_source_adder.add_new_sources()
+    if sources_added:
+        if selected is None:
+            selected = ",".join(
+                [
+                    str(source.filename)
+                    for source in search_operation.review_manager.settings.sources
+                    if source.filename not in [x.filename for x in sources_added]
+                ]
+            )
+        else:
+            input(selected)  # notify /handle pre-selected when adding new
 
     search_operation.main(selection_str=selected, rerun=rerun)
 

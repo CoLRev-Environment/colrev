@@ -40,6 +40,9 @@ from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
+if typing.TYPE_CHECKING:  # pragma: no cover
+    import colrev.settings
+
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 # pylint: disable=too-many-lines

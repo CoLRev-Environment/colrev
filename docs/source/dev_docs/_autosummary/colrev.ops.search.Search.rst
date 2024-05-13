@@ -22,7 +22,8 @@ colrev.ops.search.Search
       ~Search.check_precondition
       ~Search.conclude
       ~Search.decorate
-      ~Search.get_new_sources_heuristic_list
+      ~Search.get_new_search_files
+      ~Search.get_new_source_heuristic
       ~Search.get_query_filename
       ~Search.get_unique_filename
       ~Search.main

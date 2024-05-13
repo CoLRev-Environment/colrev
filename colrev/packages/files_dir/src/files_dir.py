@@ -574,6 +574,9 @@ class FilesSearchSource(JsonSchemaMixin):
         linked_file_paths: list,
     ) -> None:
         file_batches = self._get_file_batches()
+        if not file_batches:
+            files_dir_feed.save()
+            return
         for i, file_batch in enumerate(file_batches):
             for record in files_dir_feed.feed_records.values():
                 record = self._add_md_string(record_dict=record)
