@@ -321,11 +321,11 @@ class PaperMarkdown(JsonSchemaMixin):
     ) -> None:
         # pylint: disable=consider-using-with
 
-        temp = tempfile.NamedTemporaryFile(dir=self._temp_path)
         paper_path = self.settings.paper_path
-        Path(temp.name).unlink(missing_ok=True)
-        paper_path.rename(temp.name)
-        with open(temp.name, encoding="utf-8") as reader, open(
+        _, temp_filepath = tempfile.mkstemp(dir=self._temp_path)
+        Path(temp_filepath).unlink(missing_ok=True)
+        shutil.move(str(paper_path), str(temp_filepath))
+        with open(temp_filepath, encoding="utf-8") as reader, open(
             paper_path, "w", encoding="utf-8"
         ) as writer:
             appended, completed = False, False
