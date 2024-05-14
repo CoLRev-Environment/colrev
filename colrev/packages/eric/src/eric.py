@@ -141,17 +141,18 @@ class ERICSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: dict,
-    ) -> colrev.settings.SearchSource:
+    ) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
 
         # all API searches
 
         if len(params) == 0:
-            add_source = operation.add_db_source(search_source_cls=cls, params=params)
-            return add_source
+            search_source = operation.add_db_source(
+                search_source_cls=cls, params=params
+            )
 
         # pylint: disable=colrev-missed-constant-usage
-        if "https://api.ies.ed.gov/eric/?" in params["url"]:
+        elif "https://api.ies.ed.gov/eric/?" in params["url"]:
             url_parsed = urllib.parse.urlparse(params["url"])
             new_query = urllib.parse.parse_qs(url_parsed.query)
             search = new_query.get("search", [""])[0]
@@ -160,18 +161,20 @@ class ERICSearchSource(JsonSchemaMixin):
             if ":" in search:
                 search = ERICSearchSource._search_split(search)
             filename = operation.get_unique_filename(file_path_string=f"eric_{search}")
-            add_source = colrev.settings.SearchSource(
+            search_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
                 filename=filename,
                 search_type=SearchType.DB,
                 search_parameters={"query": search, "start": start, "rows": rows},
                 comment="",
             )
-            return add_source
 
-        raise colrev_exceptions.PackageParameterError(
-            f"Cannot add ERIC endpoint with query {params}"
-        )
+        else:
+            raise colrev_exceptions.PackageParameterError(
+                f"Cannot add ERIC endpoint with query {params}"
+            )
+
+        operation.add_source_and_search(search_source)
 
     def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
         """Get the records from a query"""

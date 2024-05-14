@@ -303,7 +303,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: dict,
-    ) -> colrev.settings.SearchSource:
+    ) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         raise colrev_exceptions.PackageParameterError(

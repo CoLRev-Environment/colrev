@@ -65,7 +65,7 @@ def test_search_add_source(  # type: ignore
         source_operation=search_operation, settings=add_source.get_dict()
     )
 
-    query = {"issn": "1234-5678"}
+    query = {"scope": {"issn": ["1234-5678"]}}
     endpoint.add_endpoint(search_operation, query)  # type: ignore
 
     search_operation.review_manager.settings.sources.pop()

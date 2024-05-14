@@ -79,7 +79,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: dict,
-    ) -> colrev.settings.SearchSource:
+    ) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         # Always API search
@@ -87,16 +87,17 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             filename = operation.get_unique_filename(
                 file_path_string=params["url"].split("/")[-1]
             )
-            add_source = colrev.settings.SearchSource(
+            search_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
                 filename=filename,
                 search_type=SearchType.OTHER,
                 search_parameters={"scope": {"url": params["url"]}},
                 comment="",
             )
-            return add_source
+        else:
+            raise NotImplementedError
 
-        raise NotImplementedError
+        operation.add_source_and_search(search_source)
 
     def _load_records_to_import(self, *, project_url: str, project_name: str) -> dict:
         temp_path = tempfile.gettempdir() / Path(project_name)

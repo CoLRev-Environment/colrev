@@ -122,7 +122,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: dict,
-    ) -> colrev.settings.SearchSource:
+    ) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         search_type = operation.select_search_type(
@@ -130,18 +130,17 @@ class PubMedSearchSource(JsonSchemaMixin):
         )
 
         if search_type == SearchType.DB:
-            return operation.add_db_source(
+            search_source = operation.add_db_source(
                 search_source_cls=cls,
                 params=params,
             )
 
-        if search_type == SearchType.API:
+        elif search_type == SearchType.API:
             if len(params) == 0:
-                add_source = operation.add_api_source(endpoint=cls.endpoint)
-                return add_source
+                search_source = operation.add_api_source(endpoint=cls.endpoint)
 
             # pylint: disable=colrev-missed-constant-usage
-            if "url" in params:
+            elif "url" in params:
                 host = urlparse(params["url"]).hostname
 
                 if host and host.endswith("pubmed.ncbi.nlm.nih.gov"):
@@ -154,18 +153,20 @@ class PubMedSearchSource(JsonSchemaMixin):
                     # "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
                     #     + params
                     # )
-                    add_source = colrev.settings.SearchSource(
+                    search_source = colrev.settings.SearchSource(
                         endpoint=cls.endpoint,
                         filename=filename,
                         search_type=SearchType.API,
                         search_parameters={"query": params},
                         comment="",
                     )
-                    return add_source
+            else:
+                raise NotImplementedError
 
+        else:
             raise NotImplementedError
 
-        raise NotImplementedError
+        operation.add_source_and_search(search_source)
 
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""

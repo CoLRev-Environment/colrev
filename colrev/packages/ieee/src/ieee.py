@@ -134,9 +134,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(
-        cls, operation: colrev.ops.search.Search, params: dict
-    ) -> colrev.settings.SearchSource:
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: dict) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         search_type = operation.select_search_type(
@@ -145,8 +143,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         if search_type == SearchType.API:
             if len(params) == 0:
-                add_source = operation.add_api_source(endpoint=cls.endpoint)
-                return add_source
+                search_source = operation.add_api_source(endpoint=cls.endpoint)
 
             # pylint: disable=colrev-missed-constant-usage
             if (
@@ -173,22 +170,23 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                     file_path_string=f"ieee_{last_value}"
                 )
 
-                add_source = colrev.settings.SearchSource(
+                search_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
                     filename=filename,
                     search_type=SearchType.API,
                     search_parameters=search_parameters,
                     comment="",
                 )
-                return add_source
 
-        if search_type == SearchType.DB:
-            return operation.add_db_source(
+        elif search_type == SearchType.DB:
+            search_source = operation.add_db_source(
                 search_source_cls=cls,
                 params=params,
             )
+        else:
+            raise NotImplementedError
 
-        raise NotImplementedError
+        operation.add_source_and_search(search_source)
 
     def search(self, rerun: bool) -> None:
         """Run a search of IEEEXplore"""

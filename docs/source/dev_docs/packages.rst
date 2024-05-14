@@ -173,6 +173,7 @@ Best practices
 * Before committing do a pre-commit test
 * Use poetry for dependency management (run `poetry add <package_name>` to add a new dependency)
 * Once the package development is completed, make a PR to the CoLRev, with brief description of the package.
+* The ``add_endpoint`` is only required for SearchSources. It is optional for other endpoint types.
 
 Package development resources
 ------------------------------

@@ -559,7 +559,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: dict,
-    ) -> colrev.settings.SearchSource:
+    ) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if "min_intext_citations" not in params:
@@ -570,15 +570,17 @@ class BackwardSearchSource(JsonSchemaMixin):
             assert params["min_intext_citations"].isdigit()
             assert params["min_ref_freq"].isdigit()
 
-        add_source = cls.get_default_source()
+        search_source = cls.get_default_source()
         if "min_intext_citations" in params:
-            add_source.search_parameters["min_intext_citations"] = int(
+            search_source.search_parameters["min_intext_citations"] = int(
                 params["min_intext_citations"]
             )
         if "min_ref_freq" in params:
-            add_source.search_parameters["min_ref_freq"] = int(params["min_ref_freq"])
+            search_source.search_parameters["min_ref_freq"] = int(
+                params["min_ref_freq"]
+            )
 
-        return add_source
+        operation.add_source_and_search(search_source)
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""

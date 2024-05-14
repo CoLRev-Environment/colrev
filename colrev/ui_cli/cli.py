@@ -540,16 +540,12 @@ def search(
         import colrev.ui_cli.add_package_to_settings
 
         package_manager = review_manager.get_package_manager()
-        source_dict = colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+        colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             package_manager,
             operation=search_operation,
             package_identifier=add,
             params=params,
         )
-        if not Path(source_dict["filename"]).is_file():
-            search_operation.main(
-                selection_str=str(source_dict["filename"]), rerun=False
-            )
         return
 
     if skip:

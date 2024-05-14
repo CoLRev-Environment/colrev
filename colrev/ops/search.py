@@ -427,6 +427,17 @@ class Search(colrev.process.operation.Operation):
 
         return heuristic_results
 
+    def add_source_and_search(
+        self, search_source: colrev.settings.SearchSource
+    ) -> None:
+        """Add a SearchSource and run the search"""
+
+        self.review_manager.settings.sources.append(search_source)
+        self.review_manager.save_settings()
+        self.review_manager.dataset.create_commit(msg="Add search source")
+        if not search_source.filename.is_file():
+            self.main(selection_str=str(search_source.filename), rerun=False)
+
     @_check_source_selection_exists(  # pylint: disable=too-many-function-args
         "selection_str"
     )

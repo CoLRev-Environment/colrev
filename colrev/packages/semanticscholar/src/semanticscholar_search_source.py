@@ -345,7 +345,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: dict,
-    ) -> colrev.settings.SearchSource:
+    ) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         # get search parameters from the user interface
@@ -377,14 +377,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         filename = operation.get_unique_filename(file_path_string="semanticscholar")
 
-        add_source = colrev.settings.SearchSource(
+        search_source = colrev.settings.SearchSource(
             endpoint="colrev.semanticscholar",
             filename=filename,
             search_type=SearchType.API,
             search_parameters=search_params,
             comment="",
         )
-        return add_source
+        operation.add_source_and_search(search_source)
 
     def prep_link_md(
         self,

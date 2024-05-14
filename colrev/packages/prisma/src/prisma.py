@@ -83,12 +83,14 @@ class PRISMA(JsonSchemaMixin):
     def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
         """Add as an endpoint"""
 
-        add_source = {
+        add_package = {
             "endpoint": "colrev.prisma",
             "version": "0.1",
             "diagram_path": ["PRISMA.png"],
         }
-        operation.review_manager.settings.data.data_package_endpoints.append(add_source)
+        operation.review_manager.settings.data.data_package_endpoints.append(
+            add_package
+        )
 
     def _export_csv(self, silent_mode: bool) -> None:
         csv_resource_path = Path("packages/prisma/prisma/PRISMA.csv")

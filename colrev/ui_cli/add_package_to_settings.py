@@ -73,7 +73,7 @@ def add_package_to_settings(
     operation: colrev.process.operation.Operation,
     package_identifier: str,
     params: str,
-) -> dict:
+) -> None:
     """Add a package_endpoint (for cli usage)"""
 
     endpoints_in_settings, package_type = _get_endpoint_with_type(operation)
@@ -97,22 +97,14 @@ def add_package_to_settings(
                 for item in params.split(";"):
                     key, value = item.split("=")
                     params_dict[key] = value
-        add_source = e_class.add_endpoint(  # type: ignore
+        add_package = e_class.add_endpoint(  # type: ignore
             operation=operation, params=params_dict
         )
-        operation.review_manager.settings.sources.append(add_source)
-        operation.review_manager.save_settings()
-        operation.review_manager.dataset.add_changes(
-            add_source.filename, ignore_missing=True
-        )
-        add_package = add_source.to_dict()
 
     else:
         add_package = {"endpoint": package_identifier}
         endpoints_in_settings.append(add_package)  # type: ignore
-
-    operation.review_manager.save_settings()
-    operation.review_manager.dataset.create_commit(
-        msg=f"Add {operation.type} {package_identifier}",
-    )
-    return add_package
+        operation.review_manager.save_settings()
+        operation.review_manager.dataset.create_commit(
+            msg=f"Add {operation.type} {package_identifier}",
+        )

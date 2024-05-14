@@ -19,6 +19,7 @@ colrev.ops.search.Search
       ~Search.add_api_source
       ~Search.add_db_source
       ~Search.add_most_likely_sources
+      ~Search.add_source_and_search
       ~Search.check_precondition
       ~Search.conclude
       ~Search.decorate
