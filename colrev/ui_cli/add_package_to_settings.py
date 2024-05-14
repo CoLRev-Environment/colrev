@@ -76,13 +76,12 @@ def add_package_to_settings(
 ) -> None:
     """Add a package_endpoint (for cli usage)"""
 
-    endpoints_in_settings, package_type = _get_endpoint_with_type(operation)
-
     operation.review_manager.logger.info(
         f"{Colors.GREEN}Add {operation.type} "
         f"package:{Colors.END} {package_identifier}"
     )
 
+    endpoints_in_settings, package_type = _get_endpoint_with_type(operation)
     e_class = package_manager.get_package_endpoint_class(
         package_type=package_type,
         package_identifier=package_identifier,
@@ -97,9 +96,7 @@ def add_package_to_settings(
                 for item in params.split(";"):
                     key, value = item.split("=")
                     params_dict[key] = value
-        add_package = e_class.add_endpoint(  # type: ignore
-            operation=operation, params=params_dict
-        )
+        e_class.add_endpoint(operation=operation, params=params_dict)  # type: ignore
 
     else:
         add_package = {"endpoint": package_identifier}
