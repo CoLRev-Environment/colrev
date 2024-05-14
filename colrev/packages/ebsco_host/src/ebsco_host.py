@@ -70,13 +70,13 @@ class EbscoHostSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
+        params: str,
     ) -> None:
         """Add SearchSource as an endpoint"""
 
         search_source = operation.add_db_source(
             search_source_cls=cls,
-            params=params,
+            params={},
         )
         operation.add_source_and_search(search_source)
 

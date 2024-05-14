@@ -249,9 +249,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
+        params: str,
     ) -> None:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         # always API search
 

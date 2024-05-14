@@ -11,15 +11,20 @@
 It is possible to copy the url from the [search.crossref.org](https://search.crossref.org/?q=microsourcing&from_ui=yes) UI and add it as follows:
 
 ```
-colrev search -a colrev.crossref -p "query=microsourcing;years=2000-2010"
-colrev search -a colrev.crossref -p "https://search.crossref.org/?q=+microsourcing&from_ui=yes"
+colrev search --add colrev.crossref -p "query=microsourcing"
+colrev search --add colrev.crossref -p "https://search.crossref.org/?q=+microsourcing&from_ui=yes"
 ```
+
+<!--
+TODO:
+colrev search --add colrev.crossref -p "query=microsourcing;years=2000-2010"
+-->
 
 ### TOC search
 
 Whole journals can be added based on their issn:
 ```
-colrev search -a colrev.crossref -p "issn=1234-5678"
+colrev search --add colrev.crossref -p "issn=2162-9730"
 ```
 
 ## prep

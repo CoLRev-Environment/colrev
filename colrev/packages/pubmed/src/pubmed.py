@@ -121,32 +121,43 @@ class PubMedSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
+        params: str,
     ) -> None:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
+
+        params_dict = {}
+        if params:
+            if params.startswith("http"):
+                params_dict = {Fields.URL: params}
+            else:
+                for item in params.split(";"):
+                    key, value = item.split("=")
+                    params_dict[key] = value
 
         search_type = operation.select_search_type(
-            search_types=cls.search_types, params=params
+            search_types=cls.search_types, params=params_dict
         )
 
         if search_type == SearchType.DB:
             search_source = operation.add_db_source(
                 search_source_cls=cls,
-                params=params,
+                params=params_dict,
             )
 
         elif search_type == SearchType.API:
-            if len(params) == 0:
+            if len(params_dict) == 0:
                 search_source = operation.add_api_source(endpoint=cls.endpoint)
 
             # pylint: disable=colrev-missed-constant-usage
-            elif "url" in params:
-                host = urlparse(params["url"]).hostname
+            elif "url" in params_dict:
+                host = urlparse(params_dict["url"]).hostname
 
                 if host and host.endswith("pubmed.ncbi.nlm.nih.gov"):
-                    params = params["url"].replace(
-                        "https://pubmed.ncbi.nlm.nih.gov/?term=", ""
-                    )
+                    query = {
+                        "query": params_dict["url"].replace(
+                            "https://pubmed.ncbi.nlm.nih.gov/?term=", ""
+                        )
+                    }
 
                     filename = operation.get_unique_filename(file_path_string="pubmed")
                     # params = (
@@ -157,7 +168,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                         endpoint=cls.endpoint,
                         filename=filename,
                         search_type=SearchType.API,
-                        search_parameters={"query": params},
+                        search_parameters=query,
                         comment="",
                     )
             else:

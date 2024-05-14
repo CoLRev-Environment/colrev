@@ -95,21 +95,30 @@ class ArXivSource:
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
+        params: str,
     ) -> None:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
+
+        params_dict = {}
+        if params:
+            if params.startswith("http"):
+                params_dict = {Fields.URL: params}
+            else:
+                for item in params.split(";"):
+                    key, value = item.split("=")
+                    params_dict[key] = value
 
         # Note : always API search
-        if len(params) == 0:
+        if len(params_dict) == 0:
             search_source = operation.add_api_source(endpoint=cls.endpoint)
 
         # pylint: disable=colrev-missed-constant-usage
         else:
-            host = urlparse(params["url"]).hostname
+            host = urlparse(params_dict["url"]).hostname
 
             assert host and host.endswith("arxiv.org")
 
-            query = params["url"].replace("https://arxiv.org/search/?query=", "")
+            query = params_dict["url"].replace("https://arxiv.org/search/?query=", "")
             query = query[: query.find("&searchtype")]
 
             filename = operation.get_unique_filename(file_path_string="arxiv")

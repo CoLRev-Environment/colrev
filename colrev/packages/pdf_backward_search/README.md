@@ -5,15 +5,15 @@
 ### BACKWARD_SEARCH
 
 One strategy could be to start with a relatively high threshold for the number of intext citations and to iteratively decrease it, and update the search:
-colrev search -a colrev.pdf_backward_search:min_intext_citations=2
+colrev search --add colrev.pdf_backward_search:min_intext_citations=2
 
 Citation data is automatically consolidated with open-citations data to improve data quality.
 
 based on [GROBID](https://github.com/kermitt2/grobid)
 
 ```
-colrev search -a colrev.pdf_backward_search -p default
-colrev search -a colrev.pdf_backward_search -p min_intext_citations=2
+colrev search --add colrev.pdf_backward_search
+colrev search --add colrev.pdf_backward_search -p min_intext_citations=2
 ```
 
 **Conducting selective backward searches**

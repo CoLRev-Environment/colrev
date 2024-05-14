@@ -134,24 +134,33 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: dict) -> None:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
+
+        params_dict = {}
+        if params:
+            if params.startswith("http"):
+                params_dict = {Fields.URL: params}
+            else:
+                for item in params.split(";"):
+                    key, value = item.split("=")
+                    params_dict[key] = value
 
         search_type = operation.select_search_type(
-            search_types=cls.search_types, params=params
+            search_types=cls.search_types, params=params_dict
         )
 
         if search_type == SearchType.API:
-            if len(params) == 0:
+            if len(params_dict) == 0:
                 search_source = operation.add_api_source(endpoint=cls.endpoint)
 
             # pylint: disable=colrev-missed-constant-usage
             if (
                 "https://ieeexploreapi.ieee.org/api/v1/search/articles?"
-                in params["url"]
+                in params_dict["url"]
             ):
                 query = (
-                    params["url"]
+                    params_dict["url"]
                     .replace(
                         "https://ieeexploreapi.ieee.org/api/v1/search/articles?", ""
                     )
@@ -181,7 +190,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         elif search_type == SearchType.DB:
             search_source = operation.add_db_source(
                 search_source_cls=cls,
-                params=params,
+                params=params_dict,
             )
         else:
             raise NotImplementedError

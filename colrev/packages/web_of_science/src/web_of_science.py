@@ -81,13 +81,13 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
+        params: str,
     ) -> None:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         search_source = operation.add_db_source(
             search_source_cls=cls,
-            params=params,
+            params={},
         )
         operation.add_source_and_search(search_source)
 

@@ -675,7 +675,7 @@ class FilesSearchSource(JsonSchemaMixin):
         operation: colrev.ops.search.Search,
         params: str,
     ) -> None:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         filename = operation.get_unique_filename(file_path_string="files")
         # pylint: disable=no-value-for-parameter

@@ -10,7 +10,6 @@ import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType
-from colrev.constants import Fields
 from colrev.constants import OperationsType
 
 
@@ -88,15 +87,7 @@ def add_package_to_settings(
     )
 
     if hasattr(e_class, "add_endpoint"):
-        params_dict = {}
-        if params:
-            if params.startswith("http"):
-                params_dict = {Fields.URL: params}
-            else:
-                for item in params.split(";"):
-                    key, value = item.split("=")
-                    params_dict[key] = value
-        e_class.add_endpoint(operation=operation, params=params_dict)  # type: ignore
+        e_class.add_endpoint(operation=operation, params=params)  # type: ignore
 
     else:
         add_package = {"endpoint": package_identifier}

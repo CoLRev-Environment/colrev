@@ -5,7 +5,7 @@
 ### API search
 
 ```
-colrev search -a colrev.local_index -p "title LIKE '%dark side%'"
+colrev search --add colrev.local_index -p "title LIKE '%dark side%'"
 ```
 
 ### TOC search ...

@@ -395,7 +395,9 @@ class BackwardSearchSource(JsonSchemaMixin):
         self.review_manager.logger.info(
             f"Set min_intext_citations={min_intext_citations}"
         )
-        nr_references_threshold = self.search_source.search_parameters["min_ref_freq"]
+        nr_references_threshold = self.search_source.search_parameters.get(
+            "min_ref_freq", 1
+        )
         self.review_manager.logger.info(
             f"Set nr_references_threshold={nr_references_threshold}"
         )
@@ -558,26 +560,32 @@ class BackwardSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
+        params: str,
     ) -> None:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        if "min_intext_citations" not in params:
+        params_dict = {}
+        if params:
+            for item in params.split(";"):
+                key, value = item.split("=")
+                params_dict[key] = value
+
+        if "min_intext_citations" not in params_dict:
             cls._get_settings_from_ui(
-                params=params, review_manager=operation.review_manager
+                params=params_dict, review_manager=operation.review_manager
             )
         else:
-            assert params["min_intext_citations"].isdigit()
-            assert params["min_ref_freq"].isdigit()
+            assert params_dict["min_intext_citations"].isdigit()
+            assert params_dict["min_ref_freq"].isdigit()
 
         search_source = cls.get_default_source()
-        if "min_intext_citations" in params:
+        if "min_intext_citations" in params_dict:
             search_source.search_parameters["min_intext_citations"] = int(
-                params["min_intext_citations"]
+                params_dict["min_intext_citations"]
             )
-        if "min_ref_freq" in params:
+        if "min_ref_freq" in params_dict:
             search_source.search_parameters["min_ref_freq"] = int(
-                params["min_ref_freq"]
+                params_dict["min_ref_freq"]
             )
 
         operation.add_source_and_search(search_source)

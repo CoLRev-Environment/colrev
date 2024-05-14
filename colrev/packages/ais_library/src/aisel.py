@@ -163,26 +163,34 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
+        params: str,
     ) -> None:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
+        params_dict = {}
+        if params:
+            if params.startswith("http"):
+                params_dict = {Fields.URL: params}
+            else:
+                for item in params.split(";"):
+                    key, value = item.split("=")
+                    params_dict[key] = value
 
         search_type = operation.select_search_type(
-            search_types=cls.search_types, params=params
+            search_types=cls.search_types, params=params_dict
         )
 
         if search_type == SearchType.DB:
             search_source = operation.add_db_source(
                 search_source_cls=cls,
-                params=params,
+                params=params_dict,
             )
 
         # pylint: disable=colrev-missed-constant-usage
         elif search_type == SearchType.API:
-            if "url" in params:
-                host = urlparse(params["url"]).hostname
+            if "url" in params_dict:
+                host = urlparse(params_dict["url"]).hostname
                 assert host and host.endswith("aisel.aisnet.org")
-                q_params = cls._parse_query(query=params["url"])
+                q_params = cls._parse_query(query=params_dict["url"])
                 filename = operation.get_unique_filename(file_path_string="ais")
                 search_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,

@@ -89,11 +89,17 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
+        params: str,
     ) -> None:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        if len(params) == 0:
+        params_dict = {}
+        if params:
+            for item in params.split(";"):
+                key, value = item.split("=")
+                params_dict[key] = value
+
+        if len(params_dict) == 0:
             operation.review_manager.logger.info("Retrieving available datasets")
             date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             temp_path = tempfile.gettempdir() / Path(f"{date_now_string}-synergy")
@@ -109,10 +115,10 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 + "\n- ".join([str(f.parent.name) + "/" + str(f.name) for f in files])
             )
             dataset = input("Enter dataset:")
-            params = {"dataset": dataset}
+            params_dict = {"dataset": dataset}
 
-        assert "dataset" in params
-        dataset = params["dataset"]
+        assert "dataset" in params_dict
+        dataset = params_dict["dataset"]
         filename = operation.get_unique_filename(
             file_path_string=f"SYNERGY_{dataset.replace('/', '_').replace('_ids.csv', '')}"
         )

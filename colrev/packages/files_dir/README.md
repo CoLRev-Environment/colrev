@@ -6,7 +6,7 @@
 ### FILES  search
 
 ```
-colrev search -a colrev.files_dir
+colrev search --add colrev.files_dir
 ```
 
 - PDF metadata extracted based on [GROBID](https://github.com/kermitt2/grobid)
