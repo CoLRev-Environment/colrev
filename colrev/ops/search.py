@@ -93,7 +93,6 @@ class Search(colrev.process.operation.Operation):
             filename = self.get_unique_filename(
                 file_path_string=search_source_cls.endpoint.replace("colrev.", "")
             )
-        self.review_manager.dataset.add_changes(filename)
         self.review_manager.logger.debug(f"Add new DB source: {filename}")
 
         query_file = self.get_query_filename(filename=filename, instantiate=True)
@@ -116,6 +115,8 @@ class Search(colrev.process.operation.Operation):
                 f"- Save search results in {Colors.ORANGE}{filename}{Colors.END}"
             )
             input("Press Enter to complete")
+
+        self.review_manager.dataset.add_changes(filename, ignore_missing=True)
         self.review_manager.dataset.add_changes(query_file)
 
         add_source = colrev.settings.SearchSource(
