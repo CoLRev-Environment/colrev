@@ -912,15 +912,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
         return params_dict
 
     @classmethod
-    def add_endpoint(
-        cls,
-        operation: colrev.ops.search.Search,
-        params: str,
-    ) -> None:
-        """Add SearchSource as an endpoint"""
-
-        params_dict = cls._parse_params(params)
-
+    def _select_search_type(
+        cls, operation: colrev.ops.search.Search, params_dict: dict
+    ) -> SearchType:
         if list(params_dict) == ["scope"]:
             search_type = SearchType.TOC
         elif "query" in params_dict:
@@ -931,6 +925,20 @@ class CrossrefSearchSource(JsonSchemaMixin):
             search_type = operation.select_search_type(
                 search_types=cls.search_types, params=params_dict
             )
+
+        return search_type
+
+    @classmethod
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+    ) -> None:
+        """Add SearchSource as an endpoint"""
+
+        params_dict = cls._parse_params(params)
+
+        search_type = cls._select_search_type(operation, params_dict)
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
