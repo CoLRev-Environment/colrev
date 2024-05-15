@@ -165,9 +165,3 @@ class Unpaywall(JsonSchemaMixin):
             pass
 
         return record
-
-
-def dummy_maxi() -> None:
-    """Test Merge"""
-    i = 2
-    i = i + 2
