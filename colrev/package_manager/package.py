@@ -32,10 +32,10 @@ class Package:
     def __init__(self, package_dir: Path) -> None:
         self.package_dir = package_dir
         self.config = self._load_config()
-        self.name = self.config["project"]["name"]
-        self.version = self.config["project"]["version"]
+        self.name = self.config["tool"]["poetry"]["name"]
+        self.version = self.config["tool"]["poetry"]["version"]
         self.status = self.config["tool"]["colrev"]["dev_status"]
-        self.colrev_doc_link = self.config["project"]["colrev_doc_link"]
+        self.colrev_doc_link = self.config["tool"]["colrev"]["colrev_doc_link"]
 
     def _load_config(self) -> dict:
         config_path = self.package_dir / "pyproject.toml"

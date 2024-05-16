@@ -1,15 +1,24 @@
-[project]
+[tool.poetry]
 name = "colrev.local_index"
 description = "CoLRev package for local_index"
 version = "0.1.0"
-authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
-]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
+
+
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
 
 [tool.colrev]
 dev_status = "maturing"
+documentation = "README.md"
+colrev_doc_link = "README.md"
 search_source = "colrev.packages.local_index.src.local_index:LocalIndexSearchSource"
 prep = "colrev.packages.local_index.src.local_index_prep:LocalIndexPrep"
 pdf_get = "colrev.packages.local_index.src.local_index_pdf_get:LocalIndexPDFGet"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"
