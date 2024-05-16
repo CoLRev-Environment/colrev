@@ -19,7 +19,7 @@ Data from the IEEE database can be retrieved with the URL from the `https://www.
 
 .. code-block::
 
-   colrev search -a colrev.ieee -p "https://ieeexploreapi.ieee.org/api/v1/search/articles?parameter=microsourcing"
+   colrev search --add colrev.ieee -p "https://ieeexploreapi.ieee.org/api/v1/search/articles?parameter=microsourcing"
 
 All configured metadata fields, the abstract and the document text are queried.
 
@@ -29,19 +29,19 @@ Specific parameters can also be searched for, such as issn, isbn, doi, article_n
 
 .. code-block::
 
-   colrev search -a colrev.ieee -p "https://ieeexploreapi.ieee.org/api/v1/search/articles?issn=1063-6919"
+   colrev search --add colrev.ieee -p "https://ieeexploreapi.ieee.org/api/v1/search/articles?issn=1063-6919"
 
 Multiple parameters can be concatenated using the "&" symbol.
 
 .. code-block::
 
-   colrev search -a colrev.ieee -p "https://ieeexploreapi.ieee.org/api/v1/search/articles?publication_year=2019&abstract=microsourcing"
+   colrev search --add colrev.ieee -p "https://ieeexploreapi.ieee.org/api/v1/search/articles?publication_year=2019&abstract=microsourcing"
 
 If your search query includes Boolean operators, add "queryText=query" to the URL.
 
 .. code-block::
 
-   colrev search -a colrev.ieee -p "https://ieeexploreapi.ieee.org/api/v1/search/articles?booleanText=(rfid%20AND%20%22internet%20of%20things%22)"
+   colrev search --add colrev.ieee -p "https://ieeexploreapi.ieee.org/api/v1/search/articles?booleanText=(rfid%20AND%20%22internet%20of%20things%22)"
 
 Links
 -----

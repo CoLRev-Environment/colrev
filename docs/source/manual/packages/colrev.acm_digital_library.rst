@@ -10,7 +10,7 @@ DB search
 
 .. code-block::
 
-   colrev search -a abi_inform_proquest
+   colrev search --add abi_inform_proquest
 
 API search
 ^^^^^^^^^^

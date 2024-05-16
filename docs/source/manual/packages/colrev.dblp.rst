@@ -23,7 +23,7 @@ Run a search on dblp.org and paste the url in the following command:
 
 .. code-block::
 
-   colrev search -a colrev.dblp -p "https://dblp.org/search?q=microsourcing"
+   colrev search --add colrev.dblp -p "https://dblp.org/search?q=microsourcing"
 
 TOC search
 ^^^^^^^^^^

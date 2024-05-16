@@ -12,7 +12,7 @@ To add a pubmed API search, enter the query in the `Pubmed web interface <https:
 
 .. code-block::
 
-   colrev search -a colrev.pubmed -p "https://pubmed.ncbi.nlm.nih.gov/?term=fitbit"
+   colrev search --add colrev.pubmed -p "https://pubmed.ncbi.nlm.nih.gov/?term=fitbit"
 
 prep
 ----
