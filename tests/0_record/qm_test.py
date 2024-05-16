@@ -203,6 +203,14 @@ def test_erroneous_title_field(
     assert not v_t_record.has_quality_defects()
     assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == []
 
+    # Test case 4: Erroneous title with symbols and digits
+    v_t_record.data[Fields.TITLE] = "PII: S0963-8687(03)00063-5"
+    erroneous_title_checker.run(record=v_t_record)
+    assert v_t_record.has_quality_defects()
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
+        DefectCodes.ERRONEOUS_TITLE_FIELD
+    ]
+
     # Test case 3: Ignoring erroneous title defect
     v_t_record.data[Fields.TITLE] = (
         "The International Journal of Information Systems Applications Chairman of the Editorial Board"

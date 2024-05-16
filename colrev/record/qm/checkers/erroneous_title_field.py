@@ -44,6 +44,11 @@ class ErroneousTitleFieldChecker:
         }:
             return True
 
+        if sum(char.isdigit() for char in title) > sum(
+            char.isalpha() for char in title
+        ):
+            return True
+
         if " " not in title and (
             any(x in title for x in ["_", "."]) or any(char.isdigit() for char in title)
         ):
