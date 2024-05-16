@@ -9,6 +9,7 @@ from pathlib import Path
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
+from colrev.constants import SearchSourceHeuristicStatus, SearchType
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
@@ -18,6 +19,19 @@ import colrev.record.record
 @dataclass
 class UnpaywallSearchSource(JsonSchemaMixin):
     """Unpaywall Search Source"""
+
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
+    # source_identifier
+    search_types = [SearchType.API]
+    endpoint = "colrev.unpaywall"
+
+    ci_supported: bool = False
+    heuristic_status = SearchSourceHeuristicStatus.oni
+    # docs_link
+
+    short_name = "Unpaywall"
+    # API_FIELDS
+    # FIELD_MAPPING
 
     def __init__(
         self,
@@ -31,8 +45,9 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Unpaywall"""
-        """Not implemented"""
-        pass
+        # Not yet implemented
+        result = {"confidence": 0.0}
+        return result
 
     @classmethod
     def add_endpoint(
