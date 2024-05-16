@@ -206,6 +206,8 @@ class BackwardSearchSource(JsonSchemaMixin):
             for record_id, refs in all_references.items()
             for ref in refs
         ]
+        if len(all_references_flat) == 0:
+            return pd.DataFrame()
 
         for ref in all_references_flat:
             ref[Fields.ID] = ref["record_id"] + "_backward_search_" + ref[Fields.ID]
