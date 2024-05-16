@@ -180,7 +180,6 @@ class Initializer:
                 "command": ["pre-commit", "install", "--hook-type", "pre-push"],
             },
             {"description": "", "command": ["pre-commit", "autoupdate"]},
-            {"description": "", "command": ["daff", "git", "csv"]},
         ]
         for script_to_call in scripts_to_call:
             try:
