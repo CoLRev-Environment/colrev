@@ -421,6 +421,37 @@ files = [
 ]
 
 [[package]]
+name = "colrev-sync"
+version = "0.1.0"
+description = "CoLRev package for sync"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/sync"
+
+[[package]]
+name = "colrev-ui-web"
+version = "0.1.0"
+description = "Web-UI package for CoLRev"
+category = "main"
+optional = true
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.dependencies]
+dash = "^2.11.1"
+
+[package.source]
+type = "directory"
+url = "colrev/packages/ui_web"
+
+[[package]]
 name = "coverage"
 version = "7.5.1"
 description = "Code coverage measurement for Python"
@@ -2383,18 +2414,15 @@ full = ["numpy"]
 
 [[package]]
 name = "readchar"
-version = "4.0.6"
+version = "4.1.0"
 description = "Library to easily read single chars and key strokes"
 category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "readchar-4.0.6-py3-none-any.whl", hash = "sha256:b4b31dd35de4897be738f27e8f9f62426b5fedb54b648364987e30ae534b71bc"},
-    {file = "readchar-4.0.6.tar.gz", hash = "sha256:e0dae942d3a746f8d5423f83dbad67efe704004baafe31b626477929faaee472"},
+    {file = "readchar-4.1.0-py3-none-any.whl", hash = "sha256:d163680656b34f263fb5074023db44b999c68ff31ab394445ebfd1a2a41fe9a2"},
+    {file = "readchar-4.1.0.tar.gz", hash = "sha256:6f44d1b5f0fd93bd93236eac7da39609f15df647ab9cea39f5bc7478b3344b99"},
 ]
-
-[package.dependencies]
-setuptools = ">=41.0"
 
 [[package]]
 name = "referencing"
@@ -3462,11 +3490,11 @@ test = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [extras]
+colrev-ui-web = ["colrev.ui_web"]
 dev = ["coverage", "pylint", "pytest", "pytest-mock", "pytest-skip-slow", "requests-mock", "types-click"]
 docs = ["Sphinx", "docutils", "repoze-sphinx-autointerface", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-design", "sphinx-rtd-theme", "sphinx_collapse", "sphinxcontrib.datatemplates"]
-web-ui = ["dash"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <4"
-content-hash = "3915fa5ca3e40292c7c93f510ec72fce4ccd9c4431a78a869599dfae56b2237d"
+content-hash = "0a956f5ba67d6ee3267fabe07ada2fd8baf565eff161deacca06b2012fac6263"
