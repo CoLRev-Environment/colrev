@@ -80,7 +80,7 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         )
 
         if search_type == SearchType.DB:
-            search_source = operation.add_db_source(
+            search_source = operation.create_db_source(
                 search_source_cls=cls,
                 params=params_dict,
             )

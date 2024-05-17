@@ -79,7 +79,7 @@ class Search(colrev.process.operation.Operation):
             self.review_manager.dataset.add_changes(query_filename)
         return query_filename
 
-    def add_db_source(  # type: ignore
+    def create_db_source(  # type: ignore
         self, *, search_source_cls, params: dict
     ) -> colrev.settings.SearchSource:
         """Interactively add a DB SearchSource"""
@@ -126,15 +126,10 @@ class Search(colrev.process.operation.Operation):
             search_parameters={"query_file": str(query_file)},
             comment="",
         )
-        self.review_manager.settings.sources.append(add_source)
-        self.review_manager.save_settings()
-        self.review_manager.dataset.create_commit(
-            msg=f"Add search {search_source_cls.endpoint}"
-        )
         print()
         return add_source
 
-    def add_api_source(self, *, endpoint: str) -> colrev.settings.SearchSource:
+    def create_api_source(self, *, endpoint: str) -> colrev.settings.SearchSource:
         """Interactively add an API SearchSource"""
 
         print(f"Add {endpoint} as an API SearchSource")
@@ -434,7 +429,9 @@ class Search(colrev.process.operation.Operation):
 
         self.review_manager.settings.sources.append(search_source)
         self.review_manager.save_settings()
-        self.review_manager.dataset.create_commit(msg="Add search source")
+        self.review_manager.dataset.create_commit(
+            msg=f"Add search: {search_source.endpoint}"
+        )
         if not search_source.filename.is_file():
             self.main(selection_str=str(search_source.filename), rerun=False)
 

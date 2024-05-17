@@ -180,7 +180,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         )
 
         if search_type == SearchType.DB:
-            search_source = operation.add_db_source(
+            search_source = operation.create_db_source(
                 search_source_cls=cls,
                 params=params_dict,
             )
@@ -201,7 +201,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 )
             else:
                 # Add API search without params
-                search_source = operation.add_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(endpoint=cls.endpoint)
 
         # elif search_type == SearchType.TOC:
         else:

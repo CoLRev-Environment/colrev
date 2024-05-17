@@ -942,7 +942,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.add_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(endpoint=cls.endpoint)
             else:
                 if Fields.URL in params_dict:
                     query = {

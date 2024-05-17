@@ -139,14 +139,14 @@ class PubMedSearchSource(JsonSchemaMixin):
         )
 
         if search_type == SearchType.DB:
-            search_source = operation.add_db_source(
+            search_source = operation.create_db_source(
                 search_source_cls=cls,
                 params=params_dict,
             )
 
         elif search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.add_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(endpoint=cls.endpoint)
 
             # pylint: disable=colrev-missed-constant-usage
             elif "url" in params_dict:

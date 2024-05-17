@@ -110,7 +110,7 @@ class ArXivSource:
 
         # Note : always API search
         if len(params_dict) == 0:
-            search_source = operation.add_api_source(endpoint=cls.endpoint)
+            search_source = operation.create_api_source(endpoint=cls.endpoint)
 
         # pylint: disable=colrev-missed-constant-usage
         else:

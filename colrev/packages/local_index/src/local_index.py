@@ -256,7 +256,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         # always API search
 
         if len(params) == 0:
-            search_source = operation.add_api_source(endpoint=cls.endpoint)
+            search_source = operation.create_api_source(endpoint=cls.endpoint)
         else:
             filename = operation.get_unique_filename(
                 file_path_string=f"local_index_{params}".replace("%", "").replace(

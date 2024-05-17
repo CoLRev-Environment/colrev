@@ -156,7 +156,7 @@ class ERICSearchSource(JsonSchemaMixin):
         # all API searches
 
         if len(params_dict) == 0:
-            search_source = operation.add_db_source(
+            search_source = operation.create_db_source(
                 search_source_cls=cls, params=params_dict
             )
 

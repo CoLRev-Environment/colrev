@@ -554,7 +554,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.add_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(endpoint=cls.endpoint)
 
             # pylint: disable=colrev-missed-constant-usage
             elif "url" in params_dict:

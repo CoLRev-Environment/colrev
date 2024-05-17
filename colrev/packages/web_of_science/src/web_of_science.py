@@ -85,7 +85,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
     ) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        search_source = operation.add_db_source(
+        search_source = operation.create_db_source(
             search_source_cls=cls,
             params={},
         )
