@@ -2,10 +2,12 @@
 """SearchSource: Unpaywall"""
 from __future__ import annotations
 
+from multiprocessing import Lock
 import typing
 from dataclasses import dataclass
 from pathlib import Path
 
+from dacite import from_dict
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -39,8 +41,20 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
     ) -> None:
-        """Not implemented"""
-        pass
+        self.review_manager = source_operation.review_manager
+        if settings:
+            # Unpaywall as a search_source
+            self.search_source = from_dict(
+                data_class=self.settings_class, data=settings
+            )
+        else:
+            self.search_source = colrev.settings.SearchSource(
+                endpoint=self.endpoint,
+                filename=Path("data/search/unpaywall.bib"),
+                search_type=SearchType.API,
+                search_parameters={},
+                comment="",
+            )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -64,8 +78,15 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
-        """Not implemented"""
-        pass
+
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
+            )
+            return records
+
+        raise NotImplementedError
 
     def prep_link_md(
         self,
