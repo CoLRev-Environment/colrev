@@ -421,6 +421,1060 @@ files = [
 ]
 
 [[package]]
+name = "colrev-abi-inform-proquest"
+version = "0.1.0"
+description = "CoLRev package for abi_inform_proquest"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/abi_inform_proquest"
+
+[[package]]
+name = "colrev-acm-digital-library"
+version = "0.1.0"
+description = "CoLRev package for acm_digital_library"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/acm_digital_library"
+
+[[package]]
+name = "colrev-add-journal-ranking"
+version = "0.1.0"
+description = "CoLRev package for add_journal_ranking"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/add_journal_ranking"
+
+[[package]]
+name = "colrev-ais-library"
+version = "0.1.0"
+description = "CoLRev package for aisel"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/ais_library"
+
+[[package]]
+name = "colrev-arxiv"
+version = "0.1.0"
+description = "CoLRev package for arxiv"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/arxiv"
+
+[[package]]
+name = "colrev-bibliography-export"
+version = "0.1.0"
+description = "CoLRev package for bibliography_export"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/bibliography_export"
+
+[[package]]
+name = "colrev-blank"
+version = "0.1.0"
+description = "CoLRev package for blank_review"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/blank"
+
+[[package]]
+name = "colrev-colrev-cli-pdf-get-man"
+version = "0.1.0"
+description = "CoLRev package for pdf_get_man_cli"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/colrev_cli_pdf_get_man"
+
+[[package]]
+name = "colrev-colrev-cli-pdf-prep-man"
+version = "0.1.0"
+description = "CoLRev package for colrev_cli_pdf_prep_man"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/colrev_cli_pdf_prep_man"
+
+[[package]]
+name = "colrev-colrev-cli-prescreen"
+version = "0.1.0"
+description = "CoLRev package for colrev_cli_prescreen"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/colrev_cli_prescreen"
+
+[[package]]
+name = "colrev-colrev-cli-screen"
+version = "0.1.0"
+description = "CoLRev package for screen_cli"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/colrev_cli_screen"
+
+[[package]]
+name = "colrev-colrev-curation"
+version = "0.1.0"
+description = "CoLRev package for colrev_curation"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/colrev_curation"
+
+[[package]]
+name = "colrev-colrev-project"
+version = "0.1.0"
+description = "CoLRev package for colrev_project"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/colrev_project"
+
+[[package]]
+name = "colrev-conceptual-review"
+version = "0.1.0"
+description = "CoLRev package for conceptual_review"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/conceptual_review"
+
+[[package]]
+name = "colrev-conditional-prescreen"
+version = "0.1.0"
+description = "CoLRev package for conditional_prescreen"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/conditional_prescreen"
+
+[[package]]
+name = "colrev-critical-review"
+version = "0.1.0"
+description = "CoLRev package for critical_review"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/critical_review"
+
+[[package]]
+name = "colrev-crossref"
+version = "0.1.0"
+description = "Crossref package for CoLRev"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.dependencies]
+crossrefapi = "^1.5.0"
+
+[package.source]
+type = "directory"
+url = "colrev/packages/crossref"
+
+[[package]]
+name = "colrev-curated-masterdata"
+version = "0.1.0"
+description = "CoLRev package for curated_masterdata"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/curated_masterdata"
+
+[[package]]
+name = "colrev-curation-full-outlet-dedupe"
+version = "0.1.0"
+description = "CoLRev package for curation_dedupe"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/curation_full_outlet_dedupe"
+
+[[package]]
+name = "colrev-curation-missing-dedupe"
+version = "0.1.0"
+description = "CoLRev package for curation_missing_dedupe"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/curation_missing_dedupe"
+
+[[package]]
+name = "colrev-dblp"
+version = "0.1.0"
+description = "CoLRev package dblp"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/dblp"
+
+[[package]]
+name = "colrev-dedupe"
+version = "0.1.0"
+description = "CoLRev package for dedupe"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/dedupe"
+
+[[package]]
+name = "colrev-descriptive-review"
+version = "0.1.0"
+description = "CoLRev package for descriptive_review"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/descriptive_review"
+
+[[package]]
+name = "colrev-doi-org"
+version = "0.1.0"
+description = "CoLRev package for doi_org"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.dependencies]
+beautifulsoup4 = "^4.11.1"
+
+[package.source]
+type = "directory"
+url = "colrev/packages/doi_org"
+
+[[package]]
+name = "colrev-download-from-website"
+version = "0.1.0"
+description = "CoLRev package for download_from_website"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.dependencies]
+beautifulsoup4 = "^4.11.1"
+
+[package.source]
+type = "directory"
+url = "colrev/packages/download_from_website"
+
+[[package]]
+name = "colrev-ebsco-host"
+version = "0.1.0"
+description = "CoLRev package for ebsco_host"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/ebsco_host"
+
+[[package]]
+name = "colrev-eric"
+version = "0.1.0"
+description = "CoLRev package for eric"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/eric"
+
+[[package]]
+name = "colrev-europe-pmc"
+version = "0.1.0"
+description = "CoLRev package for europe_pmc"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/europe_pmc"
+
+[[package]]
+name = "colrev-exclude-collections"
+version = "0.1.0"
+description = "CoLRev package for exclude_collections"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/exclude_collections"
+
+[[package]]
+name = "colrev-exclude-complementary-materials"
+version = "0.1.0"
+description = "CoLRev package for exclude_complementary_materials"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/exclude_complementary_materials"
+
+[[package]]
+name = "colrev-exclude-languages"
+version = "0.1.0"
+description = "CoLRev package for exclude_languages"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/exclude_languages"
+
+[[package]]
+name = "colrev-exclude-non-latin-alphabets"
+version = "0.1.0"
+description = "CoLRev package for exclude_non_latin_alphabets"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.dependencies]
+alphabet-detector = "^0.0.7"
+
+[package.source]
+type = "directory"
+url = "colrev/packages/exclude_non_latin_alphabets"
+
+[[package]]
+name = "colrev-export-man-prep"
+version = "0.1.0"
+description = "CoLRev package for export_man_prep"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/export_man_prep"
+
+[[package]]
+name = "colrev-files-dir"
+version = "0.1.0"
+description = "CoLRev package for files_dir"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/files_dir"
+
+[[package]]
+name = "colrev-general-polish"
+version = "0.1.0"
+description = "CoLRev package for general_polish"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/general_polish"
+
+[[package]]
+name = "colrev-get-doi-from-urls"
+version = "0.1.0"
+description = "CoLRev package for get_doi_from_urls"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/get_doi_from_urls"
+
+[[package]]
+name = "colrev-get-masterdata-from-citeas"
+version = "0.1.0"
+description = "CoLRev package for citeas"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/get_masterdata_from_citeas"
+
+[[package]]
+name = "colrev-get-masterdata-from-doi"
+version = "0.1.0"
+description = "CoLRev package for doi_metadata_prep"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/get_masterdata_from_doi"
+
+[[package]]
+name = "colrev-get-year-from-vol-iss-jour"
+version = "0.1.0"
+description = "CoLRev package for year_vol_iss_prep"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/get_year_from_vol_iss_jour"
+
+[[package]]
+name = "colrev-github-pages"
+version = "0.1.0"
+description = "CoLRev package for github_pages"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/github_pages"
+
+[[package]]
+name = "colrev-google-scholar"
+version = "0.1.0"
+description = "CoLRev package for google_scholar"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/google_scholar"
+
+[[package]]
+name = "colrev-grobid-tei"
+version = "0.1.0"
+description = "CoLRev package for grobid_tei"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/grobid_tei"
+
+[[package]]
+name = "colrev-ieee"
+version = "0.1.0"
+description = "CoLRev package for ieee"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/ieee"
+
+[[package]]
+name = "colrev-jstor"
+version = "0.1.0"
+description = "CoLRev package for jstor"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/jstor"
+
+[[package]]
+name = "colrev-literature-review"
+version = "0.1.0"
+description = "CoLRev package for literature_review"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/literature_review"
+
+[[package]]
+name = "colrev-local-index"
+version = "0.1.0"
+description = "CoLRev package for local_index"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/local_index"
+
+[[package]]
+name = "colrev-meta-analysis"
+version = "0.1.0"
+description = "CoLRev package for meta-analysis"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/meta_analysis"
+
+[[package]]
+name = "colrev-narrative-review"
+version = "0.1.0"
+description = "CoLRev package for narrative_review"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/narrative_review"
+
+[[package]]
+name = "colrev-obsidian"
+version = "0.1.0"
+description = "CoLRev package for obsidian"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/obsidian"
+
+[[package]]
+name = "colrev-ocrmypdf"
+version = "0.1.0"
+description = "CoLRev package for ocrmypdf"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/ocrmypdf"
+
+[[package]]
+name = "colrev-open-alex"
+version = "0.1.0"
+description = "CoLRev package for open_alex"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.dependencies]
+pyalex = "^0.10"
+
+[package.source]
+type = "directory"
+url = "colrev/packages/open_alex"
+
+[[package]]
+name = "colrev-open-citations-forward-search"
+version = "0.1.0"
+description = "CoLRev package for open_citations_forward_search"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/open_citations_forward_search"
+
+[[package]]
+name = "colrev-open-library"
+version = "0.1.0"
+description = "CoLRev package for open_library"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/open_library"
+
+[[package]]
+name = "colrev-paper-md"
+version = "0.1.0"
+description = "CoLRev package for paper_md"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/paper_md"
+
+[[package]]
+name = "colrev-pdf-backward-search"
+version = "0.1.0"
+description = "CoLRev package for pdf_backward_search"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/pdf_backward_search"
+
+[[package]]
+name = "colrev-prep-man-curation-jupyter"
+version = "0.1.0"
+description = "CoLRev package for curation_jupyter_prep_man"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/prep_man_curation_jupyter"
+
+[[package]]
+name = "colrev-prescreen-table"
+version = "0.1.0"
+description = "CoLRev package for prescreen_table"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/prescreen_table"
+
+[[package]]
+name = "colrev-prisma"
+version = "0.1.0"
+description = "CoLRev package for prisma"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/prisma"
+
+[[package]]
+name = "colrev-psycinfo"
+version = "0.1.0"
+description = "CoLRev package for psycinfo"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/psycinfo"
+
+[[package]]
+name = "colrev-pubmed"
+version = "0.1.0"
+description = "CoLRev package for pubmed"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/pubmed"
+
+[[package]]
+name = "colrev-qualitative-systematic-review"
+version = "0.1.0"
+description = "CoLRev package for qualitative_systematic_review"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/qualitative_systematic_review"
+
+[[package]]
+name = "colrev-remove-broken-ids"
+version = "0.1.0"
+description = "CoLRev package for remove_broken_ids"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/remove_broken_ids"
+
+[[package]]
+name = "colrev-remove-coverpage"
+version = "0.1.0"
+description = "CoLRev package for remove_coverpage"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/remove_coverpage"
+
+[[package]]
+name = "colrev-remove-last-page"
+version = "0.1.0"
+description = "CoLRev package for remove_last_page"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/remove_last_page"
+
+[[package]]
+name = "colrev-remove-urls-with-500-errors"
+version = "0.1.0"
+description = "CoLRev package for remove_urls_with_500_errors"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/remove_urls_with_500_errors"
+
+[[package]]
+name = "colrev-scientometric"
+version = "0.1.0"
+description = "CoLRev package for scientometric"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/scientometric"
+
+[[package]]
+name = "colrev-scope-prescreen"
+version = "0.1.0"
+description = "CoLRev package for scope_prescreen"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/scope_prescreen"
+
+[[package]]
+name = "colrev-scoping-review"
+version = "0.1.0"
+description = "CoLRev package for scoping_review"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/scoping_review"
+
+[[package]]
+name = "colrev-scopus"
+version = "0.1.0"
+description = "CoLRev package for scopus"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/scopus"
+
+[[package]]
+name = "colrev-screen-table"
+version = "0.1.0"
+description = "CoLRev package for screen_table"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/screen_table"
+
+[[package]]
+name = "colrev-semanticscholar"
+version = "0.1.0"
+description = "CoLRev package for semanticscholar"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.dependencies]
+semanticscholar = "^0.6.0"
+
+[package.source]
+type = "directory"
+url = "colrev/packages/semanticscholar"
+
+[[package]]
+name = "colrev-source-specific-prep"
+version = "0.1.0"
+description = "CoLRev package for source_specific_prep"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/source_specific_prep"
+
+[[package]]
+name = "colrev-springer-link"
+version = "0.1.0"
+description = "CoLRev package for springer_link"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/springer_link"
+
+[[package]]
+name = "colrev-structured"
+version = "0.1.0"
+description = "CoLRev package for structured"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/structured"
+
+[[package]]
 name = "colrev-sync"
 version = "0.1.0"
 description = "CoLRev package for sync"
@@ -433,6 +1487,62 @@ develop = false
 [package.source]
 type = "directory"
 url = "colrev/packages/sync"
+
+[[package]]
+name = "colrev-synergy-datasets"
+version = "0.1.0"
+description = "CoLRev package for synergy_datasets"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/synergy_datasets"
+
+[[package]]
+name = "colrev-taylor-and-francis"
+version = "0.1.0"
+description = "CoLRev package for taylor_and_francis"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/taylor_and_francis"
+
+[[package]]
+name = "colrev-theoretical-review"
+version = "0.1.0"
+description = "CoLRev package for theoretical_review"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/theoretical_review"
+
+[[package]]
+name = "colrev-trid"
+version = "0.1.0"
+description = "CoLRev package for trid"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/trid"
 
 [[package]]
 name = "colrev-ui-web"
@@ -450,6 +1560,90 @@ dash = "^2.11.1"
 [package.source]
 type = "directory"
 url = "colrev/packages/ui_web"
+
+[[package]]
+name = "colrev-umbrella"
+version = "0.1.0"
+description = "CoLRev package for umbrella_review"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/umbrella"
+
+[[package]]
+name = "colrev-unknown-source"
+version = "0.1.0"
+description = "CoLRev package for unknown_source"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/unknown_source"
+
+[[package]]
+name = "colrev-unpaywall"
+version = "0.1.0"
+description = "CoLRev package for unpaywall"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/unpaywall"
+
+[[package]]
+name = "colrev-web-of-science"
+version = "0.1.0"
+description = "CoLRev package for web_of_science"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/web_of_science"
+
+[[package]]
+name = "colrev-website-screenshot"
+version = "0.1.0"
+description = "CoLRev package for website_screenshot"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/website_screenshot"
+
+[[package]]
+name = "colrev-wiley"
+version = "0.1.0"
+description = "CoLRev package for wiley"
+category = "main"
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.source]
+type = "directory"
+url = "colrev/packages/wiley"
 
 [[package]]
 name = "coverage"
@@ -3227,18 +4421,6 @@ doc = ["reno", "sphinx"]
 test = ["pytest", "tornado (>=4.5)", "typeguard"]
 
 [[package]]
-name = "toml"
-version = "0.10.2"
-description = "Python Library for Tom's Obvious, Minimal Language"
-category = "main"
-optional = false
-python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-files = [
-    {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
-    {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
-]
-
-[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -3497,4 +4679,4 @@ docs = ["Sphinx", "docutils", "repoze-sphinx-autointerface", "sphinx-autodoc-typ
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <4"
-content-hash = "0a956f5ba67d6ee3267fabe07ada2fd8baf565eff161deacca06b2012fac6263"
+content-hash = "36742d2a29b813179f63c4508f7489bba50a3622cbc79792315d42352108c17f"

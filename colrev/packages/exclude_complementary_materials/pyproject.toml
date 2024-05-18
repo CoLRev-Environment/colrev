@@ -17,6 +17,8 @@ python = ">=3.8, <4"
 dev_status = "maturing"
 documentation = "README.md"
 colrev_doc_link = "README.md"
+
+[tool.poetry.plugins.colrev]
 prep = "colrev.packages.exclude_complementary_materials.src.exclude_complementary_materials:ExcludeComplementaryMaterialsPrep"
 
 [build-system]

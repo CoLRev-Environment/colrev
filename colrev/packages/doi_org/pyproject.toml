@@ -12,6 +12,7 @@ include = "src"
 
 [tool.poetry.dependencies]
 python = ">=3.8, <4"
+beautifulsoup4 = "^4.11.1"
 
 [tool.colrev]
 dev_status = "maturing"

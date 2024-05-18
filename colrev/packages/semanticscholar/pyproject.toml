@@ -6,17 +6,19 @@ authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
 documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/semanticscholar/README.md"
 
-
 [[tool.poetry.packages]]
 include = "src"
 
 [tool.poetry.dependencies]
 python = ">=3.8, <4"
+semanticscholar = "^0.6.0"
 
 [tool.colrev]
 dev_status = "experimental"
 documentation = "README.md"
 colrev_doc_link = "README.md"
+
+[tool.poetry.plugins.colrev]
 search_source = "colrev.packages.semanticscholar.src.semanticscholar_search_source:SemanticScholarSearchSource"
 prep = "colrev.packages.semanticscholar.src.semantic_scholar_prep:SemanticScholarPrep"
 

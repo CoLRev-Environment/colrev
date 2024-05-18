@@ -17,6 +17,8 @@ python = ">=3.8, <4"
 dev_status = "maturing"
 documentation = "README.md"
 colrev_doc_link = "README.md"
+
+[tool.poetry.plugins.colrev]
 search_source = "colrev.packages.europe_pmc.src.europe_pmc:EuropePMCSearchSource"
 prep = "colrev.packages.europe_pmc.src.europe_pmc_prep:EuropePMCMetadataPrep"
 

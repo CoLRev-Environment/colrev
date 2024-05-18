@@ -17,6 +17,8 @@ python = ">=3.8, <4"
 dev_status = "experimental"
 documentation = "README.md"
 colrev_doc_link = "README.md"
+
+[tool.poetry.plugins.colrev]
 data = "colrev.packages.bibliography_export.src.bibliography_export:BibliographyExport"
 
 [build-system]

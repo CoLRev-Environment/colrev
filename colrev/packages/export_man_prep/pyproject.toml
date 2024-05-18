@@ -17,6 +17,8 @@ python = ">=3.8, <4"
 dev_status = "maturing"
 documentation = "README.md"
 colrev_doc_link = "README.md"
+
+[tool.poetry.plugins.colrev]
 prep_man = "colrev.packages.export_man_prep.src.prep_man_export:ExportManPrep"
 
 [build-system]

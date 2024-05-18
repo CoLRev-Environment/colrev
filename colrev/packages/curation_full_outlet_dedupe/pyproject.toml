@@ -17,6 +17,8 @@ python = ">=3.8, <4"
 dev_status = "experimental"
 documentation = "README.md"
 colrev_doc_link = "README.md"
+
+[tool.poetry.plugins.colrev]
 dedupe = "colrev.packages.curation_full_outlet_dedupe.src.curation_dedupe:CurationDedupe"
 
 [build-system]

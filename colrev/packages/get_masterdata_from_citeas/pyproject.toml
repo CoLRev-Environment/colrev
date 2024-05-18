@@ -17,6 +17,8 @@ python = ">=3.8, <4"
 dev_status = "experimental"
 documentation = "README.md"
 colrev_doc_link = "README.md"
+
+[tool.poetry.plugins.colrev]
 prep = "colrev.packages.get_masterdata_from_citeas.src.citeas_prep:CiteAsPrep"
 
 [build-system]

@@ -17,6 +17,8 @@ python = ">=3.8, <4"
 dev_status = "experimental"
 documentation = "README.md"
 colrev_doc_link = "README.md"
+
+[tool.poetry.plugins.colrev]
 review_type = "colrev.packages.umbrella.src.umbrella_review:UmbrellaReview"
 
 [build-system]

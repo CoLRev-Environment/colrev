@@ -17,6 +17,8 @@ python = ">=3.8, <4"
 dev_status = "maturing"
 documentation = "README.md"
 colrev_doc_link = "README.md"
+
+[tool.poetry.plugins.colrev]
 search_source = "colrev.packages.files_dir.src.files_dir:FilesSearchSource"
 
 [build-system]

@@ -17,6 +17,8 @@ python = ">=3.8, <4"
 dev_status = "experimental"
 documentation = "README.md"
 colrev_doc_link = "README.md"
+
+[tool.poetry.plugins.colrev]
 prep = "colrev.packages.get_year_from_vol_iss_jour.src.year_vol_iss_prep:YearVolIssPrep"
 
 [build-system]
