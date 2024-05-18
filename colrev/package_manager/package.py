@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import importlib.util
-from importlib.metadata import distribution
+try:
+    from importlib.metadata import distribution
+except ImportError:  # Python < 3.10
+    from importlib_metadata import distribution
 from importlib.metadata import metadata
 from importlib.metadata import PackageNotFoundError
 from pathlib import Path
