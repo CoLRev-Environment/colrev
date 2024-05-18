@@ -35,7 +35,8 @@ class Package:
         try:
             self.package = distribution(package_identifier)
         except PackageNotFoundError as exc:
-
+            # Note: The distribution(package_identifier)
+            # does not seem to work reliably (across matrix tests on GitHub Actions)
             for dist in distributions():
                 if dist.metadata['Name'] == package_identifier:
                     self.package = dist
@@ -53,6 +54,7 @@ class Package:
         package_path = self.package.files[0].locate()
         self.package_dir = Path(package_path).parent
 
+        # Note: The metadata() function does not work reliably
         # package_metadata = metadata(package_identifier)
         self.name = self.package.metadata["Name"]
         self.version = self.package.metadata["Version"]
