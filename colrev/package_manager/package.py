@@ -3,10 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
-try:
-    from importlib.metadata import distribution
-except ImportError:  # Python < 3.10
-    from importlib_metadata import distribution
+from importlib.metadata import distribution, distributions
 from importlib.metadata import metadata
 from importlib.metadata import PackageNotFoundError
 from pathlib import Path
@@ -38,23 +35,31 @@ class Package:
         try:
             self.package = distribution(package_identifier)
         except PackageNotFoundError as exc:
-            raise colrev_exceptions.MissingDependencyError(
-                f"Package {package_identifier} not found"
-            ) from exc
+
+            for dist in distributions():
+                if dist.metadata['Name'] == package_identifier:
+                    self.package = dist
+                    break
+            else:
+                raise colrev_exceptions.MissingDependencyError(
+                    f"Package {package_identifier} not found"
+                ) from exc
+
         if not self.package.files:
             raise colrev_exceptions.MissingDependencyError(
                 f"Package {package_identifier} not a CoLRev package " "(no files found)"
             )
+
         package_path = self.package.files[0].locate()
         self.package_dir = Path(package_path).parent
 
-        package_metadata = metadata(package_identifier)
-        self.name = package_metadata["name"]
-        self.version = package_metadata["version"]
+        # package_metadata = metadata(package_identifier)
+        self.name = self.package.metadata["Name"]
+        self.version = self.package.metadata["Version"]
 
         # TODO : status etc. is not available through pyproject.toml (needed for docus)
-        self.status = package_metadata["dev_status"]
-        self.colrev_doc_link = package_metadata["colrev_doc_link"]
+        # self.status = package_metadata["dev_status"]
+        # self.colrev_doc_link = package_metadata["colrev_doc_link"]
 
     def has_endpoint(self, endpoint_type: EndpointType) -> bool:
         """Check if the package has a specific endpoint type"""
