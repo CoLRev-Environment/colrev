@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import importlib.util
-from importlib.metadata import distribution, distributions
-from importlib.metadata import metadata
+from importlib.metadata import distribution
+from importlib.metadata import distributions
 from importlib.metadata import PackageNotFoundError
 from pathlib import Path
 from typing import Any
@@ -38,7 +38,7 @@ class Package:
             # Note: The distribution(package_identifier)
             # does not seem to work reliably (across matrix tests on GitHub Actions)
             for dist in distributions():
-                if dist.metadata['Name'] == package_identifier:
+                if dist.metadata["Name"] == package_identifier:
                     self.package = dist
                     break
             else:
