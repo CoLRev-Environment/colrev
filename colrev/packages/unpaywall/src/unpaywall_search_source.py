@@ -7,13 +7,18 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
+from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
-from colrev.constants import SearchSourceHeuristicStatus, SearchType
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.settings
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
+# selbst importiert, löschen vor merge und absprache
+
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
@@ -21,7 +26,8 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     """Unpaywall Search Source"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    # source_identifier
+    #TODO ABSPRECHEN ENTKOMMENTIERT!
+    source_identifier="ID"
     search_types = [SearchType.API]
     endpoint = "colrev.unpaywall"
 
@@ -40,7 +46,19 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         settings: typing.Optional[dict] = None,
     ) -> None:
         """Not implemented"""
-        pass
+        self.review_manager = source_operation.review_manager
+        if settings:
+            self.search_source = from_dict(
+                data_class=self.settings_class, data=settings
+            )
+        else:
+            self.search_source = colrev.settings.SearchSource(
+                endpoint=self.endpoint,
+                filename=Path("data/search/unpaywall.bib"),
+                search_type=SearchType.API,
+                search_parameters={},
+                comment="",
+            )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -55,17 +73,20 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         """Not implemented"""
-        pass
 
     def search(self, rerun: bool) -> None:
         """Run a search of Unpaywall"""
         """Not implemented"""
-        pass
-    
+        unpaywall_feed = self.search_source.get_api_feed(
+            review_manager=self.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=(not rerun),
+        )
+        # TODO: API search
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
         """Not implemented"""
-        pass
 
     def prep_link_md(
         self,
@@ -76,14 +97,14 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
-    
+
     def prepare(
         self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Unpaywall"""
         """Not implemented"""
         return record
-    
+
 
 if __name__ == "__main__":
     instance = UnpaywallSearchSource()
