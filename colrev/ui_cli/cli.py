@@ -31,7 +31,6 @@ import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
-from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
@@ -241,11 +240,11 @@ def exit(
 @main.command(help_priority=1)
 @click.option(
     "--type",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.review_type,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.review_type,
+    #     )
+    # ),
     default="colrev.literature_review",
     help="Review type for the setup.",
 )
@@ -444,11 +443,11 @@ def retrieve(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.search_source,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.search_source,
+    #     )
+    # ),
     help="""Search source to be added.""",
 )
 @click.option(
@@ -653,11 +652,11 @@ def load(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.prep,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.prep,
+    #     )
+    # ),
     help="""Prep package to be added.""",
 )
 @click.option(
@@ -777,11 +776,11 @@ def prep(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.prep_man,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.prep_man,
+    #     )
+    # ),
     help="""Prep-man script  to be added.""",
 )
 @click.option(
@@ -872,12 +871,12 @@ def _view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.dedupe,
-        ),
-        case_sensitive=False,
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.dedupe,
+    #     ),
+    #     case_sensitive=False,
+    # ),
     help="""Dedupe package to be added.""",
 )
 @click.option(
@@ -1025,11 +1024,11 @@ def dedupe(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.prescreen,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.prescreen,
+    #     )
+    # ),
     help="""Prescreen package to be added.""",
 )
 @click.option(
@@ -1187,11 +1186,11 @@ def prescreen(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.screen,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.screen,
+    #     )
+    # ),
     help="""Screen package to be added.""",
 )
 @click.option(
@@ -1466,11 +1465,11 @@ def pdfs(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.pdf_get,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.pdf_get,
+    #     )
+    # ),
     help="""PDF-get package to be added.""",
 )
 @click.option(
@@ -1582,11 +1581,11 @@ def pdf_get(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.pdf_get_man,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.pdf_get_man,
+    #     )
+    # ),
     help="""PDF-get-man package to be added.""",
 )
 @click.option(
@@ -1723,11 +1722,11 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.pdf_prep,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.pdf_prep,
+    #     )
+    # ),
     help="""PDF-prep package to be added.""",
 )
 @click.option(
@@ -1864,11 +1863,11 @@ def _delete_first_pages_cli(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.pdf_prep_man,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.pdf_prep_man,
+    #     )
+    # ),
     help="""PDF-prep-man package to be added.""",
 )
 @click.option(
@@ -1981,11 +1980,11 @@ def pdf_prep_man(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.data,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.data,
+    #     )
+    # ),
     help="Data package to be added.",
 )
 @click.option(
