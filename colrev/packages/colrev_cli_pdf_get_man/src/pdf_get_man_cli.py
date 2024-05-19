@@ -2,6 +2,7 @@
 """CLI interface for manual retrieval of PDFs"""
 from __future__ import annotations
 
+import shutil
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
@@ -146,8 +147,9 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             f"{record.data.get('volume', 'NA')}/{record.data.get('number', 'NA')}"
         )
         if vol_slash_nr_path.is_dir():
-            pdf_in_downloads_folder.rename(
-                vol_slash_nr_path / Path(f"{record.data['ID']}.pdf")
+            shutil.move(
+                str(pdf_in_downloads_folder),
+                str(vol_slash_nr_path / Path(f"{record.data['ID']}.pdf")),
             )
             return
 
@@ -155,22 +157,32 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             f"{record.data.get('volume', 'NA')}_{record.data.get('number', 'NA')}"
         )
         if vol_underscore_nr_path.is_dir():
-            pdf_in_downloads_folder.rename(
-                vol_underscore_nr_path / Path(f"{record.data['ID']}.pdf")
+            shutil.move(
+                str(pdf_in_downloads_folder),
+                str(vol_underscore_nr_path / Path(f"{record.data['ID']}.pdf")),
             )
             return
 
         vol_path = self.pdf_dir / Path(f"{record.data.get('volume', 'NA')}")
         if vol_path.is_dir():
-            pdf_in_downloads_folder.rename(vol_path / Path(f"{record.data['ID']}.pdf"))
+            shutil.move(
+                str(pdf_in_downloads_folder),
+                str(vol_path / Path(f"{record.data['ID']}.pdf")),
+            )
             return
 
         year_path = self.pdf_dir / Path(f"{record.data.get('year', 'NA')}")
         if year_path.is_dir():
-            pdf_in_downloads_folder.rename(year_path / Path(f"{record.data['ID']}.pdf"))
+            shutil.move(
+                str(pdf_in_downloads_folder),
+                str(year_path / Path(f"{record.data['ID']}.pdf")),
+            )
             return
 
-        pdf_in_downloads_folder.rename(self.pdf_dir / Path(f"{record.data['ID']}.pdf"))
+        shutil.move(
+            str(pdf_in_downloads_folder),
+            str(self.pdf_dir / Path(f"{record.data['ID']}.pdf")),
+        )
 
     def print_record(self, *, record_dict: dict) -> None:
         """Print the record for pdf-get-man (cli)"""

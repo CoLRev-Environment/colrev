@@ -56,7 +56,7 @@ class Dedupe(JsonSchemaMixin):
         )
         if not maybe_file.is_file():
             return
-        shutil.move(str(maybe_file), target_path)
+        shutil.move(str(maybe_file), str(target_path))
 
     def run_dedupe(self) -> None:
         """Run default dedupe"""

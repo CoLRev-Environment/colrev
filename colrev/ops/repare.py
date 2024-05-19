@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path
 
 import colrev.env.local_index
@@ -93,7 +94,7 @@ class Repare(colrev.process.operation.Operation):
 
             # Add .pdf extension if missing
             if Path(str(full_path) + ".pdf").is_file():
-                Path(str(full_path) + ".pdf").rename(full_path)
+                shutil.move(str(full_path) + ".pdf", str(full_path))
 
             # Check / replace multiple blanks in file and filename
             try:
@@ -106,7 +107,9 @@ class Repare(colrev.process.operation.Operation):
                     if record_dict[Fields.FILE].replace("  ", " ") == str(
                         same_dir_pdf
                     ).replace("  ", " "):
-                        same_dir_pdf.rename(str(same_dir_pdf).replace("  ", " "))
+                        shutil.move(
+                            str(same_dir_pdf), str(same_dir_pdf).replace("  ", " ")
+                        )
                         record_dict[Fields.FILE] = record_dict[Fields.FILE].replace(
                             "  ", " "
                         )

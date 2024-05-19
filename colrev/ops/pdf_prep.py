@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import multiprocessing as mp
 import os
+import shutil
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
@@ -74,8 +75,8 @@ class PDFPrep(colrev.process.operation.Operation):
                 backup_filename = self.review_manager.path / Path(
                     original_filename.replace(".pdf", "_backup.pdf")
                 )
-                original_file.rename(backup_filename)
-                current_file.rename(original_filename)
+                shutil.move(str(original_file), str(backup_filename))
+                shutil.move(str(current_file), str(original_filename))
                 record.data[Fields.FILE] = str(
                     original_file.relative_to(self.review_manager.path)
                 )
@@ -95,7 +96,7 @@ class PDFPrep(colrev.process.operation.Operation):
             if target_fname.name != linked_file.name:
                 if target_fname.is_file():
                     os.remove(target_fname)
-                linked_file.rename(target_fname)
+                shutil.move(str(linked_file), str(target_fname))
                 record.data[Fields.FILE] = str(
                     target_fname.relative_to(self.review_manager.path)
                 )

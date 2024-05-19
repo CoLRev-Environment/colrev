@@ -6,6 +6,7 @@ import inspect
 import logging
 import multiprocessing as mp
 import random
+import shutil
 import typing
 from copy import deepcopy
 from datetime import datetime
@@ -555,7 +556,7 @@ class Prep(colrev.process.operation.Operation):
             new_filename = Path(record_dict[Fields.FILE]).parent / Path(
                 f"{record_dict[Fields.ID]}.pdf"
             )
-            Path(record_dict[Fields.FILE]).rename(new_filename)
+            shutil.move(record_dict[Fields.FILE], str(new_filename))
             record_dict[Fields.FILE] = str(new_filename)
 
             # simple heuristic:

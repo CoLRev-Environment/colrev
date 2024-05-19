@@ -441,7 +441,7 @@ class PaperMarkdown(JsonSchemaMixin):
         paper_path = self.settings.paper_path
         Path(temp.name).unlink(missing_ok=True)
         self._temp_path.mkdir(exist_ok=True, parents=True)
-        shutil.move(str(paper_path), temp.name)
+        shutil.move(str(paper_path), str(temp.name))
 
         screen_operation = self.review_manager.get_screen_operation(
             notify_state_transition_operation=False
@@ -587,7 +587,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 temp = tempfile.NamedTemporaryFile(dir=self._temp_path)
                 paper_path = self.settings.paper_path
                 Path(temp.name).unlink(missing_ok=True)
-                paper_path.rename(temp.name)
+                shutil.move(str(paper_path), str(temp.name))
                 with open(temp.name, encoding="utf-8") as reader, open(
                     paper_path, "w", encoding="utf-8"
                 ) as writer:

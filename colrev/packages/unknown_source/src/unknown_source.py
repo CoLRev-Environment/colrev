@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import shutil
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -129,7 +130,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 f"{Colors.GREEN}Rename to {new_filename} "
                 f"(because the format is .enl){Colors.END}"
             )
-            self.search_source.filename.rename(new_filename)
+            shutil.move(str(self.search_source.filename), str(new_filename))
             self.review_manager.dataset.add_changes(
                 self.search_source.filename, remove=True
             )
@@ -148,7 +149,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 f"{Colors.GREEN}Rename to {new_filename} "
                 f"(because the format is .ris){Colors.END}"
             )
-            self.search_source.filename.rename(new_filename)
+            shutil.move(str(self.search_source.filename), str(new_filename))
             self.review_manager.dataset.add_changes(
                 self.search_source.filename, remove=True
             )
