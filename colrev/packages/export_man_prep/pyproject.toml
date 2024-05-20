@@ -2,6 +2,7 @@
 name = "colrev.export_man_prep"
 description = "CoLRev package for export_man_prep"
 version = "0.1.0"
+license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]

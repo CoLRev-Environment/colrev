@@ -1,4 +1,6 @@
-# Literature review
+## Summary
+
+This ReviewType contains a basic setup for literature reviews.
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -8,6 +10,8 @@ Note: This document is currently under development. It will contain the followin
 - goals
 - dimensions
 - differences between disciplines
+
+<!--
 
 ## Steps and operations
 
@@ -28,3 +32,4 @@ Note: This document is currently under development. It will contain the followin
 ## Software recommendations
 
 ## References
+-->

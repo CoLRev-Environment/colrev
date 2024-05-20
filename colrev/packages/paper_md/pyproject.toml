@@ -2,6 +2,7 @@
 name = "colrev.paper_md"
 description = "CoLRev package for paper_md"
 version = "0.1.0"
+license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]

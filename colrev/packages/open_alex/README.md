@@ -1,28 +1,27 @@
-# OpenAlex
+## Summary
 
 ## search
 
 ### API search
 
+ℹ️ Restriction: API searches do not support complex queries (yet)
+
 ```
 colrev search --add colrev.open_alex -p "..."
 ```
 
-
 ## prep
 
-Note: This document is currently under development. It will contain the following elements.
+Links meta data from OpenAlex to existing records.
 
-- description
-- example
-
-
-## Links
-
-- [OpenAlex](https://openalex.org/)
-- [License](https://docs.openalex.org/additional-help/faq#how-is-openalex-licensed)
+## Debugging
 
 To test the metadata provided for a particular `open_alex_id` use:
 ```
 https://api.openalex.org/works/OPEN_ALEX_ID
 ```
+
+## Links
+
+- [OpenAlex](https://openalex.org/)
+- [License](https://docs.openalex.org/additional-help/faq#how-is-openalex-licensed)

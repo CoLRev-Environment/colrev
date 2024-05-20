@@ -2,6 +2,7 @@
 name = "colrev.prep_man_curation_jupyter"
 description = "CoLRev package for curation_jupyter_prep_man"
 version = "0.1.0"
+license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]

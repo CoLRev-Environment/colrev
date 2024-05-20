@@ -1,23 +1,52 @@
+colrev.crossref
+===============
 
-Crossref
-========
+- Maintainer: Gerit Wagner
+- License: MIT
 
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
 .. list-table::
    :header-rows: 1
+   :widths: 20 30 80
 
-   * - SearchSource
-     - Scope
-     - Size
-   * - `Crossref <https://www.crossref.org/>`_ (metadata deposited by publishers)
-     - Cross-disciplinary
-     - > 125,000,000
+   * - Endpoint
+     - Status
+     - Add
+   * - search_source
+     - |MATURING|
+     - .. code-block::
 
+
+         colrev search --add colrev.crossref
+
+   * - prep
+     - |MATURING|
+     - .. code-block::
+
+
+         colrev prep --add colrev.crossref
+
+
+Summary
+-------
+
+`Crossref <https://www.crossref.org/>`_ is a SearchSource that contains metadata deposited by publishers. It is cross-disciplinary and has a size of over 125,000,000 records.
 
 search
 ------
 
 API search
 ^^^^^^^^^^
+
+ℹ️ Restriction: API searches do not support complex queries (yet)
 
 It is possible to copy the url from the `search.crossref.org <https://search.crossref.org/?q=microsourcing&from_ui=yes>`_ UI and add it as follows:
 
@@ -48,13 +77,7 @@ Whole journals can be added based on their issn:
 prep
 ----
 
-Crossref linking
-
-Note: This document is currently under development. It will contain the following elements.
-
-
-* description
-* example
+Crossref generally offers high-quality meta data, making it an effective source to link and update existing records.
 
 Debugging
 ---------

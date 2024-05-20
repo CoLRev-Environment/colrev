@@ -1,12 +1,52 @@
+colrev.colrev_curation
+======================
 
-CoLRev Curations
-================
+- Maintainer: Gerit Wagner
+- License: MIT
 
-Note: This document is currently under development. It will contain the following elements.
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. list-table::
+   :header-rows: 1
+   :widths: 20 30 80
+
+   * - Endpoint
+     - Status
+     - Add
+   * - prep
+     - |MATURING|
+     - .. code-block::
 
 
-* description
-* example
+         colrev prep --add colrev.colrev_curation
+
+   * - data
+     - |MATURING|
+     - .. code-block::
+
+
+         colrev data --add colrev.colrev_curation
+
+
+Summary
+-------
+
+
+.. raw:: html
+
+   <!-- Note: This document is currently under development. It will contain the following elements.
+
+   - description
+   - example -->
+
+
 
 prep
 ----
@@ -44,10 +84,24 @@ They can be set as follows:
            ...
        }
 
-data
-----
 
-TODO
+.. raw:: html
 
-Links
------
+   <!--
+   ## data
+
+   TODO
+
+   ## Links
+   -->
+
+
+
+dedupe
+------
+
+See
+
+
+* `colrev.curation_full_outlet_dedupe <colrev.curation_full_outlet_dedupe.html>`_
+* `colrev.curation_missing_dedupe <colrev.curation_missing_dedupe.html>`_

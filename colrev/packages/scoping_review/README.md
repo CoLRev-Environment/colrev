@@ -1,4 +1,4 @@
-# Scoping review
+## Summary
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -8,6 +8,8 @@ Note: This document is currently under development. It will contain the followin
 - goals
 - dimensions
 - differences between disciplines
+
+<!--
 
 ## Steps and operations
 
@@ -26,6 +28,7 @@ Note: This document is currently under development. It will contain the followin
 - For manuscript development see separate page for Word/Tex/Md, Reference Managers
 
 ## Software recommendations
+-->
 
 ## References
 
