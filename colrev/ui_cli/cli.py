@@ -54,7 +54,9 @@ from colrev.constants import ScreenCriterionType
 
 EXACT_CALL = "colrev " + subprocess.list2cmdline(sys.argv[1:])  # nosec
 
-package_manager = colrev.package_manager.package_manager.PackageManager()
+PACKAGE_MANAGER = colrev.package_manager.package_manager.PackageManager()
+TYPE_IDENTIFIER_ENDPOINT_DICT = PACKAGE_MANAGER.load_type_identifier_endpoint_dict()
+
 SHELL_MODE = False
 
 
@@ -241,11 +243,7 @@ def exit(
 @main.command(help_priority=1)
 @click.option(
     "--type",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.review_type,
-        )
-    ),
+    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.review_type]),
     default="colrev.literature_review",
     help="Review type for the setup.",
 )
@@ -444,11 +442,7 @@ def retrieve(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.search_source,
-        )
-    ),
+    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.search_source]),
     help="""Search source to be added.""",
 )
 @click.option(
@@ -539,9 +533,8 @@ def search(
         # pylint: disable=reimported
         import colrev.ui_cli.add_package_to_settings
 
-        package_manager = review_manager.get_package_manager()
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=search_operation,
             package_identifier=add,
             params=params,
@@ -653,11 +646,7 @@ def load(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.prep,
-        )
-    ),
+    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prep]),
     help="""Prep package to be added.""",
 )
 @click.option(
@@ -755,9 +744,9 @@ def prep(
             )
             return
         if add:
-            package_manager = review_manager.get_package_manager()
+
             colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-                package_manager,
+                PACKAGE_MANAGER,
                 operation=prep_operation,
                 package_identifier=add,
                 params=params,
@@ -777,11 +766,7 @@ def prep(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.prep_man,
-        )
-    ),
+    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prep_man]),
     help="""Prep-man script  to be added.""",
 )
 @click.option(
@@ -846,9 +831,9 @@ def prep_man(
         return
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=prep_man_operation,
             package_identifier=add,
             params=params,
@@ -872,12 +857,7 @@ def _view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.dedupe,
-        ),
-        case_sensitive=False,
-    ),
+    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.dedupe]),
     help="""Dedupe package to be added.""",
 )
 @click.option(
@@ -964,9 +944,9 @@ def dedupe(
     )
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=dedupe_operation,
             package_identifier=add,
             params=params,
@@ -1025,11 +1005,7 @@ def dedupe(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.prescreen,
-        )
-    ),
+    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prescreen]),
     help="""Prescreen package to be added.""",
 )
 @click.option(
@@ -1159,9 +1135,9 @@ def prescreen(
         prescreen_operation.setup_custom_script()
         print("Activated custom_prescreen_script.py.")
     elif add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=prescreen_operation,
             package_identifier=add,
             params=params,
@@ -1187,11 +1163,7 @@ def prescreen(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.screen,
-        )
-    ),
+    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.screen]),
     help="""Screen package to be added.""",
 )
 @click.option(
@@ -1296,9 +1268,9 @@ def screen(
         screen_operation.add_abstracts_from_tei()
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=screen_operation,
             package_identifier=add,
             params=params,
@@ -1466,11 +1438,7 @@ def pdfs(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.pdf_get,
-        )
-    ),
+    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_get]),
     help="""PDF-get package to be added.""",
 )
 @click.option(
@@ -1553,9 +1521,9 @@ def pdf_get(
     )
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=pdf_get_operation,
             package_identifier=add,
             params=params,
@@ -1582,11 +1550,7 @@ def pdf_get(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.pdf_get_man,
-        )
-    ),
+    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_get_man]),
     help="""PDF-get-man package to be added.""",
 )
 @click.option(
@@ -1649,9 +1613,9 @@ def pdf_get_man(
     pdf_get_man_operation = review_manager.get_pdf_get_man_operation()
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=pdf_get_man_operation,
             package_identifier=add,
             params=params,
@@ -1723,11 +1687,7 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.pdf_prep,
-        )
-    ),
+    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_prep]),
     help="""PDF-prep package to be added.""",
 )
 @click.option(
@@ -1812,9 +1772,9 @@ def pdf_prep(
     pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=pdf_prep_operation,
             package_identifier=add,
             params=params,
@@ -1864,11 +1824,7 @@ def _delete_first_pages_cli(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.pdf_prep_man,
-        )
-    ),
+    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_prep_man]),
     help="""PDF-prep-man package to be added.""",
 )
 @click.option(
@@ -1951,9 +1907,9 @@ def pdf_prep_man(
     pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=pdf_prep_man_operation,
             package_identifier=add,
             params=params,
@@ -1981,11 +1937,7 @@ def pdf_prep_man(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.data,
-        )
-    ),
+    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.data]),
     help="Data package to be added.",
 )
 @click.option(
@@ -2068,9 +2020,9 @@ def data(
         return
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=data_operation,
             package_identifier=add,
             params=params,
@@ -2392,8 +2344,7 @@ def env(
         ):
             return
 
-        package_manager = colrev.package_manager.package_manager.PackageManager()
-        package_manager.update_package_list()
+        PACKAGE_MANAGER.update_package_list()
         return
 
     if index:
