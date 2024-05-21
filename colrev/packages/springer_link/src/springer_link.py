@@ -36,8 +36,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     endpoint = "colrev.springer_link"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
-    search_types = [SearchType.DB,
-                    SearchType.API]
+    search_types = [SearchType.DB, SearchType.API]
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
@@ -80,11 +79,11 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
-        
+
         search_type = operation.select_search_type(
             search_types=cls.search_types, params=params_dict
         )
-        
+
         if search_type == SearchType.DB:
             search_source = operation.create_db_source(
                 search_source_cls=cls,
