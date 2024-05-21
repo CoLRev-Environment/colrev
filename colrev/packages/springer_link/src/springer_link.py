@@ -92,6 +92,8 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
         elif search_type == SearchType.API:
             search_source = operation.create_api_source(endpoint=cls.endpoint)
+            api_key = cls.api_ui()
+            search_source["api_key"] = api_key
 
         else:
             raise NotImplementedError
@@ -172,6 +174,25 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             logger=self.review_manager.logger,
         )
         return records
+    
+    def api_ui() -> str:
+        """User API key insertion"""
+        run = True
+
+        api_key = ""
+
+        print("\n API key is required for search \n\n")
+
+        while run:
+            api_key = input("Please enter your Springer Link API key: ")
+            if api_key:
+                run = False
+            else:
+                print("Invalid input. Please enter a valid API key.")
+
+        return api_key
+
+        
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
