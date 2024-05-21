@@ -16,14 +16,6 @@ from colrev.constants import EndpointType
 class PackageManager:
     """The PackageManager provides functionality for package lookup and discovery"""
 
-    def __init__(self) -> None:
-        self.type_identifier_endpoint_dict = self._load_type_identifier_endpoint_dict()
-        # {EndpointType.review_type:
-        #   {'colrev.blank': {'endpoint': 'colrev.packages.review_types.blank.BlankReview'},
-        #     ...
-        # }
-        self.endpoints: typing.Dict[EndpointType, dict] = {}
-
     def _get_package_dir(self, package_identifier: str) -> Path:
         if package_identifier.startswith("colrev."):
             colrev_package_module = importlib.import_module("colrev.packages")
@@ -50,7 +42,8 @@ class PackageManager:
             "Could not find the colrev package"
         )
 
-    def _load_type_identifier_endpoint_dict(self) -> dict:
+    def load_type_identifier_endpoint_dict(self) -> dict:
+        """Load the type_identifier_endpoint_dict from the packages"""
 
         type_identifier_endpoint_dict: typing.Dict[
             EndpointType, typing.Dict[str, Any]
@@ -103,7 +96,13 @@ class PackageManager:
     def discover_packages(self, *, package_type: EndpointType) -> typing.Dict:
         """Discover packages (for cli usage)"""
 
-        return self.type_identifier_endpoint_dict[package_type]
+        type_identifier_endpoint_dict = self.load_type_identifier_endpoint_dict()
+        # {EndpointType.review_type:
+        #   {'colrev.blank': {'endpoint': 'colrev.packages.review_types.blank.BlankReview'},
+        #     ...
+        # }
+
+        return type_identifier_endpoint_dict[package_type]
 
     def get_package_endpoint_class(  # type: ignore
         self, *, package_type: EndpointType, package_identifier: str
