@@ -46,8 +46,6 @@ search
 API search
 ^^^^^^^^^^
 
-ℹ️ Restriction: API searches do not support complex queries (yet)
-
 .. code-block::
 
    colrev search --add colrev.europe_pmc -p "https://europepmc.org/search?query=fitbit%20AND%20gamification%20AND%20RCT%20AND%20diabetes%20mellitus"
