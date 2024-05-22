@@ -60,16 +60,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         """Typically called for automated searches when running “colrev search -a SOURCE_NAME” to add search and query."""
         """Not implemented"""
 
-        search_type = operation.select_search_type(
-            search_types=cls.search_types, params=params
-        )
-
-        if search_type == SearchType.DB:
-            return operation.add_db_source(
-                search_source_cls=cls,
-                params=params,
-            )
-        
         if len(params) == 0: #if no specific search sourch is given
             add_source = operation.add_db_source(search_source_cls=cls, params=params)
             return add_source
