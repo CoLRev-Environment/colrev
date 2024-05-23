@@ -21,7 +21,7 @@ colrev.dedupe
      - Status
      - Add
    * - dedupe
-     - |MATURING|
+     - |STABLE|
      - .. code-block::
 
 
