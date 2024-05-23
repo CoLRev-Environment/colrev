@@ -530,7 +530,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.dedupe",
-            "status": "|MATURING|",
+            "status": "|STABLE|",
             "short_description": "Default deduplication (:doc:`instructions </manual/packages/colrev.dedupe>`)",
             "ci_supported": true
         }
