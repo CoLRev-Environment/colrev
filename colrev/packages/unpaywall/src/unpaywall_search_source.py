@@ -61,29 +61,28 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         """Not implemented"""
 
         if len(params) == 0: #if no specific search sourch is given
-            add_source = operation.add_db_source(search_source_cls=cls, params=params)
+            add_source = operation.add_api_source(search_source_cls=cls, params=params)
             return add_source
 
-        if "URL" in params["url"]:
-            url_parsed = urllib.parse.urlparse(params["url"])
-            new_query = urllib.parse.parse_qs(url_parsed.query)
-            search = new_query.get("search", [""])[0]
-            start = new_query.get("start", ["0"])[0]
-            rows = new_query.get("rows", ["2000"])[0]
-            if ":" in search:
-                search = UnpaywallSearchSource._search_split(search)
-            filename = operation.get_unique_filename(file_path_string = "") #=f"eric_{search}"
-            # code before this statement has do be adapted according to the data format of unpaywall 
+        # TODO: delete one of the following "url", depending on the occurrence
+        if "URL" in params["url"] or "url" in params["url"]: # api.unpaywall.org/my/request?email=YOUR_EMAIL or [...].org/v2/search?query=:your_query[&is_oa=boolean][&page=integer]
 
-            add_source = colrev.settings.SearchSource( #SearchSource metadata
-                endpoint=cls.endpoint,
-                filename=filename, #filename points to the file in which retrieved records are stored. It starts with data/search/
-                search_type=SearchType.API,
-                search_parameters={"query": search, "start": start, "rows": rows},
-                comment="", #optional
-            )
+            query = params["query"]
+            is_oa = params.get("is_oa", [""])[0]
+            page = params.get("page", [""])[0] # TODO: how to handle E-Mail?
+            # email = params.get("email", None)
+
+            if query: # checks if a search query is given
+            # creates a SearchSource instance for Unpaywall search
+                add_source = colrev.settings.SearchSource(
+                    endpoint=cls.endpoint,
+                    filename="",  # TODO: edit filename
+                    search_type=SearchType.API,
+                    search_parameters={"query": query, "is_oa": is_oa, "page": page},
+                    comment="Searching Unpaywall API based on query parameters.",
+                )
             return add_source
-
+            
         raise colrev_exceptions.PackageParameterError(
             f"Cannot add UNPAYWALL endpoint with query {params}"
         )
