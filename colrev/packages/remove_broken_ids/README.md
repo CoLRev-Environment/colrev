@@ -1,10 +1,7 @@
-# Remove broken IDs
+## Summary
 
 ## prep
 
-Note: This document is currently under development. It will contain the following elements.
+This package removes "broken IDs", specifically DOIs and ISBNs that do not match their predefined pattern.
 
-- description
-- example
-
-## Links
+<!-- ## Links -->

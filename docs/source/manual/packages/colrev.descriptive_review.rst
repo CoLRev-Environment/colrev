@@ -1,6 +1,35 @@
+colrev.descriptive_review
+=========================
 
-Descriptive review
-==================
+- Maintainer: Gerit Wagner
+- License: MIT
+
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. list-table::
+   :header-rows: 1
+   :widths: 20 30 80
+
+   * - Endpoint
+     - Status
+     - Add
+   * - review_type
+     - |EXPERIMENTAL|
+     - .. code-block::
+
+
+         colrev init --type colrev.descriptive_review
+
+
+Summary
+-------
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -13,32 +42,27 @@ Short summary
 * dimensions
 * differences between disciplines
 
-Steps and operations
---------------------
 
-Problem formulation
-^^^^^^^^^^^^^^^^^^^
+.. raw:: html
 
-Metadata retrieval
-^^^^^^^^^^^^^^^^^^
+   <!--
+   ## Steps and operations
 
-Metadata prescreen
-^^^^^^^^^^^^^^^^^^
+   ### Problem formulation
 
-PDF retrieval
-^^^^^^^^^^^^^
+   ### Metadata retrieval
 
-PDF screen
-^^^^^^^^^^
+   ### Metadata prescreen
 
-Data extraction and synthesis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   ### PDF retrieval
 
+   ### PDF screen
 
-* For manuscript development see separate page for Word/Tex/Md, Reference Managers
+   ### Data extraction and synthesis
 
-Software recommendations
-------------------------
+   - For manuscript development see separate page for Word/Tex/Md, Reference Managers
 
-References
-----------
+   ## Software recommendations
+
+   ## References
+   -->

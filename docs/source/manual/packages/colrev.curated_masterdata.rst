@@ -1,6 +1,35 @@
+colrev.curated_masterdata
+=========================
 
-Curated masterdata repository
-=============================
+- Maintainer: Gerit Wagner
+- License: MIT
+
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. list-table::
+   :header-rows: 1
+   :widths: 20 30 80
+
+   * - Endpoint
+     - Status
+     - Add
+   * - review_type
+     - |EXPERIMENTAL|
+     - .. code-block::
+
+
+         colrev init --type colrev.curated_masterdata
+
+
+Summary
+-------
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -22,11 +51,17 @@ To create a new masterdata curation, run
 
    colrev init --type colrev.curated_masterdata
    # add crossref
-   colrev search -a "crossref:jissn=123456"
+   colrev search --add "crossref:jissn=123456"
    # add further sources (like DBLP)
 
-Problem formulation
-^^^^^^^^^^^^^^^^^^^
+
+.. raw:: html
+
+   <!--
+   ### Problem formulation
+   -->
+
+
 
 Metadata retrieval
 ^^^^^^^^^^^^^^^^^^
@@ -36,23 +71,21 @@ Metadata retrieval
 * The curation endpoint supports the specification of ``masterdata_restrictions``\ , defining the name of the outlet, whether volume or issue fields are required (for which time-frame).
 * Dedicated dedupe endpoints are activated.
 
-Metadata prescreen
-^^^^^^^^^^^^^^^^^^
 
-PDF retrieval
-^^^^^^^^^^^^^
+.. raw:: html
 
-PDF screen
-^^^^^^^^^^
+   <!--
+   ### Metadata prescreen
 
-Data extraction and synthesis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   ### PDF retrieval
 
+   ### PDF screen
 
-* For manuscript development see separate page for Word/Tex/Md, Reference Managers
+   ### Data extraction and synthesis
 
-Software recommendations
-------------------------
+   - For manuscript development see separate page for Word/Tex/Md, Reference Managers
 
-References
-----------
+   ## Software recommendations
+
+   ## References
+   -->

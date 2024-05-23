@@ -9,8 +9,8 @@ import tempfile
 import typing
 from pathlib import Path
 
-import fitz
 import imagehash
+import pymupdf
 from nameparser import HumanName
 from PIL import Image
 
@@ -196,7 +196,7 @@ def _get_colrev_pdf_id_cpid2(pdf_path: Path) -> str:
     with tempfile.NamedTemporaryFile(suffix=".png") as temp_file:
         file_name = temp_file.name
         try:
-            doc: fitz.Document = fitz.open(pdf_path)
+            doc: pymupdf.Document = pymupdf.open(pdf_path)
             page = next(iter(doc))  # get the first page
             pix = page.get_pixmap(dpi=200)
             pix.save(file_name)  # store image as a PNG
@@ -208,7 +208,7 @@ def _get_colrev_pdf_id_cpid2(pdf_path: Path) -> str:
                 return "cpid2:" + average_hash_str
         except StopIteration as exc:  # pragma: no cover
             raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
-        except fitz.fitz.FileDataError as exc:
+        except pymupdf.FileDataError as exc:
             raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
         except RuntimeError as exc:
             raise colrev_exceptions.PDFHashError(path=pdf_path) from exc

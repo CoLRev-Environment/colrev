@@ -36,6 +36,8 @@ class Package:
         self.version = self.config["project"]["version"]
         self.status = self.config["tool"]["colrev"]["dev_status"]
         self.colrev_doc_link = self.config["project"]["colrev_doc_link"]
+        self.authors = self.config["project"]["authors"]
+        self.license = self.config["project"]["license"]
 
     def _load_config(self) -> dict:
         config_path = self.package_dir / "pyproject.toml"

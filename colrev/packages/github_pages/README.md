@@ -1,10 +1,9 @@
-# GitHub pages
+## Summary
 
 ## data
 
-Note: This document is currently under development. It will contain the following elements.
-
-- description
-- example
+This package publishes the review to GitHub pages.
 
 ## Links
+
+- [GitHub pages](https://pages.github.com/)

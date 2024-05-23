@@ -1,6 +1,9 @@
-# Semantic Scholar
+## Summary
+
+Semantic Scholar is a cross-disciplinary search source with a vast collection of over 175 million items.
 
 This class supports the search function for Semantic Scholar via an unofficial python client (link below).
+
 
 ## search
 
@@ -8,10 +11,12 @@ So far, only API search is implemented. Other search types such as MD search or 
 
 ### API search
 
+ℹ️ Restriction: API searches do not support complex queries (yet)
+
 The API search is launched with the following command:
 
 ```
-colrev search -a colrev.semanticscholar
+colrev search --add colrev.semanticscholar
 ```
 
 Upon entering the command above with no additional parameters, a console interface opens up, in which the user is asked to enter the parameters and query for their search.
@@ -58,12 +63,10 @@ Additionally, the result file has not been adapted to author search yet. Althoug
 
 ## prep
 
-Note: This document is currently under development. It will contain the following elements.
-
-- description
-- example
+Semantic scholar can be used to link metadata to existing records.
 
 ## Links
+
 - [SemanticScholar](https://www.semanticscholar.org)
 - [SemanticScholarAPI](https://www.semanticscholar.org/product/api/tutorial#searching-and-retrieving-paper-details)
 - [SemanticScholarAPIDocumentation](https://api.semanticscholar.org/api-docs/)

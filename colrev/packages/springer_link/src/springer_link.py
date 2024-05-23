@@ -74,14 +74,15 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
-    ) -> colrev.settings.SearchSource:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        params: str,
+    ) -> None:
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        return operation.add_db_source(
+        search_source = operation.create_db_source(
             search_source_cls=cls,
-            params=params,
+            params={},
         )
+        operation.add_source_and_search(search_source)
 
     def search(self, rerun: bool) -> None:
         """Run a search of SpringerLink"""

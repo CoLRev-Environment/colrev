@@ -180,7 +180,6 @@ class Initializer:
                 "command": ["pre-commit", "install", "--hook-type", "pre-push"],
             },
             {"description": "", "command": ["pre-commit", "autoupdate"]},
-            {"description": "", "command": ["daff", "git", "csv"]},
         ]
         for script_to_call in scripts_to_call:
             try:
@@ -378,7 +377,9 @@ class Initializer:
             return
         self.review_manager.logger.info("Register CoLRev repository")
         environment_manager = self.review_manager.get_environment_manager()
-        environment_manager.register_repo(self.target_path)
+        environment_manager.register_repo(
+            self.target_path, logger=self.review_manager.logger
+        )
 
     def _post_commit_edits(self) -> None:
         if self.review_type != "colrev.curated_masterdata":

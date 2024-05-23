@@ -54,6 +54,7 @@ extensions = [
     "sphinx_collapse",
     "repoze.sphinx.autointerface",
     "sphinx_design",
+    "sphinx_copybutton",
 ]
 
 
@@ -80,11 +81,17 @@ html_static_path = ["_static"]
 # html_logo = "logo_small.png"
 html_favicon = "favicon.png"
 html_css_files = [
+    "css/asciinema-player.css",
     "css/custom.css",
     "css/jquery.dataTables.min.css",
 ]
 
-html_js_files = ["js/jquery-3.5.1.js", "js/jquery.dataTables.min.js", "js/main.js"]
+html_js_files = [
+    "js/asciinema-player.min.js",
+    "js/jquery-3.5.1.js",
+    "js/jquery.dataTables.min.js",
+    "js/main.js",
+]
 
 # Readthedocs theme
 # on_rtd is whether on readthedocs.org,
@@ -101,6 +108,8 @@ html_context = {
     "github_repo": "colrev",  # Repo name
     "github_version": "master",  # Version
     "conf_py_path": "docs/source/",  # Path in the checkout to the docs root
+    "meta_http_equiv": True,  # for asciinema
+    "html5_doctype": True,  # for asciinema
 }
 
 linkcheck_ignore = [

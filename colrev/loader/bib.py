@@ -174,6 +174,18 @@ class BIBLoader(colrev.loader.loader.Loader):
                         ).encode("utf-8")
                         seekpos = fix_key(file, line, replacement_line, seekpos)
 
+                    # Fix IDs
+                    if re.match(
+                        r"^@[a-zA-Z0-9]+\{[a-zA-Z0-9]+\s[a-zA-Z0-9]+,",
+                        line.decode("utf-8"),
+                    ):
+                        replacement_line = re.sub(
+                            r"^(@[a-zA-Z0-9]+\{[a-zA-Z0-9]+)\s([a-zA-Z0-9]+,)",
+                            r"\1_\2",
+                            line.decode("utf-8"),
+                        ).encode("utf-8")
+                        seekpos = fix_key(file, line, replacement_line, seekpos)
+
                     seekpos = file.tell()
                     line = file.readline()
 

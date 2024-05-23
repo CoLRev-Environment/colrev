@@ -6,10 +6,10 @@ import html
 import re
 
 import colrev.env.language_service
+import colrev.exceptions as colrev_exceptions
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
-
 
 # pylint: disable=too-few-public-methods
 
@@ -104,7 +104,10 @@ class LoadFormatter:
                 .upper()
             )
         if Fields.LANGUAGE in record.data and len(record.data[Fields.LANGUAGE]) != 3:
-            self.language_service.unify_to_iso_639_3_language_codes(record=record)
+            try:
+                self.language_service.unify_to_iso_639_3_language_codes(record=record)
+            except colrev_exceptions.InvalidLanguageCodeException:
+                del record.data[Fields.LANGUAGE]
         if Fields.NUMBER not in record.data and "issue" in record.data:
             record.data[Fields.NUMBER] = record.data.pop("issue")
 
@@ -162,7 +165,10 @@ class LoadFormatter:
 
         self._apply_strict_requirements(record=record)
 
-        if record.data[Fields.STATUS] != RecordState.md_retrieved:
+        if (
+            Fields.STATUS in record.data
+            and record.data[Fields.STATUS] != RecordState.md_retrieved
+        ):
             return
 
         self._unescape_field_values(record=record)

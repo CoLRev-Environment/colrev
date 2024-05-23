@@ -1,10 +1,9 @@
-# Obsidian
+## Summary
 
 ## data
 
-Note: This document is currently under development. It will contain the following elements.
-
-- description
-- example
+This package imports included records into an obsidian vault, which is useful for emergent qualitative data analysis.
 
 ## Links
+
+- [obsidian](https://obsidian.md/)

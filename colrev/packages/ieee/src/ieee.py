@@ -134,27 +134,33 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(
-        cls, operation: colrev.ops.search.Search, params: dict
-    ) -> colrev.settings.SearchSource:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
+
+        params_dict = {}
+        if params:
+            if params.startswith("http"):
+                params_dict = {Fields.URL: params}
+            else:
+                for item in params.split(";"):
+                    key, value = item.split("=")
+                    params_dict[key] = value
 
         search_type = operation.select_search_type(
-            search_types=cls.search_types, params=params
+            search_types=cls.search_types, params=params_dict
         )
 
         if search_type == SearchType.API:
-            if len(params) == 0:
-                add_source = operation.add_api_source(endpoint=cls.endpoint)
-                return add_source
+            if len(params_dict) == 0:
+                search_source = operation.create_api_source(endpoint=cls.endpoint)
 
             # pylint: disable=colrev-missed-constant-usage
             if (
                 "https://ieeexploreapi.ieee.org/api/v1/search/articles?"
-                in params["url"]
+                in params_dict["url"]
             ):
                 query = (
-                    params["url"]
+                    params_dict["url"]
                     .replace(
                         "https://ieeexploreapi.ieee.org/api/v1/search/articles?", ""
                     )
@@ -173,39 +179,43 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                     file_path_string=f"ieee_{last_value}"
                 )
 
-                add_source = colrev.settings.SearchSource(
+                search_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
                     filename=filename,
                     search_type=SearchType.API,
                     search_parameters=search_parameters,
                     comment="",
                 )
-                return add_source
 
-        # if search_type == SearchType.API:
+        elif search_type == SearchType.DB:
+            search_source = operation.create_db_source(
+                search_source_cls=cls,
+                params=params_dict,
+            )
+        else:
+            raise NotImplementedError
 
-        raise NotImplementedError
+        operation.add_source_and_search(search_source)
 
     def search(self, rerun: bool) -> None:
         """Run a search of IEEEXplore"""
 
-        ieee_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
-            source_identifier=self.source_identifier,
-            update_only=(not rerun),
-        )
-
         if self.search_source.search_type == SearchType.API:
+            ieee_feed = self.search_source.get_api_feed(
+                review_manager=self.review_manager,
+                source_identifier=self.source_identifier,
+                update_only=(not rerun),
+            )
             self._run_api_search(ieee_feed=ieee_feed, rerun=rerun)
 
-        if self.search_source.search_type == SearchType.DB:
+        elif self.search_source.search_type == SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,
             )
-            return
 
-        raise NotImplementedError
+        else:
+            raise NotImplementedError
 
     def _get_api_key(self) -> str:
         api_key = self.review_manager.environment_manager.get_settings_by_key(

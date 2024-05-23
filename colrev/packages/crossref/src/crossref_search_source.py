@@ -40,6 +40,9 @@ from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
+if typing.TYPE_CHECKING:  # pragma: no cover
+    import colrev.settings
+
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 # pylint: disable=too-many-lines
@@ -893,61 +896,92 @@ class CrossrefSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
+    def _parse_params(cls, params: str) -> dict:
+        params_dict = {}
+        if params:
+            if params.startswith("http"):
+                params_dict = {Fields.URL: params}
+            else:
+                for item in params.split(";"):
+                    key, value = item.split("=")
+                    params_dict[key] = value
+
+        if "issn" in params_dict:
+            params_dict["scope"] = {Fields.ISSN: [params_dict["issn"]]}  # type: ignore
+            del params_dict["issn"]
+        return params_dict
+
+    @classmethod
+    def _select_search_type(
+        cls, operation: colrev.ops.search.Search, params_dict: dict
+    ) -> SearchType:
+        if list(params_dict) == ["scope"]:
+            search_type = SearchType.TOC
+        elif "query" in params_dict:
+            search_type = SearchType.API
+        elif Fields.URL in params_dict:
+            search_type = SearchType.API
+        else:
+            search_type = operation.select_search_type(
+                search_types=cls.search_types, params=params_dict
+            )
+
+        return search_type
+
+    @classmethod
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
-    ) -> colrev.settings.SearchSource:
+        params: str,
+    ) -> None:
         """Add SearchSource as an endpoint"""
 
-        if list(params) == [Fields.ISSN]:
-            search_type = SearchType.TOC
-        else:
-            search_type = operation.select_search_type(
-                search_types=cls.search_types, params=params
-            )
+        params_dict = cls._parse_params(params)
+
+        search_type = cls._select_search_type(operation, params_dict)
 
         if search_type == SearchType.API:
-            if len(params) == 0:
-                add_source = operation.add_api_source(endpoint=cls.endpoint)
-                return add_source
-
-            if Fields.URL in params:
-                query = (
-                    params[Fields.URL]
-                    .replace("https://search.crossref.org/?q=", "")
-                    .replace("&from_ui=yes", "")
-                    .lstrip("+")
-                )
+            if len(params_dict) == 0:
+                search_source = operation.create_api_source(endpoint=cls.endpoint)
+            else:
+                if Fields.URL in params_dict:
+                    query = {
+                        "query": (
+                            params_dict[Fields.URL]
+                            .replace("https://search.crossref.org/?q=", "")
+                            .replace("&from_ui=yes", "")
+                            .lstrip("+")
+                        )
+                    }
+                else:
+                    query = params_dict
 
                 filename = operation.get_unique_filename(file_path_string="crossref")
-                add_source = colrev.settings.SearchSource(
+                search_source = colrev.settings.SearchSource(
                     endpoint="colrev.crossref",
                     filename=filename,
                     search_type=SearchType.API,
-                    search_parameters={"query": query},
+                    search_parameters=query,
                     comment="",
                 )
-                return add_source
 
+        elif search_type == SearchType.TOC:
+            if len(params_dict) == 0:
+                search_source = cls._add_toc_interactively(operation=operation)
+            else:
+                filename = operation.get_unique_filename(file_path_string="crossref")
+                search_source = colrev.settings.SearchSource(
+                    endpoint="colrev.crossref",
+                    filename=filename,
+                    search_type=SearchType.TOC,
+                    search_parameters=params_dict,
+                    comment="",
+                )
+
+        else:
             raise NotImplementedError
 
-        if search_type == SearchType.TOC:
-            if len(params) == 0:
-                source = cls._add_toc_interactively(operation=operation)
-                return source
-
-            filename = operation.get_unique_filename(file_path_string="crossref")
-            add_source = colrev.settings.SearchSource(
-                endpoint="colrev.crossref",
-                filename=filename,
-                search_type=SearchType.TOC,
-                search_parameters={"scope": params},
-                comment="",
-            )
-            return add_source
-
-        raise NotImplementedError
+        operation.add_source_and_search(search_source)
 
     @classmethod
     def _add_toc_interactively(

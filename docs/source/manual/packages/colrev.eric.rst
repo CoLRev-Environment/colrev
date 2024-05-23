@@ -1,6 +1,35 @@
+colrev.eric
+===========
 
-ERIC
-====
+- Maintainer: Gerit Wagner, Rhea Nguyen, Malou Schmidt, Frederic Fischer, Janus Fiegen, Albert Borchardt
+- License: MIT
+
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. list-table::
+   :header-rows: 1
+   :widths: 20 30 80
+
+   * - Endpoint
+     - Status
+     - Add
+   * - search_source
+     - |EXPERIMENTAL|
+     - .. code-block::
+
+
+         colrev search --add colrev.eric
+
+
+Summary
+-------
 
 search
 ------
@@ -13,11 +42,13 @@ Download search results and store in ``data/search/`` directory.
 API search
 ^^^^^^^^^^
 
+ℹ️ Restriction: API searches do not support complex queries (yet)
+
 A search on the ERIC API can be performed as follows:
 
 .. code-block::
 
-   colrev search -a colrev.eric: -p "https://api.ies.ed.gov/eric/?search=blockchain"
+   colrev search --add colrev.eric -p "https://api.ies.ed.gov/eric/?search=blockchain"
 
 This command searches the core fields title, author, source, subject, and description of the entered search string (here: blockchain). The data is always returned in json format (xml and csv are not yet supported).
 
@@ -25,7 +56,7 @@ A field search can also be used if only a search for a string in a specific fiel
 
 .. code-block::
 
-   colrev search -a colrev.eric: -p "https://api.ies.ed.gov/eric/?search=author: Creamer, Don"
+   colrev search --add colrev.eric -p "https://api.ies.ed.gov/eric/?search=author: Creamer, Don"
 
 This command returns all records by author Don Creamer.
 
@@ -33,7 +64,7 @@ If several strings are to be searched for in different fields, the AND operator 
 
 .. code-block::
 
-   colrev search -a colrev.eric: -p "https://api.ies.ed.gov/eric/?search=author:Creamer, Don AND title: Alternative"
+   colrev search --add colrev.eric -p "https://api.ies.ed.gov/eric/?search=author:Creamer, Don AND title: Alternative"
 
 This command returns all records by author Don Creamer that have the string "Alternative" in the title.
 
@@ -41,7 +72,7 @@ In addition, the start parameter the starting record number for the returned res
 
 .. code-block::
 
-   colrev search -a colrev.eric: -p "https://api.ies.ed.gov/eric/?search=blockchain&start=0&rows=5"
+   colrev search --add colrev.eric -p "https://api.ies.ed.gov/eric/?search=blockchain&start=0&rows=5"
 
 This command returns 5 records with starting record number 0.
 

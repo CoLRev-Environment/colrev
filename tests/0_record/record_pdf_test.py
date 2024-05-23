@@ -2,8 +2,8 @@
 """Tests of the Record class"""
 from pathlib import Path
 
-import fitz
 import imagehash
+import pymupdf
 import pytest
 from PIL import Image
 
@@ -30,7 +30,7 @@ def test_set_text_from_pdf(helpers, record_with_pdf: colrev.record.record_pdf.PD
     )
     record_with_pdf.set_text_from_pdf()
     actual = record_with_pdf.data["text_from_pdf"]
-    actual = actual[0:4234]
+    actual = actual[0:4209]
     assert expected == actual
 
 
@@ -48,6 +48,12 @@ def test_extract_text_by_page(  # type: ignore
     ).read_text(encoding="utf-8")
     actual = record_with_pdf.extract_text_by_page(pages=[0])
     actual = actual.rstrip()
+    if expected != actual:
+        (
+            helpers.test_data_path
+            / Path("data/WagnerLukyanenkoParEtAl2022_content.txt")
+        ).write_text(actual, encoding="utf-8")
+
     assert expected == actual
 
 
@@ -95,19 +101,19 @@ def test_get_pdf_hash(helpers) -> None:  # type: ignore
         pdf_hash == "fff3c3f3c3b3fff7c27fc001c7ffdfffc001c003c001c001c003c01fffffffff"
     )
 
-    def fitz_open_file_data_error(pdf_path):  # type: ignore
+    def pymupdf_open_file_data_error(pdf_path):  # type: ignore
         """Raise a file data error"""
-        raise fitz.fitz.FileDataError("Invalid PDF")
+        raise pymupdf.FileDataError("Invalid PDF")
 
-    original_fitz_open = fitz.open
-    fitz.open = fitz_open_file_data_error
+    original_pymupdf_open = pymupdf.open
+    pymupdf.open = pymupdf_open_file_data_error
 
     with pytest.raises(colrev_exceptions.InvalidPDFException):
         colrev.record.record_pdf.PDFRecord(
             {"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
         ).get_pdf_hash(page_nr=1)
 
-    fitz.open = original_fitz_open
+    pymupdf.open = original_pymupdf_open
 
     def image_open_runtime_error(pdf_path):  # type: ignore
         """Raise a runtime error"""

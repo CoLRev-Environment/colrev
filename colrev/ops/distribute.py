@@ -72,7 +72,9 @@ class Distribute(colrev.process.operation.Operation):
                 # should the following really rename the file?
                 # or just get the updated filepath?
 
-                path.rename(target / Path("data/search/local_import.bib"))
+                shutil.move(
+                    str(path), str(target / Path("data/search/local_import.bib"))
+                )
                 input(path)
 
             if path.suffix == ".pdf":

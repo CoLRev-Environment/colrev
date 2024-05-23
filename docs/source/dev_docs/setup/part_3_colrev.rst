@@ -41,6 +41,9 @@ Install the following tools mandatory for CoLRev (using the shell / ``Ctrl``\ +\
    python3 -m pip install poetry
    python3 -m pip install --upgrade paramiko
 
+.. note::
+   In the following, we assume that the ``colrev`` directory and the ``test`` directory are located on the Desktop. If you have chosen a different location, please adjust the paths accordingly.
+
 Clone and install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
 
 ::

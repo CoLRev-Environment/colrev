@@ -13,6 +13,8 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
 
+# flake8: noqa: E501
+
 
 def test_container_title_abbreviated(
     v_t_record: colrev.record.record.Record,
@@ -200,6 +202,14 @@ def test_erroneous_title_field(
     erroneous_title_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
     assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == []
+
+    # Test case 4: Erroneous title with symbols and digits
+    v_t_record.data[Fields.TITLE] = "PII: S0963-8687(03)00063-5"
+    erroneous_title_checker.run(record=v_t_record)
+    assert v_t_record.has_quality_defects()
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
+        DefectCodes.ERRONEOUS_TITLE_FIELD
+    ]
 
     # Test case 3: Ignoring erroneous title defect
     v_t_record.data[Fields.TITLE] = (
@@ -729,6 +739,44 @@ def test_name_format_separators(
     assert not v_t_record.has_quality_defects()
     assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == []
     assert v_t_record.get_field_provenance_notes(key=Fields.EDITOR) == []
+
+    v_t_record.data[Fields.AUTHOR] = (
+        "Jackson, Corey Brian and Østerlund, Carsten S. and Harandi, Mahboobeh and Kharwar, Dhruv and Crowston, Kevin"
+    )
+    name_format_separators_checker.run(record=v_t_record)
+    assert not v_t_record.has_quality_defects()
+
+    v_t_record.data[Fields.AUTHOR] = (
+        "Seidel, Stefan and Recker, Jan and {vom Brocke}, Jan"
+    )
+    name_format_separators_checker.run(record=v_t_record)
+    assert not v_t_record.has_quality_defects()
+
+    v_t_record.data[Fields.AUTHOR] = "Du, Wenyu (Derek) and Pan, Shan L. and Wu, Junjie"
+    name_format_separators_checker.run(record=v_t_record)
+    assert not v_t_record.has_quality_defects()
+
+    v_t_record.data[Fields.AUTHOR] = (
+        'Lee, Jeongsik "Jay" and Park, Hyunwoo and Zaggl, Michael'
+    )
+    name_format_separators_checker.run(record=v_t_record)
+    assert not v_t_record.has_quality_defects()
+
+    v_t_record.data[Fields.AUTHOR] = (
+        "Aguirre‐Urreta, Miguel I. and Rönkkö, Mikko and Marakas, George M."
+    )
+    name_format_separators_checker.run(record=v_t_record)
+    assert not v_t_record.has_quality_defects()
+
+    v_t_record.data[Fields.AUTHOR] = "Córdoba, José‐Rodrigo"
+    name_format_separators_checker.run(record=v_t_record)
+    assert not v_t_record.has_quality_defects()
+
+    v_t_record.data[Fields.AUTHOR] = (
+        'Zahedi, Fatemeh "Mariam" and Abbasi, Ahmed and Chen, Yan'
+    )
+    name_format_separators_checker.run(record=v_t_record)
+    assert not v_t_record.has_quality_defects()
 
     # Name format issues due to "I N T R  O D " in the author field
     v_t_record.data[Fields.AUTHOR] = "I N T R O D"

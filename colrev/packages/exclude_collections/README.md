@@ -1,4 +1,4 @@
-# Exclude collections
+## Summary
 
 ## prep
 
@@ -7,4 +7,4 @@ Note: This document is currently under development. It will contain the followin
 - description
 - example
 
-## Links
+<!-- ## Links -->

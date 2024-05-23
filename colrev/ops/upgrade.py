@@ -53,7 +53,7 @@ class Upgrade(colrev.process.operation.Operation):
     def _move_file(self, source: Path, target: Path) -> None:
         target.parent.mkdir(exist_ok=True, parents=True)
         if source.is_file():
-            shutil.move(str(source), self.review_manager.path / target)
+            shutil.move(str(source), str(self.review_manager.path / target))
             self.repo.index.remove([str(source)])
             self.repo.index.add([str(target)])
 
@@ -685,7 +685,7 @@ class Upgrade(colrev.process.operation.Operation):
                         indent=4,
                         fp=file,
                     )
-                registry_yaml.rename(backup_file)
+                shutil.move(str(registry_yaml), str(backup_file))
 
         return self.repo.is_dirty()
 

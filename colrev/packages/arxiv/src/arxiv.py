@@ -95,34 +95,43 @@ class ArXivSource:
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
-    ) -> colrev.settings.SearchSource:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        params: str,
+    ) -> None:
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        if len(params) == 0:
-            add_source = operation.add_api_source(endpoint=cls.endpoint)
-            return add_source
+        params_dict = {}
+        if params:
+            if params.startswith("http"):
+                params_dict = {Fields.URL: params}
+            else:
+                for item in params.split(";"):
+                    key, value = item.split("=")
+                    params_dict[key] = value
+
+        # Note : always API search
+        if len(params_dict) == 0:
+            search_source = operation.create_api_source(endpoint=cls.endpoint)
 
         # pylint: disable=colrev-missed-constant-usage
-        if "url" in params:
-            host = urlparse(params["url"]).hostname
+        else:
+            host = urlparse(params_dict["url"]).hostname
 
-            if host and host.endswith("arxiv.org"):
-                query = params["url"].replace("https://arxiv.org/search/?query=", "")
-                query = query[: query.find("&searchtype")]
+            assert host and host.endswith("arxiv.org")
 
-                filename = operation.get_unique_filename(file_path_string="arxiv")
+            query = params_dict["url"].replace("https://arxiv.org/search/?query=", "")
+            query = query[: query.find("&searchtype")]
 
-                add_source = colrev.settings.SearchSource(
-                    endpoint="colrev.arxiv",
-                    filename=filename,
-                    search_type=SearchType.API,
-                    search_parameters={"query": query},
-                    comment="",
-                )
-                return add_source
+            filename = operation.get_unique_filename(file_path_string="arxiv")
 
-        raise NotImplementedError
+            search_source = colrev.settings.SearchSource(
+                endpoint="colrev.arxiv",
+                filename=filename,
+                search_type=SearchType.API,
+                search_parameters={"query": query},
+                comment="",
+            )
+
+        operation.add_source_and_search(search_source)
 
     def validate_source(
         self,

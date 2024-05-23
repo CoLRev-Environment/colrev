@@ -1,6 +1,44 @@
+colrev.semanticscholar
+======================
 
-Semantic Scholar
-================
+- Maintainer: Gerit Wagner, Louis Langenhan, Peter Eckhardt, Amadou-Choumoussidine Kouotou-Ngapout, Robert Theis
+- License: MIT
+
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. list-table::
+   :header-rows: 1
+   :widths: 20 30 80
+
+   * - Endpoint
+     - Status
+     - Add
+   * - search_source
+     - |EXPERIMENTAL|
+     - .. code-block::
+
+
+         colrev search --add colrev.semanticscholar
+
+   * - prep
+     - |EXPERIMENTAL|
+     - .. code-block::
+
+
+         colrev prep --add colrev.semanticscholar
+
+
+Summary
+-------
+
+Semantic Scholar is a cross-disciplinary search source with a vast collection of over 175 million items.
 
 This class supports the search function for Semantic Scholar via an unofficial python client (link below).
 
@@ -12,11 +50,13 @@ So far, only API search is implemented. Other search types such as MD search or 
 API search
 ^^^^^^^^^^
 
+ℹ️ Restriction: API searches do not support complex queries (yet)
+
 The API search is launched with the following command:
 
 .. code-block::
 
-   colrev search -a colrev.semanticscholar
+   colrev search --add colrev.semanticscholar
 
 Upon entering the command above with no additional parameters, a console interface opens up, in which the user is asked to enter the parameters and query for their search.
 
@@ -67,11 +107,7 @@ Additionally, the result file has not been adapted to author search yet. Althoug
 prep
 ----
 
-Note: This document is currently under development. It will contain the following elements.
-
-
-* description
-* example
+Semantic scholar can be used to link metadata to existing records.
 
 Links
 -----
