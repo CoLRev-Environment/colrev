@@ -1,6 +1,9 @@
 colrev.curation_full_outlet_dedupe
 ==================================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

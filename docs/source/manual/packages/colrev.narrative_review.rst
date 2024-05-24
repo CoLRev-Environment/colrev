@@ -1,6 +1,9 @@
 colrev.narrative_review
 =======================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 
@@ -21,7 +24,7 @@ colrev.narrative_review
      - Status
      - Add
    * - review_type
-     - |EXPERIMENTAL|
+     - |STABLE|
      - .. code-block::
 
 
@@ -31,39 +34,44 @@ colrev.narrative_review
 Summary
 -------
 
-Note: This document is currently under development. It will contain the following elements.
+A narrative review aims to identify what has been written on a particular subject or topic without necessarily striving for generalizations. Unlike systematic reviews, narrative reviews can be selective and may not involve a comprehensive search of all relevant literature, instead relying on readily available sources. They typically lack detailed explanations of their review process, making them vulnerable to subjectivity and challenging to replicate. Data analysis in narrative reviews involves informal techniques to synthesize study findings, often accompanied by commentary or interpretation.
 
-Short summary
--------------
+Characteristics
+---------------
+
+.. list-table::
+   :align: left
+   :header-rows: 1
+
+   * - Dimension
+     - Description
+   * - Goal with regard to theory
+     - Describing
+   * - Scope of questions
+     - Broad
+   * - Methods
+     - Not necessarily reported
 
 
-* explanation
-* goals
-* dimensions
-* differences between disciplines
+Data extraction, analysis, and synthesis
+----------------------------------------
 
 
-.. raw:: html
+* The synthesis takes a narrative form to help readers make sense of the existing literature. This may involve different narrative styles, organized historically, conceptually, or author-centrically, along with instructive illustrations.
 
-   <!--
+The following packages are automatically set up in a scoping review:
 
-   ## Steps and operations
 
-   ### Problem formulation
+* `colrev.paper_md <colrev.paper_md.html>`_
 
-   ### Metadata retrieval
+Examples
+--------
 
-   ### Metadata prescreen
+Chan, Y. E., & Reich, B. H. (2007). IT alignment: what have we learned?. *Journal of Information Technology*\ , 22(4), 297-315. doi:\ `10.1057/palgrave.jit.2000109 <https://doi.org/10.1057/palgrave.jit.2000109>`_
 
-   ### PDF retrieval
+Methods papers
+--------------
 
-   ### PDF screen
+Davies, P. (2000). The relevance of systematic reviews to educational policy and practice. *Oxford Review of Education*\ , 26(3-4), 365-378. doi:\ `10.1080/713688543 <https://doi.org/10.1080/713688543>`_
 
-   ### Data extraction and synthesis
-
-   - For manuscript development see separate page for Word/Tex/Md, Reference Managers
-
-   ## Software recommendations
-
-   ## References
-   -->
+Green, B. N., Johnson, C. D., & Adams, A. (2006). Writing narrative literature reviews for peer-reviewed journals: secrets of the trade. *Journal of Chiropractic Medicine*\ , 5(3), 101-117. doi:\ `10.1016/S0899-3467(07)60142-6 <https://doi.org/10.1016/S0899-3467(07>`_\ 60142-6)

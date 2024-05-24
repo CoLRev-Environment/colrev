@@ -1,6 +1,6 @@
 [project]
-name = "colrev.literature_review"
-description = "CoLRev package for literature_review"
+name = "colrev.profile"
+description = "CoLRev package for creating profiles"
 version = "0.1.0"
 license = "MIT"
 authors = [
@@ -10,5 +10,5 @@ documentation = "README.md"
 colrev_doc_link = "README.md"
 
 [tool.colrev]
-dev_status = "stable"
-review_type = "colrev.packages.literature_review.src.literature_review:LiteratureReview"
+dev_status = "experimental"
+data = "colrev.packages.profile.src.profile:Profile"

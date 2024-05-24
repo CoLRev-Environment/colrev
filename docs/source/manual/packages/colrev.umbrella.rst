@@ -1,6 +1,9 @@
 colrev.umbrella
 ===============
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

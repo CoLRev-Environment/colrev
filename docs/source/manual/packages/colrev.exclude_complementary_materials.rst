@@ -1,6 +1,9 @@
 colrev.exclude_complementary_materials
 ======================================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

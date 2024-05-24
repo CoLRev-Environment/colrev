@@ -1,6 +1,9 @@
 colrev.source_specific_prep
 ===========================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

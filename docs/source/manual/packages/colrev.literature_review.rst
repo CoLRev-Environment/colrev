@@ -1,6 +1,9 @@
 colrev.literature_review
 ========================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 
@@ -21,7 +24,7 @@ colrev.literature_review
      - Status
      - Add
    * - review_type
-     - |MATURING|
+     - |STABLE|
      - .. code-block::
 
 
@@ -31,41 +34,26 @@ colrev.literature_review
 Summary
 -------
 
-This ReviewType contains a basic setup for literature reviews.
+This ReviewType contains a basic setup for literature reviews. It is a good choice to try the CoLRev system. Similar to the other packages for review types, it can be used to complete a review project and report each step for a standalone review paper.
 
-Note: This document is currently under development. It will contain the following elements.
+For standalone review papers, it is recommended to use a specific review type, such as a `scoping review <colrev.scoping_review.html>`_ or a `qualitative systematic review <colrev.qualitative_systematic_review.html>`_.
 
-Short summary
--------------
-
-
-* explanation
-* goals
-* dimensions
-* differences between disciplines
+**Characteristics**
 
 
-.. raw:: html
+* N/A. The characteristics of literature reviews vary considerably when no review type is specified.
 
-   <!--
+**Data extraction, analysis, and synthesis**
 
-   ## Steps and operations
 
-   ### Problem formulation
+* For the synthesis, the `colrev.paper_md <colrev.paper_md.html>`_ is activated, which creates the ``data/data/paper.md`` file. This file can be used to keep notes, draft a review protocol, and to write a synthesis. Based on the ``paper.md``\ , the ``output/paper.docx`` is generated automatically.
+* To extract structured data, or conduct other forms of analysis and synthesis, other `data packages <https://colrev.readthedocs.io/en/latest/manual/data/data.html>`_ can be activated.
 
-   ### Metadata retrieval
+References
+----------
 
-   ### Metadata prescreen
+**Textbooks**
 
-   ### PDF retrieval
+Fink, A. (2019). Conducting research literature reviews: From the internet to paper. Sage publications. ISBN: 9781544318462.
 
-   ### PDF screen
-
-   ### Data extraction and synthesis
-
-   - For manuscript development see separate page for Word/Tex/Md, Reference Managers
-
-   ## Software recommendations
-
-   ## References
-   -->
+Hart, C. (2018). Doing a literature review: Releasing the research imagination. Sage publications. ISBN: 9781526423146.

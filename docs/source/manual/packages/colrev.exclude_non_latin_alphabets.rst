@@ -1,6 +1,9 @@
 colrev.exclude_non_latin_alphabets
 ==================================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

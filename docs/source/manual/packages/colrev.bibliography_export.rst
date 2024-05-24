@@ -1,6 +1,9 @@
 colrev.bibliography_export
 ==========================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

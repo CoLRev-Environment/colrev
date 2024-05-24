@@ -1,6 +1,9 @@
 colrev.get_year_from_vol_iss_jour
 =================================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

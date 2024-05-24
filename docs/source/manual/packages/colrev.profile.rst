@@ -1,5 +1,5 @@
-colrev.general_polish
-=====================
+colrev.profile
+==============
 
 Package
 --------------------
@@ -23,18 +23,21 @@ Package
    * - Endpoint
      - Status
      - Add
-   * - prep
-     - |EXPERIMENTAL|
+   * - data
+     - |STABLE|
      - .. code-block::
 
 
-         colrev prep --add colrev.general_polish
+         colrev data --add colrev.profile
 
 
-Polish
-======
+Summary
+-------
 
-prep
+data
 ----
 
-This package implements basic polishing functionality.
+This package automatically generates a profile of the studies
+
+Links
+-----

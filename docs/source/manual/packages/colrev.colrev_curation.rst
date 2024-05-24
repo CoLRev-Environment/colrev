@@ -1,6 +1,9 @@
 colrev.colrev_curation
 ======================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

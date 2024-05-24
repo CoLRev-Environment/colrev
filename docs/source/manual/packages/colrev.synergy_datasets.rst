@@ -1,6 +1,9 @@
 colrev.synergy_datasets
 =======================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 
