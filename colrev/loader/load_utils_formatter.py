@@ -57,9 +57,7 @@ class LoadFormatter:
     def __init__(self) -> None:
         self.language_service = colrev.env.language_service.LanguageService()
 
-    def _apply_strict_requirements(
-        self, *, record: colrev.record.record.Record
-    ) -> None:
+    def _fix_author_particles(self, record: colrev.record.record.Record) -> None:
         # Fix the name particles in the author field
         if Fields.AUTHOR in record.data:
             names = record.data[Fields.AUTHOR].split(" and ")
@@ -94,6 +92,7 @@ class LoadFormatter:
                     names[ind] = name
             record.data[Fields.AUTHOR] = " and ".join(names)
 
+    def _format_doi(self, record: colrev.record.record.Record) -> None:
         if Fields.DOI in record.data:
             record.data[Fields.DOI] = (
                 record.data[Fields.DOI]
@@ -103,13 +102,26 @@ class LoadFormatter:
                 .replace("http://doi.org/", "")
                 .upper()
             )
+
+    def _unify_language(self, record: colrev.record.record.Record) -> None:
         if Fields.LANGUAGE in record.data and len(record.data[Fields.LANGUAGE]) != 3:
             try:
                 self.language_service.unify_to_iso_639_3_language_codes(record=record)
             except colrev_exceptions.InvalidLanguageCodeException:
                 del record.data[Fields.LANGUAGE]
+
+    def _rename_issue_to_number(self, record: colrev.record.record.Record) -> None:
         if Fields.NUMBER not in record.data and "issue" in record.data:
             record.data[Fields.NUMBER] = record.data.pop("issue")
+
+    def _apply_strict_requirements(
+        self, *, record: colrev.record.record.Record
+    ) -> None:
+
+        self._fix_author_particles(record)
+        self._format_doi(record)
+        self._unify_language(record)
+        self._rename_issue_to_number(record)
 
     def _unescape_latex(self, *, input_str: str) -> str:
         for latex_char, repl_char in self._LATEX_SPECIAL_CHAR_MAPPING.items():

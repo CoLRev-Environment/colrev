@@ -153,6 +153,7 @@ class DocRegistryManager:
                 file.write(line + "\n")
 
     # pylint: disable=line-too-long
+    # pylint: disable=too-many-branches
     # flake8: noqa: E501
     def _get_header_info(self, package: colrev.package_manager.package.Package) -> str:
 
