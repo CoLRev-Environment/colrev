@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import requests
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -92,8 +93,9 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
         elif search_type == SearchType.API:
             api_key = cls.api_ui()
-            search_source["api_key"] = api_key
             search_source = operation.create_api_source(endpoint=cls.endpoint)
+            search_source.api_key = api_key
+            
 
         else:
             raise NotImplementedError
@@ -109,8 +111,22 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                 source=self.search_source,
             )
             return
+        
+        if self.search_source.search_type == SearchType.API:
+            query = self.search_source.search_parameters.get("query", "")
+            api_key = self.get_api_key()
+            self._api_search(query=query, api_key=api_key)
+            return
 
         raise NotImplementedError
+    
+    def _api_search(self, query: str, api_key: str) -> None:
+        
+        api_search_url = f"https://api.springernature.com/meta/v2/json?q=keyword:{query}&api_key={api_key}"
+        print(api_search_url)
+        response = requests.get(api_search_url)
+        print(response)
+        return
 
     def prep_link_md(
         self,
