@@ -24,7 +24,7 @@ Package
      - Status
      - Add
    * - review_type
-     - |MATURING|
+     - |STABLE|
      - .. code-block::
 
 
