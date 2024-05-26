@@ -1,6 +1,9 @@
 colrev.exclude_collections
 ==========================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

@@ -1,6 +1,9 @@
 colrev.trid
 ===========
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

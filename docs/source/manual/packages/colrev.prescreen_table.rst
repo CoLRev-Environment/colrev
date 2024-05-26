@@ -1,6 +1,9 @@
 colrev.prescreen_table
 ======================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

@@ -1,6 +1,9 @@
 colrev.conditional_prescreen
 ============================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

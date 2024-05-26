@@ -1,6 +1,9 @@
 colrev.remove_urls_with_500_errors
 ==================================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

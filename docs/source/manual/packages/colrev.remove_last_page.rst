@@ -1,6 +1,9 @@
 colrev.remove_last_page
 =======================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

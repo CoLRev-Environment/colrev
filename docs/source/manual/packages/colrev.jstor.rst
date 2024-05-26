@@ -1,6 +1,9 @@
 colrev.jstor
 ============
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

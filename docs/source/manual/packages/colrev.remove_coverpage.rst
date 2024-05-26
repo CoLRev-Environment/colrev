@@ -1,6 +1,9 @@
 colrev.remove_coverpage
 =======================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

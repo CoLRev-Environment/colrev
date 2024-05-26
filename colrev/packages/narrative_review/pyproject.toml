@@ -10,5 +10,5 @@ documentation = "README.md"
 colrev_doc_link = "README.md"
 
 [tool.colrev]
-dev_status = "experimental"
+dev_status = "stable"
 review_type = "colrev.packages.narrative_review.src.narrative_review:NarrativeReview"

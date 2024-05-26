@@ -1,6 +1,9 @@
 colrev.blank
 ============
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

@@ -1947,12 +1947,6 @@ def pdf_prep_man(
     help="Parameters",
 )
 @click.option(
-    "--profile",
-    is_flag=True,
-    default=False,
-    help="Create a sample profile (papers per journal and year)",
-)
-@click.option(
     "--reading_heuristics",
     is_flag=True,
     default=False,
@@ -1985,7 +1979,6 @@ def data(
     ctx: click.core.Context,
     add: str,
     params: str,
-    profile: bool,
     reading_heuristics: bool,
     setup_custom_script: bool,
     verbose: bool,
@@ -2000,15 +1993,12 @@ def data(
         ctx,
         {
             "verbose_mode": verbose,
-            "force_mode": (force or profile),
+            "force_mode": force,
             "exact_call": EXACT_CALL,
         },
     )
     data_operation = review_manager.get_data_operation()
 
-    if profile:
-        data_operation.profile()
-        return
     if reading_heuristics:
         heuristic_results = data_operation.reading_heuristics()
         review_manager.p_printer.pprint(heuristic_results)

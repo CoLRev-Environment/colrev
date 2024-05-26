@@ -1,6 +1,9 @@
 colrev.obsidian
 ===============
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

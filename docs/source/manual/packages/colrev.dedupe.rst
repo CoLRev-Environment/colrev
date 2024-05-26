@@ -1,6 +1,9 @@
 colrev.dedupe
 =============
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

@@ -1,6 +1,9 @@
 colrev.github_pages
 ===================
 
+Package
+--------------------
+
 - Maintainer: Julian Prester, Gerit Wagner
 - License: MIT
 

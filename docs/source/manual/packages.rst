@@ -159,4 +159,5 @@ Packages
    packages/colrev.obsidian.rst
    packages/colrev.paper_md.rst
    packages/colrev.prisma.rst
+   packages/colrev.profile.rst
    packages/colrev.structured.rst

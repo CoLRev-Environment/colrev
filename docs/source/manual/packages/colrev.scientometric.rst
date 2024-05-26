@@ -1,6 +1,9 @@
 colrev.scientometric
 ====================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

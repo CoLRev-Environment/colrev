@@ -1,6 +1,9 @@
 colrev.meta_analysis
 ====================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

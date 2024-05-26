@@ -1,6 +1,9 @@
 colrev.get_doi_from_urls
 ========================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

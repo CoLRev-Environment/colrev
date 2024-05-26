@@ -1,6 +1,9 @@
 colrev.grobid_tei
 =================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 
