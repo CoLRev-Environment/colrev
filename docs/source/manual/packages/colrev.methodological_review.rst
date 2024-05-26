@@ -25,7 +25,7 @@ Package
      - Add
    * - review_type
      - |EXPERIMENTAL|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev init --type colrev.methodological_review
