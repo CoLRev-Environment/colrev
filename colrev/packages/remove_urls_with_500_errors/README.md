@@ -1,10 +1,5 @@
-# Remove URLs with 500 errors
+## Summary
 
 ## prep
 
-Note: This document is currently under development. It will contain the following elements.
-
-- description
-- example
-
-## Links
+This package removes urls if they throw an error 500.

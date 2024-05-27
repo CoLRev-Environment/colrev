@@ -1,10 +1,5 @@
-# Exclude non-latin alphabets
+## Summary
 
 ## prep
 
-Note: This document is currently under development. It will contain the following elements.
-
-- description
-- example
-
-## Links
+This package excludes papers with titles which do not have a latin alphabet.

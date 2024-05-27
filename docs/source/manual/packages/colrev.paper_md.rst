@@ -1,6 +1,35 @@
+colrev.paper_md
+===============
 
-paper_md
-========
+- Maintainer: Gerit Wagner
+- License: MIT
+
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. list-table::
+   :header-rows: 1
+   :widths: 20 30 80
+
+   * - Endpoint
+     - Status
+     - Add
+   * - data
+     - |MATURING|
+     - .. code-block::
+
+
+         colrev data --add colrev.paper_md
+
+
+Summary
+-------
 
 data
 ----
@@ -40,3 +69,17 @@ Once record citations are moved from the to-do list to other parts of the manusc
 
 Links
 -----
+
+
+.. image:: https://img.shields.io/github/commit-activity/y/jgm/pandoc?color=green&style=plastic
+   :target: https://img.shields.io/github/commit-activity/y/jgm/pandoc?color=green&style=plastic
+   :alt: pandocactivity
+
+`pandoc <https://github.com/jgm/pandoc>`_ to convert Markdown to PDF or Word (License: `GPL 2 <https://github.com/jgm/pandoc/blob/main/COPYRIGHT>`_\ )
+
+
+.. image:: https://img.shields.io/github/commit-activity/y/citation-style-language/styles?color=green&style=plastic
+   :target: https://img.shields.io/github/commit-activity/y/citation-style-language/styles?color=green&style=plastic
+   :alt: cslactivity
+
+`CSL <https://github.com/citation-style-language/styles>`_ to format citations (License: `CC BY-SA 3.0 <https://github.com/citation-style-language/styles>`_\ )

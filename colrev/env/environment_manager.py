@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import typing
 from pathlib import Path
 
@@ -79,7 +80,11 @@ class EnvironmentManager:
                 dict(self._cast_values_to_str(updated_registry)), indent=4, fp=file
             )
 
-    def register_repo(self, path_to_register: Path) -> None:
+    def register_repo(
+        self,
+        path_to_register: Path,
+        logger: logging.Logger = logging.getLogger(__name__),
+    ) -> None:
         """Register a repository"""
         path_to_register = path_to_register.resolve().absolute()
         self.environment_registry = self.load_environment_registry()
@@ -93,10 +98,10 @@ class EnvironmentManager:
 
         if registered_paths:
             if str(path_to_register) in registered_paths:
-                print(f"Warning: Path already registered: {path_to_register}")
+                logger.warning(f"Warning: Path already registered: {path_to_register}")
                 return
         else:
-            print(f"Register {path_to_register} in {Filepaths.REGISTRY_FILE}")
+            logger.info("Register %s in %s", path_to_register, Filepaths.REGISTRY_FILE)
 
         new_record = {
             "repo_name": path_to_register.stem,
@@ -113,7 +118,7 @@ class EnvironmentManager:
                     break
         self.environment_registry["local_index"]["repos"].append(new_record)
         self.save_environment_registry(self.environment_registry)
-        print(f"Registered path ({path_to_register})")
+        logger.info(f"Registered path ({path_to_register})")
 
     @classmethod
     def get_name_mail_from_git(cls) -> typing.Tuple[str, str]:  # pragma: no cover

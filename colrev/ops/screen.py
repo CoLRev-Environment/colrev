@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
+import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
@@ -406,6 +407,32 @@ class Screen(colrev.process.operation.Operation):
             msg="Include records (include_flag)", manual_author=True
         )
         return selected_auto_include_ids
+
+    def add_abstracts_from_tei(self) -> None:
+        """Add abstracts from TEI files to records without abstracts"""
+
+        records = self.review_manager.dataset.load_records_dict()
+        for record_dict in records.values():
+            if (
+                Fields.ABSTRACT in record_dict
+                or Fields.FILE not in record_dict
+                or Path(record_dict[Fields.FILE].suffix != ".pdf")
+                or not Path(record_dict[Fields.FILE]).exists()
+            ):
+                continue
+
+            try:
+                tei = self.review_manager.get_tei(
+                    pdf_path=Path(record_dict[Fields.FILE]),
+                    tei_path=colrev.record.record.Record(
+                        record_dict
+                    ).get_tei_filename(),
+                )
+                record_dict[Fields.ABSTRACT] = tei.get_abstract()
+            except colrev_exceptions.TEIException:
+                pass
+        self.review_manager.dataset.save_records_dict(records)
+        self.review_manager.dataset.create_commit(msg="Add abstracts from TEI")
 
     @colrev.process.operation.Operation.decorate()
     def main(self, *, split_str: str = "NA") -> None:

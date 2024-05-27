@@ -1,4 +1,4 @@
-# Scoping review
+## Summary
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -8,6 +8,8 @@ Note: This document is currently under development. It will contain the followin
 - goals
 - dimensions
 - differences between disciplines
+
+<!--
 
 ## Steps and operations
 
@@ -26,5 +28,8 @@ Note: This document is currently under development. It will contain the followin
 - For manuscript development see separate page for Word/Tex/Md, Reference Managers
 
 ## Software recommendations
+-->
 
 ## References
+
+📝 Arksey, H., & O'malley, L. (2005). Scoping studies: towards a methodological framework. International journal of social research methodology, 8(1), 19-32.

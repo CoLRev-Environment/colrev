@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import shutil
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -88,14 +89,15 @@ class UnknownSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
-    ) -> colrev.settings.SearchSource:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        params: str,
+    ) -> None:
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        return operation.add_db_source(
+        search_source = operation.create_db_source(
             search_source_cls=cls,
-            params=params,
+            params={},
         )
+        operation.add_source_and_search(search_source)
 
     def search(self, rerun: bool) -> None:
         """Run a search of Crossref"""
@@ -128,7 +130,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 f"{Colors.GREEN}Rename to {new_filename} "
                 f"(because the format is .enl){Colors.END}"
             )
-            self.search_source.filename.rename(new_filename)
+            shutil.move(str(self.search_source.filename), str(new_filename))
             self.review_manager.dataset.add_changes(
                 self.search_source.filename, remove=True
             )
@@ -147,7 +149,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 f"{Colors.GREEN}Rename to {new_filename} "
                 f"(because the format is .ris){Colors.END}"
             )
-            self.search_source.filename.rename(new_filename)
+            shutil.move(str(self.search_source.filename), str(new_filename))
             self.review_manager.dataset.add_changes(
                 self.search_source.filename, remove=True
             )

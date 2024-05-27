@@ -16,13 +16,15 @@ colrev.ops.search.Search
    .. autosummary::
       :nosignatures:
 
-      ~Search.add_api_source
-      ~Search.add_db_source
       ~Search.add_most_likely_sources
+      ~Search.add_source_and_search
       ~Search.check_precondition
       ~Search.conclude
+      ~Search.create_api_source
+      ~Search.create_db_source
       ~Search.decorate
-      ~Search.get_new_sources_heuristic_list
+      ~Search.get_new_search_files
+      ~Search.get_new_source_heuristic
       ~Search.get_query_filename
       ~Search.get_unique_filename
       ~Search.main

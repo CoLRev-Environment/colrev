@@ -64,6 +64,7 @@ class FileSets:
         "data/.tei/",
         "data/prep_man/records_prep_man.bib",
         "data/data/sample_references.bib",
+        ".DS_Store",
     ]
     DEPRECATED_GIT_IGNORE_ITEMS = [
         "missing_pdf_files.csv",

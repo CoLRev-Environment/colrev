@@ -1,4 +1,6 @@
-# Unpaywall
+## Summary
+
+The unpaywall package provides legal and open access PDF retrieval for cross-disciplinary research. With access to over 30,000,000 scholarly articles, it offers a convenient way to retrieve PDF documents from the [Unpaywall](https://unpaywall.org/) API.
 
 This package supports retrieval of PDF documents from the [unpaywall](https://unpaywall.org/) API, which provides access to over 40,000,000 free scholarly articles.
 

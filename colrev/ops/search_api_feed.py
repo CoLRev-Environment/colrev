@@ -9,6 +9,7 @@ from random import randint
 
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
+import colrev.loader.load_utils_formatter
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
@@ -59,6 +60,8 @@ class SearchAPIFeed:
 
         self.review_manager = review_manager
         self.logger = review_manager.logger
+        self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
+
         self.origin_prefix = self.source.get_origin_prefix()
 
         self._load_feed()
@@ -346,6 +349,9 @@ class SearchAPIFeed:
 
         colrev_origin = f"{self.origin_prefix}/{retrieved_record.data['ID']}"
         main_record = self._get_main_record(colrev_origin)
+
+        # For consistency (with ops/load):
+        self.load_formatter.run(retrieved_record)
 
         self._update_record_fields(
             record=retrieved_record,

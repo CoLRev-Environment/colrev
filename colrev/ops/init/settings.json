@@ -114,9 +114,6 @@
             },
             {
                 "endpoint": "colrev.download_from_website"
-            },
-            {
-                "endpoint": "colrev.website_screenshot"
             }
         ],
         "pdf_get_man_package_endpoints": [

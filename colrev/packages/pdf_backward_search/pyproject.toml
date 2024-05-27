@@ -2,6 +2,7 @@
 name = "colrev.pdf_backward_search"
 description = "CoLRev package for pdf_backward_search"
 version = "0.1.0"
+license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]

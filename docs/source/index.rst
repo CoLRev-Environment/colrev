@@ -18,6 +18,27 @@ The following features stand out:
 - Provides validate and undo operations
 - Enables typological and methodological pluralism throughout the process (`in-progress <https://github.com/CoLRev-Environment/colrev/issues/110>`_)
 
+A complete example run of CoLRev can be seen below:
+
+..
+   Note: the demo is not displayed locally due to cross-origin restrictions and different urls ("/en/latest/" is not needed locally)
+
+.. raw:: html
+
+   <div id="demo"></div>
+
+   <script src="/en/latest/_static/js/asciinema-player.min.js"></script>
+   <script>
+      window.onload = function() {
+         AsciinemaPlayer.create('/en/latest/_static/colrev_demo.cast', document.getElementById('demo'),
+         {autoPlay: true,
+         rows: 30,
+         terminalFontSize: "80px",
+         theme: 'dracula',});
+      };
+   </script>
+
+
 Please consult the :doc:`statements of development status </dev_docs/dev_status>`. A brief overview presented at ESMARConf2023 is available on `YouTube <https://www.youtube.com/watch?v=yfGGraQC6vs>`_.
 
 Getting started
@@ -113,5 +134,4 @@ The manual is available under the `Creative Commons Attribution-NonCommercial-No
    :maxdepth: 1
 
    foundations/cep
-   foundations/credits
    foundations/about

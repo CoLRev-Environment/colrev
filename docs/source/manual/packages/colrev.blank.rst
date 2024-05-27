@@ -1,43 +1,34 @@
+colrev.blank
+============
 
-Zero-settings (blank) review
-============================
+- Maintainer: Gerit Wagner
+- License: MIT
 
-The *blank* ReviewType is primarily used for simulations.
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. list-table::
+   :header-rows: 1
+   :widths: 20 30 80
 
-Note: This document is currently under development. It will contain the following elements.
+   * - Endpoint
+     - Status
+     - Add
+   * - review_type
+     - |MATURING|
+     - .. code-block::
 
-Short summary
--------------
+
+         colrev init --type colrev.blank
 
 
-* explanation
-* goals
-* dimensions
-* differences between disciplines
+Summary
+-------
 
-Steps and operations
---------------------
-
-Problem formulation
-^^^^^^^^^^^^^^^^^^^
-
-Metadata retrieval
-^^^^^^^^^^^^^^^^^^
-
-Metadata prescreen
-^^^^^^^^^^^^^^^^^^
-
-PDF retrieval
-^^^^^^^^^^^^^
-
-PDF screen
-^^^^^^^^^^
-
-Data extraction and synthesis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Software recommendations
-------------------------
-
-References
-----------
+The *blank* ReviewType does not include any settings. It is primarily used for simulations.

@@ -32,3 +32,7 @@ pre.span.s1 {
 td {
   white-space: normal !important;
 }
+
+#endpoint_overview_container table tr {
+  height: 200px;
+}

@@ -2,6 +2,7 @@
 name = "colrev.arxiv"
 description = "CoLRev package for arxiv"
 version = "0.1.0"
+license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]
