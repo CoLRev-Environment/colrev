@@ -24,7 +24,7 @@ Package
      - Status
      - Add
    * - data
-     - |STABLE|
+     - |EXPERIMENTAL|
      - .. code-block::
 
 

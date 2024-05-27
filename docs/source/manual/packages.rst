@@ -52,6 +52,7 @@ Packages
    packages/colrev.descriptive_review.rst
    packages/colrev.literature_review.rst
    packages/colrev.meta_analysis.rst
+   packages/colrev.methodological_review.rst
    packages/colrev.narrative_review.rst
    packages/colrev.qualitative_systematic_review.rst
    packages/colrev.scientometric.rst

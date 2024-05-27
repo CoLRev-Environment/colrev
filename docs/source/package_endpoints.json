@@ -2,7 +2,7 @@
     "review_type": [
         {
             "package_endpoint_identifier": "colrev.blank",
-            "status": "|MATURING|",
+            "status": "|STABLE|",
             "short_description": "Blank review (:doc:`instructions </manual/packages/colrev.blank>`)",
             "ci_supported": true
         },
@@ -14,7 +14,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.critical_review",
-            "status": "|EXPERIMENTAL|",
+            "status": "|STABLE|",
             "short_description": "Critical review (:doc:`instructions </manual/packages/colrev.critical_review>`)",
             "ci_supported": true
         },
@@ -40,6 +40,12 @@
             "package_endpoint_identifier": "colrev.meta_analysis",
             "status": "|EXPERIMENTAL|",
             "short_description": "Meta-analysis (:doc:`instructions </manual/packages/colrev.meta_analysis>`)",
+            "ci_supported": true
+        },
+        {
+            "package_endpoint_identifier": "colrev.methodological_review",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Methodological review (:doc:`instructions </manual/packages/colrev.methodological_review>`)",
             "ci_supported": true
         },
         {
@@ -682,7 +688,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.profile",
-            "status": "|STABLE|",
+            "status": "|EXPERIMENTAL|",
             "short_description": "Create a profile (:doc:`instructions </manual/packages/colrev.profile>`)",
             "ci_supported": false
         },
