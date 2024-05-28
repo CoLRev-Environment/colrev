@@ -2,20 +2,22 @@
 """SearchSource: Unpaywall"""
 from __future__ import annotations
 
-from multiprocessing import Lock
 import typing
 from dataclasses import dataclass
 from pathlib import Path
 
-from dacite import from_dict
 import zope.interface
+from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
-from colrev.constants import SearchSourceHeuristicStatus, SearchType
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+from colrev.constants import Fields
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
+
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
@@ -68,14 +70,51 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         cls, operation: colrev.ops.search.Search, params: dict
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        """Not implemented"""
-        pass
+
+        params_dict = {}
+        if params:
+            if params.startswith("http"):
+                params_dict = {Fields.URL: params}
+            else:
+                for item in params.split(";"):
+                    key, value = item.split("=")
+                    params_dict[key] = value
+
+        if len(params_dict) == 0:
+            search_source = operation.create_api_source(endpoint=cls.endpoint)
+
+        # pylint: disable=colrev-missed-constant-usage
+        elif "https://api.unpaywall.org/v2/search?" in params_dict["url"]:
+            query = (
+                params_dict["url"]
+                .replace("https://api.unpaywall.org/v2/search?", "")
+                .lstrip("&")
+            )
+
+            # Example URL: https://api.unpaywall.org/v2/search?query=cell%20thermometry&is_oa=true&email=unpaywall_01@example.com
+            parameter_pairs = query.split("&")
+            search_parameters = {}
+            for parameter in parameter_pairs:
+                key, value = parameter.split("=")
+                search_parameters[key] = value
+
+            filename = operation.get_unique_filename(file_path_string="unpaywall")
+
+            search_source = colrev.settings.SearchSource(
+                endpoint=cls.endpoint,
+                filename=filename,
+                search_type=SearchType.API,
+                search_parameters=search_parameters,
+                comment="",
+            )
+        else:
+            raise NotImplementedError
+
+        operation.add_source_and_search(search_source)
 
     def search(self, rerun: bool) -> None:
         """Run a search of Unpaywall"""
-        """Not implemented"""
-        pass
-    
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
@@ -97,15 +136,10 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
-    
+
     def prepare(
         self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Unpaywall"""
         """Not implemented"""
         return record
-    
-
-if __name__ == "__main__":
-    instance = UnpaywallSearchSource()
-    instance.search()
