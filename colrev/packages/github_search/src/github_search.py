@@ -19,7 +19,7 @@ from colrev.constants import SearchType
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
 class GitHubSearchSource(JsonSchemaMixin):
-    
+
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.github_search"
 
@@ -28,12 +28,11 @@ class GitHubSearchSource(JsonSchemaMixin):
 
         search_source = operation.create_db_source(search_source_cls=cls,params={})
         operation.add_source_and_search(search_source)
-    
+
     def search(self,  rerun: bool) -> None:
-        
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
-        
+
 
     def prepare(self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.record.Record:
-        
