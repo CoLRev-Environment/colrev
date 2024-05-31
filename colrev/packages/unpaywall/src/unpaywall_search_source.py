@@ -28,8 +28,8 @@ from colrev.constants import SearchType
 @dataclass
 class UnpaywallSearchSource(JsonSchemaMixin):
     """Unpaywall Search Source"""
-
-    settings_class = colrev.package_manager.package_settings.DefaultSettings
+#achtung hier habe ich von DefaultSettings zu DefaultSourceSettings geändert,da ich Fehler wie "DefaultSettings has no atrribute get_api_feed"
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     # TODO ABSPRECHEN ENTKOMMENTIERT!
     source_identifier = "ID"
     search_types = [SearchType.API]
@@ -89,7 +89,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
     def search(self, rerun: bool) -> None:
         """Run a search of Unpaywall"""
-        """Not implemented"""
         unpaywall_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
