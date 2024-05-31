@@ -1,11 +1,11 @@
-# OpenCitations forward search
+## Summary
 
 ## search
 
 ### FORWARD search
 
 ```
-colrev search -a colrev.open_citations_forward_search:default
+colrev search --add colrev.open_citations_forward_search
 ```
 
 ## Links

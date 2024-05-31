@@ -7,13 +7,11 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
+import pymupdf
 import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from pdfminer.pdfdocument import PDFDocument
-from pdfminer.pdfinterp import resolve1
-from pdfminer.pdfparser import PDFParser
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
@@ -249,28 +247,27 @@ class FilesSearchSource(JsonSchemaMixin):
 
     def _get_missing_fields_from_doc_info(self, *, record_dict: dict) -> None:
         file_path = self.review_manager.path / Path(record_dict[Fields.FILE])
-        with open(file_path, "rb") as file:
-            parser = PDFParser(file)
-            doc = PDFDocument(parser)
+        doc = pymupdf.Document(file_path)
 
-            if record_dict.get(Fields.TITLE, "NA") in ["NA", ""]:
-                if "Title" in doc.info[0]:
-                    try:
-                        record_dict[Fields.TITLE] = doc.info[0]["Title"].decode("utf-8")
-                    except UnicodeDecodeError:
-                        pass
-            if record_dict.get(Fields.AUTHOR, "NA") in ["NA", ""]:
-                if "Author" in doc.info[0]:
-                    try:
-                        pdf_md_author = doc.info[0]["Author"].decode("utf-8")
-                        if (
-                            "Mirko Janc" not in pdf_md_author
-                            and "wendy" != pdf_md_author
-                            and "yolanda" != pdf_md_author
-                        ):
-                            record_dict[Fields.AUTHOR] = pdf_md_author
-                    except UnicodeDecodeError:
-                        pass
+        # pylint: disable=no-member
+        if record_dict.get(Fields.TITLE, "NA") in ["NA", ""]:
+            if "title" in doc.metadata:
+                try:
+                    record_dict[Fields.TITLE] = doc.metadata["title"].decode("utf-8")
+                except UnicodeDecodeError:
+                    pass
+        if record_dict.get(Fields.AUTHOR, "NA") in ["NA", ""]:
+            if "author" in doc.metadata:
+                try:
+                    pdf_md_author = doc.metadata["author"].decode("utf-8")
+                    if (
+                        "Mirko Janc" not in pdf_md_author
+                        and "wendy" != pdf_md_author
+                        and "yolanda" != pdf_md_author
+                    ):
+                        record_dict[Fields.AUTHOR] = pdf_md_author
+                except UnicodeDecodeError:
+                    pass
 
     # curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
     # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
@@ -312,11 +309,8 @@ class FilesSearchSource(JsonSchemaMixin):
         }
         try:
             record_dict = self._get_record_from_pdf_grobid(record_dict=record_dict)
-
-            with open(file_path, "rb") as file:
-                parser = PDFParser(file)
-                document = PDFDocument(parser)
-                pages_in_file = resolve1(document.catalog["Pages"])["Count"]
+            with pymupdf.open(file_path) as doc:
+                pages_in_file = doc.page_count
                 if pages_in_file < 6:
                     record = colrev.record.record_pdf.PDFRecord(record_dict)
                     record.set_text_from_pdf()
@@ -367,12 +361,12 @@ class FilesSearchSource(JsonSchemaMixin):
 
         if (
             "_ocr.pdf" == str(file_path)[-8:]
-            or "_wo_cp.pdf" == str(file_path)[-10:]
-            or "_wo_lp.pdf" == str(file_path)[-10:]
+            or "_with_cp.pdf" == str(file_path)[-10:]
+            or "_with_lp.pdf" == str(file_path)[-10:]
             or "_backup.pdf" == str(file_path)[-11:]
         ):
             self.review_manager.logger.info(
-                f"Skipping PDF with _ocr.pdf/_wo_cp.pdf: {file_path}"
+                f"Skipping PDF with _ocr.pdf/_with_cp.pdf: {file_path}"
             )
             return True
 
@@ -580,6 +574,9 @@ class FilesSearchSource(JsonSchemaMixin):
         linked_file_paths: list,
     ) -> None:
         file_batches = self._get_file_batches()
+        if not file_batches:
+            files_dir_feed.save()
+            return
         for i, file_batch in enumerate(file_batches):
             for record in files_dir_feed.feed_records.values():
                 record = self._add_md_string(record_dict=record)
@@ -677,19 +674,19 @@ class FilesSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+    ) -> None:
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         filename = operation.get_unique_filename(file_path_string="files")
         # pylint: disable=no-value-for-parameter
-        add_source = colrev.settings.SearchSource(
+        search_source = colrev.settings.SearchSource(
             endpoint="colrev.files_dir",
             filename=filename,
             search_type=SearchType.FILES,
             search_parameters={"scope": {"path": "data/pdfs"}},
             comment="",
         )
-        return add_source
+        operation.add_source_and_search(search_source)
 
     def _update_based_on_doi(self, *, record_dict: dict) -> None:
         if Fields.DOI not in record_dict:

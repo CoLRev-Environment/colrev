@@ -63,10 +63,7 @@ class CuratedMasterdata(JsonSchemaMixin):
 
         settings.prep.prep_rounds[0].prep_package_endpoints = [
             {"endpoint": "colrev.source_specific_prep"},
-            {"endpoint": "colrev.exclude_non_latin_alphabets"},
-            {"endpoint": "colrev.exclude_collections"},
             {"endpoint": "colrev.exclude_complementary_materials"},
-            {"endpoint": "colrev.exclude_languages"},
             {"endpoint": "colrev.remove_urls_with_500_errors"},
             {"endpoint": "colrev.remove_broken_ids"},
             {"endpoint": "colrev.global_ids_consistency_check"},

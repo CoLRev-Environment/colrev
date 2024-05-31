@@ -1,9 +1,9 @@
-# CoLRev Curations
+## Summary
 
-Note: This document is currently under development. It will contain the following elements.
+<!-- Note: This document is currently under development. It will contain the following elements.
 
 - description
-- example
+- example -->
 
 ## prep
 
@@ -41,8 +41,17 @@ They can be set as follows:
 
 ```
 
+<!--
 ## data
 
 TODO
 
 ## Links
+-->
+
+## dedupe
+
+See
+
+- [colrev.curation_full_outlet_dedupe](colrev.curation_full_outlet_dedupe.html)
+- [colrev.curation_missing_dedupe](colrev.curation_missing_dedupe.html)

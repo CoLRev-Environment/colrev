@@ -2,8 +2,13 @@
 name = "colrev.semanticscholar"
 description = "CoLRev package for semanticscholar"
 version = "0.1.0"
+license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
+    { name = "Louis Langenhan"},
+    { name = "Peter Eckhardt"},
+    { name = "Amadou-Choumoussidine Kouotou-Ngapout"},
+    { name = "Robert Theis"},
 ]
 documentation = "README.md"
 colrev_doc_link = "README.md"

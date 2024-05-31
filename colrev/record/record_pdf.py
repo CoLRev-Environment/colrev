@@ -2,35 +2,21 @@
 """Functionality for PDF handling."""
 from __future__ import annotations
 
-import io
 import logging
 import os
 import tempfile
 import typing
 from pathlib import Path
 
-import fitz
 import imagehash
-import pdfminer
-from pdfminer.converter import TextConverter
-from pdfminer.pdfdocument import PDFDocument
-from pdfminer.pdfdocument import PDFTextExtractionNotAllowed
-from pdfminer.pdfinterp import PDFPageInterpreter
-from pdfminer.pdfinterp import PDFResourceManager
-from pdfminer.pdfinterp import resolve1
-from pdfminer.pdfpage import PDFPage
-from pdfminer.pdfparser import PDFParser
-from pdfminer.pdfparser import PDFSyntaxError
+import pymupdf
 from PIL import Image
-from PyPDF2 import PdfFileReader
-from PyPDF2 import PdfFileWriter
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
-from colrev.constants import RecordState
 
 
 class PDFRecord(colrev.record.record.Record):
@@ -45,69 +31,65 @@ class PDFRecord(colrev.record.record.Record):
         text_list: list = []
         pdf_path = Path(self.data[Fields.FILE]).absolute()
 
-        # https://stackoverflow.com/questions/49457443/python-pdfminer-converts-pdf-file-into-one-chunk-of-string-with-no-spaces-betwee
-        laparams = pdfminer.layout.LAParams()
-        setattr(laparams, "all_texts", True)
+        with pymupdf.open(pdf_path) as doc:
+            for i, page in enumerate(doc):
+                if pages is None or i in pages:
+                    text = page.get_text()
+                    text_list.append(text)
 
-        with open(pdf_path, "rb") as pdf_file:
-            try:
-                for page in PDFPage.get_pages(
-                    pdf_file,
-                    pagenos=pages,  # note: maybe skip potential cover pages?
-                    caching=True,
-                    check_extractable=True,
-                ):
-                    resource_manager = PDFResourceManager()
-                    fake_file_handle = io.StringIO()
-                    converter = TextConverter(
-                        resource_manager, fake_file_handle, laparams=laparams
-                    )
-                    page_interpreter = PDFPageInterpreter(resource_manager, converter)
-                    page_interpreter.process_page(page)
+        text_all = "".join(text_list)
+        text_all = (
+            text_all.replace("´\ne", "é").replace("ˆ\no", "ô").replace("´\na", "á")
+        )
+        # does not work with newlines?!
+        # text_list = unicodedata.normalize('NFKD', text_all)
 
-                    text = fake_file_handle.getvalue()
-                    text_list += text
-
-                    # close open handles
-                    converter.close()
-                    fake_file_handle.close()
-            except (
-                TypeError,
-                KeyError,
-                PDFSyntaxError,
-            ):  # pragma: no cover
-                pass
-        return "".join(text_list)
+        return text_all
 
     def set_nr_pages_in_pdf(self) -> None:
         """Set the pages_in_file field based on the PDF"""
         pdf_path = Path(self.data[Fields.FILE]).absolute()
-        try:
-            with open(pdf_path, "rb") as file:
-                parser = PDFParser(file)
-                document = PDFDocument(parser)
-                pages_in_file = resolve1(document.catalog["Pages"])["Count"]
-            self.data[Fields.NR_PAGES_IN_FILE] = pages_in_file
-        except PDFSyntaxError:  # pragma: no cover
-            self.data.pop(Fields.NR_PAGES_IN_FILE, None)
+        with pymupdf.open(pdf_path) as doc:
+            pages_in_file = doc.page_count
+        self.data[Fields.NR_PAGES_IN_FILE] = pages_in_file
 
     def set_text_from_pdf(self) -> None:
         """Set the text_from_pdf field based on the PDF"""
         self.data[Fields.TEXT_FROM_PDF] = ""
-        try:
-            self.set_nr_pages_in_pdf()
-            text = self.extract_text_by_page(pages=[0, 1, 2])
-            text_from_pdf = text.replace("\n", " ").replace("\x0c", "")
-            self.data[Fields.TEXT_FROM_PDF] = text_from_pdf
+        self.set_nr_pages_in_pdf()
+        text = self.extract_text_by_page(pages=[0, 1, 2])
+        text_from_pdf = text.replace("\n", " ").replace("\x0c", "")
+        self.data[Fields.TEXT_FROM_PDF] = text_from_pdf
 
-        except PDFSyntaxError:  # pragma: no cover
-            self.add_field_provenance_note(key=Fields.FILE, note="pdf_reader_error")
-            # pylint: disable=colrev-direct-status-assign
-            self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
-        except PDFTextExtractionNotAllowed:  # pragma: no cover
-            self.add_field_provenance_note(key=Fields.FILE, note="pdf_protected")
-            # pylint: disable=colrev-direct-status-assign
-            self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
+    @classmethod
+    def extract_pages_from_pdf(
+        cls,
+        *,
+        pages: list,
+        pdf_path: Path,
+        save_to_path: typing.Optional[Path] = None,
+    ) -> None:  # pragma: no cover
+        """Extract pages from the PDF"""
+        doc = pymupdf.Document(pdf_path)
+        all_pages_list = list(range(doc.page_count))
+
+        if save_to_path:
+            save_doc = pymupdf.Document()
+            for page in pages:
+                save_doc.insert_pdf(doc, from_page=page, to_page=page)
+            save_doc.save(save_to_path / Path(pdf_path).name)
+            save_doc.close()
+
+        saved_pdf_pages = []
+
+        for page in pages:
+            all_pages_list.remove(page)
+            saved_pdf_pages.append(page)
+
+        doc.select(all_pages_list)
+        # pylint: disable=no-member
+        doc.save(pdf_path, incremental=True, encryption=pymupdf.PDF_ENCRYPT_KEEP)
+        doc.close()
 
     def extract_pages(
         self,
@@ -116,24 +98,11 @@ class PDFRecord(colrev.record.record.Record):
         project_path: Path,
         save_to_path: typing.Optional[Path] = None,
     ) -> None:  # pragma: no cover
-        """Extract pages from the PDF (saveing them to the save_to_path)"""
+        """Extract pages from the PDF"""
         pdf_path = project_path / Path(self.data[Fields.FILE])
-        pdf_reader = PdfFileReader(str(pdf_path), strict=False)
-        writer = PdfFileWriter()
-        for i in range(0, len(pdf_reader.pages)):
-            if i in pages:
-                continue
-            writer.addPage(pdf_reader.getPage(i))
-        with open(pdf_path, "wb") as outfile:
-            writer.write(outfile)
-
-        if save_to_path:
-            writer_cp = PdfFileWriter()
-            for page in pages:
-                writer_cp.addPage(pdf_reader.getPage(page))
-            filepath = Path(pdf_path)
-            with open(save_to_path / filepath.name, "wb") as outfile:
-                writer_cp.write(outfile)
+        self.extract_pages_from_pdf(
+            pages=pages, pdf_path=pdf_path, save_to_path=save_to_path
+        )
 
     def get_pdf_hash(self, *, page_nr: int, hash_size: int = 32) -> str:
         """Get the PDF image hash"""
@@ -151,7 +120,7 @@ class PDFRecord(colrev.record.record.Record):
         with tempfile.NamedTemporaryFile(suffix=".png") as temp_file:
             file_name = temp_file.name
             try:
-                doc: fitz.Document = fitz.open(pdf_path)
+                doc: pymupdf.Document = pymupdf.open(pdf_path)
                 # Starting with page 1
                 for page_no, page in enumerate(doc, 1):
                     if page_no == page_nr:
@@ -167,7 +136,7 @@ class PDFRecord(colrev.record.record.Record):
                             return average_hash_str
                 # Page not found
                 raise colrev_exceptions.PDFHashError(path=pdf_path)  # pragma: no cover
-            except fitz.fitz.FileDataError as exc:
+            except pymupdf.FileDataError as exc:
                 raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
             except RuntimeError as exc:
                 raise colrev_exceptions.PDFHashError(path=pdf_path) from exc

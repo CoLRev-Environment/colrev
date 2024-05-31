@@ -1,6 +1,44 @@
+colrev.europe_pmc
+=================
 
-Europe PMC
-==========
+- Maintainer: Gerit Wagner
+- License: MIT
+
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. list-table::
+   :header-rows: 1
+   :widths: 20 30 80
+
+   * - Endpoint
+     - Status
+     - Add
+   * - search_source
+     - |MATURING|
+     - .. code-block::
+
+
+         colrev search --add colrev.europe_pmc
+
+   * - prep
+     - |MATURING|
+     - .. code-block::
+
+
+         colrev prep --add colrev.europe_pmc
+
+
+Summary
+-------
+
+Europe PMC is a comprehensive database that includes metadata from PubMed Central (PMC) and provides access to over 40 million records.
 
 search
 ------
@@ -10,7 +48,7 @@ API search
 
 .. code-block::
 
-   colrev search -a colrev.europe_pmc -p "https://europepmc.org/search?query=fitbit%20AND%20gamification%20AND%20RCT%20AND%20diabetes%20mellitus"
+   colrev search --add colrev.europe_pmc -p "https://europepmc.org/search?query=fitbit%20AND%20gamification%20AND%20RCT%20AND%20diabetes%20mellitus"
 
 prep
 ----

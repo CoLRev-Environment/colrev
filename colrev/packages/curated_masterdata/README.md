@@ -1,4 +1,4 @@
-# Curated masterdata repository
+## Summary
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -16,12 +16,14 @@ To create a new masterdata curation, run
 ```
 colrev init --type colrev.curated_masterdata
 # add crossref
-colrev search -a "crossref:jissn=123456"
+colrev search --add "crossref:jissn=123456"
 # add further sources (like DBLP)
 
 ```
 
+<!--
 ### Problem formulation
+-->
 
 ### Metadata retrieval
 
@@ -29,6 +31,7 @@ colrev search -a "crossref:jissn=123456"
 - The curation endpoint supports the specification of ``masterdata_restrictions``, defining the name of the outlet, whether volume or issue fields are required (for which time-frame).
 - Dedicated dedupe endpoints are activated.
 
+<!--
 ### Metadata prescreen
 
 ### PDF retrieval
@@ -42,3 +45,4 @@ colrev search -a "crossref:jissn=123456"
 ## Software recommendations
 
 ## References
+-->

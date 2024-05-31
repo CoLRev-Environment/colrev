@@ -7,9 +7,9 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
+import pymupdf
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
-from PyPDF2 import PdfFileReader
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -55,12 +55,10 @@ class PDFLastPage(JsonSchemaMixin):
 
         def _get_last_pages(*, pdf: str) -> typing.List[int]:
             last_pages: typing.List[int] = []
-            try:
-                pdf_reader = PdfFileReader(str(pdf), strict=False)
-            except ValueError:
-                return last_pages
 
-            last_page_nr = len(pdf_reader.pages) - 1
+            doc = pymupdf.Document(pdf)
+
+            last_page_nr = doc.page_count - 1
 
             last_page_average_hash_16 = record.get_pdf_hash(
                 page_nr=last_page_nr + 1, hash_size=16
@@ -85,7 +83,7 @@ class PDFLastPage(JsonSchemaMixin):
             if str(last_page_average_hash_16) in last_page_hashes:
                 last_pages.append(last_page_nr)
 
-            res = pdf_reader.getPage(last_page_nr).extract_text()
+            res = doc.load_page(last_page_nr).get_text()  # pylint: disable=no-member
             last_page_text = res.replace(" ", "").replace("\n", "").lower()
 
             # ME Sharpe last page
@@ -116,7 +114,7 @@ class PDFLastPage(JsonSchemaMixin):
         if last_pages:
             original = self.review_manager.path / Path(record.data[Fields.FILE])
             file_copy = self.review_manager.path / Path(
-                record.data[Fields.FILE].replace(".pdf", "_wo_lp.pdf")
+                record.data[Fields.FILE].replace(".pdf", "_with_lp.pdf")
             )
             shutil.copy(original, file_copy)
 

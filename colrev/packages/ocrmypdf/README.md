@@ -1,4 +1,4 @@
-# OCRmyPDF
+## Summary
 
 OCRmyPDF adds an OCR text layer to scanned PDF files, allowing them to be searched. Its main features are:
 
@@ -27,4 +27,11 @@ colrev pdf-prep -a colrev.ocrmypddf
 
 ## Links
 
-- [OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF)
+
+![ocrmypdfactivity](https://img.shields.io/github/commit-activity/y/ocrmypdf/OCRmyPDF?color=green&style=plastic)
+
+[OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF): optical-character recognition (License: [MPL-2.0](https://github.com/ocrmypdf/OCRmyPDF/blob/main/LICENSE))
+
+![tesseractactivity](https://img.shields.io/github/commit-activity/y/tesseract-ocr/tesseract?color=green&style=plastic)
+
+[Tesseract OCR](https://github.com/tesseract-ocr/tesseract) (License: [Apache-2.0](https://github.com/tesseract-ocr/tesseract/blob/main/LICENSE))

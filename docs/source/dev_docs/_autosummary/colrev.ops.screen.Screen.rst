@@ -16,6 +16,7 @@ colrev.ops.screen.Screen
    .. autosummary::
       :nosignatures:
 
+      ~Screen.add_abstracts_from_tei
       ~Screen.add_criterion
       ~Screen.check_precondition
       ~Screen.conclude

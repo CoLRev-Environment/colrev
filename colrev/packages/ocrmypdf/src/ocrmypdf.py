@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -55,7 +56,7 @@ class OCRMyPDF(JsonSchemaMixin):
     ) -> colrev.record.record_pdf.PDFRecord:
         pdf_path = self.review_manager.path / Path(record.data[Fields.FILE])
         non_ocred_filename = Path(str(pdf_path).replace(".pdf", "_no_ocr.pdf"))
-        pdf_path.rename(non_ocred_filename)
+        shutil.move(str(pdf_path), str(non_ocred_filename))
         orig_path = (
             pdf_path.parents[0]
             if pdf_path.is_file()

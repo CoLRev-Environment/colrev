@@ -1,3 +1,32 @@
+colrev.scientometric
+====================
+
+- Maintainer: Gerit Wagner
+- License: MIT
+
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. list-table::
+   :header-rows: 1
+   :widths: 20 30 80
+
+   * - Endpoint
+     - Status
+     - Add
+   * - review_type
+     - |EXPERIMENTAL|
+     - .. code-block::
+
+
+         colrev init --type colrev.scientometric
+
 
 Scientometric
 =============
@@ -15,32 +44,28 @@ Short summary
 
 For the analysis of citation data, established software packages like `VosViewer <https://www.vosviewer.com/>`_ are recommended.
 
-Steps and operations
---------------------
 
-Problem formulation
-^^^^^^^^^^^^^^^^^^^
+.. raw:: html
 
-Metadata retrieval
-^^^^^^^^^^^^^^^^^^
+   <!--
 
-Metadata prescreen
-^^^^^^^^^^^^^^^^^^
+   ## Steps and operations
 
-PDF retrieval
-^^^^^^^^^^^^^
+   ### Problem formulation
 
-PDF screen
-^^^^^^^^^^
+   ### Metadata retrieval
 
-Data extraction and synthesis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   ### Metadata prescreen
 
+   ### PDF retrieval
 
-* For manuscript development see separate page for Word/Tex/Md, Reference Managers
+   ### PDF screen
 
-Software recommendations
-------------------------
+   ### Data extraction and synthesis
 
-References
-----------
+   - For manuscript development see separate page for Word/Tex/Md, Reference Managers
+
+   ## Software recommendations
+
+   ## References
+   -->

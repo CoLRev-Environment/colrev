@@ -3,8 +3,8 @@
 import os
 from pathlib import Path
 
-import fitz
 import imagehash
+import pymupdf
 import pytest
 from PIL import Image
 
@@ -156,17 +156,17 @@ def test_open_pdf_invalid_path(helpers, tmp_path):  # type: ignore
         target=pdf_path,
     )
 
-    def fitz_open_file_data_error(pdf_path):  # type: ignore
+    def pympdf_open_file_data_error(pdf_path):  # type: ignore
         """Raise a file data error"""
-        raise fitz.fitz.FileDataError("Invalid PDF")
+        raise pymupdf.FileDataError("Invalid PDF")
 
-    original_fitz_open = fitz.open
-    fitz.open = fitz_open_file_data_error
+    original_fitz_open = pymupdf.open
+    pymupdf.open = pympdf_open_file_data_error
 
     with pytest.raises(colrev_exceptions.InvalidPDFException):
         colrev.record.record.Record.get_colrev_pdf_id(pdf_path=pdf_path)
 
-    fitz.open = original_fitz_open
+    pymupdf.open = original_fitz_open
 
     def image_open_runtime_error(pdf_path):  # type: ignore
         """Raise a runtime error"""

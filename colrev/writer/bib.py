@@ -1,11 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to write bib files
-
-Usage::
-
-    TODO
-
-"""
+"""Convenience functions to write bib files"""
 from __future__ import annotations
 
 from copy import deepcopy

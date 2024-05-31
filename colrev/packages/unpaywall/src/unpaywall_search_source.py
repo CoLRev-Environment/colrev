@@ -17,6 +17,7 @@ import colrev.record.record
 import colrev.settings
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+
 # selbst importiert, löschen vor merge und absprache
 
 
@@ -26,8 +27,8 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     """Unpaywall Search Source"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    #TODO ABSPRECHEN ENTKOMMENTIERT!
-    source_identifier="ID"
+    # TODO ABSPRECHEN ENTKOMMENTIERT!
+    source_identifier = "ID"
     search_types = [SearchType.API]
     endpoint = "colrev.unpaywall"
 
@@ -45,9 +46,9 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
     ) -> None:
-        """Not implemented"""
         self.review_manager = source_operation.review_manager
         if settings:
+            # Unpaywall as a search_source
             self.search_source = from_dict(
                 data_class=self.settings_class, data=settings
             )
@@ -86,7 +87,15 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
-        """Not implemented"""
+
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
+            )
+            return records
+
+        raise NotImplementedError
 
     def prep_link_md(
         self,

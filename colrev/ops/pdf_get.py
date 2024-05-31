@@ -2,7 +2,6 @@
 """CoLRev pdf_get operation: Get PDF documents."""
 from __future__ import annotations
 
-import os
 import shutil
 import typing
 from glob import glob
@@ -336,7 +335,7 @@ class PDFGet(colrev.process.operation.Operation):
             Path(x)
             for x in pdf_files
             if str(Path(x).resolve()) not in linked_pdfs
-            and not any(kw in x for kw in ["_wo_lp.pdf", "_wo_cp.pdf", "_ocr.pdf"])
+            and not any(kw in x for kw in ["_with_lp.pdf", "_with_cp.pdf", "_ocr.pdf"])
         ]
 
         if len(unlinked_pdfs) == 0:
@@ -424,9 +423,9 @@ class PDFGet(colrev.process.operation.Operation):
                 file = corrected_path
 
         if file.is_file():
-            file.rename(new_filename)
+            shutil.move(str(file), str(new_filename))
         elif file.is_symlink():
-            os.rename(str(file), str(new_filename))
+            shutil.move(str(file), str(new_filename))
 
         record_dict[Fields.FILE] = str(new_filename)
         self.review_manager.logger.info(f"rename {file.name} > {new_filename}")

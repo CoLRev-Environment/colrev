@@ -1,17 +1,37 @@
+colrev.website_screenshot
+=========================
 
-Website screenshot
-==================
+- Maintainer: Gerit Wagner
+- License: MIT
 
-This package takes a PDF screenshot of websites (for ``ONLINE`` ENTRYTYPES).
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. list-table::
+   :header-rows: 1
+   :widths: 20 30 80
+
+   * - Endpoint
+     - Status
+     - Add
+   * - pdf_get
+     - |EXPERIMENTAL|
+     - .. code-block::
+
+
+         colrev pdf-get --add colrev.website_screenshot
+
+
+Summary
+-------
 
 pdf-get
 -------
 
-To add this package, run
-
-.. code-block::
-
-   colrev pdf-get -a colrev.website_screenshot
-
-Links
------
+This package takes a PDF screenshot of websites (for ``ONLINE`` ENTRYTYPES).
