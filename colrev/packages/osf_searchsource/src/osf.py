@@ -106,13 +106,13 @@ class OSFSearchSource(JsonSchemaMixin):
               
               # pylint: disable=colrev-missed-constant-usage
               if (
-                   "https://api.test.osf.io/v2/search/files?"
+                   "https://api.test.osf.io/v2/search"
                    in params["url"]
                 ):
                 query = (
                     params["url"]
                     .replace(
-                        "https://api.test.osf.io/v2/search/files?", ""
+                        "https://api.test.osf.io/v2/search", ""
                     )
                     .lstrip("&")
                 )
