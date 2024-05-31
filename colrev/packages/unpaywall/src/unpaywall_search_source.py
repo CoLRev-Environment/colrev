@@ -10,6 +10,9 @@ import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.ops
+import colrev.ops.screen
+import colrev.ops.search_api_feed
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
@@ -75,6 +78,15 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         """Not implemented"""
 
+#hilfsmethode um suche zu starten -> getapi bekommt man SearchAPIFeed object deswegen kann ich auch mit .save etc. arbeiten
+    def _start_api_search(
+            self,*, unpaywall_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
+    ) -> None:
+        for record in self.query_return():
+            unpaywall_feed.add_update_record(record)
+        
+        unpaywall_feed.save()
+
     def search(self, rerun: bool) -> None:
         """Run a search of Unpaywall"""
         """Not implemented"""
@@ -84,6 +96,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
         # TODO: API search
+        self._start_api_search(unpaywall_feed=unpaywall_feed, rerun=rerun)
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
