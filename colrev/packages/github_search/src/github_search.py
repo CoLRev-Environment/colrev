@@ -35,6 +35,10 @@ class GitHubSearchSource(JsonSchemaMixin):
             params={},
         )
         operation.add_source_and_search(search_source)
+    docs_link = (
+        "https://colrev.readthedocs.io/en/latest/dev_docs/packages/package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface"
+        + "https://docs.github.com/en/rest?apiVersion=2022-11-28"
+    )
     
     def search(self,  rerun: bool) -> None:
         
