@@ -39,6 +39,8 @@ class GitHubSearchSource(JsonSchemaMixin):
         "https://colrev.readthedocs.io/en/latest/dev_docs/packages/package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface"
         + "https://docs.github.com/en/rest?apiVersion=2022-11-28"
     )
+    '''heuristic_status = SearchSourceHeuristicStatus.experimental'''
+    short_name = "GitHubSearch"
     
     def search(self,  rerun: bool) -> None:
         
