@@ -33,4 +33,17 @@ Links
 -----
 
 
-* `OCRmyPDF <https://github.com/ocrmypdf/OCRmyPDF>`_
+.. image:: https://img.shields.io/github/commit-activity/y/ocrmypdf/OCRmyPDF?color=green&style=plastic
+   :target: https://img.shields.io/github/commit-activity/y/ocrmypdf/OCRmyPDF?color=green&style=plastic
+   :alt: ocrmypdfactivity
+
+
+`OCRmyPDF <https://github.com/ocrmypdf/OCRmyPDF>`_\ : optical-character recognition (License: `MPL-2.0 <https://github.com/ocrmypdf/OCRmyPDF/blob/main/LICENSE>`_\ )
+
+
+.. image:: https://img.shields.io/github/commit-activity/y/tesseract-ocr/tesseract?color=green&style=plastic
+   :target: https://img.shields.io/github/commit-activity/y/tesseract-ocr/tesseract?color=green&style=plastic
+   :alt: tesseractactivity
+
+
+`Tesseract OCR <https://github.com/tesseract-ocr/tesseract>`_ (License: `Apache-2.0 <https://github.com/tesseract-ocr/tesseract/blob/main/LICENSE>`_\ )

@@ -2,6 +2,17 @@
 Unpaywall
 =========
 
+.. list-table::
+   :header-rows: 1
+
+   * - PDF retrieval
+     - Field
+     - Size
+   * - `Unpaywall <https://unpaywall.org/>`_ (legal/OA PDF retrieval)
+     - Cross-disciplinary
+     - > 30,000,000
+
+
 This package supports retrieval of PDF documents from the `unpaywall <https://unpaywall.org/>`_ API, which provides access to over 40,000,000 free scholarly articles.
 
 pdf-get

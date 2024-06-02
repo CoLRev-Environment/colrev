@@ -2,6 +2,17 @@
 DBLP
 ====
 
+.. list-table::
+   :header-rows: 1
+
+   * - SearchSource
+     - Scope
+     - Size
+   * - `dblp <https://dblp.org/>`_ (curated metadata)
+     - Compter science, Information Technology
+     - > 5,750,000
+
+
 search
 ------
 

@@ -1,5 +1,9 @@
 # OpenLibrary
 
+| SearchSource    | Scope                          | Size         |
+|-----------------|--------------------------------|--------------|
+| Open Library    | Curated metadata, books        | > 20,000,000 |
+
 ## search
 
 Searches of the OpenLibrary are not (yet) supported.

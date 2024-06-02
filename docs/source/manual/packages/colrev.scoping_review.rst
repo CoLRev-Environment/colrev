@@ -42,3 +42,5 @@ Software recommendations
 
 References
 ----------
+
+📝 Arksey, H., & O'malley, L. (2005). Scoping studies: towards a methodological framework. International journal of social research methodology, 8(1), 19-32.

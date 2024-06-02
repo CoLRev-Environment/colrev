@@ -2,7 +2,6 @@
 """CoLRev pdf_prep operation: Prepare PDF documents."""
 from __future__ import annotations
 
-import logging
 import multiprocessing as mp
 import os
 from multiprocessing.pool import ThreadPool as Pool
@@ -45,8 +44,6 @@ class PDFPrep(colrev.process.operation.Operation):
             operations_type=self.type,
             notify_state_transition_operation=notify_state_transition_operation,
         )
-
-        logging.getLogger("pdfminer").setLevel(logging.ERROR)
 
         self.reprocess = reprocess
 
@@ -409,9 +406,6 @@ class PDFPrep(colrev.process.operation.Operation):
         self.review_manager.logger.info(
             "See https://colrev.readthedocs.io/en/latest/manual/pdf_retrieval/pdf_prep.html"
         )
-
-        # temporary fix: remove all lines containing PDFType1Font from log.
-        # https://github.com/pdfminer/pdfminer.six/issues/282
 
         self.review_manager.logger.info(
             "INFO: This operation is computationally intensive and may take longer."

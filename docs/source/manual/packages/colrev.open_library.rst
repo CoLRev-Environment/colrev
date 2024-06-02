@@ -2,6 +2,17 @@
 OpenLibrary
 ===========
 
+.. list-table::
+   :header-rows: 1
+
+   * - SearchSource
+     - Scope
+     - Size
+   * - Open Library
+     - Curated metadata, books
+     - > 20,000,000
+
+
 search
 ------
 

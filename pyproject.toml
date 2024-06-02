@@ -61,6 +61,7 @@ pandasql = "^0.7.3"
 PyYAML = "^6.0.0"
 feedparser = "^6.0.10"       # internally?
 pybtex = "^0.24.0"           # internally?
+toml = "^0.10.2"
 requests = "<2.32.0"
 urllib3 = "<2.0" # https://github.com/google-deepmind/alphafold/issues/867
 requests-cache = "^0.9.6"
@@ -70,9 +71,7 @@ alphabet-detector = "^0.0.7"
 pycountry = "^22.3.5"
 nameparser = "^1.1.2"
 number-parser = "^0.3.2"
-pymupdf = "^1.22.0"
-"pdfminer.six" = "^20220524"
-PyPDF2 = "^1.28.6"
+pymupdf = "^1.24.3"
 pyalex = "^0.10"
 crossrefapi = "^1.5.0"
 semanticscholar = "^0.6.0"
@@ -94,12 +93,11 @@ requests-mock = {version = "^1.10.0", optional = true }
 coverage = {extras = ["toml"], version = "^7.3.2", optional = true }
 types-click = {version = "^7.1.8", optional = true }
 # Can't do 0.21 with poetry because of https://github.com/python-poetry/poetry/issues/9293
-docutils = "!=0.21.post1"
-toml = "^0.10.2"
+docutils = {version = "!=0.21.post1", optional = true }
 
 [tool.poetry.extras]
 web_ui = ["dash"]
-docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinxcontrib.datatemplates", "sphinx_collapse", "repoze-sphinx-autointerface", "sphinx-design"]
+docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinxcontrib.datatemplates", "sphinx_collapse", "repoze-sphinx-autointerface", "sphinx-design", "docutils"]
 dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock", "pytest-skip-slow"]
 
 [tool.mypy]

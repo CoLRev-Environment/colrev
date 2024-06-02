@@ -1,5 +1,9 @@
 # Crossref
 
+| SearchSource                                                             | Scope              | Size          |
+|--------------------------------------------------------------------------|--------------------|---------------|
+| [Crossref](https://www.crossref.org/) (metadata deposited by publishers) | Cross-disciplinary | > 125,000,000 |
+
 ## search
 
 ### API search
@@ -27,14 +31,16 @@ Note: This document is currently under development. It will contain the followin
 - description
 - example
 
+## Debugging
+
+To test the metadata provided for a particular `DOI` use:
+```
+https://api.crossref.org/works/DOI
+```
+
 ## Links
 
 - [Crossref](https://www.crossref.org/)
 - [License](https://www.crossref.org/documentation/retrieve-metadata/rest-api/rest-api-metadata-license-information/)
 - [Crossref types](https://api.crossref.org/types)
 - [Issue: AND Operators not yet supported](https://github.com/fabiobatalha/crossrefapi/issues/20)
-
-To test the metadata provided for a particular `DOI` use:
-```
-https://api.crossref.org/works/DOI
-```

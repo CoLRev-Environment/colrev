@@ -7,9 +7,9 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
+import pymupdf
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
-from PyPDF2 import PdfFileReader
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -117,12 +117,9 @@ class PDFCoverPage(JsonSchemaMixin):
     ) -> typing.List[int]:
         coverpages: typing.List[int] = []
 
-        try:
-            pdf_reader = PdfFileReader(str(record.data[Fields.FILE]), strict=False)
-        except ValueError:
-            return coverpages
+        doc = pymupdf.Document(str(record.data[Fields.FILE]))
 
-        if len(pdf_reader.pages) == 1:
+        if doc.page_count == 1:
             return coverpages
 
         first_page_average_hash_16 = record.get_pdf_hash(page_nr=1, hash_size=16)
@@ -145,10 +142,10 @@ class PDFCoverPage(JsonSchemaMixin):
         if str(first_page_average_hash_16) in first_page_hashes:
             coverpages.append(0)
 
-        res = pdf_reader.getPage(0).extract_text()
+        res = doc.load_page(0).get_text()
         page0 = res.replace(" ", "").replace("\n", "").lower()
 
-        res = pdf_reader.getPage(1).extract_text()
+        res = doc.load_page(1).get_text()
         page1 = res.replace(" ", "").replace("\n", "").lower()
 
         # input(page0)
@@ -182,7 +179,7 @@ class PDFCoverPage(JsonSchemaMixin):
         if coverpages:
             original = self.review_manager.path / Path(record.data[Fields.FILE])
             file_copy = self.review_manager.path / Path(
-                record.data[Fields.FILE].replace(".pdf", "_wo_cp.pdf")
+                record.data[Fields.FILE].replace(".pdf", "_with_cp.pdf")
             )
             shutil.copy(original, file_copy)
             record.extract_pages(

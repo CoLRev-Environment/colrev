@@ -15,7 +15,7 @@ Dedupe
 Prescreen
 Prescreen package endoints: colrev.scope_prescreen,colrev.colrev_cli_prescreen
 PDF get
- - pdf_path_type: PDFPathType.symlink - colrev.local_index,colrev.unpaywall,colrev.website_screenshot
+ - pdf_path_type: PDFPathType.symlink - colrev.local_index,colrev.unpaywall
 PDF prep
  - colrev.pdf_check_ocr,colrev.remove_coverpage,colrev.remove_last_page,colrev.validate_pdf_metadata,colrev.validate_completeness,colrev.create_tei
 Screen

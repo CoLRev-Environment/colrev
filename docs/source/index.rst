@@ -20,6 +20,9 @@ The following features stand out:
 
 A complete example run of CoLRev can be seen below:
 
+..
+   Note: the demo is not displayed locally due to cross-origin restrictions and different urls ("/en/latest/" is not needed locally)
+
 .. raw:: html
 
    <div id="demo"></div>
@@ -34,6 +37,7 @@ A complete example run of CoLRev can be seen below:
          theme: 'dracula',});
       };
    </script>
+
 
 Please consult the :doc:`statements of development status </dev_docs/dev_status>`. A brief overview presented at ESMARConf2023 is available on `YouTube <https://www.youtube.com/watch?v=yfGGraQC6vs>`_.
 
@@ -130,5 +134,4 @@ The manual is available under the `Creative Commons Attribution-NonCommercial-No
    :maxdepth: 1
 
    foundations/cep
-   foundations/credits
    foundations/about

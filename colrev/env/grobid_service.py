@@ -29,10 +29,8 @@ class GrobidService:
         colrev.env.docker_manager.DockerManager.build_docker_image(
             imagename=self.GROBID_IMAGE
         )
-        self.start()
+        self.start(environment_manager)
         self.check_grobid_availability()
-        if environment_manager:
-            environment_manager.register_ports(["8070", "8071"])
 
     def check_grobid_availability(self, *, wait: bool = True) -> bool:
         """Check whether the GROBID service is available"""
@@ -54,7 +52,12 @@ class GrobidService:
                 raise requests.exceptions.ConnectionError()
         return True
 
-    def start(self) -> None:
+    def start(
+        self,
+        environment_manager: typing.Optional[
+            colrev.env.environment_manager.EnvironmentManager
+        ] = None,
+    ) -> None:
         """Start the GROBID service"""
         # pylint: disable=consider-using-with
 
@@ -76,5 +79,7 @@ class GrobidService:
             ports={8070: 8070, 8071: 8071},
             detach=True,
         )
+        if environment_manager:
+            environment_manager.register_ports(["8070", "8071"])
 
         self.check_grobid_availability()
