@@ -1,0 +1,14 @@
+[project]
+name = "colrev.github"
+description = "CoLRev package for GitHub"
+version = "0.1.0"
+license = "MIT"
+authors = [
+    { name = "Philipp Kasimir ", email = "philipp-william.kasimir@stud.uni-bamberg.de" }
+]
+documentation = "README.md"
+colrev_doc_link = "README.md"
+
+[tool.colrev]
+dev_status = "experimental"
+search_source = "colrev.packages.github_search.src.github_search:GitHubSearchSource"
