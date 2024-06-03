@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import platform
+import shutil
 from importlib.metadata import version
 from pathlib import Path
 from subprocess import CalledProcessError  # nosec
@@ -14,6 +15,7 @@ from subprocess import DEVNULL  # nosec
 from subprocess import STDOUT  # nosec
 
 import git
+from git.exc import InvalidGitRepositoryError
 
 import colrev.env.docker_manager
 import colrev.env.environment_manager
@@ -78,6 +80,7 @@ class Initializer:
         if platform.system() != "Linux":
             self.no_docker = True
 
+        self._reset_if_existing_repo_with_single_commit()
         self._check_init_precondition()
         self.review_manager.logger.info("Create CoLRev repository")
         self._setup_git()
@@ -112,6 +115,21 @@ class Initializer:
             formatted_review_type = "colrev." + formatted_review_type
 
         return formatted_review_type
+
+    def _reset_if_existing_repo_with_single_commit(self) -> None:
+        try:
+            git_repo = git.Repo.init()
+            if len(list(git_repo.iter_commits())) == 1:
+                print("Detected existing repository")
+                if "y" != input("Reset existing repository? (y/n) "):
+                    raise colrev_exceptions.CoLRevException("Operation aborted.")
+                for root, dirs, files in os.walk(self.target_path):
+                    for file in files:
+                        os.remove(os.path.join(root, file))
+                    for directory in dirs:
+                        shutil.rmtree(os.path.join(root, directory))
+        except (InvalidGitRepositoryError, ValueError):
+            pass
 
     def _check_init_precondition(self) -> None:
         if self.force_mode:
