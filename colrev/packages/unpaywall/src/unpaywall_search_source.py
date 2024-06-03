@@ -6,10 +6,12 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
+import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
@@ -34,8 +36,48 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     # docs_link
 
     short_name = "Unpaywall"
-    # API_FIELDS
-    # FIELD_MAPPING
+
+    API_FIELDS = [
+        "best_oa_location",
+        "best_oa_location.evidence",
+        "best_oa_location.host_type",
+        "best_oa_location.is_best",
+        "best_oa_location.license",
+        "best_oa_location.oa_date",
+        "best_oa_location.pmh_id",
+        "best_oa_location.updated",
+        "best_oa_location.url",
+        "best_oa_location.url_for_landing_page",
+        "best_oa_location.url_for_pdf",
+        "best_oa_location.version",
+        "data_standard",
+        "doi",
+        "doi_url",
+        "genre",
+        "is_paratext",
+        "is_oa",
+        "journal_is_in_doaj",
+        "journal_is_oa",
+        "journal_issns",
+        "journal_issn_l",
+        "journal_name",
+        "oa_locations",
+        "oa_locations_embargoed",
+        "first_oa_location",
+        "oa_status",
+        "has_repository_copy",
+        "published_date",
+        "publisher",
+        "title",
+        "updated",
+        "year",
+        "z_authors",
+    ]
+
+    FIELD_MAPPING = {
+        "best_oa_location.url_for_pdf": Fields.FULLTEXT,
+        "journal_name": Fields.JOURNAL,
+    }
 
     def __init__(
         self,
@@ -112,8 +154,78 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         operation.add_source_and_search(search_source)
 
+    def _run_api_search(
+        self, *, unpaywall_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
+    ) -> None:
+        for record in self._get_query_records():
+            unpaywall_feed.add_update_record(record)
+
+        unpaywall_feed.save()
+
+    def _get_query_records(self) -> typing.Iterator[colrev.record.record.Record]:
+        """Get the records from a query"""
+        full_url = self._build_search_url()
+        response = requests.get(full_url, timeout=90)
+        if response.status_code != 200:
+            return
+        with open("test.json", "wb") as file:
+            file.write(response.content)
+        data = response.json()
+
+        if "response" not in data["results"]:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "Could not reach API. Status Code: " + response.status_code
+            )
+
+        for article in data["results"]["response"]:
+            record = self._create_record(article)
+            yield record
+
+    def _create_record(self, article: dict) -> colrev.record.record.Record:
+        record_dict = {Fields.ID: article["doi"]}
+
+        for field in self.API_FIELDS:
+            if article.get(field) is None:
+                continue
+            record_dict[field] = str(article.get(field))
+
+        for api_field, rec_field in self.FIELD_MAPPING.items():
+            if api_field not in record_dict:
+                continue
+            record_dict[rec_field] = record_dict.pop(api_field)
+
+        self._update_special_case_fields(record_dict=record_dict, article=article)
+
+        record = colrev.record.record.Record(record_dict)
+        return record
+
+    def _build_search_url(self) -> str:
+        url = "https://https://api.unpaywall.org/v2/search?"
+        params = self.search_source.search_parameters
+        for key in params.keys():
+            if key == "query":
+                url += "query=" + str(params["query"])
+            elif key == "is_oa":
+                url += "is_oa=" + str(params["is_oa"])
+            elif key == "email":
+                url += "email=" + str(params["email"])
+            elif key == "page":
+                url += "page=" + str(params["page"])
+        return url
+
     def search(self, rerun: bool) -> None:
         """Run a search of Unpaywall"""
+
+        unpaywall_feed = self.search_source.get_api_feed(
+            review_manager=self.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=(not rerun),
+        )
+
+        if self.search_source.search_type == SearchType.API:
+            self._run_api_search(unpaywall_feed=unpaywall_feed, rerun=rerun)
+        else:
+            raise NotImplementedError
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
