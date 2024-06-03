@@ -15,6 +15,7 @@ from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import FieldSet
+from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.constants import SearchType
@@ -46,7 +47,8 @@ class Load(colrev.process.operation.Operation):
         if not hide_load_explanation:
             self.review_manager.logger.info("Load")
             self.review_manager.logger.info(
-                "Load converts search results and adds them to the shared data/records.bib."
+                "Load converts search results and adds them to the shared "
+                f"{Filepaths.RECORDS_FILE}."
             )
             self.review_manager.logger.info(
                 "Original records (search results) are stored in the directory data/search"
