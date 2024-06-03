@@ -71,7 +71,7 @@ class CLISourceAdder:
         )
 
         params = {"search_file": filename}
-        source = endpoint.add_endpoint(  # type: ignore
+        source = endpoint.add_endpoint(
             operation=self.search_operation,
             params=params,
         )
