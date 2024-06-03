@@ -6,11 +6,11 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
+import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.ops
 import colrev.ops.screen
 import colrev.ops.search_api_feed
 import colrev.package_manager.interfaces
@@ -28,7 +28,8 @@ from colrev.constants import SearchType
 @dataclass
 class UnpaywallSearchSource(JsonSchemaMixin):
     """Unpaywall Search Source"""
-#achtung hier habe ich von DefaultSettings zu DefaultSourceSettings geändert,da ich Fehler wie "DefaultSettings has no atrribute get_api_feed"
+
+    # achtung hier habe ich von DefaultSettings zu DefaultSourceSettings geändert,da ich Fehler wie "DefaultSettings has no atrribute get_api_feed"
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     # TODO ABSPRECHEN ENTKOMMENTIERT!
     source_identifier = "ID"
@@ -78,14 +79,34 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         """Not implemented"""
 
-#hilfsmethode um suche zu starten -> getapi bekommt man SearchAPIFeed object deswegen kann ich auch mit .save etc. arbeiten
+    # hilfsmethode um suche zu starten -> getapi bekommt man SearchAPIFeed object deswegen kann ich auch mit .save etc. arbeiten
     def _start_api_search(
-            self,*, unpaywall_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
+        self, *, unpaywall_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
-        for record in self.query_return():
+        for record in self.get_query_record():
             unpaywall_feed.add_update_record(record)
-        
+
         unpaywall_feed.save()
+
+    def _build_url(self) -> str:
+        """Building of search_url"""
+        url = "https://api.unpaywall.org/v2/"
+        params = self.search_source.search_parameters
+        query = params["query"]
+        is_oa = params["is_oa"]
+        email = self.email
+        return f"{url}?search={query}&is_oa={is_oa}&email={email}"
+
+    # hierrüber bekommt man die records von der abfrage über die itteriert wird
+
+    def get_query_record(self) -> typing.Iterator[colrev.record.record.Record]:
+        """Gets Records to save in API feed"""
+        search_url = self._build_url()
+
+        response = requests.get(search_url, timeout=60)
+        if response.status_code != 200:
+            return
+        # TODO: weitere verarbeitung impelemtieren -> warten auf fertigstellung von _build_url
 
     def search(self, rerun: bool) -> None:
         """Run a search of Unpaywall"""
