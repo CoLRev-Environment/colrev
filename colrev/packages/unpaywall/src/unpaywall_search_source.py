@@ -74,20 +74,19 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         """Typically called for automated searches when running “colrev search -a SOURCE_NAME” to add search and query."""
         """Not implemented"""
 
-        if len(params) == 0: #if no specific search sourch is given
+        if len(params) == 0: #if no specific search source is given
             add_source = operation.add_api_source(search_source_cls=cls, params=params)
             return add_source
 
         # TODO: delete one of the following "url", depending on the occurrence
         if "URL" in params["url"] or "url" in params["url"]: # api.unpaywall.org/my/request?email=YOUR_EMAIL or [...].org/v2/search?query=:your_query[&is_oa=boolean][&page=integer]
-
             query = params["query"]
             is_oa = params.get("is_oa", [""])[0]
             page = params.get("page", [""])[0] # TODO: how to handle E-Mail?
             # email = params.get("email", None)
 
             if query: # checks if a search query is given
-            # creates a SearchSource instance for Unpaywall search
+                # creates a SearchSource instance for Unpaywall search
                 add_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
                     filename="",  # TODO: edit filename
@@ -95,7 +94,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                     search_parameters={"query": query, "is_oa": is_oa, "page": page},
                     comment="Searching Unpaywall API based on query parameters.",
                 )
-            return add_source
+                return add_source
             
         raise colrev_exceptions.PackageParameterError(
             f"Cannot add UNPAYWALL endpoint with query {params}"
