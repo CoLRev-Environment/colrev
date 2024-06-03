@@ -80,7 +80,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             if params.startswith("http"):
                 params_dict = {Fields.URL: params}
             else:
-                for item in params.split(";"):
+                for item in params.split("&"): # TODO: figure out what happens, when 
                     key, value = item.split("=")
                     params_dict[key] = value
         
@@ -89,7 +89,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         )
 
         if search_type == SearchType.API:
-            if len(params) == 0: #if no specific search source is given
+            if len(params) == 0: 
                 add_source = operation.add_api_source(search_source_cls=cls, params=params)
                 return add_source
 
@@ -100,7 +100,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                 search_query = new_query.get("query", [""])[0]   
                 is_oa = new_query.get("is_oa", [""])[0] 
                 page = new_query.get("page", [""])[0] 
-                # email = new_query.get("email", ["fillermail@filler.net"])[0] # TODO: how to handle E-Mail?
+                # email = new_query.get("email", ["fillermail@thathastobechangedordeleted.net"])[0] # TODO: how to handle E-Mail? Save it? (I guess not, because it is not needed for the search itself)
 
                 filename = operation.get_unique_filename(file_path_string=f"unpaywall_{search_query}")
                 search_source = colrev.settings.SearchSource(
