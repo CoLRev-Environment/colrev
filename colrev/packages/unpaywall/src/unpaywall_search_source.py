@@ -80,7 +80,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             if params.startswith("http"):
                 params_dict = {Fields.URL: params}
             else:
-                for item in params.split("&"): # TODO: figure out what happens, when 
+                for item in params.split("&"): # TODO figurte our what happens with the first part 	https://api.unpaywall.org/v2/search? 
                     key, value = item.split("=")
                     params_dict[key] = value
         
@@ -95,7 +95,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
             # TODO: delete one of the following "url", depending on the occurrence
             elif "https://api.unpaywall.org/v2/request?" or "https://api.unpaywall.org/v2/search?" in params_dict["url"]: # api.unpaywall.org/my/request?email=YOUR_EMAIL or [...].org/v2/search?query=:your_query[&is_oa=boolean][&page=integer]
-                url_parsed = urllib.parse.urlparse(params_dict["url"])
+                url_parsed = urllib.parse.urlparse(params_dict["url"])  
                 new_query = urllib.parse.parse_qs(url_parsed.query)
                 search_query = new_query.get("query", [""])[0]   
                 is_oa = new_query.get("is_oa", [""])[0] 
