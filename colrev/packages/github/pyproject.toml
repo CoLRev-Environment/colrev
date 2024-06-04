@@ -13,4 +13,4 @@ colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "experimental"
-search_source = "colrev.packages.github_search.src.github_search:GitHubSearchSource"
+search_source = "colrev.packages.github.src.github:GitHubSearchSource"
