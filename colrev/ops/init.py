@@ -240,7 +240,7 @@ class Initializer:
             settings = json.loads(settings_filedata.decode("utf-8"))
             settings["project"]["review_type"] = str(self.review_type)
             with open(
-                self.target_path / Path("settings.json"), "w", encoding="utf8"
+                self.target_path / Filepaths.SETTINGS_FILE, "w", encoding="utf8"
             ) as file:
                 json.dump(settings, file, indent=4)
 
@@ -254,7 +254,7 @@ class Initializer:
             [Path("ops/init/readme.md"), Path("readme.md")],
             [
                 Path("ops/init/pre-commit-config.yaml"),
-                Path(".pre-commit-config.yaml"),
+                Filepaths.PRE_COMMIT_CONFIG,
             ],
             [Path("ops/init/markdownlint.yaml"), Path(".markdownlint.yaml")],
             [
@@ -295,8 +295,8 @@ class Initializer:
         settings.project.title = self.title
         self.review_type = settings.project.review_type
 
-        # Principle: adapt values provided by the default settings.json
-        # instead of creating a new settings.json
+        # Principle: adapt values provided by the default SETTINGS_FILE
+        # instead of creating a new SETTINGS_FILE
         package_manager = self.review_manager.get_package_manager()
         review_type_class = package_manager.get_package_endpoint_class(
             package_type=EndpointType.review_type,
@@ -374,7 +374,7 @@ class Initializer:
                 data_package_endpoint["endpoint"].replace("colrev.", ""),
             )
 
-        with open("data/records.bib", mode="w", encoding="utf-8") as file:
+        with open(Filepaths.RECORDS_FILE, mode="w", encoding="utf-8") as file:
             file.write("\n")
 
         self._fix_pre_commit_hooks_windows()
@@ -452,7 +452,7 @@ class Initializer:
         git_repo = self.review_manager.dataset.get_repo()
         git_repo.index.add(["data/search/30_example_records.bib"])
 
-        with open("settings.json", encoding="utf-8") as file:
+        with open(Filepaths.SETTINGS_FILE, encoding="utf-8") as file:
             settings = json.load(file)
 
         settings["dedupe"]["dedupe_package_endpoints"] = [{"endpoint": "colrev.dedupe"}]
@@ -468,9 +468,9 @@ class Initializer:
             }
         ]
 
-        with open("settings.json", "w", encoding="utf-8") as outfile:
+        with open(Filepaths.SETTINGS_FILE, "w", encoding="utf-8") as outfile:
             json.dump(settings, outfile, indent=4)
-        git_repo.index.add(["settings.json"])
+        git_repo.index.add([Filepaths.SETTINGS_FILE])
 
     def _create_local_pdf_collection(self) -> None:
         self.review_manager.report_logger.handlers = []
