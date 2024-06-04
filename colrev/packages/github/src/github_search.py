@@ -71,9 +71,17 @@ class GitHubSearchSource(JsonSchemaMixin):
     
     
     def search(self,  rerun: bool) -> None:
+        """Run a search of GitHub"""
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
-
+        """Load the records from the SearchSource file"""
+        return 
 
     def prepare(self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.record.Record:
+        """Source-specific preparation for GitHub"""
+
+
+#   If __name__ = "main"
+# Instance = github_search()
+# Instance.search()
