@@ -338,7 +338,6 @@ class SQLiteIndexTOC(SQLiteIndex):
             results = cur.fetchall()
 
         except sqlite3.OperationalError as exc:  # pragma: no cover
-            print(exc)
             raise colrev_exceptions.RecordNotInIndexException() from exc
         except AttributeError as exc:
             raise colrev_exceptions.RecordNotInIndexException() from exc

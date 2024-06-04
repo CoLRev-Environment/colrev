@@ -27,4 +27,7 @@ colrev.writer
    :recursive:
 
    colrev.writer.bib
+   colrev.writer.csv
+   colrev.writer.excel
+   colrev.writer.ris
    colrev.writer.write_utils

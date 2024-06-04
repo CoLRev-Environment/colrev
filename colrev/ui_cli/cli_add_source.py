@@ -2,6 +2,7 @@
 """Scripts for the load process."""
 from __future__ import annotations
 
+import typing
 from pathlib import Path
 
 import inquirer
@@ -26,7 +27,6 @@ class CLISourceAdder:
         *,
         source_candidates: list,
     ) -> dict:
-
         choices = [
             (
                 f"{heuristic_source['source_candidate'].endpoint} "
@@ -47,12 +47,18 @@ class CLISourceAdder:
 
     def _select_source_from_heuristics(
         self, *, filename: Path, source_candidates: list
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         if 1 == len(source_candidates):
             heuristic_source_dict = source_candidates[0]
+            self.search_operation.review_manager.logger.info(
+                f"Automatically selected {heuristic_source_dict['source_candidate'].endpoint}"
+            )
         else:
             heuristic_source_dict = self._select_source(
                 source_candidates=source_candidates
+            )
+            self.search_operation.review_manager.logger.info(
+                f"Selected {heuristic_source_dict['source_candidate'].endpoint}"
             )
 
         search_source_class = self.package_manager.get_package_endpoint_class(
@@ -69,16 +75,22 @@ class CLISourceAdder:
             operation=self.search_operation,
             params=params,
         )
-        self.search_operation.review_manager.settings.sources.append(source)
-        self.review_manager.save_settings()
-        self.review_manager.dataset.add_changes(filename)
+        return source
 
-    def add_new_sources(self) -> None:
+    def add_new_sources(self) -> typing.List[colrev.settings.SearchSource]:
         """Select the new source from the heuristic_result_list."""
 
-        heuristic_list = self.search_operation.get_new_sources_heuristic_list()
-        for filename, source_candidates in heuristic_list.items():
-            self._select_source_from_heuristics(
-                filename=filename, source_candidates=source_candidates
+        new_search_files = self.search_operation.get_new_search_files()
+        sources_added = []
+
+        for filename in new_search_files:
+            self.search_operation.review_manager.logger.info(
+                f"Discover and add new DB source: {filename}"
             )
-        self.search_operation.review_manager.save_settings()
+            heuristic_list = self.search_operation.get_new_source_heuristic(filename)
+            for source_candidates in heuristic_list:
+                source = self._select_source_from_heuristics(
+                    filename=filename, source_candidates=source_candidates
+                )
+                sources_added.append(source)
+        return sources_added

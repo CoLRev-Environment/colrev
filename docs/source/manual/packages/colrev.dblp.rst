@@ -2,6 +2,17 @@
 DBLP
 ====
 
+.. list-table::
+   :header-rows: 1
+
+   * - SearchSource
+     - Scope
+     - Size
+   * - `dblp <https://dblp.org/>`_ (curated metadata)
+     - Compter science, Information Technology
+     - > 5,750,000
+
+
 search
 ------
 
@@ -12,7 +23,7 @@ Run a search on dblp.org and paste the url in the following command:
 
 .. code-block::
 
-   colrev search -a colrev.dblp -p "https://dblp.org/search?q=microsourcing"
+   colrev search --add colrev.dblp -p "https://dblp.org/search?q=microsourcing"
 
 TOC search
 ^^^^^^^^^^

@@ -5,7 +5,7 @@
 ### DB search
 
 ```
-colrev search -a abi_inform_proquest
+colrev search --add abi_inform_proquest
 ```
 
 ### API search

@@ -16,7 +16,7 @@ To create a new masterdata curation, run
 ```
 colrev init --type colrev.curated_masterdata
 # add crossref
-colrev search -a "crossref:jissn=123456"
+colrev search --add "crossref:jissn=123456"
 # add further sources (like DBLP)
 
 ```

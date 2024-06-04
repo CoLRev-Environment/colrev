@@ -648,7 +648,7 @@
             "package_endpoint_identifier": "colrev.bibliography_export",
             "status": "|EXPERIMENTAL|",
             "short_description": "Export the sample references in Endpoint format (:doc:`instructions </manual/packages/colrev.bibliography_export>`)",
-            "ci_supported": false
+            "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.colrev_curation",

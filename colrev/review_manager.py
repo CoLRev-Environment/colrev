@@ -627,6 +627,5 @@ class ReviewManager:
             "CIRCLECI",
             "TRAVIS",
             "GITLAB_CI",
-            "CODESPACES",
         ]
         return any("true" == os.getenv(x) for x in identifier_list)

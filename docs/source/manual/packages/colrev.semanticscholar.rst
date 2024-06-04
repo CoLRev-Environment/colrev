@@ -2,6 +2,17 @@
 Semantic Scholar
 ================
 
+.. list-table::
+   :header-rows: 1
+
+   * - SearchSource
+     - Scope
+     - Size
+   * - Semantic Scholar
+     - Cross-disciplinary
+     - > 175,000,000
+
+
 This class supports the search function for Semantic Scholar via an unofficial python client (link below).
 
 search
@@ -16,7 +27,7 @@ The API search is launched with the following command:
 
 .. code-block::
 
-   colrev search -a colrev.semanticscholar
+   colrev search --add colrev.semanticscholar
 
 Upon entering the command above with no additional parameters, a console interface opens up, in which the user is asked to enter the parameters and query for their search.
 

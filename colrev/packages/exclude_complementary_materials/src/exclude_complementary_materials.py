@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import zope.interface
-from alphabet_detector import AlphabetDetector
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.package_manager.interfaces
@@ -31,7 +30,6 @@ class ExcludeComplementaryMaterialsPrep(JsonSchemaMixin):
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
-    alphabet_detector = AlphabetDetector()
 
     def __init__(
         self,

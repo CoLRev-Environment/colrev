@@ -5,7 +5,7 @@
 ### API search
 
 ```
-colrev search -a colrev.open_alex -p "..."
+colrev search --add colrev.open_alex -p "..."
 ```
 
 

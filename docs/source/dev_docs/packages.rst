@@ -4,7 +4,7 @@ Package development
 CoLRev packages are Python packages that extend CoLRev by relying on its shared data structure, standard process, and common interfaces.
 Packages can support specific endpoints (e.g., `search_source`, `prescreen`, `pdf-get`) or provide complementary functionalities (e.g., for ad-hoc data exploration and visualization).
 
-The following guide explains how to develop built-in packages, i.e., packages that reside in the `packages` directory.
+The following guide explains how to develop built-in packages, i.e., packages that reside in the `packages <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages>`_ directory.
 
 ..
     CoLRev comes with batteries included, i.e., a reference implementation for all steps of the process. At the same time you can easily include other packages or custom scripts (batteries are swappable). Everything is specified in the settings.json (simply add the package/script name as the endpoint in the ``settings.json`` of the project):
@@ -84,17 +84,18 @@ The package metadata is stored in the ``pyproject.toml`` file. The metadata is u
 
    ::
 
-    [project]
+    [tool.poetry]
     name = "colrev.abi_inform_proquest"
     description = "CoLRev package for abi_inform_proquest"
     version = "0.1.0"
-    authors = [
-        { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
-    ]
-    documentation = "README.md"
-    colrev_doc_link = "README.md"
+    authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
+    license = "MIT"
+    documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/sync/README.md"
+
 
     [tool.colrev]
+    documentation = "README.md"
+    colrev_doc_link = "README.md"
     dev_status = "maturing"
     search_source = "colrev.packages.abi_inform_proquest.src.package_functionality:ABIInformProQuestSearchSource"
 
@@ -173,6 +174,7 @@ Best practices
 * Before committing do a pre-commit test
 * Use poetry for dependency management (run `poetry add <package_name>` to add a new dependency)
 * Once the package development is completed, make a PR to the CoLRev, with brief description of the package.
+* The ``add_endpoint`` is only required for SearchSources. It is optional for other endpoint types.
 
 Package development resources
 ------------------------------

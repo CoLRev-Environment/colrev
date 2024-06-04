@@ -70,21 +70,15 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
-    ) -> colrev.settings.SearchSource:
+        params: str,
+    ) -> None:
         """Add SearchSource as an endpoint"""
 
-        search_type = operation.select_search_type(
-            search_types=cls.search_types, params=params
+        search_source = operation.add_db_source(
+            search_source_cls=cls,
+            params={},
         )
-
-        if search_type == SearchType.DB:
-            return operation.add_db_source(
-                search_source_cls=cls,
-                params=params,
-            )
-
-        raise NotImplementedError
+        operation.add_source_and_search(search_source)
 
     def search(self, rerun: bool) -> None:
         """Run a search of ABI/INFORM"""

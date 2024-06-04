@@ -464,6 +464,9 @@ class Load(colrev.process.operation.Operation):
                 self.load_source_records(source, keep_ids=keep_ids)
                 self._create_load_commit(source)
 
+            except FileNotFoundError:
+                self.review_manager.logger.info(" Nothing to load")
+                print()
             except colrev_exceptions.ImportException as exc:
                 print(exc)
 

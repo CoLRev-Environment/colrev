@@ -8,10 +8,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
+import pymupdf
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
-from PyPDF2 import PdfFileReader
-from PyPDF2 import PdfFileWriter
 
 import colrev.env.utils
 import colrev.package_manager.interfaces
@@ -113,12 +112,11 @@ class ExportManPrep(JsonSchemaMixin):
                         pass
 
                 if self.settings.pdf_handling_mode == "copy_first_page":
-                    pdf_reader = PdfFileReader(str(record[Fields.FILE]), strict=False)
-                    if len(pdf_reader.pages) >= 1:
-                        writer = PdfFileWriter()
-                        writer.addPage(pdf_reader.pages[0])
-                        with open(target_path, "wb") as outfile:
-                            writer.write(outfile)
+                    doc1 = pymupdf.Document(str(record[Fields.FILE]))
+                    if doc1.page_count > 0:
+                        doc2 = pymupdf.Document()
+                        doc2.insert_pdf(doc1, to_page=0)
+                        doc2.save(str(target_path))
 
     def _export_prep_man(
         self,

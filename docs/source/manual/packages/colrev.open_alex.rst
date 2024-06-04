@@ -10,7 +10,7 @@ API search
 
 .. code-block::
 
-   colrev search -a colrev.open_alex -p "..."
+   colrev search --add colrev.open_alex -p "..."
 
 prep
 ----

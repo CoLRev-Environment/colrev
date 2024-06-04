@@ -70,8 +70,8 @@ class SearchSourceInterface(
     # pylint: disable=no-self-argument
     def add_endpoint(  # type: ignore
         operation: colrev.process.operation.Operation,
-        params: dict,
-    ) -> colrev.settings.SearchSource:
+        params: str,
+    ) -> None:
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)
         params:
         - search_file="..." to add a DB search

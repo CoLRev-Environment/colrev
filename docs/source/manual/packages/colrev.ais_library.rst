@@ -14,7 +14,7 @@ Download the search results (advanced search, format:Bibliography Export, click 
 
 .. code-block::
 
-   colrev search -a colrev.ais_library
+   colrev search --add colrev.ais_library
 
 API search
 ^^^^^^^^^^
@@ -23,7 +23,7 @@ Copy the search link and add an API search (replacing the link):
 
 .. code-block::
 
-   colrev search -a colrev.ais_library -p "https://aisel.aisnet.org/do/search/?q=microsourcing&start=0&context=509156&facet="
+   colrev search --add colrev.ais_library -p "https://aisel.aisnet.org/do/search/?q=microsourcing&start=0&context=509156&facet="
 
 Note: Complex queries can be entered in the basic search field. Example:
 

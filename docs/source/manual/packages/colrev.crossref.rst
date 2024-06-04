@@ -2,6 +2,17 @@
 Crossref
 ========
 
+.. list-table::
+   :header-rows: 1
+
+   * - SearchSource
+     - Scope
+     - Size
+   * - `Crossref <https://www.crossref.org/>`_ (metadata deposited by publishers)
+     - Cross-disciplinary
+     - > 125,000,000
+
+
 search
 ------
 
@@ -12,8 +23,18 @@ It is possible to copy the url from the `search.crossref.org <https://search.cro
 
 .. code-block::
 
-   colrev search -a colrev.crossref -p "query=microsourcing;years=2000-2010"
-   colrev search -a colrev.crossref -p "https://search.crossref.org/?q=+microsourcing&from_ui=yes"
+   colrev search --add colrev.crossref -p "query=microsourcing"
+   colrev search --add colrev.crossref -p "https://search.crossref.org/?q=+microsourcing&from_ui=yes"
+
+
+.. raw:: html
+
+   <!--
+   TODO:
+   colrev search --add colrev.crossref -p "query=microsourcing;years=2000-2010"
+   -->
+
+
 
 TOC search
 ^^^^^^^^^^
@@ -22,7 +43,7 @@ Whole journals can be added based on their issn:
 
 .. code-block::
 
-   colrev search -a colrev.crossref -p "issn=1234-5678"
+   colrev search --add colrev.crossref -p "issn=2162-9730"
 
 prep
 ----
@@ -35,6 +56,15 @@ Note: This document is currently under development. It will contain the followin
 * description
 * example
 
+Debugging
+---------
+
+To test the metadata provided for a particular ``DOI`` use:
+
+.. code-block::
+
+   https://api.crossref.org/works/DOI
+
 Links
 -----
 
@@ -43,9 +73,3 @@ Links
 * `License <https://www.crossref.org/documentation/retrieve-metadata/rest-api/rest-api-metadata-license-information/>`_
 * `Crossref types <https://api.crossref.org/types>`_
 * `Issue: AND Operators not yet supported <https://github.com/fabiobatalha/crossrefapi/issues/20>`_
-
-To test the metadata provided for a particular ``DOI`` use:
-
-.. code-block::
-
-   https://api.crossref.org/works/DOI

@@ -1,11 +1,15 @@
 # Europe PMC
 
+| SearchSource                         | Scope                                     | Size         |
+|--------------------------------------|-------------------------------------------|--------------|
+| [Europe PMC](https://europepmc.org/) | Including PubMed Central (PMC) (metadata) | > 40,000,000 |
+
 ## search
 
 ### API search
 
 ```
-colrev search -a colrev.europe_pmc -p "https://europepmc.org/search?query=fitbit%20AND%20gamification%20AND%20RCT%20AND%20diabetes%20mellitus"
+colrev search --add colrev.europe_pmc -p "https://europepmc.org/search?query=fitbit%20AND%20gamification%20AND%20RCT%20AND%20diabetes%20mellitus"
 ```
 ## prep
 

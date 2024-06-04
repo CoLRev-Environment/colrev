@@ -31,7 +31,6 @@ import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
-from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
@@ -241,11 +240,11 @@ def exit(
 @main.command(help_priority=1)
 @click.option(
     "--type",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.review_type,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.review_type,
+    #     )
+    # ),
     default="colrev.literature_review",
     help="Review type for the setup.",
 )
@@ -444,11 +443,11 @@ def retrieve(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.search_source,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.search_source,
+    #     )
+    # ),
     help="""Search source to be added.""",
 )
 @click.option(
@@ -540,22 +539,23 @@ def search(
         import colrev.ui_cli.add_package_to_settings
 
         package_manager = review_manager.get_package_manager()
-        source_dict = colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+        colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             package_manager,
             operation=search_operation,
             package_identifier=add,
             params=params,
         )
-        search_operation.main(selection_str=str(source_dict["filename"]), rerun=False)
         return
 
-    if not skip:
-        import colrev.ui_cli.cli_add_source
-
-        cli_source_adder = colrev.ui_cli.cli_add_source.CLISourceAdder(
-            search_operation=search_operation
+    if skip:
+        existing_sources = ",".join(
+            str(
+                source.filename
+                for source in search_operation.review_manager.settings.sources
+            )
         )
-        cli_source_adder.add_new_sources()
+        search_operation.main(selection_str=existing_sources, rerun=rerun)
+        return
 
     if setup_custom_script:
         import colrev.ui_cli.setup_custom_scripts
@@ -572,6 +572,24 @@ def search(
             search_operation=search_operation, bws=bws
         )
         return
+
+    import colrev.ui_cli.cli_add_source
+
+    cli_source_adder = colrev.ui_cli.cli_add_source.CLISourceAdder(
+        search_operation=search_operation
+    )
+    sources_added = cli_source_adder.add_new_sources()
+    if sources_added:
+        if selected is None:
+            selected = ",".join(
+                [
+                    str(source.filename)
+                    for source in search_operation.review_manager.settings.sources
+                    if source.filename not in [x.filename for x in sources_added]
+                ]
+            )
+        else:
+            input(selected)  # notify /handle pre-selected when adding new
 
     search_operation.main(selection_str=selected, rerun=rerun)
 
@@ -634,11 +652,11 @@ def load(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.prep,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.prep,
+    #     )
+    # ),
     help="""Prep package to be added.""",
 )
 @click.option(
@@ -758,11 +776,11 @@ def prep(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.prep_man,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.prep_man,
+    #     )
+    # ),
     help="""Prep-man script  to be added.""",
 )
 @click.option(
@@ -853,12 +871,12 @@ def _view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.dedupe,
-        ),
-        case_sensitive=False,
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.dedupe,
+    #     ),
+    #     case_sensitive=False,
+    # ),
     help="""Dedupe package to be added.""",
 )
 @click.option(
@@ -1006,11 +1024,11 @@ def dedupe(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.prescreen,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.prescreen,
+    #     )
+    # ),
     help="""Prescreen package to be added.""",
 )
 @click.option(
@@ -1168,11 +1186,11 @@ def prescreen(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.screen,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.screen,
+    #     )
+    # ),
     help="""Screen package to be added.""",
 )
 @click.option(
@@ -1219,6 +1237,13 @@ def prescreen(
     help="Screen a split sample",
 )
 @click.option(
+    "-abstracts",
+    "--add_abstracts_from_tei",
+    is_flag=True,
+    default=False,
+    help="Add abstracts from TEI files",
+)
+@click.option(
     "-scs",
     "--setup_custom_script",
     is_flag=True,
@@ -1251,6 +1276,7 @@ def screen(
     delete_criterion: str,
     create_split: int,
     split: str,
+    add_abstracts_from_tei: bool,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
@@ -1264,6 +1290,9 @@ def screen(
         ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
     )
     screen_operation = review_manager.get_screen_operation()
+
+    if add_abstracts_from_tei:
+        screen_operation.add_abstracts_from_tei()
 
     if add:
         package_manager = review_manager.get_package_manager()
@@ -1431,21 +1460,16 @@ def pdfs(
     )
     pdf_get_operation.main()
 
-    print()
-
-    pdf_prep_operation = review_manager.get_pdf_prep_operation()
-    pdf_prep_operation.main()
-
 
 @main.command(help_priority=12)
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.pdf_get,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.pdf_get,
+    #     )
+    # ),
     help="""PDF-get package to be added.""",
 )
 @click.option(
@@ -1557,11 +1581,11 @@ def pdf_get(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.pdf_get_man,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.pdf_get_man,
+    #     )
+    # ),
     help="""PDF-get-man package to be added.""",
 )
 @click.option(
@@ -1674,14 +1698,12 @@ def pdf_get_man(
 
 
 def _print_pdf_hashes(*, pdf_path: Path) -> None:
-    from PyPDF2 import PdfFileReader
-    import colrev.record.record_pdf
 
-    try:
-        pdf_reader = PdfFileReader(str(pdf_path), strict=False)
-    except ValueError:
-        print("Could not read PDF")
-        return
+    import colrev.record.record_pdf
+    import pymupdf
+
+    doc = pymupdf.Document(pdf_path)
+    last_page_nr = doc.page_count
 
     assert Path(pdf_path).suffix == ".pdf"
     record = colrev.record.record_pdf.PDFRecord({"file": pdf_path})
@@ -1690,7 +1712,6 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
     first_page_average_hash_32 = record.get_pdf_hash(page_nr=1, hash_size=32)
     print(f"first page: {first_page_average_hash_32}")
 
-    last_page_nr = len(pdf_reader.pages)
     last_page_average_hash_16 = record.get_pdf_hash(page_nr=last_page_nr, hash_size=16)
     print(f"last page: {last_page_average_hash_16}")
     last_page_average_hash_32 = record.get_pdf_hash(page_nr=last_page_nr, hash_size=32)
@@ -1701,11 +1722,11 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.pdf_prep,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.pdf_prep,
+    #     )
+    # ),
     help="""PDF-prep package to be added.""",
 )
 @click.option(
@@ -1842,11 +1863,11 @@ def _delete_first_pages_cli(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.pdf_prep_man,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.pdf_prep_man,
+    #     )
+    # ),
     help="""PDF-prep-man package to be added.""",
 )
 @click.option(
@@ -1959,11 +1980,11 @@ def pdf_prep_man(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=EndpointType.data,
-        )
-    ),
+    # type=click.Choice(
+    #     package_manager.discover_packages(
+    #         package_type=EndpointType.data,
+    #     )
+    # ),
     help="Data package to be added.",
 )
 @click.option(

@@ -87,26 +87,37 @@ class Search(colrev.process.operation.Operation):
         if not all(x in ["search_file"] for x in list(params)):
             raise NotImplementedError  # or parameter error
 
-        print("DB search mode")
         if "search_file" in params:
             filename = params["search_file"]
-            query_file = self.get_query_filename(filename=filename, instantiate=True)
         else:
             filename = self.get_unique_filename(
                 file_path_string=search_source_cls.endpoint.replace("colrev.", "")
             )
-            print(f"- Go to {Colors.ORANGE}{search_source_cls.db_url}{Colors.END}")
+        self.review_manager.logger.debug(f"Add new DB source: {filename}")
+
+        query_file = self.get_query_filename(filename=filename, instantiate=True)
+        self.review_manager.logger.info(f"Created query-file: {query_file}")
+        input(
+            f"{Colors.ORANGE}Store query in query-file and press Enter to continue{Colors.END}"
+        )
+
+        if not filename.is_file():
+            self.review_manager.logger.info(
+                f"- Go to {Colors.ORANGE}{search_source_cls.db_url}{Colors.END}"
+            )
             query_file = self.get_query_filename(
                 filename=filename, instantiate=True, interactive=False
             )
-            print(
+            self.review_manager.logger.info(
                 f"- Search for your query and store it in {Colors.ORANGE}{query_file}{Colors.END}"
             )
-            print(f"- Save search results in {Colors.ORANGE}{filename}{Colors.END}")
+            self.review_manager.logger.info(
+                f"- Save search results in {Colors.ORANGE}{filename}{Colors.END}"
+            )
             input("Press Enter to complete")
-            self.review_manager.dataset.add_changes(filename)
 
-        query_file = self.get_query_filename(filename=filename, instantiate=True)
+        self.review_manager.dataset.add_changes(filename, ignore_missing=True)
+        self.review_manager.dataset.add_changes(query_file)
 
         add_source = colrev.settings.SearchSource(
             endpoint=search_source_cls.endpoint,
@@ -115,6 +126,12 @@ class Search(colrev.process.operation.Operation):
             search_parameters={"query_file": str(query_file)},
             comment="",
         )
+        self.review_manager.settings.sources.append(add_source)
+        self.review_manager.save_settings()
+        self.review_manager.dataset.create_commit(
+            msg=f"Add search {search_source_cls.endpoint}"
+        )
+        print()
         return add_source
 
     def add_api_source(self, *, endpoint: str) -> colrev.settings.SearchSource:
@@ -256,7 +273,7 @@ class Search(colrev.process.operation.Operation):
 
         return check_accepts
 
-    def _get_new_search_files(self) -> list[Path]:
+    def get_new_search_files(self) -> list[Path]:
         """Retrieve new search files (not yet registered in settings)"""
 
         search_dir = self.review_manager.get_path(Filepaths.SEARCH_DIR)
@@ -349,51 +366,48 @@ class Search(colrev.process.operation.Operation):
         {"filepath": [SearchSource1,..]}
         """
 
-        heuristic_list = self.get_new_sources_heuristic_list()
+        new_search_files = self.get_new_search_files()
+        for filename in new_search_files:
+            heuristic_list = self.get_new_source_heuristic(filename)
 
-        for results_list in heuristic_list.values():
-            # Use the last / unknown_source
-            max_conf = 0.0
-            best_candidate_pos = 0
-            for i, heuristic_candidate in enumerate(results_list):
-                if heuristic_candidate["confidence"] > max_conf:
-                    best_candidate_pos = i + 1
-                    max_conf = heuristic_candidate["confidence"]
-            if not any(c["confidence"] > 0.1 for c in results_list):
-                source = [
-                    x
-                    for x in results_list
-                    if x["source_candidate"].endpoint == "colrev.unknown_source"
-                ][0]
-            else:
-                selection = str(best_candidate_pos)
-                source = results_list[int(selection) - 1]
+            for results_list in heuristic_list:
+                # Use the last / unknown_source
+                max_conf = 0.0
+                best_candidate_pos = 0
+                for i, heuristic_candidate in enumerate(results_list):
+                    if heuristic_candidate["confidence"] > max_conf:
+                        best_candidate_pos = i + 1
+                        max_conf = heuristic_candidate["confidence"]
+                if not any(c["confidence"] > 0.1 for c in results_list):
+                    source = [
+                        x
+                        for x in results_list
+                        if x["source_candidate"].endpoint == "colrev.unknown_source"
+                    ][0]
+                else:
+                    selection = str(best_candidate_pos)
+                    source = results_list[int(selection) - 1]
 
-            if create_query_files:
-                query_path = self.get_query_filename(
-                    filename=source["source_candidate"].filename
-                )
-                source["source_candidate"].search_parameters["query_file"] = str(
-                    query_path
-                )
-                query_path.write_text("", encoding="utf-8")
-                self.review_manager.dataset.add_changes(query_path)
+                if create_query_files:
+                    query_path = self.get_query_filename(
+                        filename=source["source_candidate"].filename
+                    )
+                    source["source_candidate"].search_parameters["query_file"] = str(
+                        query_path
+                    )
+                    query_path.write_text("", encoding="utf-8")
+                    self.review_manager.dataset.add_changes(query_path)
 
-            self.review_manager.settings.sources.append(source["source_candidate"])
+                self.review_manager.settings.sources.append(source["source_candidate"])
         self.review_manager.save_settings()
         self.review_manager.dataset.create_commit(msg="Add new search sources")
 
-    def get_new_sources_heuristic_list(self) -> dict:
+    def get_new_source_heuristic(self, filename: Path) -> list:
         """Get the heuristic result list of SearchSources candidates
 
         returns a dictionary:
         {"filepath": ({"search_source": SourceCandidate1", "confidence": 0.98},..]}
         """
-
-        new_search_files = self._get_new_search_files()
-        if not new_search_files:
-            self.review_manager.logger.info("No new search files...")
-            return {}
 
         self.review_manager.logger.debug("Load available search_source endpoints...")
 
@@ -401,18 +415,28 @@ class Search(colrev.process.operation.Operation):
             package_type=EndpointType.search_source
         )
 
-        heuristic_results = {}
-        for sfp_name in new_search_files:
-            if not self.review_manager.high_level_operation:
-                print()
-            self.review_manager.logger.info(f"Discover new source: {sfp_name}")
+        heuristic_results = []
+        self.review_manager.logger.debug(f"Discover new DB source file: {filename}")
 
-            heuristic_results[sfp_name] = self._apply_source_heuristics(
-                filepath=sfp_name,
+        heuristic_results.append(
+            self._apply_source_heuristics(
+                filepath=filename,
                 search_sources=search_sources,
             )
+        )
 
         return heuristic_results
+
+    def add_source_and_search(
+        self, search_source: colrev.settings.SearchSource
+    ) -> None:
+        """Add a SearchSource and run the search"""
+
+        self.review_manager.settings.sources.append(search_source)
+        self.review_manager.save_settings()
+        self.review_manager.dataset.create_commit(msg="Add search source")
+        if not search_source.filename.is_file():
+            self.main(selection_str=str(search_source.filename), rerun=False)
 
     @_check_source_selection_exists(  # pylint: disable=too-many-function-args
         "selection_str"

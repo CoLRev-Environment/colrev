@@ -134,7 +134,6 @@ import tempfile
 import typing
 from pathlib import Path
 
-import colrev.exceptions as colrev_exceptions
 import colrev.loader.bib
 import colrev.loader.enl
 import colrev.loader.json
@@ -160,7 +159,7 @@ def load(  # type: ignore
     """Load a file and return records as a dictionary"""
 
     if not filename.exists():
-        raise colrev_exceptions.ImportException(f"File not found: {filename.name}")
+        raise FileNotFoundError
 
     if filename.suffix == ".bib":
         parser = colrev.loader.bib.BIBLoader  # type: ignore

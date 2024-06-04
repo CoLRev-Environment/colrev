@@ -10,7 +10,7 @@ API search
 
 .. code-block::
 
-   colrev search -a colrev.colrev_project -p "/path/to/local/file.bib"
+   colrev search --add colrev.colrev_project -p "https://github.com/CoLRev-Environment/example"
 
 Links
 -----

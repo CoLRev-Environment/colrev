@@ -336,7 +336,7 @@ class PDFGet(colrev.process.operation.Operation):
             Path(x)
             for x in pdf_files
             if str(Path(x).resolve()) not in linked_pdfs
-            and not any(kw in x for kw in ["_wo_lp.pdf", "_wo_cp.pdf", "_ocr.pdf"])
+            and not any(kw in x for kw in ["_with_lp.pdf", "_with_cp.pdf", "_ocr.pdf"])
         ]
 
         if len(unlinked_pdfs) == 0:

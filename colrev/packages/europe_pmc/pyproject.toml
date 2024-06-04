@@ -1,14 +1,27 @@
-[project]
+[tool.poetry]
 name = "colrev.europe_pmc"
 description = "CoLRev package for europe_pmc"
 version = "0.1.0"
-authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
-]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
+license = "MIT"
+documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/europe_pmc/README.md"
+
+
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
 
 [tool.colrev]
 dev_status = "maturing"
+documentation = "README.md"
+colrev_doc_link = "README.md"
+
+[tool.poetry.plugins.colrev]
 search_source = "colrev.packages.europe_pmc.src.europe_pmc:EuropePMCSearchSource"
 prep = "colrev.packages.europe_pmc.src.europe_pmc_prep:EuropePMCMetadataPrep"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"
