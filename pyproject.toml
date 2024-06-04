@@ -34,7 +34,7 @@ colrev-hooks-share = "colrev.hooks.share:main"
 colrev-hooks-update = "colrev.hooks.update:main"
 
 [tool.poetry.dependencies]
-python = ">=3.8, <4"
+python = ">=3.9, <4"
 click = "^8.1.6"
 click_completion = "^0.5.2"
 click-repl = "^0.3.0"
@@ -79,8 +79,6 @@ crossrefapi = "^1.5.0"
 semanticscholar = "^0.6.0"
 m2r = "^0.3.1"
 pydantic = "^2.7.1"
-instructor = "^1.2.6"
-litellm = "^1.37.0"
 dash = {version = "^2.11.1", optional = true }
 Sphinx = {version = "^5.2.3", optional = true }
 sphinx-autodoc-typehints = {version = "^1.19.4", optional = true }
@@ -100,8 +98,10 @@ types-click = {version = "^7.1.8", optional = true }
 # Can't do 0.21 with poetry because of https://github.com/python-poetry/poetry/issues/9293
 docutils = "!=0.21.post1"
 toml = "^0.10.2"
+"colrev.genai" = {path="./colrev/packages/genai", optional = true}
 
 [tool.poetry.extras]
+"colrev.genai" = ["colrev.genai"]
 web_ui = ["dash"]
 docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinxcontrib.datatemplates", "sphinx_collapse", "repoze-sphinx-autointerface", "sphinx-design"]
 dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock", "pytest-skip-slow"]

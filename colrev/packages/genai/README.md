@@ -1,5 +1,12 @@
 # GenAI
 
+## Installation
+
+To install the dependencies of `colrev.genai`, run
+```
+pip install colrev[colrev.genai]
+```
+
 ## prescreen
 
 Note: This document is currently under development. It will contain the following elements.
