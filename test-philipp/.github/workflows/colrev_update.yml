@@ -1,0 +1,56 @@
+name: Run colrev update
+
+# Note : requires github/settings/actions/general/workflow permissions/read and write
+# Note : requires github/settings/actions/general/workflow permissions/create and approve pull requests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '10 2 * * 3'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+      - name: Install CoLRev
+        working-directory: ${{ runner.temp }}
+        run: |
+          git clone https://github.com/CoLRev-Environment/colrev
+          cd colrev
+          python -m pip install poetry
+          poetry install
+      - name: Setup git
+        run: |
+          git config --global user.name "CoLRev update"
+          git config --global user.email "actions@users.noreply.github.com"
+          git config --global url.https://github.com/.insteadOf git://github.com/
+      - name: Set branch name
+        run: |
+          echo "BRANCH_NAME=colrev-update-$(date '+%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
+          echo ${{ env.BRANCH_NAME }}
+      - name: Switch to branch ${{ env.BRANCH_NAME }}
+        run: |
+          git checkout -b ${{ env.BRANCH_NAME }}
+      - name: Run CoLRev update
+        run: |
+          poetry run --directory ${{ runner.temp }}/colrev colrev env -i
+          poetry run --directory ${{ runner.temp }}/colrev colrev search -f
+          poetry run --directory ${{ runner.temp }}/colrev colrev load
+          poetry run --directory ${{ runner.temp }}/colrev colrev prep
+          poetry run --directory ${{ runner.temp }}/colrev colrev prep --polish
+          poetry run --directory ${{ runner.temp }}/colrev colrev prescreen
+          poetry run --directory ${{ runner.temp }}/colrev colrev pdfs
+          poetry run --directory ${{ runner.temp }}/colrev colrev screen
+          git push --set-upstream origin ${{ env.BRANCH_NAME }}
+      - name: Create pull request
+        uses: repo-sync/pull-request@v2
+        with:
+          source_branch: "${{ env.BRANCH_NAME }}"
+          destination_branch: "main"
+          pr_title: "Pull CoLRev updates"
+          pr_body: |
+            *CoLRev updates*
+
+            _Created by [colrev gh-action](https://github.com/CoLRev-Environment/colrev/tree/main/colrev/template)_

@@ -4,7 +4,11 @@ description = "CoLRev package for GitHub"
 version = "0.1.0"
 license = "MIT"
 authors = [
+<<<<<<< HEAD
     { name = "Kolja Rinne", email = "kolja.rinne@stud.uni-bamberg.de" }
+=======
+    { name = "Philipp Kasimir ", email = "philipp-william.kasimir@stud.uni-bamberg.de" }
+>>>>>>> origin/philipp
 ]
 documentation = "README.md"
 colrev_doc_link = "README.md"
