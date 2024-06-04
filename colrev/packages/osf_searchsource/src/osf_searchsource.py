@@ -173,7 +173,6 @@ class OSFSearchSource(JsonSchemaMixin):
         headers = {
             "Authorization": f"Bearer {api_key}",
         }
-        api_key = self.get_api_key()
         query = OSFApiQuery(api_key)
         query.dataType("json")
         query.dataFormat("object")
@@ -182,11 +181,10 @@ class OSFSearchSource(JsonSchemaMixin):
         parameter_methods = {
             "id": query.id,
             "type": query.type,
-            "author": query.author,
-            "doi": query.doi,
-            "publisher": query.publisher,
             "title": query.title,
-            "links": query.links,
+            "category": query.category,
+            "year": query.year,
+            "ia_url": query.ia_url,
         }
 
         parameters = self.search_source.search_parameters
@@ -199,16 +197,17 @@ class OSFSearchSource(JsonSchemaMixin):
         return response
 
     def _create_record_dict(self, item: dict) -> dict:
+        attributes = item["attributes"]
         record_dict = {
             Fields.ID: item["id"],
-            Fields.TITLE: item["attributes"]["title"],
-            Fields.ABSTRACT: item["attributes"]["description"],
-            Fields.AUTHOR: ", ".join(contributor["embeds"]["users"]["data"]["attributes"]["full_name"] for contributor in item["embeds"]["contributors"]["data"]),
-            Fields.YEAR: item["attributes"]["date_created"][:4],
-            Fields.URL: item["links"]["html"],
+            Fields.TYPE: item["type"],
+            Fields.TITLE: attributes.get("title", ""),
+            Fields.CATEGORY: attributes.get("category", ""),
+            Fields.YEAR: attributes.get("date_created", "")[:4],
+            Fields.URL: attributes.get("ia_url", ""),
         }
         return record_dict
-
+    
     def _load_bib(self) -> dict:
 
         records = colrev.loader.load_utils.load(
