@@ -47,18 +47,21 @@ class GitHubSearchSource(JsonSchemaMixin):
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.github"
     search_types = [SearchType.API] #Nicht ganz sicher, vllt MD? (Siehe open_library.py)
+
+    '''heuristic_status = SearchSourceHeuristicStatus.experimental'''
+    short_name = "GitHubSearch"
+    docs_link = (
+        "https://colrev.readthedocs.io/en/latest/dev_docs/packages/package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface"
+        + "https://docs.github.com/en/rest?apiVersion=2022-11-28"
+    )
+    db_url = "https://github.com/"
     
 
     def add_endpoint(cls,operation: colrev.ops.search.Search,params: str,) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         search_source = operation.create_db_source(search_source_cls=cls,params={})
         operation.add_source_and_search(search_source)
-    docs_link = (
-        "https://colrev.readthedocs.io/en/latest/dev_docs/packages/package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface"
-        + "https://docs.github.com/en/rest?apiVersion=2022-11-28"
-    )
-    '''heuristic_status = SearchSourceHeuristicStatus.experimental'''
-    short_name = "GitHubSearch"
+    
     
     def search(self,  rerun: bool) -> None:
 
