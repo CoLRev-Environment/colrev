@@ -385,10 +385,11 @@ class Load(colrev.process.operation.Operation):
                 sources.append(endpoint)
 
             except colrev_exceptions.MissingDependencyError as exc:
-                if self.review_manager.force_mode:
-                    self.review_manager.logger.error(exc)
-                else:
-                    raise exc
+                self.review_manager.logger.error(exc)
+                self.review_manager.logger.error(
+                    f"Cannot load records for {source.filename}"
+                )
+                print()
 
         return sources
 
