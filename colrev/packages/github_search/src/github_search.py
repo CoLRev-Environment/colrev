@@ -42,14 +42,18 @@ g.close()
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
 class GitHubSearchSource(JsonSchemaMixin):
+    """GitHub Search"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    endpoint = "colrev.github_search"
+    endpoint = "colrev.github"
+    search_types = [SearchType.API] #Nicht ganz sicher, vllt MD? (Siehe open_library.py)
+    
 
     def add_endpoint(cls,operation: colrev.ops.search.Search,params: str,) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         search_source = operation.create_db_source(search_source_cls=cls,params={})
         operation.add_source_and_search(search_source)
+        
 
     def search(self,  rerun: bool) -> None:
 
