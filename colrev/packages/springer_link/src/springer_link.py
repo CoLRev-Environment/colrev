@@ -92,9 +92,8 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             )
 
         elif search_type == SearchType.API:
-            api_key = cls.api_ui()
+            cls.api_ui()
             search_source = operation.create_api_source(endpoint=cls.endpoint)
-            search_source.api_key = api_key
             
 
         else:
