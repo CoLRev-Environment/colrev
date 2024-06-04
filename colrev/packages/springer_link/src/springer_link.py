@@ -42,6 +42,9 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Springer Link"
+    SETTINGS = {
+        "api_key": "packages.search_source.colrev.springer_link.api_key",
+    }
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/packages/search_sources/springer_link.md"
@@ -92,7 +95,8 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             )
 
         elif search_type == SearchType.API:
-            cls.api_ui()
+            instance = cls(source_operation=operation, settings=settings)
+            instance.api_ui()
             search_source = operation.create_api_source(endpoint=cls.endpoint)
             
 
@@ -190,7 +194,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         )
         return records
     
-    def api_ui() -> str:
+    def api_ui(self) -> None:
         """User API key insertion"""
         run = True
 
@@ -201,12 +205,19 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         while run:
             api_key = input("Please enter your Springer Link API key: ")
             if api_key:
+                self.review_manager.environment_manager.update_registry(
+                    self.SETTINGS["api_key"], api_key
+                )
                 run = False
             else:
                 print("Invalid input. Please enter a valid API key.")
+        return
 
-        return api_key
-
+    def get_api_key(self) -> str:
+        """Get API key from settings"""
+        return self.review_manager.environment_manager.get_settings_by_key(
+            self.SETTINGS["api_key"]
+        )
         
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
