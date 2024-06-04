@@ -551,6 +551,11 @@ class UnknownSearchSource(JsonSchemaMixin):
                 for k, v in records[record_id].items()
                 if k not in FieldSet.PROVENANCE_KEYS + [Fields.SCREENING_CRITERIA]
             }
+        for record in records.values():
+            for key in list(record.keys()):
+                if key not in FieldSet.STANDARDIZED_FIELD_KEYS:
+                    record[f"colrev.unknonwn_source.{key}"] = record.pop(key)
+
         return records
 
     def _heuristically_fix_entrytypes(

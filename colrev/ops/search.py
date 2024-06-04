@@ -88,7 +88,7 @@ class Search(colrev.process.operation.Operation):
             raise NotImplementedError  # or parameter error
 
         if "search_file" in params:
-            filename = params["search_file"]
+            filename = Path(params["search_file"])
         else:
             filename = self.get_unique_filename(
                 file_path_string=search_source_cls.endpoint.replace("colrev.", "")
