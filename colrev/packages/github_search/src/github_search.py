@@ -29,10 +29,17 @@ auth = Auth.Token("access_token")
 g = Github(auth=auth)
 # Github Enterprise with custom hostname
 g = Github(base_url="https://{hostname}/api/v3", auth=auth)
+
 """
 # Then play with your Github objects:
 for repo in g.get_user().get_repos():
     print(repo.name)
+
+# search repositories by name
+for repo in g.search_repositories("pythoncode tutorials"): oder "suchbegriff" + in:readme && in:name (name = Name des Repos)
+    # print repository details
+    print_repo(repo)
+    
 
 # To close connections after use
 g.close()
@@ -46,7 +53,7 @@ class GitHubSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.github"
-    search_types = [SearchType.API] #Nicht ganz sicher, vllt MD? (Siehe open_library.py)
+    search_types = [SearchType.API] #Nicht ganz sicher, vllt MD, oder doch DB lassen? (Siehe open_library.py)
 
     '''heuristic_status = SearchSourceHeuristicStatus.experimental'''
     short_name = "GitHubSearch"
