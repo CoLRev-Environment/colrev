@@ -20,6 +20,7 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+import colrev.settings
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -95,7 +96,15 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             )
 
         elif search_type == SearchType.API:
-            instance = cls(source_operation=operation, settings=settings)
+            add_settings = colrev.settings.SearchSource(
+                endpoint=cls.endpoint,
+                filename=Path("data/search/springerlink"),
+                search_type=SearchType.API,
+                search_parameters={},
+                comment="",
+            )
+            params_dict.update(vars(add_settings))
+            instance = cls(source_operation=operation, settings=params_dict)
             instance.api_ui()
             search_source = operation.create_api_source(endpoint=cls.endpoint)
             
