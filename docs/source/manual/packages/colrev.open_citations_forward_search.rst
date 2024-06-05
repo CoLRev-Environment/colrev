@@ -1,6 +1,9 @@
 colrev.open_citations_forward_search
 ====================================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

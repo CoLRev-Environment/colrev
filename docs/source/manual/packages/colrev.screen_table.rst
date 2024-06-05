@@ -1,6 +1,9 @@
 colrev.screen_table
 ===================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

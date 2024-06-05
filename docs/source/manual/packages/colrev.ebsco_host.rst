@@ -1,6 +1,9 @@
 colrev.ebsco_host
 =================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

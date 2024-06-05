@@ -1,6 +1,9 @@
 colrev.pdf_backward_search
 ==========================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

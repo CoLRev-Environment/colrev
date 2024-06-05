@@ -1,6 +1,9 @@
 colrev.qualitative_systematic_review
 ====================================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

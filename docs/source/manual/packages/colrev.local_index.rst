@@ -1,6 +1,9 @@
 colrev.local_index
 ==================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

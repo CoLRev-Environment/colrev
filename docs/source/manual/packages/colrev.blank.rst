@@ -1,6 +1,9 @@
 colrev.blank
 ============
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 
@@ -21,7 +24,7 @@ colrev.blank
      - Status
      - Add
    * - review_type
-     - |MATURING|
+     - |STABLE|
      - .. code-block::
 
 

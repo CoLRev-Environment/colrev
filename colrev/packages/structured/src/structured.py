@@ -190,6 +190,8 @@ Example 2:
             review_manager: colrev.review_manager.ReviewManager,
             synthesized_record_status_matrix: dict,
         ) -> typing.Dict:
+            if silent_mode:
+                return synthesized_record_status_matrix
             if not self.data_path.is_file():
                 self._set_fields()
 
@@ -249,7 +251,9 @@ Example 2:
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
 
-        self.review_manager.dataset.add_changes(self.settings.data_path_relative)
+        self.review_manager.dataset.add_changes(
+            self.settings.data_path_relative, ignore_missing=True
+        )
 
     def update_record_status_matrix(
         self,

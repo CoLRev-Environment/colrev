@@ -1,6 +1,9 @@
 colrev.unknown_source
 =====================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

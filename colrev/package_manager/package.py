@@ -29,6 +29,8 @@ ENDPOINT_OVERVIEW = colrev.package_manager.interfaces.ENDPOINT_OVERVIEW
 class Package:
     """A Python package for CoLRev"""
 
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(self, package_dir: Path) -> None:
         self.package_dir = package_dir
         self.config = self._load_config()

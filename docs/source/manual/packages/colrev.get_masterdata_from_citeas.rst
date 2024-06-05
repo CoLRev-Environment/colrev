@@ -1,6 +1,9 @@
 colrev.get_masterdata_from_citeas
 =================================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

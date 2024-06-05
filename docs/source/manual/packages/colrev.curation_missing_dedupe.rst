@@ -1,6 +1,9 @@
 colrev.curation_missing_dedupe
 ==============================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

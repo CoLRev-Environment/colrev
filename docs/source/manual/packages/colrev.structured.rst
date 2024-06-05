@@ -1,6 +1,9 @@
 colrev.structured
 =================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

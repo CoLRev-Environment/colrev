@@ -1,6 +1,9 @@
 colrev.prep_man_curation_jupyter
 ================================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

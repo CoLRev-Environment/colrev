@@ -1,6 +1,9 @@
 colrev.taylor_and_francis
 =========================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 
