@@ -1,6 +1,9 @@
 colrev.eric
 ===========
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner, Rhea Nguyen, Malou Schmidt, Frederic Fischer, Janus Fiegen, Albert Borchardt
 - License: MIT
 

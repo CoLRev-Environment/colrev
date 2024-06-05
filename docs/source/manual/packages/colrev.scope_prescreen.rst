@@ -1,6 +1,9 @@
 colrev.scope_prescreen
 ======================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

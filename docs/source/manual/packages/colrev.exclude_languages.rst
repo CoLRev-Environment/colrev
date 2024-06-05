@@ -1,6 +1,9 @@
 colrev.exclude_languages
 ========================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

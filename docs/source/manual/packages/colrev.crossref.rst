@@ -1,6 +1,9 @@
 colrev.crossref
 ===============
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

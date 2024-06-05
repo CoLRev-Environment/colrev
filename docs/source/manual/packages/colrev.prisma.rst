@@ -1,6 +1,9 @@
 colrev.prisma
 =============
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

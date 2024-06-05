@@ -1,6 +1,9 @@
 colrev.colrev_cli_screen
 ========================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

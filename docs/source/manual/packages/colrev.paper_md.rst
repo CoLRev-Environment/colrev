@@ -1,6 +1,9 @@
 colrev.paper_md
 ===============
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

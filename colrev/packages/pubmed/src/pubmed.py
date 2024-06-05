@@ -122,7 +122,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -178,6 +178,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             raise NotImplementedError
 
         operation.add_source_and_search(search_source)
+        return search_source
 
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""

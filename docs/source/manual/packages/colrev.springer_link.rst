@@ -1,6 +1,9 @@
 colrev.springer_link
 ====================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

@@ -1,6 +1,9 @@
 colrev.google_scholar
 =====================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

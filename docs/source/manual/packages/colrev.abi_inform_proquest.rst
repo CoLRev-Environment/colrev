@@ -1,6 +1,9 @@
 colrev.abi_inform_proquest
 ==========================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

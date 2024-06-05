@@ -1,6 +1,9 @@
 colrev.acm_digital_library
 ==========================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

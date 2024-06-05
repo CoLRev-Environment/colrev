@@ -3,15 +3,6 @@
 import colrev.review_manager
 
 
-def test_data(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> None:
-    """Test the date operation"""
-
-    data_operation = base_repo_review_manager.get_data_operation()
-    data_operation.profile()
-
-
 def test_data_custom_script(  # type: ignore
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:

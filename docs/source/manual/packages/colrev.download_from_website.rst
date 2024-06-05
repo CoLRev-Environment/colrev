@@ -1,6 +1,9 @@
 colrev.download_from_website
 ============================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

@@ -1,6 +1,9 @@
 colrev.theoretical_review
 =========================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

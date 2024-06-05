@@ -16,6 +16,7 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
+from colrev.constants import Filepaths
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
 
@@ -408,7 +409,7 @@ class SearchAPIFeed:
         else:
             if self.records:
                 self.review_manager.logger.info(
-                    f"{Colors.GREEN}Records (data/records.bib) up-to-date{Colors.END}"
+                    f"{Colors.GREEN}Records ({Filepaths.RECORDS_FILE}) up-to-date{Colors.END}"
                 )
 
     def get_prev_feed_record(
