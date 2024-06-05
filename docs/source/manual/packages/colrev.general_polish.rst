@@ -1,6 +1,9 @@
 colrev.general_polish
 =====================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

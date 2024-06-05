@@ -1,6 +1,9 @@
 colrev.files_dir
 ================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

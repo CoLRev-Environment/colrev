@@ -1,6 +1,9 @@
 colrev.colrev_cli_pdf_prep_man
 ==============================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

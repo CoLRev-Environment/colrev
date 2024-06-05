@@ -1,6 +1,9 @@
 colrev.pubmed
 =============
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

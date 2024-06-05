@@ -1,6 +1,9 @@
 colrev.unpaywall
 ================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

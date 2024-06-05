@@ -1,6 +1,9 @@
 colrev.scopus
 =============
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

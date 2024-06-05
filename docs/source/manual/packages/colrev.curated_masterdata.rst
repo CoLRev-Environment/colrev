@@ -1,6 +1,9 @@
 colrev.curated_masterdata
 =========================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

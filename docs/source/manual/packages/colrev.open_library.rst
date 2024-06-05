@@ -1,6 +1,9 @@
 colrev.open_library
 ===================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

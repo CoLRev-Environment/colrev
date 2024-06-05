@@ -1,6 +1,9 @@
 colrev.wiley
 ============
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

@@ -1,6 +1,9 @@
 colrev.remove_broken_ids
 ========================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

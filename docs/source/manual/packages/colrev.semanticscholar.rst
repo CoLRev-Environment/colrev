@@ -1,6 +1,9 @@
 colrev.semanticscholar
 ======================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner, Louis Langenhan, Peter Eckhardt, Amadou-Choumoussidine Kouotou-Ngapout, Robert Theis
 - License: MIT
 

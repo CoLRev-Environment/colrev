@@ -1,6 +1,9 @@
 colrev.ocrmypdf
 ===============
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

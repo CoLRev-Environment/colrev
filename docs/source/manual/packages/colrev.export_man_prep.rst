@@ -1,6 +1,9 @@
 colrev.export_man_prep
 ======================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 

@@ -153,6 +153,7 @@ class DocRegistryManager:
                 file.write(line + "\n")
 
     # pylint: disable=line-too-long
+    # pylint: disable=too-many-branches
     # flake8: noqa: E501
     def _get_header_info(self, package: colrev.package_manager.package.Package) -> str:
 
@@ -173,6 +174,8 @@ class DocRegistryManager:
 
         header_info = f"{package.name}\n"
         header_info += "=" * len(package.name) + "\n\n"
+        header_info += "Package\n"
+        header_info += "-" * 20 + "\n\n"
         header_info += (
             f"- Maintainer: {', '.join(x['name'] for x in package.authors)}\n"
         )
@@ -236,6 +239,7 @@ class DocRegistryManager:
         )
 
         output = parse_from_file(docs_link)
+        output = output.replace(".. list-table::", ".. list-table::\n   :align: left")
 
         header_info = self._get_header_info(package)
 

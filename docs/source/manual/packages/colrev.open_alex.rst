@@ -1,6 +1,9 @@
 colrev.open_alex
 ================
 
+Package
+--------------------
+
 - Maintainer: Gerit Wagner
 - License: MIT
 
