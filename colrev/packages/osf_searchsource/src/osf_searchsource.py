@@ -142,8 +142,6 @@ class OSFSearchSource(JsonSchemaMixin):
                       search_source_cls=cls,
                       params=params,
                       )
-
-                  raise NotImplementedError
     
     
     def _get_api_key(self) -> str:
@@ -185,6 +183,9 @@ class OSFSearchSource(JsonSchemaMixin):
             "category": query.category,
             "year": query.year,
             "ia_url": query.ia_url,
+            "description": query.description,
+            "tags": query.tags,
+            "date_created": query.date_created,
         }
 
         parameters = self.search_source.search_parameters
@@ -205,27 +206,66 @@ class OSFSearchSource(JsonSchemaMixin):
             Fields.CATEGORY: attributes.get("category", ""),
             Fields.YEAR: attributes.get("date_created", "")[:4],
             Fields.URL: attributes.get("ia_url", ""),
+            Fields.DESCRIPTION: attributes.get("description", ""),
+            Fields.TAGS: attributes.get("tags",""),
+            Fields.DATE_CREATED: attributes.get("date_created", ""),
         }
         return record_dict
     
-    def _load_bib(self) -> dict:
-
-        records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
-            logger=self.review_manager.logger,
-            unique_id_field="ID",
-        )
-        for record_dict in records.values():
-            record_dict.pop("type", None)
-
-        return records
-
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
-        if self.search_source.filename.suffix == ".bib":
-            return self._load_bib()
-        raise NotImplementedError
 
+        def json_field_mapper(record_dict: dict) -> None:
+                """Maps the different entries of the JSON file to endpoints"""
+                if "title" in record_dict:
+                    record_dict[f"{self.endpoint}.title"] = record_dict.pop("title")
+                if "description" in record_dict:
+                    record_dict[f"{self.endpoint}.description"] = record_dict.pop("description")
+                if "category" in record_dict:
+                    record_dict[f"{self.endpoint}.category"] = record_dict.pop("category")
+                if "type" in record_dict:
+                    record_dict[f"{self.endpoint}.type"] = record_dict.pop(
+                        "type"
+                    )
+                if "tags" in record_dict:
+                    record_dict[f"{self.endpoint}.tags"] = record_dict.pop(
+                        "tags"
+                    )
+                if "date_created" in record_dict:
+                    record_dict[f"{self.endpoint}.date_created"] = record_dict.pop(
+                        "date_created"
+                    )
+                if "year" in record_dict:
+                    record_dict[f"{self.endpoint}.year"] = record_dict.pop(
+                        "year"
+                    )
 
-    def prepare():
-        #need the dict method to create the prepare method
+                if "id" in record_dict:
+                    record_dict[f"{self.endpoint}.id"] = record_dict.pop("id")
+                
+                record_dict.pop("date_modified", None)
+                record_dict.pop("custom_citation", None)
+                record_dict.pop("registration", None)
+                record_dict.pop("preprint", None)
+                record_dict.pop("fork", None)
+                record_dict.pop("collection", None)
+            
+                for key, value in record_dict.items():
+                    record_dict[key] = str(value)
+
+        def json_entrytype_setter(record_dict: dict) -> None:
+                """Loads the JSON file into the imported_md file"""
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+                records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                entrytype_setter=json_entrytype_setter,
+                field_mapper=json_field_mapper,
+                # Note: uid not always available.
+                unique_id_field="INCREMENTAL",
+                logger=self.review_manager.logger,
+            )
+                return records
+    
+    raise NotImplementedError
+    

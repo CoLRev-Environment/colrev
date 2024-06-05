@@ -35,6 +35,15 @@ class OSFApiQuery:
 
     def ia_url(self, value: str):
         self.params["filter[ia_url]"] = value
+    
+    def description(self, value: str):
+        self.params["filter[description]"] = value
+    
+    def tags(self, value:str):
+        self.params["filter[tags]"] = value
+
+    def date_created(self, value:str):
+        self.params["filter[date_created]"] = value
 
     def callAPI(self):
         response = requests.get(self.base_url, headers=self.headers, params=self.params)
