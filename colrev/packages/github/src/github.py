@@ -49,19 +49,20 @@ g.close()
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
 class GitHubSearchSource(JsonSchemaMixin):
-    """GitHub Search"""
+    """GitHub API"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.github"
-    search_types = [SearchType.API] #Nicht ganz sicher, vllt MD, oder doch DB lassen? (Siehe open_library.py)
+    search_types = [SearchType.API]
 
-    '''heuristic_status = SearchSourceHeuristicStatus.experimental'''
+    heuristic_status = SearchSourceHeuristicStatus.experimental
     short_name = "GitHubSearch"
     docs_link = (
         "https://colrev.readthedocs.io/en/latest/dev_docs/packages/package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface"
         + "https://docs.github.com/en/rest?apiVersion=2022-11-28"
     )
     db_url = "https://github.com/"
+    _github_md_filename = Path("data/search/md_github.bib")
     
 
     def add_endpoint(cls,operation: colrev.ops.search.Search,params: str,) -> None:
