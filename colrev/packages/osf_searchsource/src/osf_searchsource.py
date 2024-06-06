@@ -94,14 +94,23 @@ class OSFSearchSource(JsonSchemaMixin):
     ) -> colrev.settings.SearchSource:
          """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
+         params_dict = {}
+         if params:
+             if params.startswith("http"):
+                 params_dict = {Fields.URL: params}
+             else:
+                for item in params.split(";"):
+                    key, value = item.split("=")
+                    params_dict[key] = value
+
          search_type = operation.select_search_type(
-              search_types=cls.search_types, params=params
+              search_types=cls.search_types, params=params_dict
          )
 
          if search_type == SearchType.API:
               if len(params) == 0:
-                   add_source = operation.add_api_source(endpoint=cls.endpoint)
-                   return add_source
+                   search_source = operation.add_api_source(endpoint=cls.endpoint)
+
               
               # pylint: disable=colrev-missed-constant-usage
               if (
@@ -128,20 +137,25 @@ class OSFSearchSource(JsonSchemaMixin):
                     file_path_string=f"osf_{last_value}"
                 )
 
-                add_source = colrev.settings.SearchSource(
+                search_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
                     filename=filename,
                     search_type=SearchType.API,
                     search_parameters=search_parameters,
                     comment="",
                 )
-                return add_source
-              
-              if search_type == SearchType.DB:
-                  return operation.add_db_source(
-                      search_source_cls=cls,
-                      params=params,
-                      )
+                
+         elif search_type == SearchType.DB:
+             search_source = operation.create_db_source(
+                 search_source_cls = cls,
+                 params = params_dict,
+             )
+
+         else:
+             raise NotImplementedError
+         
+         operation.add_source_and_search(search_source)
+         return search_source
     
     
     def _get_api_key(self) -> str:
