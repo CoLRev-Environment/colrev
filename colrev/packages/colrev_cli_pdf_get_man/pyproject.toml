@@ -6,9 +6,9 @@ license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_pdf_get_man"
 
 [tool.colrev]
 dev_status = "maturing"
+colrev_doc_link = "README.md"
 pdf_get_man = "colrev.packages.colrev_cli_pdf_get_man.src.pdf_get_man_cli:CoLRevCLIPDFGetMan"
