@@ -49,9 +49,9 @@ class OSFSearchSource(JsonSchemaMixin):
         + "colrev/packages/osf_searchsource/README.md"
     )
     db_url = "https://osf.io/"
-    # SETTINGS = {
-    #     "api_key": "packages.search_source.colrev.osf.api_key",
-    # }
+    SETTINGS = {
+        "api_key": "packages.search_source.colrev.osf.api_key",
+    }
 
     def __init__(
             self,
