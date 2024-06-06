@@ -82,6 +82,6 @@ class GitHubSearchSource(JsonSchemaMixin):
         """Source-specific preparation for GitHub"""
 
 
-#   If __name__ = "main"
-# Instance = github_search()
+#   If __name__ == "__main__":
+# Instance = github()
 # Instance.search()
