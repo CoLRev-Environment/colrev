@@ -8,6 +8,7 @@ from pathlib import Path
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
@@ -59,21 +60,24 @@ class SourceSpecificPrep(JsonSchemaMixin):
         ]
 
         for source in sources:
-            # if source.endpoint not in self.search_sources.packages:
-            #     continue
-            # endpoint = self.search_sources.packages[source.endpoint]
-            search_source_class = self.package_manager.get_package_endpoint_class(
-                package_type=EndpointType.search_source,
-                package_identifier=source.endpoint,
-            )
-            endpoint = search_source_class(
-                source_operation=self, settings=source.get_dict()
-            )
+            try:
+                # if source.endpoint not in self.search_sources.packages:
+                #     continue
+                # endpoint = self.search_sources.packages[source.endpoint]
+                search_source_class = self.package_manager.get_package_endpoint_class(
+                    package_type=EndpointType.search_source,
+                    package_identifier=source.endpoint,
+                )
+                endpoint = search_source_class(
+                    source_operation=self, settings=source.get_dict()
+                )
 
-            if callable(endpoint.prepare):
-                record = endpoint.prepare(record, source)
-            else:
-                print(f"error: {source.endpoint}")
+                if callable(endpoint.prepare):
+                    record = endpoint.prepare(record, source)
+                else:
+                    print(f"error: {source.endpoint}")
+            except colrev_exceptions.MissingDependencyError as exc:
+                self.review_manager.logger.warn(exc)
 
         if "howpublished" in record.data and Fields.URL not in record.data:
             if Fields.URL in record.data["howpublished"]:

@@ -10,6 +10,7 @@ import yaml
 import colrev.env.utils
 import colrev.process.operation
 from colrev.constants import Colors
+from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 
 
@@ -36,9 +37,9 @@ class Status(colrev.process.operation.Operation):
                 commit.message,
                 commit.author.name,
                 commit.committed_date,
-                (commit.tree / "status.yaml").data_stream.read(),
+                (commit.tree / str(Filepaths.STATUS_FILE)).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(paths="status.yaml")
+            for commit in git_repo.iter_commits(paths=str(Filepaths.STATUS_FILE))
         )
         for ind, (
             commit_id,
@@ -49,7 +50,7 @@ class Status(colrev.process.operation.Operation):
         ) in enumerate(revlist):
             var_t = io.StringIO(filecontents.decode("utf-8"))
 
-            # TBD: we could simply include the whole status.yaml
+            # TBD: we could simply include the whole STATUS_FILE
             # (to create a general-purpose status analyzer)
             # -> flatten nested structures (e.g., overall/currently)
             # -> integrate with get_status (current data) -
