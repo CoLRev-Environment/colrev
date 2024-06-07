@@ -26,8 +26,8 @@ from colrev.constants import SearchType
 class UnpaywallSearchSource(JsonSchemaMixin):
     """Unpaywall Search Source"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSettings
-    # source_identifier
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+    source_identifier = "ID"
     search_types = [SearchType.API]
     endpoint = "colrev.unpaywall"
 
@@ -38,18 +38,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     short_name = "Unpaywall"
 
     API_FIELDS = [
-        "best_oa_location",
-        "best_oa_location.evidence",
-        "best_oa_location.host_type",
-        "best_oa_location.is_best",
-        "best_oa_location.license",
-        "best_oa_location.oa_date",
-        "best_oa_location.pmh_id",
-        "best_oa_location.updated",
-        "best_oa_location.url",
-        "best_oa_location.url_for_landing_page",
-        "best_oa_location.url_for_pdf",
-        "best_oa_location.version",
         "data_standard",
         "doi",
         "doi_url",
@@ -61,9 +49,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         "journal_issns",
         "journal_issn_l",
         "journal_name",
-        "oa_locations",
-        "oa_locations_embargoed",
-        "first_oa_location",
         "oa_status",
         "has_repository_copy",
         "published_date",
@@ -73,11 +58,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         "year",
         "z_authors",
     ]
-
-    FIELD_MAPPING = {
-        "best_oa_location.url_for_pdf": Fields.FULLTEXT,
-        "journal_name": Fields.JOURNAL,
-    }
+    # FIELD_MAPPING
 
     def __init__(
         self,
@@ -155,61 +136,62 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     def _run_api_search(
         self, *, unpaywall_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
-        for record in self._get_query_records():
+        for record in self.get_query_records():
             unpaywall_feed.add_update_record(record)
 
         unpaywall_feed.save()
 
-    def _get_query_records(self) -> typing.Iterator[colrev.record.record.Record]:
+    def get_query_records(self) -> typing.Iterator[colrev.record.record.Record]:
         """Get the records from a query"""
         full_url = self._build_search_url()
         response = requests.get(full_url, timeout=90)
         if response.status_code != 200:
             return
+
         with open("test.json", "wb") as file:
             file.write(response.content)
         data = response.json()
 
-        if "response" not in data["results"]:
+        if "results" not in data:
             raise colrev_exceptions.ServiceNotAvailableException(
-                "Could not reach API. Status Code: " + response.status_code
+                f"Could not reach API. Status Code: {response.status_code}"
             )
 
-        for article in data["results"]["response"]:
+        for result in data["results"]:
+            article = result["response"]
             record = self._create_record(article)
             yield record
 
+    def _get_authors(self, article):
+        authors = []
+        z_authors = article.get("z_authors", [])
+        if z_authors:
+            for author in z_authors:
+                given_name = author.get("given", "")
+                family_name = author.get("family", "")
+                authors.append(f"{family_name}, {given_name}")
+        return authors
+
     def _create_record(self, article: dict) -> colrev.record.record.Record:
         record_dict = {Fields.ID: article["doi"]}
-
-        for field in self.API_FIELDS:
-            if article.get(field) is None:
-                continue
-            record_dict[field] = str(article.get(field))
-
-        for api_field, rec_field in self.FIELD_MAPPING.items():
-            if api_field not in record_dict:
-                continue
-            record_dict[rec_field] = record_dict.pop(api_field)
-
-        self._update_special_case_fields(record_dict=record_dict, article=article)
+        record_dict[Fields.TITLE] = article.get("title", "")
+        record_dict[Fields.ENTRYTYPE] = article.get("genre", "other")
+        record_dict[Fields.AUTHOR] = " and ".join(self._get_authors(article))
 
         record = colrev.record.record.Record(record_dict)
         return record
 
     def _build_search_url(self) -> str:
-        url = "https://https://api.unpaywall.org/v2/search?"
+        url = "https://api.unpaywall.org/v2/search?"
         params = self.search_source.search_parameters
-        for key in params.keys():
-            if key == "query":
-                url += "query=" + str(params["query"])
-            elif key == "is_oa":
-                url += "is_oa=" + str(params["is_oa"])
-            elif key == "email":
-                url += "email=" + str(params["email"])
-            elif key == "page":
-                url += "page=" + str(params["page"])
-        return url
+        query = params["query"]
+        is_oa = params.get("is_oa", "null")
+        page = params.get("page", 1)
+
+        # TODO default email & validation of params
+        email = params.get("email", "unpaywall_01@example.com")
+
+        return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
 
     def search(self, rerun: bool) -> None:
         """Run a search of Unpaywall"""
