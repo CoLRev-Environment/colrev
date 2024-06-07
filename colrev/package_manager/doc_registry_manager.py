@@ -206,7 +206,9 @@ class DocRegistryManager:
             repo_name = package.repository.replace("https://github.com/", "")
             if "CoLRev-Environment/colrev" in repo_name:
                 repo_name = "CoLRev-Environment/colrev"
-            header_info += f"|GIT_REPO| Repository: `{repo_name} <{package.repository}>`_ \n\n"
+            header_info += (
+                f"|GIT_REPO| Repository: `{repo_name} <{package.repository}>`_ \n\n"
+            )
 
         if package.documentation != "":
             header_info += (
