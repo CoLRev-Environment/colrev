@@ -7,8 +7,8 @@ authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
 ]
 documentation = "README.md"
-colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "experimental"
 search_source = "colrev.packages.osf.src.osf:OSFSearchSource"
+colrev_doc_link = "README.md"
