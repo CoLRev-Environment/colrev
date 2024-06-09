@@ -56,7 +56,7 @@ class OSFSearchSource(JsonSchemaMixin):
             self,
             *, 
             source_operation: colrev.process.operation.Operation,
-            settings: typing.Optional[dict] = None,
+            settings: dict,
             ) -> None:
           self.review.manager = source_operation.review_manager
 
@@ -88,56 +88,39 @@ class OSFSearchSource(JsonSchemaMixin):
     
 
     @classmethod
-    def add_endpoint(
-         cls,
-         operation:colrev.ops.search.Search, 
-         params: dict
-    ) -> colrev.settings.SearchSource:
-         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-         params_dict = {}
-         if params:
-             if params.startswith("http"):
-                 params_dict = {Fields.URL: params}
-             else:
-                for item in params.split(";"):
-                    key, value = item.split("=")
-                    params_dict[key] = value
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: dict = None) -> colrev.settings.SearchSource:
+        """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
 
-         search_type = operation.select_search_type(
-              search_types=cls.search_types, params=params_dict
-         )
+        params_dict = {}
+        if params:
+            if isinstance(params, str) and params.startswith("http"):
+                params_dict = {Fields.URL: params}
+            else:
+                # Handling the case where params might not be a string or None
+                try:
+                    for item in params.split(";"):
+                        key, value = item.split("=")
+                        params_dict[key] = value
+                except AttributeError:
+                    # handle the error appropriately if params is not a valid string
+                    print("Invalid parameters provided.")
+                    return None
 
-         if search_type == SearchType.API:
-              if len(params) == 0:
-                   search_source = operation.add_api_source(endpoint=cls.endpoint)
+        # Select the search type based on the provided parameters
+        search_type = operation.select_search_type(search_types=cls.search_types, params=params_dict)
 
-              
-              # pylint: disable=colrev-missed-constant-usage
-              if (
-                   "https://api.test.osf.io/v2/search"
-                   in params["url"]
-                ):
-                query = (
-                    params["url"]
-                    .replace(
-                        "https://api.test.osf.io/v2/search", ""
-                    )
-                    .lstrip("&")
-                )
-
+        # Handle different search types
+        if search_type == SearchType.API:
+            # Check for params being empty and initialize if needed
+            if not params_dict:
+                search_source = operation.create_api_source(endpoint=cls.endpoint)
+            elif "https://api.test.osf.io/v2/search" in params_dict.get("url", ""):
+                query = params_dict["url"].replace("https://api.test.osf.io/v2/search", "").lstrip("&")
                 parameter_pairs = query.split("&")
-                search_parameters = {}
-                for parameter in parameter_pairs:
-                    key, value = parameter.split("=")
-                    search_parameters[key] = value
-
+                search_parameters = {key: value for key, value in (pair.split("=") for pair in parameter_pairs)}
                 last_value = list(search_parameters.values())[-1]
-
-                filename = operation.get_unique_filename(
-                    file_path_string=f"osf_{last_value}"
-                )
-
+                filename = operation.get_unique_filename(file_path_string=f"osf_{last_value}")
                 search_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
                     filename=filename,
@@ -145,18 +128,15 @@ class OSFSearchSource(JsonSchemaMixin):
                     search_parameters=search_parameters,
                     comment="",
                 )
-                
-         elif search_type == SearchType.DB:
-             search_source = operation.create_db_source(
-                 search_source_cls = cls,
-                 params = params_dict,
-             )
+        elif search_type == SearchType.DB:
+            search_source = operation.create_db_source(search_source_cls=cls, params=params_dict)
+        else:
+            raise NotImplementedError("Unsupported search type.")
 
-         else:
-             raise NotImplementedError
-         
-         operation.add_source_and_search(search_source)
-         return search_source
+        # Adding the source and performing the search
+        operation.add_source_and_search(search_source)
+        return search_source
+
     
     
     def _get_api_key(self) -> str:
@@ -170,7 +150,7 @@ class OSFSearchSource(JsonSchemaMixin):
             )
         return api_key
     
-    def search(self) -> None:
+    def search(self, rerun=False) -> None:
         """Run a search of OSF"""
         response = self.run_api_query()
         for item in response.get("data", []):
@@ -178,6 +158,14 @@ class OSFSearchSource(JsonSchemaMixin):
             record = colrev.record.record.Record(record_dict)
             self.source_operation.add_update_record(record)
         self.source_operation.save_records()    
+
+
+    def prep_link_md(self, prep_operation, record, save_feed=True, timeout=10):
+        pass
+
+    def prepare(self, record, source):
+        pass
+
 
 
     def run_api_query(self) -> dict:
