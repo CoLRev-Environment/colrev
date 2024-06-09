@@ -22,7 +22,6 @@ colrev.ops.data.Data
       ~Data.get_record_ids_for_synthesis
       ~Data.main
       ~Data.notify
-      ~Data.profile
       ~Data.reading_heuristics
       ~Data.setup_custom_script
 

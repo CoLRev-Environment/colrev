@@ -16,6 +16,7 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
@@ -145,14 +146,14 @@ class GithubPages(JsonSchemaMixin):
         }
 
         self.git_repo.git.checkout(self.GH_PAGES_BRANCH_NAME)
-        if not Path("pre-commit-config.yaml").is_file():
+        if not Filepaths.PRE_COMMIT_CONFIG.is_file():
             colrev.env.utils.retrieve_package_file(
                 template_file=Path(
                     "packages/github_pages/github_pages/pre-commit-config.yaml"
                 ),
-                target=Path(".pre-commit-config.yaml"),
+                target=Filepaths.PRE_COMMIT_CONFIG,
             )
-            self.review_manager.dataset.add_changes(Path(".pre-commit-config.yaml"))
+            self.review_manager.dataset.add_changes(Filepaths.PRE_COMMIT_CONFIG)
 
         data_file = Path("data.bib")
         write_file(records_dict=included_records, filename=data_file)
