@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import typing
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -64,7 +65,22 @@ class GitHubSearchSource(JsonSchemaMixin):
     db_url = "https://github.com/"
     _github_md_filename = Path("data/search/md_github.bib")
     
-
+    def __init__(
+        self, 
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: typing.Optional[dict] = None,
+    ) -> None:
+        self.review_manager = source_operation.review_manager
+        if settings:
+            """GitHub as a search_source"""
+            self.search_source = from_dict(
+                data_class=self.settings_class, data=settings
+            )
+        else:
+            """TODO: GitHub as an md-prep source"""
+            pass
+        
     def add_endpoint(cls,operation: colrev.ops.search.Search,params: str,) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         search_source = operation.create_db_source(search_source_cls=cls,params={})
