@@ -25,6 +25,10 @@ def test_build_docker_image(tmp_path) -> None:  # type: ignore
         except docker.errors.ImageNotFound:
             print(f"Image '{image_name}' not found.")
 
+    # Do not run on macOS (GH-Actions) as Docker is not available
+    if os.getenv("RUNNER_OS") == "macOS":
+        return
+
     colrev.env.docker_manager.DockerManager.build_docker_image(imagename="hello-world")
     remove_docker_image("hello-world")
 

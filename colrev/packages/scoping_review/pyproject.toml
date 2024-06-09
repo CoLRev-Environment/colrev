@@ -2,12 +2,13 @@
 name = "colrev.scoping_review"
 description = "CoLRev package for scoping_review"
 version = "0.1.0"
+license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/scoping_review"
 
 [tool.colrev]
-dev_status = "maturing"
+dev_status = "stable"
+colrev_doc_link = "README.md"
 review_type = "colrev.packages.scoping_review.src.scoping_review:ScopingReview"

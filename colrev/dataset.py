@@ -374,6 +374,14 @@ class Dataset:
             raise colrev_exceptions.ReviewManagerNotNotifiedError()
         return self._git_repo
 
+    def repo_initialized(self) -> bool:
+        """Check whether the repository is initialized"""
+        try:
+            self._git_repo.head.commit
+        except ValueError:
+            return False
+        return True
+
     def has_record_changes(self, *, change_type: str = "all") -> bool:
         """Check whether the records have changes"""
         return self.has_changes(

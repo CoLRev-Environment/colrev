@@ -2,12 +2,18 @@
 name = "colrev.ieee"
 description = "CoLRev package for ieee"
 version = "0.1.0"
+license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
+    { name = "Rhea Nguyen"},
+    { name = "Malou Schmidt"},
+    { name = "Frederic Fischer"},
+    { name = "Janus Fiegen"},
+    { name = "Albert Borchardt"}
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/ieee"
 
 [tool.colrev]
 dev_status = "experimental"
+colrev_doc_link = "README.md"
 search_source = "colrev.packages.ieee.src.ieee:IEEEXploreSearchSource"

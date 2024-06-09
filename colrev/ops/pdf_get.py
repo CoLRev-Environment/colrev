@@ -2,7 +2,6 @@
 """CoLRev pdf_get operation: Get PDF documents."""
 from __future__ import annotations
 
-import os
 import shutil
 import typing
 from glob import glob
@@ -424,9 +423,9 @@ class PDFGet(colrev.process.operation.Operation):
                 file = corrected_path
 
         if file.is_file():
-            file.rename(new_filename)
+            shutil.move(str(file), str(new_filename))
         elif file.is_symlink():
-            os.rename(str(file), str(new_filename))
+            shutil.move(str(file), str(new_filename))
 
         record_dict[Fields.FILE] = str(new_filename)
         self.review_manager.logger.info(f"rename {file.name} > {new_filename}")

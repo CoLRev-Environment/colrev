@@ -1,4 +1,4 @@
-# Remove PDF last page
+## Summary
 
 This package removes pages appended by publishers or registries.
 
@@ -9,8 +9,4 @@ Examples are:
 
 ## pdf-prep
 
-This package is included in many default setups. To add it to a project, run
-
-```
-colrev pdf-prep -a colrev.remove_last_page
-```
+This package is included in many default setups.

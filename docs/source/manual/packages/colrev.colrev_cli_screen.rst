@@ -1,15 +1,62 @@
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |GIT_REPO| image:: /_static/svg/iconmonstr-code-fork-1.svg
+   :width: 15
+   :alt: Git repository
+.. |LICENSE| image:: /_static/svg/iconmonstr-copyright-2.svg
+   :width: 15
+   :alt: Licencse
+.. |MAINTAINER| image:: /_static/svg/iconmonstr-user-29.svg
+   :width: 20
+   :alt: Maintainer
+.. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
+   :width: 15
+   :alt: Documentation
+colrev.colrev_cli_screen
+========================
 
-Interactive CLI screen
-======================
+Package
+--------------------
+
+|MAINTAINER| Maintainer: Gerit Wagner
+
+|LICENSE| License: MIT
+
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_screen>`_
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 30 80
+
+   * - Endpoint
+     - Status
+     - Add
+   * - screen
+     - |MATURING|
+     - .. code-block::
+
+
+         colrev screen --add colrev.colrev_cli_screen
+
+
+Summary
+-------
 
 screen
 ------
 
-Note: This document is currently under development. It will contain the following elements.
+The cli screen asks for user input, indicating for each paper whether it should be included or not. At the beginning, screening criteria can be defined.
 
 
-* description
-* example
+.. raw:: html
 
-Links
------
+   <!--
+   ## Links
+   -->

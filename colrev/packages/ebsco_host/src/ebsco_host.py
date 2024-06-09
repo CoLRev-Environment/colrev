@@ -70,14 +70,16 @@ class EbscoHostSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
+        params: str,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint"""
 
-        return operation.add_db_source(
+        search_source = operation.create_db_source(
             search_source_cls=cls,
-            params=params,
+            params={},
         )
+        operation.add_source_and_search(search_source)
+        return search_source
 
     def search(self, rerun: bool) -> None:
         """Run a search of EbscoHost"""
@@ -87,9 +89,8 @@ class EbscoHostSearchSource(JsonSchemaMixin):
                 search_source_cls=self.__class__,
                 source=self.search_source,
             )
-            return
-
-        raise NotImplementedError
+        else:
+            raise NotImplementedError
 
     def prep_link_md(
         self,

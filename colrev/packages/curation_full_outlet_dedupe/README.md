@@ -1,10 +1,5 @@
-# Curation dedupe
+## Summary
 
 ## dedupe
 
-Note: This document is currently under development. It will contain the following elements.
-
-- description
-- example
-
-## Links
+Deduplication aimed at curated repositories of a selected journal or conference.

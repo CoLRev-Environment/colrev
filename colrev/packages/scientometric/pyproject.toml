@@ -2,12 +2,13 @@
 name = "colrev.scientometric"
 description = "CoLRev package for scientometric"
 version = "0.1.0"
+license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/scientometric"
 
 [tool.colrev]
 dev_status = "experimental"
+colrev_doc_link = "README.md"
 review_type = "colrev.packages.scientometric.src.scientometric:ScientometricReview"

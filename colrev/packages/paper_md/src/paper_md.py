@@ -321,11 +321,11 @@ class PaperMarkdown(JsonSchemaMixin):
     ) -> None:
         # pylint: disable=consider-using-with
 
-        temp = tempfile.NamedTemporaryFile(dir=self._temp_path)
         paper_path = self.settings.paper_path
-        Path(temp.name).unlink(missing_ok=True)
-        paper_path.rename(temp.name)
-        with open(temp.name, encoding="utf-8") as reader, open(
+        _, temp_filepath = tempfile.mkstemp(dir=self._temp_path)
+        Path(temp_filepath).unlink(missing_ok=True)
+        shutil.move(str(paper_path), str(temp_filepath))
+        with open(temp_filepath, encoding="utf-8") as reader, open(
             paper_path, "w", encoding="utf-8"
         ) as writer:
             appended, completed = False, False
@@ -441,7 +441,7 @@ class PaperMarkdown(JsonSchemaMixin):
         paper_path = self.settings.paper_path
         Path(temp.name).unlink(missing_ok=True)
         self._temp_path.mkdir(exist_ok=True, parents=True)
-        shutil.move(str(paper_path), temp.name)
+        shutil.move(str(paper_path), str(temp.name))
 
         screen_operation = self.review_manager.get_screen_operation(
             notify_state_transition_operation=False
@@ -587,7 +587,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 temp = tempfile.NamedTemporaryFile(dir=self._temp_path)
                 paper_path = self.settings.paper_path
                 Path(temp.name).unlink(missing_ok=True)
-                paper_path.rename(temp.name)
+                shutil.move(str(paper_path), str(temp.name))
                 with open(temp.name, encoding="utf-8") as reader, open(
                     paper_path, "w", encoding="utf-8"
                 ) as writer:
@@ -748,11 +748,11 @@ class PaperMarkdown(JsonSchemaMixin):
     ) -> None:
         """Update the data/paper"""
 
-        if silent_mode:
-            return
-
-        if self.review_manager.dataset.has_changes(
-            self.paper_relative_path, change_type="unstaged"
+        if (
+            self.review_manager.dataset.repo_initialized()
+            and self.review_manager.dataset.has_changes(
+                self.paper_relative_path, change_type="unstaged"
+            )
         ):
             self.review_manager.logger.warning(
                 f"{Colors.RED}Skipping updates of "

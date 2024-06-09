@@ -1,4 +1,4 @@
-# GROBID TEI
+## Summary
 
 This package uses GROBID to create annotated TEI documents from PDFs (see [example](https://github.com/CoLRev-Environment/colrev/blob/main/tests/data/WagnerLukyanenkoParEtAl2022.tei.xml)).
 

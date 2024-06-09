@@ -2,12 +2,13 @@
 name = "colrev.umbrella"
 description = "CoLRev package for umbrella_review"
 version = "0.1.0"
+license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/umbrella"
 
 [tool.colrev]
 dev_status = "experimental"
+colrev_doc_link = "README.md"
 review_type = "colrev.packages.umbrella.src.umbrella_review:UmbrellaReview"

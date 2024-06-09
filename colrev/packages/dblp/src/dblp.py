@@ -535,42 +535,54 @@ class DBLPSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
+        params: str,
     ) -> colrev.settings.SearchSource:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
+
+        params_dict = {}
+        if params:
+            if params.startswith("http"):
+                params_dict = {Fields.URL: params}
+            else:
+                for item in params.split(";"):
+                    key, value = item.split("=")
+                    params_dict[key] = value
 
         search_type = operation.select_search_type(
-            search_types=cls.search_types, params=params
+            search_types=cls.search_types, params=params_dict
         )
 
         if search_type == SearchType.API:
-            if len(params) == 0:
-                add_source = operation.add_api_source(endpoint=cls.endpoint)
-                return add_source
+            if len(params_dict) == 0:
+                search_source = operation.create_api_source(endpoint=cls.endpoint)
 
             # pylint: disable=colrev-missed-constant-usage
-            if "url" in params:
+            elif "url" in params_dict:
                 query = (
-                    params["url"]
+                    params_dict["url"]
                     .replace("https://dblp.org/search?q=", cls._api_url)
                     .replace("https://dblp.org/search/publ?q=", cls._api_url)
                 )
 
                 filename = operation.get_unique_filename(file_path_string="dblp")
-                add_source = colrev.settings.SearchSource(
+                search_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
                     filename=filename,
                     search_type=SearchType.API,
                     search_parameters={"query": query},
                     comment="",
                 )
-                return add_source
+            else:
+                raise NotImplementedError
 
-        # if search_type == SearchType.TOC:
+        # elif search_type == SearchType.TOC:
+        else:
+            raise colrev_exceptions.PackageParameterError(
+                f"Cannot add dblp endpoint with query {params}"
+            )
 
-        raise colrev_exceptions.PackageParameterError(
-            f"Cannot add dblp endpoint with query {params}"
-        )
+        operation.add_source_and_search(search_source)
+        return search_source
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""

@@ -495,31 +495,43 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
+        params: str,
     ) -> colrev.settings.SearchSource:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        if len(params) == 0:
-            add_source = operation.add_api_source(endpoint=cls.endpoint)
-            return add_source
+        params_dict = {}
+        if params:
+            if params.startswith("http"):
+                params_dict = {Fields.URL: params}
+            else:
+                for item in params.split(";"):
+                    key, value = item.split("=")
+                    params_dict[key] = value
+
+        if len(params_dict) == 0:
+            search_source = operation.create_api_source(endpoint=cls.endpoint)
 
         # pylint: disable=colrev-missed-constant-usage
-        if "url" in params:
-            host = urlparse(params["url"]).hostname
+        elif "url" in params_dict:
+            host = urlparse(params_dict["url"]).hostname
 
             if host and host.endswith("europepmc.org"):
-                query = params["url"].replace("https://europepmc.org/search?query=", "")
+                query = params_dict["url"].replace(
+                    "https://europepmc.org/search?query=", ""
+                )
                 filename = operation.get_unique_filename(file_path_string="europepmc")
-                add_source = colrev.settings.SearchSource(
+                search_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
                     filename=filename,
-                    search_type=SearchType.DB,
+                    search_type=SearchType.API,
                     search_parameters={"query": query},
                     comment="",
                 )
-                return add_source
+        else:
+            raise NotImplementedError
 
-        raise NotImplementedError
+        operation.add_source_and_search(search_source)
+        return search_source
 
     def _load_bib(self) -> dict:
         def field_mapper(record_dict: dict) -> None:

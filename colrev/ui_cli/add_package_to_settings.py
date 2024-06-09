@@ -10,7 +10,6 @@ import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType
-from colrev.constants import Fields
 from colrev.constants import OperationsType
 
 
@@ -73,46 +72,27 @@ def add_package_to_settings(
     operation: colrev.process.operation.Operation,
     package_identifier: str,
     params: str,
-) -> dict:
+) -> None:
     """Add a package_endpoint (for cli usage)"""
-
-    endpoints_in_settings, package_type = _get_endpoint_with_type(operation)
 
     operation.review_manager.logger.info(
         f"{Colors.GREEN}Add {operation.type} "
         f"package:{Colors.END} {package_identifier}"
     )
 
+    endpoints_in_settings, package_type = _get_endpoint_with_type(operation)
     e_class = package_manager.get_package_endpoint_class(
         package_type=package_type,
         package_identifier=package_identifier,
     )
 
     if hasattr(e_class, "add_endpoint"):
-        params_dict = {}
-        if params:
-            if params.startswith("http"):
-                params_dict = {Fields.URL: params}
-            else:
-                for item in params.split(";"):
-                    key, value = item.split("=")
-                    params_dict[key] = value
-        add_source = e_class.add_endpoint(  # type: ignore
-            operation=operation, params=params_dict
-        )
-        operation.review_manager.settings.sources.append(add_source)
-        operation.review_manager.save_settings()
-        operation.review_manager.dataset.add_changes(
-            add_source.filename, ignore_missing=True
-        )
-        add_package = add_source.to_dict()
+        e_class.add_endpoint(operation=operation, params=params)  # type: ignore
 
     else:
         add_package = {"endpoint": package_identifier}
         endpoints_in_settings.append(add_package)  # type: ignore
-
-    operation.review_manager.save_settings()
-    operation.review_manager.dataset.create_commit(
-        msg=f"Add {operation.type} {package_identifier}",
-    )
-    return add_package
+        operation.review_manager.save_settings()
+        operation.review_manager.dataset.create_commit(
+            msg=f"Add {operation.type} {package_identifier}",
+        )

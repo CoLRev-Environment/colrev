@@ -40,6 +40,7 @@ colrev.dataset.Dataset
       ~Dataset.read_next_record
       ~Dataset.records_changed
       ~Dataset.remote_ahead
+      ~Dataset.repo_initialized
       ~Dataset.reset_log_if_no_changes
       ~Dataset.save_records_dict
       ~Dataset.save_records_dict_to_file

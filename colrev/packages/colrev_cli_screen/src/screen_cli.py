@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from inquirer import Checkbox
 from inquirer import prompt
 
-import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
@@ -85,9 +83,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
 
     def _screen_record_with_criteria(
         self,
-        *,
         record: colrev.record.record.Record,
-        abstract_from_tei: bool,
     ) -> str:
         choices = []
         for criterion_name, criterion_settings in self.screening_criteria.items():
@@ -135,10 +131,6 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             record=record, screen_inclusion=screen_inclusion
         )
 
-        if abstract_from_tei:
-            if Fields.ABSTRACT in record.data:
-                del record.data[Fields.ABSTRACT]
-
         self.screen_operation.screen(
             record=record,
             screen_inclusion=screen_inclusion,
@@ -149,9 +141,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
 
     def _screen_record_without_criteria(
         self,
-        *,
         record: colrev.record.record.Record,
-        abstract_from_tei: bool,
     ) -> str:
         quit_pressed = False
         decision, ret = "NA", "NA"
@@ -171,9 +161,6 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             self.review_manager.logger.info("Stop screen")
             return "quit"
 
-        if abstract_from_tei:
-            if Fields.ABSTRACT in record.data:
-                del record.data[Fields.ABSTRACT]
         if decision == "y":
             self.screen_operation.screen(
                 record=record,
@@ -195,20 +182,6 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         record_dict: dict,
     ) -> str:
         record = colrev.record.record.Record(record_dict)
-        abstract_from_tei = False
-        if (
-            Fields.ABSTRACT not in record.data
-            and Path(record.data.get(Fields.FILE, "")).suffix == ".pdf"
-        ):
-            try:
-                abstract_from_tei = True
-                tei = self.review_manager.get_tei(
-                    pdf_path=Path(record.data[Fields.FILE]),
-                    tei_path=record.get_tei_filename(),
-                )
-                record.data[Fields.ABSTRACT] = tei.get_abstract()
-            except colrev_exceptions.TEIException:
-                pass
 
         self._i += 1
         print("\n\n")
@@ -222,16 +195,10 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             print(record.data["abstract"])
 
         if self.criteria_available:
-            ret = self._screen_record_with_criteria(
-                record=record,
-                abstract_from_tei=abstract_from_tei,
-            )
+            ret = self._screen_record_with_criteria(record)
 
         else:
-            ret = self._screen_record_without_criteria(
-                record=record,
-                abstract_from_tei=abstract_from_tei,
-            )
+            ret = self._screen_record_without_criteria(record)
 
         return ret
 

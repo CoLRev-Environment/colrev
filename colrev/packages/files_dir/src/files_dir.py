@@ -574,6 +574,9 @@ class FilesSearchSource(JsonSchemaMixin):
         linked_file_paths: list,
     ) -> None:
         file_batches = self._get_file_batches()
+        if not file_batches:
+            files_dir_feed.save()
+            return
         for i, file_batch in enumerate(file_batches):
             for record in files_dir_feed.feed_records.values():
                 record = self._add_md_string(record_dict=record)
@@ -672,18 +675,19 @@ class FilesSearchSource(JsonSchemaMixin):
         operation: colrev.ops.search.Search,
         params: str,
     ) -> colrev.settings.SearchSource:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         filename = operation.get_unique_filename(file_path_string="files")
         # pylint: disable=no-value-for-parameter
-        add_source = colrev.settings.SearchSource(
+        search_source = colrev.settings.SearchSource(
             endpoint="colrev.files_dir",
             filename=filename,
             search_type=SearchType.FILES,
             search_parameters={"scope": {"path": "data/pdfs"}},
             comment="",
         )
-        return add_source
+        operation.add_source_and_search(search_source)
+        return search_source
 
     def _update_based_on_doi(self, *, record_dict: dict) -> None:
         if Fields.DOI not in record_dict:

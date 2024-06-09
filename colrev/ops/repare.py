@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
+import colrev.loader.load_utils_formatter
 import colrev.process.operation
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
@@ -39,6 +41,7 @@ class Repare(colrev.process.operation.Operation):
         self.pdf_get_operation = self.review_manager.get_pdf_get_operation(
             notify_state_transition_operation=False
         )
+        self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
 
     def _fix_broken_symlink_based_on_local_index(
         self, *, record: colrev.record.record.Record, full_path: Path
@@ -91,7 +94,7 @@ class Repare(colrev.process.operation.Operation):
 
             # Add .pdf extension if missing
             if Path(str(full_path) + ".pdf").is_file():
-                Path(str(full_path) + ".pdf").rename(full_path)
+                shutil.move(str(full_path) + ".pdf", str(full_path))
 
             # Check / replace multiple blanks in file and filename
             try:
@@ -104,7 +107,9 @@ class Repare(colrev.process.operation.Operation):
                     if record_dict[Fields.FILE].replace("  ", " ") == str(
                         same_dir_pdf
                     ).replace("  ", " "):
-                        same_dir_pdf.rename(str(same_dir_pdf).replace("  ", " "))
+                        shutil.move(
+                            str(same_dir_pdf), str(same_dir_pdf).replace("  ", " ")
+                        )
                         record_dict[Fields.FILE] = record_dict[Fields.FILE].replace(
                             "  ", " "
                         )
@@ -423,6 +428,11 @@ class Repare(colrev.process.operation.Operation):
             ) and record.data.get("link", "").endswith("Accept=text/xml"):
                 record.remove_field(key="link")
 
+    def _fix_field_values(self, records: dict) -> None:
+        for record_dict in records.values():
+            record = colrev.record.record.Record(record_dict)
+            self.load_formatter.run(record)
+
     @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
         """Repare a CoLRev project (main entrypoint)"""
@@ -483,6 +493,8 @@ class Repare(colrev.process.operation.Operation):
         self._update_field_names(records)
 
         self._fix_provenance(records)
+
+        self._fix_field_values(records)
 
         self._fix_files(records)
 

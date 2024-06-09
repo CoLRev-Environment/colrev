@@ -65,21 +65,30 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: dict,
+        params: str,
     ) -> colrev.settings.SearchSource:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
+
+        params_dict = {}
+        if params:
+            for item in params.split(";"):
+                key, value = item.split("=")
+                params_dict[key] = value
 
         search_type = operation.select_search_type(
-            search_types=cls.search_types, params=params
+            search_types=cls.search_types, params=params_dict
         )
 
         if search_type == SearchType.DB:
-            return operation.add_db_source(
+            search_source = operation.create_db_source(
                 search_source_cls=cls,
-                params=params,
+                params=params_dict,
             )
+        else:
+            raise NotImplementedError
 
-        raise NotImplementedError
+        operation.add_source_and_search(search_source)
+        return search_source
 
     def search(self, rerun: bool) -> None:
         """Run a search of ACM Digital Library"""

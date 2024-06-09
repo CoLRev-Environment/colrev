@@ -1,10 +1,5 @@
-# Export prescreen Table
+## Summary
 
 ## prescreen
 
-Note: This document is currently under development. It will contain the following elements.
-
-- description
-- example
-
-## Links
+This package exports a csv/excel file for prescreening and imports the results afterwards.

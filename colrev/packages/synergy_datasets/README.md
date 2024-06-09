@@ -1,4 +1,4 @@
-# SYNERGY datasets
+## Summary
 
 ## search
 
@@ -10,7 +10,7 @@ Navigate to the [SYNERGY Datasets](https://github.com/asreview/synergy-dataset) 
 For example, the dataset under `Howard_2016/Wassenaar_2017_ids.csv` can be added as follows:
 
 ```
-colrev search -a colrev.synergy_datasets -p dataset=Howard_2016/Wassenaar_2017_ids.csv
+colrev search --add colrev.synergy_datasets -p dataset=Howard_2016/Wassenaar_2017_ids.csv
 ```
 
 Note: some datasets are "broken". For example, the [Nagtegaal_2019](https://github.com/asreview/synergy-dataset/blob/master/datasets/Nagtegaal_2019/Nagtegaal_2019_ids.csv) dataset is a broken csv file and does not have any ids (doi/pubmedid/openalex_id).

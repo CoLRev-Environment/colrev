@@ -1,15 +1,13 @@
-# Europe PMC
+## Summary
 
-| SearchSource                         | Scope                                     | Size         |
-|--------------------------------------|-------------------------------------------|--------------|
-| [Europe PMC](https://europepmc.org/) | Including PubMed Central (PMC) (metadata) | > 40,000,000 |
+Europe PMC is a comprehensive database that includes metadata from PubMed Central (PMC) and provides access to over 40 million records.
 
 ## search
 
 ### API search
 
 ```
-colrev search -a colrev.europe_pmc -p "https://europepmc.org/search?query=fitbit%20AND%20gamification%20AND%20RCT%20AND%20diabetes%20mellitus"
+colrev search --add colrev.europe_pmc -p "https://europepmc.org/search?query=fitbit%20AND%20gamification%20AND%20RCT%20AND%20diabetes%20mellitus"
 ```
 ## prep
 

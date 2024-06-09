@@ -8,7 +8,6 @@ from pathlib import Path
 import git
 import pytest
 
-import colrev.env.docker_manager
 import colrev.env.environment_manager
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions

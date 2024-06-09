@@ -54,6 +54,7 @@ extensions = [
     "sphinx_collapse",
     "repoze.sphinx.autointerface",
     "sphinx_design",
+    "sphinx_copybutton",
 ]
 
 
