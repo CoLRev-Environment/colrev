@@ -87,6 +87,16 @@ class GitHubSearchSource(JsonSchemaMixin):
         else:
             """TODO: GitHub as an md-prep source"""
             pass
+    
+    def prep_link_md(
+        self,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.record.Record,
+        save_feed: bool = True,
+        timeout: int = 10,
+    ) -> colrev.record.record.Record:
+        """TODO: Retrieve masterdata from the SearchSource"""
+        return record
         
     def add_endpoint(cls,operation: colrev.ops.search.Search,params: str,) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
