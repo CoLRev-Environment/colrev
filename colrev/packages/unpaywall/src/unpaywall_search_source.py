@@ -20,6 +20,7 @@ import colrev.record.record
 import colrev.settings
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from utils import get_email
 
 # selbst importiert, löschen vor merge und absprache
 
@@ -94,7 +95,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         params = self.search_source.search_parameters
         query = params["query"]
         is_oa = params["is_oa"]
-        email = self.email
+        email = get_email
         return f"{url}?search={query}&is_oa={is_oa}&email={email}"
 
     # hierrüber bekommt man die records von der abfrage über die itteriert wird

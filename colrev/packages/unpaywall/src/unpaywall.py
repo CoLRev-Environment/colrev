@@ -18,6 +18,8 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 
+from utils import get_email
+
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
 
@@ -44,24 +46,7 @@ class Unpaywall(JsonSchemaMixin):
         self.review_manager = pdf_get_operation.review_manager
         self.pdf_get_operation = pdf_get_operation
 
-        self.email = self.get_email()
-
-    def get_email(self) -> str:
-        """Get user's name and email,
-
-        if user have specified an email in registry, that will be returned
-        otherwise it will return the email used in git
-        """
-
-        env_mail = self.review_manager.environment_manager.get_settings_by_key(
-            self.SETTINGS["email"]
-        )
-        (
-            _,
-            email,
-        ) = self.review_manager.environment_manager.get_name_mail_from_git()
-        email = env_mail or email
-        return email
+        self.email = get_email()
 
     def _unpaywall(
         self,
