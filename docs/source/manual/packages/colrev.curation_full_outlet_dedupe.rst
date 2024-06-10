@@ -29,7 +29,7 @@ Package
 
 |LICENSE| License: MIT
 
-|GIT_REPO| `Repository <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/curation_full_outlet_dedupe>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/curation_full_outlet_dedupe>`_
 
 .. list-table::
    :header-rows: 1
