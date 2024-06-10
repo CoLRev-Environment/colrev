@@ -64,7 +64,14 @@ class GitHubSearchSource(JsonSchemaMixin):
     )
     db_url = "https://github.com/"
     _github_md_filename = Path("data/search/md_github.bib")
-    
+
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for GitHub"""
+
+        result = {"confidence": 0.0}
+
+        return result
+
     def __init__(
         self, 
         *,
