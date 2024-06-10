@@ -112,7 +112,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                 .lstrip("&")
             )
 
-            # Example URL: https://api.unpaywall.org/v2/search?query=cell%20thermometry&is_oa=true&email=unpaywall_01@example.com
             parameter_pairs = query.split("&")
             search_parameters = {}
             for parameter in parameter_pairs:
@@ -187,8 +186,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         query = params["query"]
         is_oa = params.get("is_oa", "null")
         page = params.get("page", 1)
-
-        # TODO default email & validation of params
         email = params.get("email", "unpaywall_01@example.com")
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
