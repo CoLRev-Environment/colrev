@@ -52,6 +52,7 @@ Packages
    packages/colrev.descriptive_review.rst
    packages/colrev.literature_review.rst
    packages/colrev.meta_analysis.rst
+   packages/colrev.methodological_review.rst
    packages/colrev.narrative_review.rst
    packages/colrev.qualitative_systematic_review.rst
    packages/colrev.scientometric.rst
@@ -159,4 +160,5 @@ Packages
    packages/colrev.obsidian.rst
    packages/colrev.paper_md.rst
    packages/colrev.prisma.rst
+   packages/colrev.profile.rst
    packages/colrev.structured.rst

@@ -1,0 +1,14 @@
+[project]
+name = "colrev.profile"
+description = "CoLRev package for creating profiles"
+version = "0.1.0"
+license = "MIT"
+authors = [
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/profile"
+
+[tool.colrev]
+dev_status = "experimental"
+colrev_doc_link = "README.md"
+data = "colrev.packages.profile.src.profile:Profile"

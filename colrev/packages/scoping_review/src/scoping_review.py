@@ -40,9 +40,7 @@ class ScopingReview(JsonSchemaMixin):
         settings.data.data_package_endpoints = [
             {"endpoint": "colrev.prisma", "version": "1.0"},
             {
-                "endpoint": "colrev.obsidian",
-                "version": "0.1",
-                "config": {},
+                "endpoint": "colrev.structured",
             },
             {
                 "endpoint": "colrev.paper_md",

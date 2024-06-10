@@ -933,7 +933,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint"""
 
         params_dict = cls._parse_params(params)
@@ -982,6 +982,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             raise NotImplementedError
 
         operation.add_source_and_search(search_source)
+        return search_source
 
     @classmethod
     def _add_toc_interactively(
