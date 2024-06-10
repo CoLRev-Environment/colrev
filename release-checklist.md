@@ -37,6 +37,7 @@ For all releases:
     - Trigger/test the Github-action in a curated metadata repository (using ``colrev-batch-gh-api.py``)
 
 - Update [example repository](https://github.com/CoLRev-Environment/example) if necessary
+- Update the release in the devcontainer of [colrev-template](https://github.com/CoLRev-Environment/colrev-template)
 
 ```
 mkdir example && cd example
