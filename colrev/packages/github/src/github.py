@@ -55,7 +55,7 @@ class GitHubSearchSource(JsonSchemaMixin):
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.github"
     search_types = [SearchType.API]
-
+    
     heuristic_status = SearchSourceHeuristicStatus.todo
     short_name = "GitHubSearch"
     docs_link = (
@@ -65,6 +65,7 @@ class GitHubSearchSource(JsonSchemaMixin):
     db_url = "https://github.com/"
     _github_md_filename = Path("data/search/md_github.bib")
 
+    @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for GitHub"""
 
@@ -73,21 +74,11 @@ class GitHubSearchSource(JsonSchemaMixin):
         return result
 
     def __init__(
-        self, 
-        *,
-        source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
+        self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
-        if settings:
-            """GitHub as a search_source"""
-            self.search_source = from_dict(
-                data_class=self.settings_class, data=settings
-            )
-        else:
-            """TODO: GitHub as an md-prep source"""
-            pass
-    
+
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
@@ -97,11 +88,33 @@ class GitHubSearchSource(JsonSchemaMixin):
     ) -> colrev.record.record.Record:
         """TODO: Retrieve masterdata from the SearchSource"""
         return record
-        
-    def add_endpoint(cls,operation: colrev.ops.search.Search,params: str,) -> None:
+    
+    @classmethod
+    def add_endpoint(
+        cls,
+        operation: colrev.process.operation.Operation,
+        params: str
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-        search_source = operation.create_db_source(search_source_cls=cls,params={})
+        params_dict = {}
+        if params:
+            for item in params.split(";"):
+                key, value = item.split("=")
+                params_dict[key] = value
+        if len(params_dict) == 0:
+            search_source = operation.create_api_source(endpoint="colrev.github")
+        else:
+            filename = operation.get_unique_filename(file_path_string="github")
+            search_source = colrev.settings.SearchSource(
+                endpoint="colrev.github",
+                filename=filename,
+                search_type=SearchType.API,
+                search_parameters=params_dict,
+                comment="",
+            )
+
         operation.add_source_and_search(search_source)
+        return search_source
     
     
     def search(self,  rerun: bool) -> None:
