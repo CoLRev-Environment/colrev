@@ -161,7 +161,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             record = self._create_record(article)
             yield record
 
-    def _get_authors(self, article):
+    def _get_authors(self, article: dict) -> typing.List[str]:
         authors = []
         z_authors = article.get("z_authors", [])
         if z_authors:
