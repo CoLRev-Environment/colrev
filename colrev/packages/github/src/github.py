@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+"""SearchSource: GitHub"""
 from __future__ import annotations
 
 import typing
