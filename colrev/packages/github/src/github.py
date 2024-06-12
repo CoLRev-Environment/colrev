@@ -118,7 +118,19 @@ class GitHubSearchSource(JsonSchemaMixin):
         operation.add_source_and_search(search_source)
         return search_source
     
-    
+    def repo_to_record(*, repo: Github.Repository.Repository) -> dict:
+        """Convert a GitHub repository to a record dict"""
+        record_dict = {}
+        record_dict[Fields.ENTRYTYPE] = "misc"
+        record_dict[Fields.TITLE] = repo.name
+        record_dict[Fields.AUTHOR] = repo.owner
+        record_dict[Fields.DATE] = repo.created_at.strftime("%m/%d/%Y")
+        record_dict[Fields.ABSTRACT] = repo.description
+        record_dict[Fields.URL] = "https://github.com/" + repo.full_name
+        record_dict[Fields.LANGUAGE] = repo.language
+
+        return record_dict
+
     def search(self,  rerun: bool) -> None:
         """Run a search of GitHub"""
 
