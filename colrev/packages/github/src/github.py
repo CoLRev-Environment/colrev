@@ -124,7 +124,15 @@ class GitHubSearchSource(JsonSchemaMixin):
         record_dict = {}
         record_dict[Fields.ENTRYTYPE] = "misc"
         record_dict[Fields.TITLE] = repo.name
-        record_dict[Fields.AUTHOR] = repo.owner
+        """format contributors into str"""
+        contributors = "";
+        for contributor in repo.get_contributors():
+            contributor_name = contributor.login
+            if not contributor_name.endswith("[bot]"): #filter out bots
+                contributors = contributors + contributor_name + ", "
+        contributors = contributors[:-2]
+        record_dict[Fields.AUTHOR] = contributors
+
         record_dict[Fields.DATE] = repo.created_at.strftime("%m/%d/%Y")
         record_dict[Fields.ABSTRACT] = repo.description
         record_dict[Fields.URL] = "https://github.com/" + repo.full_name
