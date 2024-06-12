@@ -133,6 +133,7 @@ class GitHubSearchSource(JsonSchemaMixin):
         contributors = contributors[:-2]
         record_dict[Fields.AUTHOR] = contributors
 
+        record_dict[Fields.YEAR] = repo.created_at.strftime("%Y")
         record_dict[Fields.DATE] = repo.created_at.strftime("%m/%d/%Y")
         record_dict[Fields.ABSTRACT] = repo.description
         record_dict[Fields.URL] = "https://github.com/" + repo.full_name
