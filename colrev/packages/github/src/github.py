@@ -122,7 +122,7 @@ class GitHubSearchSource(JsonSchemaMixin):
         return search_source
     
     @staticmethod
-    def repo_to_record(*, repo: Github.Repository.Repository) -> dict:
+    def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.record.Record:
         """Convert a GitHub repository to a record dict"""
         record_dict = {}
         record_dict[Fields.ENTRYTYPE] = "misc"
@@ -142,7 +142,7 @@ class GitHubSearchSource(JsonSchemaMixin):
         record_dict[Fields.URL] = "https://github.com/" + repo.full_name
         record_dict[Fields.LANGUAGE] = repo.language
 
-        return record_dict
+        return colrev.record.record.Record(data=record_dict)
 
     def search(self,  rerun: bool) -> None:
         """Run a search of GitHub"""
