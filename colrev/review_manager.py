@@ -174,7 +174,7 @@ class ReviewManager:
     def load_settings(self) -> colrev.settings.Settings:
         """Load the settings"""
         self.settings = colrev.settings.load_settings(
-            settings_path=Filepaths.SETTINGS_FILE
+            settings_path=self.get_path(Filepaths.SETTINGS_FILE)
         )
         return self.settings
 
@@ -253,7 +253,7 @@ class ReviewManager:
     def update_status_yaml(
         self, *, add_to_git: bool = True, records: typing.Optional[dict] = None
     ) -> None:
-        """Update the status.yaml"""
+        """Update the STATUS_FILE"""
 
         status_stats = self.get_status_stats(records=records)
         exported_dict = asdict(status_stats)

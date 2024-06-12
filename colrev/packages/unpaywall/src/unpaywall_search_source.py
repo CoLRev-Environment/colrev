@@ -11,18 +11,14 @@ import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.ops.screen
-import colrev.ops.search_api_feed
+import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
-import colrev.settings
+from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
-from utils import get_email
-
-# selbst importiert, löschen vor merge und absprache
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
@@ -30,9 +26,7 @@ from utils import get_email
 class UnpaywallSearchSource(JsonSchemaMixin):
     """Unpaywall Search Source"""
 
-    # achtung hier habe ich von DefaultSettings zu DefaultSourceSettings geändert,da ich Fehler wie "DefaultSettings has no atrribute get_api_feed"
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    # TODO ABSPRECHEN ENTKOMMENTIERT!
     source_identifier = "ID"
     search_types = [SearchType.API]
     endpoint = "colrev.unpaywall"
@@ -42,7 +36,28 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     # docs_link
 
     short_name = "Unpaywall"
-    # API_FIELDS
+
+    API_FIELDS = [
+        "data_standard",
+        "doi",
+        "doi_url",
+        "genre",
+        "is_paratext",
+        "is_oa",
+        "journal_is_in_doaj",
+        "journal_is_oa",
+        "journal_issns",
+        "journal_issn_l",
+        "journal_name",
+        "oa_status",
+        "has_repository_copy",
+        "published_date",
+        "publisher",
+        "title",
+        "updated",
+        "year",
+        "z_authors",
+    ]
     # FIELD_MAPPING
 
     def __init__(
@@ -74,50 +89,120 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(
-        cls, operation: colrev.ops.search.Search, params: dict
-    ) -> colrev.settings.SearchSource:
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        """Not implemented"""
 
-    # hilfsmethode um suche zu starten -> getapi bekommt man SearchAPIFeed object deswegen kann ich auch mit .save etc. arbeiten
-    def _start_api_search(
+        params_dict = {}
+        if params:
+            if params.startswith("http"):
+                params_dict = {Fields.URL: params}
+            else:
+                for item in params.split(";"):
+                    key, value = item.split("=")
+                    params_dict[key] = value
+
+        if len(params_dict) == 0:
+            search_source = operation.create_api_source(endpoint=cls.endpoint)
+
+        # pylint: disable=colrev-missed-constant-usage
+        elif "https://api.unpaywall.org/v2/search?" in params_dict["url"]:
+            query = (
+                params_dict["url"]
+                .replace("https://api.unpaywall.org/v2/search?", "")
+                .lstrip("&")
+            )
+
+            parameter_pairs = query.split("&")
+            search_parameters = {}
+            for parameter in parameter_pairs:
+                key, value = parameter.split("=")
+                search_parameters[key] = value
+
+            filename = operation.get_unique_filename(file_path_string="unpaywall")
+
+            search_source = colrev.settings.SearchSource(
+                endpoint=cls.endpoint,
+                filename=filename,
+                search_type=SearchType.API,
+                search_parameters=search_parameters,
+                comment="",
+            )
+        else:
+            raise NotImplementedError
+
+        operation.add_source_and_search(search_source)
+
+    def _run_api_search(
         self, *, unpaywall_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
-        for record in self.get_query_record():
+        for record in self.get_query_records():
             unpaywall_feed.add_update_record(record)
 
         unpaywall_feed.save()
 
-    def _build_url(self) -> str:
-        """Building of search_url"""
-        url = "https://api.unpaywall.org/v2/"
-        params = self.search_source.search_parameters
-        query = params["query"]
-        is_oa = params["is_oa"]
-        email = get_email
-        return f"{url}?search={query}&is_oa={is_oa}&email={email}"
-
-    # hierrüber bekommt man die records von der abfrage über die itteriert wird
-
-    def get_query_record(self) -> typing.Iterator[colrev.record.record.Record]:
-        """Gets Records to save in API feed"""
-        search_url = self._build_url()
-
-        response = requests.get(search_url, timeout=60)
+    def get_query_records(self) -> typing.Iterator[colrev.record.record.Record]:
+        """Get the records from a query"""
+        full_url = self._build_search_url()
+        response = requests.get(full_url, timeout=90)
         if response.status_code != 200:
             return
-        # TODO: weitere verarbeitung impelemtieren -> warten auf fertigstellung von _build_url
+
+        with open("test.json", "wb") as file:
+            file.write(response.content)
+        data = response.json()
+
+        if "results" not in data:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"Could not reach API. Status Code: {response.status_code}"
+            )
+
+        for result in data["results"]:
+            article = result["response"]
+            record = self._create_record(article)
+            yield record
+
+    def _get_authors(self, article: dict) -> typing.List[str]:
+        authors = []
+        z_authors = article.get("z_authors", [])
+        if z_authors:
+            for author in z_authors:
+                given_name = author.get("given", "")
+                family_name = author.get("family", "")
+                authors.append(f"{family_name}, {given_name}")
+        return authors
+
+    def _create_record(self, article: dict) -> colrev.record.record.Record:
+        record_dict = {Fields.ID: article["doi"]}
+        record_dict[Fields.TITLE] = article.get("title", "")
+        record_dict[Fields.ENTRYTYPE] = article.get("genre", "other")
+        record_dict[Fields.AUTHOR] = " and ".join(self._get_authors(article))
+
+        record = colrev.record.record.Record(record_dict)
+        return record
+
+    def _build_search_url(self) -> str:
+        url = "https://api.unpaywall.org/v2/search?"
+        params = self.search_source.search_parameters
+        query = params["query"]
+        is_oa = params.get("is_oa", "null")
+        page = params.get("page", 1)
+        email = params.get("email", "unpaywall_01@example.com")
+
+        return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
 
     def search(self, rerun: bool) -> None:
         """Run a search of Unpaywall"""
+
         unpaywall_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
-        # TODO: API search
-        self._start_api_search(unpaywall_feed=unpaywall_feed, rerun=rerun)
+
+        if self.search_source.search_type == SearchType.API:
+            self._run_api_search(unpaywall_feed=unpaywall_feed, rerun=rerun)
+        else:
+            raise NotImplementedError
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
@@ -147,8 +232,4 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         """Source-specific preparation for Unpaywall"""
         """Not implemented"""
         return record
-
-
-if __name__ == "__main__":
-    instance = UnpaywallSearchSource()
-    instance.search()
+        return record

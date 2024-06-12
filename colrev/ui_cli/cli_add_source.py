@@ -70,8 +70,8 @@ class CLISourceAdder:
             settings=heuristic_source_dict["source_candidate"].get_dict(),
         )
 
-        params = {"search_file": filename}
-        source = endpoint.add_endpoint(  # type: ignore
+        params = f"search_file={filename}"
+        source = endpoint.add_endpoint(
             operation=self.search_operation,
             params=params,
         )

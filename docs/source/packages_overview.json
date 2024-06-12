@@ -1,7 +1,7 @@
 [
     {
         "package_endpoint_identifier": "colrev.blank",
-        "status": "|MATURING|",
+        "status": "|STABLE|",
         "short_description": "Blank review (:doc:`instructions </manual/packages/colrev.blank>`)",
         "ci_supported": true,
         "endpoint_type": "review_type"
@@ -15,7 +15,7 @@
     },
     {
         "package_endpoint_identifier": "colrev.critical_review",
-        "status": "|EXPERIMENTAL|",
+        "status": "|STABLE|",
         "short_description": "Critical review (:doc:`instructions </manual/packages/colrev.critical_review>`)",
         "ci_supported": true,
         "endpoint_type": "review_type"
@@ -29,14 +29,14 @@
     },
     {
         "package_endpoint_identifier": "colrev.descriptive_review",
-        "status": "|EXPERIMENTAL|",
+        "status": "|STABLE|",
         "short_description": "Descriptive review (:doc:`instructions </manual/packages/colrev.descriptive_review>`)",
         "ci_supported": true,
         "endpoint_type": "review_type"
     },
     {
         "package_endpoint_identifier": "colrev.literature_review",
-        "status": "|MATURING|",
+        "status": "|STABLE|",
         "short_description": "Literature review (simple) (:doc:`instructions </manual/packages/colrev.literature_review>`)",
         "ci_supported": true,
         "endpoint_type": "review_type"
@@ -49,8 +49,15 @@
         "endpoint_type": "review_type"
     },
     {
-        "package_endpoint_identifier": "colrev.narrative_review",
+        "package_endpoint_identifier": "colrev.methodological_review",
         "status": "|EXPERIMENTAL|",
+        "short_description": "Methodological review (:doc:`instructions </manual/packages/colrev.methodological_review>`)",
+        "ci_supported": true,
+        "endpoint_type": "review_type"
+    },
+    {
+        "package_endpoint_identifier": "colrev.narrative_review",
+        "status": "|STABLE|",
         "short_description": "Narrative review (:doc:`instructions </manual/packages/colrev.narrative_review>`)",
         "ci_supported": true,
         "endpoint_type": "review_type"
@@ -71,7 +78,7 @@
     },
     {
         "package_endpoint_identifier": "colrev.scoping_review",
-        "status": "|MATURING|",
+        "status": "|STABLE|",
         "short_description": "Scoping review (:doc:`instructions </manual/packages/colrev.scoping_review>`)",
         "ci_supported": true,
         "endpoint_type": "review_type"
@@ -718,6 +725,13 @@
         "package_endpoint_identifier": "colrev.prisma",
         "status": "|EXPERIMENTAL|",
         "short_description": "Create a PRISMA diagram (:doc:`instructions </manual/packages/colrev.prisma>`)",
+        "ci_supported": false,
+        "endpoint_type": "data"
+    },
+    {
+        "package_endpoint_identifier": "colrev.profile",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "Create a profile (:doc:`instructions </manual/packages/colrev.profile>`)",
         "ci_supported": false,
         "endpoint_type": "data"
     },
