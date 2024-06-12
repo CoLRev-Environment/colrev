@@ -6,10 +6,10 @@ license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/europe_pmc"
 
 [tool.colrev]
 dev_status = "maturing"
+colrev_doc_link = "README.md"
 search_source = "colrev.packages.europe_pmc.src.europe_pmc:EuropePMCSearchSource"
 prep = "colrev.packages.europe_pmc.src.europe_pmc_prep:EuropePMCMetadataPrep"
