@@ -65,7 +65,7 @@ class SearchSourceInterface(
 
     # pylint: disable=no-self-argument
     def heuristic(filename: Path, data: str):  # type: ignore
-        """Heuristic to identify the SearchSource"""
+        """Heuristic to identify to which SearchSource a search file belongs (for DB searches)"""
 
     # pylint: disable=no-self-argument
     def add_endpoint(  # type: ignore
