@@ -10,10 +10,10 @@ authors = [
     { name = "Amadou-Choumoussidine Kouotou-Ngapout"},
     { name = "Robert Theis"},
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/semanticscholar"
 
 [tool.colrev]
 dev_status = "experimental"
+colrev_doc_link = "README.md"
 search_source = "colrev.packages.semanticscholar.src.semanticscholar_search_source:SemanticScholarSearchSource"
 prep = "colrev.packages.semanticscholar.src.semantic_scholar_prep:SemanticScholarPrep"
