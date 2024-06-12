@@ -96,9 +96,12 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             )
 
         elif search_type == SearchType.API:
+
+            filename = operation.get_unique_filename(file_path_string="springer_link")
+
             add_settings = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
-                filename=Path("data/search/springerlink"),
+                filename=filename,
                 search_type=SearchType.API,
                 search_parameters={},
                 comment="",
