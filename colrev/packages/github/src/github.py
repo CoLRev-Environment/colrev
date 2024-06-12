@@ -118,6 +118,7 @@ class GitHubSearchSource(JsonSchemaMixin):
         operation.add_source_and_search(search_source)
         return search_source
     
+    @staticmethod
     def repo_to_record(*, repo: Github.Repository.Repository) -> dict:
         """Convert a GitHub repository to a record dict"""
         record_dict = {}
