@@ -10,6 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
+import colrev.packages.github.src.github as github_connector
 import colrev.record.record
 from colrev.constants import Fields
 
@@ -40,6 +41,17 @@ class GithubMetadataPrep(JsonSchemaMixin):
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
 
-    def prepare(prep_record: dict) -> dict:
-        """Run the prep operation"""
+    def prepare(
+            self, record: colrev.record.record_prep.PrepRecord
+        ) -> colrev.record.record.Record:
+        """Prepare a record based on GitHub metadata"""
+
+        GitHubSearchSource = github_connector.GitHubSearchSource(
+            source_operation=self.prep_operation
+        )
+        GitHubSearchSource.prep_link_md(
+            prep_operation=self.prep_operation, record=record
+        )
+        return record
+
     
