@@ -51,7 +51,7 @@ class Dedupe(JsonSchemaMixin):
         maybe_file = self.review_manager.path / Path(
             bib_dedupe.maybe_cases.MAYBE_CASES_FILEPATH
         )
-        target_path = self.review_manager.get_path(Filepaths.PDF_DIR) / Path(
+        target_path = self.review_manager.get_path(Filepaths.DEDUPE_DIR) / Path(
             bib_dedupe.maybe_cases.MAYBE_CASES_FILEPATH
         )
         if not maybe_file.is_file():
