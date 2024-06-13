@@ -116,6 +116,10 @@ class GitHubSearchSource(JsonSchemaMixin):
         timeout: int = 10,
     ) -> colrev.record.record.Record:
         """TODO: Retrieve masterdata from the SearchSource"""
+        if Fields.URL in record.data:
+            if record.data[Fields.URL].startswith("https://github.com/"): #Check whether record contains GitHub url
+                #TODO: use the provided url to retrieve masterdata for the record
+                pass
         return record
     
     @classmethod
@@ -178,6 +182,7 @@ class GitHubSearchSource(JsonSchemaMixin):
     def prepare(self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.record.Record:
         """Source-specific preparation for GitHub"""
+        return record
 
 
 #   If __name__ == "__main__":
