@@ -212,7 +212,11 @@ class LocalIndex:
 
         # Note: in NotTOCIdentifiableException cases, we still need a toc_key.
         # to accomplish this, the get_toc_key() may acced an "accept_incomplete" flag
-        toc_key = record.get_toc_key()
+        try:
+            toc_key = record.get_toc_key()
+        except colrev_exceptions.NotTOCIdentifiableException as exc:
+            raise colrev_exceptions.RecordNotInIndexException() from exc
+
         toc_items = self._get_toc_items(toc_key, search_across_tocs=search_across_tocs)
         # SQLiteIndexRecord() must be after _get_toc_items(), which also uses the sqlite file
         sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
