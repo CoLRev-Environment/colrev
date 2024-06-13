@@ -30,6 +30,16 @@ class GithubMetadataPrep(JsonSchemaMixin):
     always_apply_changes = False
     docs_link = ()
 
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.ops.prep.Prep,
+        settings: dict,
+    ) -> None:
+        self.settings = self.settings_class.load_settings(data=settings)
+        self.prep_operation = prep_operation
+        self.review_manager = prep_operation.review_manager
+
     def prepare(prep_record: dict) -> dict:
         """Run the prep operation"""
     
