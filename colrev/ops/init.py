@@ -48,7 +48,6 @@ class Initializer:
         light: bool = False,
         exact_call: str = "",
     ) -> None:
-        saved_args = locals()
         self.force_mode = force_mode
         self.target_path = target_path
         os.chdir(target_path)
@@ -60,7 +59,6 @@ class Initializer:
         self._setup_repo(
             example=example,
             exact_call=exact_call,
-            saved_args=saved_args,
             no_docker=light,
         )
 
@@ -69,7 +67,6 @@ class Initializer:
         *,
         example: bool,
         exact_call: str,
-        saved_args: dict,
         no_docker: bool,
     ) -> None:
         self.no_docker = no_docker
