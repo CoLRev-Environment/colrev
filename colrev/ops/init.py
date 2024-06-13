@@ -46,12 +46,10 @@ class Initializer:
         example: bool = False,
         force_mode: bool = False,
         light: bool = False,
-        local_pdf_collection: bool = False,
         exact_call: str = "",
     ) -> None:
         saved_args = locals()
         self.force_mode = force_mode
-        self._validate_arguments(example, local_pdf_collection)
         self.target_path = target_path
         os.chdir(target_path)
         self.review_manager = colrev.review_manager.ReviewManager(
@@ -61,7 +59,6 @@ class Initializer:
         self.title = str(self.target_path.name)
         self._setup_repo(
             example=example,
-            local_pdf_collection=local_pdf_collection,
             exact_call=exact_call,
             saved_args=saved_args,
             no_docker=light,
@@ -71,7 +68,6 @@ class Initializer:
         self,
         *,
         example: bool,
-        local_pdf_collection: bool,
         exact_call: str,
         saved_args: dict,
         no_docker: bool,
@@ -92,22 +88,18 @@ class Initializer:
 
         self.review_manager = colrev.review_manager.ReviewManager(exact_call=exact_call)
 
-        self._create_commit(saved_args=saved_args)
+        self.review_manager.dataset.create_commit(
+            msg="Initial commit",
+            manual_author=True,
+            skip_hooks=True,
+        )
         self._register_repo(example=example)
-        if local_pdf_collection:
-            self._create_local_pdf_collection()
 
         self._post_commit_edits()
 
         self.review_manager.logger.info(
             "%sCompleted init operation%s", Colors.GREEN, Colors.END
         )
-
-    def _validate_arguments(self, example: bool, local_pdf_collection: bool) -> None:
-        if example and local_pdf_collection:
-            raise colrev_exceptions.RepoInitError(
-                msg="Cannot initialize local_pdf_collection repository with example data."
-            )
 
     def _format_review_type(self, review_type: str) -> str:
         formatted_review_type = review_type.replace("-", "_").lower().replace(" ", "_")
@@ -382,14 +374,6 @@ class Initializer:
         git_repo = self.review_manager.dataset.get_repo()
         git_repo.git.add(all=True)
 
-    def _create_commit(self, *, saved_args: dict) -> None:
-        saved_args.pop("local_pdf_collection", None)
-        self.review_manager.dataset.create_commit(
-            msg="Initial commit",
-            manual_author=True,
-            skip_hooks=True,
-        )
-
     def _register_repo(self, *, example: bool) -> None:
         if example or "pytest" in os.getcwd():
             return
@@ -471,20 +455,3 @@ class Initializer:
         with open(Filepaths.SETTINGS_FILE, "w", encoding="utf-8") as outfile:
             json.dump(settings, outfile, indent=4)
         git_repo.index.add([Filepaths.SETTINGS_FILE])
-
-    def _create_local_pdf_collection(self) -> None:
-        self.review_manager.report_logger.handlers = []
-        local_pdf_collection_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(
-            "local_pdf_collection"
-        )
-
-        if local_pdf_collection_path.is_dir():
-            return
-
-        local_pdf_collection_path.mkdir(parents=True, exist_ok=True)
-        Initializer(
-            review_type="colrev.literature_review",
-            target_path=local_pdf_collection_path,
-            local_pdf_collection=True,
-        )
-        self.review_manager.logger.info("Created local_pdf_collection repository")

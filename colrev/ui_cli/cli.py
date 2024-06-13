@@ -266,13 +266,6 @@ def exit(
     default=False,
     help="Add search results example",
 )
-@click.option(
-    "-lpdf",
-    "--local_pdf_collection",
-    is_flag=True,
-    default=False,
-    help="Add a local PDF collection repository",
-)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def init(
@@ -281,7 +274,6 @@ def init(
     example: bool,
     force: bool,
     light: bool,
-    local_pdf_collection: bool,
 ) -> None:
     """Initialize (define review objectives and type)
 
@@ -295,7 +287,6 @@ def init(
         example=example,
         force_mode=force,
         light=light,
-        local_pdf_collection=local_pdf_collection,
         exact_call=EXACT_CALL,
     )
 
