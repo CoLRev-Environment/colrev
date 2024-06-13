@@ -5,6 +5,7 @@ from __future__ import annotations
 import typing
 import json
 from dataclasses import dataclass
+from multiprocessing import Lock
 from pathlib import Path
 
 import zope.interface
@@ -56,7 +57,10 @@ class GitHubSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.github"
-    search_types = [SearchType.API]
+    search_types = [
+        SearchType.API, 
+        SearchType.MD
+        ]
     
     heuristic_status = SearchSourceHeuristicStatus.todo
     short_name = "GitHubSearch"
@@ -76,10 +80,33 @@ class GitHubSearchSource(JsonSchemaMixin):
         return result
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: typing.Optional[dict] = None
     ) -> None:
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
+        if settings:
+            #GitHub as a search source
+            self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        else:
+            #GitHub as a md-prep source
+            github_md_source_l = [
+                s
+                for s in source_operation.review_manager.settings.sources
+                if s.filename == self._github_md_filename
+            ]
+            if github_md_source_l:
+                self.search_source = github_md_source_l[0]
+            else:
+                self.search_source = colrev.settings.SearchSource(
+                    endpoint=self.endpoint,
+                    filename=self._github_md_filename,
+                    search_type=SearchType.MD,
+                    search_parameters={},
+                    comment="",
+                )
+            self.github_lock = Lock()
 
     def prep_link_md(
         self,
@@ -119,7 +146,7 @@ class GitHubSearchSource(JsonSchemaMixin):
         return search_source
     
     @staticmethod
-    def repo_to_record(*, repo: Github.Repository.Repository) -> dict:
+    def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.record.Record:
         """Convert a GitHub repository to a record dict"""
         record_dict = {}
         record_dict[Fields.ENTRYTYPE] = "misc"
@@ -133,12 +160,13 @@ class GitHubSearchSource(JsonSchemaMixin):
         contributors = contributors[:-2]
         record_dict[Fields.AUTHOR] = contributors
 
+        record_dict[Fields.YEAR] = repo.created_at.strftime("%Y")
         record_dict[Fields.DATE] = repo.created_at.strftime("%m/%d/%Y")
         record_dict[Fields.ABSTRACT] = repo.description
         record_dict[Fields.URL] = "https://github.com/" + repo.full_name
         record_dict[Fields.LANGUAGE] = repo.language
 
-        return record_dict
+        return colrev.record.record.Record(data=record_dict)
 
     def search(self,  rerun: bool) -> None:
         """Run a search of GitHub"""
