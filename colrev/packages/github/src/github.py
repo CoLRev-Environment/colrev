@@ -5,6 +5,7 @@ from __future__ import annotations
 import typing
 import json
 from dataclasses import dataclass
+from multiprocessing import Lock
 from pathlib import Path
 
 import zope.interface
@@ -81,8 +82,28 @@ class GitHubSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
+        if settings:
+            #GitHub as a search source
+            self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        else:
+            #GitHub as a md-prep source
+            github_md_source_l = [
+                s
+                for s in source_operation.review_manager.settings.sources
+                if s.filename == self._github_md_filename
+            ]
+            if github_md_source_l:
+                self.search_source = github_md_source_l[0]
+            else:
+                self.search_source = colrev.settings.SearchSource(
+                    endpoint=self.endpoint,
+                    filename=self._github_md_filename,
+                    search_type=SearchType.MD,
+                    search_parameters={},
+                    comment="",
+                )
+            self.github_lock = Lock()
 
     def prep_link_md(
         self,
