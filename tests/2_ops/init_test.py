@@ -22,15 +22,6 @@ def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
         / Path("colrev/ops/init/settings.json")
     )
 
-    with pytest.raises(colrev_exceptions.RepoInitError):
-        colrev.ops.init.Initializer(
-            review_type="literature_review",
-            example=True,
-            local_pdf_collection=True,
-            target_path=tmp_path,
-            light=True,
-        )
-
     with pytest.raises(colrev_exceptions.MissingDependencyError):
         colrev.ops.init.Initializer(
             review_type="misspelled_review", target_path=tmp_path

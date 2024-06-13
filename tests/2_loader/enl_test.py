@@ -33,6 +33,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         colrev.loader.load_utils.load(
             filename=Path("data/search/bib_tests.xy"),
             logger=logging.getLogger(__name__),
+            empty_if_file_not_exists=False,
         )
 
     def entrytype_setter(record_dict: dict) -> None:
