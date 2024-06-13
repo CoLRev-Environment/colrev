@@ -24,6 +24,11 @@ class GithubMetadataPrep(JsonSchemaMixin):
     """Prepares records based on GitHub metadata"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
+    ci_supported: bool = True
+
+    source_correction_hint = "ask the publisher to correct the metadata"
+    always_apply_changes = False
+    docs_link = ()
 
     def prepare(prep_record: dict) -> dict:
         """Run the prep operation"""
