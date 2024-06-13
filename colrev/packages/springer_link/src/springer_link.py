@@ -211,26 +211,32 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         """User API key insertion"""
         run = True
 
-        api_key = ""
+        api_key = self.get_api_key()        
 
         print("\n API key is required for search \n\n")
 
         while run:
-            api_key = input("Please enter your Springer Link API key: ")
+
             if api_key:
-                self.review_manager.environment_manager.update_registry(
-                    self.SETTINGS["api_key"], api_key
-                )
-                run = False
-            else:
-                print("Invalid input. Please enter a valid API key.")
+                print("Api_key vorhanden")
+
+            else: 
+                api_key = input("Please enter your Springer Link API key: ")
+                if api_key:
+                    self.review_manager.environment_manager.update_registry(
+                        self.SETTINGS["api_key"], api_key
+                    )
+                    run = False
+                else:
+                    print("Invalid input. Please enter a valid API key.")
         return
 
     def get_api_key(self) -> str:
         """Get API key from settings"""
-        return self.review_manager.environment_manager.get_settings_by_key(
+        api_key = self.review_manager.environment_manager.get_settings_by_key(
             self.SETTINGS["api_key"]
         )
+        return api_key if api_key else ""
         
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
