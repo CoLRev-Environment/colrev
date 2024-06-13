@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import inquirer
 import requests
 from dataclasses import dataclass
 from pathlib import Path
@@ -220,7 +221,31 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             if api_key:
                 print("Api_key vorhanden")
 
-                run = False
+                change_api_key = [
+                    inquirer.List(
+                        name='change_api_key',
+                        message="Do you want to change your saved api_key?",
+                        choices=['no', 'yes'],
+                            ),
+                ]
+
+                answers = inquirer.prompt(change_api_key)
+
+                if answers == "no":
+                    run = False
+
+                else:
+                    api_key = input("Please enter your new Springer Link API key: ")
+                    if not re.match(r'^[a-z0-9]{32}$', api_key):
+                        print("Error: Invalid API key.\n")
+
+                    elif api_key:
+                        self.review_manager.environment_manager.update_registry(
+                        self.SETTINGS["api_key"], api_key
+                        )
+                        run = False
+                    else:
+                        print("Invalid input. Please enter a valid API key.")
 
             else: 
                 api_key = input("Please enter your Springer Link API key: ")
