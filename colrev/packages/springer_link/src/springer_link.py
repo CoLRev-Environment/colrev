@@ -220,9 +220,14 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             if api_key:
                 print("Api_key vorhanden")
 
+                run = False
+
             else: 
                 api_key = input("Please enter your Springer Link API key: ")
-                if api_key:
+                if not re.match(r'^[a-z0-9]{32}$', api_key):
+                    print("Error: Invalid API key.\n")
+
+                elif api_key:
                     self.review_manager.environment_manager.update_registry(
                         self.SETTINGS["api_key"], api_key
                     )
