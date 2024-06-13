@@ -80,7 +80,10 @@ class GitHubSearchSource(JsonSchemaMixin):
         return result
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: typing.Optional[dict] = None
     ) -> None:
         self.review_manager = source_operation.review_manager
         if settings:
