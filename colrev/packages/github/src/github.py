@@ -115,11 +115,20 @@ class GitHubSearchSource(JsonSchemaMixin):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """TODO: Retrieve masterdata from the SearchSource"""
         if Fields.URL in record.data:
             if record.data[Fields.URL].startswith("https://github.com/"): #Check whether record contains GitHub url
-                #TODO: use the provided url to retrieve masterdata for the record
-                pass
+
+                """GitHub API access (for testing purposes)
+                auth = Auth.Token("access token")
+                g = Github(auth=auth)
+                """
+
+                repo_owner, repo_name = record.data[Fields.URL].rstrip('/').split('/')[-2:]
+                repo = g.get_repo(repo_owner+"/"+repo_name)
+
+                new_record = GitHubSearchSource.repo_to_record(repo=repo)
+                record.data.update(new_record.data)
+                
         return record
     
     @classmethod
