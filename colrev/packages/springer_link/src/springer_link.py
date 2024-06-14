@@ -231,7 +231,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
                 answers = inquirer.prompt(change_api_key)
 
-                if answers == "no":
+                if answers["change_api_key"] == "no":
                     run = False
 
                 else:
