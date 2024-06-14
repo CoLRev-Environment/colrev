@@ -130,16 +130,40 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             return
         
         if self.search_source.search_type == SearchType.API:
-            query = self.search_source.search_parameters.get("query", "")
+            query = self.add_constraints()
             api_key = self.get_api_key()
             self._api_search(query=query, api_key=api_key)
             return
 
         raise NotImplementedError
     
+    def add_constraints(self) -> str:
+        subject = input("Please enter subject for limiting to the specified subject collection: ")
+        keyword = input("Please enter keyword to limit articles tagged with a keyword: ")
+        language = input("Please enter language to limit articles from a particular language: ")
+        year = input("Please enter year to limit articles/chapter published in a particular year: ")
+        type = input("please enter query for type search (book, journal): ")
+
+        constraints = []
+
+        if subject:
+            constraints.append(f"subject:{subject}")
+        if keyword:
+            constraints.append(f"keyword:{keyword}")
+        if language:
+            constraints.append(f"language:{language}")
+        if year:
+            constraints.append(f"year:{year}")
+        if type:
+            constraints.append(f"type:{type}")
+
+        query = " ".join(constraints)
+        return query
+
+    
     def _api_search(self, query: str, api_key: str) -> None:
         
-        api_search_url = f"https://api.springernature.com/meta/v2/json?q=keyword:{query}&api_key={api_key}"
+        api_search_url = f"https://api.springernature.com/meta/v2/json?q={query}&api_key={api_key}"
         print(api_search_url)
         response = requests.get(api_search_url)
         print(response)
