@@ -18,7 +18,16 @@ Download search results and store in `data/search/` directory.
 ### API search
 
 
+#### API search: API key for Springer Link
+
+After selecting API search the user is asked to enter an API key for Springer Link. If an API key is already stored, the user can change the key with the first prompted question by navigating through the list with 'downarrow' and selecting 'yes'. Pressing 'enter' will confirm the selection.
+The use of an API key is mandatory. Without an API key, you will not be able to perform API searches. An API key can be requested via the Springer Link API. (link below)
+
+
+
 
 ## Links
 
 - [SpringerLink](https://link.springer.com/)
+- [SpringerLink API](https://dev.springernature.com/)
+
