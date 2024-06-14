@@ -152,8 +152,8 @@ class GitHubSearchSource(JsonSchemaMixin):
             Fields.ENTRYTYPE: "software",
             Fields.TITLE: repo.name,
             Fields.URL: repo.html_url,
-            Fields.AUTHOR: [contributor.login for contributor in repo.get_contributors() if not contributor.login.endswith("[bot]")],
-            Fields.YEAR: repo.created_at.year,
+            Fields.AUTHOR: ", ".join([contributor.login for contributor in repo.get_contributors() if not contributor.login.endswith("[bot]")]),
+            Fields.YEAR: str(repo.created_at.year),
             Fields.ABSTRACT: repo.description,
             Fields.LANGUAGE: repo.language,
             Fields.FILE: repo.html_url + "/blob/main/README.md" if repo.get_readme() else None
