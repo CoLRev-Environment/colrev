@@ -155,10 +155,13 @@ def load(  # type: ignore
     id_labeler: typing.Callable = lambda x: x,
     unique_id_field: str = "",
     logger: logging.Logger = logging.getLogger(__name__),
+    empty_if_file_not_exists: bool = True,
 ) -> dict:
     """Load a file and return records as a dictionary"""
 
-    if not filename.exists():
+    if not filename.is_file():
+        if empty_if_file_not_exists:
+            return {}
         raise FileNotFoundError
 
     if filename.suffix == ".bib":
