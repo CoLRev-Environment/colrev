@@ -219,19 +219,19 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         while run:
 
             if api_key:
-                print("Api_key vorhanden")
+                print("Your API key is already available")
 
                 change_api_key = [
                     inquirer.List(
                         name='change_api_key',
-                        message="Do you want to change your saved api_key?",
+                        message="Do you want to change your saved API key?",
                         choices=['no', 'yes'],
                             ),
                 ]
 
                 answers = inquirer.prompt(change_api_key)
 
-                if answers == "no":
+                if answers["change_api_key"] == "no":
                     run = False
 
                 else:
