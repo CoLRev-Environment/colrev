@@ -39,6 +39,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
     with pytest.raises(FileNotFoundError):
         colrev.loader.load_utils.load(
             filename=Path("non-existent.bib"),
+            empty_if_file_not_exists=False,
         )
 
     helpers.retrieve_test_file(

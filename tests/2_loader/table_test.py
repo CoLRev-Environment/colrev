@@ -41,6 +41,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
             unique_id_field="pmid",
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
+            empty_if_file_not_exists=False,
         )
 
     # file must exist
@@ -50,6 +51,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
             unique_id_field="INCREMENTAL",
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
+            empty_if_file_not_exists=False,
         )
 
     # Test csv

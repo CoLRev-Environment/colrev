@@ -49,6 +49,7 @@ def test_load_ris_entries(tmp_path, helpers):  # type: ignore
             unique_id_field="doi",
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
+            empty_if_file_not_exists=False,
         )
 
     helpers.retrieve_test_file(

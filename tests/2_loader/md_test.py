@@ -30,6 +30,7 @@ def test_load_md(  # type: ignore
         colrev.loader.load_utils.load(
             filename=Path("non-existent.md"),
             logger=logging.getLogger(__name__),
+            empty_if_file_not_exists=False,
         )
 
     if base_repo_review_manager.in_ci_environment():
