@@ -152,23 +152,17 @@ class GitHubSearchSource(JsonSchemaMixin):
     @staticmethod
     def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.record.Record:
         """Convert a GitHub repository to a record dict"""
-        record_dict = {}
-        record_dict[Fields.ENTRYTYPE] = "misc"
-        record_dict[Fields.TITLE] = repo.name
-        """format contributors into str"""
-        contributors = "";
-        for contributor in repo.get_contributors():
-            contributor_name = contributor.login
-            if not contributor_name.endswith("[bot]"): #filter out bots
-                contributors = contributors + contributor_name + ", "
-        contributors = contributors[:-2]
-        record_dict[Fields.AUTHOR] = contributors
-
-        record_dict[Fields.YEAR] = repo.created_at.strftime("%Y")
-        record_dict[Fields.DATE] = repo.created_at.strftime("%m/%d/%Y")
-        record_dict[Fields.ABSTRACT] = repo.description
-        record_dict[Fields.URL] = "https://github.com/" + repo.full_name
-        record_dict[Fields.LANGUAGE] = repo.language
+        record_dict = {
+            Fields.ENTRYTYPE: "software",
+            Fields.TITLE: repo.name,
+            Fields.URL: repo.html_url,
+            Fields.AUTHOR: [contributor.login for contributor in repo.get_contributors() if not contributor.login.endswith("[bot]")],
+            Fields.YEAR: repo.created_at.year,
+            Fields.ABSTRACT: repo.description,
+            Fields.LANGUAGE: repo.language,
+            Fields.FILE: repo.html_url + "/blob/main/README.md" if repo.get_readme() else None
+            #Fields.LICENSE?: license_info.spdx_id if repo.license else None
+        }
 
         return colrev.record.record.Record(data=record_dict)
 
