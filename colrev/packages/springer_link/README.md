@@ -24,10 +24,15 @@ After selecting API search the user is asked to enter an API key for Springer Li
 The use of an API key is mandatory. Without an API key, you will not be able to perform API searches. An API key can be requested via the Springer Link API. (link below)
 
 
+#### API search: entering the search paramters
 
+In this step the user can enter the search parameters.
+
+#### API search: Search results
 
 ## Links
 
 - [SpringerLink](https://link.springer.com/)
 - [SpringerLink API](https://dev.springernature.com/)
+- [SpringerLink API Documentation](https://docs-dev.springernature.com/docs/)
 
