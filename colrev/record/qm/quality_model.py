@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+from multiprocessing import Lock
 from pathlib import Path
 
 import colrev.record.qm.checkers
@@ -24,6 +25,7 @@ class QualityModel:
         self.pdf_mode = pdf_mode
         self.defects_to_ignore = defects_to_ignore
         self._register_checkers()
+        self.local_index_lock = Lock()
 
     def _register_checkers(self) -> None:
         """Register checkers from the checker directory, looking for a
