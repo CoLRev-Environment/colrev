@@ -118,7 +118,9 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         try:
             system_platform = platform.system().lower()
 
-            if system_platform == "darwin":  # macOS
+            if os.getenv("CODESPACES") is not None:
+                subprocess.run(["code", filepath], check=True)
+            elif system_platform == "darwin":  # macOS
                 subprocess.run(["open", filepath], check=True)
             elif system_platform == "windows":
                 subprocess.run(["start", "", filepath], check=True, shell=True)

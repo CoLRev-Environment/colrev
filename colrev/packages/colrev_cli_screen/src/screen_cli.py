@@ -99,7 +99,8 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         question = [
             Checkbox(
                 "violated_criteria",
-                message="Select the criteria that are violated:",
+                message="Select the criteria that are violated "
+                + "[use space to select (if any), use Enter to confirm]:",
                 choices=choices,
             ),
         ]
