@@ -110,7 +110,9 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             params_dict.update(vars(add_settings))
             instance = cls(source_operation=operation, settings=params_dict)
             instance.api_ui()
-            search_source = operation.create_api_source(endpoint=cls.endpoint)
+            search_params = instance.add_constraints()
+            add_settings.search_parameters = search_params
+            search_source = add_settings
             
 
         else:
@@ -130,33 +132,32 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             return
         
         if self.search_source.search_type == SearchType.API:
-            query = self.add_constraints()
+            query = self.build_query(self.search_source.search_parameters)
             api_key = self.get_api_key()
             self._api_search(query=query, api_key=api_key)
             return
 
         raise NotImplementedError
     
-    def add_constraints(self) -> str:
+    def add_constraints(self) -> dict:
         subject = input("Please enter subject for limiting to the specified subject collection: ")
         keyword = input("Please enter keyword to limit articles tagged with a keyword: ")
         language = input("Please enter language to limit articles from a particular language: ")
         year = input("Please enter year to limit articles/chapter published in a particular year: ")
-        type = input("please enter query for type search (book, journal): ")
+        type = input("Please enter query for type search (book, journal): ")
 
-        constraints = []
+        search_parameters = {
+            'subject': subject,
+            'keyword': keyword,
+            'language': language,
+            'year': year,
+            'type': type
+        }
 
-        if subject:
-            constraints.append(f"subject:{subject}")
-        if keyword:
-            constraints.append(f"keyword:{keyword}")
-        if language:
-            constraints.append(f"language:{language}")
-        if year:
-            constraints.append(f"year:{year}")
-        if type:
-            constraints.append(f"type:{type}")
-
+        return search_parameters
+    
+    def build_query(self, search_parameters: dict) -> str:
+        constraints = [f"{key}:{value}" for key, value in search_parameters.items() if value]
         query = " ".join(constraints)
         return query
 
