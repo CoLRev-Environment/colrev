@@ -10,29 +10,89 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 
 from github import Github
+from github import Auth
 
-def get_citation_data(*, citation_data: str) -> dict:
-    """TODO: get citation data from cff file"""
-    pass
+def get_title(*, repo: Github.Repository.Repository, citation_data: str) -> str:
+    """Get repository title"""
+    if citation_data:
+        title = re.search(r'^\s*title\s*:\s*(.+)\s*$', citation_data, re.M)
+        if title:
+            return title.group(1).strip().replace('"','')
+    return repo.name
 
+def get_authors(*, repo: Github.Repository.Repository, citation_data: str) -> str:
+    """Get repository authors"""
+    if citation_data:
+        authors = re.findall(r'- family-names:\s*"(.+)"\s*\n\s*given-names:\s*"(.+)"', citation_data, re.M)
+        return ', '.join([a[1].strip() + " " + a[0].strip() for a in authors])
+    return ', '.join([c.login for c in repo.get_contributors() if not c.login.endswith("[bot]")])
+
+def get_url(*, repo: Github.Repository.Repository, citation_data: str) -> str:
+    """Get repository URL"""
+    if citation_data:
+        url = re.search(r'^\s*url\s*:\s*(.+)\s*$', citation_data, re.M)
+        if url:
+            return url.group(1).strip()
+    return repo.html_url
+
+def get_release_date(*, repo: Github.Repository.Repository, citation_data: str) -> str:
+    """Get release date"""
+    if citation_data:
+        release_date = re.search(r'^\s*date-released\s*:\s*(.+)\s*$', citation_data, re.M)
+        if release_date:
+            return release_date.group(1).strip()
+    return repo.created_at.strftime("%m/%d/%Y")
+
+def get_version(*, repo: Github.Repository.Repository, citation_data: str) -> str:
+    """Get current software version"""
+    if citation_data:
+        version = re.search(r'^\s*version\s*:\s*(.+)\s*$', citation_data, re.M)
+        if version:
+            return version.group(1).strip()
+    return ""
 
 def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.record.Record:
-    """Convert a GitHub repository to a record dict"""
+    """Convert a GitHub repository to a record"""
     try: #If available, use data from CITATION.cff file
         content = repo.get_contents("CITATION.cff")
         citation_data = content.decoded_content.decode('utf-8')
-        record_dict = GitHubSearchSource.get_citation_data(citation_data=citation_data)
     except:
-        record_dict = {
-            Fields.ENTRYTYPE: "software",
-            Fields.TITLE: repo.name,
-            Fields.URL: repo.html_url,
-            Fields.AUTHOR: ", ".join([contributor.login for contributor in repo.get_contributors() if not contributor.login.endswith("[bot]")]),
-            Fields.YEAR: str(repo.created_at.year),
-            Fields.ABSTRACT: repo.description,
-            Fields.LANGUAGE: repo.language,
-            Fields.FILE: repo.html_url + "/blob/main/README.md" if repo.get_readme() else None
-            #Fields.LICENSE?: license_info.spdx_id if repo.license else None
-        }
+        citation_data = ""
 
-    return colrev.record.record.Record(data=record_dict)
+    data = {Fields.ENTRYTYPE: "software"}
+
+    data[Fields.TITLE] = get_title(repo=repo,citation_data=citation_data)
+
+    data[Fields.AUTHOR] = get_authors(repo=repo,citation_data=citation_data)
+
+    data[Fields.URL] = get_url(repo=repo,citation_data=citation_data)
+
+    data[Fields.DATE] = get_release_date(repo=repo,citation_data=citation_data)
+
+    data[Fields.FILE] = repo.html_url + "/blob/main/README.md" if repo.get_readme() else None
+    
+    data[Fields.ABSTRACT] = repo.description
+    
+    data[Fields.LANGUAGE] = repo.language
+
+    # data[Fields.LICENSE] = license_info.spdx_id if repo.license else None
+
+    # data[Fields.VERSION] = get_version(repo=repo,citation_data=citation_data)
+
+    return colrev.record.record.Record(data=data)
+
+"""
+# Code for testing the methods
+auth = Auth.Token("access_token")
+g = Github(auth=auth)
+repo = g.get_repo("CoLRev-Environment/colrev")
+assert repo_to_record(repo=repo).data == {
+    'ENTRYTYPE': 'software',
+    'title': 'CoLRev: An open-source environment for collaborative reviews',
+    'author': 'Gerit Wagner, Julian Prester',
+    'url': '"https://github.com/CoLRev-Environment/colrev"',
+    'date': '2024-06-15',
+    'file': 'https://github.com/CoLRev-Environment/colrev/blob/main/README.md',
+    'abstract': 'CoLRev: An open-source environment for collaborative reviews', 
+    'language': 'Python'}
+"""
