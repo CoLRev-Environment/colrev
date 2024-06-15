@@ -259,30 +259,11 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                     run = False
 
                 else:
-                    api_key = input("Please enter your new Springer Link API key: ")
-                    if not re.match(r'^[a-z0-9]{32}$', api_key):
-                        print("Error: Invalid API key.\n")
-
-                    elif api_key:
-                        self.review_manager.environment_manager.update_registry(
-                        self.SETTINGS["api_key"], api_key
-                        )
-                        run = False
-                    else:
-                        print("Invalid input. Please enter a valid API key.")
+                    api_key = self.api_key_ui()
 
             else: 
-                api_key = input("Please enter your Springer Link API key: ")
-                if not re.match(r'^[a-z0-9]{32}$', api_key):
-                    print("Error: Invalid API key.\n")
-
-                elif api_key:
-                    self.review_manager.environment_manager.update_registry(
-                        self.SETTINGS["api_key"], api_key
-                    )
-                    run = False
-                else:
-                    print("Invalid input. Please enter a valid API key.")
+                api_key = self.api_key_ui()
+                
         return
 
     def get_api_key(self) -> str:
@@ -291,7 +272,16 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             self.SETTINGS["api_key"]
         )
         return api_key if api_key else ""
-        
+    
+    def api_key_ui(self) -> str: 
+        api_key = input("Please enter your Springer Link API key: ")
+        if not re.match(r'^[a-z0-9]{32}$', api_key):
+            print("Error: Invalid API key.\n")
+        else:
+            self.review_manager.environment_manager.update_registry(
+                self.SETTINGS["api_key"], api_key
+            )
+            return api_key
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
