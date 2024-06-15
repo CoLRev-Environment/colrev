@@ -140,18 +140,19 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         raise NotImplementedError
     
     def add_constraints(self) -> dict:
-        subject = input("Please enter subject for limiting to the specified subject collection: ")
-        keyword = input("Please enter keyword to limit articles tagged with a keyword: ")
-        language = input("Please enter language to limit articles from a particular language: ")
-        year = input("Please enter year to limit articles/chapter published in a particular year: ")
-        type = input("Please enter query for type search (book, journal): ")
+        print("Please enter your search parameter for the following constraints (or just press enter to continue):")
+        subject = input("subject: ")
+        keyword = input("keyword: ")
+        language = input("language: ")
+        year = input("year: ")
+        doc_type = input("type: ")
 
         search_parameters = {
             'subject': subject,
             'keyword': keyword,
             'language': language,
             'year': year,
-            'type': type
+            'type': doc_type
         }
 
         return search_parameters
