@@ -106,9 +106,26 @@ class Initializer:
         return formatted_review_type
 
     def _reset_if_existing_repo_with_single_commit(self) -> None:
+        def is_empty_colrev_template() -> bool:
+            files = list(
+                os.path.join(root, file)
+                for root, _, files in os.walk(self.target_path)
+                for file in files
+            )
+            files = [os.path.relpath(file, self.target_path) for file in files]
+            files = [
+                file
+                for file in files
+                if not file.startswith(".git/")
+                and not file.startswith(".devcontainer/")
+            ]
+            return not files
+
         try:
             git_repo = git.Repo.init()
             if len(list(git_repo.iter_commits())) == 1:
+                if is_empty_colrev_template():
+                    return
                 print("Detected existing repository")
                 if "y" != input("Reset existing repository? (y/n) "):
                     raise colrev_exceptions.CoLRevException("Operation aborted.")
