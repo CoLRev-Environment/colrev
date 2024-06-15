@@ -59,6 +59,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         "z_authors",
     ]
     # FIELD_MAPPING
+    FIELD_MAPPING = {"z_authors": Fields.AUTHOR, "journal_name": Fields.JOURNAL}
 
     def __init__(
         self,
@@ -177,6 +178,17 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         record_dict[Fields.ENTRYTYPE] = article.get("genre", "other")
         record_dict[Fields.AUTHOR] = " and ".join(self._get_authors(article))
 
+        #validation of params und schauen hier wird nur gemapped in der ersten for schleife
+        # und noch keine werte zugewiesen
+        for api_field, rec_field in self.FIELD_MAPPING.items():
+            if api_field in article:
+                record_dict[rec_field] = api_field
+
+        #alle Felder die nicht angehängt sind erstmal anhängen
+        for api_field in article:
+            if api_field not in self.FIELD_MAPPING:
+                record_dict[api_field] = article[api_field]
+
         record = colrev.record.record.Record(record_dict)
         return record
 
@@ -231,5 +243,4 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Unpaywall"""
         """Not implemented"""
-        return record
         return record
