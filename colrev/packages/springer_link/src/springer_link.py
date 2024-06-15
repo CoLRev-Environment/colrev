@@ -158,7 +158,11 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         return search_parameters
     
     def build_query(self, search_parameters: dict) -> str:
-        constraints = [f"{key}:{value}" for key, value in search_parameters.items() if value]
+        constraints = []
+        for key, value in search_parameters.items():
+            if value:
+                encoded_value = value.replace(" ", "%20")
+                constraints.append(f"{key}:%22{encoded_value}%22")
         query = " ".join(constraints)
         return query
 
