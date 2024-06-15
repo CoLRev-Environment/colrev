@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typing
 import json
+import re
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -118,17 +119,18 @@ class GitHubSearchSource(JsonSchemaMixin):
         timeout: int = 10,
     ) -> colrev.record.record.Record:
         if Fields.URL in record.data:
-            if record.data[Fields.URL].startswith("https://github.com/"): #Check whether record contains GitHub url
+            pattern = r'https?://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)$'
+            match = re.match(pattern, record.data[Fields.URL])
+            if match: #Check whether record contains GitHub url
 
-                """GitHub API access (for testing purposes)
-                auth = Auth.Token("access token")
+                '''
+                # for testing
+                auth = Auth.Token("access_token")
                 g = Github(auth=auth)
-                """
-
-                repo_owner, repo_name = record.data[Fields.URL].rstrip('/').split('/')[-2:]
-                repo = g.get_repo(repo_owner+"/"+repo_name)
-
-                new_record = GitHubSearchSource.repo_to_record(repo=repo)
+                '''
+                
+                repo = g.get_repo(match.group(1) + "/" + match.group(2))
+                new_record = connector_utils.repo_to_record(repo=repo)
                 record.data.update(new_record.data)
                 
         return record

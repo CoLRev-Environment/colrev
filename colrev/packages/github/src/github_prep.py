@@ -10,7 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
-import colrev.packages.github.src.github as github_connector
+import colrev.packages.github.src.github_search_source as github_connector
 import colrev.record.record
 from colrev.constants import Fields
 
