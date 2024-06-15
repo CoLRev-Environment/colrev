@@ -15,7 +15,7 @@ from github import Auth
 def get_title(*, repo: Github.Repository.Repository, citation_data: str) -> str:
     """Get repository title"""
     if citation_data:
-        title = re.search(r'^\s*title\s*:\s*(.+)\s*$', citation_data, re.M)
+        title = re.search(r'^\s*title:\s*(.+)\s*$', citation_data, re.M)
         if title:
             return title.group(1).strip().replace('"','')
     return repo.name
@@ -30,7 +30,7 @@ def get_authors(*, repo: Github.Repository.Repository, citation_data: str) -> st
 def get_url(*, repo: Github.Repository.Repository, citation_data: str) -> str:
     """Get repository URL"""
     if citation_data:
-        url = re.search(r'^\s*url\s*:\s*(.+)\s*$', citation_data, re.M)
+        url = re.search(r'^\s*url:\s*(.+)\s*$', citation_data, re.M)
         if url:
             return url.group(1).strip()
     return repo.html_url
@@ -38,18 +38,18 @@ def get_url(*, repo: Github.Repository.Repository, citation_data: str) -> str:
 def get_release_date(*, repo: Github.Repository.Repository, citation_data: str) -> str:
     """Get release date"""
     if citation_data:
-        release_date = re.search(r'^\s*date-released\s*:\s*(.+)\s*$', citation_data, re.M)
+        release_date = re.search(r'^\s*date-released:\s*(.+)\s*$', citation_data, re.M)
         if release_date:
             return release_date.group(1).strip()
-    return repo.created_at.strftime("%m/%d/%Y")
+    return repo.created_at.strftime("%Y/%m/%d")
 
 def get_version(*, repo: Github.Repository.Repository, citation_data: str) -> str:
     """Get current software version"""
     if citation_data:
-        version = re.search(r'^\s*version\s*:\s*(.+)\s*$', citation_data, re.M)
+        version = re.search(r'^\s*version:\s*(.+)\s*$', citation_data, re.M)
         if version:
             return version.group(1).strip()
-    return ""
+    return None
 
 def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.record.Record:
     """Convert a GitHub repository to a record"""
@@ -69,6 +69,8 @@ def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.recor
 
     data[Fields.DATE] = get_release_date(repo=repo,citation_data=citation_data)
 
+    data[Fields.YEAR] = data[Fields.DATE][:4]
+
     data[Fields.FILE] = repo.html_url + "/blob/main/README.md" if repo.get_readme() else None
     
     data[Fields.ABSTRACT] = repo.description
@@ -80,8 +82,7 @@ def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.recor
     # data[Fields.VERSION] = get_version(repo=repo,citation_data=citation_data)
 
     return colrev.record.record.Record(data=data)
-
-"""
+'''
 # Code for testing the methods
 auth = Auth.Token("access_token")
 g = Github(auth=auth)
@@ -92,7 +93,8 @@ assert repo_to_record(repo=repo).data == {
     'author': 'Gerit Wagner, Julian Prester',
     'url': '"https://github.com/CoLRev-Environment/colrev"',
     'date': '2024-06-15',
+    'year': '2024',
     'file': 'https://github.com/CoLRev-Environment/colrev/blob/main/README.md',
     'abstract': 'CoLRev: An open-source environment for collaborative reviews', 
     'language': 'Python'}
-"""
+'''
