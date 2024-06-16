@@ -208,6 +208,8 @@ class GitHubSearchSource(JsonSchemaMixin):
             repositories = g.search_repositories("bogosort")
 
             # Speichern der Suchergebnisse in einer Datei
+            # hierfür Verweis auf _create_record_dict aus der ieee -> wie sieht unser record_dict am Ende aus?
+
             results = []
             for repo in repositories:
                 repo_data = {
