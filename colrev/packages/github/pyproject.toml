@@ -7,10 +7,11 @@ authors = [
     { name = "Kolja Rinne", email = "kolja.rinne@stud.uni-bamberg.de" }
     { name = "Philipp Kasimir ", email = "philipp-william.kasimir@stud.uni-bamberg.de" }
     { name = "Chris Vierath", email = "chris-norman.vierath@stud.uni-bamberg.de" }
+    { name = "Karl Schnickmann", email = "karl.schnickmann@stud.uni-bamberg.de"}
 ]
 documentation = "README.md"
-colrev_doc_link = "README.md"
 
 [tool.colrev]
 dev_status = "experimental"
-search_source = "colrev.packages.github.src.github:GitHubSearchSource"
+colrev_doc_link = "README.md"
+search_source = "colrev.packages.github.src.github_search_source:GitHubSearchSource"
