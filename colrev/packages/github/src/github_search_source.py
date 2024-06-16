@@ -128,10 +128,14 @@ class GitHubSearchSource(JsonSchemaMixin):
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         params_dict = {}
-        if params:
+        if params: # right now parameters of the form title=[search term];readme=[search term] are accepted
             for item in params.split(";"):
-                key, value = item.split("=")
-                params_dict[key] = value
+                try:
+                    key, value = item.split("=")
+                    if key == "title" or key == "readme":
+                        params_dict[key] = value
+                except:
+                    pass
         if len(params_dict) == 0:
             search_source = operation.create_api_source(endpoint="colrev.github")
         else:
