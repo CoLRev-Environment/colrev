@@ -16,10 +16,12 @@ import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.unpaywall.src import utils
+
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
@@ -58,8 +60,16 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         "year",
         "z_authors",
     ]
-    # FIELD_MAPPING
-    FIELD_MAPPING = {"z_authors": Fields.AUTHOR, "journal_name": Fields.JOURNAL}
+
+    ENTRYTYPE_MAPPING = {
+        "journal-article": ENTRYTYPES.ARTICLE,
+        "book": ENTRYTYPES.BOOK,
+        "proceedings-article": ENTRYTYPES.INPROCEEDINGS,
+        "book-chapter": ENTRYTYPES.INBOOK,
+        "conference": ENTRYTYPES.CONFERENCE,
+        "dissertation": ENTRYTYPES.PHDTHESIS,
+        "report": ENTRYTYPES.TECHREPORT,
+    }
 
     def __init__(
         self,
@@ -174,22 +184,36 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
     def _create_record(self, article: dict) -> colrev.record.record.Record:
         record_dict = {Fields.ID: article["doi"]}
-        record_dict[Fields.TITLE] = article.get("title", "")
-        record_dict[Fields.ENTRYTYPE] = article.get("genre", "other")
+
+        entrytype = self.ENTRYTYPE_MAPPING.get(
+            article.get("genre", "other"), ENTRYTYPES.MISC
+        )
+        record_dict[Fields.ENTRYTYPE] = entrytype
+
         record_dict[Fields.AUTHOR] = " and ".join(self._get_authors(article))
+        record_dict[Fields.TITLE] = article.get("title", "")
+        record_dict[Fields.YEAR] = article.get("published_date", "")
 
-        #validation of params und schauen hier wird nur gemapped in der ersten for schleife
-        # und noch keine werte zugewiesen
-        for api_field, rec_field in self.FIELD_MAPPING.items():
-            if api_field in article:
-                record_dict[rec_field] = api_field
-
-        #alle Felder die nicht angehängt sind erstmal anhängen
-        for api_field in article:
-            if api_field not in self.FIELD_MAPPING:
-                record_dict[api_field] = article[api_field]
+        if entrytype == ENTRYTYPES.ARTICLE:
+            record_dict[Fields.JOURNAL] = article.get("journal_name", "")
+        elif entrytype == ENTRYTYPES.BOOK:
+            record_dict[Fields.PUBLISHER] = article.get("publisher", "")
+        elif entrytype == ENTRYTYPES.INPROCEEDINGS:
+            record_dict[Fields.BOOKTITLE] = article.get("booktitle", "")
+        elif entrytype == ENTRYTYPES.INBOOK:
+            record_dict[Fields.BOOKTITLE] = article.get("booktitle", "")
+            record_dict[Fields.PUBLISHER] = article.get("publisher", "")
+        elif entrytype == ENTRYTYPES.CONFERENCE:
+            record_dict[Fields.BOOKTITLE] = article.get("booktitle", "")
+        elif entrytype == ENTRYTYPES.PHDTHESIS:
+            record_dict[Fields.SCHOOL] = article.get("school", "")  # oder publisher?
+        elif entrytype == ENTRYTYPES.TECHREPORT:
+            record_dict[Fields.INSTITUTION] = article.get(
+                "publisher", ""
+            )  # habe hier als default publisher, richtig?
 
         record = colrev.record.record.Record(record_dict)
+
         return record
 
     def _build_search_url(self) -> str:
