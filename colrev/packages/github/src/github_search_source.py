@@ -151,8 +151,57 @@ class GitHubSearchSource(JsonSchemaMixin):
         operation.add_source_and_search(search_source)
         return search_source
 
-    def search(self,  rerun: bool) -> None:
-        """Run a search of GitHub"""
+    def search(self, rerun: bool = False) -> None:
+        """Run a search on GitHub"""
+        # Überprüfen Sie, ob die Suchparameter definiert sind
+        if not self.search_source.search_parameters:
+            raise ValueError("No search parameters defined for GitHub search source")
+
+        # Erstellen einer GitHub-Instanz ohne Authentifizierung
+        g = Github()
+
+        # Extrahieren der Suchparameter
+        title_query = self.search_source.search_parameters.get('title', '')
+        readme_query = self.search_source.search_parameters.get('readme', '')
+        
+        # Erstellen der Suchanfrage
+        query = ""
+        if title_query:
+            query += f"{title_query} in:name"
+        if readme_query:
+            if query:
+                query += " "
+            query += f"{readme_query} in:readme"
+        
+        if not query:
+           raise ValueError("No valid search parameters found. Please provide at least one search parameter.")
+
+        # Durchführen der Suche auf GitHub
+        repositories = g.search_repositories(query)
+        
+        # Speichern der Suchergebnisse in einer Datei
+        results = []
+        for repo in repositories:
+            repo_data = {
+                "name": repo.name,
+                "full_name": repo.full_name,
+                "description": repo.description,
+                "html_url": repo.html_url,
+                "created_at": repo.created_at.isoformat(),
+                "updated_at": repo.updated_at.isoformat(),
+                "pushed_at": repo.pushed_at.isoformat(),
+                "stargazers_count": repo.stargazers_count,
+                "language": repo.language,
+            }
+            results.append(repo_data)
+        
+        # Speichern der Ergebnisse in einer JSON-Datei
+        with open(self._github_md_filename, 'w', encoding='utf-8') as f:
+            json.dump(results, f, ensure_ascii=False, indent=4)
+        
+        # Schließen der GitHub-Verbindung
+        g.close()
+
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
