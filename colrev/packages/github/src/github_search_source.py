@@ -154,7 +154,17 @@ class GitHubSearchSource(JsonSchemaMixin):
 
         operation.add_source_and_search(search_source)
         return search_source
-
+    ## api key template aus ieee
+    ##def _get_api_key(self) -> str:
+    ##    api_key = self.review_manager.environment_manager.get_settings_by_key(
+    ##        self.SETTINGS["api_key"]
+    ##    )
+    ##    if api_key is None or len(api_key) != 24:
+    ##        api_key = input("Please enter api key: ")
+    ##        self.review_manager.environment_manager.update_registry(
+    ##            self.SETTINGS["api_key"], api_key
+    ##        )
+    ##    return api_key
     def search(self, rerun: bool = False) -> None:
         """Run a search on GitHub"""
 
@@ -169,7 +179,12 @@ class GitHubSearchSource(JsonSchemaMixin):
             if not self.search_source.search_parameters:
                 raise ValueError("No search parameters defined for GitHub search source")
 
+            #sollte wahrscheinlich mehr in einzelne methoden aufgeteilt werden
+
+
+
             # Erstellen einer GitHub-Instanz ohne Authentifizierung
+            ### anm. er kommen ca. 290 ergebnisse bei "bogosort" zurück -> heißt mehr als wir vss. brauchen werden
             g = Github()
 
             # Extrahieren der Suchparameter
