@@ -12,6 +12,8 @@ import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.ops
+import colrev.ops.search
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
@@ -58,6 +60,8 @@ class GitHubSearchSource(JsonSchemaMixin):
     """GitHub API"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+    source_identifier = "ID"
+    search_types = [SearchType.API]
     endpoint = "colrev.github"
     search_types = [
         SearchType.API, 
@@ -153,54 +157,63 @@ class GitHubSearchSource(JsonSchemaMixin):
 
     def search(self, rerun: bool = False) -> None:
         """Run a search on GitHub"""
-        # Überprüfen Sie, ob die Suchparameter definiert sind
-        if not self.search_source.search_parameters:
-            raise ValueError("No search parameters defined for GitHub search source")
 
-        # Erstellen einer GitHub-Instanz ohne Authentifizierung
-        g = Github()
+        # übernommen aus iee 
+        if self.search_source.search_type == SearchType.API:
+            github_feed = self.search_source.get_api_feed(
+                review_manager=self.review_manager,
+                source_identifier=self.source_identifier,
+                update_only=(not rerun),
+            )
+            # Überprüfen Sie, ob die Suchparameter definiert sind
+            if not self.search_source.search_parameters:
+                raise ValueError("No search parameters defined for GitHub search source")
 
-        # Extrahieren der Suchparameter
-        title_query = self.search_source.search_parameters.get('title', '')
-        readme_query = self.search_source.search_parameters.get('readme', '')
-        
-        # Erstellen der Suchanfrage
-        query = ""
-        if title_query:
-            query += f"{title_query} in:name"
-        if readme_query:
-            if query:
-                query += " "
-            query += f"{readme_query} in:readme"
-        
-        if not query:
-           raise ValueError("No valid search parameters found. Please provide at least one search parameter.")
+            # Erstellen einer GitHub-Instanz ohne Authentifizierung
+            g = Github()
 
-        # Durchführen der Suche auf GitHub
-        repositories = g.search_repositories(query)
-        
-        # Speichern der Suchergebnisse in einer Datei
-        results = []
-        for repo in repositories:
-            repo_data = {
-                "name": repo.name,
-                "full_name": repo.full_name,
-                "description": repo.description,
-                "html_url": repo.html_url,
-                "created_at": repo.created_at.isoformat(),
-                "updated_at": repo.updated_at.isoformat(),
-                "pushed_at": repo.pushed_at.isoformat(),
-                "stargazers_count": repo.stargazers_count,
-                "language": repo.language,
-            }
-            results.append(repo_data)
-        
-        # Speichern der Ergebnisse in einer JSON-Datei
-        with open(self._github_md_filename, 'w', encoding='utf-8') as f:
-            json.dump(results, f, ensure_ascii=False, indent=4)
-        
-        # Schließen der GitHub-Verbindung
-        g.close()
+            # Extrahieren der Suchparameter
+            title_query = self.search_source.search_parameters.get('title', '')
+            readme_query = self.search_source.search_parameters.get('readme', '')
+
+            # Erstellen der Suchanfrage
+            #query = colrev.ops.search.Search.
+            query = ""
+            if title_query:
+                query += f"{title_query} in:name"
+            if readme_query:
+                if query:
+                    query += " "
+                query += f"{readme_query} in:readme"
+
+            #if not query:
+            #   raise ValueError("No valid search parameters found. Please provide at least one search parameter.")
+
+            # Durchführen der Suche auf GitHub
+            repositories = g.search_repositories("bogosort")
+
+            # Speichern der Suchergebnisse in einer Datei
+            results = []
+            for repo in repositories:
+                repo_data = {
+                    "name": repo.name,
+                    "full_name": repo.full_name,
+                    "description": repo.description,
+                    "html_url": repo.html_url,
+                    "created_at": repo.created_at.isoformat(),
+                    "updated_at": repo.updated_at.isoformat(),
+                    "pushed_at": repo.pushed_at.isoformat(),
+                    "stargazers_count": repo.stargazers_count,
+                    "language": repo.language,
+                }
+                results.append(repo_data)
+
+            # Speichern der Ergebnisse in einer JSON-Datei
+            with open(self._github_md_filename, 'w', encoding='utf-8') as f:
+                json.dump(results, f, ensure_ascii=False, indent=4)
+
+            # Schließen der GitHub-Verbindung
+            g.close()
 
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
