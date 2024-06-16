@@ -24,18 +24,19 @@ from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
-"""pip install PyGithub muss davor geschehen?"""
-from github import Github
+"""pip install PyGithub -> Must be installed before use, please note in the documentation! """
+
+#from github import Github
 # Authentication is defined via github.Auth
-from github import Auth
+#from github import Auth
 # using an access token
-auth = Auth.Token("access_token")
+#auth = Auth.Token("access_token")
 
 # First create a Github instance:
 # Public Web Github
-g = Github(auth=auth)
+#g = Github(auth=auth)
 # Github Enterprise with custom hostname
-g = Github(base_url="https://{hostname}/api/v3", auth=auth)
+#g = Github(base_url="https://{hostname}/api/v3", auth=auth)
 
 """
 # Then play with your Github objects:
