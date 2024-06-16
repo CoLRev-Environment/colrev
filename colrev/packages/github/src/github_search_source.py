@@ -60,6 +60,7 @@ class GitHubSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.github"
+    source_identifier = Fields.URL
     search_types = [
         SearchType.API, 
         SearchType.MD
