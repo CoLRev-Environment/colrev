@@ -178,7 +178,7 @@ class GitHubSearchSource(JsonSchemaMixin):
     ##    api_key = self.review_manager.environment_manager.get_settings_by_key(
     ##        self.SETTINGS["api_key"]
     ##    )
-    ##    if api_key is None or len(api_key) != 24:
+    ##    if api_key is None or len(api_key) != 40:
     ##        api_key = input("Please enter api key: ")
     ##        self.review_manager.environment_manager.update_registry(
     ##            self.SETTINGS["api_key"], api_key
