@@ -12,6 +12,7 @@ import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
@@ -128,23 +129,29 @@ class GitHubSearchSource(JsonSchemaMixin):
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         params_dict = {}
-        if params: # right now parameters of the form title=[search term];readme=[search term] are accepted
+        if params:
             for item in params.split(";"):
                 try:
                     key, value = item.split("=")
-                    if key == "title" or key == "readme":
+                    if key in ["title", "readme"]:
                         params_dict[key] = value
-                except:
-                    pass
+                    else:
+                        raise colrev_exceptions.InvalidQueryException(
+                            "GitHub search_parameters support title or readme field"
+                        ) 
+                except ValueError:
+                    cls.review_manager.logger("Invalid search_parameter format")
         if len(params_dict) == 0:
             search_source = operation.create_api_source(endpoint="colrev.github")
         else:
+            query = params_dict
+
             filename = operation.get_unique_filename(file_path_string="github")
             search_source = colrev.settings.SearchSource(
                 endpoint="colrev.github",
                 filename=filename,
                 search_type=SearchType.API,
-                search_parameters=params_dict,
+                search_parameters=query,
                 comment="",
             )
 
