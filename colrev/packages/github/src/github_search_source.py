@@ -130,21 +130,35 @@ class GitHubSearchSource(JsonSchemaMixin):
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         params_dict = {}
         if params:
-            for item in params.split(";"):
-                try:
-                    key, value = item.split("=")
-                    if key in ["title", "readme"]:
-                        params_dict[key] = value
-                    else:
-                        raise colrev_exceptions.InvalidQueryException(
-                            "GitHub search_parameters support title or readme field"
-                        ) 
-                except ValueError:
-                    cls.review_manager.logger("Invalid search_parameter format")
+            if params.startswith("http"):
+                params_dict = {Fields.URL: params}
+            else:
+                for item in params.split(";"):
+                    try:
+                        key, value = item.split("=")
+                        if key in ["title", "readme"]:
+                            params_dict[key] = value
+                        else:
+                            raise colrev_exceptions.InvalidQueryException(
+                                "GitHub search_parameters support title or readme field"
+                            ) 
+                    except ValueError:
+                        cls.review_manager.logger("Invalid search_parameter format")
         if len(params_dict) == 0:
             search_source = operation.create_api_source(endpoint="colrev.github")
         else:
-            query = params_dict
+            if Fields.URL in params_dict:
+                query = {
+                    "query": (
+                        params_dict[Fields.URL]
+                        .replace("https://github.com/search?q=%2F", "")
+                        .replace("https://github.com/search?q=", "")
+                        .replace("&type=repositories", "")
+                        .replace("+"," ")
+                    )
+                }
+            else:
+                query = params_dict
 
             filename = operation.get_unique_filename(file_path_string="github")
             search_source = colrev.settings.SearchSource(
