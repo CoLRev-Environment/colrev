@@ -18,7 +18,7 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 
-from utils import get_email
+from colrev.packages.unpaywall.src import utils
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
@@ -46,7 +46,7 @@ class Unpaywall(JsonSchemaMixin):
         self.review_manager = pdf_get_operation.review_manager
         self.pdf_get_operation = pdf_get_operation
 
-        self.email = get_email()
+        self.email = utils.get_email(self.review_manager)
 
     def _unpaywall(
         self,
