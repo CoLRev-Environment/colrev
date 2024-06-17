@@ -47,13 +47,3 @@ colrev.dataset.Dataset
       ~Dataset.set_ids
       ~Dataset.stash_unstaged_changes
       ~Dataset.update_gitignore
-
-
-
-
-
-   .. rubric:: Attributes
-
-   .. autosummary::
-
-      ~Dataset.records_file
