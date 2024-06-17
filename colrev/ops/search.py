@@ -487,9 +487,9 @@ class Search(colrev.process.operation.Operation):
             except colrev_exceptions.ServiceNotAvailableException:
                 self.review_manager.logger.warning("ServiceNotAvailableException")
             except colrev_exceptions.SearchNotAutomated as exc:
-                self.review_manager.logger.warn(exc)
+                self.review_manager.logger.warning(exc)
             except colrev_exceptions.MissingDependencyError as exc:
-                self.review_manager.logger.warn(exc)
+                self.review_manager.logger.warning(exc)
 
         if self.review_manager.in_ci_environment():
             print("\n\n")
