@@ -9,7 +9,6 @@ import dictdiffer
 
 import colrev.process.operation
 from colrev.constants import Colors
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 
 if typing.TYPE_CHECKING:  # pragma: no cover
@@ -80,12 +79,14 @@ class Trace(colrev.process.operation.Operation):
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
 
         revlist = self.review_manager.dataset.get_repo().iter_commits(
-            paths=Filepaths.RECORDS_FILE_GIT
+            paths=self.review_manager.paths.RECORDS_FILE_GIT
         )
 
         prev_record: dict = {}
         for commit in reversed(list(revlist)):
-            filecontents = (commit.tree / Filepaths.RECORDS_FILE_GIT).data_stream.read()
+            filecontents = (
+                commit.tree / self.review_manager.paths.RECORDS_FILE_GIT
+            ).data_stream.read()
             commit_message_first_line = str(commit.message).partition("\n")[0]
 
             if self.review_manager.verbose_mode:

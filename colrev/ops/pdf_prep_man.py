@@ -87,7 +87,9 @@ class PDFPrepMan(colrev.process.operation.Operation):
         """Determine PDF prep man statistics"""
         # pylint: disable=duplicate-code
 
-        self.review_manager.logger.info(f"Load {Filepaths.RECORDS_FILE}")
+        self.review_manager.logger.info(
+            f"Load {self.review_manager.paths.RECORDS_FILE}"
+        )
         records = self.review_manager.dataset.load_records_dict()
 
         self.review_manager.logger.info("Calculate statistics")
@@ -155,7 +157,9 @@ class PDFPrepMan(colrev.process.operation.Operation):
             print(f"Please rename file to avoid overwriting changes ({prep_bib_path})")
             return
 
-        self.review_manager.logger.info(f"Load {Filepaths.RECORDS_FILE}")
+        self.review_manager.logger.info(
+            f"Load {self.review_manager.paths.RECORDS_FILE}"
+        )
         records = self.review_manager.dataset.load_records_dict()
 
         records = {
@@ -282,7 +286,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
         self.review_manager.dataset.save_records_dict(
             {record_dict[Fields.ID]: record_dict}, partial=True
         )
-        self.review_manager.dataset.add_changes(Filepaths.RECORDS_FILE)
+        self.review_manager.dataset.add_changes(self.review_manager.paths.RECORDS_FILE)
 
     @colrev.process.operation.Operation.decorate()
     def main(self) -> None:

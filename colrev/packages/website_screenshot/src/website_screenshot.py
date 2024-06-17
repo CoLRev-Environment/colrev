@@ -20,7 +20,6 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 # pylint: disable=duplicate-code
@@ -161,9 +160,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
 
         self._start_screenshot_service()
 
-        pdf_filepath = self.review_manager.get_path(Filepaths.PDF_DIR) / Path(
-            f"{record.data['ID']}.pdf"
-        )
+        pdf_filepath = self.review_manager.paths.pdf / Path(f"{record.data['ID']}.pdf")
         record = self._add_screenshot(record=record, pdf_filepath=pdf_filepath)
 
         if Fields.FILE in record.data:

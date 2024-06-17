@@ -14,7 +14,6 @@ import colrev.record.record_pdf
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import PDFPathType
 from colrev.constants import RecordState
@@ -44,7 +43,7 @@ class PDFGet(colrev.process.operation.Operation):
 
         self.package_manager = self.review_manager.get_package_manager()
 
-        pdf_dir = self.review_manager.get_path(Filepaths.PDF_DIR)
+        pdf_dir = self.review_manager.paths.pdf
         pdf_dir.mkdir(exist_ok=True, parents=True)
 
         self.pdf_qm = self.review_manager.get_pdf_qm()
@@ -89,10 +88,12 @@ class PDFGet(colrev.process.operation.Operation):
     ) -> colrev.record.record.Record:
         """Link the PDF in its record (should be {ID}.pdf)"""
 
-        pdf_filepath = Filepaths.PDF_DIR / Path(f"{record.data['ID']}.pdf")
-        if pdf_filepath.is_file() and str(pdf_filepath) != record.data.get(
-            Fields.FILE, "NA"
-        ):
+        pdf_filepath = self.review_manager.paths.PDF_DIR / Path(
+            f"{record.data['ID']}.pdf"
+        )
+        if (self.review_manager.path / pdf_filepath).is_file() and str(
+            pdf_filepath
+        ) != record.data.get(Fields.FILE, "NA"):
             record.update_field(
                 key=Fields.FILE, value=str(pdf_filepath), source="link_pdf"
             )
@@ -106,22 +107,24 @@ class PDFGet(colrev.process.operation.Operation):
         """Get the target filepath for a PDF"""
 
         if self.filepath_directory_pattern == Fields.YEAR:
-            target_filepath = Filepaths.PDF_DIR / Path(
+            target_filepath = self.review_manager.paths.PDF_DIR / Path(
                 f"{record.data.get('year', 'no_year')}/{record.data['ID']}.pdf"
             )
 
         elif self.filepath_directory_pattern == "volume_number":
             if Fields.VOLUME in record.data and Fields.NUMBER in record.data:
-                target_filepath = Filepaths.PDF_DIR / Path(
+                target_filepath = self.review_manager.paths.PDF_DIR / Path(
                     f"{record.data['volume']}/{record.data['number']}/{record.data['ID']}.pdf"
                 )
 
             if Fields.VOLUME in record.data and Fields.NUMBER not in record.data:
-                target_filepath = Filepaths.PDF_DIR / Path(
+                target_filepath = self.review_manager.paths.PDF_DIR / Path(
                     f"{record.data['volume']}/{record.data['ID']}.pdf"
                 )
         else:
-            target_filepath = Filepaths.PDF_DIR / Path(f"{record.data['ID']}.pdf")
+            target_filepath = self.review_manager.paths.PDF_DIR / Path(
+                f"{record.data['ID']}.pdf"
+            )
 
         return target_filepath
 
@@ -223,7 +226,7 @@ class PDFGet(colrev.process.operation.Operation):
     ) -> typing.Dict[str, typing.Dict]:
         # pylint: disable=too-many-branches
 
-        pdf_dir = self.review_manager.get_path(Filepaths.PDF_DIR)
+        pdf_dir = self.review_manager.paths.pdf
 
         # Relink files in source file
         corresponding_origin: str
@@ -329,7 +332,7 @@ class PDFGet(colrev.process.operation.Operation):
             for x in records.values()
             if Fields.FILE in x
         ]
-        pdf_dir = self.review_manager.get_path(Filepaths.PDF_DIR)
+        pdf_dir = self.review_manager.paths.pdf
         pdf_files = glob(str(pdf_dir) + "/**.pdf", recursive=True)
         unlinked_pdfs = [
             Path(x)

@@ -22,7 +22,6 @@ import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 # pylint: disable=too-few-public-methods
@@ -321,10 +320,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
         filepath = self.review_manager.path / Path(record_dict[Fields.FILE])
         if not filepath.is_file():
-            filepath = (
-                self.review_manager.get_path(Filepaths.PDF_DIR)
-                / f"{record_dict['ID']}.pdf"
-            )
+            filepath = self.review_manager.paths.pdf / f"{record_dict['ID']}.pdf"
         if not filepath.is_file():
             input(
                 f"{Colors.ORANGE}Warning: PDF file for record {record_dict['ID']} not found. "

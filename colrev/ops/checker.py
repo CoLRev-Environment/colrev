@@ -15,7 +15,6 @@ from git.exc import InvalidGitRepositoryError
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.process.model import ProcessModel
@@ -113,18 +112,18 @@ class Checker:
 
     def _is_colrev_project(self) -> bool:
         required_paths = [
-            Filepaths.PRE_COMMIT_CONFIG,
-            Filepaths.GIT_IGNORE_FILE,
-            Filepaths.SETTINGS_FILE,
+            self.review_manager.paths.pre_commit_config,
+            self.review_manager.paths.git_ignore,
+            self.review_manager.paths.settings,
         ]
-        if not all((self.review_manager.path / x).is_file() for x in required_paths):
+        if not all(x.is_file() for x in required_paths):
             return False
         return True
 
     def _get_installed_hooks(self) -> list:
         installed_hooks = []
         with open(
-            self.review_manager.get_path(Filepaths.PRE_COMMIT_CONFIG), encoding="utf8"
+            self.review_manager.paths.pre_commit_config, encoding="utf8"
         ) as pre_commit_y:
             pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.SafeLoader)
         for repository in pre_commit_config["repos"]:
@@ -617,7 +616,7 @@ class Checker:
         data_operation = self.review_manager.get_data_operation(
             notify_state_transition_operation=False
         )
-        records_file = self.review_manager.get_path(Filepaths.RECORDS_FILE)
+        records_file = self.review_manager.paths.records
         if records_file.is_file():
             self.records = self.review_manager.dataset.load_records_dict()
 
@@ -665,8 +664,7 @@ class Checker:
         # pylint: disable=not-a-mapping
 
         self.records: typing.Dict[str, typing.Any] = {}
-        records_file = self.review_manager.get_path(Filepaths.RECORDS_FILE)
-        if records_file.is_file():
+        if self.review_manager.paths.records.is_file():
             self.records = self.review_manager.dataset.load_records_dict()
 
         # We work with exceptions because each issue may be raised in different checks.
@@ -683,8 +681,10 @@ class Checker:
             {"script": self._check_software, "params": []},
         ]
 
-        if records_file.is_file():
-            if self.review_manager.dataset.file_in_history(Filepaths.RECORDS_FILE):
+        if self.review_manager.paths.records.is_file():
+            if self.review_manager.dataset.file_in_history(
+                self.review_manager.paths.RECORDS_FILE
+            ):
                 prior = self._retrieve_prior()
                 self.review_manager.logger.debug("prior")
                 self.review_manager.logger.debug(

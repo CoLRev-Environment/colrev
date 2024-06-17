@@ -58,7 +58,7 @@ class Upgrade(colrev.process.operation.Operation):
             self.repo.index.add([str(target)])
 
     def _load_settings_dict(self) -> dict:
-        settings_path = self.review_manager.get_path(Filepaths.SETTINGS_FILE)
+        settings_path = self.review_manager.paths.settings
         if not settings_path.is_file():
             raise colrev_exceptions.CoLRevException()
         with open(settings_path, encoding="utf-8") as file:

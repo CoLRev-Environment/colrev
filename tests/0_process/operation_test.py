@@ -2,7 +2,6 @@ import pytest
 
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 
 
@@ -17,11 +16,11 @@ def test_check_precondition_load(  # type: ignore
     base_repo_review_manager.settings.project.title = "test modification"
     base_repo_review_manager.save_settings()
 
-    Filepaths.README_FILE.write_text("test modification")
+    base_repo_review_manager.paths.readme.write_text("test modification")
     with pytest.raises(colrev_exceptions.UnstagedGitChangesError):
         load_operation.check_precondition()
 
-    base_repo_review_manager.dataset.add_changes(Filepaths.README_FILE)
+    base_repo_review_manager.dataset.add_changes(base_repo_review_manager.paths.readme)
     with pytest.raises(colrev_exceptions.CleanRepoRequiredError):
         load_operation.check_precondition()
 
@@ -31,7 +30,7 @@ def test_check_precondition_load(  # type: ignore
     )
     dedupe_operation.check_precondition()
 
-    Filepaths.README_FILE.write_text("test modification")
+    base_repo_review_manager.paths.readme.write_text("test modification")
     with pytest.raises(colrev_exceptions.UnstagedGitChangesError):
         load_operation.check_precondition()
 
