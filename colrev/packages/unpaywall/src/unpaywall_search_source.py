@@ -224,7 +224,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         query = params["query"]
         is_oa = params.get("is_oa", "null")
         page = params.get("page", 1)
-        email = utils.get_email(self.review_manager)
+        email = params.get("email", utils.get_email(self.review_manager))
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
 
