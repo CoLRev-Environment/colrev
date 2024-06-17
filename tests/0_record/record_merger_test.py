@@ -272,6 +272,31 @@ def test_merger(
                 Fields.URL: "https://www.publisher.com",
             },
         ),
+        (
+            {},
+            {
+                Fields.NUMBER: "1",
+            },
+            Fields.NUMBER,
+            {
+                Fields.NUMBER: "1",
+            },
+        ),
+        (
+            {
+                Fields.MD_PROV: {
+                    Fields.NUMBER: {
+                        "source": "source_identifier",
+                        "note": "IGNORE:missing",
+                    }
+                }
+            },
+            {
+                Fields.NUMBER: "1",
+            },
+            Fields.NUMBER,
+            {},
+        ),
     ],
 )
 def test__fuse_fields(
@@ -280,6 +305,7 @@ def test__fuse_fields(
     key: str,
     expected_dict: dict,
 ) -> None:
+    print(main_record_dict)
     main_record = colrev.record.record.Record(main_record_dict)
 
     colrev.record.record_merger._fuse_fields(
@@ -287,7 +313,14 @@ def test__fuse_fields(
         merging_record=colrev.record.record.Record(merging_record_dict),
         key=key,
     )
-    assert main_record.data[key] == expected_dict[key]
+    print(main_record_dict)
+    print(merging_record_dict)
+    print(expected_dict)
+
+    if key in expected_dict:
+        assert main_record.data[key] == expected_dict[key]
+    else:
+        assert key not in main_record.data
 
 
 @pytest.mark.parametrize(

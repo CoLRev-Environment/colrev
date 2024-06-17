@@ -226,15 +226,26 @@ def _fuse_fields(
                 append_edit=False,
             )
 
-    elif FieldValues.UNKNOWN == main_record.data.get(
-        key, ""
-    ) and FieldValues.UNKNOWN != merging_record.data.get(key, ""):
+    elif main_record.data.get(key, "") in [
+        "",
+        FieldValues.UNKNOWN,
+    ] and merging_record.data.get(key, "") not in ["", FieldValues.UNKNOWN]:
+        if _preserve_ignore_missing(main_record, key=key):
+            return
         main_record.update_field(
             key=key,
             value=merging_record.data[key],
             source=merging_record.get_field_provenance_source(key),
             append_edit=False,
         )
+
+
+def _preserve_ignore_missing(
+    main_record: colrev.record.record.Record, *, key: str
+) -> bool:
+    if main_record.ignored_defect(key=key, defect=DefectCodes.MISSING):
+        return True
+    return False
 
 
 def _merging_record_preferred(
