@@ -39,7 +39,8 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
     short_name = "Unpaywall"
 
-    API_FIELDS = [
+    
+    """API_FIELDS = [
         "data_standard",
         "doi",
         "doi_url",
@@ -59,7 +60,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         "updated",
         "year",
         "z_authors",
-    ]
+    ]"""
 
     ENTRYTYPE_MAPPING = {
         "journal-article": ENTRYTYPES.ARTICLE,
@@ -69,6 +70,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         "conference": ENTRYTYPES.CONFERENCE,
         "dissertation": ENTRYTYPES.PHDTHESIS,
         "report": ENTRYTYPES.TECHREPORT,
+        "other": ENTRYTYPES.MISC
     }
 
     def __init__(
