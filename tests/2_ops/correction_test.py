@@ -7,7 +7,6 @@ import pytest
 
 import colrev.ops.correct
 import colrev.review_manager
-from colrev.constants import Filepaths
 
 
 @pytest.fixture(scope="function", name="correction_fixture")
@@ -52,7 +51,7 @@ def test_corrections_pre_commit_hooks(  # type: ignore
     )
     print(ret)
     base_repo_review_manager.dataset.get_repo().git.log(p=True)
-    corrections_path = base_repo_review_manager.get_path(Filepaths.CORRECTIONS_DIR)
+    corrections_path = base_repo_review_manager.paths.corrections
 
     expected = (
         helpers.test_data_path

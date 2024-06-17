@@ -13,7 +13,6 @@ import colrev.process.operation
 import colrev.record.record
 from colrev.constants import EndpointType
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
@@ -98,7 +97,7 @@ class PDFGetMan(colrev.process.operation.Operation):
         """Get the data for pdf-get-man"""
         # pylint: disable=duplicate-code
 
-        pdf_dir = self.review_manager.get_path(Filepaths.PDF_DIR)
+        pdf_dir = self.review_manager.paths.pdf
         pdf_dir.mkdir(exist_ok=True)
 
         records_headers = self.review_manager.dataset.load_records_dict(

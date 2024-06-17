@@ -9,7 +9,6 @@ from pathlib import Path
 from dictdiffer import diff
 
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
@@ -58,7 +57,7 @@ class Corrections:
         review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
         self.review_manager = review_manager
-        self.corrections_path = self.review_manager.get_path(Filepaths.CORRECTIONS_DIR)
+        self.corrections_path = self.review_manager.paths.corrections
         self.corrections_path.mkdir(exist_ok=True)
 
     def _record_corrected(self, *, prior_r: dict, record_dict: dict) -> bool:

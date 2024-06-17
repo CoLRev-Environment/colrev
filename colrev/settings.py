@@ -19,7 +19,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
-from colrev.constants import Filepaths
 from colrev.constants import IDPattern
 from colrev.constants import PDFPathType
 from colrev.constants import ScreenCriterionType
@@ -137,9 +136,7 @@ class SearchSource(JsonSchemaMixin):
     def get_origin_prefix(self) -> str:
         """Get the corresponding origin prefix"""
         assert not any(x in str(self.filename.name) for x in [";", "/"])
-        return (
-            str(self.filename.name).replace(str(Filepaths.SEARCH_DIR), "").lstrip("/")
-        )
+        return str(self.filename.name).lstrip("/")
 
     def is_md_source(self) -> bool:
         """Check whether the source is a metadata source (for preparation)"""
@@ -520,8 +517,6 @@ def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Non
         review_manager.settings, dict_factory=colrev.env.utils.custom_asdict_factory
     )
 
-    with open(
-        review_manager.get_path(Filepaths.SETTINGS_FILE), "w", encoding="utf-8"
-    ) as outfile:
+    with open(review_manager.paths.settings, "w", encoding="utf-8") as outfile:
         json.dump(exported_dict, outfile, indent=4)
-    review_manager.dataset.add_changes(review_manager.get_path(Filepaths.SETTINGS_FILE))
+    review_manager.dataset.add_changes(review_manager.paths.settings)
