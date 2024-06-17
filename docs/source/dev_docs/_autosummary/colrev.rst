@@ -36,6 +36,7 @@
    colrev.ops
    colrev.package_manager
    colrev.packages
+   colrev.paths
    colrev.process
    colrev.record
    colrev.review_manager
