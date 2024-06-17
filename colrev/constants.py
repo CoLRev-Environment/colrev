@@ -10,30 +10,6 @@ from pathlib import Path
 class Filepaths:
     """Filepaths for CoLRev"""
 
-    # Project-specific paths
-    # To get absolute paths, use review_manager.get_path(Filepaths.SEARCH_DIR)
-    SEARCH_DIR = Path("data/search")
-    PREP_DIR = Path("data/prep")
-    DEDUPE_DIR = Path("data/dedupe")
-    PRESCREEN_DIR = Path("data/prescreen")
-    PDF_DIR = Path("data/pdfs")
-    SCREEN_DIR = Path("data/screen")
-    DATA_DIR = Path("data/data")
-
-    CORRECTIONS_DIR = Path(".corrections")
-    OUTPUT_DIR = Path("output")
-
-    RECORDS_FILE = Path("data/records.bib")
-    SETTINGS_FILE = Path("settings.json")
-    STATUS_FILE = Path("status.yaml")
-    README_FILE = Path("readme.md")
-    REPORT_FILE = Path(".report.log")
-    GIT_IGNORE_FILE = Path(".gitignore")
-    PRE_COMMIT_CONFIG = Path(".pre-commit-config.yaml")
-
-    # Ensure the path uses forward slashes, which is compatible with Git's path handling
-    RECORDS_FILE_GIT = str(RECORDS_FILE).replace("\\", "/")
-
     # Environment-specific paths
     LOCAL_ENVIRONMENT_DIR = Path.home().joinpath("colrev")
     CURATIONS_PATH = LOCAL_ENVIRONMENT_DIR.joinpath("curated_metadata")
@@ -55,12 +31,12 @@ class FileSets:
         "__pycache__",
         "*.bib.sav",
         "venv",
-        str(Filepaths.CORRECTIONS_DIR),
-        str(Filepaths.REPORT_FILE),
-        str(Filepaths.OUTPUT_DIR),
-        str(Filepaths.PDF_DIR),
-        str(Filepaths.DEDUPE_DIR),
-        str(Filepaths.PREP_DIR),
+        ".corrections",
+        ".report.log",
+        "output",
+        "data/pdfs",
+        "data/dedupe",
+        "data/prep",
         "data/pdf_get_man/missing_pdf_files.csv",
         "data/.tei/",
         "data/prep_man/records_prep_man.bib",
