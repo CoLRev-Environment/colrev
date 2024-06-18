@@ -8,6 +8,7 @@ import requests
 from dataclasses import dataclass
 from pathlib import Path
 
+import typing
 import pandas as pd
 import zope.interface
 from dacite import from_dict
@@ -133,9 +134,12 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             return
         
         if self.search_source.search_type == SearchType.API:
-            query = self.build_query(self.search_source.search_parameters)
-            api_key = self.get_api_key()
-            self._build_api_search_url(query=query, api_key=api_key)
+            springer_feed = self.search_source.get_api_feed(
+                review_manager=self.review_manager,
+                source_identifier=self.source_identifier,
+                update_only=(not rerun),
+            )
+            self._run_api_search(springer_feed=springer_feed, rerun=rerun)
             return
 
         raise NotImplementedError
@@ -171,7 +175,30 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     
     def _build_api_search_url(self, query: str, api_key: str) -> str:
         return f"https://api.springernature.com/meta/v2/json?q={query}&api_key={api_key}"
-       
+
+
+    def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
+        """Get the records from a query"""
+
+        query = self.build_query(self.search_source.search_parameters)
+        full_url = self._build_api_search_url(query=query, api_key=self.get_api_key())
+        response = requests.get(full_url, timeout=10)
+        if response.status_code != 200:
+            return
+
+        data = response.json()
+
+        for record in data["records"]:
+            yield self._create_record(record)
+
+
+    def _run_api_search(
+        self, springer_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
+    ) -> None:
+        for record in self.get_query_return():
+            springer_feed.add_update_record(record)
+
+        springer_feed.save()  
 
     def _create_record(self, doc: dict) -> colrev.record.record.Record:
         record_dict = {Fields.ID: doc["identifier"]}
