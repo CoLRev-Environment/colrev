@@ -26,6 +26,7 @@ from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.unpaywall.src import utils
+import re 
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
@@ -138,6 +139,9 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
             filename = operation.get_unique_filename(file_path_string="unpaywall")
 
+            search_parameters["query"] = cls._normalize_query(search_parameters["query"])
+            search_parameters["query"] = cls._convert_html_url_encoding_from_html_to_string(search_parameters["query"])
+
             search_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
                 filename=filename,
@@ -152,6 +156,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         operation.add_source_and_search(search_source)
 
+    
     def _run_api_search(
         self, *, unpaywall_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
@@ -186,6 +191,9 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                 break
 
             page += 1
+
+            # if(page/5 == 0):
+            #     time.sleep(2)
     
         with open(f"all_results.json", "wb") as file:
             file.write(response.content)
@@ -194,29 +202,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             article = result["response"]
             record = self._create_record(article)
             yield record
-
-        #=======================================================================
-
-        # full_url = self._build_search_url()
-        # response = requests.get(full_url, timeout=90) #TODO: hier while einbauen
-        # if response.status_code != 200:
-        #     return
-
-        # with open("test.json", "wb") as file:
-        #     file.write(response.content)
-        # data = response.json()
-
-        # if "results" not in data:
-        #     raise colrev_exceptions.ServiceNotAvailableException(
-        #         f"Could not reach API. Status Code: {response.status_code}"
-        #     )
-
-        # for result in data["results"]:
-        #     article = result["response"]
-        #     record = self._create_record(article)
-        #     yield record
-
-
 
     def _get_authors(self, article: dict) -> typing.List[str]:
         authors = []
@@ -265,12 +250,30 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     def _build_search_url(self,page) -> str:
         url = "https://api.unpaywall.org/v2/search?"
         params = self.search_source.search_parameters
-        query = params["query"]
+        query = self._convert_html_url_encoding_from_string_to_html(params["query"]) 
         is_oa = params.get("is_oa", "null")
         email = params.get("email", utils.get_email(self.review_manager))
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
-
+    
+    def _normalize_query(self, query: str) -> str:
+        query = query.replace(" AND ", " ")
+        return query
+    
+    def _convert_html_url_encoding_from_html_to_string(self, url: str) -> str:
+        url = url.replace("%20", " AND ")
+        url = url.replace("%20OR%20", " OR ")
+        url = url.replace("%20-", " NOT ")
+        return url
+    
+    def _convert_html_url_encoding_from_string_to_html(self, url: str) -> str:
+        url = re.sub(r'\s+', ' ', url).strip()
+        url = url.replace(" AND ", "%20")
+        url = url.replace(" OR ", "%20OR%20")
+        url = url.replace(" NOT ", "%20-")
+        url = url.replace(" ", "%20")
+        return url
+    
     def search(self, rerun: bool) -> None:
         """Run a search of Unpaywall"""
 
@@ -296,7 +299,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             return records
 
         raise NotImplementedError
-
+  
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
@@ -313,4 +316,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         """Source-specific preparation for Unpaywall"""
         """Not implemented"""
         return record
-        return record
+        
+   
+
