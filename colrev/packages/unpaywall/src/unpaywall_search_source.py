@@ -139,8 +139,8 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
             filename = operation.get_unique_filename(file_path_string="unpaywall")
 
-            search_parameters["query"] = cls._normalize_query(search_parameters["query"])
-            search_parameters["query"] = cls._convert_html_url_encoding_from_html_to_string(search_parameters["query"])
+            search_parameters["query"] = cls._normalize_query(query=search_parameters["query"])
+            search_parameters["query"] = cls._convert_html_url_encoding_from_html_to_string(query=search_parameters["query"])
 
             search_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
@@ -260,20 +260,21 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         query = query.replace(" AND ", " ")
         return query
     
-    def _convert_html_url_encoding_from_html_to_string(self, url: str) -> str:
-        url = url.replace("%20", " AND ")
-        url = url.replace("%20OR%20", " OR ")
-        url = url.replace("%20-", " NOT ")
-        return url
+    def _convert_html_url_encoding_from_html_to_string(self, query: str) -> str: 
+        query = query.replace("%20", " AND ")
+        query = query.replace("%20OR%20", " OR ")
+        query = query.replace("%20-", " NOT ")
+        return query
     
-    def _convert_html_url_encoding_from_string_to_html(self, url: str) -> str:
-        url = re.sub(r'\s+', ' ', url).strip()
-        url = url.replace(" AND ", "%20")
-        url = url.replace(" OR ", "%20OR%20")
-        url = url.replace(" NOT ", "%20-")
-        url = url.replace(" ", "%20")
-        return url
-    
+    def _convert_html_url_encoding_from_string_to_html(self, query: str) -> str: #used when string is given as input
+        query = query.lower()
+        query = re.sub(r'\s+', ' ', query).strip() 
+        query = query.replace(" and ", "%20")
+        query = query.replace(" or ", "%20OR%20") #was passiert, wenn query "Ketchup and Mayo" ist?
+        query = query.replace(" not ", "%20-")
+        query = query.replace(" ", "%20")
+        return query   
+     
     def search(self, rerun: bool) -> None:
         """Run a search of Unpaywall"""
 
