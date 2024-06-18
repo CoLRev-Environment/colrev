@@ -674,7 +674,7 @@ class FilesSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         filename = operation.get_unique_filename(file_path_string="files")
@@ -687,6 +687,7 @@ class FilesSearchSource(JsonSchemaMixin):
             comment="",
         )
         operation.add_source_and_search(search_source)
+        return search_source
 
     def _update_based_on_doi(self, *, record_dict: dict) -> None:
         if Fields.DOI not in record_dict:

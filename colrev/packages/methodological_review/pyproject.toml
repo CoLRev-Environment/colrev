@@ -1,0 +1,14 @@
+[project]
+name = "colrev.methodological_review"
+description = "CoLRev package for methodological reviews"
+version = "0.1.0"
+license = "MIT"
+authors = [
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/methodological_review"
+
+[tool.colrev]
+dev_status = "experimental"
+colrev_doc_link = "README.md"
+review_type = "colrev.packages.methodological_review.src.methodological_review:MethodologicalReview"

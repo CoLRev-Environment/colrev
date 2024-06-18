@@ -10,8 +10,8 @@ authors = [
     { name = "Luca Rita Ossendorf"},
     { name = "Simon Mühlbauer"}
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/ui_web"
 
 [tool.colrev]
+colrev_doc_link = "README.md"
 dev_status = "maturing"
