@@ -285,12 +285,23 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                 self.SETTINGS["api_key"], api_key
             )
             return api_key
+        
+    def _load_bib(self) -> dict:
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            logger=self.review_manager.logger,
+            unique_id_field="ID",
+        )
+        return records
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".csv":
             return self._load_csv()
+        
+        if self.search_source.filename.suffix == ".bib":
+            return self._load_bib()
 
         raise NotImplementedError
 
