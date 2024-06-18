@@ -134,15 +134,15 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         if self.search_source.search_type == SearchType.API:
             query = self.build_query(self.search_source.search_parameters)
             api_key = self.get_api_key()
-            self._api_search(query=query, api_key=api_key)
+            self._build_api_search_url(query=query, api_key=api_key)
             return
 
         raise NotImplementedError
     
     def add_constraints(self) -> dict:
-        print("Please enter your search parameter for the following constraints (or just press enter to continue):")
-        subject = input("subject: ")
+        print("Please enter your search parameter for the following constraints (or just press enter to continue):") 
         keyword = input("keyword: ")
+        subject = input("subject: ")
         language = input("language: ")
         year = input("year: ")
         doc_type = input("type: ")
@@ -156,6 +156,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         }
 
         return search_parameters
+
     
     def build_query(self, search_parameters: dict) -> str:
         constraints = []
@@ -167,13 +168,9 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         return query
 
     
-    def _api_search(self, query: str, api_key: str) -> None:
-        
-        api_search_url = f"https://api.springernature.com/meta/v2/json?q={query}&api_key={api_key}"
-        print(api_search_url)
-        response = requests.get(api_search_url)
-        print(response)
-        return
+    def _build_api_search_url(self, query: str, api_key: str) -> str:
+        return f"https://api.springernature.com/meta/v2/json?q={query}&api_key={api_key}"
+       
 
     def prep_link_md(
         self,
