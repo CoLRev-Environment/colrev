@@ -13,6 +13,7 @@ import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
@@ -171,6 +172,38 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     def _build_api_search_url(self, query: str, api_key: str) -> str:
         return f"https://api.springernature.com/meta/v2/json?q={query}&api_key={api_key}"
        
+
+    def _create_record(self, doc: dict) -> colrev.record.record.Record:
+        record_dict = {Fields.ID: doc["identifier"]}
+        record_dict[Fields.ENTRYTYPE] = "other"
+
+        if "Article" in doc["contentType"]:
+            record_dict[Fields.ENTRYTYPE] = "article"
+        elif "Chapter" in doc["contentType"]:
+            record_dict[Fields.ENTRYTYPE] = "inbook"
+        elif "Book" in doc["contentType"]:
+            record_dict[Fields.ENTRYTYPE] = "book"
+        
+        record_dict.update({
+            Fields.TITLE: doc.get("title", ""),
+            Fields.JOURNAL: doc.get("publicationName", ""),
+            Fields.DATE: doc.get("publicationDate", ""),
+            Fields.VOLUME: doc.get("volume", ""),
+            Fields.NUMBER: doc.get("number", ""),
+            Fields.DOI: doc.get("doi", ""),
+            Fields.URL: self.map_url(doc.get("url", [])),
+            Fields.ABSTRACT: doc.get("abstract", ""),
+            Fields.KEYWORDS: ", ".join(doc.get("keyword", [])),
+        })
+
+        record = colrev.record.record.Record(data=record_dict)
+        if Fields.LANGUAGE in record.data:
+            try:
+                record.data[Fields.LANGUAGE] = record.data[Fields.LANGUAGE][0]
+                self.language_service.unify_to_iso_639_3_language_codes(record=record)
+            except colrev_exceptions.InvalidLanguageCodeException:
+                del record.data[Fields.LANGUAGE]
+        return record
 
     def prep_link_md(
         self,
