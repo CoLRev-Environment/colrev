@@ -107,54 +107,44 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(
-        cls, operation: colrev.ops.search.Search, params: dict
-    ) -> colrev.settings.SearchSource:
-        #"""Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        #"""Typically called for automated searches when running “colrev search -a SOURCE_NAME” to add search and query."""
-        #"""Not implemented"""
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         params_dict = {}
         if params:
             if params.startswith("http"):
                 params_dict = {Fields.URL: params}
             else:
-                for item in params.split("&"): # TODO figurte our what happens with the first part 	https://api.unpaywall.org/v2/search?
+                for item in params.split(";"):
                     key, value = item.split("=")
                     params_dict[key] = value
 
-        search_type = operation.select_search_type(
-            search_types=cls.search_types, params=params_dict
-        )
+        if len(params_dict) == 0:
+            search_source = operation.create_api_source(endpoint=cls.endpoint)
 
-        if search_type == SearchType.API:
-            if len(params) == 0:
-                add_source = operation.add_api_source(search_source_cls=cls, params=params)
-                return add_source
-
-            # TODO: delete one of the following "url", depending on the occurrence
-            elif "https://api.unpaywall.org/v2/request?" or "https://api.unpaywall.org/v2/search?" in params_dict["url"]: # api.unpaywall.org/my/request?email=YOUR_EMAIL or [...].org/v2/search?query=:your_query[&is_oa=boolean][&page=integer]
-                url_parsed = urllib.parse.urlparse(params_dict["url"])
-                new_query = urllib.parse.parse_qs(url_parsed.query)
-                search_query = new_query.get("query", [""])[0]
-                is_oa = new_query.get("is_oa", [""])[0]
-                page = new_query.get("page", [""])[0]
-                # email = new_query.get("email", ["fillermail@thathastobechangedordeleted.net"])[0] # TODO: how to handle E-Mail? Save it? (I guess not, because it is not needed for the search itself)
-
-                filename = operation.get_unique_filename(file_path_string=f"unpaywall_{search_query}")
-                search_source = colrev.settings.SearchSource(
-                    endpoint=cls.endpoint,
-                    filename=filename,
-                    search_type=SearchType.API,
-                    search_parameters={"query": search_query, "is_oa": is_oa, "page": page},
-                    comment="",
-                )
-        elif search_type == SearchType.DB:
-            search_source = operation.create_db_source(
-                search_source_cls=cls,
-                params=params_dict,
+        # pylint: disable=colrev-missed-constant-usage
+        elif "https://api.unpaywall.org/v2/search?" in params_dict["url"]:
+            query = (
+                params_dict["url"]
+                .replace("https://api.unpaywall.org/v2/search?", "")
+                .lstrip("&")
             )
 
+            parameter_pairs = query.split("&")
+            search_parameters = {}
+            for parameter in parameter_pairs:
+                key, value = parameter.split("=")
+                search_parameters[key] = value
+
+            filename = operation.get_unique_filename(file_path_string="unpaywall")
+
+            search_source = colrev.settings.SearchSource(
+                endpoint=cls.endpoint,
+                filename=filename,
+                search_type=SearchType.API,
+                search_parameters=search_parameters,
+                comment="",
+            )
         else:
             raise colrev_exceptions.PackageParameterError(
                 f"Cannot add UNPAYWALL endpoint with query {params}"
