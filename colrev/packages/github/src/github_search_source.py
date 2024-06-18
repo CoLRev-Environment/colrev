@@ -61,7 +61,6 @@ class GitHubSearchSource(JsonSchemaMixin):
     """GitHub API"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    source_identifier = "ID"
     search_types = [SearchType.API]
     endpoint = "colrev.github"
     source_identifier = Fields.URL
@@ -105,7 +104,7 @@ class GitHubSearchSource(JsonSchemaMixin):
                 self.search_source = github_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint=self.endpoint,
+                    endpoint=self.endpoint,  #Maybe set to "colrev.github"
                     filename=self._github_md_filename,
                     search_type=SearchType.MD,
                     search_parameters={},
@@ -198,36 +197,45 @@ class GitHubSearchSource(JsonSchemaMixin):
             if not self.search_source.search_parameters:
                 raise ValueError("No search parameters defined for GitHub search source")
 
-            #sollte wahrscheinlich mehr in einzelne methoden aufgeteilt werden
+            #Auth-Tokenabfrageposition
+            ## api key template aus ieee
+            ##def _get_api_key(self) -> str:
+            ##    api_key = self.review_manager.environment_manager.get_settings_by_key(
+            ##        self.SETTINGS["api_key"]
+            ##    )
+            ##    if api_key is None or len(api_key) != 40:
+            ##        api_key = input("Please enter api key: ")
+            ##        self.review_manager.environment_manager.update_registry(
+            ##            self.SETTINGS["api_key"], api_key
+            ##        )
+            ##    return api_key
 
-
-
-            # Erstellen einer GitHub-Instanz ohne Authentifizierung
-            ### anm. er kommen ca. 290 ergebnisse bei "bogosort" zurück -> heißt mehr als wir vss. brauchen werden
-            g = Github()
+            choice_int = choice()
+            #print(choice_int)
+            query = ""
 
             # Extrahieren der Suchparameter
-            title_query = self.search_source.search_parameters.get('title', '')
-            readme_query = self.search_source.search_parameters.get('readme', '')
+            keywords_input = self.search_source.search_parameters.get('query', '')
+            #print(keywords_input)
 
-            # Erstellen der Suchanfrage
-            #query = colrev.ops.search.Search.
-            query = ""
-            if title_query:
-                query += f"{title_query} in:name"
-            if readme_query:
-                if query:
-                    query += " "
-                query += f"{readme_query} in:readme"
-
-            #if not query:
-            #   raise ValueError("No valid search parameters found. Please provide at least one search parameter.")
-
+            if choice_int==1:
+                query = f"{keywords_input} in:name"
+                #print(query) 
+            if choice_int==2:
+                query = f"{keywords_input} in:readme"
+                #print(query)
+            if choice_int==3:
+                query = f"{keywords_input} in:name,readme"
+                #print(query)
+            #Prints for Tests
+        
+            #Tokenabfrage muss vor der Instanzbildung abgefragt werden!
+            g = Github()
+            
             # Durchführen der Suche auf GitHub
-            repositories = g.search_repositories("bogosort")
+            repositories = g.search_repositories(query=query)
 
             # Speichern der Suchergebnisse in einer Datei
-            # hierfür Verweis auf _create_record_dict aus der ieee -> wie sieht unser record_dict am Ende aus?
 
             results = []
             for repo in repositories:
@@ -259,6 +267,15 @@ class GitHubSearchSource(JsonSchemaMixin):
     def prepare(self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.record.Record:
         """Source-specific preparation for GitHub"""
+
+
+def choice() -> int:
+    while True:
+        user_choice = input("Where do you want to search in (1 = Only in Title, 2 = Only in Readme, 3 = Both): ")
+        if user_choice in ['1', '2', '3']:
+            return int(user_choice)
+        else:
+            print("Invalid choice. Please try again.")     
 
 #   If __name__ == "__main__":
 # Instance = github()
