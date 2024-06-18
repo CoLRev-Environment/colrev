@@ -18,7 +18,6 @@ from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
@@ -46,7 +45,7 @@ class Dedupe(colrev.process.operation.Operation):
             operations_type=self.type,
             notify_state_transition_operation=notify_state_transition_operation,
         )
-        self.dedupe_dir = self.review_manager.get_path(Filepaths.DEDUPE_DIR)
+        self.dedupe_dir = self.review_manager.paths.dedupe
         self.non_dupe_file_xlsx = self.dedupe_dir / self.NON_DUPLICATE_FILE_XLSX
         self.non_dupe_file_txt = self.dedupe_dir / self.NON_DUPLICATE_FILE_TXT
         self.dupe_file = self.dedupe_dir / self.DUPLICATES_TO_VALIDATE

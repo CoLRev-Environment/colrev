@@ -10,7 +10,6 @@ from git.exc import GitCommandError
 import colrev.process.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 
 # pylint: disable=too-few-public-methods
@@ -116,10 +115,12 @@ class Merge(colrev.process.operation.Operation):
         assert all(len(v) == 3 for k, v in unmerged_blobs.items())
 
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
-        if Filepaths.RECORDS_FILE_GIT in unmerged_blobs:
+        if self.review_manager.paths.RECORDS_FILE_GIT in unmerged_blobs:
             current_branch_records = {}
             other_branch_records = {}
-            for stage, blob in unmerged_blobs[Filepaths.RECORDS_FILE_GIT]:
+            for stage, blob in unmerged_blobs[
+                self.review_manager.paths.RECORDS_FILE_GIT
+            ]:
                 # stage == 1: common ancestor (often md_processed for prescreen)
                 # stage == 2: own branch
                 # stage == 3: other branch
@@ -140,7 +141,7 @@ class Merge(colrev.process.operation.Operation):
 
         else:
             self.review_manager.logger.info(
-                f"No conflicts to reconcile in {Filepaths.RECORDS_FILE}."
+                f"No conflicts to reconcile in {self.review_manager.paths.records}."
             )
             return
 

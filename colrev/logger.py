@@ -6,7 +6,6 @@ import logging
 import typing
 
 import colrev.exceptions as colrev_exceptions
-from colrev.constants import Filepaths
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
@@ -60,7 +59,7 @@ def setup_report_logger(
             fmt="%(asctime)s [%(levelname)s] %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
-        report_path = review_manager.get_path(Filepaths.REPORT_FILE)
+        report_path = review_manager.paths.report
         report_file_handler = logging.FileHandler(report_path, mode="a")
         report_file_handler.setFormatter(formatter)
 
@@ -85,7 +84,7 @@ def stop_logger(*, review_manager: colrev.review_manager.ReviewManager) -> None:
         review_manager.report_logger.removeHandler(report_handler)
         report_handler.close()
 
-    report_path = review_manager.get_path(Filepaths.REPORT_FILE)
+    report_path = review_manager.paths.report
     if report_path.is_file():
         with open(report_path, "r+", encoding="utf8") as file:
             file.truncate(0)
@@ -96,7 +95,7 @@ def reset_report_logger(*, review_manager: colrev.review_manager.ReviewManager) 
 
     stop_logger(review_manager=review_manager)
 
-    report_path = review_manager.get_path(Filepaths.REPORT_FILE)
+    report_path = review_manager.paths.report
     file_handler = logging.FileHandler(report_path, mode="a")
     file_handler.setLevel(logging.INFO)
     formatter = logging.Formatter(

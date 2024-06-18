@@ -10,7 +10,6 @@ import yaml
 import colrev.env.utils
 import colrev.process.operation
 from colrev.constants import Colors
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 
 
@@ -37,9 +36,13 @@ class Status(colrev.process.operation.Operation):
                 commit.message,
                 commit.author.name,
                 commit.committed_date,
-                (commit.tree / str(Filepaths.STATUS_FILE)).data_stream.read(),
+                (
+                    commit.tree / str(self.review_manager.paths.STATUS_FILE)
+                ).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(paths=str(Filepaths.STATUS_FILE))
+            for commit in git_repo.iter_commits(
+                paths=str(self.review_manager.paths.STATUS_FILE)
+            )
         )
         for ind, (
             commit_id,

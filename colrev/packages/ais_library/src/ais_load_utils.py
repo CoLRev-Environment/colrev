@@ -68,6 +68,19 @@ def enl_field_mapper(record_dict: dict) -> None:
             standard_key = key_map[ris_key]
             record_dict[standard_key] = record_dict.pop(ris_key)
 
+    # Add secondary titles / fix cases where F and P fields start with a space:
+    # these may be special cases:
+    # https://aisel.aisnet.org/amcis2002/301/
+    # https://aisel.aisnet.org/amcis2002/145/
+    if " F" in record_dict:
+        record_dict[Fields.TITLE] = (
+            record_dict[Fields.TITLE] + " " + record_dict.pop(" F")
+        )
+    if " P" in record_dict:
+        record_dict[Fields.TITLE] = (
+            record_dict[Fields.TITLE] + " " + record_dict.pop(" P")
+        )
+
     if Fields.AUTHOR in record_dict and isinstance(record_dict[Fields.AUTHOR], list):
         record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
     if Fields.EDITOR in record_dict and isinstance(record_dict[Fields.EDITOR], list):

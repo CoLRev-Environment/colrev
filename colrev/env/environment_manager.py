@@ -145,7 +145,7 @@ class EnvironmentManager:
 
     def _get_status(self, review_manager: colrev.review_manager.ReviewManager) -> dict:
         status_dict = {}
-        status_yml = review_manager.get_path(Filepaths.STATUS_FILE)
+        status_yml = review_manager.paths.status
         with open(status_yml, encoding="utf8") as stream:
             try:
                 status_dict = yaml.safe_load(stream)

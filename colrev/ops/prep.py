@@ -98,10 +98,11 @@ class Prep(colrev.process.operation.Operation):
         self._stats: typing.Dict[str, typing.List[timedelta]] = {}
 
         self.temp_prep_lock = Lock()
-        self.current_temp_records = self.review_manager.get_path(
-            Path(".colrev/cur_temp_recs.bib")
+        self.current_temp_records = self.review_manager.path / Path(
+            ".colrev/cur_temp_recs.bib"
         )
-        self.temp_records = self.review_manager.get_path(Path(".colrev/temp_recs.bib"))
+
+        self.temp_records = self.review_manager.path / (Path(".colrev/temp_recs.bib"))
 
         self.quality_model = review_manager.get_qm()
         self.package_manager = self.review_manager.get_package_manager()

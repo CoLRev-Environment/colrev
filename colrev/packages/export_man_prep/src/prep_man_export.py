@@ -21,7 +21,6 @@ from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
@@ -88,7 +87,7 @@ class ExportManPrep(JsonSchemaMixin):
 
         self.review_manager = prep_man_operation.review_manager
         self.quality_model = self.review_manager.get_qm()
-        self.prep_dir = self.review_manager.get_path(Filepaths.PREP_DIR)
+        self.prep_dir = self.review_manager.paths.prep
         self.prep_dir.mkdir(exist_ok=True, parents=True)
         self.prep_man_bib_path = self.prep_dir / self.RELATIVE_PREP_MAN_PATH
         self.prep_man_csv_path = self.prep_dir / self.RELATIVE_PREP_MAN_INFO_PATH

@@ -17,7 +17,6 @@ import colrev.record.record_pdf
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
@@ -104,7 +103,7 @@ class PDFPrep(colrev.process.operation.Operation):
             if not self.review_manager.verbose_mode:
                 # Delete temporary PDFs for which processing has failed:
                 if target_fname.is_file():
-                    pdf_dir = self.review_manager.get_path(Filepaths.PDF_DIR)
+                    pdf_dir = self.review_manager.paths.pdf
                     for fpath in pdf_dir.glob("*.pdf"):
                         if (
                             record.data[Fields.ID] in str(fpath)
