@@ -70,7 +70,31 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         "conference": ENTRYTYPES.CONFERENCE,
         "dissertation": ENTRYTYPES.PHDTHESIS,
         "report": ENTRYTYPES.TECHREPORT,
-        "other": ENTRYTYPES.MISC
+        "other": ENTRYTYPES.MISC,
+        "book-section": ENTRYTYPES.INBOOK,
+        "monograph": ENTRYTYPES.THESIS, #thesis nicht auf website
+        "report-component": ENTRYTYPES.TECHREPORT,
+        "peer-review": ENTRYTYPES.MISC, #
+        "book-track": ENTRYTYPES.INCOLLECTION, #
+        "book-part": ENTRYTYPES.INBOOK,
+        "journal-volume": ENTRYTYPES.ARTICLE,
+        "book-set": ENTRYTYPES.MISC,
+        "reference-entry": ENTRYTYPES.MISC,
+        "journal": ENTRYTYPES.ARTICLE, #
+        "component": ENTRYTYPES.MISC,
+        "proceedings-series": ENTRYTYPES.PROCEEDINGS, #oder Misc da serie
+        "report-series": ENTRYTYPES.TECHREPORT,#oder misc da series und nicht ein report
+        "proceedings": ENTRYTYPES.PROCEEDINGS,
+        "database": ENTRYTYPES.MISC,
+        "standard": ENTRYTYPES.MISC,
+        "reference-book": ENTRYTYPES.BOOK,
+        "posted-content": ENTRYTYPES.MISC,
+        "journal-issue": ENTRYTYPES.ARTICLE, #Misc?
+        "grant": ENTRYTYPES.MISC,
+        "dataset": ENTRYTYPES.MISC,
+        "book-series": ENTRYTYPES.BOOK, # oder Misc, da Serie?
+        "edited-book": ENTRYTYPES.BOOK
+
     }
 
     def __init__(
