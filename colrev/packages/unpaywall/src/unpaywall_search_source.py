@@ -207,24 +207,61 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
     def get_query_records(self) -> typing.Iterator[colrev.record.record.Record]:
         """Get the records from a query"""
-        full_url = self._build_search_url()
-        response = requests.get(full_url, timeout=90)
-        if response.status_code != 200:
-            return
+        all_results = []
+        page = 1
+        results_per_page = 50
 
-        with open("test.json", "wb") as file:
+        while True:
+            page_dependend_url = self._build_search_url(page)  
+            response = requests.get(page_dependend_url, timeout=90)
+            if response.status_code != 200:
+                print(f"Error fetching data: {response.status_code}")
+                return
+
+            data = response.json()
+            if "results" not in data:
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    f"Could not reach API. Status Code: {response.status_code}"
+                )
+
+            new_results = data["results"]
+            all_results.extend(new_results)
+
+            if len(new_results) < results_per_page:
+                break
+
+            page += 1
+    
+        with open(f"all_results.json", "wb") as file:
             file.write(response.content)
-        data = response.json()
 
-        if "results" not in data:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                f"Could not reach API. Status Code: {response.status_code}"
-            )
-
-        for result in data["results"]:
+        for result in all_results:
             article = result["response"]
             record = self._create_record(article)
             yield record
+
+        #=======================================================================
+
+        # full_url = self._build_search_url()
+        # response = requests.get(full_url, timeout=90) #TODO: hier while einbauen
+        # if response.status_code != 200:
+        #     return
+
+        # with open("test.json", "wb") as file:
+        #     file.write(response.content)
+        # data = response.json()
+
+        # if "results" not in data:
+        #     raise colrev_exceptions.ServiceNotAvailableException(
+        #         f"Could not reach API. Status Code: {response.status_code}"
+        #     )
+
+        # for result in data["results"]:
+        #     article = result["response"]
+        #     record = self._create_record(article)
+        #     yield record
+
+
 
     def _get_authors(self, article: dict) -> typing.List[str]:
         authors = []
@@ -270,12 +307,11 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         return record
 
-    def _build_search_url(self) -> str:
+    def _build_search_url(self,page) -> str:
         url = "https://api.unpaywall.org/v2/search?"
         params = self.search_source.search_parameters
         query = params["query"]
         is_oa = params.get("is_oa", "null")
-        page = params.get("page", 1)
         email = params.get("email", utils.get_email(self.review_manager))
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
