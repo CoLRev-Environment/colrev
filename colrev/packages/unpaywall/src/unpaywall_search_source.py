@@ -152,51 +152,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         operation.add_source_and_search(search_source)
 
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-
-        params_dict = {}
-        if params:
-            if params.startswith("http"):
-                params_dict = {Fields.URL: params}
-            else:
-                for item in params.split(";"):
-                    key, value = item.split("=")
-                    params_dict[key] = value
-
-        if len(params_dict) == 0:
-            search_source = operation.create_api_source(endpoint=cls.endpoint)
-
-        # pylint: disable=colrev-missed-constant-usage
-        elif "https://api.unpaywall.org/v2/search?" in params_dict["url"]:
-            query = (
-                params_dict["url"]
-                .replace("https://api.unpaywall.org/v2/search?", "")
-                .lstrip("&")
-            )
-
-            parameter_pairs = query.split("&")
-            search_parameters = {}
-            for parameter in parameter_pairs:
-                key, value = parameter.split("=")
-                search_parameters[key] = value
-
-            filename = operation.get_unique_filename(file_path_string=f"unpaywall_{query}")
-
-            search_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
-                search_type=SearchType.API,
-                search_parameters=search_parameters,
-                comment="",
-            )
-        else:
-            raise colrev_exceptions.PackageParameterError(
-                f"Cannot add UNPAYWALL endpoint with query {params}"
-            )
-            
-        operation.add_source_and_search(search_source)
-
     def _run_api_search(
         self, *, unpaywall_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
