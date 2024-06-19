@@ -14,7 +14,6 @@ import gitdb.exc
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-from colrev.constants import Filepaths
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
@@ -137,7 +136,7 @@ class Commit:
 
     def _get_detailed_processing_report(self) -> str:
         processing_report = ""
-        report_path = self.review_manager.get_path(Filepaths.REPORT_FILE)
+        report_path = self.review_manager.paths.report
         if report_path.is_file():
             processing_report = "\nProcessing report\n"
             processing_report += "".join(report_path.read_text())
@@ -160,7 +159,7 @@ class Commit:
 
         self.review_manager.logger.debug("Prepare commit: checks and updates")
         if not skip_status_yaml:
-            status_yml = self.review_manager.get_path(Filepaths.STATUS_FILE)
+            status_yml = self.review_manager.paths.status
             self.review_manager.update_status_yaml()
             self.review_manager.dataset.add_changes(status_yml)
 
@@ -179,9 +178,7 @@ class Commit:
         except ValueError:
             pass
 
-        self.records_committed = self.review_manager.get_path(
-            Filepaths.RECORDS_FILE
-        ).is_file()
+        self.records_committed = self.review_manager.paths.records.is_file()
         self.completeness_condition = self.review_manager.get_completeness_condition()
 
         self.msg = (

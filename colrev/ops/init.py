@@ -27,7 +27,6 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 
 # pylint: disable=too-few-public-methods
 
@@ -146,8 +145,8 @@ class Initializer:
         cur_content = [
             x for x in cur_content if not x.startswith("venv") and x != ".history"
         ]
-        if str(Filepaths.REPORT_FILE) in cur_content:
-            cur_content.remove(str(Filepaths.REPORT_FILE))
+        if str(self.review_manager.paths.REPORT_FILE) in cur_content:
+            cur_content.remove(str(self.review_manager.paths.REPORT_FILE))
 
         if all(x.startswith((".git", ".devcontainer", ".vscode")) for x in cur_content):
             return
@@ -245,33 +244,40 @@ class Initializer:
         if settings_filedata:
             settings = json.loads(settings_filedata.decode("utf-8"))
             settings["project"]["review_type"] = str(self.review_type)
-            with open(
-                self.target_path / Filepaths.SETTINGS_FILE, "w", encoding="utf8"
-            ) as file:
+            with open(self.review_manager.paths.settings, "w", encoding="utf8") as file:
                 json.dump(settings, file, indent=4)
 
-        (self.target_path / Filepaths.SEARCH_DIR).mkdir(parents=True)
-        (self.target_path / Filepaths.PDF_DIR).mkdir(parents=True)
+        self.review_manager.paths.search.mkdir(parents=True)
+        self.review_manager.paths.pdf.mkdir(parents=True)
 
         colrev_path = Path.home() / Path("colrev")
         colrev_path.mkdir(exist_ok=True, parents=True)
 
         files_to_retrieve = [
-            [Path("ops/init/readme.md"), Path("readme.md")],
+            [Path("ops/init/readme.md"), self.review_manager.paths.readme],
             [
                 Path("ops/init/pre-commit-config.yaml"),
-                Filepaths.PRE_COMMIT_CONFIG,
+                self.review_manager.paths.pre_commit_config,
             ],
-            [Path("ops/init/markdownlint.yaml"), Path(".markdownlint.yaml")],
+            [
+                Path("ops/init/markdownlint.yaml"),
+                self.review_manager.path / Path(".markdownlint.yaml"),
+            ],
             [
                 Path("ops/init/pre-commit.yml"),
-                Path(".github/workflows/pre-commit.yml"),
+                self.review_manager.path / Path(".github/workflows/pre-commit.yml"),
             ],
-            [Path("ops/init/gitattributes"), Path(".gitattributes")],
-            [Path("ops/init/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
+            [
+                Path("ops/init/gitattributes"),
+                self.review_manager.path / Path(".gitattributes"),
+            ],
+            [
+                Path("ops/init/LICENSE-CC-BY-4.0.txt"),
+                self.review_manager.path / Path("LICENSE.txt"),
+            ],
             [
                 Path("ops/init/colrev_update.yml"),
-                Path(".github/workflows/colrev_update.yml"),
+                self.review_manager.path / Path(".github/workflows/colrev_update.yml"),
             ],
         ]
         for retrieval_path, target_path in files_to_retrieve:
@@ -380,7 +386,9 @@ class Initializer:
                 data_package_endpoint["endpoint"].replace("colrev.", ""),
             )
 
-        with open(Filepaths.RECORDS_FILE, mode="w", encoding="utf-8") as file:
+        with open(
+            self.review_manager.paths.records, mode="w", encoding="utf-8"
+        ) as file:
             file.write("\n")
 
         self._fix_pre_commit_hooks_windows()
@@ -450,7 +458,7 @@ class Initializer:
         git_repo = self.review_manager.dataset.get_repo()
         git_repo.index.add(["data/search/30_example_records.bib"])
 
-        with open(Filepaths.SETTINGS_FILE, encoding="utf-8") as file:
+        with open(self.review_manager.paths.settings, encoding="utf-8") as file:
             settings = json.load(file)
 
         settings["dedupe"]["dedupe_package_endpoints"] = [{"endpoint": "colrev.dedupe"}]
@@ -466,6 +474,6 @@ class Initializer:
             }
         ]
 
-        with open(Filepaths.SETTINGS_FILE, "w", encoding="utf-8") as outfile:
+        with open(self.review_manager.paths.settings, "w", encoding="utf-8") as outfile:
             json.dump(settings, outfile, indent=4)
-        git_repo.index.add([Filepaths.SETTINGS_FILE])
+        git_repo.index.add([self.review_manager.paths.SETTINGS_FILE])
