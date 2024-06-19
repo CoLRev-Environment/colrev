@@ -22,7 +22,6 @@ import colrev.ops.check
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.env.local_index_prep import prepare_record_for_return
 
 
@@ -80,7 +79,7 @@ class LocalIndex:
                     depth=1,
                 )
             ret = colrev.loader.load_utils.load(
-                filename=target_path / Filepaths.RECORDS_FILE,
+                filename=target_path / Path("data/records.bib"),
             )
 
         except GitCommandError:
