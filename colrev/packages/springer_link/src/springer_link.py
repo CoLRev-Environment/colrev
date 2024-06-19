@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import re
-import inquirer
-import requests
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
-import typing
+import inquirer
 import pandas as pd
+import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -19,11 +19,11 @@ import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
-import colrev.settings
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -87,8 +87,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        params_dict = {}
-
+        params_dict: dict[str, str] = {}
         search_type = operation.select_search_type(
             search_types=cls.search_types, params=params_dict
         )
@@ -116,7 +115,6 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             search_params = instance.add_constraints()
             add_settings.search_parameters = search_params
             search_source = add_settings
-            
 
         else:
             raise NotImplementedError
@@ -133,7 +131,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                 source=self.search_source,
             )
             return
-        
+
         if self.search_source.search_type == SearchType.API:
             springer_feed = self.search_source.get_api_feed(
                 review_manager=self.review_manager,
@@ -144,9 +142,13 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             return
 
         raise NotImplementedError
-    
+
     def add_constraints(self) -> dict:
-        print("Please enter your search parameter for the following constraints (or just press enter to continue):") 
+        """add constraints for query"""
+        print(
+            "Please enter your search parameter for the following constraints"
+            + "(or just press enter to continue):"
+        )
         keyword = input("keyword: ")
         subject = input("subject: ")
         language = input("language: ")
@@ -154,17 +156,18 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         doc_type = input("type: ")
 
         search_parameters = {
-            'subject': subject,
-            'keyword': keyword,
-            'language': language,
-            'year': year,
-            'type': doc_type
+            "subject": subject,
+            "keyword": keyword,
+            "language": language,
+            "year": year,
+            "type": doc_type,
         }
 
         return search_parameters
 
-    
     def build_query(self, search_parameters: dict) -> str:
+        """build api query"""
+
         constraints = []
         for key, value in search_parameters.items():
             if value:
@@ -173,35 +176,34 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         query = " ".join(constraints)
         return query
 
-    
     def _build_api_search_url(self, query: str, api_key: str, start: int = 1) -> str:
         return f"https://api.springernature.com/meta/v2/json?q={query}&api_key={api_key}&s={start}"
-
 
     def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
         """Get the records from a query"""
         query = self.build_query(self.search_source.search_parameters)
         api_key = self.get_api_key()
         start = 1
-        
+
         while True:
-            full_url = self._build_api_search_url(query=query, api_key=api_key, start=start)
+            full_url = self._build_api_search_url(
+                query=query, api_key=api_key, start=start
+            )
             response = requests.get(full_url, timeout=10)
             if response.status_code != 200:
-             return
+                return
 
             data = response.json()
 
             for record in data.get("records", []):
                 yield self._create_record(record)
-            
+
             next_page = data.get("nextPage")
             if not next_page:
                 break
 
-            start_str = next_page.split('s=')[1].split('&')[0]
+            start_str = next_page.split("s=")[1].split("&")[0]
             start = int(start_str)
-
 
     def _run_api_search(
         self, springer_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
@@ -209,7 +211,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         for record in self.get_query_return():
             springer_feed.add_update_record(record)
 
-        springer_feed.save()  
+        springer_feed.save()
 
     def _create_record(self, doc: dict) -> colrev.record.record.Record:
         record_dict = {Fields.ID: doc["identifier"]}
@@ -221,24 +223,47 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             record_dict[Fields.ENTRYTYPE] = "inproceedings"
         elif "Book" in doc["contentType"]:
             record_dict[Fields.ENTRYTYPE] = "book"
-        
-        record_dict.update({
-            Fields.AUTHOR: " and ".join(creator.get("creator", "") for creator in doc.get("creators", [])),
-            Fields.TITLE: doc.get("title", ""),
-            Fields.PUBLISHER: doc.get("publisher", ""), 
-            Fields.BOOKTITLE: doc.get("publicationName", "") if doc.get("publicationType") == "Book" else "",
-            Fields.JOURNAL: doc.get("publicationName", "") if doc.get("publicationType") == "Journal" else "",
-            Fields.YEAR: doc.get("publicationDate", "").split("-")[0] if doc.get("publicationDate") else "",
-            Fields.VOLUME: doc.get("volume", ""),
-            Fields.NUMBER: doc.get("number", ""),
-            Fields.PAGES: f"{doc.get('startingPage', '')}-{doc.get('endingPage', '')}" 
-            if doc.get('startingPage') and doc.get('endingPage') else "",
-            Fields.DOI: doc.get("doi", ""),
-            Fields.URL: next((url.get("value", "") for url in doc.get("url", []) 
-                              if url.get("format") == "html"), doc.get("url", [{}])[0].get("value", "") 
-                              if doc.get("url") else ""),         
-            Fields.ABSTRACT: doc.get("abstract", ""),
-        })
+
+        record_dict.update(
+            {
+                Fields.AUTHOR: " and ".join(
+                    creator.get("creator", "") for creator in doc.get("creators", [])
+                ),
+                Fields.TITLE: doc.get("title", ""),
+                Fields.PUBLISHER: doc.get("publisher", ""),
+                Fields.BOOKTITLE: (
+                    doc.get("publicationName", "")
+                    if doc.get("publicationType") == "Book"
+                    else ""
+                ),
+                Fields.JOURNAL: (
+                    doc.get("publicationName", "")
+                    if doc.get("publicationType") == "Journal"
+                    else ""
+                ),
+                Fields.YEAR: (
+                    doc.get("publicationDate", "").split("-")[0]
+                    if doc.get("publicationDate")
+                    else ""
+                ),
+                Fields.VOLUME: doc.get("volume", ""),
+                Fields.NUMBER: doc.get("number", ""),
+                Fields.PAGES: (
+                    f"{doc.get('startingPage', '')}-{doc.get('endingPage', '')}"
+                    if doc.get("startingPage") and doc.get("endingPage")
+                    else ""
+                ),
+                Fields.DOI: doc.get("doi", ""),
+                Fields.URL: next(
+                    (
+                        url.get("value", "")
+                        for url in doc.get("url", [])
+                        if url.get("format") == "html"
+                    ),
+                    doc.get("url", [{}])[0].get("value", "") if doc.get("url") else "",
+                ),
+            }
+        )
 
         record = colrev.record.record.Record(data=record_dict)
         if Fields.LANGUAGE in record.data:
@@ -311,12 +336,12 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             logger=self.review_manager.logger,
         )
         return records
-    
+
     def api_ui(self) -> None:
         """User API key insertion"""
         run = True
 
-        api_key = self.get_api_key()        
+        api_key = self.get_api_key()
 
         print("\n API key is required for search \n\n")
 
@@ -327,10 +352,10 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
                 change_api_key = [
                     inquirer.List(
-                        name='change_api_key',
+                        name="change_api_key",
                         message="Do you want to change your saved API key?",
-                        choices=['no', 'yes'],
-                            ),
+                        choices=["no", "yes"],
+                    ),
                 ]
 
                 answers = inquirer.prompt(change_api_key)
@@ -339,30 +364,31 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                     run = False
 
                 else:
-                    api_key = self.api_key_ui()
+                    self.api_key_ui()
 
-            else: 
-                api_key = self.api_key_ui()
-                
-        return
+            else:
+                self.api_key_ui()
 
     def get_api_key(self) -> str:
         """Get API key from settings"""
         api_key = self.review_manager.environment_manager.get_settings_by_key(
             self.SETTINGS["api_key"]
         )
-        return api_key if api_key else ""
-    
-    def api_key_ui(self) -> str: 
+        if api_key:
+            return api_key
+        return ""
+
+    def api_key_ui(self) -> None:
+        """User Interface to enter Api key"""
+
         api_key = input("Please enter your Springer Link API key: ")
-        if not re.match(r'^[a-z0-9]{32}$', api_key):
+        if not re.match(r"^[a-z0-9]{32}$", api_key):
             print("Error: Invalid API key.\n")
         else:
             self.review_manager.environment_manager.update_registry(
                 self.SETTINGS["api_key"], api_key
             )
-            return api_key
-        
+
     def _load_bib(self) -> dict:
         records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
@@ -376,7 +402,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".csv":
             return self._load_csv()
-        
+
         if self.search_source.filename.suffix == ".bib":
             return self._load_bib()
 

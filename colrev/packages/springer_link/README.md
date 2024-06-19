@@ -2,7 +2,7 @@
 
 ## search
 
-The search is launched with the following command: 
+The search is launched with the following command:
 
 ```
 colrev search --add colrev.springer_link
@@ -35,4 +35,3 @@ In this step the user can enter the search parameters.
 - [SpringerLink](https://link.springer.com/)
 - [SpringerLink API](https://dev.springernature.com/)
 - [SpringerLink API Documentation](https://docs-dev.springernature.com/docs/)
-
