@@ -31,13 +31,13 @@ from github import Github
 # Authentication is defined via github.Auth
 from github import Auth
 # using an access token
-auth = Auth.Token("token here")
+# auth = Auth.Token("token here")
 
 # First create a Github instance:
 # Public Web Github
-g = Github(auth=auth)
+# g = Github(auth=auth)
 # Github Enterprise with custom hostname
-g = Github(base_url="https://{hostname}/api/v3", auth=auth)
+# g = Github(base_url="https://{hostname}/api/v3", auth=auth)
 rerun = False
 """
 # Then play with your Github objects:
@@ -74,6 +74,9 @@ class GitHubSearchSource(JsonSchemaMixin):
         + "https://docs.github.com/en/rest?apiVersion=2022-11-28"
     )
     db_url = "https://github.com/"
+    SETTINGS = {
+        "api_key": "packages.search_source.colrev.github.api_key",
+    }
     _github_md_filename = Path("data/search/md_github.bib")
 
     @classmethod
@@ -173,17 +176,19 @@ class GitHubSearchSource(JsonSchemaMixin):
 
         operation.add_source_and_search(search_source)
         return search_source
+    
     ## api key template aus ieee
-    ##def _get_api_key(self) -> str:
-    ##    api_key = self.review_manager.environment_manager.get_settings_by_key(
-    ##        self.SETTINGS["api_key"]
-    ##    )
-    ##    if api_key is None or len(api_key) != 40:
-    ##        api_key = input("Please enter api key: ")
-    ##        self.review_manager.environment_manager.update_registry(
-    ##            self.SETTINGS["api_key"], api_key
-    ##        )
-    ##    return api_key
+    def _get_api_key(self) -> str:
+        api_key = self.review_manager.environment_manager.get_settings_by_key(
+            self.SETTINGS["api_key"]
+        )
+        if api_key is None or len(api_key) != 40:
+            api_key = input("Please enter api access token: ")
+            self.review_manager.environment_manager.update_registry(
+                self.SETTINGS["api_key"], api_key
+            )
+        return api_key
+    
     def search(self, rerun: bool = False) -> None:
         """Run a search on GitHub"""
 
@@ -197,19 +202,6 @@ class GitHubSearchSource(JsonSchemaMixin):
             # Überprüfen Sie, ob die Suchparameter definiert sind
             if not self.search_source.search_parameters:
                 raise ValueError("No search parameters defined for GitHub search source")
-
-            #Auth-Tokenabfrageposition
-            ## api key template aus ieee
-            ##def _get_api_key(self) -> str:
-            ##    api_key = self.review_manager.environment_manager.get_settings_by_key(
-            ##        self.SETTINGS["api_key"]
-            ##    )
-            ##    if api_key is None or len(api_key) != 40:
-            ##        api_key = input("Please enter api key: ")
-            ##        self.review_manager.environment_manager.update_registry(
-            ##            self.SETTINGS["api_key"], api_key
-            ##        )
-            ##    return api_key
 
             if rerun == False:
                 choice_int = choice()
@@ -233,13 +225,14 @@ class GitHubSearchSource(JsonSchemaMixin):
             #Prints for Tests
         
             #Tokenabfrage muss vor der Instanzbildung abgefragt werden!
-            g = Github()
+            token = self._get_api_key()
+            auth = Auth.Token(token)
+            g = Github(auth=auth)
             
             # Durchführen der Suche auf GitHub
             repositories = g.search_repositories(query=query)
 
             # Speichern der Suchergebnisse in einer Datei
-
             results = []
             for repo in repositories:
                 repo_data = {
@@ -256,7 +249,7 @@ class GitHubSearchSource(JsonSchemaMixin):
                 }
                 repo_data = colrev.record.record.Record(data=repo_data)
                 try:
-                    #repo_data=connector_utils.repo_to_record(repo=repo,g=g)
+                    #repo_data=connector_utils.repo_to_record(repo=repo)
                     #print(repo)
                     #results.append(repo)
                     pass
