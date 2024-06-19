@@ -369,7 +369,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
             else:
                 self.api_key_ui()
-                run = False 
+                run = False
 
     def get_api_key(self) -> str:
         """Get API key from settings"""
