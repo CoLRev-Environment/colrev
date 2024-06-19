@@ -64,7 +64,8 @@ class GitHubSearchSource(JsonSchemaMixin):
     search_types = [SearchType.API]
     endpoint = "colrev.github"
     source_identifier = Fields.URL
-   
+    rerun = False
+
     
     heuristic_status = SearchSourceHeuristicStatus.todo
     short_name = "GitHubSearch"
@@ -210,8 +211,9 @@ class GitHubSearchSource(JsonSchemaMixin):
             ##        )
             ##    return api_key
 
-            choice_int = choice()
-            #print(choice_int)
+            if rerun == False:
+                choice_int = choice()
+                #print(choice_int)
             query = ""
 
             # Extrahieren der Suchparameter
@@ -221,12 +223,15 @@ class GitHubSearchSource(JsonSchemaMixin):
 
             if choice_int==1:
                 query = f"{keywords_input} in:name"
+                rerun == True
                 #print(query) 
             if choice_int==2:
                 query = f"{keywords_input} in:readme"
+                rerun == True
                 #print(query)
             if choice_int==3:
                 query = f"{keywords_input} in:name,readme"
+                rerun == True
                 #print(query)
             #Prints for Tests
         
@@ -251,7 +256,10 @@ class GitHubSearchSource(JsonSchemaMixin):
                     "stargazers_count": repo.stargazers_count,
                     "language": repo.language,
                 }
-                results.append(repo_data)
+                
+                #results.append(connector_utils.repo_to_record(repo=repo))
+
+                
 
             # Speichern der Ergebnisse in einer JSON-Datei
             with open(self._github_md_filename, 'w', encoding='utf-8') as f:
