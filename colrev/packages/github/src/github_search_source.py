@@ -216,6 +216,7 @@ class GitHubSearchSource(JsonSchemaMixin):
 
             # Extrahieren der Suchparameter
             keywords_input = self.search_source.search_parameters.get('query', '')
+            #When query empty = abort.
             #print(keywords_input)
 
             if choice_int==1:
