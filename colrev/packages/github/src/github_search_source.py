@@ -235,6 +235,7 @@ class GitHubSearchSource(JsonSchemaMixin):
             # Speichern der Suchergebnisse in einer Datei
             results = []
             for repo in repositories:
+                """
                 repo_data = {
                    Fields.ENTRYTYPE: "software",
                    "name": repo.name,
@@ -248,10 +249,9 @@ class GitHubSearchSource(JsonSchemaMixin):
                    "language": repo.language,
                 }
                 repo_data = colrev.record.record.Record(data=repo_data)
+                """
                 try:
-                    #repo_data=connector_utils.repo_to_record(repo=repo)
-                    #print(repo)
-                    #results.append(repo)
+                    repo_data=connector_utils.repo_to_record(repo=repo)
                     pass
                 except Exception as e:
                     print("Skipped because there was an Error: ")

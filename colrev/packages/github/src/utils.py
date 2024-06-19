@@ -25,7 +25,10 @@ def get_authors(*, repo: Github.Repository.Repository, citation_data: str) -> st
     if citation_data:
         authors = re.findall(r'- family-names:\s*"(.+)"\s*\n\s*given-names:\s*"(.+)"', citation_data, re.M)
         return colrev.record.record_prep.PrepRecord.format_author_field(' and '.join([a[1].strip() + " " + a[0].strip() for a in authors]))
-    return ' and '.join([c.login for c in repo.get_contributors() if not c.login.endswith("[bot]")])
+    try:
+        return ' and '.join([c.login for c in repo.get_contributors() if not c.login.endswith("[bot]")])
+    except:
+        return None
 
 def get_url(*, repo: Github.Repository.Repository, citation_data: str) -> str:
     """Get repository URL"""
@@ -71,7 +74,11 @@ def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.recor
 
     data[Fields.YEAR] = data[Fields.DATE][:4]
 
-    data[Fields.FILE] = repo.html_url + "/blob/main/README.md" if repo.get_readme() else None
+    try:
+        repo.get_readme()
+        data[Fields.FILE] = repo.html_url + "/blob/main/README.md"
+    except:
+        data[Fields.FILE] = None
     
     data[Fields.ABSTRACT] = repo.description
     
