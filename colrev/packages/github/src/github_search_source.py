@@ -242,26 +242,28 @@ class GitHubSearchSource(JsonSchemaMixin):
 
             results = []
             for repo in repositories:
-               #repo_data = {
-               #    "name": repo.name,
-               #    "full_name": repo.full_name,
-               #    "description": repo.description,
-               #    "html_url": repo.html_url,
-               #    "created_at": repo.created_at.isoformat(),
-               #    "updated_at": repo.updated_at.isoformat(),
-               #    "pushed_at": repo.pushed_at.isoformat(),
-               #    "stargazers_count": repo.stargazers_count,
-               #    "language": repo.language,
-               #}
-                try:
-                    repo=connector_utils.repo_to_record(repo=repo)
-                    print(repo)
-                    results.append(repo)
-                    pass
-                except Exception as e:
-                    print("Skipped because there was an Error: ")
-                    pass
-                #results.append(repo_data)
+               repo_data = {
+                   Fields.ENTRYTYPE: "software",
+                   "name": repo.name,
+                   "full_name": repo.full_name,
+                   "description": repo.description,
+                   Fields.URL: repo.html_url,
+                   "created_at": repo.created_at.isoformat(),
+                   "updated_at": repo.updated_at.isoformat(),
+                   "pushed_at": repo.pushed_at.isoformat(),
+                   "stargazers_count": repo.stargazers_count,
+                   "language": repo.language,
+               }
+               repo_data = colrev.record.record.Record(data=repo_data)
+            try:
+                repo_data=connector_utils.repo_to_record(repo=repo)
+                #print(repo)
+                #results.append(repo)
+                pass
+            except Exception as e:
+                print("Skipped because there was an Error: ")
+                pass
+            results.append(repo_data)
                 
 
             # Speichern der Ergebnisse in einer JSON-Datei
@@ -269,9 +271,13 @@ class GitHubSearchSource(JsonSchemaMixin):
             #    json.dump(results, f, ensure_ascii=False, indent=4)
 
             # Speichern als Repos in .bib
-            with open(self._github_md_filename, 'w') as file:
-                for repo in results:
-                    file.write(repo)        #Speichern so nicht möglich, da repo kein string
+            # with open(self._github_md_filename, 'w') as file:
+            #    for repo in results:
+            #        file.write(repo)        #Speichern so nicht möglich, da repo kein string
+
+            for record in results:
+                github_feed.add_update_record(retrieved_record=record)
+            github_feed.save()
 
             # Schließen der GitHub-Verbindung
             g.close()
