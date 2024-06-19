@@ -242,7 +242,7 @@ class GitHubSearchSource(JsonSchemaMixin):
 
             results = []
             for repo in repositories:
-               repo_data = {
+                repo_data = {
                    Fields.ENTRYTYPE: "software",
                    "name": repo.name,
                    "full_name": repo.full_name,
@@ -253,16 +253,16 @@ class GitHubSearchSource(JsonSchemaMixin):
                    "pushed_at": repo.pushed_at.isoformat(),
                    "stargazers_count": repo.stargazers_count,
                    "language": repo.language,
-               }
-               repo_data = colrev.record.record.Record(data=repo_data)
-            try:
-                repo_data=connector_utils.repo_to_record(repo=repo)
-                #print(repo)
-                #results.append(repo)
-                pass
-            except Exception as e:
-                print("Skipped because there was an Error: ")
-                pass
+                }
+                repo_data = colrev.record.record.Record(data=repo_data)
+                try:
+                    repo_data=connector_utils.repo_to_record(repo=repo)
+                    #print(repo)
+                    #results.append(repo)
+                    pass
+                except Exception as e:
+                    print("Skipped because there was an Error: ")
+                    pass
             results.append(repo_data)
                 
 
