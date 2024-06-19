@@ -174,23 +174,33 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         return query
 
     
-    def _build_api_search_url(self, query: str, api_key: str) -> str:
-        return f"https://api.springernature.com/meta/v2/json?q={query}&api_key={api_key}"
+    def _build_api_search_url(self, query: str, api_key: str, start: int = 1) -> str:
+        return f"https://api.springernature.com/meta/v2/json?q={query}&api_key={api_key}&s={start}"
 
 
     def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
         """Get the records from a query"""
-
         query = self.build_query(self.search_source.search_parameters)
-        full_url = self._build_api_search_url(query=query, api_key=self.get_api_key())
-        response = requests.get(full_url, timeout=10)
-        if response.status_code != 200:
-            return
+        api_key = self.get_api_key()
+        start = 1
+        
+        while True:
+            full_url = self._build_api_search_url(query=query, api_key=api_key, start=start)
+            response = requests.get(full_url, timeout=10)
+            if response.status_code != 200:
+             return
 
-        data = response.json()
+            data = response.json()
 
-        for record in data["records"]:
-            yield self._create_record(record)
+            for record in data.get("records", []):
+                yield self._create_record(record)
+            
+            next_page = data.get("nextPage")
+            if not next_page:
+                break
+
+            start_str = next_page.split('s=')[1].split('&')[0]
+            start = int(start_str)
 
 
     def _run_api_search(
@@ -203,20 +213,22 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
     def _create_record(self, doc: dict) -> colrev.record.record.Record:
         record_dict = {Fields.ID: doc["identifier"]}
-        record_dict[Fields.ENTRYTYPE] = "other"
+        record_dict[Fields.ENTRYTYPE] = "misc"
 
         if "Article" in doc["contentType"]:
             record_dict[Fields.ENTRYTYPE] = "article"
         elif "Chapter" in doc["contentType"]:
-            record_dict[Fields.ENTRYTYPE] = "inbook"
+            record_dict[Fields.ENTRYTYPE] = "inproceedings"
         elif "Book" in doc["contentType"]:
             record_dict[Fields.ENTRYTYPE] = "book"
         
         record_dict.update({
-            Fields.TITLE: doc.get("title", ""),
             Fields.AUTHOR: " and ".join(creator.get("creator", "") for creator in doc.get("creators", [])),
-            Fields.JOURNAL: doc.get("publicationName", ""),
-            Fields.DATE: doc.get("publicationDate", ""),
+            Fields.TITLE: doc.get("title", ""),
+            Fields.PUBLISHER: doc.get("publisher", ""), 
+            Fields.BOOKTITLE: doc.get("publicationName", "") if doc.get("publicationType") == "Book" else "",
+            Fields.JOURNAL: doc.get("publicationName", "") if doc.get("publicationType") == "Journal" else "",
+            Fields.YEAR: doc.get("publicationDate", "").split("-")[0] if doc.get("publicationDate") else "",
             Fields.VOLUME: doc.get("volume", ""),
             Fields.NUMBER: doc.get("number", ""),
             Fields.PAGES: f"{doc.get('startingPage', '')}-{doc.get('endingPage', '')}" 
@@ -226,7 +238,6 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                               if url.get("format") == "html"), doc.get("url", [{}])[0].get("value", "") 
                               if doc.get("url") else ""),         
             Fields.ABSTRACT: doc.get("abstract", ""),
-            Fields.KEYWORDS: ", ".join(doc.get("keyword", [])),
         })
 
         record = colrev.record.record.Record(data=record_dict)
