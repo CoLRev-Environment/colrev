@@ -255,7 +255,7 @@ class GitHubSearchSource(JsonSchemaMixin):
                 }
                 
                 #results.append(connector_utils.repo_to_record(repo=repo))
-
+                results.append(repo_data)
                 
 
             # Speichern der Ergebnisse in einer JSON-Datei
