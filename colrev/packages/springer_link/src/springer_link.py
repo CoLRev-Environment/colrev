@@ -62,6 +62,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.quality_model = self.review_manager.get_qm()
         self.source_operation = source_operation
+        self.language_service = colrev.env.language_service.LanguageService()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -213,12 +214,17 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         
         record_dict.update({
             Fields.TITLE: doc.get("title", ""),
+            Fields.AUTHOR: " and ".join(creator.get("creator", "") for creator in doc.get("creators", [])),
             Fields.JOURNAL: doc.get("publicationName", ""),
             Fields.DATE: doc.get("publicationDate", ""),
             Fields.VOLUME: doc.get("volume", ""),
             Fields.NUMBER: doc.get("number", ""),
+            Fields.PAGES: f"{doc.get('startingPage', '')}-{doc.get('endingPage', '')}" 
+            if doc.get('startingPage') and doc.get('endingPage') else "",
             Fields.DOI: doc.get("doi", ""),
-            Fields.URL: self.map_url(doc.get("url", [])),
+            Fields.URL: next((url.get("value", "") for url in doc.get("url", []) 
+                              if url.get("format") == "html"), doc.get("url", [{}])[0].get("value", "") 
+                              if doc.get("url") else ""),         
             Fields.ABSTRACT: doc.get("abstract", ""),
             Fields.KEYWORDS: ", ".join(doc.get("keyword", [])),
         })
