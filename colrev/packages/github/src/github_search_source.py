@@ -26,9 +26,9 @@ from colrev.constants import SearchType
 
 """pip install PyGithub -> Must be installed before use, please note in the documentation! """
 
-#from github import Github
+from github import Github
 # Authentication is defined via github.Auth
-#from github import Auth
+from github import Auth
 # using an access token
 #auth = Auth.Token("access_token")
 
