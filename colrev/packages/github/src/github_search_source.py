@@ -256,14 +256,14 @@ class GitHubSearchSource(JsonSchemaMixin):
                 }
                 repo_data = colrev.record.record.Record(data=repo_data)
                 try:
-                    repo_data=connector_utils.repo_to_record(repo=repo)
+                    #repo_data=connector_utils.repo_to_record(repo=repo,g=g)
                     #print(repo)
                     #results.append(repo)
                     pass
                 except Exception as e:
                     print("Skipped because there was an Error: ")
                     pass
-            results.append(repo_data)
+                results.append(repo_data)
                 
 
             # Speichern der Ergebnisse in einer JSON-Datei
