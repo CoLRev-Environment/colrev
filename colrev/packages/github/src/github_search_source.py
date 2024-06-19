@@ -38,7 +38,7 @@ auth = Auth.Token("access_token")
 g = Github(auth=auth)
 # Github Enterprise with custom hostname
 g = Github(base_url="https://{hostname}/api/v3", auth=auth)
-
+rerun = False
 """
 # Then play with your Github objects:
 for repo in g.get_user().get_repos():
@@ -64,7 +64,7 @@ class GitHubSearchSource(JsonSchemaMixin):
     search_types = [SearchType.API]
     endpoint = "colrev.github"
     source_identifier = Fields.URL
-    rerun = False
+    
 
     
     heuristic_status = SearchSourceHeuristicStatus.todo
@@ -223,15 +223,12 @@ class GitHubSearchSource(JsonSchemaMixin):
 
             if choice_int==1:
                 query = f"{keywords_input} in:name"
-                rerun == True
                 #print(query) 
             if choice_int==2:
                 query = f"{keywords_input} in:readme"
-                rerun == True
                 #print(query)
             if choice_int==3:
                 query = f"{keywords_input} in:name,readme"
-                rerun == True
                 #print(query)
             #Prints for Tests
         
@@ -282,6 +279,7 @@ def choice() -> int:
     while True:
         user_choice = input("Where do you want to search in (1 = Only in Title, 2 = Only in Readme, 3 = Both): ")
         if user_choice in ['1', '2', '3']:
+            rerun == True
             return int(user_choice)
         else:
             print("Invalid choice. Please try again.")     
