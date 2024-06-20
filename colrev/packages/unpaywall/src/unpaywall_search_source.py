@@ -162,7 +162,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
             filename = operation.get_unique_filename(file_path_string="unpaywall")
 
-            search_parameters["query"] = cls._normalize_query(query=search_parameters["query"])
             search_parameters["query"] = cls._convert_html_url_encoding_from_html_to_string(query=search_parameters["query"])
 
             search_source = colrev.settings.SearchSource(
@@ -276,25 +275,26 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
     
-    def _normalize_query(query: str) -> str:
-        query = query.replace(" AND ", " ")
-        return query
-    
     def _convert_html_url_encoding_from_html_to_string(query: str) -> str: 
-        query = query.replace("%20", " AND ")
-        query = query.replace("%20OR%20", " OR ")
-        query = query.replace("%20-", " NOT ")
+        query = query.replace("AND", "%20")
+        query = re.sub(r'(%20)+', '%20', query).strip()
+        query = query.replace("%20OR%20", "%HOR%H") # %20 for special case: e.g. OR NOT x => %20OR%20-x. If we would use %20 instead of %H, we would get %20OR%20- and after the "AND"-replacement "ANDORAND-x" instead of "OR NOT x"
+        query = query.replace("%20-", "%HNOT%H")
+        query = query.replace("%H-", "%HNOT%H")  
+        query = query.replace("%20", "%HAND%H") 
+        query = re.sub(r'(%H|%20)+', '%20', query).strip()
+        query = query.replace("%20", " ")
         return query
     
     def _convert_html_url_encoding_from_string_to_html(self,query: str) -> str: 
         query = re.sub(r'\s+', ' ', query).strip() 
         splited_query = query.split(" ")
         query_parts = []
-        for part in splited_query:
-            if part == "AND" or part == "OR" or part == "NOT":
+        for word in splited_query:
+            if word == "AND" or word == "OR" or word == "NOT":
                 continue
-            part = part.lower()
-            query_parts.append(part)	
+            word = word.lower()
+            query_parts.append(word)	
         query = " ".join(query_parts)
         query = query.replace(" OR ", "%20OR%20")
         query = query.replace(" NOT ", "%20-")
