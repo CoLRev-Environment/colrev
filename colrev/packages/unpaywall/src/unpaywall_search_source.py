@@ -279,7 +279,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         query = query.replace("AND", "%20")
         query = re.sub(r'(%20)+', '%20', query).strip()
         query = query.replace("%20OR%20", "§OR§") # %20 for special case: e.g. OR NOT x => %20OR%20-x. If we would use %20 instead of §, we would get "%20OR%20-" and after the "%20 to %20AND%20"-replacement "%20AND%20OR%20AND%20-x" instead of "OR NOT x"
-        query = query.replace("%20-", "§§NOT§")
+        query = query.replace("%20-", "§NOT§")
         query = query.replace("§-", "§NOT§")  
         query = query.replace("%20", "§AND§") 
         query = re.sub(r'§|%20)+', '%20', query).strip()
