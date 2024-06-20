@@ -17,7 +17,6 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
-
 from colrev.packages.unpaywall.src import utils
 
 # pylint: disable=duplicate-code
