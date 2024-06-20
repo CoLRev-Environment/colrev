@@ -33,7 +33,6 @@ import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
 
@@ -266,13 +265,6 @@ def exit(
     default=False,
     help="Add search results example",
 )
-@click.option(
-    "-lpdf",
-    "--local_pdf_collection",
-    is_flag=True,
-    default=False,
-    help="Add a local PDF collection repository",
-)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def init(
@@ -281,7 +273,6 @@ def init(
     example: bool,
     force: bool,
     light: bool,
-    local_pdf_collection: bool,
 ) -> None:
     """Initialize (define review objectives and type)
 
@@ -295,7 +286,6 @@ def init(
         example=example,
         force_mode=force,
         light=light,
-        local_pdf_collection=local_pdf_collection,
         exact_call=EXACT_CALL,
     )
 
@@ -393,8 +383,8 @@ def retrieve(
         {"verbose_mode": verbose, "force_mode": force, "high_level_operation": True},
     )
 
-    pdf_dir = review_manager.get_path(Filepaths.PDF_DIR)
-    search_dir = review_manager.get_path(Filepaths.SEARCH_DIR)
+    pdf_dir = review_manager.paths.pdf
+    search_dir = review_manager.paths.search
     if not any(search_dir.iterdir()) and not any(pdf_dir.iterdir()):
         # Note : API-based searches automatically retrieve files
         # when they are added, i.e., the following message should
@@ -402,8 +392,8 @@ def retrieve(
         print(
             "To retrieve search results,\n"
             " - copy files (*.bib, *.ris, *.xlsx, ...) "
-            f"to the directory {Filepaths.SEARCH_DIR} or\n"
-            f" - copy PDF files to the directory {Filepaths.PDF_DIR} or \n"
+            f"to the directory {review_manager.paths.SEARCH_DIR} or\n"
+            f" - copy PDF files to the directory {review_manager.paths.PDF_DIR} or \n"
             " - add an API-based search, as described in the documentation:\n"
             "https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html"
         )
@@ -558,7 +548,9 @@ def search(
             review_manager=review_manager
         )
         print("Activated custom_search_script.py.")
-        print(f"Please update the source in {Filepaths.SETTINGS_FILE} and commit.")
+        print(
+            f"Please update the source in {review_manager.paths.SETTINGS_FILE} and commit."
+        )
     elif bws:
         import colrev.ui_cli.search_backward_selective
 
@@ -740,7 +732,8 @@ def prep(
             prep_operation.setup_custom_script()
             print("Activated custom_prep_script.py.")
             print(
-                f"Please check and adapt its position in the {Filepaths.SETTINGS_FILE} and commit."
+                "Please check and adapt its position in the "
+                f"{review_manager.paths.SETTINGS_FILE} and commit."
             )
             return
         if add:
@@ -2006,7 +1999,9 @@ def data(
     if setup_custom_script:
         data_operation.setup_custom_script()
         print("Activated custom_data_script.py.")
-        print(f"Please update the data_format in {Filepaths.SETTINGS_FILE} and commit.")
+        print(
+            f"Please update the data_format in {review_manager.paths.SETTINGS_FILE} and commit."
+        )
         return
 
     if add:
@@ -2493,7 +2488,7 @@ def settings(
         for script_to_call in scripts_to_call:
             check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)  # nosec
 
-        review_manager.dataset.add_changes(Filepaths.PRE_COMMIT_CONFIG)
+        review_manager.dataset.add_changes(review_manager.paths.PRE_COMMIT_CONFIG)
         review_manager.dataset.create_commit(msg="Update pre-commit hooks")
         print("Successfully updated pre-commit hooks")
         return
@@ -2518,15 +2513,15 @@ def settings(
         value = ast.literal_eval(value_string)
         review_manager.logger.info("Change settings.%s to %s", path, value)
 
-        with open(Filepaths.SETTINGS_FILE, encoding="utf-8") as file:
+        with open(review_manager.paths.settings, encoding="utf-8") as file:
             project_settings = json.load(file)
 
         glom.assign(project_settings, path, value)
 
-        with open(Filepaths.SETTINGS_FILE, "w", encoding="utf-8") as outfile:
+        with open(review_manager.paths.settings, "w", encoding="utf-8") as outfile:
             json.dump(project_settings, outfile, indent=4)
 
-        review_manager.dataset.add_changes(Filepaths.SETTINGS_FILE)
+        review_manager.dataset.add_changes(review_manager.paths.SETTINGS_FILE)
         review_manager.dataset.create_commit(msg="Change settings", manual_author=True)
 
     # import colrev_ui.ui_web.settings_editor

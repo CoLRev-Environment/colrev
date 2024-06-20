@@ -45,15 +45,22 @@ class RecordNotInTOCChecker:
             return
 
     def _is_in_toc(self, record: colrev.record.record.Record) -> bool:
+
         try:
+            self.quality_model.local_index_lock.acquire(timeout=60)
             # Search within the table-of-content in local_index
             self.local_index.retrieve_from_toc(record)
             return True
 
-        except colrev.exceptions.RecordNotInIndexException:
+        except colrev_exceptions.RecordNotInIndexException:
             pass
         except colrev_exceptions.RecordNotInTOCException:
             return False
+        finally:
+            try:
+                self.quality_model.local_index_lock.release()
+            except ValueError:
+                pass
         return True
 
 

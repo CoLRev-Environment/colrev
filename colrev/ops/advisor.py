@@ -16,7 +16,6 @@ import colrev.process.operation
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 if typing.TYPE_CHECKING:  # pragma: no cover
@@ -304,7 +303,7 @@ class Advisor:
                 review_instructions.append(instruction)
 
     def _append_initial_operations(self, review_instructions: list) -> bool:
-        search_dir = self.review_manager.get_path(Filepaths.SEARCH_DIR)
+        search_dir = self.review_manager.paths.search
         if not Path(search_dir).iterdir():
             instruction = {
                 "msg": "Add search results to data/search",
@@ -546,9 +545,7 @@ class Advisor:
         return instruction
 
     def _extract_outlet_count(self) -> typing.Tuple[list, list]:
-        with open(
-            self.review_manager.get_path(Filepaths.RECORDS_FILE), encoding="utf8"
-        ) as file:
+        with open(self.review_manager.paths.records, encoding="utf8") as file:
             outlets = []
             for line in file.readlines():
                 if line.lstrip()[:8] == "journal ":
@@ -623,7 +620,7 @@ class Advisor:
 
         environment_instructions += list(filter(None, add_instructions))
 
-        corrections_path = self.review_manager.get_path(Filepaths.CORRECTIONS_DIR)
+        corrections_path = self.review_manager.paths.corrections
         if len(list(corrections_path.glob("*.json"))) > 0:
             instruction = {
                 "msg": "Corrections to share with curated repositories.",
