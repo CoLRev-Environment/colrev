@@ -13,7 +13,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
@@ -35,13 +34,15 @@ class Validate(colrev.process.operation.Operation):
         """If commit is "": return the last commited version of records"""
         git_repo = self.review_manager.dataset.get_repo()
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
-        records_file_path = str(Filepaths.RECORDS_FILE).replace("\\", "/")
+        records_file_path = self.review_manager.paths.RECORDS_FILE_GIT
         revlist = (
             (
                 commit_i.hexsha,
                 (commit_i.tree / records_file_path).data_stream.read(),
             )
-            for commit_i in git_repo.iter_commits(paths=str(Filepaths.RECORDS_FILE))
+            for commit_i in git_repo.iter_commits(
+                paths=str(self.review_manager.paths.RECORDS_FILE)
+            )
         )
 
         found_target_commit = False
@@ -278,9 +279,13 @@ class Validate(colrev.process.operation.Operation):
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / Filepaths.RECORDS_FILE_GIT).data_stream.read(),
+                (
+                    commit.tree / self.review_manager.paths.RECORDS_FILE_GIT
+                ).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(paths=str(Filepaths.RECORDS_FILE))
+            for commit in git_repo.iter_commits(
+                paths=str(self.review_manager.paths.RECORDS_FILE)
+            )
         )
         found = False
         records: typing.Dict[str, typing.Any] = {}
@@ -506,7 +511,9 @@ class Validate(colrev.process.operation.Operation):
 
         git_repo = self.review_manager.dataset.get_repo()
 
-        revlist = git_repo.iter_commits(paths=str(Filepaths.RECORDS_FILE))
+        revlist = git_repo.iter_commits(
+            paths=str(self.review_manager.paths.RECORDS_FILE)
+        )
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
 
         for commit in list(revlist):
@@ -517,7 +524,7 @@ class Validate(colrev.process.operation.Operation):
                 continue
 
             load_str = (
-                (commit.parents[0].tree / Filepaths.RECORDS_FILE_GIT)
+                (commit.parents[0].tree / self.review_manager.paths.RECORDS_FILE_GIT)
                 .data_stream.read()
                 .decode("utf-8")
             )
@@ -528,7 +535,7 @@ class Validate(colrev.process.operation.Operation):
             )
 
             load_str = (
-                (commit.parents[1].tree / Filepaths.RECORDS_FILE_GIT)
+                (commit.parents[1].tree / self.review_manager.paths.RECORDS_FILE_GIT)
                 .data_stream.read()
                 .decode("utf-8")
             )
@@ -539,7 +546,7 @@ class Validate(colrev.process.operation.Operation):
             )
 
             load_str = (
-                (commit.tree / Filepaths.RECORDS_FILE_GIT)
+                (commit.tree / self.review_manager.paths.RECORDS_FILE_GIT)
                 .data_stream.read()
                 .decode("utf-8")
             )

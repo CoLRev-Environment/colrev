@@ -25,6 +25,7 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
+from colrev.paths import PathManager
 
 
 class ReviewManager:
@@ -72,15 +73,16 @@ class ReviewManager:
         else:
             self.path = Path.cwd()
 
+        self.paths = PathManager(self.path)
+
         self.exact_call = exact_call
 
         try:
-            settings_path = self.get_path(Filepaths.SETTINGS_FILE)
-            if settings_path.is_file():
-                self.get_path(Filepaths.DATA_DIR).mkdir(parents=True, exist_ok=True)
-                self.get_path(Filepaths.SEARCH_DIR).mkdir(parents=True, exist_ok=True)
-                self.get_path(Filepaths.PDF_DIR).mkdir(parents=True, exist_ok=True)
-                self.get_path(Filepaths.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+            if self.paths.settings.is_file():
+                self.paths.data.mkdir(parents=True, exist_ok=True)
+                self.paths.search.mkdir(parents=True, exist_ok=True)
+                self.paths.pdf.mkdir(parents=True, exist_ok=True)
+                self.paths.output.mkdir(parents=True, exist_ok=True)
 
             report_logger, logger = self.get_loggers()
             self.report_logger = report_logger
@@ -106,10 +108,6 @@ class ReviewManager:
 
             if not force_mode:
                 raise exc
-
-    def get_path(self, filename: Path) -> Path:
-        """Get the absolute path"""
-        return self.path / filename
 
     # pylint: disable=too-many-arguments
     def update_config(
@@ -173,9 +171,7 @@ class ReviewManager:
 
     def load_settings(self) -> colrev.settings.Settings:
         """Load the settings"""
-        self.settings = colrev.settings.load_settings(
-            settings_path=self.get_path(Filepaths.SETTINGS_FILE)
-        )
+        self.settings = colrev.settings.load_settings(settings_path=self.paths.settings)
         return self.settings
 
     def save_settings(self) -> None:
@@ -257,10 +253,10 @@ class ReviewManager:
 
         status_stats = self.get_status_stats(records=records)
         exported_dict = asdict(status_stats)
-        with open(Filepaths.STATUS_FILE, "w", encoding="utf8") as file:
+        with open(self.paths.status, "w", encoding="utf8") as file:
             yaml.dump(exported_dict, file, allow_unicode=True)
         if add_to_git:
-            self.dataset.add_changes(Filepaths.STATUS_FILE)
+            self.dataset.add_changes(self.paths.STATUS_FILE)
 
     def get_upgrade(self) -> colrev.ops.upgrade.Upgrade:  # pragma: no cover
         """Get an upgrade object"""
