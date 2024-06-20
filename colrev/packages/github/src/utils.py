@@ -24,8 +24,11 @@ def get_authors(*, repo: Github.Repository.Repository, citation_data: str) -> st
     """Get repository authors"""
     if citation_data:
         authors = re.findall(r'- family-names:\s*"(.+)"\s*\n\s*given-names:\s*"(.+)"', citation_data, re.M)
-        return ', '.join([a[1].strip() + " " + a[0].strip() for a in authors])
-    return ', '.join([c.login for c in repo.get_contributors() if not c.login.endswith("[bot]")])
+        return colrev.record.record_prep.PrepRecord.format_author_field(' and '.join([a[1].strip() + " " + a[0].strip() for a in authors]))
+    try:
+        return ' and '.join([c.login for c in repo.get_contributors() if not c.login.endswith("[bot]")])
+    except:
+        return None
 
 def get_url(*, repo: Github.Repository.Repository, citation_data: str) -> str:
     """Get repository URL"""
@@ -71,7 +74,11 @@ def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.recor
 
     data[Fields.YEAR] = data[Fields.DATE][:4]
 
-    data[Fields.FILE] = repo.html_url + "/blob/main/README.md" if repo.get_readme() else None
+    try:
+        repo.get_readme()
+        data[Fields.FILE] = repo.html_url + "/blob/main/README.md"
+    except:
+        data[Fields.FILE] = None
     
     data[Fields.ABSTRACT] = repo.description
     
@@ -82,6 +89,7 @@ def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.recor
     # data[Fields.VERSION] = get_version(repo=repo,citation_data=citation_data)
 
     return colrev.record.record.Record(data=data)
+
 '''
 # Code for testing the methods
 auth = Auth.Token("access_token")
@@ -90,7 +98,7 @@ repo = g.get_repo("CoLRev-Environment/colrev")
 assert repo_to_record(repo=repo).data == {
     'ENTRYTYPE': 'software',
     'title': 'CoLRev: An open-source environment for collaborative reviews',
-    'author': 'Gerit Wagner, Julian Prester',
+    'author': 'Wagner, Gerit and Prester, Julian',
     'url': '"https://github.com/CoLRev-Environment/colrev"',
     'date': '2024-06-15',
     'year': '2024',
@@ -98,3 +106,4 @@ assert repo_to_record(repo=repo).data == {
     'abstract': 'CoLRev: An open-source environment for collaborative reviews', 
     'language': 'Python'}
 '''
+
