@@ -129,11 +129,10 @@ class GitHubSearchSource(JsonSchemaMixin):
             match = re.match(pattern, record.data[Fields.URL])
             if match: #Check whether record contains GitHub url
 
-                '''
-                # for testing
-                auth = Auth.Token("access_token")
+                # get API access
+                token = self._get_api_key()
+                auth = Auth.Token(token)
                 g = Github(auth=auth)
-                '''
                 
                 repo = g.get_repo(match.group(1) + "/" + match.group(2))
                 new_record = connector_utils.repo_to_record(repo=repo)
