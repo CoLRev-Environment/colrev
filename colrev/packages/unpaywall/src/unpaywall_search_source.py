@@ -256,22 +256,29 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
     
-    def _normalize_query(self, query: str) -> str:
+    def _normalize_query(query: str) -> str:
         query = query.replace(" AND ", " ")
         return query
     
-    def _convert_html_url_encoding_from_html_to_string(self, query: str) -> str: 
+    def _convert_html_url_encoding_from_html_to_string(query: str) -> str: 
         query = query.replace("%20", " AND ")
         query = query.replace("%20OR%20", " OR ")
         query = query.replace("%20-", " NOT ")
         return query
     
-    def _convert_html_url_encoding_from_string_to_html(self, query: str) -> str: #used when string is given as input
-        query = query.lower()
+    def _convert_html_url_encoding_from_string_to_html(self,query: str) -> str: 
         query = re.sub(r'\s+', ' ', query).strip() 
-        query = query.replace(" and ", "%20")
-        query = query.replace(" or ", "%20OR%20") #was passiert, wenn query "Ketchup and Mayo" ist?
-        query = query.replace(" not ", "%20-")
+        splited_query = query.split(" ")
+        query_parts = []
+        for part in splited_query:
+            if part == "AND" or part == "OR" or part == "NOT":
+                continue
+            part = part.lower()
+            query_parts.append(part)	
+        query = " ".join(query_parts)
+        query = query.replace(" OR ", "%20OR%20")
+        query = query.replace(" NOT ", "%20-")
+        query = query.replace(" AND ", "%20")
         query = query.replace(" ", "%20")
         return query   
      
