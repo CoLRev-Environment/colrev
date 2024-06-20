@@ -230,7 +230,9 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         elif entrytype == ENTRYTYPES.CONFERENCE:
             record_dict[Fields.BOOKTITLE] = article.get("booktitle", "")
         elif entrytype == ENTRYTYPES.PHDTHESIS:
-            record_dict[Fields.SCHOOL] = article.get("school", "")  # oder publisher?
+            authors = article.get("z_authors","")
+            school= authors.get("affiliation","")
+            record_dict[Fields.SCHOOL] = school
         elif entrytype == ENTRYTYPES.TECHREPORT:
             record_dict[Fields.INSTITUTION] = article.get(
                 "publisher", ""
