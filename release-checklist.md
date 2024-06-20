@@ -12,12 +12,12 @@ For all releases:
 - Run [poetry update on GitHub](https://github.com/CoLRev-Environment/colrev/actions/workflows/poetry_update.yml).
 - Change released to `True` for the migration script in `ops/upgrade.py`, add a new migration script.
 - Update `settings.py - _add_missing_attributes()` to prevent exceptions.
+- Update the version in `pyproject.toml`. Check whether other parts of the `pyproject.toml` need to be updated. Check whether dependencies can be removed.
 - Update version in `tests/0_core/review_manager_test.py`
 - Run `colrev env --update_package_list`.
 - Collect release notes and update the `CHANGELOG.md`.
 - Update **version** and **date**  and date in `CITATION.cff`.
 - Update version in `SECURITY.md`.
-- Update the version in `pyproject.toml`. Check whether other parts of the `pyproject.toml` need to be updated. Check whether dependencies can be removed.
 - Check: `pyproject.toml` cannot have direct depdencies (Github)
 - Run `pip3 install -e .` locally (before testing upgrade in local repositories).
 - Commit the changes (`release 0.10.0`).
@@ -36,7 +36,9 @@ For all releases:
     - The zenodo version is published automatically
     - Trigger/test the Github-action in a curated metadata repository (using ``colrev-batch-gh-api.py``)
 
+- Update the Zenodo doi in `README.md` and `CITATION.cff`
 - Update [example repository](https://github.com/CoLRev-Environment/example) if necessary
+- Update the release in the devcontainer of [colrev-template](https://github.com/CoLRev-Environment/colrev-template)
 
 ```
 mkdir example && cd example
