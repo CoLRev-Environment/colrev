@@ -1,4 +1,5 @@
-def get_email(review_manager) -> str:
+"""Utils for Unpaywall"""
+def get_email(review_manager:object) -> str:
     """Get user's name and email,
 
     if user have specified an email in registry, that will be returned
