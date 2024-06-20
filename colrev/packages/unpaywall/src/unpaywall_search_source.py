@@ -278,11 +278,11 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     def _convert_html_url_encoding_from_html_to_string(query: str) -> str: 
         query = query.replace("AND", "%20")
         query = re.sub(r'(%20)+', '%20', query).strip()
-        query = query.replace("%20OR%20", "%HOR%H") # %20 for special case: e.g. OR NOT x => %20OR%20-x. If we would use %20 instead of %H, we would get %20OR%20- and after the "AND"-replacement "ANDORAND-x" instead of "OR NOT x"
-        query = query.replace("%20-", "%HNOT%H")
-        query = query.replace("%H-", "%HNOT%H")  
-        query = query.replace("%20", "%HAND%H") 
-        query = re.sub(r'(%H|%20)+', '%20', query).strip()
+        query = query.replace("%20OR%20", "§OR§") # %20 for special case: e.g. OR NOT x => %20OR%20-x. If we would use %20 instead of §, we would get "%20OR%20-" and after the "%20 to %20AND%20"-replacement "%20AND%20OR%20AND%20-x" instead of "OR NOT x"
+        query = query.replace("%20-", "§§NOT§")
+        query = query.replace("§-", "§NOT§")  
+        query = query.replace("%20", "§AND§") 
+        query = re.sub(r'§|%20)+', '%20', query).strip()
         query = query.replace("%20", " ")
         return query
     
