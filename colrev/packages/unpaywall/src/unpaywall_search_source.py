@@ -71,27 +71,27 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         "report": ENTRYTYPES.TECHREPORT,
         "other": ENTRYTYPES.MISC,
         "book-section": ENTRYTYPES.INBOOK,
-        "monograph": ENTRYTYPES.THESIS,  # thesis nicht auf website
+        "monograph": ENTRYTYPES.THESIS, 
         "report-component": ENTRYTYPES.TECHREPORT,
-        "peer-review": ENTRYTYPES.MISC,  #
-        "book-track": ENTRYTYPES.INCOLLECTION,  #
+        "peer-review": ENTRYTYPES.MISC,  
+        "book-track": ENTRYTYPES.INCOLLECTION,  
         "book-part": ENTRYTYPES.INBOOK,
         "journal-volume": ENTRYTYPES.ARTICLE,
         "book-set": ENTRYTYPES.MISC,
         "reference-entry": ENTRYTYPES.MISC,
-        "journal": ENTRYTYPES.ARTICLE,  #
+        "journal": ENTRYTYPES.MISC,
         "component": ENTRYTYPES.MISC,
-        "proceedings-series": ENTRYTYPES.PROCEEDINGS,  # oder Misc da serie
-        "report-series": ENTRYTYPES.TECHREPORT,  # oder misc da series und nicht ein report
+        "proceedings-series": ENTRYTYPES.PROCEEDINGS,
+        "report-series": ENTRYTYPES.TECHREPORT,  
         "proceedings": ENTRYTYPES.PROCEEDINGS,
         "database": ENTRYTYPES.MISC,
         "standard": ENTRYTYPES.MISC,
         "reference-book": ENTRYTYPES.BOOK,
         "posted-content": ENTRYTYPES.MISC,
-        "journal-issue": ENTRYTYPES.ARTICLE,  # Misc?
+        "journal-issue": ENTRYTYPES.MISC,
         "grant": ENTRYTYPES.MISC,
         "dataset": ENTRYTYPES.MISC,
-        "book-series": ENTRYTYPES.BOOK,  # oder Misc, da Serie?
+        "book-series": ENTRYTYPES.BOOK,
         "edited-book": ENTRYTYPES.BOOK,
     }
 
