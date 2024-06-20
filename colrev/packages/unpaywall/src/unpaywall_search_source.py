@@ -282,7 +282,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         query = query.replace("%20-", "§NOT§")
         query = query.replace("§-", "§NOT§")  
         query = query.replace("%20", "§AND§") 
-        query = re.sub(r'§|%20)+', '%20', query).strip()
+        query = re.sub(r'(§|%20)+', '%20', query).strip()
         query = query.replace("%20", " ")
         return query
     
