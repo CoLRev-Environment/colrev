@@ -274,18 +274,20 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         email = params.get("email", utils.get_email(self.review_manager))
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
-    
+
     def _convert_html_url_encoding_from_html_to_string(query: str) -> str: 
         query = query.replace("AND", "%20")
-        query = re.sub(r'(%20)+', '%20', query).strip()
-        query = query.replace("%20OR%20", "§OR§") # %20 for special case: e.g. OR NOT x => %20OR%20-x. If we would use %20 instead of §, we would get "%20OR%20-" and after the "%20 to %20AND%20"-replacement "%20AND%20OR%20AND%20-x" instead of "OR NOT x"
-        query = query.replace("%20-", "§NOT§")
-        query = query.replace("§-", "§NOT§")  
-        query = query.replace("%20", "§AND§") 
-        query = re.sub(r'(§|%20)+', '%20', query).strip()
-        query = query.replace("%20", " ")
+        query = re.sub(r'(%20)+', "%20", query).strip()
+        query = query.replace("%20OR%20", " OR ")
+        query = query.replace("%20-", " NOT ")
+        query = query.replace(" -", " NOT ")
+        query = query.replace("%20", " AND ")
+        query = re.sub(r'\s+', " ", query).strip()
+        query = query.lstrip(" ")
+        query = query.rstrip(" ")
         return query
-    
+
+
     def _convert_html_url_encoding_from_string_to_html(self,query: str) -> str: 
         query = re.sub(r'\s+', ' ', query).strip() 
         splited_query = query.split(" ")
