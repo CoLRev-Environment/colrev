@@ -234,9 +234,9 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             school= authors.get("affiliation","")
             record_dict[Fields.SCHOOL] = school
         elif entrytype == ENTRYTYPES.TECHREPORT:
-            record_dict[Fields.INSTITUTION] = article.get(
-                "publisher", ""
-            )  # habe hier als default publisher, richtig?
+            authors = article.get("z_authors","")
+            institution= authors.get("affiliation","")
+            record_dict[Fields.INSTITUTION] = institution
 
         record = colrev.record.record.Record(record_dict)
 
