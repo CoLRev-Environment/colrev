@@ -206,6 +206,16 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                 authors.append(f"{family_name}, {given_name}")
         return authors
 
+
+    def _get_affiliation(self, article: dict)-> str:
+        school = ""
+        z_authors = article.get("z_authors","")
+        if z_authors:
+            person = z_authors[0]
+            affiliation = person.get("affiliation","")
+            school= affiliation.get("name","")
+        return school
+
     def _create_record(self, article: dict) -> colrev.record.record.Record:
         record_dict = {Fields.ID: article["doi"]}
 
@@ -230,13 +240,13 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         elif entrytype == ENTRYTYPES.CONFERENCE:
             record_dict[Fields.BOOKTITLE] = article.get("journal_name", "") ####same here
         elif entrytype == ENTRYTYPES.PHDTHESIS:
-            authors = article.get("z_authors","")
-            school= authors.get("affiliation","")
-            record_dict[Fields.SCHOOL] = school
+            record_dict[Fields.SCHOOL] = self._get_affiliation(article)
         elif entrytype == ENTRYTYPES.TECHREPORT:
-            authors = article.get("z_authors","")
-            institution= authors.get("affiliation","")
-            record_dict[Fields.INSTITUTION] = institution
+            record_dict[Fields.INSTITUTION] = self._get_affiliation(article)
+
+        bestoa = article.get("best_oa_location", "")
+        url = bestoa.get("url","")
+        record_dict[Fields.URL] = url
 
         record = colrev.record.record.Record(record_dict)
 
