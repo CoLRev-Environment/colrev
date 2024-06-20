@@ -213,7 +213,8 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         if z_authors:
             person = z_authors[0]
             affiliation = person.get("affiliation","")
-            school= affiliation.get("name","")
+            if affiliation:
+                school= affiliation.get("name","")
         return school
 
     def _create_record(self, article: dict) -> colrev.record.record.Record:
@@ -245,8 +246,9 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             record_dict[Fields.INSTITUTION] = self._get_affiliation(article)
 
         bestoa = article.get("best_oa_location", "")
-        url = bestoa.get("url","")
-        record_dict[Fields.URL] = url
+        if bestoa:
+            url = bestoa.get("url","")
+            record_dict[Fields.URL] = url
 
         record = colrev.record.record.Record(record_dict)
 
