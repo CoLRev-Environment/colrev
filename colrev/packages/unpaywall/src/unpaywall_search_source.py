@@ -214,7 +214,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             person = z_authors[0]
             affiliation = person.get("affiliation","")
             if affiliation:
-                school= affiliation.get("name","")
+                school= affiliation[0]["name"]
         return school
 
     def _create_record(self, article: dict) -> colrev.record.record.Record:
