@@ -12,6 +12,11 @@ from colrev.constants import FieldValues
 from github import Github
 from github import Auth
 
+#Github-specific constants
+GITHUB_VERSION = "colrev.github.version"
+GITHUB_LICENSE = "colrev.github.license"
+GITHUB_LANGUAGE = "colrev.github.language"
+
 def get_title(*, repo: Github.Repository.Repository, citation_data: str) -> str:
     """Get repository title"""
     if citation_data:
@@ -76,27 +81,14 @@ def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.recor
     
     data[Fields.ABSTRACT] = repo.description
     
-    data[Fields.LANGUAGE] = repo.language
+    data[GITHUB_LANGUAGE] = repo.language
 
-    # data[Fields.LICENSE] = license_info.spdx_id if repo.license else None
+    try:
+        data[GITHUB_LICENSE] = repo.get_license().license.name
+    except:
+        data[GITHUB_LICENSE] = None
 
-    # data[Fields.VERSION] = get_version(repo=repo,citation_data=citation_data)
+    data[GITHUB_VERSION] = get_version(repo=repo,citation_data=citation_data)
 
     return colrev.record.record.Record(data=data)
-
-'''
-# Code for testing the methods
-auth = Auth.Token("access_token")
-g = Github(auth=auth)
-repo = g.get_repo("CoLRev-Environment/colrev")
-assert repo_to_record(repo=repo).data == {
-    'ENTRYTYPE': 'software',
-    'title': 'CoLRev: An open-source environment for collaborative reviews',
-    'author': 'Wagner, Gerit and Prester, Julian',
-    'url': '"https://github.com/CoLRev-Environment/colrev"',
-    'date': '2024-06-15',
-    'year': '2024',
-    'abstract': 'CoLRev: An open-source environment for collaborative reviews', 
-    'language': 'Python'}
-'''
 
