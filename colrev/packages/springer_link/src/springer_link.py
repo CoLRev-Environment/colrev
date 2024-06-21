@@ -145,35 +145,56 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
     def add_constraints(self) -> dict:
         """add constraints for query"""
-        print(
+        complex_query_prompt = [
+            inquirer.List(
+                        name="complex_query",
+                        message="Do you want to search via complex constrains or via search parameter?",
+                        choices=["no", "yes"],
+                    ),
+                ]
+
+        answers = inquirer.prompt(complex_query_prompt)
+
+        if answers["complex_query"] == "yes":
+            query = input("Please enter your complex query: ")
+            return {"complex": query}
+         
+        else:
+
+            print(
             "Please enter your search parameter for the following constraints"
             + "(or just press enter to continue):"
-        )
-        keyword = input("keyword: ")
-        subject = input("subject: ")
-        language = input("language: ")
-        year = input("year: ")
-        doc_type = input("type: ")
+            )
+            keyword = input("keyword: ")
+            subject = input("subject: ")
+            language = input("language: ")
+            year = input("year: ")
+            doc_type = input("type: ")
 
-        search_parameters = {
-            "subject": subject,
-            "keyword": keyword,
-            "language": language,
-            "year": year,
-            "type": doc_type,
-        }
+            search_parameters = {
+                "subject": subject,
+                "keyword": keyword,
+                "language": language,
+                "year": year,
+                "type": doc_type,
+            }
 
         return search_parameters
 
     def build_query(self, search_parameters: dict) -> str:
         """build api query"""
 
-        constraints = []
-        for key, value in search_parameters.items():
-            if value:
+        if "complex" in search_parameters:
+            query = search_parameters["complex"]
+            return query
+        else:
+
+            constraints = []
+            for key, value in search_parameters.items():
+             if value:
                 encoded_value = value.replace(" ", "%20")
                 constraints.append(f"{key}:%22{encoded_value}%22")
-        query = " ".join(constraints)
+            query = " ".join(constraints)
         return query
 
     def _build_api_search_url(self, query: str, api_key: str, start: int = 1) -> str:
