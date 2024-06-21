@@ -147,23 +147,24 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         """add constraints for query"""
         complex_query_prompt = [
             inquirer.List(
-                        name="complex_query",
-                        message="Do you want to search via complex constrains or via search parameter?",
-                        choices=["no", "yes"],
-                    ),
-                ]
+                name="complex_query",
+                message="Do you want to search via complex constrains or via search parameter?",
+                choices=["no", "yes"],
+            ),
+        ]
 
         answers = inquirer.prompt(complex_query_prompt)
 
         if answers["complex_query"] == "yes":
             query = input("Please enter your complex query: ")
-            return {"complex": query}
-         
+
+            search_parameters = {"complex": query}
+
         else:
 
             print(
-            "Please enter your search parameter for the following constraints"
-            + "(or just press enter to continue):"
+                "Please enter your search parameter for the following constraints"
+                + "(or just press enter to continue):"
             )
             keyword = input("keyword: ")
             subject = input("subject: ")
@@ -186,14 +187,14 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
         if "complex" in search_parameters:
             query = search_parameters["complex"]
-            return query
+
         else:
 
             constraints = []
             for key, value in search_parameters.items():
-             if value:
-                encoded_value = value.replace(" ", "%20")
-                constraints.append(f"{key}:%22{encoded_value}%22")
+                if value:
+                    encoded_value = value.replace(" ", "%20")
+                    constraints.append(f"{key}:%22{encoded_value}%22")
             query = " ".join(constraints)
         return query
 
@@ -407,14 +408,16 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     def api_key_ui(self) -> None:
         """User Interface to enter Api key"""
         run = True
-        while run: 
+        while run:
 
             api_key = input("Please enter your Springer Link API key: ")
             if not re.match(r"^[a-z0-9]{32}$", api_key):
                 print("Error: Invalid API key.\n")
             else:
-                
-                full_url = self._build_api_search_url(query="doi:10.1007/978-3-319-07410-8_4", api_key=api_key)
+
+                full_url = self._build_api_search_url(
+                    query="doi:10.1007/978-3-319-07410-8_4", api_key=api_key
+                )
                 response = requests.get(full_url, timeout=10)
                 if response.status_code != 200:
                     print("Error: Invalid API key")
