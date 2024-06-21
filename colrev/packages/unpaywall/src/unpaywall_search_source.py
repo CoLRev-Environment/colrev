@@ -263,7 +263,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         elif entrytype == ENTRYTYPES.INBOOK:
             record_dict[Fields.BOOKTITLE] = article.get(
                 "journal_name", ""
-            )  ##richtig mit journal name für booktitle???????
+            )  ##TODO: richtig mit journal name für booktitle???????
             record_dict[Fields.PUBLISHER] = article.get("publisher", "")
         elif entrytype == ENTRYTYPES.CONFERENCE:
             record_dict[Fields.BOOKTITLE] = article.get(
@@ -313,9 +313,21 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         query_parts = []
         for word in splited_query:
             if word == "AND" or word == "OR" or word == "NOT":
+                query_parts.append(word)
                 continue
             word = word.lower()
             query_parts.append(word)	
+        query = " ".join(query_parts)
+        query = query.replace(" OR ", "§%20OR%20§")
+        query = query.replace(" NOT ", "§%20-§")
+        query = query.replace("§NOT ", "§%20-§")
+        query = query.replace(" AND ", "§%20§")
+        query = query.replace("§AND ", "§%20§")
+        query = query.replace(" AND§", "§%20§")
+        query = query.replace("§AND§", "§%20§")
+        query = query.replace(" ", "%20")
+        query = query.replace("§", "")
+
         query = " ".join(query_parts)
         query = query.replace(" OR ", "§%20OR%20§")
         query = query.replace(" NOT ", "§%20-§")
