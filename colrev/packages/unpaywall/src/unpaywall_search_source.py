@@ -309,26 +309,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
     def _encode_query_for_html_url(self,query: str) -> str: 
         query = re.sub(r'\s+', ' ', query).strip() 
-        splited_query = query.split(" ")
-        query_parts = []
-        for word in splited_query:
-            if word == "AND" or word == "OR" or word == "NOT":
-                query_parts.append(word)
-                continue
-            word = word.lower()
-            query_parts.append(word)	
-        query = " ".join(query_parts)
-        query = query.replace(" OR ", "§%20OR%20§")
-        query = query.replace(" NOT ", "§%20-§")
-        query = query.replace("§NOT ", "§%20-§")
-        query = query.replace(" AND ", "§%20§")
-        query = query.replace("§AND ", "§%20§")
-        query = query.replace(" AND§", "§%20§")
-        query = query.replace("§AND§", "§%20§")
-        query = query.replace(" ", "%20")
-        query = query.replace("§", "")
-
-        query = " ".join(query_parts)
         query = query.replace(" OR ", "§%20OR%20§")
         query = query.replace(" NOT ", "§%20-§")
         query = query.replace("§NOT ", "§%20-§")
