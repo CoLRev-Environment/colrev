@@ -126,7 +126,7 @@ class GitHubSearchSource(JsonSchemaMixin):
     ) -> colrev.record.record.Record:
         if Fields.URL in record.data:
             pattern = r'https?://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)$'
-            match = re.match(pattern, record.data[Fields.URL])
+            match = re.match(pattern, record.data[Fields.URL].strip('"'))
             if match: #Check whether record contains GitHub url
 
                 # get API access
