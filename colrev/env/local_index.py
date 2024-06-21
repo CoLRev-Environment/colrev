@@ -22,7 +22,6 @@ import colrev.ops.check
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.env.local_index_prep import prepare_record_for_return
 
 
@@ -59,6 +58,8 @@ class LocalIndex:
 
             except colrev_exceptions.RecordNotInIndexException:
                 continue  # continue with the next cid_to_retrieve
+            finally:
+                sqlite_index_record.connection.close()
 
         raise colrev_exceptions.RecordNotInIndexException()
 
@@ -78,7 +79,7 @@ class LocalIndex:
                     depth=1,
                 )
             ret = colrev.loader.load_utils.load(
-                filename=target_path / Filepaths.RECORDS_FILE,
+                filename=target_path / Path("data/records.bib"),
             )
 
         except GitCommandError:
@@ -119,6 +120,7 @@ class LocalIndex:
         except sqlite3.OperationalError as exc:  # pragma: no cover
             print(exc)
         finally:
+            sqlite_index_record.connection.close()
             self.thread_lock.release()
 
         return records_to_return
@@ -151,6 +153,8 @@ class LocalIndex:
             colrev_exceptions.RecordNotInIndexException,
         ) as exc:
             raise colrev_exceptions.TOCNotAvailableException() from exc
+        finally:
+            sqlite_index_toc.connection.close()
 
     def _toc_exists(self, toc_item: str) -> bool:
         try:
@@ -163,6 +167,7 @@ class LocalIndex:
             # ie. no sqlite database available
             pass  # return False
         finally:
+            sqlite_index_toc.connection.close()
             self.thread_lock.release()
         return False
 
@@ -173,6 +178,7 @@ class LocalIndex:
             toc_items = sqlite_index_toc.get_toc_items(toc_key=toc_key)
         else:
             if not search_across_tocs:
+                sqlite_index_toc.connection.close()
                 raise colrev_exceptions.RecordNotInIndexException()
 
         if not toc_items and search_across_tocs:
@@ -183,6 +189,7 @@ class LocalIndex:
                 toc_items = sqlite_index_toc.get_toc_items(
                     partial_toc_key=partial_toc_key
                 )
+                sqlite_index_toc.connection.close()
             except (
                 colrev_exceptions.NotTOCIdentifiableException,
                 KeyError,
@@ -202,14 +209,17 @@ class LocalIndex:
     ) -> colrev.record.record.Record:
         """Retrieve a record from the toc (table-of-contents)"""
 
+        # Note: in NotTOCIdentifiableException cases, we still need a toc_key.
+        # to accomplish this, the get_toc_key() may acced an "accept_incomplete" flag
+        try:
+            toc_key = record.get_toc_key()
+        except colrev_exceptions.NotTOCIdentifiableException as exc:
+            raise colrev_exceptions.RecordNotInIndexException() from exc
+
+        toc_items = self._get_toc_items(toc_key, search_across_tocs=search_across_tocs)
+        # SQLiteIndexRecord() must be after _get_toc_items(), which also uses the sqlite file
         sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
         try:
-            # Note: in NotTOCIdentifiableException cases, we still need a toc_key.
-            # to accomplish this, the get_toc_key() may acced an "accept_incomplete" flag
-            toc_key = record.get_toc_key()
-            toc_items = self._get_toc_items(
-                toc_key, search_across_tocs=search_across_tocs
-            )
             for toc_records_colrev_id in toc_items:
                 record_dict = sqlite_index_record.get(
                     key=Fields.COLREV_ID, value=toc_records_colrev_id
@@ -231,6 +241,8 @@ class LocalIndex:
         ):
             pass
 
+        sqlite_index_record.connection.close()
+
         raise colrev_exceptions.RecordNotInIndexException()
 
     def retrieve_based_on_colrev_pdf_id(
@@ -240,11 +252,15 @@ class LocalIndex:
         Convenience function to retrieve the indexed record_dict metadata
         based on a colrev_pdf_id
         """
-
-        sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
-        record_dict = sqlite_index_record.get(key=Fields.PDF_ID, value=colrev_pdf_id)
-        record_to_import = prepare_record_for_return(record_dict, include_file=True)
-        record_to_import.data.pop(Fields.FILE, None)
+        try:
+            sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
+            record_dict = sqlite_index_record.get(
+                key=Fields.PDF_ID, value=colrev_pdf_id
+            )
+            record_to_import = prepare_record_for_return(record_dict, include_file=True)
+            record_to_import.data.pop(Fields.FILE, None)
+        finally:
+            sqlite_index_record.connection.close()
         return record_to_import
 
     def retrieve(
@@ -276,7 +292,6 @@ class LocalIndex:
 
             # 2. Try using global-ids
             retrieved_record_dict = {}
-            sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
             remove_colrev_id = False
             if Fields.COLREV_ID not in record_dict:
                 try:
@@ -293,8 +308,15 @@ class LocalIndex:
                     or Fields.ID == key
                 ):
                     continue
-
-                retrieved_record_dict = sqlite_index_record.get(key=key, value=value)
+                try:
+                    sqlite_index_record = (
+                        colrev.env.local_index_sqlite.SQLiteIndexRecord()
+                    )
+                    retrieved_record_dict = sqlite_index_record.get(
+                        key=key, value=value
+                    )
+                finally:
+                    sqlite_index_record.connection.close()
 
                 if key in retrieved_record_dict:
                     if retrieved_record_dict[key] == value:

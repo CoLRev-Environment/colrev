@@ -27,7 +27,6 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 
 # pylint: disable=too-few-public-methods
 
@@ -46,12 +45,9 @@ class Initializer:
         example: bool = False,
         force_mode: bool = False,
         light: bool = False,
-        local_pdf_collection: bool = False,
         exact_call: str = "",
     ) -> None:
-        saved_args = locals()
         self.force_mode = force_mode
-        self._validate_arguments(example, local_pdf_collection)
         self.target_path = target_path
         os.chdir(target_path)
         self.review_manager = colrev.review_manager.ReviewManager(
@@ -61,9 +57,7 @@ class Initializer:
         self.title = str(self.target_path.name)
         self._setup_repo(
             example=example,
-            local_pdf_collection=local_pdf_collection,
             exact_call=exact_call,
-            saved_args=saved_args,
             no_docker=light,
         )
 
@@ -71,9 +65,7 @@ class Initializer:
         self,
         *,
         example: bool,
-        local_pdf_collection: bool,
         exact_call: str,
-        saved_args: dict,
         no_docker: bool,
     ) -> None:
         self.no_docker = no_docker
@@ -92,22 +84,18 @@ class Initializer:
 
         self.review_manager = colrev.review_manager.ReviewManager(exact_call=exact_call)
 
-        self._create_commit(saved_args=saved_args)
+        self.review_manager.dataset.create_commit(
+            msg="Initial commit",
+            manual_author=True,
+            skip_hooks=True,
+        )
         self._register_repo(example=example)
-        if local_pdf_collection:
-            self._create_local_pdf_collection()
 
         self._post_commit_edits()
 
         self.review_manager.logger.info(
             "%sCompleted init operation%s", Colors.GREEN, Colors.END
         )
-
-    def _validate_arguments(self, example: bool, local_pdf_collection: bool) -> None:
-        if example and local_pdf_collection:
-            raise colrev_exceptions.RepoInitError(
-                msg="Cannot initialize local_pdf_collection repository with example data."
-            )
 
     def _format_review_type(self, review_type: str) -> str:
         formatted_review_type = review_type.replace("-", "_").lower().replace(" ", "_")
@@ -117,9 +105,26 @@ class Initializer:
         return formatted_review_type
 
     def _reset_if_existing_repo_with_single_commit(self) -> None:
+        def is_empty_colrev_template() -> bool:
+            files = list(
+                os.path.join(root, file)
+                for root, _, files in os.walk(self.target_path)
+                for file in files
+            )
+            files = [os.path.relpath(file, self.target_path) for file in files]
+            files = [
+                file
+                for file in files
+                if not file.startswith(".git/")
+                and not file.startswith(".devcontainer/")
+            ]
+            return not files
+
         try:
             git_repo = git.Repo.init()
             if len(list(git_repo.iter_commits())) == 1:
+                if is_empty_colrev_template():
+                    return
                 print("Detected existing repository")
                 if "y" != input("Reset existing repository? (y/n) "):
                     raise colrev_exceptions.CoLRevException("Operation aborted.")
@@ -140,8 +145,8 @@ class Initializer:
         cur_content = [
             x for x in cur_content if not x.startswith("venv") and x != ".history"
         ]
-        if str(Filepaths.REPORT_FILE) in cur_content:
-            cur_content.remove(str(Filepaths.REPORT_FILE))
+        if str(self.review_manager.paths.REPORT_FILE) in cur_content:
+            cur_content.remove(str(self.review_manager.paths.REPORT_FILE))
 
         if all(x.startswith((".git", ".devcontainer", ".vscode")) for x in cur_content):
             return
@@ -239,33 +244,40 @@ class Initializer:
         if settings_filedata:
             settings = json.loads(settings_filedata.decode("utf-8"))
             settings["project"]["review_type"] = str(self.review_type)
-            with open(
-                self.target_path / Filepaths.SETTINGS_FILE, "w", encoding="utf8"
-            ) as file:
+            with open(self.review_manager.paths.settings, "w", encoding="utf8") as file:
                 json.dump(settings, file, indent=4)
 
-        (self.target_path / Filepaths.SEARCH_DIR).mkdir(parents=True)
-        (self.target_path / Filepaths.PDF_DIR).mkdir(parents=True)
+        self.review_manager.paths.search.mkdir(parents=True)
+        self.review_manager.paths.pdf.mkdir(parents=True)
 
         colrev_path = Path.home() / Path("colrev")
         colrev_path.mkdir(exist_ok=True, parents=True)
 
         files_to_retrieve = [
-            [Path("ops/init/readme.md"), Path("readme.md")],
+            [Path("ops/init/readme.md"), self.review_manager.paths.readme],
             [
                 Path("ops/init/pre-commit-config.yaml"),
-                Filepaths.PRE_COMMIT_CONFIG,
+                self.review_manager.paths.pre_commit_config,
             ],
-            [Path("ops/init/markdownlint.yaml"), Path(".markdownlint.yaml")],
+            [
+                Path("ops/init/markdownlint.yaml"),
+                self.review_manager.path / Path(".markdownlint.yaml"),
+            ],
             [
                 Path("ops/init/pre-commit.yml"),
-                Path(".github/workflows/pre-commit.yml"),
+                self.review_manager.path / Path(".github/workflows/pre-commit.yml"),
             ],
-            [Path("ops/init/gitattributes"), Path(".gitattributes")],
-            [Path("ops/init/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
+            [
+                Path("ops/init/gitattributes"),
+                self.review_manager.path / Path(".gitattributes"),
+            ],
+            [
+                Path("ops/init/LICENSE-CC-BY-4.0.txt"),
+                self.review_manager.path / Path("LICENSE.txt"),
+            ],
             [
                 Path("ops/init/colrev_update.yml"),
-                Path(".github/workflows/colrev_update.yml"),
+                self.review_manager.path / Path(".github/workflows/colrev_update.yml"),
             ],
         ]
         for retrieval_path, target_path in files_to_retrieve:
@@ -374,21 +386,15 @@ class Initializer:
                 data_package_endpoint["endpoint"].replace("colrev.", ""),
             )
 
-        with open(Filepaths.RECORDS_FILE, mode="w", encoding="utf-8") as file:
+        with open(
+            self.review_manager.paths.records, mode="w", encoding="utf-8"
+        ) as file:
             file.write("\n")
 
         self._fix_pre_commit_hooks_windows()
 
         git_repo = self.review_manager.dataset.get_repo()
         git_repo.git.add(all=True)
-
-    def _create_commit(self, *, saved_args: dict) -> None:
-        saved_args.pop("local_pdf_collection", None)
-        self.review_manager.dataset.create_commit(
-            msg="Initial commit",
-            manual_author=True,
-            skip_hooks=True,
-        )
 
     def _register_repo(self, *, example: bool) -> None:
         if example or "pytest" in os.getcwd():
@@ -452,7 +458,7 @@ class Initializer:
         git_repo = self.review_manager.dataset.get_repo()
         git_repo.index.add(["data/search/30_example_records.bib"])
 
-        with open(Filepaths.SETTINGS_FILE, encoding="utf-8") as file:
+        with open(self.review_manager.paths.settings, encoding="utf-8") as file:
             settings = json.load(file)
 
         settings["dedupe"]["dedupe_package_endpoints"] = [{"endpoint": "colrev.dedupe"}]
@@ -468,23 +474,6 @@ class Initializer:
             }
         ]
 
-        with open(Filepaths.SETTINGS_FILE, "w", encoding="utf-8") as outfile:
+        with open(self.review_manager.paths.settings, "w", encoding="utf-8") as outfile:
             json.dump(settings, outfile, indent=4)
-        git_repo.index.add([Filepaths.SETTINGS_FILE])
-
-    def _create_local_pdf_collection(self) -> None:
-        self.review_manager.report_logger.handlers = []
-        local_pdf_collection_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(
-            "local_pdf_collection"
-        )
-
-        if local_pdf_collection_path.is_dir():
-            return
-
-        local_pdf_collection_path.mkdir(parents=True, exist_ok=True)
-        Initializer(
-            review_type="colrev.literature_review",
-            target_path=local_pdf_collection_path,
-            local_pdf_collection=True,
-        )
-        self.review_manager.logger.info("Created local_pdf_collection repository")
+        git_repo.index.add([self.review_manager.paths.SETTINGS_FILE])

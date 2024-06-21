@@ -13,7 +13,6 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
@@ -271,7 +270,7 @@ class Search(colrev.process.operation.Operation):
     def get_new_search_files(self) -> list[Path]:
         """Retrieve new search files (not yet registered in settings)"""
 
-        search_dir = self.review_manager.get_path(Filepaths.SEARCH_DIR)
+        search_dir = self.review_manager.paths.search
         files = [
             f.relative_to(self.review_manager.path) for f in search_dir.glob("**/*")
         ]
@@ -488,9 +487,9 @@ class Search(colrev.process.operation.Operation):
             except colrev_exceptions.ServiceNotAvailableException:
                 self.review_manager.logger.warning("ServiceNotAvailableException")
             except colrev_exceptions.SearchNotAutomated as exc:
-                self.review_manager.logger.warn(exc)
+                self.review_manager.logger.warning(exc)
             except colrev_exceptions.MissingDependencyError as exc:
-                self.review_manager.logger.warn(exc)
+                self.review_manager.logger.warning(exc)
 
         if self.review_manager.in_ci_environment():
             print("\n\n")

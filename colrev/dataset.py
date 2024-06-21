@@ -23,7 +23,6 @@ import colrev.record.record_id_setter
 import colrev.record.record_prep
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import FileSets
 from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
@@ -34,12 +33,10 @@ from colrev.writer.write_utils import to_string
 class Dataset:
     """The CoLRev dataset (records and their history in git)"""
 
-    records_file: Path
     _git_repo: git.Repo
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager
-        self.records_file = review_manager.get_path(Filepaths.RECORDS_FILE)
 
         try:
             # In most cases, the repo should exist
@@ -60,7 +57,7 @@ class Dataset:
         """Update the gitignore file by adding or removing particular paths"""
         # The following may print warnings...
 
-        git_ignore_file = self.review_manager.get_path(Filepaths.GIT_IGNORE_FILE)
+        git_ignore_file = self.review_manager.paths.git_ignore
         if git_ignore_file.is_file():
             gitignore_content = git_ignore_file.read_text(encoding="utf-8")
         else:
@@ -97,7 +94,7 @@ class Dataset:
             )
         else:
             bib_loader = colrev.loader.bib.BIBLoader(
-                filename=self.records_file,
+                filename=self.review_manager.paths.records,
                 logger=self.review_manager.logger,
                 unique_id_field="ID",
             )
@@ -111,9 +108,13 @@ class Dataset:
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / Filepaths.RECORDS_FILE_GIT).data_stream.read(),
+                (
+                    commit.tree / self.review_manager.paths.RECORDS_FILE_GIT
+                ).data_stream.read(),
             )
-            for commit in self._git_repo.iter_commits(paths=Filepaths.RECORDS_FILE_GIT)
+            for commit in self._git_repo.iter_commits(
+                paths=self.review_manager.paths.RECORDS_FILE_GIT
+            )
         )
         filecontents = list(revlist)[0][1]
 
@@ -140,7 +141,7 @@ class Dataset:
 
         reached_target_commit = False  # if no commit_sha provided
         for current_commit in self._git_repo.iter_commits(
-            paths=Filepaths.RECORDS_FILE_GIT
+            paths=self.review_manager.paths.RECORDS_FILE_GIT
         ):
 
             # Skip all commits before the specified commit_sha, if provided
@@ -152,7 +153,7 @@ class Dataset:
 
             # Read and parse the records file from the current commit
             filecontents = (
-                current_commit.tree / Filepaths.RECORDS_FILE_GIT
+                current_commit.tree / self.review_manager.paths.RECORDS_FILE_GIT
             ).data_stream.read()
 
             records_dict = colrev.loader.load_utils.loads(
@@ -188,16 +189,16 @@ class Dataset:
             # Note : currently not parsing screening_criteria to settings.ScreeningCriterion
             # to optimize performance
             bib_loader = colrev.loader.bib.BIBLoader(
-                filename=self.records_file,
+                filename=self.review_manager.paths.records,
                 logger=self.review_manager.logger,
                 unique_id_field="ID",
             )
             return bib_loader.get_record_header_items()
 
-        if self.records_file.is_file():
+        if self.review_manager.paths.records.is_file():
 
             records_dict = colrev.loader.load_utils.load(
-                filename=self.records_file,
+                filename=self.review_manager.paths.records,
                 logger=self.review_manager.logger,
                 unique_id_field="ID",
             )
@@ -214,7 +215,7 @@ class Dataset:
 
         bibtex_str = to_string(records_dict=records, implementation="bib")
 
-        with open(self.records_file, "w", encoding="utf-8") as out:
+        with open(self.review_manager.paths.records, "w", encoding="utf-8") as out:
             out.write(bibtex_str + "\n")
 
         self._add_record_changes()
@@ -233,8 +234,8 @@ class Dataset:
         record_list[0]["record"] = "@" + record_list[0]["record"][2:]
 
         current_id_str = "NOTSET"
-        if self.records_file.is_file():
-            with open(self.records_file, "r+b") as file:
+        if self.review_manager.paths.records.is_file():
+            with open(self.review_manager.paths.records, "r+b") as file:
                 seekpos = file.tell()
                 line = file.readline()
                 while line:
@@ -269,7 +270,9 @@ class Dataset:
                     line = file.readline()
 
         if len(record_list) > 0:
-            with open(self.records_file, "a", encoding="utf8") as m_refs:
+            with open(
+                self.review_manager.paths.records, "a", encoding="utf8"
+            ) as m_refs:
                 for item in record_list:
                     m_refs.write(item["record"])
 
@@ -300,7 +303,10 @@ class Dataset:
     def format_records_file(self) -> dict:
         """Format the records file (Entrypoint for pre-commit hooks)"""
 
-        if not self.records_file.is_file() or not self.records_changed():
+        if (
+            not self.review_manager.paths.records.is_file()
+            or not self.records_changed()
+        ):
             return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
         colrev.ops.check.CheckOperation(self.review_manager)  # to notify
@@ -323,7 +329,7 @@ class Dataset:
                 record.reset_pdf_provenance_notes()
 
         self.save_records_dict(records)
-        changed = Filepaths.RECORDS_FILE in [
+        changed = self.review_manager.paths.RECORDS_FILE in [
             r.a_path for r in self._git_repo.index.diff(None)
         ]
         self.review_manager.update_status_yaml()
@@ -362,7 +368,7 @@ class Dataset:
             selected_ids=selected_ids,
         )
         self.save_records_dict(records)
-        self.add_changes(Filepaths.RECORDS_FILE)
+        self.add_changes(self.review_manager.paths.RECORDS_FILE)
         return updated_records
 
     # GIT operations -----------------------------------------------
@@ -385,7 +391,7 @@ class Dataset:
     def has_record_changes(self, *, change_type: str = "all") -> bool:
         """Check whether the records have changes"""
         return self.has_changes(
-            Path(Filepaths.RECORDS_FILE_GIT), change_type=change_type
+            Path(self.review_manager.paths.RECORDS_FILE_GIT), change_type=change_type
         )
 
     def has_changes(self, relative_path: Path, *, change_type: str = "all") -> bool:
@@ -456,7 +462,7 @@ class Dataset:
 
     def records_changed(self) -> bool:
         """Check whether the records were changed"""
-        main_recs_changed = Filepaths.RECORDS_FILE_GIT in [
+        main_recs_changed = self.review_manager.paths.RECORDS_FILE_GIT in [
             item.a_path for item in self._git_repo.index.diff(None)
         ] + [x.a_path for x in self._git_repo.head.commit.diff()]
         return main_recs_changed
@@ -508,18 +514,18 @@ class Dataset:
     def _add_record_changes(self) -> None:
         """Add changes in records to git"""
         self._sleep_util_git_unlocked()
-        self._git_repo.index.add([str(Filepaths.RECORDS_FILE)])
+        self._git_repo.index.add([str(self.review_manager.paths.RECORDS_FILE)])
 
     def add_setting_changes(self) -> None:
         """Add changes in settings to git"""
         self._sleep_util_git_unlocked()
 
-        self._git_repo.index.add([str(Filepaths.SETTINGS_FILE)])
+        self._git_repo.index.add([str(self.review_manager.paths.SETTINGS_FILE)])
 
     def has_untracked_search_records(self) -> bool:
         """Check whether there are untracked search records"""
         return any(
-            str(Filepaths.SEARCH_DIR) in str(untracked_file)
+            str(self.review_manager.paths.SEARCH_DIR) in str(untracked_file)
             for untracked_file in self.get_untracked_files()
         )
 

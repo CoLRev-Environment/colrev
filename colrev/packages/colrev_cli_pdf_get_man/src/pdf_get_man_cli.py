@@ -18,7 +18,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 
@@ -45,7 +44,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         self.pdf_get_man_operation = pdf_get_man_operation
 
         self._get_from_downloads_folder = False
-        self.pdf_dir = self.review_manager.get_path(Filepaths.PDF_DIR)
+        self.pdf_dir = self.review_manager.paths.pdf
 
     def _get_pdf_from_google(
         self, record: colrev.record.record.Record
