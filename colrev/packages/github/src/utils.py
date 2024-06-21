@@ -35,7 +35,7 @@ def get_url(*, repo: Github.Repository.Repository, citation_data: str) -> str:
     if citation_data:
         url = re.search(r'^\s*url:\s*(.+)\s*$', citation_data, re.M)
         if url:
-            return url.group(1).strip()
+            return url.group(1).strip().replace('"','')
     return repo.html_url
 
 def get_release_date(*, repo: Github.Repository.Repository, citation_data: str) -> str:
@@ -73,12 +73,6 @@ def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.recor
     data[Fields.DATE] = get_release_date(repo=repo,citation_data=citation_data)
 
     data[Fields.YEAR] = data[Fields.DATE][:4]
-
-    try:
-        repo.get_readme()
-        data[Fields.FILE] = repo.html_url + "/blob/main/README.md"
-    except:
-        data[Fields.FILE] = None
     
     data[Fields.ABSTRACT] = repo.description
     
@@ -102,7 +96,6 @@ assert repo_to_record(repo=repo).data == {
     'url': '"https://github.com/CoLRev-Environment/colrev"',
     'date': '2024-06-15',
     'year': '2024',
-    'file': 'https://github.com/CoLRev-Environment/colrev/blob/main/README.md',
     'abstract': 'CoLRev: An open-source environment for collaborative reviews', 
     'language': 'Python'}
 '''
