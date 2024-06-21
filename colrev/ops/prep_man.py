@@ -14,7 +14,6 @@ import colrev.process.operation
 import colrev.record.record_prep
 from colrev.constants import EndpointType
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
@@ -37,9 +36,9 @@ class PrepMan(colrev.process.operation.Operation):
         )
 
         self.verbose = True
-        self.lang_prep_csv_path = self.review_manager.get_path(
-            Filepaths.PREP_DIR
-        ) / Path("missing_lang_recs_df.csv")
+        self.lang_prep_csv_path = self.review_manager.paths.prep / Path(
+            "missing_lang_recs_df.csv"
+        )
 
     def _get_crosstab_df(self) -> pd.DataFrame:
         # pylint: disable=too-many-branches

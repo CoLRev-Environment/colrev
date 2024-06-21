@@ -19,7 +19,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldSet
-from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
@@ -80,7 +79,7 @@ class BibliographyExport(JsonSchemaMixin):
             settings["version"] = "0.1"
 
         self.settings = self.settings_class.load_settings(data=settings)
-        self.endpoint_path = self.review_manager.get_path(Filepaths.OUTPUT_DIR)
+        self.endpoint_path = self.review_manager.paths.output
 
     def _export(self, *, selected_records: dict) -> None:
         self.review_manager.logger.info(f"Export {self.settings.bib_format.name}")

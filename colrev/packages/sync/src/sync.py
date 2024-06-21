@@ -23,7 +23,6 @@ import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldSet
-from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
@@ -32,6 +31,7 @@ class Sync:
     """Synchronize records into a non-CoLRev repository"""
 
     cited_papers: list
+    pre_commit_config = Path(".pre-commit-config.yaml")
 
     def __init__(self) -> None:
         self.records_to_import: typing.List[colrev.record.record.Record] = []
@@ -51,14 +51,14 @@ class Sync:
             print("Other filenames are not (yet) supported.")
             return
 
-        if Filepaths.PRE_COMMIT_CONFIG.is_file():
-            if "colrev-hooks-update" in Filepaths.PRE_COMMIT_CONFIG.read_text(
+        if self.pre_commit_config.is_file():
+            if "colrev-hooks-update" in self.pre_commit_config.read_text(
                 encoding="utf-8"
             ):
                 print("Hook already registered")
                 return
 
-        with open(Filepaths.PRE_COMMIT_CONFIG, "a", encoding="utf-8") as file:
+        with open(self.pre_commit_config, "a", encoding="utf-8") as file:
             file.write(
                 """\n-   repo: local
         hooks:

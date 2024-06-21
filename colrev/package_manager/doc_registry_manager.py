@@ -154,6 +154,7 @@ class DocRegistryManager:
 
     # pylint: disable=line-too-long
     # pylint: disable=too-many-branches
+    # pylint: disable=too-many-statements
     # flake8: noqa: E501
     def _get_header_info(self, package: colrev.package_manager.package.Package) -> str:
 

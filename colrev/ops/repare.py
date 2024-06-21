@@ -14,7 +14,6 @@ from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.constants import SearchType
@@ -448,9 +447,7 @@ class Repare(colrev.process.operation.Operation):
             self.review_manager.logger.error("Could not read bibtex file")
 
             separated_records = {}  # type: ignore
-            with open(
-                self.review_manager.get_path(Filepaths.RECORDS_FILE), encoding="utf-8"
-            ) as file:
+            with open(self.review_manager.paths.records, encoding="utf-8") as file:
                 record_str = ""
                 line = file.readline()
 
