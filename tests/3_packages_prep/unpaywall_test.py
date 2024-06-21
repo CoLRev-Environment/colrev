@@ -9,6 +9,7 @@ import colrev.env.environment_manager
 import colrev.env.tei_parser
 import colrev.packages.unpaywall.src.unpaywall
 import colrev.review_manager
+from colrev.packages.unpaywall.src import utils
 
 
 @pytest.fixture(name="unpaywall")
@@ -34,7 +35,7 @@ def test_loading_user_specified_email_with_none_set(  # type: ignore
     # Test without settings
     env_man = colrev.env.environment_manager.EnvironmentManager()
     _, email = env_man.get_name_mail_from_git()
-    cfg_email = unpaywall.get_email()
+    cfg_email = utils.get_email(base_repo_review_manager)
     assert email == cfg_email
     # now create a new settings
     test_user = {"email": "test@email.com"}
@@ -51,6 +52,6 @@ def test_loading_user_specified_email_with_none_set(  # type: ignore
     ) as file:
         file.write(reg)
     # Check with new env_man
-    cfg_email = unpaywall.get_email()
+    cfg_email = utils.get_email(base_repo_review_manager)
     assert test_user["email"] == cfg_email
     (base_repo_review_manager.path / Path("reg.json")).unlink()

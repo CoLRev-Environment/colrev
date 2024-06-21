@@ -78,27 +78,27 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         "report": ENTRYTYPES.TECHREPORT,
         "other": ENTRYTYPES.MISC,
         "book-section": ENTRYTYPES.INBOOK,
-        "monograph": ENTRYTYPES.THESIS,  # thesis nicht auf website
+        "monograph": ENTRYTYPES.THESIS,
         "report-component": ENTRYTYPES.TECHREPORT,
-        "peer-review": ENTRYTYPES.MISC,  #
-        "book-track": ENTRYTYPES.INCOLLECTION,  #
+        "peer-review": ENTRYTYPES.MISC,
+        "book-track": ENTRYTYPES.INCOLLECTION,
         "book-part": ENTRYTYPES.INBOOK,
         "journal-volume": ENTRYTYPES.ARTICLE,
         "book-set": ENTRYTYPES.MISC,
         "reference-entry": ENTRYTYPES.MISC,
-        "journal": ENTRYTYPES.ARTICLE,  #
+        "journal": ENTRYTYPES.MISC,
         "component": ENTRYTYPES.MISC,
-        "proceedings-series": ENTRYTYPES.PROCEEDINGS,  # oder Misc da serie
-        "report-series": ENTRYTYPES.TECHREPORT,  # oder misc da series und nicht ein report
+        "proceedings-series": ENTRYTYPES.PROCEEDINGS,
+        "report-series": ENTRYTYPES.TECHREPORT,
         "proceedings": ENTRYTYPES.PROCEEDINGS,
         "database": ENTRYTYPES.MISC,
         "standard": ENTRYTYPES.MISC,
         "reference-book": ENTRYTYPES.BOOK,
         "posted-content": ENTRYTYPES.MISC,
-        "journal-issue": ENTRYTYPES.ARTICLE,  # Misc?
+        "journal-issue": ENTRYTYPES.MISC,
         "grant": ENTRYTYPES.MISC,
         "dataset": ENTRYTYPES.MISC,
-        "book-series": ENTRYTYPES.BOOK,  # oder Misc, da Serie?
+        "book-series": ENTRYTYPES.BOOK,
         "edited-book": ENTRYTYPES.BOOK,
     }
 
@@ -232,6 +232,16 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                 authors.append(f"{family_name}, {given_name}")
         return authors
 
+    def _get_affiliation(self, article: dict) -> str:
+        school = ""
+        z_authors = article.get("z_authors", "")
+        if z_authors:
+            person = z_authors[0]
+            affiliation = person.get("affiliation", "")
+            if affiliation:
+                school = affiliation[0]["name"]
+        return school
+
     def _create_record(self, article: dict) -> colrev.record.record.Record:
         record_dict = {Fields.ID: article["doi"]}
 
@@ -249,18 +259,27 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         elif entrytype == ENTRYTYPES.BOOK:
             record_dict[Fields.PUBLISHER] = article.get("publisher", "")
         elif entrytype == ENTRYTYPES.INPROCEEDINGS:
-            record_dict[Fields.BOOKTITLE] = article.get("booktitle", "")
+            record_dict[Fields.BOOKTITLE] = article.get("journal_name", "")  ##same here
         elif entrytype == ENTRYTYPES.INBOOK:
-            record_dict[Fields.BOOKTITLE] = article.get("booktitle", "")
+            record_dict[Fields.BOOKTITLE] = article.get(
+                "journal_name", ""
+            )  ##richtig mit journal name für booktitle???????
             record_dict[Fields.PUBLISHER] = article.get("publisher", "")
         elif entrytype == ENTRYTYPES.CONFERENCE:
-            record_dict[Fields.BOOKTITLE] = article.get("booktitle", "")
+            record_dict[Fields.BOOKTITLE] = article.get(
+                "journal_name", ""
+            )  ####same here
         elif entrytype == ENTRYTYPES.PHDTHESIS:
-            record_dict[Fields.SCHOOL] = article.get("school", "")  # oder publisher?
+            record_dict[Fields.SCHOOL] = self._get_affiliation(
+                article
+            )  # reicht hier nur ein name?
         elif entrytype == ENTRYTYPES.TECHREPORT:
-            record_dict[Fields.INSTITUTION] = article.get(
-                "publisher", ""
-            )  # habe hier als default publisher, richtig?
+            record_dict[Fields.INSTITUTION] = self._get_affiliation(article)
+
+        bestoa = article.get("best_oa_location", "")
+        if bestoa:
+            url = bestoa.get("url", "")
+            record_dict[Fields.URL] = url
 
         record = colrev.record.record.Record(record_dict)
 
