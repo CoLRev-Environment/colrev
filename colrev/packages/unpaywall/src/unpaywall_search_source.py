@@ -252,7 +252,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         record_dict[Fields.AUTHOR] = " and ".join(self._get_authors(article))
         record_dict[Fields.TITLE] = article.get("title", "")
-        record_dict[Fields.YExAR] = article.get("year", "")
+        record_dict[Fields.YEAR] = article.get("year", "")
 
         if entrytype == ENTRYTYPES.ARTICLE:
             record_dict[Fields.JOURNAL] = article.get("journal_name", "")
@@ -317,10 +317,15 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             word = word.lower()
             query_parts.append(word)	
         query = " ".join(query_parts)
-        query = query.replace(" OR ", "%20OR%20")
-        query = query.replace(" NOT ", "%20-")
-        query = query.replace(" AND ", "%20")
+        query = query.replace(" OR ", "§%20OR%20§")
+        query = query.replace(" NOT ", "§%20-§")
+        query = query.replace("§NOT ", "§%20-§")
+        query = query.replace(" AND ", "§%20§")
+        query = query.replace("§AND ", "§%20§")
+        query = query.replace(" AND§", "§%20§")
+        query = query.replace("§AND§", "§%20§")
         query = query.replace(" ", "%20")
+        query = query.replace("§", "")
         return query   
      
     def search(self, rerun: bool) -> None:
