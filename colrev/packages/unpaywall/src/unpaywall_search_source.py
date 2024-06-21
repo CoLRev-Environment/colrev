@@ -162,7 +162,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
             filename = operation.get_unique_filename(file_path_string="unpaywall")
 
-            search_parameters["query"] = cls._convert_html_url_encoding_from_html_to_string(query=search_parameters["query"])
+            search_parameters["query"] = cls._decode_html_url_encoding_to_string(query=search_parameters["query"])
 
             search_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
@@ -288,13 +288,13 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     def _build_search_url(self,page) -> str:
         url = "https://api.unpaywall.org/v2/search?"
         params = self.search_source.search_parameters
-        query = self._convert_html_url_encoding_from_string_to_html(params["query"]) 
+        query = self._encode_query_for_html_url(params["query"]) 
         is_oa = params.get("is_oa", "null")
         email = params.get("email", utils.get_email(self.review_manager))
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
 
-    def _convert_html_url_encoding_from_html_to_string(query: str) -> str: 
+    def _decode_html_url_encoding_to_string(query: str) -> str: 
         query = query.replace("AND", "%20")
         query = re.sub(r'(%20)+', "%20", query).strip()
         query = query.replace("%20OR%20", " OR ")
@@ -307,7 +307,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         return query
 
 
-    def _convert_html_url_encoding_from_string_to_html(self,query: str) -> str: 
+    def _encode_query_for_html_url(self,query: str) -> str: 
         query = re.sub(r'\s+', ' ', query).strip() 
         splited_query = query.split(" ")
         query_parts = []
