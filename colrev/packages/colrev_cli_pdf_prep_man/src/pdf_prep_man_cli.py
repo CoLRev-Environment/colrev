@@ -22,7 +22,6 @@ import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 # pylint: disable=too-few-public-methods
@@ -118,7 +117,9 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         try:
             system_platform = platform.system().lower()
 
-            if system_platform == "darwin":  # macOS
+            if os.getenv("CODESPACES") is not None:
+                subprocess.run(["code", filepath], check=True)
+            elif system_platform == "darwin":  # macOS
                 subprocess.run(["open", filepath], check=True)
             elif system_platform == "windows":
                 subprocess.run(["start", "", filepath], check=True, shell=True)
@@ -319,10 +320,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
         filepath = self.review_manager.path / Path(record_dict[Fields.FILE])
         if not filepath.is_file():
-            filepath = (
-                self.review_manager.get_path(Filepaths.PDF_DIR)
-                / f"{record_dict['ID']}.pdf"
-            )
+            filepath = self.review_manager.paths.pdf / f"{record_dict['ID']}.pdf"
         if not filepath.is_file():
             input(
                 f"{Colors.ORANGE}Warning: PDF file for record {record_dict['ID']} not found. "

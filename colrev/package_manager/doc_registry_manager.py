@@ -154,6 +154,7 @@ class DocRegistryManager:
 
     # pylint: disable=line-too-long
     # pylint: disable=too-many-branches
+    # pylint: disable=too-many-statements
     # flake8: noqa: E501
     def _get_header_info(self, package: colrev.package_manager.package.Package) -> str:
 
@@ -203,7 +204,13 @@ class DocRegistryManager:
         header_info += f"|MAINTAINER| Maintainer: {', '.join(x['name'] for x in package.authors)}\n\n"
         header_info += f"|LICENSE| License: {package.license}\n\n"
         if package.repository != "":
-            header_info += f"|GIT_REPO| `Repository <{package.repository}>`_ \n\n"
+            repo_name = package.repository.replace("https://github.com/", "")
+            if "CoLRev-Environment/colrev" in repo_name:
+                repo_name = "CoLRev-Environment/colrev"
+            header_info += (
+                f"|GIT_REPO| Repository: `{repo_name} <{package.repository}>`_ \n\n"
+            )
+
         if package.documentation != "":
             header_info += (
                 f"|DOCUMENTATION| `Documentation <{package.documentation}>`_ \n\n"

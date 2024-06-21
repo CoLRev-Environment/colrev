@@ -6,7 +6,6 @@ from pathlib import Path
 
 import colrev.process.operation
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.writer.write_utils import write_file
 
@@ -43,7 +42,7 @@ class Remove(colrev.process.operation.Operation):
                 for origin in origins:
                     file, origin_id = origin.split("/")
 
-                    search_dir = self.review_manager.get_path(Filepaths.SEARCH_DIR)
+                    search_dir = self.review_manager.paths.search
                     filepath = search_dir / Path(file)
 
                     origin_records = colrev.loader.load_utils.load(

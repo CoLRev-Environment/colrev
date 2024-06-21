@@ -83,9 +83,15 @@ class Loader:
 
         error_fields = {field for field in error_field_list if field is not None}
 
-        assert not any(
-            error_fields
-        ), f"Field contains invalid characters {error_fields}"
+        if any(error_fields):
+            error_cases = [
+                r
+                for r in records_dict.values()
+                if any(error_field in r for error_field in error_fields)
+            ]
+            self.logger.error(
+                f"Record contains invalid keys: {error_fields},\n record: {error_cases}"
+            )
 
     def load_records_list(self) -> list:
         """The load_records_list must be implemented by the inheriting class
