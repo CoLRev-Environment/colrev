@@ -406,14 +406,23 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
     def api_key_ui(self) -> None:
         """User Interface to enter Api key"""
+        run = True
+        while run: 
 
-        api_key = input("Please enter your Springer Link API key: ")
-        if not re.match(r"^[a-z0-9]{32}$", api_key):
-            print("Error: Invalid API key.\n")
-        else:
-            self.review_manager.environment_manager.update_registry(
-                self.SETTINGS["api_key"], api_key
-            )
+            api_key = input("Please enter your Springer Link API key: ")
+            if not re.match(r"^[a-z0-9]{32}$", api_key):
+                print("Error: Invalid API key.\n")
+            else:
+                
+                full_url = self._build_api_search_url(query="doi:10.1007/978-3-319-07410-8_4", api_key=api_key)
+                response = requests.get(full_url, timeout=10)
+                if response.status_code != 200:
+                    print("Error: Invalid API key")
+                else:
+                    self.review_manager.environment_manager.update_registry(
+                        self.SETTINGS["api_key"], api_key
+                    )
+                    run = False
 
     def _load_bib(self) -> dict:
         records = colrev.loader.load_utils.load(
