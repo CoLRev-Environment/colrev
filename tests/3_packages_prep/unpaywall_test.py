@@ -11,6 +11,7 @@ import colrev.packages.unpaywall.src.unpaywall
 import colrev.review_manager
 from colrev.packages.unpaywall.src import utils
 
+
 @pytest.fixture(name="unpaywall")
 def fixture_unpaywall(
     base_repo_review_manager: colrev.review_manager.ReviewManager,

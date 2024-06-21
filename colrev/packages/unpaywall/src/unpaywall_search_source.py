@@ -71,10 +71,10 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         "report": ENTRYTYPES.TECHREPORT,
         "other": ENTRYTYPES.MISC,
         "book-section": ENTRYTYPES.INBOOK,
-        "monograph": ENTRYTYPES.THESIS, 
+        "monograph": ENTRYTYPES.THESIS,
         "report-component": ENTRYTYPES.TECHREPORT,
-        "peer-review": ENTRYTYPES.MISC,  
-        "book-track": ENTRYTYPES.INCOLLECTION,  
+        "peer-review": ENTRYTYPES.MISC,
+        "book-track": ENTRYTYPES.INCOLLECTION,
         "book-part": ENTRYTYPES.INBOOK,
         "journal-volume": ENTRYTYPES.ARTICLE,
         "book-set": ENTRYTYPES.MISC,
@@ -82,7 +82,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         "journal": ENTRYTYPES.MISC,
         "component": ENTRYTYPES.MISC,
         "proceedings-series": ENTRYTYPES.PROCEEDINGS,
-        "report-series": ENTRYTYPES.TECHREPORT,  
+        "report-series": ENTRYTYPES.TECHREPORT,
         "proceedings": ENTRYTYPES.PROCEEDINGS,
         "database": ENTRYTYPES.MISC,
         "standard": ENTRYTYPES.MISC,
@@ -206,15 +206,14 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                 authors.append(f"{family_name}, {given_name}")
         return authors
 
-
-    def _get_affiliation(self, article: dict)-> str:
+    def _get_affiliation(self, article: dict) -> str:
         school = ""
-        z_authors = article.get("z_authors","")
+        z_authors = article.get("z_authors", "")
         if z_authors:
             person = z_authors[0]
-            affiliation = person.get("affiliation","")
+            affiliation = person.get("affiliation", "")
             if affiliation:
-                school= affiliation[0]["name"]
+                school = affiliation[0]["name"]
         return school
 
     def _create_record(self, article: dict) -> colrev.record.record.Record:
@@ -234,20 +233,26 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         elif entrytype == ENTRYTYPES.BOOK:
             record_dict[Fields.PUBLISHER] = article.get("publisher", "")
         elif entrytype == ENTRYTYPES.INPROCEEDINGS:
-            record_dict[Fields.BOOKTITLE] = article.get("journal_name", "") ##same here
+            record_dict[Fields.BOOKTITLE] = article.get("journal_name", "")  ##same here
         elif entrytype == ENTRYTYPES.INBOOK:
-            record_dict[Fields.BOOKTITLE] = article.get("journal_name", "") ##richtig mit journal name für booktitle???????
+            record_dict[Fields.BOOKTITLE] = article.get(
+                "journal_name", ""
+            )  ##richtig mit journal name für booktitle???????
             record_dict[Fields.PUBLISHER] = article.get("publisher", "")
         elif entrytype == ENTRYTYPES.CONFERENCE:
-            record_dict[Fields.BOOKTITLE] = article.get("journal_name", "") ####same here
+            record_dict[Fields.BOOKTITLE] = article.get(
+                "journal_name", ""
+            )  ####same here
         elif entrytype == ENTRYTYPES.PHDTHESIS:
-            record_dict[Fields.SCHOOL] = self._get_affiliation(article) #reicht hier nur ein name?
+            record_dict[Fields.SCHOOL] = self._get_affiliation(
+                article
+            )  # reicht hier nur ein name?
         elif entrytype == ENTRYTYPES.TECHREPORT:
             record_dict[Fields.INSTITUTION] = self._get_affiliation(article)
 
         bestoa = article.get("best_oa_location", "")
         if bestoa:
-            url = bestoa.get("url","")
+            url = bestoa.get("url", "")
             record_dict[Fields.URL] = url
 
         record = colrev.record.record.Record(record_dict)
