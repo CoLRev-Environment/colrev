@@ -260,6 +260,33 @@ class OSFSearchSource(JsonSchemaMixin):
         }
         return record_dict
     
+    def prep_link_md(
+        self,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.record.Record,
+        save_feed: bool = True,
+        timeout: int = 60,
+    ) -> colrev.record.record.Record:
+        """Not implemented"""
+        return record
+
+
+    def prepare(
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
+    ) -> colrev.record.record.Record:
+        
+        if source.filename.suffix == ".json":
+            if Fields.AUTHOR in record.data:
+                record.data[Fields.AUTHOR] = (
+                    colrev.record.record_prep.PrepRecord.format_author_field(
+                        record.data[Fields.AUTHOR]
+                    )
+                )
+            return record
+        return record
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
