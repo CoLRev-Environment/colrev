@@ -17,7 +17,7 @@ csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/ap
 
 # Methodology
 
-Data was managed with CoLRev version {{colrev_version}} [@WagnerPrester2022].
+Data was managed with CoLRev version {{colrev_version}} [@WagnerPrester2024].
 
 # Synthesis
 

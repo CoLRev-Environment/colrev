@@ -295,9 +295,7 @@ class LocalIndexBuilder:
                     f"{Colors.ORANGE}Warning: {repo_source_path} not on main branch{Colors.END}"
                 )
 
-            records_file = check_operation.review_manager.get_path(
-                Filepaths.RECORDS_FILE
-            )
+            records_file = check_operation.review_manager.paths.records
             if not records_file.is_file():
                 return
             records = check_operation.review_manager.dataset.load_records_dict()

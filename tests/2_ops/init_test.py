@@ -8,7 +8,6 @@ import pytest
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.init
 import colrev.review_manager
-from colrev.constants import Filepaths
 
 
 def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
@@ -21,15 +20,6 @@ def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
         settings_path=helpers.test_data_path.parents[0]
         / Path("colrev/ops/init/settings.json")
     )
-
-    with pytest.raises(colrev_exceptions.RepoInitError):
-        colrev.ops.init.Initializer(
-            review_type="literature_review",
-            example=True,
-            local_pdf_collection=True,
-            target_path=tmp_path,
-            light=True,
-        )
 
     with pytest.raises(colrev_exceptions.MissingDependencyError):
         colrev.ops.init.Initializer(
@@ -51,7 +41,7 @@ def test_repo_init(tmp_path) -> None:  # type: ignore
 def test_non_empty_dir_error_Initializer(tmp_path) -> None:  # type: ignore
     """Test repo init error (non-empty dir)"""
     # A .report.log file that should be removed
-    (tmp_path / Filepaths.REPORT_FILE).write_text("test", encoding="utf-8")
+    (tmp_path / Path(".report.log")).write_text("test", encoding="utf-8")
     (tmp_path / Path("test.txt")).write_text("test", encoding="utf-8")
     with pytest.raises(colrev_exceptions.NonEmptyDirectoryError):
         colrev.ops.init.Initializer(

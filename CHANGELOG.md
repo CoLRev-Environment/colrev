@@ -17,6 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 ### Fixed
 -->
 
+## 0.12.3 - 2024-06-15
+
+- Extend documentation (package development, package summaries, asciinema demo)
+- Bugfixes and codebase improvements (e.g., package management and discovery, closing sqlite connections)
+- Reduce dependencies (e.g., levenshtein, PyPDF2, pdfminer, daff, psutil)
+- Refactor colrev.bibliography_export (add writers)
+- Extend tests: cover MacOS and Python 3.12
+- Remove unnecessary options (e.g., init --local_pdf_collection)
+- Add and test support for GitHub codespaces
+
 ## 0.12.2 - 2024-04-29
 
 - Update CoLRev packages (including interfaces, development docs etc.)

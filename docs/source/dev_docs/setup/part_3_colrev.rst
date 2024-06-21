@@ -49,7 +49,8 @@ Clone and install CoLRev with the following commands (using the shell / ``Ctrl``
 ::
 
    # Clone and install CoLRev on your Desktop
-   # Make sure you have registered your SSH key on GitHub beforehand
+   # Make sure you have registered your SSH key on GitHub beforehand, see "Setup part 2: Git and SSH"
+   mkdir -p ~/Desktop
    cd ~/Desktop
    git clone git@github.com:CoLRev-Environment/colrev.git
    cd ~/Desktop/colrev
