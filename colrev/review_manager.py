@@ -25,6 +25,7 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
+import colrev.env
 
 
 class ReviewManager:
@@ -59,6 +60,9 @@ class ReviewManager:
         exact_call: str = "",
         skip_upgrade: bool = True,
     ) -> None:
+        
+        
+
         self.force_mode = force_mode
         """Force mode variable (bool)"""
         self.verbose_mode = verbose_mode

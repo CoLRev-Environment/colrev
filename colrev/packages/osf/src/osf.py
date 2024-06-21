@@ -6,7 +6,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
+import colrev.packages
+import colrev.packages.osf
+import colrev.packages.osf.src
 from colrev.packages.osf.src.osf_api import OSFApiQuery
+import colrev.packages.osf.src.osf_api
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -23,6 +27,8 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+import colrev.review_manager
+import colrev.ops.search_api_feed
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -36,7 +42,7 @@ class OSFSearchSource(JsonSchemaMixin):
     flag = True
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
 
-    source_identifier = "ID"
+    source_identifier = "id"
     search_types = [SearchType.API]
     endpoint = "colrev.osf"
 
@@ -56,23 +62,23 @@ class OSFSearchSource(JsonSchemaMixin):
             self,
             *, 
             source_operation: colrev.process.operation.Operation,
-            settings: dict,
+            settings: typing.Optional[dict] = None,
             ) -> None:
-          self.review.manager = source_operation.review_manager
+          self.review_manager = source_operation.review_manager
 
           if settings:
                self.search_source = from_dict(
                     data_class=self.settings_class, data=settings
           )
           else:
-               self.search_source = colrev.settings.SearchSource(
-                    endpoint=self.endpoint,
-                    filename=Path("data/search/osf.bib"),
-                    search_type=SearchType.OTHER,
-                    search_parameters={},
-                    comment="",
-               )
-               self.source_operation = source_operation
+            self.search_source = colrev.settings.SearchSource(
+                endpoint=self.endpoint,
+                filename=Path("data/search/osf.json"),
+                search_type=SearchType.API,
+                search_parameters={},
+                comment="",
+                )
+            self.source_operation = source_operation
 
     @classmethod
     def heuristic(cls, filename:Path, data:str) -> dict:
@@ -113,10 +119,10 @@ class OSFSearchSource(JsonSchemaMixin):
         # Handle different search types
         if search_type == SearchType.API:
             # Check for params being empty and initialize if needed
-            if not params_dict:
+            if len(params_dict) == 0:
                 search_source = operation.create_api_source(endpoint=cls.endpoint)
-            elif "https://api.test.osf.io/v2/search" in params_dict.get("url", ""):
-                query = params_dict["url"].replace("https://api.test.osf.io/v2/search", "").lstrip("&")
+            elif "https://api.osf.io/v2/nodes" in params_dict.get("url", ""):
+                query = params_dict["url"].replace("https://api.osf.io/v2/nodes", "").lstrip("&")
                 parameter_pairs = query.split("&")
                 search_parameters = {key: value for key, value in (pair.split("=") for pair in parameter_pairs)}
                 last_value = list(search_parameters.values())[-1]
@@ -150,30 +156,48 @@ class OSFSearchSource(JsonSchemaMixin):
             )
         return api_key
     
-    def search(self, rerun=False) -> None:
+    def search(self, rerun:bool) -> None:
         """Run a search of OSF"""
-        response = self.run_api_query()
-        for item in response.get("data", []):
-            record_dict = self._create_record_dict(item)
-            record = colrev.record.record.Record(record_dict)
-            self.source_operation.add_update_record(record)
-        self.source_operation.save_records()    
+        osf_feed = self.search_source.get_api_feed(
+            review_manager = self.review_manager,
+            source_identifier = self.source_identifier,
+            update_only = (not rerun),
+        )
+        self._run_api_search(osf_feed=osf_feed, rerun=rerun)
+        
 
 
-    def prep_link_md(self, prep_operation, record, save_feed=True, timeout=10):
-        pass
+    def prep_link_md(
+        self,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.record.Record,
+        save_feed: bool = True,
+        timeout: int = 60,
+    ) -> colrev.record.record.Record:
+        """Not implemented"""
+        return record
 
-    def prepare(self, record, source):
-        pass
+    def prepare(
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
+    ) -> colrev.record.record.Record:
+        
+        if source.filename.suffix == ".json":
+            if Fields.AUTHOR in record.data:
+                record.data[Fields.AUTHOR] = (
+                    colrev.record.record_prep.PrepRecord.format_author_field(
+                        record.data[Fields.AUTHOR]
+                    )
+                )
+            return record
+        return record
 
 
 
-    def run_api_query(self) -> dict:
-        api_key = self.get_api_key()
-        base_url = "https://api.osf.io/v2/search/"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-        }
+    def run_api_query(self) -> colrev.packages.osf.src.osf_api.OSFApiQuery:
+        api_key = self._get_api_key()
+        query = colrev.packages.osf.src.osf_api.OSFApiQuery(api_key=api_key)
         query = OSFApiQuery(api_key)
         query.dataType("json")
         query.dataFormat("object")
@@ -197,21 +221,42 @@ class OSFSearchSource(JsonSchemaMixin):
                 method = parameter_methods[key]
                 method(value)
 
+        # response = query.callAPI()
+        return query
+    
+    def _run_api_search(
+        self, osf_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
+    ) -> None:
+        query = self.run_api_query()
+        # query.startRecord = 1
         response = query.callAPI()
-        return response
+        while "id" in response:
+            articles = response["id"]
+
+            for article in articles:
+
+                record_dict = self._create_record_dict(article)
+                record = colrev.record.record.Record(record_dict)
+
+                osf_feed.add_update_record(record)
+
+            # query.startRecord += 200
+            response = query.callAPI()
+
+        osf_feed.save()
 
     def _create_record_dict(self, item: dict) -> dict:
         attributes = item["attributes"]
         record_dict = {
             Fields.ID: item["id"],
-            Fields.TYPE: item["type"],
+            Fields.ENTRYTYPE: item["type"],
             Fields.TITLE: attributes.get("title", ""),
-            Fields.CATEGORY: attributes.get("category", ""),
+            # Fields.CATEGORY: attributes.get("category", ""),
             Fields.YEAR: attributes.get("date_created", "")[:4],
             Fields.URL: attributes.get("ia_url", ""),
-            Fields.DESCRIPTION: attributes.get("description", ""),
-            Fields.TAGS: attributes.get("tags",""),
-            Fields.DATE_CREATED: attributes.get("date_created", ""),
+            Fields.ABSTRACT: attributes.get("description", ""),
+            Fields.KEYWORDS: attributes.get("tags",""),
+            Fields.DATE: attributes.get("date_created", ""),
         }
         return record_dict
     
