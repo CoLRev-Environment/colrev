@@ -175,7 +175,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         if "http" in csl_link:
             ret = requests.get(csl_link, allow_redirects=True, timeout=30)
-            csl_filename = self.review_manager.paths.data / Path(csl_link).name
+            csl_filename = self.review_manager.paths.DATA_DIR / Path(csl_link).name
             with open(csl_filename, "wb") as file:
                 file.write(ret.content)
             colrev.env.utils.inplace_change(
