@@ -8,7 +8,7 @@ The search is launched with the following command:
 colrev search --add colrev.springer_link
 ```
 
-Upon entering the above command the user is asked to choose between DB search and API search. The user can select the search type by navigating through the list with `uparrow` and `downarrow` and confirm the choice with `enter`.
+Upon entering the above command the user is asked to choose between `DB search` and `API search`. The user can select the search type by navigating through the list with `uparrow` and `downarrow` and confirm the choice with `enter`.
 
 
 ### DB search
