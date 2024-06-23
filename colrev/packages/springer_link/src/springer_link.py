@@ -214,7 +214,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             response = requests.get(full_url, timeout=10)
             if response.status_code != 200:
                 print(
-                    "Error - API search failed for the following reason: {response.status_code}"
+                    f"Error - API search failed for the following reason: {response.status_code}"
                 )
                 return
 
