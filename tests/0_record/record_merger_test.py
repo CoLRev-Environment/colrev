@@ -9,6 +9,8 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
 
+# flake8: noqa: E501
+
 
 @pytest.mark.parametrize(
     "input_dict_1, input_dict_2, preferred_masterdata_source_prefixes, result_dict",
