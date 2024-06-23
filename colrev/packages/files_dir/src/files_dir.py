@@ -259,7 +259,7 @@ class FilesSearchSource(JsonSchemaMixin):
         if record_dict.get(Fields.AUTHOR, "NA") in ["NA", ""]:
             if "author" in doc.metadata:
                 try:
-                    pdf_md_author = doc.metadata["author"].decode("utf-8")
+                    pdf_md_author = doc.metadata["author"]
                     if (
                         "Mirko Janc" not in pdf_md_author
                         and "wendy" != pdf_md_author
