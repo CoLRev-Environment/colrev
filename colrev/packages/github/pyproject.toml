@@ -15,3 +15,6 @@ documentation = "README.md"
 dev_status = "experimental"
 colrev_doc_link = "README.md"
 search_source = "colrev.packages.github.src.github_search_source:GitHubSearchSource"
+
+[tool.poetry.dependencies]
+PyGithub = "^2.3.0"

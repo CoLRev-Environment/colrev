@@ -13,6 +13,3 @@ dev_status = "maturing"
 colrev_doc_link = "README.md"
 search_source = "colrev.packages.crossref.src.crossref_search_source:CrossrefSearchSource"
 prep = "colrev.packages.crossref.src.crossref_prep:CrossrefMetadataPrep"
-
-[tool.poetry.dependencies]
-PyGithub = "^2.3.0"
