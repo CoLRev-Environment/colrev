@@ -144,7 +144,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def add_constraints(self) -> dict:
-        """add constraints for query"""
+        """add constraints for API query"""
         complex_query_prompt = [
             inquirer.List(
                 name="complex_query",
@@ -183,7 +183,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         return search_parameters
 
     def build_query(self, search_parameters: dict) -> str:
-        """build api query"""
+        """build API query"""
 
         if "complex" in search_parameters:
             query = search_parameters["complex"]
@@ -202,7 +202,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         return f"https://api.springernature.com/meta/v2/json?q={query}&api_key={api_key}&s={start}"
 
     def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
-        """Get the records from a query"""
+        """Get the records from a API search"""
         query = self.build_query(self.search_source.search_parameters)
         api_key = self.get_api_key()
         start = 1
@@ -214,7 +214,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             response = requests.get(full_url, timeout=10)
             if response.status_code != 200:
                 print(
-                    "Error - API search failed for the following reason: {response.status_code}"
+                    f"Error - API search failed for the following reason: {response.status_code}"
                 )
                 return
 
@@ -233,12 +233,14 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     def _run_api_search(
         self, springer_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
+        """save API search results"""
         for record in self.get_query_return():
             springer_feed.add_update_record(record)
 
         springer_feed.save()
 
     def _create_record(self, doc: dict) -> colrev.record.record.Record:
+        """Fieldmapper API search"""
         record_dict = {Fields.ID: doc["identifier"]}
         record_dict[Fields.ENTRYTYPE] = "misc"
 
@@ -406,7 +408,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         return ""
 
     def api_key_ui(self) -> None:
-        """User Interface to enter Api key"""
+        """User Interface to enter API key"""
         run = True
         while run:
 
@@ -428,6 +430,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                     run = False
 
     def _load_bib(self) -> dict:
+        """load bib file"""
         records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             logger=self.review_manager.logger,

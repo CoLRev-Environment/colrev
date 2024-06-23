@@ -74,17 +74,17 @@ The user can provide values for the following parameters: keyword, subject, lang
     - Astronomy
     - Behavioral Sciences
     - Biomedical Sciences
-    - Business & Management
+    - Business and Management
     - Chemistry
     - Climate
     - Computer Science
     - Earth Sciences
     - Economics
-    - Education & Language
+    - Education and Language
     - Energy
     - Engineering
     - Environmental Sciences
-    - Food Science & Nutrition
+    - Food Science and Nutrition
     - General Interest
     - Geography
     - Law
