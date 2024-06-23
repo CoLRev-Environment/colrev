@@ -228,6 +228,36 @@ def test_merger(
             {Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE, Fields.AUTHOR: "Rai, Arun"},
         ),
         (
+            {
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.AUTHOR: "{von Krogh} and Haefliger and Spaeth and Wallin",
+            },
+            {
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.AUTHOR: "{von Krogh}, Georg and Haefliger, Stefan and Spaeth, Sebastian and Wallin, Martin W.",
+            },
+            Fields.AUTHOR,
+            {
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.AUTHOR: "{von Krogh}, Georg and Haefliger, Stefan and Spaeth, Sebastian and Wallin, Martin W.",
+            },
+        ),
+        (
+            {
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.AUTHOR: "Kappos and Rivard",
+            },
+            {
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.AUTHOR: "Kappos, Antonio and Rivard, Suzanne",
+            },
+            Fields.AUTHOR,
+            {
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.AUTHOR: "Kappos, Antonio and Rivard, Suzanne",
+            },
+        ),
+        (
             {Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE, Fields.AUTHOR: "RAI, ARUN"},
             {Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE, Fields.AUTHOR: "Rai, Arun"},
             Fields.AUTHOR,
