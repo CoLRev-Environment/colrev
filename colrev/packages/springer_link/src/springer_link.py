@@ -186,7 +186,9 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         """build API query"""
 
         if "complex" in search_parameters:
-            query = search_parameters["complex"]
+            value = search_parameters["complex"]
+            encoded_value = value.replace(" ", "%20")
+            query = encoded_value.replace('"', "%22")
 
         else:
 
