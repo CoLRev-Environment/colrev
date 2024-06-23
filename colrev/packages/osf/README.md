@@ -1,4 +1,4 @@
-# Open Science Framework(OSF) Search Source 
+# Open Science Framework(OSF) Search Source
 
 | PDF retrieval                                                | Field              | Size         |
 |--------------------------------------------------------------|--------------------|--------------|

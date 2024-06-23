@@ -1,12 +1,12 @@
 # osf_api.py
-
-import requests
 import json
 import urllib.parse
 import urllib.request
-import xml.etree.ElementTree as ET
+
+
 
 class OSFApiQuery:
+
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.base_url = "https://api.osf.io/v2/nodes"
@@ -18,8 +18,7 @@ class OSFApiQuery:
         self.usingDescription = False
         self.usingTags = False
         self.queryProvided = False
-        
-
+        self.startRecord = 1
 
     def dataType(self, data_type: str):
         outputtype = data_type.strip().lower()
@@ -49,14 +48,14 @@ class OSFApiQuery:
 
     def ia_url(self, value: str):
         self.params["filter[ia_url]"] = value
-    
+
     def description(self, value: str):
         self.addParameter("description", value)
-    
-    def tags(self, value:str):
+
+    def tags(self, value: str):
         self.addParameter("tags", value)
 
-    def date_created(self, value:str):
+    def date_created(self, value: str):
         self.params["filter[date_created]"] = value
 
     def addParameter(self, parameter: str, value: str) -> None:
@@ -85,9 +84,7 @@ class OSFApiQuery:
         formattedData = json.loads(data)
         return formattedData
 
-
-
-    def buildQuery(self, filters = None) -> str:
+    def buildQuery(self, filters=None) -> str:
         """Creates the URL for the non-Open Access Document API call
         return string: full URL for querying the API"""
         url = self.base_url
@@ -112,13 +109,11 @@ class OSFApiQuery:
         #         url += "&" + key + "=" + urllib.parse.quote(value)
 
         return url
-    
-    
+
     def queryAPI(self, url: str) -> str:
         """Creates the URL for the API call
         string url  Full URL to pass to API
         return string: Results from API"""
         with urllib.request.urlopen(url) as con:
             content = con.read()
-        return content.decode('utf-8')
-
+        return content.decode("utf-8")
