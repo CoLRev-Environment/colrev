@@ -19,6 +19,7 @@ For this search download search results and store in `data/search/` directory.
 
 ### API search
 
+Springer Link only allows a daily quota of 500. This might lead to the site being unavailable with a response code of 403.
 
 #### API search: API key for Springer Link
 
@@ -30,20 +31,17 @@ The user can choose between `yes` for searching with a complex query or `no` for
 #### API search: complex query
 
 The user can type the individual search constraints that can also use the boolean  `AND`, `OR` , `NOT`, `NEAR` for a specified search. Following conditions have to be followed:
-- Search terms must be enclosed in double quotes `%22` (22 is equal to ASCII Hex ")
+- Search terms must be enclosed in double quotes `"`
 - The entire logical condition must be enclosed in parentheses `()`
-- Filters can be added with a space `%20`and then followed by the `constraint:argument`
+- Filters can be added with a `space` and then followed by the `constraint:argument`
 - A word or phrase that appears among the constraints but is not preceded by a constraint value will be treated as the argument of the "empty constraint"
-- Helpful Hints: the space character (`%20`)can be mistaken with a logical AND. Therefore a multiword should be surrounded by the quote symbol (`%22`)
-    - Example: `orgname:%22University%20of%20Calgary%22`
-    - Without `%22` the API interprets it as three separate constraints: `orgname:University, of and Calgary` ("of" and "Calgary" are interpreted as arguments of "empty" constraints).
 
 ##### Examples
-- A single search term: `(%22saturn%22)%20type:book`
-- Two terms with AND: `(%22saturn%22%20AND%20%22jupiter%22)%20type:book`
-- Two terms with OR: `(%22saturn%22%20OR%20%22jupiter%22)%20type:book`
-- Negation of a term: `(%22saturn%22%20NOT%20%22jupiter%22)%20type:book`
-- After NEAR, a slash `/{number}` should be used, for example: `(%22saturn%22%20NEAR/10%20%22jupiter%22)%20type:book`
+- A single search term: `("saturn") type:book`
+- Two terms with AND: `("saturn" AND "jupiter") type:book`
+- Two terms with OR: `("saturn" OR "jupiter") type:book`
+- Negation of a term: `("saturn" NOT "jupiter") type:book`
+- After NEAR, a slash `/{number}` should be used, for example: `("saturn" NEAR/10 "jupiter") type:book`
 
 ##### Other Constraints supported by the Springers Nature API
 
