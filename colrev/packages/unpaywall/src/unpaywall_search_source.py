@@ -274,7 +274,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         return record
 
-    def _build_search_url(self, page) -> str:
+    def _build_search_url(self, page: int) -> str:
         url = "https://api.unpaywall.org/v2/search?"
         params = self.search_source.search_parameters
         query = self._encode_query_for_html_url(params["query"])
