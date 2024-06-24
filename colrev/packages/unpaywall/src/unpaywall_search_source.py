@@ -36,31 +36,12 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.oni
-    # docs_link
+    docs_link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/packages/unpaywall/README.md"
+    )
 
     short_name = "Unpaywall"
-
-    """API_FIELDS = [
-        "data_standard",
-        "doi",
-        "doi_url",
-        "genre",
-        "is_paratext",
-        "is_oa",
-        "journal_is_in_doaj",
-        "journal_is_oa",
-        "journal_issns",
-        "journal_issn_l",
-        "journal_name",
-        "oa_status",
-        "has_repository_copy",
-        "published_date",
-        "publisher",
-        "title",
-        "updated",
-        "year",
-        "z_authors",
-    ]"""
 
     ENTRYTYPE_MAPPING = {
         "journal-article": ENTRYTYPES.ARTICLE,
@@ -202,14 +183,15 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                 )
 
             new_results = data["results"]
-            for x in new_results:
-                if x not in all_results:
-                    all_results.append(x)
+            all_results.extend(new_results)
 
             if len(new_results) < results_per_page:
                 break
 
             page += 1
+
+        with open("all_results.json", "wb") as file:
+            file.write(response.content)
 
         for result in all_results:
             article = result["response"]
@@ -227,7 +209,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         return authors
 
     def _get_affiliation(self, article: dict) -> str:
-        school = None
+        school = ""
         z_authors = article.get("z_authors", "")
         if z_authors:
             person = z_authors[0]
@@ -247,7 +229,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         record_dict[Fields.AUTHOR] = " and ".join(self._get_authors(article))
         record_dict[Fields.TITLE] = article.get("title", "")
         record_dict[Fields.YEAR] = article.get("year", "")
-        record_dict[Fields.DOI] = article.get("doi", "")
 
         if entrytype == ENTRYTYPES.ARTICLE:
             record_dict[Fields.JOURNAL] = article.get("journal_name", "")
@@ -267,14 +248,10 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         bestoa = article.get("best_oa_location", "")
         if bestoa:
-            record_dict[Fields.URL] = bestoa.get("url_for_landing_page", "")
-            record_dict[Fields.FULLTEXT] = bestoa.get("url_for_pdf", "")
+            url = bestoa.get("url", "")
+            record_dict[Fields.URL] = url
 
-        final_record_dict = {
-            key: value for key, value in record_dict.items() if value is not None
-        }
-
-        record = colrev.record.record.Record(final_record_dict)
+        record = colrev.record.record.Record(record_dict)
 
         return record
 
@@ -285,11 +262,11 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         is_oa = params.get("is_oa", "null")
         email_param = params.get("email", "")
 
-        if email_param and page == 1:
+        if email_param:
             from colrev.env.environment_manager import EnvironmentManager
 
             env_man = EnvironmentManager()
-            path = utils.UNPAYWALL_EMAIL_PATH
+            path = "packages.search.colrev.unpaywall.email"
             value_string = email_param
             print(f"Updating registry settings:\n{path} = {value_string}")
             env_man.update_registry(path, value_string)
