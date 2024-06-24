@@ -202,15 +202,15 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                 )
 
             new_results = data["results"]
-            all_results.extend(new_results)
+            for x in new_results:
+                if x not in all_results:
+                    all_results.append(x)
+
 
             if len(new_results) < results_per_page:
                 break
 
             page += 1
-
-        with open("all_results.json", "wb") as file:
-            file.write(response.content)
 
         for result in all_results:
             article = result["response"]
