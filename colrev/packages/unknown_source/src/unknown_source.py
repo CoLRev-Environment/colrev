@@ -55,10 +55,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.na
     short_name = "Unknown Source"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/unknown_source.md"
-    )
+
     db_url = ""
 
     HTML_CLEANER = re.compile("<.*?>")

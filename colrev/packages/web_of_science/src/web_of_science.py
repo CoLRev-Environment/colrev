@@ -36,10 +36,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Web of Science"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/web_of_science.md"
-    )
+
     db_url = "http://webofscience.com/"
 
     def __init__(
