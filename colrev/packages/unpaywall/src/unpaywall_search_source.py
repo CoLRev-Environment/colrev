@@ -227,7 +227,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         return authors
 
     def _get_affiliation(self, article: dict) -> str:
-        school = ""
+        school = None
         z_authors = article.get("z_authors", "")
         if z_authors:
             person = z_authors[0]
