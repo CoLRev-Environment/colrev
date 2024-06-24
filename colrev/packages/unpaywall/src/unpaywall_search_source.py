@@ -248,6 +248,9 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             record_dict[Fields.SCHOOL] = ",".join(self._get_affiliation(article))
         elif entrytype == ENTRYTYPES.TECHREPORT:
             record_dict[Fields.INSTITUTION] = ",".join(self._get_affiliation(article))
+        elif entrytype == ENTRYTYPES.INCOLLECTION:
+            ecord_dict[Fields.BOOKTITLE] = article.get("journal_name", "")
+            record_dict[Fields.PUBLISHER] = article.get("publisher", "")
 
         bestoa = article.get("best_oa_location", "")
         if bestoa:
