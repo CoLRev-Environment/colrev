@@ -279,7 +279,18 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         params = self.search_source.search_parameters
         query = self._encode_query_for_html_url(params["query"])
         is_oa = params.get("is_oa", "null")
-        email = params.get("email", utils.get_email(self.review_manager))
+        email_param = params.get("email", "")
+
+        if email_param:
+            from colrev.env.environment_manager import EnvironmentManager
+
+            env_man = EnvironmentManager()
+            path = "packages.search.colrev.unpaywall.email"
+            value_string = email_param
+            print(f"Updating registry settings:\n{path} = {value_string}")
+            env_man.update_registry(path, value_string)
+        
+        email = utils.get_email(self.review_manager)
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
 
