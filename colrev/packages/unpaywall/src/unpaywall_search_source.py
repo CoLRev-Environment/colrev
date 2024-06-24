@@ -247,6 +247,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         record_dict[Fields.AUTHOR] = " and ".join(self._get_authors(article))
         record_dict[Fields.TITLE] = article.get("title", "")
         record_dict[Fields.YEAR] = article.get("year", "")
+        record_dict[Fields.DOI] = article.get("doi", "")
 
         if entrytype == ENTRYTYPES.ARTICLE:
             record_dict[Fields.JOURNAL] = article.get("journal_name", "")
