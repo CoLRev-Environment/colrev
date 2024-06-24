@@ -277,7 +277,8 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
 
-    def _decode_html_url_encoding_to_string(query: str) -> str:
+    @classmethod
+    def _decode_html_url_encoding_to_string(cls, query: str) -> str:
         query = query.replace("AND", "%20")
         query = re.sub(r"(%20)+", "%20", query).strip()
         query = query.replace("%20OR%20", " OR ")
