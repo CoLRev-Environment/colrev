@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typing
 import json
+import re
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -124,7 +125,20 @@ class GitHubSearchSource(JsonSchemaMixin):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """TODO: Retrieve masterdata from the SearchSource"""
+        if Fields.URL in record.data:
+            pattern = r'https?://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)$'
+            match = re.match(pattern, record.data[Fields.URL].strip('"'))
+            if match: #Check whether record contains GitHub url
+
+                # get API access
+                token = self._get_api_key()
+                auth = Auth.Token(token)
+                g = Github(auth=auth)
+                
+                repo = g.get_repo(match.group(1) + "/" + match.group(2))
+                new_record = connector_utils.repo_to_record(repo=repo)
+                record.data.update(new_record.data)
+                
         return record
     
     @classmethod
@@ -283,6 +297,7 @@ class GitHubSearchSource(JsonSchemaMixin):
     def prepare(self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.record.Record:
         """Source-specific preparation for GitHub"""
+        return record
 
 
 def choice() -> int:
