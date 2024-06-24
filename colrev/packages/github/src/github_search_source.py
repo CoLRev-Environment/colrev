@@ -1,18 +1,14 @@
 #! /usr/bin/env python
 """SearchSource: GitHub"""
 from __future__ import annotations
-
 import typing
-import json
 import re
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
-
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-
 import colrev.ops
 import colrev.ops.search
 import colrev.exceptions as colrev_exceptions
@@ -21,7 +17,6 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.packages.github.src.utils as connector_utils
-
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
@@ -32,30 +27,8 @@ from colrev.constants import SearchType
 from github import Github
 # Authentication is defined via github.Auth
 from github import Auth
-# using an access token
-#auth = Auth.Token("access_token")
 
-# First create a Github instance:
-# Public Web Github
-# g = Github(auth=auth)
-# Github Enterprise with custom hostname
-# g = Github(base_url="https://{hostname}/api/v3", auth=auth)
 rerun = False
-"""
-# Then play with your Github objects:
-for repo in g.get_user().get_repos():
-    print(repo.name)
-
-# search repositories by name
-for repo in g.search_repositories("pythoncode tutorials"): oder "suchbegriff" + in:readme && in:name (name = Name des Repos)
-    # print repository details
-    print_repo(repo)
-    
-
-# To close connections after use
-g.close()
-"""
-
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
@@ -66,8 +39,6 @@ class GitHubSearchSource(JsonSchemaMixin):
     search_types = [SearchType.API]
     endpoint = "colrev.github"
     source_identifier = Fields.URL
-    
-
     
     heuristic_status = SearchSourceHeuristicStatus.todo
     short_name = "GitHubSearch"
@@ -110,7 +81,7 @@ class GitHubSearchSource(JsonSchemaMixin):
                 self.search_source = github_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint=self.endpoint,  #Maybe set to "colrev.github"
+                    endpoint=self.endpoint,  
                     filename=self._github_md_filename,
                     search_type=SearchType.MD,
                     search_parameters={},
@@ -192,7 +163,7 @@ class GitHubSearchSource(JsonSchemaMixin):
         operation.add_source_and_search(search_source)
         return search_source
     
-    ## api key template aus ieee
+    
     def _get_api_key(self) -> str:
         api_key = self.review_manager.environment_manager.get_settings_by_key(
             self.SETTINGS["api_key"]
@@ -207,47 +178,38 @@ class GitHubSearchSource(JsonSchemaMixin):
     def search(self, rerun: bool = False) -> None:
         """Run a search on GitHub"""
 
-        # übernommen aus iee 
+        
         if self.search_source.search_type == SearchType.API:
             github_feed = self.search_source.get_api_feed(
                 review_manager=self.review_manager,
                 source_identifier=self.source_identifier,
                 update_only=(not rerun),
             )
-            # Überprüfen Sie, ob die Suchparameter definiert sind
+            
             if not self.search_source.search_parameters:
                 raise ValueError("No search parameters defined for GitHub search source")
-
+            
+            # Checking where to search
             if rerun == False:
                 choice_int = choice()
-                #print(choice_int)
             query = ""
-
-            # Extrahieren der Suchparameter
             keywords_input = self.search_source.search_parameters.get('query', '')
-            #When query empty = abort.
-            #print(keywords_input)
-
             if choice_int==1:
                 query = f"{keywords_input} in:name"
-                #print(query) 
             if choice_int==2:
                 query = f"{keywords_input} in:readme"
-                #print(query)
             if choice_int==3:
                 query = f"{keywords_input} in:name,readme"
-                #print(query)
-            #Prints for Tests
-        
-            #Tokenabfrage muss vor der Instanzbildung abgefragt werden!
+
+            # Getting API key
             token = self._get_api_key()
             auth = Auth.Token(token)
             g = Github(auth=auth)
-            
-            # Durchführen der Suche auf GitHub
+
+            # Searching on Github
             repositories = g.search_repositories(query=query)
 
-            # Speichern der Suchergebnisse in einer Datei
+            # Saving search results 
             results = []
             for repo in repositories:
                 
@@ -264,21 +226,10 @@ class GitHubSearchSource(JsonSchemaMixin):
                     
                 results.append(repo_data)
                 
-
-            # Speichern der Ergebnisse in einer JSON-Datei
-            #with open(self._github_md_filename, 'w', encoding='utf-8') as f:
-            #    json.dump(results, f, ensure_ascii=False, indent=4)
-
-            # Speichern als Repos in .bib
-            # with open(self._github_md_filename, 'w') as file:
-            #    for repo in results:
-            #        file.write(repo)        #Speichern so nicht möglich, da repo kein string
-
             for record in results:
                 github_feed.add_update_record(retrieved_record=record)
             github_feed.save()
 
-            # Schließen der GitHub-Verbindung
             g.close()
 
 
@@ -308,7 +259,3 @@ def choice() -> int:
             return int(user_choice)
         else:
             print("Invalid choice. Please try again.")     
-
-#   If __name__ == "__main__":
-# Instance = github()
-# Instance.search()
