@@ -1,7 +1,8 @@
 """Utils for Unpaywall"""
+import colrev.review_manager
 
 
-def get_email(review_manager: object) -> str:
+def get_email(review_manager: colrev.review_manager.ReviewManager) -> str:
     """Get user's name and email,
 
     if user have specified an email in registry, that will be returned

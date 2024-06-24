@@ -2,8 +2,8 @@
 """SearchSource: Unpaywall"""
 from __future__ import annotations
 
+import re
 import typing
-import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -13,20 +13,15 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.exceptions as colrev_exceptions
-from colrev.constants import SearchSourceHeuristicStatus, SearchType
-import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
-from colrev.constants import Fields
 import colrev.record.record
-
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.unpaywall.src import utils
-import re 
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
@@ -44,7 +39,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     # docs_link
 
     short_name = "Unpaywall"
-
 
     """API_FIELDS = [
         "data_standard",
@@ -162,7 +156,9 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
             filename = operation.get_unique_filename(file_path_string="unpaywall")
 
-            search_parameters["query"] = cls._decode_html_url_encoding_to_string(query=search_parameters["query"])
+            search_parameters["query"] = cls._decode_html_url_encoding_to_string(
+                query=search_parameters["query"]
+            )
 
             search_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
@@ -178,7 +174,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         operation.add_source_and_search(search_source)
 
-    
     def _run_api_search(
         self, *, unpaywall_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
@@ -194,7 +189,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         results_per_page = 50
 
         while True:
-            page_dependend_url = self._build_search_url(page)  
+            page_dependend_url = self._build_search_url(page)
             response = requests.get(page_dependend_url, timeout=90)
             if response.status_code != 200:
                 print(f"Error fetching data: {response.status_code}")
@@ -213,8 +208,8 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                 break
 
             page += 1
-    
-        with open(f"all_results.json", "wb") as file:
+
+        with open("all_results.json", "wb") as file:
             file.write(response.content)
 
         for result in all_results:
@@ -259,20 +254,14 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         elif entrytype == ENTRYTYPES.BOOK:
             record_dict[Fields.PUBLISHER] = article.get("publisher", "")
         elif entrytype == ENTRYTYPES.INPROCEEDINGS:
-            record_dict[Fields.BOOKTITLE] = article.get("journal_name", "")  ##same here
+            record_dict[Fields.BOOKTITLE] = article.get("journal_name", "")
         elif entrytype == ENTRYTYPES.INBOOK:
-            record_dict[Fields.BOOKTITLE] = article.get(
-                "journal_name", ""
-            )  ##TODO: richtig mit journal name für booktitle???????
+            record_dict[Fields.BOOKTITLE] = article.get("journal_name", "")
             record_dict[Fields.PUBLISHER] = article.get("publisher", "")
         elif entrytype == ENTRYTYPES.CONFERENCE:
-            record_dict[Fields.BOOKTITLE] = article.get(
-                "journal_name", ""
-            )  ####same here
+            record_dict[Fields.BOOKTITLE] = article.get("journal_name", "")
         elif entrytype == ENTRYTYPES.PHDTHESIS:
-            record_dict[Fields.SCHOOL] = self._get_affiliation(
-                article
-            )  # reicht hier nur ein name?
+            record_dict[Fields.SCHOOL] = self._get_affiliation(article)
         elif entrytype == ENTRYTYPES.TECHREPORT:
             record_dict[Fields.INSTITUTION] = self._get_affiliation(article)
 
@@ -285,30 +274,29 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         return record
 
-    def _build_search_url(self,page) -> str:
+    def _build_search_url(self, page) -> str:
         url = "https://api.unpaywall.org/v2/search?"
         params = self.search_source.search_parameters
-        query = self._encode_query_for_html_url(params["query"]) 
+        query = self._encode_query_for_html_url(params["query"])
         is_oa = params.get("is_oa", "null")
         email = params.get("email", utils.get_email(self.review_manager))
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
 
-    def _decode_html_url_encoding_to_string(query: str) -> str: 
+    def _decode_html_url_encoding_to_string(query: str) -> str:
         query = query.replace("AND", "%20")
-        query = re.sub(r'(%20)+', "%20", query).strip()
+        query = re.sub(r"(%20)+", "%20", query).strip()
         query = query.replace("%20OR%20", " OR ")
         query = query.replace("%20-", " NOT ")
         query = query.replace(" -", " NOT ")
         query = query.replace("%20", " AND ")
-        query = re.sub(r'\s+', " ", query).strip()
+        query = re.sub(r"\s+", " ", query).strip()
         query = query.lstrip(" ")
         query = query.rstrip(" ")
         return query
 
-
-    def _encode_query_for_html_url(self,query: str) -> str: 
-        query = re.sub(r'\s+', ' ', query).strip() 
+    def _encode_query_for_html_url(self, query: str) -> str:
+        query = re.sub(r"\s+", " ", query).strip()
         query = query.replace(" OR ", "§%20OR%20§")
         query = query.replace(" NOT ", "§%20-§")
         query = query.replace("§NOT ", "§%20-§")
@@ -318,8 +306,8 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         query = query.replace("§AND§", "§%20§")
         query = query.replace(" ", "%20")
         query = query.replace("§", "")
-        return query   
-     
+        return query
+
     def search(self, rerun: bool) -> None:
         """Run a search of Unpaywall"""
 
@@ -345,7 +333,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             return records
 
         raise NotImplementedError
-  
+
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
@@ -362,6 +350,3 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         """Source-specific preparation for Unpaywall"""
         """Not implemented"""
         return record
-        
-   
-
