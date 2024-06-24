@@ -36,31 +36,12 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.oni
-    # docs_link
+    docs_link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/packages/unpaywall/README.md"
+    )
 
     short_name = "Unpaywall"
-
-    """API_FIELDS = [
-        "data_standard",
-        "doi",
-        "doi_url",
-        "genre",
-        "is_paratext",
-        "is_oa",
-        "journal_is_in_doaj",
-        "journal_is_oa",
-        "journal_issns",
-        "journal_issn_l",
-        "journal_name",
-        "oa_status",
-        "has_repository_copy",
-        "published_date",
-        "publisher",
-        "title",
-        "updated",
-        "year",
-        "z_authors",
-    ]"""
 
     ENTRYTYPE_MAPPING = {
         "journal-article": ENTRYTYPES.ARTICLE,
