@@ -285,18 +285,18 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     @classmethod
     def _decode_html_url_encoding_to_string(cls, query: str) -> str:
         query = query.replace("AND", "%20")
-        query = re.sub(r"(%20)+", "%20", query).strip()
+        query = re.sub(r'(%20)+', '%20', query).strip()
         query = query.replace("%20OR%20", " OR ")
         query = query.replace("%20-", " NOT ")
         query = query.replace(" -", " NOT ")
         query = query.replace("%20", " AND ")
-        query = re.sub(r"\s+", " ", query).strip()
+        query = re.sub(r'\s+', ' ', query).strip()
         query = query.lstrip(" ")
         query = query.rstrip(" ")
         return query
 
     def _encode_query_for_html_url(self, query: str) -> str:
-        query = re.sub(r"\s+", " ", query).strip()
+        query = re.sub(r'\s+', ' ', query).strip()
         query = query.replace(" OR ", "§%20OR%20§")
         query = query.replace(" NOT ", "§%20-§")
         query = query.replace("§NOT ", "§%20-§")
@@ -304,8 +304,9 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         query = query.replace("§AND ", "%20")
         query = query.replace(" AND§", "%20")
         query = query.replace("§AND§", "%20")
-        query = query.replace(" ", "%20")
         query = query.replace("§", "")
+        query = query.replace(" ", "%20")
+        query = re.sub(r'(%20)+', '%20', query).strip()  
         return query
 
     def search(self, rerun: bool) -> None:
