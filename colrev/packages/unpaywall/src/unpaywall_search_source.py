@@ -285,7 +285,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             from colrev.env.environment_manager import EnvironmentManager
 
             env_man = EnvironmentManager()
-            path = "packages.search.colrev.unpaywall.email"
+            path = "packages.pdf_get.colrev.unpaywall.email"
             value_string = email_param
             print(f"Updating registry settings:\n{path} = {value_string}")
             env_man.update_registry(path, value_string)
