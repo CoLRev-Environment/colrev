@@ -210,14 +210,14 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         return authors
 
     def _get_affiliation(self, article: dict) -> typing.List[str]:
-        affiliations = set()  
+        affiliations = set()
         z_authors = article.get("z_authors", "")
         if z_authors:
             for person in z_authors:
                 person_affiliation = person.get("affiliation", [])
                 if person_affiliation:
                     affiliations.add(person_affiliation[0]["name"])
-        
+
         return list(affiliations)
 
     def _create_record(self, article: dict) -> colrev.record.record.Record:
@@ -249,7 +249,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         elif entrytype == ENTRYTYPES.TECHREPORT:
             record_dict[Fields.INSTITUTION] = ",".join(self._get_affiliation(article))
         elif entrytype == ENTRYTYPES.INCOLLECTION:
-            ecord_dict[Fields.BOOKTITLE] = article.get("journal_name", "")
+            record_dict[Fields.BOOKTITLE] = article.get("journal_name", "")
             record_dict[Fields.PUBLISHER] = article.get("publisher", "")
 
         bestoa = article.get("best_oa_location", "")
