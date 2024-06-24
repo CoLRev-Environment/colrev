@@ -202,15 +202,14 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                 )
 
             new_results = data["results"]
-            all_results.extend(new_results)
+            for x in new_results:
+                if x not in all_results:
+                    all_results.append(x)
 
             if len(new_results) < results_per_page:
                 break
 
             page += 1
-
-        with open("all_results.json", "wb") as file:
-            file.write(response.content)
 
         for result in all_results:
             article = result["response"]
@@ -228,7 +227,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         return authors
 
     def _get_affiliation(self, article: dict) -> str:
-        school = ""
+        school = None
         z_authors = article.get("z_authors", "")
         if z_authors:
             person = z_authors[0]
@@ -248,6 +247,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         record_dict[Fields.AUTHOR] = " and ".join(self._get_authors(article))
         record_dict[Fields.TITLE] = article.get("title", "")
         record_dict[Fields.YEAR] = article.get("year", "")
+        record_dict[Fields.DOI] = article.get("doi", "")
 
         if entrytype == ENTRYTYPES.ARTICLE:
             record_dict[Fields.JOURNAL] = article.get("journal_name", "")
@@ -267,10 +267,14 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         bestoa = article.get("best_oa_location", "")
         if bestoa:
-            url = bestoa.get("url", "")
-            record_dict[Fields.URL] = url
+            record_dict[Fields.URL] = bestoa.get("url_for_landing_page", "")
+            record_dict[Fields.FULLTEXT] = bestoa.get("url_for_pdf", "")
 
-        record = colrev.record.record.Record(record_dict)
+        final_record_dict = {
+            key: value for key, value in record_dict.items() if value is not None
+        }
+
+        record = colrev.record.record.Record(final_record_dict)
 
         return record
 
@@ -281,15 +285,15 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         is_oa = params.get("is_oa", "null")
         email_param = params.get("email", "")
 
-        if email_param:
+        if email_param and page == 1:
             from colrev.env.environment_manager import EnvironmentManager
 
             env_man = EnvironmentManager()
-            path = "packages.search.colrev.unpaywall.email"
+            path = utils.UNPAYWALL_EMAIL_PATH
             value_string = email_param
             print(f"Updating registry settings:\n{path} = {value_string}")
             env_man.update_registry(path, value_string)
-        
+
         email = utils.get_email(self.review_manager)
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
