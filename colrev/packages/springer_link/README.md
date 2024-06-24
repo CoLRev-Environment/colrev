@@ -24,7 +24,7 @@ Springer Link only allows a daily quota of 500. This might lead to the site bein
 #### API search: API key for Springer Link
 
 After selecting API search the user is asked to enter an API key for Springer Link (available upon [registration](https://dev.springernature.com/)). If an API key is already stored, the user can change the key with the first prompted question by navigating through the list with `downarrow` and selecting `yes`. Pressing `enter` will confirm this selection.
-The use of an API key is mandatory. An API key can be requested via the Springer Link API (link below).
+The use of an API key is mandatory.
 
 The user can choose between `yes` for searching with a complex query or `no` for search parameters by navigating through the list with `downarrow` and confirming the choice by pressing `enter`.
 
