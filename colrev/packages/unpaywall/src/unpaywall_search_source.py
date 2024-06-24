@@ -206,7 +206,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                 if x not in all_results:
                     all_results.append(x)
 
-
             if len(new_results) < results_per_page:
                 break
 
@@ -281,16 +280,17 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         is_oa = params.get("is_oa", "null")
         email_param = params.get("email", "")
 
-        if email_param:
+        if email_param and page == 1:
             from colrev.env.environment_manager import EnvironmentManager
 
             env_man = EnvironmentManager()
-            path = "packages.pdf_get.colrev.unpaywall.email"
+            path = utils.UNPAYWALL_EMAIL_PATH
             value_string = email_param
             print(f"Updating registry settings:\n{path} = {value_string}")
             env_man.update_registry(path, value_string)
-        
+
         email = utils.get_email(self.review_manager)
+        print(email)
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
 

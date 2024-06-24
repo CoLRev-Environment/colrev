@@ -1,6 +1,8 @@
 """Utils for Unpaywall"""
 import colrev.review_manager
 
+UNPAYWALL_EMAIL_PATH = "packages.pdf_get.colrev.unpaywall.email"
+
 
 def get_email(review_manager: colrev.review_manager.ReviewManager) -> str:
     """Get user's name and email,
@@ -10,7 +12,7 @@ def get_email(review_manager: colrev.review_manager.ReviewManager) -> str:
     """
 
     env_mail = review_manager.environment_manager.get_settings_by_key(
-        "packages.pdf_get.colrev.unpaywall.email"
+        UNPAYWALL_EMAIL_PATH
     )
     (
         _,
