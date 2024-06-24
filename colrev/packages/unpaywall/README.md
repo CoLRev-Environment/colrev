@@ -39,12 +39,20 @@ A search on the Unpaywall API can be performed as follows:
 ```
 colrev search --add colrev.unpaywall -p "https://api.unpaywall.org/v2/search?query=cell%20thermometry&is_oa=true&email=unpaywall_01@example.com"
 ```
+To use different search terms, switch out the terms in the "query" section as follows:
+
+```
+query=ocean%20%animals
+query=ocean AND animals 
+query=ocean animals
+
+```
+
 If the email address is manually specified in the URL as a replacement for unpaywall_01@example.com, it will be stored under the following path:
 
 ```
 packages.pdf_get.colrev.unpaywall.email=<email_address>
 ```
-
 
 ## Links
 
