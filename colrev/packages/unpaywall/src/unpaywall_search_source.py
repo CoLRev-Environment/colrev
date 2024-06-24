@@ -290,7 +290,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             env_man.update_registry(path, value_string)
 
         email = utils.get_email(self.review_manager)
-        print(email)
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
 
