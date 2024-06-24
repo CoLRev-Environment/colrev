@@ -28,6 +28,18 @@ If you would like to use a different email address, use the following command
 colrev settings --update-global=packages.pdf_get.colrev.unpaywall.email=<email_address>
 ```
 
+## search
+So far, only API search is implemented. Other search types such as MD search or TOC search might be implemented in the future.
+
+### API search
+Download search results and store in `data/search/` directory.
+A search on the Unpaywall API can be performed as follows:
+```
+colrev search --add colrev.unpaywall -p "https://api.unpaywall.org/v2/search?query=cell%20thermometry&is_oa=true&email=unpaywall_01@example.com"
+```
+
+
+
 ## Links
 
 - [REST API](https://unpaywall.org/products/api)
