@@ -270,7 +270,15 @@ class GitHubSearchSource(JsonSchemaMixin):
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
-        return 
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
+                unique_id_field="url",
+            )
+        
+            return records
+        raise NotImplementedError 
 
     def prepare(self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.record.Record:
