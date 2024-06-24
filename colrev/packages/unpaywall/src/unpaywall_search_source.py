@@ -208,7 +208,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         return authors
 
     def _get_affiliation(self, article: dict) -> str:
-        school = None
+        school = ""
         z_authors = article.get("z_authors", "")
         if z_authors:
             person = z_authors[0]
@@ -251,9 +251,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             record_dict[Fields.URL] = bestoa.get("url_for_landing_page", "")
             record_dict[Fields.FULLTEXT] = bestoa.get("url_for_pdf", "")
 
-        final_record_dict = {
-            key: value for key, value in record_dict.items() if value is not None
-        }
+        final_record_dict = {key: value for key, value in record_dict.items() if value}
 
         record = colrev.record.record.Record(final_record_dict)
 
