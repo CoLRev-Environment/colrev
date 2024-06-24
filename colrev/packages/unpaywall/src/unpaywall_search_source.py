@@ -21,7 +21,10 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.env.environment_manager import EnvironmentManager
 from colrev.packages.unpaywall.src import utils
+
+# pylint: disable=unused-argument
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
@@ -101,7 +104,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Unpaywall"""
-        # Not yet implemented
         result = {"confidence": 0.0}
         return result
 
@@ -265,7 +267,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         email_param = params.get("email", "")
 
         if email_param and page == 1:
-            from colrev.env.environment_manager import EnvironmentManager
 
             env_man = EnvironmentManager()
             path = utils.UNPAYWALL_EMAIL_PATH
@@ -343,5 +344,4 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Unpaywall"""
-        """Not implemented"""
         return record
