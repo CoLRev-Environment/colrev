@@ -209,15 +209,16 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                 authors.append(f"{family_name}, {given_name}")
         return authors
 
-    def _get_affiliation(self, article: dict) -> str:
-        school = ""
+    def _get_affiliation(self, article: dict) -> typing.List[str]:
+        affiliations = set()  
         z_authors = article.get("z_authors", "")
         if z_authors:
-            person = z_authors[0]
-            affiliation = person.get("affiliation", "")
-            if affiliation:
-                school = affiliation[0]["name"]
-        return school
+            for person in z_authors:
+                person_affiliation = person.get("affiliation", [])
+                if person_affiliation:
+                    affiliations.add(person_affiliation[0]["name"])
+        
+        return list(affiliations)
 
     def _create_record(self, article: dict) -> colrev.record.record.Record:
         record_dict = {Fields.ID: article["doi"]}
@@ -244,9 +245,9 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         elif entrytype == ENTRYTYPES.CONFERENCE:
             record_dict[Fields.BOOKTITLE] = article.get("journal_name", "")
         elif entrytype == ENTRYTYPES.PHDTHESIS:
-            record_dict[Fields.SCHOOL] = self._get_affiliation(article)
+            record_dict[Fields.SCHOOL] = ",".join(self._get_affiliation(article))
         elif entrytype == ENTRYTYPES.TECHREPORT:
-            record_dict[Fields.INSTITUTION] = self._get_affiliation(article)
+            record_dict[Fields.INSTITUTION] = ",".join(self._get_affiliation(article))
 
         bestoa = article.get("best_oa_location", "")
         if bestoa:
