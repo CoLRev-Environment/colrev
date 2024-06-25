@@ -42,8 +42,8 @@ class GithubMetadataPrep(JsonSchemaMixin):
         self.review_manager = prep_operation.review_manager
 
     def prepare(
-            self, record: colrev.record.record_prep.PrepRecord
-        ) -> colrev.record.record.Record:
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare a record based on GitHub metadata"""
 
         GitHubSearchSource = github_connector.GitHubSearchSource(
@@ -53,5 +53,3 @@ class GithubMetadataPrep(JsonSchemaMixin):
             prep_operation=self.prep_operation, record=record
         )
         return record
-
-    

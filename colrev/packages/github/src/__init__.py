@@ -12,4 +12,3 @@ __email__ = "karl.schnickmann@stud.uni-bamberg.de"
 
 __author__ = "Chris Vierath"
 __email__ = "chris-norman.vierath@stud.uni-bamberg.de"
-

@@ -1,34 +1,35 @@
 #! /usr/bin/env python
 """SearchSource: GitHub"""
 from __future__ import annotations
-import typing
+
 import re
+import typing
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
+
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-import colrev.ops
-import colrev.ops.search
+from github import Auth
+from github import Github
+
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
-import colrev.record.record
 import colrev.packages.github.src.utils as connector_utils
+import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
-
 """pip install PyGithub -> Must be installed before use, please note in the documentation! """
-
-from github import Github
 # Authentication is defined via github.Auth
-from github import Auth
 
 rerun = False
+
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
@@ -39,7 +40,7 @@ class GitHubSearchSource(JsonSchemaMixin):
     search_types = [SearchType.API]
     endpoint = "colrev.github"
     source_identifier = Fields.URL
-    
+
     heuristic_status = SearchSourceHeuristicStatus.todo
     short_name = "GitHubSearch"
     docs_link = (
@@ -64,14 +65,16 @@ class GitHubSearchSource(JsonSchemaMixin):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None
+        settings: typing.Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
         if settings:
-            #GitHub as a search source
-            self.search_source = from_dict(data_class=self.settings_class, data=settings)
+            # GitHub as a search source
+            self.search_source = from_dict(
+                data_class=self.settings_class, data=settings
+            )
         else:
-            #GitHub as a md-prep source
+            # GitHub as a md-prep source
             github_md_source_l = [
                 s
                 for s in source_operation.review_manager.settings.sources
@@ -81,7 +84,7 @@ class GitHubSearchSource(JsonSchemaMixin):
                 self.search_source = github_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint=self.endpoint,  
+                    endpoint=self.endpoint,
                     filename=self._github_md_filename,
                     search_type=SearchType.MD,
                     search_parameters={},
@@ -97,26 +100,24 @@ class GitHubSearchSource(JsonSchemaMixin):
         timeout: int = 10,
     ) -> colrev.record.record.Record:
         if Fields.URL in record.data:
-            pattern = r'https?://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)$'
+            pattern = r"https?://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)$"
             match = re.match(pattern, record.data[Fields.URL].strip('"'))
-            if match: #Check whether record contains GitHub url
+            if match:  # Check whether record contains GitHub url
 
                 # get API access
                 token = self._get_api_key()
                 auth = Auth.Token(token)
                 g = Github(auth=auth)
-                
+
                 repo = g.get_repo(match.group(1) + "/" + match.group(2))
                 new_record = connector_utils.repo_to_record(repo=repo)
                 record.data.update(new_record.data)
-                
+
         return record
-    
+
     @classmethod
     def add_endpoint(
-        cls,
-        operation: colrev.process.operation.Operation,
-        params: str
+        cls, operation: colrev.process.operation.Operation, params: str
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         params_dict = {}
@@ -132,7 +133,7 @@ class GitHubSearchSource(JsonSchemaMixin):
                         else:
                             raise colrev_exceptions.InvalidQueryException(
                                 "GitHub search_parameters support title or readme field"
-                            ) 
+                            )
                     except ValueError:
                         cls.review_manager.logger("Invalid search_parameter format")
         if len(params_dict) == 0:
@@ -145,7 +146,7 @@ class GitHubSearchSource(JsonSchemaMixin):
                         .replace("https://github.com/search?q=%2F", "")
                         .replace("https://github.com/search?q=", "")
                         .replace("&type=repositories", "")
-                        .replace("+"," ")
+                        .replace("+", " ")
                     )
                 }
             else:
@@ -162,8 +163,7 @@ class GitHubSearchSource(JsonSchemaMixin):
 
         operation.add_source_and_search(search_source)
         return search_source
-    
-    
+
     def _get_api_key(self) -> str:
         api_key = self.review_manager.environment_manager.get_settings_by_key(
             self.SETTINGS["api_key"]
@@ -174,31 +174,32 @@ class GitHubSearchSource(JsonSchemaMixin):
                 self.SETTINGS["api_key"], api_key
             )
         return api_key
-    
+
     def search(self, rerun: bool = False) -> None:
         """Run a search on GitHub"""
 
-        
         if self.search_source.search_type == SearchType.API:
             github_feed = self.search_source.get_api_feed(
                 review_manager=self.review_manager,
                 source_identifier=self.source_identifier,
                 update_only=(not rerun),
             )
-            
+
             if not self.search_source.search_parameters:
-                raise ValueError("No search parameters defined for GitHub search source")
-            
+                raise ValueError(
+                    "No search parameters defined for GitHub search source"
+                )
+
             # Checking where to search
             if rerun == False:
                 choice_int = choice()
             query = ""
-            keywords_input = self.search_source.search_parameters.get('query', '')
-            if choice_int==1:
+            keywords_input = self.search_source.search_parameters.get("query", "")
+            if choice_int == 1:
                 query = f"{keywords_input} in:name"
-            if choice_int==2:
+            if choice_int == 2:
                 query = f"{keywords_input} in:readme"
-            if choice_int==3:
+            if choice_int == 3:
                 query = f"{keywords_input} in:name,readme"
 
             # Getting API key
@@ -209,29 +210,28 @@ class GitHubSearchSource(JsonSchemaMixin):
             # Searching on Github
             repositories = g.search_repositories(query=query)
 
-            # Saving search results 
+            # Saving search results
             results = []
             for repo in repositories:
-                
+
                 repo_data = {
-                   Fields.ENTRYTYPE: "software",
-                   Fields.URL: repo.html_url,
+                    Fields.ENTRYTYPE: "software",
+                    Fields.URL: repo.html_url,
                 }
                 repo_data = colrev.record.record.Record(data=repo_data)
-                
+
                 try:
-                    repo_data=connector_utils.repo_to_record(repo=repo)
-                except Exception as e:
+                    repo_data = connector_utils.repo_to_record(repo=repo)
+                except Exception:
                     print("Could not convert record: " + repo.html_url)
-                    
+
                 results.append(repo_data)
-                
+
             for record in results:
                 github_feed.add_update_record(retrieved_record=record)
             github_feed.save()
 
             g.close()
-
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
@@ -241,11 +241,12 @@ class GitHubSearchSource(JsonSchemaMixin):
                 logger=self.review_manager.logger,
                 unique_id_field="url",
             )
-        
-            return records
-        raise NotImplementedError 
 
-    def prepare(self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+            return records
+        raise NotImplementedError
+
+    def prepare(
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.record.Record:
         """Source-specific preparation for GitHub"""
         return record
@@ -253,9 +254,11 @@ class GitHubSearchSource(JsonSchemaMixin):
 
 def choice() -> int:
     while True:
-        user_choice = input("Where do you want to search in (1 = Only in Title, 2 = Only in Readme, 3 = Both): ")
-        if user_choice in ['1', '2', '3']:
+        user_choice = input(
+            "Where do you want to search in (1 = Only in Title, 2 = Only in Readme, 3 = Both): "
+        )
+        if user_choice in ["1", "2", "3"]:
             rerun == True
             return int(user_choice)
         else:
-            print("Invalid choice. Please try again.")     
+            print("Invalid choice. Please try again.")
