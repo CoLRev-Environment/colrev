@@ -36,31 +36,12 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.oni
-    # docs_link
+    docs_link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/packages/unpaywall/README.md"
+    )
 
     short_name = "Unpaywall"
-
-    """API_FIELDS = [
-        "data_standard",
-        "doi",
-        "doi_url",
-        "genre",
-        "is_paratext",
-        "is_oa",
-        "journal_is_in_doaj",
-        "journal_is_oa",
-        "journal_issns",
-        "journal_issn_l",
-        "journal_name",
-        "oa_status",
-        "has_repository_copy",
-        "published_date",
-        "publisher",
-        "title",
-        "updated",
-        "year",
-        "z_authors",
-    ]"""
 
     ENTRYTYPE_MAPPING = {
         "journal-article": ENTRYTYPES.ARTICLE,
@@ -227,7 +208,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         return authors
 
     def _get_affiliation(self, article: dict) -> str:
-        school = None
+        school = ""
         z_authors = article.get("z_authors", "")
         if z_authors:
             person = z_authors[0]
@@ -270,9 +251,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             record_dict[Fields.URL] = bestoa.get("url_for_landing_page", "")
             record_dict[Fields.FULLTEXT] = bestoa.get("url_for_pdf", "")
 
-        final_record_dict = {
-            key: value for key, value in record_dict.items() if value is not None
-        }
+        final_record_dict = {key: value for key, value in record_dict.items() if value}
 
         record = colrev.record.record.Record(final_record_dict)
 
@@ -298,7 +277,8 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
 
-    def _decode_html_url_encoding_to_string(query: str) -> str:
+    @classmethod
+    def _decode_html_url_encoding_to_string(cls, query: str) -> str:
         query = query.replace("AND", "%20")
         query = re.sub(r"(%20)+", "%20", query).strip()
         query = query.replace("%20OR%20", " OR ")
