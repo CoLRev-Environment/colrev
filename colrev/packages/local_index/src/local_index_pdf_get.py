@@ -29,11 +29,6 @@ class LocalIndexPDFGet(JsonSchemaMixin):
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = False
 
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/local_index.md"
-    )
-
     def __init__(
         self,
         *,

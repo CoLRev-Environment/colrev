@@ -104,6 +104,10 @@ Example 2:
             "data_path_relative": "data/data.csv",
         }
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
+        operation.review_manager.save_settings()
+        operation.review_manager.dataset.create_commit(
+            msg=f"Add {operation.type} colrev.structured",
+        )
 
     def validate_structured_data(self) -> None:
         """Validate the extracted data"""

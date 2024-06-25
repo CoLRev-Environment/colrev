@@ -41,10 +41,6 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Springer Link"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/springer_link.md"
-    )
     db_url = "https://link.springer.com/"
 
     def __init__(

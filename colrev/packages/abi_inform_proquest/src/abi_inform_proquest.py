@@ -37,10 +37,6 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "ABI/INFORM (ProQuest)"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/"
-        + "packages/search_sources/abi_inform_proquest.md"
-    )
 
     db_url = "https://search.proquest.com/abicomplete/advanced"
 

@@ -55,10 +55,6 @@ class BackwardSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "PDF backward search"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/pdf_backward_search.md"
-    )
 
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
