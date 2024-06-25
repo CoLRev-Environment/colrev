@@ -21,7 +21,10 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.env.environment_manager import EnvironmentManager
 from colrev.packages.unpaywall.src import utils
+
+# pylint: disable=unused-argument
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
@@ -101,7 +104,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Unpaywall"""
-        # Not yet implemented
         result = {"confidence": 0.0}
         return result
 
@@ -207,15 +209,16 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                 authors.append(f"{family_name}, {given_name}")
         return authors
 
-    def _get_affiliation(self, article: dict) -> str:
-        school = ""
+    def _get_affiliation(self, article: dict) -> typing.List[str]:
+        affiliations = set()
         z_authors = article.get("z_authors", "")
         if z_authors:
-            person = z_authors[0]
-            affiliation = person.get("affiliation", "")
-            if affiliation:
-                school = affiliation[0]["name"]
-        return school
+            for person in z_authors:
+                person_affiliation = person.get("affiliation", [])
+                if person_affiliation:
+                    affiliations.add(person_affiliation[0]["name"])
+
+        return list(affiliations)
 
     def _create_record(self, article: dict) -> colrev.record.record.Record:
         record_dict = {Fields.ID: article["doi"]}
@@ -242,9 +245,12 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         elif entrytype == ENTRYTYPES.CONFERENCE:
             record_dict[Fields.BOOKTITLE] = article.get("journal_name", "")
         elif entrytype == ENTRYTYPES.PHDTHESIS:
-            record_dict[Fields.SCHOOL] = self._get_affiliation(article)
+            record_dict[Fields.SCHOOL] = ",".join(self._get_affiliation(article))
         elif entrytype == ENTRYTYPES.TECHREPORT:
-            record_dict[Fields.INSTITUTION] = self._get_affiliation(article)
+            record_dict[Fields.INSTITUTION] = ",".join(self._get_affiliation(article))
+        elif entrytype == ENTRYTYPES.INCOLLECTION:
+            record_dict[Fields.BOOKTITLE] = article.get("journal_name", "")
+            record_dict[Fields.PUBLISHER] = article.get("publisher", "")
 
         bestoa = article.get("best_oa_location", "")
         if bestoa:
@@ -265,7 +271,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         email_param = params.get("email", "")
 
         if email_param and page == 1:
-            from colrev.env.environment_manager import EnvironmentManager
 
             env_man = EnvironmentManager()
             path = utils.UNPAYWALL_EMAIL_PATH
@@ -280,27 +285,28 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     @classmethod
     def _decode_html_url_encoding_to_string(cls, query: str) -> str:
         query = query.replace("AND", "%20")
-        query = re.sub(r"(%20)+", "%20", query).strip()
+        query = re.sub(r'(%20)+', '%20', query).strip()
         query = query.replace("%20OR%20", " OR ")
         query = query.replace("%20-", " NOT ")
         query = query.replace(" -", " NOT ")
         query = query.replace("%20", " AND ")
-        query = re.sub(r"\s+", " ", query).strip()
+        query = re.sub(r'\s+', ' ', query).strip()
         query = query.lstrip(" ")
         query = query.rstrip(" ")
         return query
 
     def _encode_query_for_html_url(self, query: str) -> str:
-        query = re.sub(r"\s+", " ", query).strip()
+        query = re.sub(r'\s+', ' ', query).strip()
         query = query.replace(" OR ", "§%20OR%20§")
         query = query.replace(" NOT ", "§%20-§")
         query = query.replace("§NOT ", "§%20-§")
-        query = query.replace(" AND ", "§%20§")
-        query = query.replace("§AND ", "§%20§")
-        query = query.replace(" AND§", "§%20§")
-        query = query.replace("§AND§", "§%20§")
-        query = query.replace(" ", "%20")
+        query = query.replace(" AND ", "%20")
+        query = query.replace("§AND ", "%20")
+        query = query.replace(" AND§", "%20")
+        query = query.replace("§AND§", "%20")
         query = query.replace("§", "")
+        query = query.replace(" ", "%20")
+        query = re.sub(r'(%20)+', '%20', query).strip()  
         return query
 
     def search(self, rerun: bool) -> None:
@@ -343,5 +349,4 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Unpaywall"""
-        """Not implemented"""
         return record
