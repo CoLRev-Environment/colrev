@@ -305,25 +305,20 @@ class UnpaywallSearchSource(JsonSchemaMixin):
             if not is_in_quotes and x.startswith('"'):
                 parts.append(x)
                 is_in_quotes = True
-                continue
             elif is_in_quotes and x.endswith('"'):
                 parts.append(x)
                 is_in_quotes = False
-                continue
             elif is_in_quotes:
                 parts.append(x)
-                continue
             else:
                 x = x.replace("OR", "%20OR%20")
                 x = x.replace("NOT", "%20-")
                 x = x.replace("AND", "%20")
                 x = x.replace(" ", "%20")
                 parts.append(x)
-                continue
         joined_query = "%20".join(parts)
         joined_query = re.sub(r"(%20)+", "%20", joined_query).strip()
         joined_query = joined_query.replace("-%20", "-")
-        print(joined_query)
         return joined_query
 
     def search(self, rerun: bool) -> None:
