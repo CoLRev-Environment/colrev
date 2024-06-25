@@ -296,18 +296,35 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         return query
 
     def _encode_query_for_html_url(self, query: str) -> str:
+        query = query.replace("'", '"')
         query = re.sub(r'\s+', ' ', query).strip()
-        query = query.replace(" OR ", "§%20OR%20§")
-        query = query.replace(" NOT ", "§%20-§")
-        query = query.replace("§NOT ", "§%20-§")
-        query = query.replace(" AND ", "%20")
-        query = query.replace("§AND ", "%20")
-        query = query.replace(" AND§", "%20")
-        query = query.replace("§AND§", "%20")
-        query = query.replace("§", "")
-        query = query.replace(" ", "%20")
-        query = re.sub(r'(%20)+', '%20', query).strip()  
-        return query
+        splited_query = query.split(" ")
+        is_in_quotes = False
+        parts = []
+        for x in splited_query:
+            if not is_in_quotes and x.startswith('"'):
+                parts.append(x)
+                is_in_quotes = True
+                continue
+            elif is_in_quotes and x.endswith('"'):
+                parts.append(x)
+                is_in_quotes = False
+                continue
+            elif is_in_quotes:
+                parts.append(x)
+                continue
+            else:
+                x = x.replace("OR", "%20OR%20")
+                x = x.replace("NOT", "%20-")
+                x = x.replace("AND", "%20")
+                x = x.replace(" ", "%20")
+                parts.append(x)
+                continue
+        joined_query = "%20".join(parts)
+        joined_query = re.sub(r'(%20)+', '%20', joined_query).strip()
+        joined_query = joined_query.replace("-%20", "-")
+        print(joined_query)
+        return joined_query
 
     def search(self, rerun: bool) -> None:
         """Run a search of Unpaywall"""
