@@ -285,19 +285,19 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     @classmethod
     def _decode_html_url_encoding_to_string(cls, query: str) -> str:
         query = query.replace("AND", "%20")
-        query = re.sub(r'(%20)+', '%20', query).strip()
+        query = re.sub(r"(%20)+", "%20", query).strip()
         query = query.replace("%20OR%20", " OR ")
         query = query.replace("%20-", " NOT ")
         query = query.replace(" -", " NOT ")
         query = query.replace("%20", " AND ")
-        query = re.sub(r'\s+', ' ', query).strip()
+        query = re.sub(r"\s+", " ", query).strip()
         query = query.lstrip(" ")
         query = query.rstrip(" ")
         return query
 
     def _encode_query_for_html_url(self, query: str) -> str:
         query = query.replace("'", '"')
-        query = re.sub(r'\s+', ' ', query).strip()
+        query = re.sub(r"\s+", " ", query).strip()
         splited_query = query.split(" ")
         is_in_quotes = False
         parts = []
@@ -321,7 +321,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
                 parts.append(x)
                 continue
         joined_query = "%20".join(parts)
-        joined_query = re.sub(r'(%20)+', '%20', joined_query).strip()
+        joined_query = re.sub(r"(%20)+", "%20", joined_query).strip()
         joined_query = joined_query.replace("-%20", "-")
         print(joined_query)
         return joined_query

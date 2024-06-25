@@ -4,7 +4,7 @@ The unpaywall package provides legal and open access PDF retrieval for cross-dis
 
 This package supports retrieval of PDF documents from the [unpaywall](https://unpaywall.org/) API, which provides access to over 40,000,000 free scholarly articles.
 
-The search method provides functionality for searching the Unpaywall database. There are two options, one with keywords and one with a complete URL. By default, the email address used in the git configuration is added to the unpaywall requests (pdf-get, search), but can be changed as described [here](#e-mail). 
+The search method provides functionality for searching the Unpaywall database. There are two options, one with keywords and one with a complete URL. By default, the email address used in the git configuration is added to the unpaywall requests (pdf-get, search), but can be changed as described [here](#e-mail).
 
 ## pdf-get
 
@@ -35,7 +35,7 @@ Download search results and store them in the `data/search/` directory. When sea
     ```
     colrev search --add colrev.unpaywall
     ```
-2. Upon entering the command above with no additional parameters, a console interface opens up, in which the user is asked to enter the parameters and query for their search. Enter the keywords for the search by following the [Query & Keyword format](#api-search-query--keyword-format) like described underneath. 
+2. Upon entering the command above with no additional parameters, a console interface opens up, in which the user is asked to enter the parameters and query for their search. Enter the keywords for the search by following the [Query & Keyword format](#api-search-query--keyword-format) like described underneath.
 
 #### API search: Query & Keyword format
 The user can enter a single term or use the Boolean `AND`, `OR`, `NOT` for a specific search. The following conditions must be met:
@@ -66,7 +66,7 @@ The user can enter a single term or use the Boolean `AND`, `OR`, `NOT` for a spe
     - false: filter the results to non-OA articles
     - null/unspecified: return the most relevant results regardless of OA status
 - `query:` (Required) Keywords to search for.
-- `email:` Your email address to access the API. If the email address is manually specified in the URL, this email will be saved and used for later requests. 
+- `email:` Your email address to access the API. If the email address is manually specified in the URL, this email will be saved and used for later requests.
 
 
 #### E-Mail
