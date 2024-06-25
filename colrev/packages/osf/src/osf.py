@@ -127,7 +127,7 @@ class OSFSearchSource(JsonSchemaMixin):
             elif "https://api.osf.io/v2/nodes" in params_dict.get("url", ""):
                 query = (
                     params_dict["url"]
-                    .replace("https://api.osf.io/v2/nodes/?filter[", "")
+                    .replace("https://api.osf.io/v2/nodes", "")
                     .lstrip("&")
                 )
                 parameter_pairs = query.split("&")
@@ -255,11 +255,11 @@ class OSFSearchSource(JsonSchemaMixin):
             for  id in articles:
 
                 record_dict = self._create_record_dict(id)
-                input(record_dict)
+                #input(record_dict)
                 record = colrev.record.record.Record(record_dict)
 
                 osf_feed.add_update_record(record)
-
+            break
             query.startRecord += 200
             response = query.callAPI()
 
@@ -271,14 +271,15 @@ class OSFSearchSource(JsonSchemaMixin):
         #input(attributes)
         record_dict = {
             Fields.ID: item["id"],
-            Fields.ENTRYTYPE: item["type"],
+            Fields.ENTRYTYPE: "misc",
+            Fields.AUTHOR: "A second api call to be implemented later",
             Fields.TITLE: attributes["title"],
             # Fields.CATEGORY: attributes.get("category", ""),
             #Fields.YEAR: attributes["date_created"],
             #Fields.URL: attributes.get("ia_url", ""),
             Fields.ABSTRACT: attributes["description"],
             Fields.KEYWORDS: attributes["tags"],
-            Fields.DATE: attributes["date_created"],
+            Fields.YEAR: attributes.get("date_created", ""),
         }
         return record_dict
 
