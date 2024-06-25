@@ -15,4 +15,5 @@ colrev.record.record\_merger
       :toctree:
       :nosignatures:
 
+      fuse_fields
       merge
