@@ -4,6 +4,8 @@ The unpaywall package provides legal and open access PDF retrieval for cross-dis
 
 This package supports retrieval of PDF documents from the [unpaywall](https://unpaywall.org/) API, which provides access to over 40,000,000 free scholarly articles.
 
+The search method provides functionality for searching the Unpaywall database. There are two options, one with keywords and one with a complete URL. By default, the email address used in the git configuration is added to the unpaywall requests (pdf-get, search), but can be changed as described [here](#e-mail). 
+
 ## pdf-get
 
 <!--
@@ -21,59 +23,52 @@ colrev pdf-get -a colrev.unpaywall
 ```
 
 ## search
-So far, only API search is implemented. Other search types such as MD search or TOC search might be implemented in the future.
+Currently only API search is implemented. Other search types such as MD search or TOC search may be implemented in the future.
 
 ### API search
-Download search results and store in `data/search/` directory. A search on the Unpaywall API can be performed as follows.
+ℹ️ Restriction: API searches do not support complex queries (yet)
 
-#### Add enpoint and enter search query
-You can add the endpoint without parameters as follows.
-```
-colrev search --add colrev.unpaywall
-```
-Afterwards you get enter the keywords as follows. The title must contain all keywords to be matched.
+Download search results and store them in the `data/search/` directory. When searching for publications, only the title is used. A search on the Unpaywall API can be performed as follows.
 
-#### API search: Query format
-The user can enter one single term or use the boolean  `AND`, `OR` , `NOT` for a specified search. Following conditions have to be followed:
+#### Option 1: Search with keywords
+1. Use the following command to add the endpoint:
+    ```
+    colrev search --add colrev.unpaywall
+    ```
+2. Upon entering the command above with no additional parameters, a console interface opens up, in which the user is asked to enter the parameters and query for their search. Enter the keywords for the search by following the [Query & Keyword format](#api-search-query--keyword-format) like described underneath. 
+
+#### API search: Query & Keyword format
+The user can enter a single term or use the Boolean `AND`, `OR`, `NOT` for a specific search. The following conditions must be met:
 - The boolean operators `AND`, `OR` , `NOT` must be written in capital letters
-- Search terms must be enclosed in double quotes `""`
-- The boolean operators `AND`, `OR` , `NOT` must be seperated from the search term with a whitespace `" "`
+- The boolean operators `AND`, `OR` , `NOT` must be separated from the search term with a whitespace
+- If you enter two terms without a boolean operator but a whitespace in between, the default is `AND`
 
-##### Examples
-- A single search term: `"thermometry"`
-- Two terms with AND: `"cell" AND "thermometry"`
-- Two terms with OR: `"cell" OR "thermometry"`
-- Negation of a term: `"cell" - "thermometry"`
+    ##### Examples
+    - A single search term: `thermometry`
+    - Two terms with AND: `cell AND thermometry` equals `cell thermometry`
+    - Two terms with OR: `cell OR thermometry`
+    - Negation of a term: `cell - thermometry`
 
-#### Adding Endpoint with URL
+#### Option 2: Search with URL
+1. Visit the [Unpaywall Article Search tool](https://unpaywall.org/articles), enter the keywords as described in the [Query & Keyword format](#api-search-query--keyword-format) section, click on "View in API", and copy the URL.
 
-To add an endpoint with a specific URL from the Unpaywall Article Search tool:
-
-1. Copy the URL: Visit [Unpaywall Article Search tool](https://unpaywall.org/articles) and enter the keywords as described in the Query format section. Then click on "view in API" and copy the URL.
-
-2. Use colrev command: Use the following command to add the endpoint with the copied URL:
-
-   ```
-   colrev search --add colrev.unpaywall -p "https://api.unpaywall.org/v2/search?query=YOUR_SEARCH_TERMS_HERE&is_oa=true&email=YOUR_EMAIL_HERE"
-   ```
-
-   ##### Example
+2. Use the following command to add the endpoint with the copied URL:
+    ##### Example
    ```
     colrev search --add colrev.unpaywall -p "https://api.unpaywall.org/v2/search?query=cell%20thermometry&is_oa=true&email=unpaywall_01@example.com"
-    ```
+   ```
 
 ##### Unpaywall Query Parameters
-
 - `is_oa:` (Optional) A boolean value indicating whether the returned records should be Open Access or not.
-- `query:` (Required) The text to search for. The title must contain all search terms to be matched. 
-- `email:` Your email address to access the API. If the email address is manually specified in the URL, this email will be saved in the registry.
+    - true: filter the results to OA articles
+    - false: filter the results to non-OA articles
+    - null/unspecified: return the most relevant results regardless of OA status
+- `query:` (Required) Keywords to search for.
+- `email:` Your email address to access the API. If the email address is manually specified in the URL, this email will be saved and used for later requests. 
 
 
 #### E-Mail
-
-By default, the email address used in the git configuration is added to the unpaywall requests (pdf-get, search).
-
-If you would like to use a different email address, use the following command.
+By default, the email address used in the git configuration is added to the unpaywall requests. If you would like to use a different email address, use the following command.
 
 ```
 colrev settings --update-global=packages.pdf_get.colrev.unpaywall.email=<email_address>
