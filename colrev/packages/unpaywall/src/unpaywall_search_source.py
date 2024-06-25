@@ -294,6 +294,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         query = re.sub(r"\s+", " ", query).strip()
         query = query.lstrip(" ")
         query = query.rstrip(" ")
+        query = query.replace("%22", '"')
         return query
 
     def _encode_query_for_html_url(self, query: str) -> str:

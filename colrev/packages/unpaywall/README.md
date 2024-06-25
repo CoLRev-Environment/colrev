@@ -49,15 +49,15 @@ The user can enter a single term or use the Boolean `AND`, `OR`, `NOT` for a spe
     - Search Phrase: `"hash table"`
     - Two terms with AND: `cell AND thermometry` equals `cell thermometry`
     - Two terms with OR: `cell OR thermometry`
-    - Negation of a term: `cell - thermometry`
+    - Negation of a term: `cell NOT thermometry`
 
-#### Option 2: Search with URL
-1. Visit the [Unpaywall Article Search tool](https://unpaywall.org/articles), enter the keywords as described in the [Query & Keyword format](#api-search-query--keyword-format) section, click on "View in API", and copy the URL.
+#### Option 2: Search with URL for simple single-term query
+1. Visit the [Unpaywall Article Search tool](https://unpaywall.org/articles), enter the keyword for a simple single-term query and click on "View in API" to copy the URL.
 
 2. Use the following command to add the endpoint with the copied URL:
     ##### Example
    ```
-    colrev search --add colrev.unpaywall -p "https://api.unpaywall.org/v2/search?query=cell%20thermometry&is_oa=true&email=unpaywall_01@example.com"
+    colrev search --add colrev.unpaywall -p "https://api.unpaywall.org/v2/search?query=thermometry&is_oa=true&email=unpaywall_01@example.com"
    ```
 
 ##### Unpaywall Query Parameters
