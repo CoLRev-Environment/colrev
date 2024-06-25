@@ -25,6 +25,7 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+
 """pip install PyGithub -> Must be installed before use, please note in the documentation! """
 # Authentication is defined via github.Auth
 
