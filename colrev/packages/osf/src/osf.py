@@ -1,3 +1,4 @@
+
 """Searchsource:OSF"""
 from __future__ import annotations
 
@@ -26,8 +27,9 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.osf.src.osf_api import OSFApiQuery
 import colrev.settings
-import colrev.process
+import colrev.process.operation
 import colrev.ops.search
+import colrev.env.environment_manager
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -72,7 +74,7 @@ class OSFSearchSource(JsonSchemaMixin):
         else:
             self.search_source = colrev.settings.SearchSource(
                 endpoint=self.endpoint,
-                filename=Path("data/search/osf.json"),
+                filename=Path("data/search/osf.bib"),
                 search_type=SearchType.API,
                 search_parameters={},
                 comment="",
@@ -125,7 +127,7 @@ class OSFSearchSource(JsonSchemaMixin):
             elif "https://api.osf.io/v2/nodes" in params_dict.get("url", ""):
                 query = (
                     params_dict["url"]
-                    .replace("https://api.osf.io/v2/nodes", "")
+                    .replace("https://api.osf.io/v2/nodes/?filter[", "")
                     .lstrip("&")
                 )
                 parameter_pairs = query.split("&")
@@ -209,7 +211,7 @@ class OSFSearchSource(JsonSchemaMixin):
         query.dataFormat("object")
         query.maximumResults(50000)
 
-        parameter_methods = {
+        """ parameter_methods = {
             "id": query.id,
             "type": query.type,
             "title": query.title,
@@ -219,7 +221,16 @@ class OSFSearchSource(JsonSchemaMixin):
             "description": query.description,
             "tags": query.tags,
             "date_created": query.date_created,
-        }
+        }"""
+        parameter_methods = {}
+        parameter_methods["title"] = query.title
+        parameter_methods["id"] = query.id
+        parameter_methods["year"] = query.year
+        parameter_methods["category"] = query.category
+        parameter_methods["ia_url"] = query.ia_url
+        parameter_methods["description"] = query.description
+        parameter_methods["tags"] = query.tags
+        parameter_methods["date_created"] = query.date_created
 
         parameters = self.search_source.search_parameters
         for key, value in parameters.items():
@@ -228,6 +239,7 @@ class OSFSearchSource(JsonSchemaMixin):
                 method(value)
 
         # response = query.callAPI()
+        input(query.params)
         return query
 
     def _run_api_search(
@@ -236,13 +248,14 @@ class OSFSearchSource(JsonSchemaMixin):
         query = self.run_api_query()
         query.startRecord = 1
         response = query.callAPI()
-        print(response)
+        #print(response)
         while 'data' in response:
             articles = response['data']
 
-            for id in articles:
+            for  id in articles:
 
                 record_dict = self._create_record_dict(id)
+                input(record_dict)
                 record = colrev.record.record.Record(record_dict)
 
                 osf_feed.add_update_record(record)
@@ -254,16 +267,18 @@ class OSFSearchSource(JsonSchemaMixin):
 
     def _create_record_dict(self, item: dict) -> dict:
         attributes = item["attributes"]
+        #input(item)
+        #input(attributes)
         record_dict = {
             Fields.ID: item["id"],
             Fields.ENTRYTYPE: item["type"],
-            Fields.TITLE: attributes.get("title", ""),
+            Fields.TITLE: attributes["title"],
             # Fields.CATEGORY: attributes.get("category", ""),
-            Fields.YEAR: attributes.get("date_created", "")[:4],
-            Fields.URL: attributes.get("ia_url", ""),
-            Fields.ABSTRACT: attributes.get("description", ""),
-            Fields.KEYWORDS: attributes.get("tags", ""),
-            Fields.DATE: attributes.get("date_created", ""),
+            #Fields.YEAR: attributes["date_created"],
+            #Fields.URL: attributes.get("ia_url", ""),
+            Fields.ABSTRACT: attributes["description"],
+            Fields.KEYWORDS: attributes["tags"],
+            Fields.DATE: attributes["date_created"],
         }
         return record_dict
 
@@ -276,7 +291,7 @@ class OSFSearchSource(JsonSchemaMixin):
     ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
-
+        
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
