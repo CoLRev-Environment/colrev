@@ -16,7 +16,7 @@ The following packages are automatically set up in a descriptive review:
 
 - [colrev.prisma](colrev.prisma.html)
 - [colrev.profile](colrev.profile.html)
-- [colrev.colrev_structured](colrev.colrev_structured.html)
+- [colrev.structured](colrev.structured.html)
 - [colrev.paper_md](colrev.paper_md.html)
 
 ## Examples
