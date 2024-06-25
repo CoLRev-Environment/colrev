@@ -1,4 +1,4 @@
-"""Package for osf."""
+"""Package for osf"""
 
-__author__ = ""
-__email__ = ""
+__author__ = "Gerit Wagner"
+__email__ = "gerit.wagner@uni-bamberg.de"

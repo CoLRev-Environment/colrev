@@ -1,32 +1,31 @@
 # Open Science Framework(OSF) Search Source
 
-| PDF retrieval                                                | Field              | Size         |
-|--------------------------------------------------------------|--------------------|--------------|
-| [OSF](https://osf.io/) (xxxx retrieval) | xxxxxx | xxxxxx |
+### API search
 
-This package supports retrieval of PDF documents from the [OSF](https://osf.io/) API, which provides access to over xxxx free scholarly articles.
+ℹ️ Restriction: API searches do not support complex queries yet.
 
-## pdf-get
+Download search results and store in `data/search/` directory.
 
-<!--
-Note: This document is currently under development. It will contain the following elements.
+Data from the OSF open platform can be retrieved with the URL from the [https://www.osf.io/](https://api.osf.io/v2/nodes/?filter). Add the URL as follows:
 
-- description
-- example
--->
+----------------------------------------------------------------------------------------------
+colrev search --add colrev.osf -p "https://api.osf.io/v2/nodes/?filter[title]=reproducibility"
+----------------------------------------------------------------------------------------------
 
-The osf package is activated by default.
-If it is not yet activated, run
+The search can be filtered by changing the filter parameter to one of the following parameters:
+------
+title
+id
+type
+category
+year
+ia_url
+description
+tags
+date_created
+-------
 
-```
-colrev pdf-get -a colrev.osf
-```
-
-
-
-```
-colrev settings --update-global=packages.pdf_get.colrev.osf.email=<email_address>
-```
+The keyword you want the search source to filter it by should replace "reproducibility" in the given example.
 
 ## Links
 
