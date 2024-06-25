@@ -123,7 +123,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         if len(params_dict) == 0:
             search_source = operation.create_api_source(endpoint=cls.endpoint)
 
-
         # pylint: disable=colrev-missed-constant-usage
         elif "https://api.unpaywall.org/v2/search" in params_dict["url"]:
             query = (
