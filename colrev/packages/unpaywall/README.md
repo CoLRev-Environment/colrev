@@ -42,9 +42,11 @@ The user can enter a single term or use the Boolean `AND`, `OR`, `NOT` for a spe
 - The boolean operators `AND`, `OR` , `NOT` must be written in capital letters
 - The boolean operators `AND`, `OR` , `NOT` must be separated from the search term with a whitespace
 - If you enter two terms without a boolean operator but a whitespace in between, the default is `AND`
+- Search phrases must be enclosed in double quotes `"`
 
     ##### Examples
     - A single search term: `thermometry`
+    - Search Phrase: `"hash table"`
     - Two terms with AND: `cell AND thermometry` equals `cell thermometry`
     - Two terms with OR: `cell OR thermometry`
     - Negation of a term: `cell - thermometry`
