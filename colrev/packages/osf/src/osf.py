@@ -124,10 +124,10 @@ class OSFSearchSource(JsonSchemaMixin):
             # Check for params being empty and initialize if needed
             if len(params_dict) == 0:
                 search_source = operation.create_api_source(endpoint=cls.endpoint)
-            elif "https://api.osf.io/v2/nodes" in params_dict.get("url", ""):
+            elif "https://api.osf.io/v2/nodes/?filter" in params_dict.get("url", ""):
                 query = (
                     params_dict["url"]
-                    .replace("https://api.osf.io/v2/nodes", "")
+                    .replace("https://api.osf.io/v2/nodes/?filter", "")
                     .lstrip("&")
                 )
                 parameter_pairs = query.split("&")
@@ -209,7 +209,7 @@ class OSFSearchSource(JsonSchemaMixin):
         query = OSFApiQuery(api_key)
         query.dataType("json")
         query.dataFormat("object")
-        query.maximumResults(50000)
+        query.maximumResults(100)
 
         """ parameter_methods = {
             "id": query.id,
@@ -222,15 +222,15 @@ class OSFSearchSource(JsonSchemaMixin):
             "tags": query.tags,
             "date_created": query.date_created,
         }"""
-        parameter_methods = {}
-        parameter_methods["title"] = query.title
-        parameter_methods["id"] = query.id
-        parameter_methods["year"] = query.year
-        parameter_methods["category"] = query.category
+        parameter_methods ={}
+        parameter_methods["[title]"] = query.title
+        parameter_methods["[id]"] = query.id
+        parameter_methods["[year]"] = query.year
+        parameter_methods["[category]"] = query.category
         parameter_methods["ia_url"] = query.ia_url
-        parameter_methods["description"] = query.description
-        parameter_methods["tags"] = query.tags
-        parameter_methods["date_created"] = query.date_created
+        parameter_methods["[description]"] = query.description
+        parameter_methods["[tags]"] = query.tags
+        parameter_methods["[date_created]"] = query.date_created
 
         parameters = self.search_source.search_parameters
         for key, value in parameters.items():
