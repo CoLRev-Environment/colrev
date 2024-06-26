@@ -19,7 +19,7 @@ It is not necessary to pass an API key as a parameter here. In order to keep the
 The search can be filtered by changing the filter parameter to one of the following parameters: title, id, type, category, year, ia_url, description, tags, data_created. For each of these, change "filter[parameter]=value" in the URL.
  
 ```
-colrev search --add colrev.ieee -p "https://api.osf.io/v2/nodes/?filter[description]=machine%20learning"
+colrev search --add colrev.osf -p "https://api.osf.io/v2/nodes/?filter[description]=machine%20learning"
 ```
  
 ## Links
