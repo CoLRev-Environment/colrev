@@ -213,13 +213,13 @@ class GitHubSearchSource(JsonSchemaMixin):
             # Saving search results
             results = []
             for repo in repositories:
-                
+
                 data = {
-                   Fields.ENTRYTYPE: "software",
-                   Fields.URL: repo.html_url,
+                    Fields.ENTRYTYPE: "software",
+                    Fields.URL: repo.html_url,
                 }
                 repo_data = colrev.record.record.Record(data=data)
-                
+
                 try:
                     repo_data = connector_utils.repo_to_record(repo=repo)
                 except Exception:
@@ -257,8 +257,7 @@ def choice() -> int:
         user_choice = input(
             "Where do you want to search in (1 = Only in Title, 2 = Only in Readme, 3 = Both): "
         )
-        if user_choice in ['1', '2', '3']:
-            rerun = True
+        if user_choice in ["1", "2", "3"]:
             return int(user_choice)
         else:
             print("Invalid choice. Please try again.")

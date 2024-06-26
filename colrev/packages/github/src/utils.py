@@ -4,16 +4,13 @@ from __future__ import annotations
 
 import re
 
-from github import Auth
 from github import Github
 
 import colrev.record.record
 import colrev.record.record_prep
 from colrev.constants import Fields
 
-from github import Github
-
-#Github-specific constants
+# Github-specific constants
 GITHUB_VERSION = "colrev.github.version"
 GITHUB_LICENSE = "colrev.github.license"
 GITHUB_LANGUAGE = "colrev.github.language"
@@ -43,7 +40,7 @@ def get_authors(*, repo: Github.Repository.Repository, citation_data: str) -> st
         return " and ".join(
             [c.login for c in repo.get_contributors() if not c.login.endswith("[bot]")]
         )
-    except Exception as e:
+    except Exception:
         return ""
 
 
@@ -80,15 +77,15 @@ def repo_to_record(
     """Convert a GitHub repository to a record"""
     try:  # If available, use data from CITATION.cff file
         content = repo.get_contents("CITATION.cff")
-        citation_data = content.decoded_content.decode('utf-8')
-    except Exception as e:
+        citation_data = content.decoded_content.decode("utf-8")
+    except Exception:
         citation_data = ""
 
     data = {Fields.ENTRYTYPE: "software"}
 
     data[Fields.TITLE] = get_title(repo=repo, citation_data=citation_data)
 
-    authors = get_authors(repo=repo,citation_data=citation_data)
+    authors = get_authors(repo=repo, citation_data=citation_data)
     if authors:
         data[Fields.AUTHOR] = authors
 
@@ -104,10 +101,10 @@ def repo_to_record(
 
     try:
         data[GITHUB_LICENSE] = repo.get_license().license.name
-    except Exception as e:
+    except Exception:
         pass
 
-    version = get_version(repo=repo,citation_data=citation_data)
+    version = get_version(repo=repo, citation_data=citation_data)
     if version:
         data[GITHUB_VERSION] = version
 
