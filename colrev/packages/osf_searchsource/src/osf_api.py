@@ -1,6 +1,6 @@
 # osf_api.py
-
 import requests
+
 
 class OSFApiQuery:
     def __init__(self, api_key: str):
@@ -35,14 +35,14 @@ class OSFApiQuery:
 
     def ia_url(self, value: str):
         self.params["filter[ia_url]"] = value
-    
+
     def description(self, value: str):
         self.params["filter[description]"] = value
-    
-    def tags(self, value:str):
+
+    def tags(self, value: str):
         self.params["filter[tags]"] = value
 
-    def date_created(self, value:str):
+    def date_created(self, value: str):
         self.params["filter[date_created]"] = value
 
     def callAPI(self):

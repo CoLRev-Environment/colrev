@@ -5,8 +5,6 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
-import pandas as pd
-from colrev.packages.osf_searchsource.src.osf_api import OSFApiQuery
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -24,6 +22,7 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.packages.osf_searchsource.src.osf_api import OSFApiQuery
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -54,28 +53,29 @@ class OSFSearchSource(JsonSchemaMixin):
     }
 
     def __init__(
-            self,
-            *, 
-            source_operation: colrev.process.operation.Operation,
-            settings: typing.Optional[dict] = None,) -> None:
-          self.review.manager = source_operation.review_manager
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: typing.Optional[dict] = None,
+    ) -> None:
+        self.review.manager = source_operation.review_manager
 
-          if settings:
-               self.search_source = from_dict(
-                    data_class=self.settings_class, data=settings
-          )
-          else:
-               self.search_source = colrev.settings.SearchSource(
-                    endpoint=self.endpoint,
-                    filename=Path("data/search/osf.bib"),
-                    search_type=SearchType.OTHER,
-                    search_parameters={},
-                    comment="",
-               )
-               self.source_operation = source_operation
+        if settings:
+            self.search_source = from_dict(
+                data_class=self.settings_class, data=settings
+            )
+        else:
+            self.search_source = colrev.settings.SearchSource(
+                endpoint=self.endpoint,
+                filename=Path("data/search/osf.bib"),
+                search_type=SearchType.OTHER,
+                search_parameters={},
+                comment="",
+            )
+            self.source_operation = source_operation
 
     @classmethod
-    def heuristic(cls, filename:Path, data:str) -> dict:
+    def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for OSF"""
 
         result = {"confidence": 0.1}
@@ -88,40 +88,32 @@ class OSFSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-         cls,
-         operation:colrev.ops.search.Search, 
-         params: dict
+        cls, operation: colrev.ops.search.Search, params: dict
     ) -> colrev.settings.SearchSource:
-         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-         params_dict = {}
-         if params:
-             if params.startswith("http"):
-                 params_dict = {Fields.URL: params}
-             else:
+        params_dict = {}
+        if params:
+            if params.startswith("http"):
+                params_dict = {Fields.URL: params}
+            else:
                 for item in params.split(";"):
                     key, value = item.split("=")
                     params_dict[key] = value
 
-         search_type = operation.select_search_type(
-              search_types=cls.search_types, params=params_dict
-         )
+        search_type = operation.select_search_type(
+            search_types=cls.search_types, params=params_dict
+        )
 
-         if search_type == SearchType.API:
-              if len(params) == 0:
-                   search_source = operation.add_api_source(endpoint=cls.endpoint)
+        if search_type == SearchType.API:
+            if len(params) == 0:
+                search_source = operation.add_api_source(endpoint=cls.endpoint)
 
-              
-              # pylint: disable=colrev-missed-constant-usage
-              if (
-                   "https://api.test.osf.io/v2/search"
-                   in params["url"]
-                ):
+            # pylint: disable=colrev-missed-constant-usage
+            if "https://api.test.osf.io/v2/search" in params["url"]:
                 query = (
                     params["url"]
-                    .replace(
-                        "https://api.test.osf.io/v2/search", ""
-                    )
+                    .replace("https://api.test.osf.io/v2/search", "")
                     .lstrip("&")
                 )
 
@@ -144,20 +136,19 @@ class OSFSearchSource(JsonSchemaMixin):
                     search_parameters=search_parameters,
                     comment="",
                 )
-                
-         elif search_type == SearchType.DB:
-             search_source = operation.create_db_source(
-                 search_source_cls = cls,
-                 params = params_dict,
-             )
 
-         else:
-             raise NotImplementedError
-         
-         operation.add_source_and_search(search_source)
-         return search_source
-    
-    
+        elif search_type == SearchType.DB:
+            search_source = operation.create_db_source(
+                search_source_cls=cls,
+                params=params_dict,
+            )
+
+        else:
+            raise NotImplementedError
+
+        operation.add_source_and_search(search_source)
+        return search_source
+
     def _get_api_key(self) -> str:
         api_key = self.review_manager.environment_manager.get_settings_by_key(
             self.SETTINGS["api_key"]
@@ -168,7 +159,7 @@ class OSFSearchSource(JsonSchemaMixin):
                 self.SETTINGS["api_key"], api_key
             )
         return api_key
-    
+
     def search(self) -> None:
         """Run a search of OSF"""
         response = self.run_api_query()
@@ -176,8 +167,7 @@ class OSFSearchSource(JsonSchemaMixin):
             record_dict = self._create_record_dict(item)
             record = colrev.record.record.Record(record_dict)
             self.source_operation.add_update_record(record)
-        self.source_operation.save_records()    
-
+        self.source_operation.save_records()
 
     def run_api_query(self) -> dict:
         api_key = self.get_api_key()
@@ -221,57 +211,53 @@ class OSFSearchSource(JsonSchemaMixin):
             Fields.YEAR: attributes.get("date_created", "")[:4],
             Fields.URL: attributes.get("ia_url", ""),
             Fields.DESCRIPTION: attributes.get("description", ""),
-            Fields.TAGS: attributes.get("tags",""),
+            Fields.TAGS: attributes.get("tags", ""),
             Fields.DATE_CREATED: attributes.get("date_created", ""),
         }
         return record_dict
-    
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         def json_field_mapper(record_dict: dict) -> None:
-                """Maps the different entries of the JSON file to endpoints"""
-                if "title" in record_dict:
-                    record_dict[f"{self.endpoint}.title"] = record_dict.pop("title")
-                if "description" in record_dict:
-                    record_dict[f"{self.endpoint}.description"] = record_dict.pop("description")
-                if "category" in record_dict:
-                    record_dict[f"{self.endpoint}.category"] = record_dict.pop("category")
-                if "type" in record_dict:
-                    record_dict[f"{self.endpoint}.type"] = record_dict.pop(
-                        "type"
-                    )
-                if "tags" in record_dict:
-                    record_dict[f"{self.endpoint}.tags"] = record_dict.pop(
-                        "tags"
-                    )
-                if "date_created" in record_dict:
-                    record_dict[f"{self.endpoint}.date_created"] = record_dict.pop(
-                        "date_created"
-                    )
-                if "year" in record_dict:
-                    record_dict[f"{self.endpoint}.year"] = record_dict.pop(
-                        "year"
-                    )
+            """Maps the different entries of the JSON file to endpoints"""
+            if "title" in record_dict:
+                record_dict[f"{self.endpoint}.title"] = record_dict.pop("title")
+            if "description" in record_dict:
+                record_dict[f"{self.endpoint}.description"] = record_dict.pop(
+                    "description"
+                )
+            if "category" in record_dict:
+                record_dict[f"{self.endpoint}.category"] = record_dict.pop("category")
+            if "type" in record_dict:
+                record_dict[f"{self.endpoint}.type"] = record_dict.pop("type")
+            if "tags" in record_dict:
+                record_dict[f"{self.endpoint}.tags"] = record_dict.pop("tags")
+            if "date_created" in record_dict:
+                record_dict[f"{self.endpoint}.date_created"] = record_dict.pop(
+                    "date_created"
+                )
+            if "year" in record_dict:
+                record_dict[f"{self.endpoint}.year"] = record_dict.pop("year")
 
-                if "id" in record_dict:
-                    record_dict[f"{self.endpoint}.id"] = record_dict.pop("id")
-                
-                record_dict.pop("date_modified", None)
-                record_dict.pop("custom_citation", None)
-                record_dict.pop("registration", None)
-                record_dict.pop("preprint", None)
-                record_dict.pop("fork", None)
-                record_dict.pop("collection", None)
-            
-                for key, value in record_dict.items():
-                    record_dict[key] = str(value)
+            if "id" in record_dict:
+                record_dict[f"{self.endpoint}.id"] = record_dict.pop("id")
+
+            record_dict.pop("date_modified", None)
+            record_dict.pop("custom_citation", None)
+            record_dict.pop("registration", None)
+            record_dict.pop("preprint", None)
+            record_dict.pop("fork", None)
+            record_dict.pop("collection", None)
+
+            for key, value in record_dict.items():
+                record_dict[key] = str(value)
 
         def json_entrytype_setter(record_dict: dict) -> None:
-                """Loads the JSON file into the imported_md file"""
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+            """Loads the JSON file into the imported_md file"""
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
-                records = colrev.loader.load_utils.load(
+            records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,
                 entrytype_setter=json_entrytype_setter,
                 field_mapper=json_field_mapper,
@@ -279,7 +265,6 @@ class OSFSearchSource(JsonSchemaMixin):
                 unique_id_field="INCREMENTAL",
                 logger=self.review_manager.logger,
             )
-                return records
-    
+            return records
+
     raise NotImplementedError
-    

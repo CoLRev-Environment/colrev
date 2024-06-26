@@ -1,4 +1,3 @@
-
 """Searchsource:OSF"""
 from __future__ import annotations
 
@@ -10,26 +9,25 @@ import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.env.environment_manager
 import colrev.loader.load_utils
 import colrev.ops.load
 import colrev.ops.prep
+import colrev.ops.search
 import colrev.ops.search_api_feed
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.osf.src.osf_api
+import colrev.process.operation
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.review_manager
-from colrev.constants import ENTRYTYPES
+import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.osf.src.osf_api import OSFApiQuery
-import colrev.settings
-import colrev.process.operation
-import colrev.ops.search
-import colrev.env.environment_manager
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -179,11 +177,11 @@ class OSFSearchSource(JsonSchemaMixin):
         record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 60,
-    ) -> colrev.record.record.Record:    
+    ) -> colrev.record.record.Record:
         """Not implemented"""
 
         return record
-        
+
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
@@ -201,7 +199,7 @@ class OSFSearchSource(JsonSchemaMixin):
         query.dataFormat("object")
         query.maximumResults(100)
 
-        parameter_methods ={}
+        parameter_methods = {}
         parameter_methods["[title]"] = query.title
         parameter_methods["[id]"] = query.id
         parameter_methods["[year]"] = query.year
@@ -228,15 +226,15 @@ class OSFSearchSource(JsonSchemaMixin):
         links = response["links"]
         next = links["next"]
 
-        while 'data' in response:
-            articles = response['data']
+        while "data" in response:
+            articles = response["data"]
 
             for id in articles:
 
-                record_dict = self._create_record_dict(id)               
+                record_dict = self._create_record_dict(id)
                 record = colrev.record.record.Record(record_dict)
                 osf_feed.add_update_record(record)
-        
+
             if next == None:
                 break
             else:
@@ -267,10 +265,10 @@ class OSFSearchSource(JsonSchemaMixin):
             Fields.ABSTRACT: attributes["description"],
             Fields.KEYWORDS: attributes["tags"],
             Fields.YEAR: year[:4],
-            Fields.URL: url["self"]
+            Fields.URL: url["self"],
         }
         return record_dict
-    
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
 
         if self.search_source.filename.suffix == ".bib":
