@@ -213,11 +213,11 @@ class GitHubSearchSource(JsonSchemaMixin):
             results = []
             for repo in repositories:
                 
-                repo_data = {
+                data = {
                    Fields.ENTRYTYPE: "software",
                    Fields.URL: repo.html_url,
                 }
-                repo_data = colrev.record.record.Record(data=repo_data)
+                repo_data = colrev.record.record.Record(data=data)
                 
                 try:
                     repo_data=connector_utils.repo_to_record(repo=repo)
