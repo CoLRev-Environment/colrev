@@ -10,9 +10,10 @@ from github import Github
 import colrev.record.record
 import colrev.record.record_prep
 from colrev.constants import Fields
-from colrev.constants import FieldValues
 
-# Github-specific constants
+from github import Github
+
+#Github-specific constants
 GITHUB_VERSION = "colrev.github.version"
 GITHUB_LICENSE = "colrev.github.license"
 GITHUB_LANGUAGE = "colrev.github.language"
@@ -42,8 +43,8 @@ def get_authors(*, repo: Github.Repository.Repository, citation_data: str) -> st
         return " and ".join(
             [c.login for c in repo.get_contributors() if not c.login.endswith("[bot]")]
         )
-    except:
-        return None
+    except Exception as e:
+        return ""
 
 
 def get_url(*, repo: Github.Repository.Repository, citation_data: str) -> str:
@@ -70,7 +71,7 @@ def get_version(*, repo: Github.Repository.Repository, citation_data: str) -> st
         version = re.search(r"^\s*version:\s*(.+)\s*$", citation_data, re.M)
         if version:
             return version.group(1).strip()
-    return None
+    return ""
 
 
 def repo_to_record(
@@ -79,15 +80,17 @@ def repo_to_record(
     """Convert a GitHub repository to a record"""
     try:  # If available, use data from CITATION.cff file
         content = repo.get_contents("CITATION.cff")
-        citation_data = content.decoded_content.decode("utf-8")
-    except:
+        citation_data = content.decoded_content.decode('utf-8')
+    except Exception as e:
         citation_data = ""
 
     data = {Fields.ENTRYTYPE: "software"}
 
     data[Fields.TITLE] = get_title(repo=repo, citation_data=citation_data)
 
-    data[Fields.AUTHOR] = get_authors(repo=repo, citation_data=citation_data)
+    authors = get_authors(repo=repo,citation_data=citation_data)
+    if authors:
+        data[Fields.AUTHOR] = authors
 
     data[Fields.URL] = get_url(repo=repo, citation_data=citation_data)
 
@@ -101,9 +104,11 @@ def repo_to_record(
 
     try:
         data[GITHUB_LICENSE] = repo.get_license().license.name
-    except:
-        data[GITHUB_LICENSE] = None
+    except Exception as e:
+        pass
 
-    data[GITHUB_VERSION] = get_version(repo=repo, citation_data=citation_data)
+    version = get_version(repo=repo,citation_data=citation_data)
+    if version:
+        data[GITHUB_VERSION] = version
 
     return colrev.record.record.Record(data=data)

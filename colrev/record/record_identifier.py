@@ -10,6 +10,7 @@ import typing
 from pathlib import Path
 
 import imagehash
+import pymupdf
 from nameparser import HumanName
 from PIL import Image
 
@@ -21,8 +22,6 @@ from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
-
-# import PyMuPDF
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.record.record

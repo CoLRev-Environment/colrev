@@ -20,8 +20,6 @@ import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.github.src.utils as connector_utils
-import colrev.record.record
-from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -45,7 +43,8 @@ class GitHubSearchSource(JsonSchemaMixin):
     heuristic_status = SearchSourceHeuristicStatus.todo
     short_name = "GitHubSearch"
     docs_link = (
-        "https://colrev.readthedocs.io/en/latest/dev_docs/packages/package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface"
+        "https://colrev.readthedocs.io/en/latest/dev_docs/packages/"
+        + "package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface"
         + "https://docs.github.com/en/rest?apiVersion=2022-11-28"
     )
     db_url = "https://github.com/"
@@ -118,7 +117,7 @@ class GitHubSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, operation: colrev.process.operation.Operation, params: str
+        cls, operation: colrev.ops.search.Search, params: str
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         params_dict = {}
@@ -192,7 +191,7 @@ class GitHubSearchSource(JsonSchemaMixin):
                 )
 
             # Checking where to search
-            if rerun == False:
+            if not rerun:
                 choice_int = choice()
             query = ""
             keywords_input = self.search_source.search_parameters.get("query", "")
@@ -214,13 +213,13 @@ class GitHubSearchSource(JsonSchemaMixin):
             # Saving search results
             results = []
             for repo in repositories:
-
-                repo_data = {
-                    Fields.ENTRYTYPE: "software",
-                    Fields.URL: repo.html_url,
+                
+                data = {
+                   Fields.ENTRYTYPE: "software",
+                   Fields.URL: repo.html_url,
                 }
-                repo_data = colrev.record.record.Record(data=repo_data)
-
+                repo_data = colrev.record.record.Record(data=data)
+                
                 try:
                     repo_data = connector_utils.repo_to_record(repo=repo)
                 except Exception:
@@ -258,8 +257,8 @@ def choice() -> int:
         user_choice = input(
             "Where do you want to search in (1 = Only in Title, 2 = Only in Readme, 3 = Both): "
         )
-        if user_choice in ["1", "2", "3"]:
-            rerun == True
+        if user_choice in ['1', '2', '3']:
+            rerun = True
             return int(user_choice)
         else:
             print("Invalid choice. Please try again.")
