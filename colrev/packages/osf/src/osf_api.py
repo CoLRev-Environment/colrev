@@ -23,13 +23,13 @@ class OSFApiQuery:
         self.queryProvided = False
         self.resultSetMax = 25
         self.startRecord = 1
-        self.page = 45
+        self.page = 1
 
 
     def dataType(self, data_type: str):
         outputtype = data_type.strip().lower()
         self.outputType = outputtype
-        # self.params["type"] = data_type
+
 
     def dataFormat(self, data_format: str):
         outputDataFormat = data_format.strip().lower()
@@ -66,30 +66,6 @@ class OSFApiQuery:
     def date_created(self, value:str):
         self.params['date_created'] = value
 
-    def set_parameter(self, key, value):
-        self.params[f'filter[{key}]'] = value
-
-    def addParameter(self, parameter: str, value: str) -> None:
-        """Add parameter"""
-        value = value.strip()
-
-        if len(value) > 0:
-            self.params[parameter] = value
-
-            # viable query criteria provided
-            self.queryProvided = True
-
-            # set flags based on parameter
-            if parameter == "title":
-                self.usingTitle = True
-
-            if parameter == "description":
-                self.usingDescription = True
-
-            if parameter == "tags":
-                self.usingTags = True
-
-
     def callAPI(self):
         ret = self.buildQuery()
         data = self.queryAPI(ret)
@@ -98,6 +74,7 @@ class OSFApiQuery:
 
     def buildQuery(self) -> str:
         """Creates the URL for querying the API with support for nested filter parameters."""
+
         # Initialize the URL with the base endpoint
         url = f"{self.base_url}/?filter["
  
@@ -108,13 +85,14 @@ class OSFApiQuery:
         url += f"&apikey={self.api_key}"
 
         url += f"&page={self.page}"
-        # input(url)
+        
         return url
 
     def queryAPI(self, url: str) -> str:
         """Creates the URL for the API call
         string url  Full URL to pass to API
         return string: Results from API"""
+
         with urllib.request.urlopen(url) as con:
             content = con.read()
         return content.decode("utf-8")

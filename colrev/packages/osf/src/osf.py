@@ -238,8 +238,6 @@ class OSFSearchSource(JsonSchemaMixin):
                 method = parameter_methods[key]
                 method(value)
 
-        # response = query.callAPI()
-        input(query.params)
         return query
 
     def _run_api_search(
@@ -248,20 +246,18 @@ class OSFSearchSource(JsonSchemaMixin):
         query = self.run_api_query()
         query.startRecord = 1
         response = query.callAPI()
-        # print(response)
         links = response["links"]
         next = links["next"]
+
         while 'data' in response:
             articles = response['data']
 
             for  id in articles:
 
-                record_dict = self._create_record_dict(id)
-                #input(record_dict)
+                record_dict = self._create_record_dict(id)               
                 record = colrev.record.record.Record(record_dict)
-
                 osf_feed.add_update_record(record)
-            input(next)
+        
             if next == None:
                 break
             else:
@@ -275,19 +271,16 @@ class OSFSearchSource(JsonSchemaMixin):
 
     def _create_record_dict(self, item: dict) -> dict:
         attributes = item["attributes"]
-        #input(item)
-        #input(attributes)
+        year = attributes["date_created"]
+
         record_dict = {
             Fields.ID: item["id"],
             Fields.ENTRYTYPE: "misc",
             Fields.AUTHOR: "A second api call to be implemented later",
             Fields.TITLE: attributes["title"],
-            # Fields.CATEGORY: attributes.get("category", ""),
-            #Fields.YEAR: attributes["date_created"],
-            #Fields.URL: attributes.get("ia_url", ""),
             Fields.ABSTRACT: attributes["description"],
             Fields.KEYWORDS: attributes["tags"],
-            Fields.YEAR: attributes.get("date_created", ""),
+            Fields.YEAR: year[:4],
         }
         return record_dict
 
@@ -297,8 +290,9 @@ class OSFSearchSource(JsonSchemaMixin):
         record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 60,
-    ) -> colrev.record.record.Record:
+    ) -> colrev.record.record.Record:    
         """Not implemented"""
+
         return record
         
     def prepare(
