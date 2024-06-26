@@ -79,7 +79,8 @@ def _get_affiliation(*, article: dict) -> typing.List[str]:
     return list(affiliations)
 
 
-def _create_record(article: dict) -> colrev.record.record.Record:
+def create_record(article: dict) -> colrev.record.record.Record:
+    """Build record"""
     doi = article.get("doi", "").upper()
     record_dict = {Fields.ID: doi}
 

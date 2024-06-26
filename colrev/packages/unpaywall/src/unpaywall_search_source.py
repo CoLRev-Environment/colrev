@@ -162,7 +162,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
         for result in all_results:
             article = result["response"]
-            record = utils._create_record(article)
+            record = utils.create_record(article)
             yield record
 
     def _build_search_url(self, page: int) -> str:
