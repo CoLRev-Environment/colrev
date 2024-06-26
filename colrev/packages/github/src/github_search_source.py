@@ -115,7 +115,7 @@ class GitHubSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.process.operation.Operation,
+        operation: colrev.ops.search.Search,
         params: str
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""

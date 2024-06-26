@@ -69,7 +69,9 @@ def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.recor
 
     data[Fields.TITLE] = get_title(repo=repo,citation_data=citation_data)
 
-    data[Fields.AUTHOR] = get_authors(repo=repo,citation_data=citation_data)
+    authors = get_authors(repo=repo,citation_data=citation_data)
+    if authors:
+        data[Fields.AUTHOR] = authors
 
     data[Fields.URL] = get_url(repo=repo,citation_data=citation_data)
 
@@ -84,9 +86,11 @@ def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.recor
     try:
         data[GITHUB_LICENSE] = repo.get_license().license.name
     except Exception as e:
-        data[GITHUB_LICENSE] = ""
+        pass
 
-    data[GITHUB_VERSION] = get_version(repo=repo,citation_data=citation_data)
+    version = get_version(repo=repo,citation_data=citation_data)
+    if version:
+        data[GITHUB_VERSION] = version
 
     return colrev.record.record.Record(data=data)
 
