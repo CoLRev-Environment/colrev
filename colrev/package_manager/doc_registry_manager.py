@@ -153,6 +153,7 @@ class DocRegistryManager:
                 file.write(line + "\n")
 
     # pylint: disable=line-too-long
+    # pylint: disable=too-many-branches
     # flake8: noqa: E501
     def _get_header_info(self, package: colrev.package_manager.package.Package) -> str:
 
@@ -170,15 +171,7 @@ class DocRegistryManager:
         # # Write the modified HTML back to the file
         # with open('output.html', 'w') as f:
         #     f.write(str(soup))
-
-        header_info = f"{package.name}\n"
-        header_info += "=" * len(package.name) + "\n\n"
-        header_info += "Package\n"
-        header_info += "-" * 20 + "\n\n"
-        header_info += (
-            f"- Maintainer: {', '.join(x['name'] for x in package.authors)}\n"
-        )
-        header_info += f"- License: {package.license}\n\n"
+        header_info = ""
         header_info += ".. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue\n"
         header_info += "   :height: 14pt\n"
         header_info += "   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html\n"
@@ -188,10 +181,43 @@ class DocRegistryManager:
         header_info += ".. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen\n"
         header_info += "   :height: 14pt\n"
         header_info += "   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html\n"
+        header_info += ".. |GIT_REPO| image:: /_static/svg/iconmonstr-code-fork-1.svg\n"
+        header_info += "   :width: 15\n"
+        header_info += "   :alt: Git repository\n"
+        header_info += ".. |LICENSE| image:: /_static/svg/iconmonstr-copyright-2.svg\n"
+        header_info += "   :width: 15\n"
+        header_info += "   :alt: Licencse\n"
+        header_info += ".. |MAINTAINER| image:: /_static/svg/iconmonstr-user-29.svg\n"
+        header_info += "   :width: 20\n"
+        header_info += "   :alt: Maintainer\n"
+        header_info += (
+            ".. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg\n"
+        )
+        header_info += "   :width: 15\n"
+        header_info += "   :alt: Documentation\n"
+
+        header_info += f"{package.name}\n"
+        header_info += "=" * len(package.name) + "\n\n"
+        header_info += "Package\n"
+        header_info += "-" * 20 + "\n\n"
+        header_info += f"|MAINTAINER| Maintainer: {', '.join(x['name'] for x in package.authors)}\n\n"
+        header_info += f"|LICENSE| License: {package.license}\n\n"
+        if package.repository != "":
+            repo_name = package.repository.replace("https://github.com/", "")
+            if "CoLRev-Environment/colrev" in repo_name:
+                repo_name = "CoLRev-Environment/colrev"
+            header_info += (
+                f"|GIT_REPO| Repository: `{repo_name} <{package.repository}>`_ \n\n"
+            )
+
+        if package.documentation != "":
+            header_info += (
+                f"|DOCUMENTATION| `Documentation <{package.documentation}>`_ \n\n"
+            )
+
         header_info += ".. list-table::\n"
         header_info += "   :header-rows: 1\n"
         header_info += "   :widths: 20 30 80\n\n"
-
         header_info += "   * - Endpoint\n"
         header_info += "     - Status\n"
         header_info += "     - Add\n"

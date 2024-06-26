@@ -29,6 +29,7 @@ class Filepaths:
     README_FILE = Path("readme.md")
     REPORT_FILE = Path(".report.log")
     GIT_IGNORE_FILE = Path(".gitignore")
+    PRE_COMMIT_CONFIG = Path(".pre-commit-config.yaml")
 
     # Ensure the path uses forward slashes, which is compatible with Git's path handling
     RECORDS_FILE_GIT = str(RECORDS_FILE).replace("\\", "/")

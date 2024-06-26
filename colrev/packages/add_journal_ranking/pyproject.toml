@@ -10,9 +10,9 @@ authors = [
     { name = "Thomas Fleischmann"},
     { name = "Anton Liam Frisch"}
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/add_journal_ranking"
 
 [tool.colrev]
 dev_status = "experimental"
+colrev_doc_link = "README.md"
 prep = "colrev.packages.add_journal_ranking.src.add_journal_ranking:AddJournalRanking"

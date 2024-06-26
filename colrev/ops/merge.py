@@ -140,7 +140,7 @@ class Merge(colrev.process.operation.Operation):
 
         else:
             self.review_manager.logger.info(
-                "No conflicts to reconcile in data/records.bib."
+                f"No conflicts to reconcile in {Filepaths.RECORDS_FILE}."
             )
             return
 

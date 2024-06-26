@@ -250,7 +250,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         # always API search
@@ -271,6 +271,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 comment="",
             )
         operation.add_source_and_search(search_source)
+        return search_source
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""

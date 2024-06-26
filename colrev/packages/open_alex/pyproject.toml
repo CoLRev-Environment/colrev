@@ -6,10 +6,10 @@ license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/open_alex"
 
 [tool.colrev]
 dev_status = "experimental"
+colrev_doc_link = "README.md"
 search_source = "colrev.packages.open_alex.src.open_alex:OpenAlexSearchSource"
 prep = "colrev.packages.open_alex.src.open_alex_metadata_prep:OpenAlexMetadataPrep"

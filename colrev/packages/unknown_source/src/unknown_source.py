@@ -90,14 +90,20 @@ class UnknownSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
+        params_dict = {}
+        if params:
+            for item in params.split(";"):
+                key, value = item.split("=")
+                params_dict[key] = value
         search_source = operation.create_db_source(
             search_source_cls=cls,
-            params={},
+            params=params_dict,
         )
         operation.add_source_and_search(search_source)
+        return search_source
 
     def search(self, rerun: bool) -> None:
         """Run a search of Crossref"""
@@ -545,6 +551,11 @@ class UnknownSearchSource(JsonSchemaMixin):
                 for k, v in records[record_id].items()
                 if k not in FieldSet.PROVENANCE_KEYS + [Fields.SCREENING_CRITERIA]
             }
+        for record in records.values():
+            for key in list(record.keys()):
+                if key not in FieldSet.STANDARDIZED_FIELD_KEYS:
+                    record[f"colrev.unknonwn_source.{key}"] = record.pop(key)
+
         return records
 
     def _heuristically_fix_entrytypes(

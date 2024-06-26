@@ -37,6 +37,7 @@ colrev.constants.Filepaths
       ~Filepaths.PREP_DIR
       ~Filepaths.PREP_REQUESTS_CACHE_FILE
       ~Filepaths.PRESCREEN_DIR
+      ~Filepaths.PRE_COMMIT_CONFIG
       ~Filepaths.README_FILE
       ~Filepaths.RECORDS_FILE
       ~Filepaths.RECORDS_FILE_GIT

@@ -31,10 +31,10 @@ class Resources:
         git.Repo.clone_from(curated_resource, repo_dir, depth=1)
 
         environment_manager = colrev.env.environment_manager.EnvironmentManager()
-        if (repo_dir / Path("data/records.bib")).is_file():
+        if (repo_dir / Filepaths.RECORDS_FILE).is_file():
             environment_manager.register_repo(repo_dir)
-        elif (repo_dir / Path("readme.md")).is_file():
-            text = Path(repo_dir / "readme.md").read_text(encoding="utf-8")
+        elif (repo_dir / Filepaths.README_FILE).is_file():
+            text = (repo_dir / Filepaths.README_FILE).read_text(encoding="utf-8")
             for line in [x for x in text.splitlines() if "colrev env --install" in x]:
                 if line.endswith(curated_resource.replace("https://github.com/", "")):
                     continue
@@ -43,6 +43,7 @@ class Resources:
                 )
         else:
             print(
-                f"Error: repo does not contain a data/records.bib or linked repos {repo_dir}"
+                "Error: repo does not contain a "
+                f"{Filepaths.RECORDS_FILE} or linked repos {repo_dir}"
             )
         return True

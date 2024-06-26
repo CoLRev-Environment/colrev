@@ -88,7 +88,7 @@ class Search(colrev.process.operation.Operation):
             raise NotImplementedError  # or parameter error
 
         if "search_file" in params:
-            filename = params["search_file"]
+            filename = Path(params["search_file"])
         else:
             filename = self.get_unique_filename(
                 file_path_string=search_source_cls.endpoint.replace("colrev.", "")
@@ -460,35 +460,37 @@ class Search(colrev.process.operation.Operation):
         # Reload the settings because the search sources may have been updated
         self.review_manager.settings = self.review_manager.load_settings()
         for source in self._get_search_sources(selection_str=selection_str):
-            search_source_class = self.package_manager.get_package_endpoint_class(
-                package_type=EndpointType.search_source,
-                package_identifier=source.endpoint,
-            )
-            endpoint = search_source_class(
-                source_operation=self, settings=source.get_dict()
-            )
-
-            if not self.review_manager.high_level_operation:
-                print()
-            self.review_manager.logger.info(
-                f"search [{source.endpoint}:{source.search_type} > "
-                f"data/search/{source.filename.name}]"
-            )
-
             try:
+                if not self.review_manager.high_level_operation:
+                    print()
+                self.review_manager.logger.info(
+                    f"search [{source.endpoint}:{source.search_type} > "
+                    f"data/search/{source.filename.name}]"
+                )
+
+                search_source_class = self.package_manager.get_package_endpoint_class(
+                    package_type=EndpointType.search_source,
+                    package_identifier=source.endpoint,
+                )
+                endpoint = search_source_class(
+                    source_operation=self, settings=source.get_dict()
+                )
+
                 endpoint.search(rerun=rerun)  # type: ignore
+
+                if not source.filename.is_file():
+                    continue
+
+                self._remove_forthcoming(source)
+                self.review_manager.dataset.add_changes(source.filename)
+                if not skip_commit:
+                    self.review_manager.dataset.create_commit(msg="Run search")
             except colrev_exceptions.ServiceNotAvailableException:
                 self.review_manager.logger.warning("ServiceNotAvailableException")
             except colrev_exceptions.SearchNotAutomated as exc:
-                print(exc)
-
-            if not source.filename.is_file():
-                continue
-
-            self._remove_forthcoming(source)
-            self.review_manager.dataset.add_changes(source.filename)
-            if not skip_commit:
-                self.review_manager.dataset.create_commit(msg="Run search")
+                self.review_manager.logger.warn(exc)
+            except colrev_exceptions.MissingDependencyError as exc:
+                self.review_manager.logger.warn(exc)
 
         if self.review_manager.in_ci_environment():
             print("\n\n")

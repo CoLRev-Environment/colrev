@@ -7,9 +7,9 @@ authors = [
     { name = "Julian Prester", email = "julian.prester@sydney.edu.au" },
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/github_pages"
 
 [tool.colrev]
 dev_status = "maturing"
+colrev_doc_link = "README.md"
 data = "colrev.packages.github_pages.src.github_pages:GithubPages"

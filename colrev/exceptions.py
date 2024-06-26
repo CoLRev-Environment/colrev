@@ -109,11 +109,11 @@ class ParameterError(CoLRevException):
 
 class InvalidSettingsError(CoLRevException):
     """
-    Invalid value in settings.json.
+    Invalid value in SETTINGS_FILE.
     """
 
     def __init__(self, *, msg: str, fix_per_upgrade: bool = True) -> None:
-        msg = f"Error in settings.json: {msg}"
+        msg = f"Error in SETTINGS_FILE: {msg}"
         if fix_per_upgrade:
             msg += (
                 "\nTo solve this, use\n  " f"{Colors.ORANGE}colrev upgrade{Colors.END}"

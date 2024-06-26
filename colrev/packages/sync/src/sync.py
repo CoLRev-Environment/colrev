@@ -23,6 +23,7 @@ import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldSet
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
@@ -50,14 +51,14 @@ class Sync:
             print("Other filenames are not (yet) supported.")
             return
 
-        if Path(".pre-commit-config.yaml").is_file():
-            if "colrev-hooks-update" in Path(".pre-commit-config.yaml").read_text(
+        if Filepaths.PRE_COMMIT_CONFIG.is_file():
+            if "colrev-hooks-update" in Filepaths.PRE_COMMIT_CONFIG.read_text(
                 encoding="utf-8"
             ):
                 print("Hook already registered")
                 return
 
-        with open(".pre-commit-config.yaml", "a", encoding="utf-8") as file:
+        with open(Filepaths.PRE_COMMIT_CONFIG, "a", encoding="utf-8") as file:
             file.write(
                 """\n-   repo: local
         hooks:

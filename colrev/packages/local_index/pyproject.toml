@@ -6,11 +6,11 @@ license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/local_index"
 
 [tool.colrev]
 dev_status = "maturing"
+colrev_doc_link = "README.md"
 search_source = "colrev.packages.local_index.src.local_index:LocalIndexSearchSource"
 prep = "colrev.packages.local_index.src.local_index_prep:LocalIndexPrep"
 pdf_get = "colrev.packages.local_index.src.local_index_pdf_get:LocalIndexPDFGet"

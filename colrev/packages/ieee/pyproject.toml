@@ -11,9 +11,9 @@ authors = [
     { name = "Janus Fiegen"},
     { name = "Albert Borchardt"}
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/ieee"
 
 [tool.colrev]
 dev_status = "experimental"
+colrev_doc_link = "README.md"
 search_source = "colrev.packages.ieee.src.ieee:IEEEXploreSearchSource"

@@ -6,9 +6,9 @@ license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/remove_cover_page"
 
 [tool.colrev]
 dev_status = "maturing"
+colrev_doc_link = "README.md"
 pdf_prep = "colrev.packages.remove_coverpage.src.remove_cover_page:PDFCoverPage"

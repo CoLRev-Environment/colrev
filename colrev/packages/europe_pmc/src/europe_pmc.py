@@ -496,7 +496,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -531,6 +531,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             raise NotImplementedError
 
         operation.add_source_and_search(search_source)
+        return search_source
 
     def _load_bib(self) -> dict:
         def field_mapper(record_dict: dict) -> None:

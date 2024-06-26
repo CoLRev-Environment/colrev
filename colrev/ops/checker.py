@@ -113,9 +113,9 @@ class Checker:
 
     def _is_colrev_project(self) -> bool:
         required_paths = [
-            Path(".pre-commit-config.yaml"),
-            Path(".gitignore"),
-            Path("settings.json"),
+            Filepaths.PRE_COMMIT_CONFIG,
+            Filepaths.GIT_IGNORE_FILE,
+            Filepaths.SETTINGS_FILE,
         ]
         if not all((self.review_manager.path / x).is_file() for x in required_paths):
             return False
@@ -123,7 +123,9 @@ class Checker:
 
     def _get_installed_hooks(self) -> list:
         installed_hooks = []
-        with open(".pre-commit-config.yaml", encoding="utf8") as pre_commit_y:
+        with open(
+            self.review_manager.get_path(Filepaths.PRE_COMMIT_CONFIG), encoding="utf8"
+        ) as pre_commit_y:
             pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.SafeLoader)
         for repository in pre_commit_config["repos"]:
             installed_hooks.extend([hook["id"] for hook in repository["hooks"]])

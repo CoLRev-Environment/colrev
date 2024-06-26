@@ -14,9 +14,9 @@ Programmatic use of CoLRev in other Python applications is supported. The follow
     prep_operation = review_manager.get_prep_operation()
 
     # Load the records and apply changes
-    records = review_manger.dataset.load_records_dict()
+    records = review_manager.dataset.load_records_dict()
     for record in records.values():
-        ....
+        ...
 
     # Save the changes, add them to git, and create commit
     review_manager.dataset.save_records_dict(records)

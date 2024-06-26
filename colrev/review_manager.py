@@ -15,6 +15,7 @@ import requests_cache
 import yaml
 
 import colrev.dataset
+import colrev.env
 import colrev.exceptions as colrev_exceptions
 import colrev.logger
 import colrev.ops.check
@@ -59,6 +60,7 @@ class ReviewManager:
         exact_call: str = "",
         skip_upgrade: bool = True,
     ) -> None:
+
         self.force_mode = force_mode
         """Force mode variable (bool)"""
         self.verbose_mode = verbose_mode
@@ -174,7 +176,7 @@ class ReviewManager:
     def load_settings(self) -> colrev.settings.Settings:
         """Load the settings"""
         self.settings = colrev.settings.load_settings(
-            settings_path=Filepaths.SETTINGS_FILE
+            settings_path=self.get_path(Filepaths.SETTINGS_FILE)
         )
         return self.settings
 
@@ -253,7 +255,7 @@ class ReviewManager:
     def update_status_yaml(
         self, *, add_to_git: bool = True, records: typing.Optional[dict] = None
     ) -> None:
-        """Update the status.yaml"""
+        """Update the STATUS_FILE"""
 
         status_stats = self.get_status_stats(records=records)
         exported_dict = asdict(status_stats)

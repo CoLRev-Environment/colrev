@@ -6,9 +6,9 @@ license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]
-documentation = "README.md"
-colrev_doc_link = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/abi_inform_proquest"
 
 [tool.colrev]
+colrev_doc_link = "README.md"
 dev_status = "experimental"
 search_source = "colrev.packages.abi_inform_proquest.src.abi_inform_proquest:ABIInformProQuestSearchSource"

@@ -141,7 +141,7 @@ class ERICSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
 
         params_dict = {}
@@ -184,6 +184,7 @@ class ERICSearchSource(JsonSchemaMixin):
             )
 
         operation.add_source_and_search(search_source)
+        return search_source
 
     def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
         """Get the records from a query"""

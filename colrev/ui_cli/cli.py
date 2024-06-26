@@ -558,7 +558,7 @@ def search(
             review_manager=review_manager
         )
         print("Activated custom_search_script.py.")
-        print("Please update the source in settings.json and commit.")
+        print(f"Please update the source in {Filepaths.SETTINGS_FILE} and commit.")
     elif bws:
         import colrev.ui_cli.search_backward_selective
 
@@ -740,7 +740,7 @@ def prep(
             prep_operation.setup_custom_script()
             print("Activated custom_prep_script.py.")
             print(
-                "Please check and adapt its position in the settings.json and commit."
+                f"Please check and adapt its position in the {Filepaths.SETTINGS_FILE} and commit."
             )
             return
         if add:
@@ -2006,7 +2006,7 @@ def data(
     if setup_custom_script:
         data_operation.setup_custom_script()
         print("Activated custom_data_script.py.")
-        print("Please update the data_format in settings.json and commit.")
+        print(f"Please update the data_format in {Filepaths.SETTINGS_FILE} and commit.")
         return
 
     if add:
@@ -2493,7 +2493,7 @@ def settings(
         for script_to_call in scripts_to_call:
             check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)  # nosec
 
-        review_manager.dataset.add_changes(Path(".pre-commit-config.yaml"))
+        review_manager.dataset.add_changes(Filepaths.PRE_COMMIT_CONFIG)
         review_manager.dataset.create_commit(msg="Update pre-commit hooks")
         print("Successfully updated pre-commit hooks")
         return
@@ -2518,15 +2518,15 @@ def settings(
         value = ast.literal_eval(value_string)
         review_manager.logger.info("Change settings.%s to %s", path, value)
 
-        with open("settings.json", encoding="utf-8") as file:
+        with open(Filepaths.SETTINGS_FILE, encoding="utf-8") as file:
             project_settings = json.load(file)
 
         glom.assign(project_settings, path, value)
 
-        with open("settings.json", "w", encoding="utf-8") as outfile:
+        with open(Filepaths.SETTINGS_FILE, "w", encoding="utf-8") as outfile:
             json.dump(project_settings, outfile, indent=4)
 
-        review_manager.dataset.add_changes(Path("settings.json"))
+        review_manager.dataset.add_changes(Filepaths.SETTINGS_FILE)
         review_manager.dataset.create_commit(msg="Change settings", manual_author=True)
 
     # import colrev_ui.ui_web.settings_editor
