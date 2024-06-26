@@ -12,7 +12,6 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.github.src.github_search_source as github_connector
 import colrev.record.record
-from colrev.constants import Fields
 
 
 # pylint: disable=too-few-public-methods

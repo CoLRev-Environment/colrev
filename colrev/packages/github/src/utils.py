@@ -7,10 +7,8 @@ import re
 import colrev.record.record
 import colrev.record.record_prep
 from colrev.constants import Fields
-from colrev.constants import FieldValues
 
 from github import Github
-from github import Auth
 
 #Github-specific constants
 GITHUB_VERSION = "colrev.github.version"
@@ -32,8 +30,8 @@ def get_authors(*, repo: Github.Repository.Repository, citation_data: str) -> st
         return colrev.record.record_prep.PrepRecord.format_author_field(' and '.join([a[1].strip() + " " + a[0].strip() for a in authors]))
     try:
         return ' and '.join([c.login for c in repo.get_contributors() if not c.login.endswith("[bot]")])
-    except:
-        return None
+    except Exception as e:
+        return ""
 
 def get_url(*, repo: Github.Repository.Repository, citation_data: str) -> str:
     """Get repository URL"""
@@ -57,14 +55,14 @@ def get_version(*, repo: Github.Repository.Repository, citation_data: str) -> st
         version = re.search(r'^\s*version:\s*(.+)\s*$', citation_data, re.M)
         if version:
             return version.group(1).strip()
-    return None
+    return ""
 
 def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.record.Record:
     """Convert a GitHub repository to a record"""
     try: #If available, use data from CITATION.cff file
         content = repo.get_contents("CITATION.cff")
         citation_data = content.decoded_content.decode('utf-8')
-    except:
+    except Exception as e:
         citation_data = ""
 
     data = {Fields.ENTRYTYPE: "software"}
@@ -85,8 +83,8 @@ def repo_to_record(*, repo: Github.Repository.Repository) -> colrev.record.recor
 
     try:
         data[GITHUB_LICENSE] = repo.get_license().license.name
-    except:
-        data[GITHUB_LICENSE] = None
+    except Exception as e:
+        data[GITHUB_LICENSE] = ""
 
     data[GITHUB_VERSION] = get_version(repo=repo,citation_data=citation_data)
 

@@ -17,7 +17,6 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.packages.github.src.utils as connector_utils
-from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -43,7 +42,8 @@ class GitHubSearchSource(JsonSchemaMixin):
     heuristic_status = SearchSourceHeuristicStatus.todo
     short_name = "GitHubSearch"
     docs_link = (
-        "https://colrev.readthedocs.io/en/latest/dev_docs/packages/package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface"
+        "https://colrev.readthedocs.io/en/latest/dev_docs/packages/"
+        + "package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface"
         + "https://docs.github.com/en/rest?apiVersion=2022-11-28"
     )
     db_url = "https://github.com/"
@@ -190,7 +190,7 @@ class GitHubSearchSource(JsonSchemaMixin):
                 raise ValueError("No search parameters defined for GitHub search source")
             
             # Checking where to search
-            if rerun == False:
+            if not rerun:
                 choice_int = choice()
             query = ""
             keywords_input = self.search_source.search_parameters.get('query', '')
@@ -255,7 +255,7 @@ def choice() -> int:
     while True:
         user_choice = input("Where do you want to search in (1 = Only in Title, 2 = Only in Readme, 3 = Both): ")
         if user_choice in ['1', '2', '3']:
-            rerun == True
+            rerun = True
             return int(user_choice)
         else:
             print("Invalid choice. Please try again.")     
