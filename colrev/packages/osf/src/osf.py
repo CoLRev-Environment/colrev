@@ -248,7 +248,9 @@ class OSFSearchSource(JsonSchemaMixin):
         query = self.run_api_query()
         query.startRecord = 1
         response = query.callAPI()
-        #print(response)
+        # print(response)
+        links = response["links"]
+        next = links["next"]
         while 'data' in response:
             articles = response['data']
 
@@ -259,9 +261,15 @@ class OSFSearchSource(JsonSchemaMixin):
                 record = colrev.record.record.Record(record_dict)
 
                 osf_feed.add_update_record(record)
-            break
-            query.startRecord += 200
-            response = query.callAPI()
+            input(next)
+            if next == None:
+                break
+            else:
+                query.page += 1
+                query.startRecord += 200
+                response = query.callAPI()
+                links = response["links"]
+                next = links["next"]
 
         osf_feed.save()
 

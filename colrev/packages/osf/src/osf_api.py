@@ -23,6 +23,7 @@ class OSFApiQuery:
         self.queryProvided = False
         self.resultSetMax = 25
         self.startRecord = 1
+        self.page = 45
 
 
     def dataType(self, data_type: str):
@@ -105,7 +106,9 @@ class OSFApiQuery:
             url += key + "]=" + str(value)
  
         url += f"&apikey={self.api_key}"
-        input(url)
+
+        url += f"&page={self.page}"
+        # input(url)
         return url
 
     def queryAPI(self, url: str) -> str:
