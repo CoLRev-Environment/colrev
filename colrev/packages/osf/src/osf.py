@@ -250,11 +250,14 @@ class OSFSearchSource(JsonSchemaMixin):
             if next == None:
                 break
             else:
-                query.page += 1
-                query.startRecord += 200
-                response = query.callAPI()
-                links = response["links"]
-                next = links["next"]
+                if query.page != 20:
+                    query.page += 1
+                    query.startRecord += 200
+                    response = query.callAPI()
+                    links = response["links"]
+                    next = links["next"]
+                else:
+                    break
 
         osf_feed.save()
 
