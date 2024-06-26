@@ -26,6 +26,7 @@ from colrev.constants import SearchType
 
 rerun = False
 
+
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
 class GitHubSearchSource(JsonSchemaMixin):
