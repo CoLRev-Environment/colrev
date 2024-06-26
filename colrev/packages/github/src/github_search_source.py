@@ -135,7 +135,7 @@ class GitHubSearchSource(JsonSchemaMixin):
                                 "GitHub search_parameters support title or readme field"
                             )
                     except ValueError:
-                        cls.review_manager.logger("Invalid search_parameter format")
+                        print("Invalid search parameter format")
         if len(params_dict) == 0:
             search_source = operation.create_api_source(endpoint="colrev.github")
         else:
