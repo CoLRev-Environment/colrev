@@ -262,10 +262,14 @@ class OSFSearchSource(JsonSchemaMixin):
         attributes = item["attributes"]
         year = attributes["date_created"]
         url = item["links"]
+        relationships = item["relationships"]
+        contributors = relationships["contributors"]
+        links = contributors["links"]
+        related = links["related"]
         record_dict = {
             Fields.ID: item["id"],
             Fields.ENTRYTYPE: "misc",
-            Fields.AUTHOR: "A second api call to be implemented later",
+            Fields.AUTHOR: related["href"],
             Fields.TITLE: attributes["title"],
             Fields.ABSTRACT: attributes["description"],
             Fields.KEYWORDS: attributes["tags"],
