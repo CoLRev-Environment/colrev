@@ -10,7 +10,7 @@ import typing
 from pathlib import Path
 
 import imagehash
-import PyMuPDF
+import pymupdf
 from nameparser import HumanName
 from PIL import Image
 
