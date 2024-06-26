@@ -42,10 +42,6 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.oni
     short_name = "IEEE Xplore"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/ieee.md"
-    )
     db_url = "https://ieeexplore.ieee.org/Xplore/home.jsp"
     SETTINGS = {
         "api_key": "packages.search_source.colrev.ieee.api_key",

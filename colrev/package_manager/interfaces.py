@@ -61,7 +61,6 @@ class SearchSourceInterface(
         """The status of the SearchSource heuristic"""
     )
     short_name = zope.interface.Attribute("""Short name of the SearchSource""")
-    docs_link = zope.interface.Attribute("""Link to the SearchSource website""")
 
     # pylint: disable=no-self-argument
     def heuristic(filename: Path, data: str):  # type: ignore

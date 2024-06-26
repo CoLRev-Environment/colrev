@@ -31,11 +31,6 @@ class CurationPrep(JsonSchemaMixin):
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/data/colrev_curation.md"
-    )
-
     def __init__(
         self,
         *,

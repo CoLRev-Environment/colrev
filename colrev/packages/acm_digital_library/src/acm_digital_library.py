@@ -32,14 +32,10 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     # "https://dl.acm.org/doi/{{ID}}"
     source_identifier = "doi"
     search_types = [SearchType.DB]
+    short_name = "ACM Digital Library"
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "ACM Digital Library"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/"
-        + "packages/search_sources/acm_digital_library.md"
-    )
     db_url = "https://dl.acm.org/"
 
     def __init__(

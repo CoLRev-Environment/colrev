@@ -30,11 +30,6 @@ class OpenAlexMetadataPrep(JsonSchemaMixin):
     source_correction_hint = "TBD"
     always_apply_changes = False
 
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/open_alex.md"
-    )
-
     def __init__(
         self,
         *,

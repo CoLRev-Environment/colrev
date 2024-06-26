@@ -33,10 +33,6 @@ class LocalIndexPrep(JsonSchemaMixin):
         + "repository (as linked in the provenance field)"
     )
     always_apply_changes = True
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/local_index.md"
-    )
 
     def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
         self.settings = self.settings_class.load_settings(data=settings)

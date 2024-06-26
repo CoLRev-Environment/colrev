@@ -36,10 +36,7 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "TRID"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/trid.md"
-    )
+
     db_url = "https://trid.trb.org/"
 
     def __init__(
