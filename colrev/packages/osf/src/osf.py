@@ -261,7 +261,7 @@ class OSFSearchSource(JsonSchemaMixin):
     def _create_record_dict(self, item: dict) -> dict:
         attributes = item["attributes"]
         year = attributes["date_created"]
-
+        url = item["links"]
         record_dict = {
             Fields.ID: item["id"],
             Fields.ENTRYTYPE: "misc",
@@ -270,6 +270,7 @@ class OSFSearchSource(JsonSchemaMixin):
             Fields.ABSTRACT: attributes["description"],
             Fields.KEYWORDS: attributes["tags"],
             Fields.YEAR: year[:4],
+            Fields.URL: url["self"]
         }
         return record_dict
 
