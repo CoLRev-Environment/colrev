@@ -47,10 +47,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "AIS eLibrary"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/aisel.md"
-    )
     db_url = "https://aisel.aisnet.org/"
 
     _conference_abbreviations = {

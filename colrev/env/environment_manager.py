@@ -273,7 +273,9 @@ class EnvironmentManager:
         return True
 
     def get_settings_by_key(self, key: str) -> str | None:
-        """Loads setting by the given key"""
+        """Loads setting by the given key
+
+        The registry is stored in /home/username/colrev/registry.json"""
         environment_registry = self.load_environment_registry()
         keys = key.split(".")
         if self._dict_keys_exists(environment_registry, *keys):
@@ -281,7 +283,9 @@ class EnvironmentManager:
         return None
 
     def update_registry(self, key: str, value: str) -> None:
-        """updates given key in the registry with new value"""
+        """Updates a given key in the registry with new value
+
+        The registry is stored in /home/username/colrev/registry.json"""
 
         keys = key.split(".")
         # We don't want to allow user to replace any core settings, so check for packages key

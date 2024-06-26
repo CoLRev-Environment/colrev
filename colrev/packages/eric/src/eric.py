@@ -39,10 +39,6 @@ class ERICSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.oni
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/eric.md"
-    )
     short_name = "ERIC"
 
     API_FIELDS = [

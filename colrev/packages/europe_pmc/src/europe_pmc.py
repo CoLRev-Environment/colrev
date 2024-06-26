@@ -54,10 +54,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Europe PMC"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/europe_pmc.md"
-    )
     _europe_pmc_md_filename = Path("data/search/md_europe_pmc.bib")
     _SOURCE_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
     _next_page_url: str = ""

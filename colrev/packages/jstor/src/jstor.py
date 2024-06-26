@@ -36,10 +36,7 @@ class JSTORSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "JSTOR"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/jstor.md"
-    )
+
     db_url = "http://www.jstor.org"
 
     def __init__(

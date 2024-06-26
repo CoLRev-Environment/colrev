@@ -36,10 +36,6 @@ class ScopusSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Scopus"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/scopus.md"
-    )
     db_url = "https://www.scopus.com/search/form.uri?display=advanced"
 
     def __init__(

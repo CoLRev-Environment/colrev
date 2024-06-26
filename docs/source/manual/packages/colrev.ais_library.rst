@@ -52,6 +52,8 @@ Summary
 search
 ------
 
+**Limitation**\ : The AIS eLibrary currently limits search results an 3.000 records (for DB and API searches).
+
 DB search
 ^^^^^^^^^
 

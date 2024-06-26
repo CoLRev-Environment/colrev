@@ -52,10 +52,6 @@ class FilesSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Files directory"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/files_dir.md"
-    )
 
     _doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
     _batch_size = 20

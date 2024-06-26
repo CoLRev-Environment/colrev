@@ -34,10 +34,7 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Wiley"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/wiley.md"
-    )
+
     db_url = "https://onlinelibrary.wiley.com/"
 
     def __init__(

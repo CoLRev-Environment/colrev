@@ -40,10 +40,6 @@ class EbscoHostSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "EBSCOHost"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/ebsco_host.md"
-    )
     db_url = "https://search.ebscohost.com/"
 
     def __init__(

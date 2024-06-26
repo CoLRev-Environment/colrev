@@ -266,6 +266,21 @@ def test_merger(
             {Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE, Fields.AUTHOR: "Rai, Arun"},
         ),
         (
+            {
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.TITLE: "GENERATING RESEARCH QUESTIONS THROUGH PROBLEMATIZATION",
+            },
+            {
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.TITLE: "Generating research questions through problematization",
+            },
+            Fields.TITLE,
+            {
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.TITLE: "Generating research questions through problematization",
+            },
+        ),
+        (
             {Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE, Fields.YEAR: FieldValues.UNKNOWN},
             {Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE, Fields.YEAR: "2015"},
             Fields.YEAR,
@@ -331,7 +346,7 @@ def test_merger(
         ),
     ],
 )
-def test__fuse_fields(
+def test_fuse_fields(
     main_record_dict: dict,
     merging_record_dict: dict,
     key: str,
@@ -340,7 +355,7 @@ def test__fuse_fields(
     print(main_record_dict)
     main_record = colrev.record.record.Record(main_record_dict)
 
-    colrev.record.record_merger._fuse_fields(
+    colrev.record.record_merger.fuse_fields(
         main_record,
         merging_record=colrev.record.record.Record(merging_record_dict),
         key=key,

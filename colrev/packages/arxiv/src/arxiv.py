@@ -40,10 +40,6 @@ class ArXivSource:
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "arXiv"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/arxiv.md"
-    )
     db_url = "https://arxiv.org/"
     _arxiv_md_filename = Path("data/search/md_arxiv.bib")
 

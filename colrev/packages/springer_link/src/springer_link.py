@@ -49,10 +49,6 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     SETTINGS = {
         "api_key": "packages.search_source.colrev.springer_link.api_key",
     }
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/springer_link.md"
-    )
     db_url = "https://link.springer.com/"
 
     def __init__(

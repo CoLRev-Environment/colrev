@@ -48,10 +48,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "LocalIndex"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/local_index.md"
-    )
     _local_index_md_filename = Path("data/search/md_curated.bib")
 
     essential_md_keys = [

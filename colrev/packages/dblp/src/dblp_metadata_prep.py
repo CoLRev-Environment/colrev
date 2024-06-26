@@ -32,10 +32,6 @@ class DBLPMetadataPrep(JsonSchemaMixin):
         + " (see https://dblp.org/faq/How+can+I+correct+errors+in+dblp.html)"
     )
     always_apply_changes = False
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/dblp.md"
-    )
 
     def __init__(
         self,
