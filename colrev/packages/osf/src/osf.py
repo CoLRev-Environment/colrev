@@ -146,10 +146,6 @@ class OSFSearchSource(JsonSchemaMixin):
                     search_parameters=search_parameters,
                     comment="",
                 )
-        elif search_type == SearchType.DB:
-            search_source = operation.create_db_source(
-                search_source_cls=cls, params=params_dict
-            )
         else:
             raise NotImplementedError("Unsupported search type.")
 
@@ -183,24 +179,18 @@ class OSFSearchSource(JsonSchemaMixin):
         record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 60,
-    ) -> colrev.record.record.Record:
+    ) -> colrev.record.record.Record:    
         """Not implemented"""
-        return record
 
+        return record
+        
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
         source: colrev.settings.SearchSource,
     ) -> colrev.record.record.Record:
+        """Needs manual preparation"""
 
-        if source.filename.suffix == ".bib":
-            if Fields.ID in record.data:
-                record.data[Fields.ID] = (
-                    colrev.record.record_prep.PrepRecord.format_author_field(
-                        record.data[Fields.ID]
-                    )
-                )
-            return record
         return record
 
     def run_api_query(self) -> colrev.packages.osf.src.osf_api.OSFApiQuery:
@@ -241,7 +231,7 @@ class OSFSearchSource(JsonSchemaMixin):
         while 'data' in response:
             articles = response['data']
 
-            for  id in articles:
+            for id in articles:
 
                 record_dict = self._create_record_dict(id)               
                 record = colrev.record.record.Record(record_dict)
@@ -280,33 +270,6 @@ class OSFSearchSource(JsonSchemaMixin):
             Fields.URL: url["self"]
         }
         return record_dict
-
-    def prep_link_md(
-        self,
-        prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.record.Record,
-        save_feed: bool = True,
-        timeout: int = 60,
-    ) -> colrev.record.record.Record:    
-        """Not implemented"""
-
-        return record
-        
-    def prepare(
-        self,
-        record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
-    ) -> colrev.record.record.Record:
-
-        if source.filename.suffix == ".json":
-            if Fields.AUTHOR in record.data:
-                record.data[Fields.AUTHOR] = (
-                    colrev.record.record_prep.PrepRecord.format_author_field(
-                        record.data[Fields.AUTHOR]
-                    )
-                )
-            return record
-        return record
     
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
 
