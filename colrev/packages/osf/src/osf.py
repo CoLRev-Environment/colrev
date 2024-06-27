@@ -48,10 +48,6 @@ class OSFSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.oni
     short_name = "OSF SearchSource"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/osf/README.md"
-    )
     db_url = "https://osf.io/"
     SETTINGS = {
         "api_key": "packages.osf.src.api_key",
@@ -122,6 +118,10 @@ class OSFSearchSource(JsonSchemaMixin):
             # Check for params being empty and initialize if needed
             if len(params_dict) == 0:
                 search_source = operation.create_api_source(endpoint=cls.endpoint)
+                # Search title per default (other fields may be supported later)
+                search_source.search_parameters["query"] = {
+                    "title": search_source.search_parameters["query"]
+                }
             elif "https://api.osf.io/v2/nodes/?filter" in params_dict.get("url", ""):
                 query = (
                     params_dict["url"]
@@ -197,19 +197,18 @@ class OSFSearchSource(JsonSchemaMixin):
         query = OSFApiQuery(api_key)
         query.dataType("json")
         query.dataFormat("object")
-        query.maximumResults(100)
 
         parameter_methods = {}
-        parameter_methods["[title]"] = query.title
-        parameter_methods["[id]"] = query.id
-        parameter_methods["[year]"] = query.year
-        parameter_methods["[category]"] = query.category
+        parameter_methods["title"] = query.title
+        parameter_methods["id"] = query.id
+        parameter_methods["year"] = query.year
+        parameter_methods["category"] = query.category
         parameter_methods["ia_url"] = query.ia_url
-        parameter_methods["[description]"] = query.description
-        parameter_methods["[tags]"] = query.tags
-        parameter_methods["[date_created]"] = query.date_created
+        parameter_methods["description"] = query.description
+        parameter_methods["tags"] = query.tags
+        parameter_methods["date_created"] = query.date_created
 
-        parameters = self.search_source.search_parameters
+        parameters = self.search_source.search_parameters["query"]
         for key, value in parameters.items():
             if key in parameter_methods:
                 method = parameter_methods[key]
@@ -226,6 +225,10 @@ class OSFSearchSource(JsonSchemaMixin):
         links = response["links"]
         next = links["next"]
 
+        self.review_manager.logger.info(
+            f"Retrieve {response['links']['meta']['total']} records"
+        )
+
         while "data" in response:
             articles = response["data"]
 
@@ -237,15 +240,12 @@ class OSFSearchSource(JsonSchemaMixin):
 
             if next == None:
                 break
-            else:
-                if query.page != 20:
-                    query.page += 1
-                    query.startRecord += 200
-                    response = query.callAPI()
-                    links = response["links"]
-                    next = links["next"]
-                else:
-                    break
+
+            query.page += 1
+            query.startRecord += 10
+            response = query.callAPI()
+            links = response["links"]
+            next = links["next"]
 
         osf_feed.save()
 
@@ -263,10 +263,12 @@ class OSFSearchSource(JsonSchemaMixin):
             Fields.AUTHOR: related["href"],
             Fields.TITLE: attributes["title"],
             Fields.ABSTRACT: attributes["description"],
-            Fields.KEYWORDS: attributes["tags"],
+            Fields.KEYWORDS: ", ".join(attributes["tags"]),
             Fields.YEAR: year[:4],
             Fields.URL: url["self"],
         }
+        # Drop empty fields
+        record_dict = {k: v for k, v in record_dict.items() if v}
         return record_dict
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:

@@ -1,9 +1,8 @@
 # osf_api.py
 import json
 import math
-import urllib.parse
-import urllib.request
 
+import requests
 
 
 class OSFApiQuery:
@@ -12,6 +11,7 @@ class OSFApiQuery:
         self.base_url = "https://api.osf.io/v2/nodes"
         self.headers = {"Authorization": f"Bearer {self.api_key}"}
         self.params = {}
+        # TODO : there are some attributes that are never used or defined twice.
         self.filters = {}
         self.queryProvided = False
         self.outputType = "json"
@@ -79,8 +79,6 @@ class OSFApiQuery:
         for key, value in self.params.items():
             url += key + "]=" + str(value)
 
-        url += f"&apikey={self.api_key}"
-
         url += f"&page={self.page}"
 
         return url
@@ -90,6 +88,5 @@ class OSFApiQuery:
         string url  Full URL to pass to API
         return string: Results from API"""
 
-        with urllib.request.urlopen(url) as con:
-            content = con.read()
-        return content.decode("utf-8")
+        response = requests.get(url, headers=self.headers)
+        return response.text
