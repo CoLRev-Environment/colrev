@@ -1,6 +1,5 @@
 # osf_api.py
 import json
-import math
 
 import requests
 
