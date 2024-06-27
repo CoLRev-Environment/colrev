@@ -38,7 +38,6 @@ from colrev.packages.osf.src.osf_api import OSFApiQuery
 class OSFSearchSource(JsonSchemaMixin):
     """OSF"""
 
-    flag = True
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
 
     source_identifier = Fields.ID
