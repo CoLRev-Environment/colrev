@@ -5,6 +5,9 @@ version = "0.1.0"
 license = "MIT"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
+    { name = "Peiyao Mao", email = "peiyao.mao@stud.uni-bamberg.de" },
+    { name = "Mingxin Jiang", email = "mingxin.jiang@stud.uni-bamberg.de" },
+    { name = "Johannes Maximilian Diel", email = "jm_diel@stud.uni-bamberg.de" },
 ]
 documentation = "README.md"
 
