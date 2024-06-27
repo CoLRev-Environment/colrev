@@ -197,23 +197,21 @@ class OSFSearchSource(JsonSchemaMixin):
         query = OSFApiQuery(api_key)
         query.dataType("json")
         query.dataFormat("object")
-
-        parameter_methods = {}
-        parameter_methods["title"] = query.title
-        parameter_methods["id"] = query.id
-        parameter_methods["year"] = query.year
-        parameter_methods["category"] = query.category
-        parameter_methods["ia_url"] = query.ia_url
-        parameter_methods["description"] = query.description
-        parameter_methods["tags"] = query.tags
-        parameter_methods["date_created"] = query.date_created
-
-        parameters = self.search_source.search_parameters["query"]
+ 
+        parameter_methods ={}
+        parameter_methods["[title]"] = query.title
+        parameter_methods["[id]"] = query.id
+        parameter_methods["[year]"] = query.year
+        parameter_methods["[description]"] = query.description
+        parameter_methods["[tags]"] = query.tags
+        parameter_methods["[date_created]"] = query.date_created
+ 
+        parameters = self.search_source.search_parameters
         for key, value in parameters.items():
             if key in parameter_methods:
                 method = parameter_methods[key]
                 method(value)
-
+ 
         return query
 
     def _run_api_search(

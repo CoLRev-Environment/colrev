@@ -11,18 +11,10 @@ class OSFApiQuery:
         self.base_url = "https://api.osf.io/v2/nodes"
         self.headers = {"Authorization": f"Bearer {self.api_key}"}
         self.params = {}
-        # TODO : there are some attributes that are never used or defined twice.
-        self.filters = {}
-        self.queryProvided = False
         self.outputType = "json"
         self.outputDataFormat = "bib"
-        self.usingTitle = False
-        self.usingDescription = False
-        self.usingTags = False
-        self.queryProvided = False
-        self.resultSetMax = 25
         self.startRecord = 1
-        self.page = 1
+        self.page = 50
 
     def dataType(self, data_type: str):
         outputtype = data_type.strip().lower()
@@ -31,10 +23,6 @@ class OSFApiQuery:
     def dataFormat(self, data_format: str):
         outputDataFormat = data_format.strip().lower()
         self.outputDataFormat = outputDataFormat
-
-    def maximumResults(self, max_results: int):
-        self.resultSetMax = math.ceil(max_results) if (max_results > 0) else 25
-        self.resultSetMax = min(self.resultSetMax, 200)
 
     def id(self, value: str):
         self.params["id"] = value
@@ -45,14 +33,8 @@ class OSFApiQuery:
     def title(self, value: str):
         self.params["title"] = value
 
-    def category(self, value: str):
-        self.params["category"] = value
-
     def year(self, value: str):
         self.params["year"] = value
-
-    def ia_url(self, value: str):
-        self.params["ia_url"] = value
 
     def description(self, value: str):
         self.params["description"] = value
