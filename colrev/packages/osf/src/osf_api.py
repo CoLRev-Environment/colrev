@@ -13,7 +13,7 @@ class OSFApiQuery:
         self.outputType = "json"
         self.outputDataFormat = "bib"
         self.startRecord = 1
-        self.page = 50
+        self.page = 1
 
     def dataType(self, data_type: str):
         outputtype = data_type.strip().lower()
