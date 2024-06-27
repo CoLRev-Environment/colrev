@@ -81,10 +81,6 @@ class OSFSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.1}
 
-        if "Date Added To OSF" in data:
-            result["confidence"] = 0.9
-            return result
-
         return result
 
     @classmethod
