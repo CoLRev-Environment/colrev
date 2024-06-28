@@ -416,7 +416,7 @@
     {
         "package_endpoint_identifier": "colrev.add_journal_ranking",
         "status": "|EXPERIMENTAL|",
-        "short_description": "Class for add _journal_ranking (:doc:`instructions </manual/packages/colrev.add_journal_ranking>`)",
+        "short_description": "Prepares records based on journal rankings (:doc:`instructions </manual/packages/colrev.add_journal_ranking>`)",
         "ci_supported": false,
         "endpoint_type": "prep"
     },
@@ -568,6 +568,20 @@
         "endpoint_type": "prep"
     },
     {
+        "package_endpoint_identifier": "colrev.export_man_prep",
+        "status": "|MATURING|",
+        "short_description": "Manual preparation based on exported and imported metadata (and PDFs if any) (:doc:`instructions </manual/packages/colrev.export_man_prep>`)",
+        "ci_supported": false,
+        "endpoint_type": "prep_man"
+    },
+    {
+        "package_endpoint_identifier": "colrev.prep_man_curation_jupyter",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "Manual preparation based on a Jupyter Notebook (:doc:`instructions </manual/packages/colrev.prep_man_curation_jupyter>`)",
+        "ci_supported": false,
+        "endpoint_type": "prep_man"
+    },
+    {
         "package_endpoint_identifier": "colrev.curation_full_outlet_dedupe",
         "status": "|EXPERIMENTAL|",
         "short_description": "Deduplication endpoint for curations with full journals/proceedings (:doc:`instructions </manual/packages/colrev.curation_full_outlet_dedupe>`)",
@@ -645,6 +659,13 @@
         "endpoint_type": "pdf_get"
     },
     {
+        "package_endpoint_identifier": "colrev.colrev_cli_pdf_get_man",
+        "status": "|MATURING|",
+        "short_description": "Get PDFs manually based on a CLI (:doc:`instructions </manual/packages/colrev.colrev_cli_pdf_get_man>`)",
+        "ci_supported": false,
+        "endpoint_type": "pdf_get_man"
+    },
+    {
         "package_endpoint_identifier": "colrev.grobid_tei",
         "status": "|MATURING|",
         "short_description": "Prepare PDFs by creating an annotated TEI document (:doc:`instructions </manual/packages/colrev.grobid_tei>`)",
@@ -671,6 +692,13 @@
         "short_description": "Prepare PDFs by removing unnecessary last pages (e.g. copyright notices, cited-by infos) (:doc:`instructions </manual/packages/colrev.remove_last_page>`)",
         "ci_supported": false,
         "endpoint_type": "pdf_prep"
+    },
+    {
+        "package_endpoint_identifier": "colrev.colrev_cli_pdf_prep_man",
+        "status": "|MATURING|",
+        "short_description": "Manually prepare PDFs based on a CLI (not yet implemented) (:doc:`instructions </manual/packages/colrev.colrev_cli_pdf_prep_man>`)",
+        "ci_supported": false,
+        "endpoint_type": "pdf_prep_man"
     },
     {
         "package_endpoint_identifier": "colrev.colrev_cli_screen",

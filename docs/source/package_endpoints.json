@@ -377,7 +377,7 @@
         {
             "package_endpoint_identifier": "colrev.add_journal_ranking",
             "status": "|EXPERIMENTAL|",
-            "short_description": "Class for add _journal_ranking (:doc:`instructions </manual/packages/colrev.add_journal_ranking>`)",
+            "short_description": "Prepares records based on journal rankings (:doc:`instructions </manual/packages/colrev.add_journal_ranking>`)",
             "ci_supported": false
         },
         {
