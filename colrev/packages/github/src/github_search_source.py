@@ -24,8 +24,6 @@ from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
-rerun = False
-
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
@@ -188,8 +186,7 @@ class GitHubSearchSource(JsonSchemaMixin):
                 )
 
             # Checking where to search
-            if not rerun:
-                choice_int = choice()
+            choice_int = choice()
             query = ""
             keywords_input = self.search_source.search_parameters.get("query", "")
             if choice_int == 1:
