@@ -93,6 +93,7 @@ coverage = {extras = ["toml"], version = "^7.3.2", optional = true }
 types-click = {version = "^7.1.8", optional = true }
 # Can't do 0.21 with poetry because of https://github.com/python-poetry/poetry/issues/9293
 docutils = {version = "!=0.21.post1", optional = true }
+pygithub = "^2.3.0"
 
 [tool.poetry.extras]
 web_ui = ["dash"]

@@ -79,3 +79,5 @@ analysis/__pycache__/*
 !/colrev/ui\_web/build
 /.pre-commit-config-local.yaml
 /.run/
+github_test
+github_test
