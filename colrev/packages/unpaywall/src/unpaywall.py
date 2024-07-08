@@ -45,7 +45,7 @@ class Unpaywall(JsonSchemaMixin):
         self.review_manager = pdf_get_operation.review_manager
         self.pdf_get_operation = pdf_get_operation
 
-        self.email = utils.get_email(self.review_manager)
+        self.email = utils.get_email()
 
     def _unpaywall(
         self,

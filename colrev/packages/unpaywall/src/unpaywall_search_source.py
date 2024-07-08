@@ -2,12 +2,10 @@
 """SearchSource: Unpaywall"""
 from __future__ import annotations
 
-import re
 import typing
 from dataclasses import dataclass
 from pathlib import Path
 
-import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -20,8 +18,7 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
-from colrev.env.environment_manager import EnvironmentManager
-from colrev.packages.unpaywall.src import utils
+from colrev.packages.unpaywall.src.api import UnpaywallAPI
 
 # pylint: disable=unused-argument
 
@@ -105,8 +102,10 @@ class UnpaywallSearchSource(JsonSchemaMixin):
 
             filename = operation.get_unique_filename(file_path_string="unpaywall")
 
-            search_parameters["query"] = cls._decode_html_url_encoding_to_string(
-                query=search_parameters["query"]
+            search_parameters["query"] = (
+                UnpaywallAPI.decode_html_url_encoding_to_string(
+                    query=search_parameters["query"]
+                )
             )
 
             search_source = colrev.settings.SearchSource(
@@ -126,103 +125,12 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     def _run_api_search(
         self, *, unpaywall_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
-        for record in self.get_query_records():
+
+        api = UnpaywallAPI(self.search_source.search_parameters)
+        for record in api.get_query_records():
             unpaywall_feed.add_update_record(record)
 
         unpaywall_feed.save()
-
-    def get_query_records(self) -> typing.Iterator[colrev.record.record.Record]:
-        """Get the records from a query"""
-        all_results = []
-        page = 1
-        results_per_page = 50
-
-        while True:
-            page_dependend_url = self._build_search_url(page)
-            response = requests.get(page_dependend_url, timeout=90)
-            if response.status_code != 200:
-                print(f"Error fetching data: {response.status_code}")
-                return
-
-            data = response.json()
-            if "results" not in data:
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    f"Could not reach API. Status Code: {response.status_code}"
-                )
-
-            new_results = data["results"]
-            for x in new_results:
-                if x not in all_results:
-                    all_results.append(x)
-
-            if len(new_results) < results_per_page:
-                break
-
-            page += 1
-
-        for result in all_results:
-            article = result["response"]
-            record = utils.create_record(article)
-            yield record
-
-    def _build_search_url(self, page: int) -> str:
-        url = "https://api.unpaywall.org/v2/search?"
-        params = self.search_source.search_parameters
-        query = self._encode_query_for_html_url(params["query"])
-        is_oa = params.get("is_oa", "null")
-        email_param = params.get("email", "")
-
-        if email_param and page == 1:
-
-            env_man = EnvironmentManager()
-            path = utils.UNPAYWALL_EMAIL_PATH
-            value_string = email_param
-            print(f"Updating registry settings:\n{path} = {value_string}")
-            env_man.update_registry(path, value_string)
-
-        email = utils.get_email(self.review_manager)
-
-        return f"{url}query={query}&is_oa={is_oa}&page={page}&email={email}"
-
-    @classmethod
-    def _decode_html_url_encoding_to_string(cls, query: str) -> str:
-        query = query.replace("AND", "%20")
-        query = re.sub(r"(%20)+", "%20", query).strip()
-        query = query.replace("%20OR%20", " OR ")
-        query = query.replace("%20-", " NOT ")
-        query = query.replace(" -", " NOT ")
-        query = query.replace("%20", " AND ")
-        query = re.sub(r"\s+", " ", query).strip()
-        query = query.lstrip(" ")
-        query = query.rstrip(" ")
-        query = query.replace("%22", '"')
-        return query
-
-    def _encode_query_for_html_url(self, query: str) -> str:
-        query = query.replace("'", '"')
-        query = re.sub(r"\s+", " ", query).strip()
-        splited_query = query.split(" ")
-        is_in_quotes = False
-        parts = []
-        for x in splited_query:
-            if not is_in_quotes and x.startswith('"'):
-                parts.append(x)
-                is_in_quotes = True
-            elif is_in_quotes and x.endswith('"'):
-                parts.append(x)
-                is_in_quotes = False
-            elif is_in_quotes:
-                parts.append(x)
-            else:
-                x = x.replace("OR", "%20OR%20")
-                x = x.replace("NOT", "%20-")
-                x = x.replace("AND", "%20")
-                x = x.replace(" ", "%20")
-                parts.append(x)
-        joined_query = "%20".join(parts)
-        joined_query = re.sub(r"(%20)+", "%20", joined_query).strip()
-        joined_query = joined_query.replace("-%20", "-")
-        return joined_query
 
     def search(self, rerun: bool) -> None:
         """Run a search of Unpaywall"""
