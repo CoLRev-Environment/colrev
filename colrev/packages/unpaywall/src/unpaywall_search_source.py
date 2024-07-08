@@ -32,7 +32,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
     """Unpaywall Search Source"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    source_identifier = "ID"
+    source_identifier = "doi"
     search_types = [SearchType.API]
     endpoint = "colrev.unpaywall"
 
