@@ -19,7 +19,7 @@ For this search download search results and store in `data/search/` directory.
 
 ### API search
 
-Springer Link only allows a daily quota of 500. This might lead to the site being unavailable with a response code of 403.
+Springer Link only allows a daily quota of 500 requests. This might lead to the site being unavailable with a response code of 403.
 
 #### API search: API key for Springer Link
 
@@ -38,11 +38,11 @@ The user can type the individual search constraints that can also use the boolea
 
 ##### Examples
 
-- A single search term: `("saturn") type:book`
-- Two terms with AND: `("saturn" AND "jupiter") type:book`
-- Two terms with OR: `("saturn" OR "jupiter") type:book`
-- Negation of a term: `("saturn" NOT "jupiter") type:book`
-- After NEAR, a slash `/{number}` should be used, for example: `("saturn" NEAR/10 "jupiter") type:book`
+- A single search term: `("saturn") type:Book`
+- Two terms with AND: `("saturn" AND "jupiter") type:Book`
+- Two terms with OR: `("saturn" OR "jupiter") type:Book`
+- Negation of a term: `("saturn" NOT "jupiter") type:Book`
+- After NEAR, a slash `/{number}` should be used, for example: `("saturn" NEAR/10 "jupiter") type:Book`
 
 ##### Other Constraints supported by the Springers Nature API
 
@@ -98,7 +98,7 @@ The user can provide values for the following parameters: keyword, subject, lang
     - Water
 - `language:` please use country codes, e.g. "de" for "Germany".
 - `year:` e.g. 2024.
-- `type:` limit search to Book or Journal.
+- `type:` limit search to Book or Journal (case sensitive!).
 
 Each constraint that appears in your request will be automatically ANDed with all the others.
 
