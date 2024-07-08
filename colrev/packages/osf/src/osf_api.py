@@ -1,56 +1,89 @@
-# osf_api.py
+#!/usr/bin/env python3
+"""OSF API Query class for querying the OSF API."""
 import json
+import typing
 
 import requests
 
+from colrev.constants import Fields
+
+# pylint: disable=colrev-missed-constant-usage
+
 
 class OSFApiQuery:
-    def __init__(self, api_key: str):
+    """Class for querying the OSF API."""
+
+    base_url = "https://api.osf.io/v2/nodes"
+    fields = ["id", "type", "title", "year", "description", "tags", "date_created"]
+
+    def __init__(self, parameters: dict, *, api_key: str) -> None:
         self.api_key = api_key
-        self.base_url = "https://api.osf.io/v2/nodes"
         self.headers = {"Authorization": f"Bearer {self.api_key}"}
-        self.params = {}
-        self.outputType = "json"
-        self.outputDataFormat = "bib"
-        self.startRecord = 1
-        self.page = 1
+        self.params: typing.Dict[str, str] = {}
+        self.next_url = None
+        self.params = {
+            key: value for key, value in parameters.items() if key in self.fields
+        }
 
-    def dataType(self, data_type: str):
-        outputtype = data_type.strip().lower()
-        self.outputType = outputtype
+    def _create_record_dict(self, item: dict) -> dict:
+        attributes = item["attributes"]
+        year = attributes["date_created"]
+        url = item["links"]
+        relationships = item["relationships"]
+        contributors = relationships["contributors"]
+        links = contributors["links"]
+        related = links["related"]
+        record_dict = {
+            Fields.ID: item["id"],
+            Fields.ENTRYTYPE: "misc",
+            Fields.AUTHOR: related["href"],
+            Fields.TITLE: attributes["title"],
+            Fields.ABSTRACT: attributes["description"],
+            Fields.KEYWORDS: ", ".join(attributes["tags"]),
+            Fields.YEAR: year[:4],
+            Fields.URL: url["self"],
+        }
+        # Drop empty fields
+        record_dict = {k: v for k, v in record_dict.items() if v}
+        return record_dict
 
-    def dataFormat(self, data_format: str):
-        outputDataFormat = data_format.strip().lower()
-        self.outputDataFormat = outputDataFormat
+    def _query_api(self, url: str) -> str:
+        """Creates the URL for the API call
+        string url  Full URL to pass to API
+        return string: Results from API"""
 
-    def id(self, value: str):
-        self.params["id"] = value
+        response = requests.get(url, headers=self.headers, timeout=60)
+        return response.text
 
-    def type(self, value: str):
-        self.params["type"] = value
+    def retrieve_records(self) -> typing.List[dict]:
+        """Call the API with the query parameters and return the results."""
 
-    def title(self, value: str):
-        self.params["title"] = value
+        if self.next_url is None:
+            url = self._build_query()
+        else:
+            url = self.next_url
 
-    def year(self, value: str):
-        self.params["year"] = value
+        data = self._query_api(url)
+        response = json.loads(data)
 
-    def description(self, value: str):
-        self.params["description"] = value
+        # Set the next URL for the next query
+        links = response["links"]
+        self.next_url = links["next"]
 
-    def tags(self, value: str):
-        self.params["tags"] = value
+        articles = response.get("data", [])
+        return [self._create_record_dict(article) for article in articles]
 
-    def date_created(self, value: str):
-        self.params["date_created"] = value
+    def overall(self) -> int:
+        """Return the overall number of records."""
 
-    def callAPI(self):
-        ret = self.buildQuery()
-        data = self.queryAPI(ret)
-        formattedData = json.loads(data)
-        return formattedData
+        url = self._build_query()
+        data = self._query_api(url)
+        response = json.loads(data)
 
-    def buildQuery(self) -> str:
+        links = response["links"]
+        return links["meta"]["total"]
+
+    def _build_query(self) -> str:
         """Creates the URL for querying the API with support for nested filter parameters."""
 
         # Initialize the URL with the base endpoint
@@ -60,14 +93,8 @@ class OSFApiQuery:
         for key, value in self.params.items():
             url += key + "]=" + str(value)
 
-        url += f"&page={self.page}"
-
         return url
 
-    def queryAPI(self, url: str) -> str:
-        """Creates the URL for the API call
-        string url  Full URL to pass to API
-        return string: Results from API"""
-
-        response = requests.get(url, headers=self.headers)
-        return response.text
+    def pages_completed(self) -> bool:
+        """Check if all pages have been completed"""
+        return self.next_url is None
