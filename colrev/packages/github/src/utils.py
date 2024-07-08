@@ -62,7 +62,7 @@ def get_release_date(*, repo: Github.Repository.Repository, citation_data: str) 
     return repo.created_at.strftime("%Y/%m/%d")
 
 
-def get_version(*, repo: Github.Repository.Repository, citation_data: str) -> str:
+def get_version(citation_data: str) -> str:
     """Get current software version"""
     if citation_data:
         version = re.search(r"^\s*version:\s*(.+)\s*$", citation_data, re.M)
@@ -104,8 +104,10 @@ def repo_to_record(
     except Exception:
         pass
 
-    version = get_version(repo=repo, citation_data=citation_data)
+    version = get_version(citation_data)
     if version:
         data[GITHUB_VERSION] = version
+
+    data = {k: v for k, v in data.items() if v}
 
     return colrev.record.record.Record(data=data)

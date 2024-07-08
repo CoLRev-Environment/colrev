@@ -45,10 +45,10 @@ class GithubMetadataPrep(JsonSchemaMixin):
     ) -> colrev.record.record.Record:
         """Prepare a record based on GitHub metadata"""
 
-        GitHubSearchSource = github_connector.GitHubSearchSource(
+        github_search_source = github_connector.GitHubSearchSource(
             source_operation=self.prep_operation
         )
-        GitHubSearchSource.prep_link_md(
+        github_search_source.prep_link_md(
             prep_operation=self.prep_operation, record=record
         )
         return record
