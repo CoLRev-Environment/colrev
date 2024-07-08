@@ -98,19 +98,17 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
             filename = operation.get_unique_filename(file_path_string="springer_link")
 
-            add_settings = colrev.settings.SearchSource(
+            search_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
                 filename=filename,
                 search_type=SearchType.API,
                 search_parameters={},
                 comment="",
             )
-            params_dict.update(vars(add_settings))
+            params_dict.update(vars(search_source))
             instance = cls(source_operation=operation, settings=params_dict)
             instance.api_ui()
-            search_params = instance.add_constraints()
-            add_settings.search_parameters = search_params
-            search_source = add_settings
+            search_source.search_parameters = instance.add_constraints()
 
         else:
             raise NotImplementedError
