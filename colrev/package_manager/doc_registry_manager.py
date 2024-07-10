@@ -29,6 +29,21 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 class DocRegistryManager:
     """DocRegistryManager"""
 
+    ENDPOINT_TYPES = [
+        "review_type",
+        "search_source",
+        "prep",
+        "prep_man",
+        "dedupe",
+        "prescreen",
+        "pdf_get",
+        "pdf_get_man",
+        "pdf_prep",
+        "pdf_prep_man",
+        "screen",
+        "data",
+    ]
+
     def __init__(
         self,
         *,
@@ -111,7 +126,7 @@ class DocRegistryManager:
     def _write_docs_for_index(self) -> None:
         """Writes data from self.docs_for_index to the packages.rst file."""
 
-        packages_index_path = Path(__file__).parent.parent.parent / Path(
+        packages_index_path = self._colrev_path / Path(
             "docs/source/manual/packages.rst"
         )
         packages_index_path_content = packages_index_path.read_text(encoding="utf-8")
@@ -124,20 +139,7 @@ class DocRegistryManager:
                 break
 
         # append new links
-        for endpoint_type in [
-            "review_type",
-            "search_source",
-            "prep",
-            "prep_man",
-            "dedupe",
-            "prescreen",
-            "pdf_get",
-            "pdf_get_man",
-            "pdf_prep",
-            "pdf_prep_man",
-            "screen",
-            "data",
-        ]:
+        for endpoint_type in self.ENDPOINT_TYPES:
             new_doc.append("")
             new_doc.append("")
 
@@ -154,6 +156,7 @@ class DocRegistryManager:
 
     # pylint: disable=line-too-long
     # pylint: disable=too-many-branches
+    # pylint: disable=too-many-statements
     # flake8: noqa: E501
     def _get_header_info(self, package: colrev.package_manager.package.Package) -> str:
 
@@ -259,9 +262,7 @@ class DocRegistryManager:
 
         docs_link = package.package_dir / package.colrev_doc_link
 
-        packages_index_path = Path(__file__).parent.parent.parent / Path(
-            "docs/source/manual/packages"
-        )
+        packages_index_path = self._colrev_path / Path("docs/source/manual/packages")
 
         output = parse_from_file(docs_link)
         output = output.replace(".. list-table::", ".. list-table::\n   :align: left")
@@ -320,17 +321,7 @@ class DocRegistryManager:
         packages_overview = []
         # for key, packages in self.package_endpoints_json.items():
 
-        for endpoint_type in [
-            "review_type",
-            "search_source",
-            "prep",
-            "dedupe",
-            "prescreen",
-            "pdf_get",
-            "pdf_prep",
-            "screen",
-            "data",
-        ]:
+        for endpoint_type in self.ENDPOINT_TYPES:
             packages = self.package_endpoints_json[endpoint_type]
             for package in packages:
                 package["endpoint_type"] = endpoint_type
@@ -348,7 +339,7 @@ class DocRegistryManager:
     def update(self) -> None:
         """Update the package endpoints and the package status."""
 
-        self._extract_search_source_types()
         self._update_package_endpoints_json()
+        self._extract_search_source_types()
         self._update_packages_overview()
         self._write_docs_for_index()

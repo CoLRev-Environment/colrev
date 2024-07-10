@@ -18,7 +18,7 @@ from colrev.constants import Fields
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
 @dataclass
 class AddJournalRanking(JsonSchemaMixin):
-    """Class for add _journal_ranking"""
+    """Prepares records based on journal rankings"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 

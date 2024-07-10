@@ -21,7 +21,7 @@ A scoping review aims to provide an initial overview of the potential size and n
 The following packages are automatically set up in a scoping review:
 
 - [colrev.prisma](colrev.prisma.html)
-- [colrev.colrev_structured](colrev.colrev_structured.html)
+- [colrev.structured](colrev.structured.html)
 - [colrev.paper_md](colrev.paper_md.html)
 
 ## Examples

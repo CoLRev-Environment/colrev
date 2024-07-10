@@ -1,0 +1,21 @@
+[project]
+name = "colrev.github"
+description = "CoLRev package for GitHub"
+version = "0.1.1"
+license = "MIT"
+authors = [
+    { name = "Kolja Rinne", email = "kolja.rinne@stud.uni-bamberg.de" },
+    { name = "Philipp Kasimir", email = "philipp-william.kasimir@stud.uni-bamberg.de" },
+    { name = "Chris Vierath", email = "chris-norman.vierath@stud.uni-bamberg.de" },
+    { name = "Karl Schnickmann", email = "karl.schnickmann@stud.uni-bamberg.de" }
+]
+documentation = "README.md"
+
+[tool.colrev]
+dev_status = "experimental"
+colrev_doc_link = "README.md"
+search_source = "colrev.packages.github.src.github_search_source:GitHubSearchSource"
+prep = "colrev.packages.github.src.github_prep:GithubMetadataPrep"
+
+[tool.poetry.dependencies]
+PyGithub = "^2.3.0"

@@ -36,10 +36,7 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "GoogleScholar"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/google_scholar.md"
-    )
+
     db_url = "https://scholar.google.de/"
 
     def __init__(

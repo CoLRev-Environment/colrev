@@ -52,10 +52,6 @@ class FilesSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Files directory"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/files_dir.md"
-    )
 
     _doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
     _batch_size = 20
@@ -259,7 +255,7 @@ class FilesSearchSource(JsonSchemaMixin):
         if record_dict.get(Fields.AUTHOR, "NA") in ["NA", ""]:
             if "author" in doc.metadata:
                 try:
-                    pdf_md_author = doc.metadata["author"].decode("utf-8")
+                    pdf_md_author = doc.metadata["author"]
                     if (
                         "Mirko Janc" not in pdf_md_author
                         and "wendy" != pdf_md_author
@@ -294,6 +290,8 @@ class FilesSearchSource(JsonSchemaMixin):
             del record_dict[Fields.ABSTRACT]
         if Fields.KEYWORDS in record_dict:
             del record_dict[Fields.KEYWORDS]
+        if Fields.DOI in record_dict:
+            record_dict[Fields.DOI] = record_dict[Fields.DOI].upper()
 
         # to allow users to update/reindex with newer version:
         record_dict[Fields.GROBID_VERSION] = (

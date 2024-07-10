@@ -19,6 +19,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         colrev.loader.load_utils.load(
             filename=Path("data/search/bib_data.bib"),
             logger=logging.getLogger(__name__),
+            empty_if_file_not_exists=False,
         )
     helpers.retrieve_test_file(
         source=Path("2_loader/data/bib_data.bib"),

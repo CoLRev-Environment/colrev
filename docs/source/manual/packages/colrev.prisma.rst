@@ -61,3 +61,4 @@ Links
 * `PRISMA2020 app <https://estech.shinyapps.io/prisma_flowdiagram/>`_
 * `PRISMA2020 repository <https://github.com/prisma-flowdiagram/PRISMA2020>`_
 * `PRISMA2020 paper <https://onlinelibrary.wiley.com/doi/full/10.1002/cl2.1230>`_
+* `Docker image <https://github.com/CoLRev-Environment/docker-prisma>`_

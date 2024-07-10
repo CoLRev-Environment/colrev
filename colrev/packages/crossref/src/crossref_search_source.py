@@ -71,10 +71,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.oni
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/crossref.md"
-    )
+
     short_name = "Crossref"
     _crossref_md_filename = Path("data/search/md_crossref.bib")
 
@@ -514,7 +511,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 if save_feed:
                     crossref_feed.save()
 
-            except (colrev_exceptions.NotFeedIdentifiableException,):
+            except colrev_exceptions.NotFeedIdentifiableException:
                 pass
             finally:
                 try:
