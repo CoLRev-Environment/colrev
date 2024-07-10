@@ -288,6 +288,16 @@
         "endpoint_type": "search_source"
     },
     {
+        "package_endpoint_identifier": "colrev.osf",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "OSF (:doc:`instructions </manual/packages/colrev.osf>`)",
+        "ci_supported": true,
+        "search_types": [
+            "API"
+        ],
+        "endpoint_type": "search_source"
+    },
+    {
         "package_endpoint_identifier": "colrev.pdf_backward_search",
         "status": "|MATURING|",
         "short_description": "Backward search extracting references from PDFs using GROBID (:doc:`instructions </manual/packages/colrev.pdf_backward_search>`)",

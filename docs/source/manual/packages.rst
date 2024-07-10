@@ -79,6 +79,7 @@ Packages
    packages/colrev.open_alex.rst
    packages/colrev.open_citations_forward_search.rst
    packages/colrev.open_library.rst
+   packages/colrev.osf.rst
    packages/colrev.pdf_backward_search.rst
    packages/colrev.psycinfo.rst
    packages/colrev.pubmed.rst
