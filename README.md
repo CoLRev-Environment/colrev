@@ -103,6 +103,9 @@ For further information, see [tests](tests/readme.md), [changes](CHANGELOG.md), 
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/QuynhMaiNguyen"><img src="https://avatars.githubusercontent.com/u/167417535?v=4?s=100" width="100px;" alt="QuynhMaiNguyen"/><br /><sub><b>QuynhMaiNguyen</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=QuynhMaiNguyen" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/pmao0907"><img src="https://avatars.githubusercontent.com/u/167312265?v=4?s=100" width="100px;" alt="pmao0907"/><br /><sub><b>QuynhMaiNguyen</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=pmao0907" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/MingxinJiang"><img src="https://avatars.githubusercontent.com/u/132772605?v=4?s=100" width="100px;" alt="MingxinJiang"/><br /><sub><b>QuynhMaiNguyen</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=MingxinJiang" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/JohannesDiel"><img src="https://avatars.githubusercontent.com/u/167763043?v=4?s=100" width="100px;" alt="JohannesDiel"/><br /><sub><b>QuynhMaiNguyen</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=JohannesDiel" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

@@ -101,6 +101,15 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.osf",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "OSF (:doc:`instructions </manual/packages/colrev.osf>`)",
+            "ci_supported": true,
+            "search_types": [
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.pubmed",
             "status": "|MATURING|",
             "short_description": "Pubmed (:doc:`instructions </manual/packages/colrev.pubmed>`)",

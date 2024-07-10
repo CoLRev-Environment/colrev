@@ -283,7 +283,34 @@
       "contributions": [
         "code"
       ]
-    }
+    },
+    {
+      "login": "pmao0907",
+      "name": "pmao0907",
+      "avatar_url": "https://avatars.githubusercontent.com/u/167312265?v=4",
+      "profile": "https://github.com/pmao0907",
+      "contributions": [
+            "code"
+          ]
+      },
+      {
+      "login": "MingxinJiang",
+      "name": "MingxinJiang",
+      "avatar_url": "https://avatars.githubusercontent.com/u/132772605?v=4",
+      "profile": "https://github.com/MingxinJiang",
+      "contributions": [
+            "code"
+          ]
+      },
+      {
+      "login": "JohannesDiel",
+      "name": "JohannesDiel",
+      "avatar_url": "https://avatars.githubusercontent.com/u/167763043?v=4",
+      "profile": "https://github.com/JohannesDiel",
+      "contributions": [
+            "code"
+          ]
+      }
   ],
   "contributorsPerLine": 7,
   "skipCi": true,
