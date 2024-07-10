@@ -202,6 +202,24 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "CelinaSchwarz",
+      "name": "CelinaSchwarz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/71493743?v=4",
+      "profile": "https://github.com/CelinaSchwarz",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "QuynhMaiNguyen",
+      "name": "QuynhMaiNguyen",
+      "avatar_url": "https://avatars.githubusercontent.com/u/167417535?v=4",
+      "profile": "https://github.com/QuynhMaiNguyen",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
