@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 
+import inquirer
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -25,6 +26,14 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
+
+
+def is_github_api_key(previous: dict, answer: str) -> bool:
+    """Validate GitHub API key format"""
+    api_key_pattern = re.compile(r"[a-zA-Z0-9_-]{40}")
+    if api_key_pattern.fullmatch(answer):
+        return True
+    raise inquirer.errors.ValidationError("", reason="Invalid GitHub API key format.")
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
@@ -90,7 +99,7 @@ class GitHubSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def _choice_scope(cls) -> int:
+    def _choice_scope(cls) -> str:
         while True:
             user_choice = input(
                 "Where do you want to search in (1 = Only in URL, 2 = Only in Readme, 3 = Both): "
@@ -112,22 +121,20 @@ class GitHubSearchSource(JsonSchemaMixin):
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
+        cls._get_api_key()
         params_dict = {}
         if params:
-            if params.startswith("http"):
-                params_dict = {Fields.URL: params}
-            else:
-                for item in params.split(";"):
-                    try:
-                        key, value = item.split("=")
-                        if key in ["title", "readme"]:
-                            params_dict[key] = value
-                        else:
-                            raise colrev_exceptions.InvalidQueryException(
-                                "GitHub search_parameters support title or readme field"
-                            )
-                    except ValueError:
-                        print("Invalid search parameter format")
+            for item in params.split(";"):
+                try:
+                    key, value = item.split("=")
+                    if key in ["title", "readme"]:
+                        params_dict[key] = value
+                    else:
+                        raise colrev_exceptions.InvalidQueryException(
+                            "GitHub search_parameters support title or readme field"
+                        )
+                except ValueError:
+                    print("Invalid search parameter format")
 
         if len(params_dict) == 0:
             search_source = operation.create_api_source(endpoint="colrev.github")
@@ -161,16 +168,53 @@ class GitHubSearchSource(JsonSchemaMixin):
         operation.add_source_and_search(search_source)
         return search_source
 
-    def _get_api_key(self) -> str:
-        api_key = self.review_manager.environment_manager.get_settings_by_key(
-            self.SETTINGS["api_key"]
-        )
-        if api_key is None or len(api_key) != 40:
-            api_key = input("Please enter api access token: ")
-            self.review_manager.environment_manager.update_registry(
-                self.SETTINGS["api_key"], api_key
-            )
-        return api_key
+    @classmethod
+    def _get_api_key(cls) -> str:
+        env_man = colrev.env.environment_manager.EnvironmentManager()
+        api_key = env_man.get_settings_by_key(cls.SETTINGS["api_key"])
+        if api_key is not None and is_github_api_key({}, api_key):
+            return api_key
+
+        questions = [
+            inquirer.Text(
+                "github_api_key",
+                message="Enter your GitHub API key",
+                validate=is_github_api_key,
+            ),
+        ]
+        answers = inquirer.prompt(questions)
+        input_key = answers["github_api_key"]
+        env_man.update_registry(cls.SETTINGS["api_key"], input_key)
+        print("API key saved in environment settings.")
+        return input_key
+
+    def _run_api_search(
+        self, github_feed: colrev.ops.search_api_feed.SearchAPIFeed
+    ) -> None:
+
+        if not self.search_source.search_parameters:
+            raise ValueError("No search parameters defined for GitHub search source")
+
+        keywords = self.search_source.search_parameters.get("query", "")
+        scope = self.search_source.search_parameters.get("scope", "")
+        query = f"{keywords} in:{scope}"
+
+        # Getting API key
+        token = self._get_api_key()
+        auth = Auth.Token(token)
+        g = Github(auth=auth)
+
+        # Searching on Github
+        repositories = g.search_repositories(query=query)
+
+        # Saving search results
+        for repo in repositories:
+
+            record = connector_utils.repo_to_record(repo=repo)
+            github_feed.add_update_record(record)
+
+        github_feed.save()
+        g.close()
 
     def search(self, rerun: bool = False) -> None:
         """Run a search on GitHub"""
@@ -181,46 +225,7 @@ class GitHubSearchSource(JsonSchemaMixin):
                 source_identifier=self.source_identifier,
                 update_only=(not rerun),
             )
-
-            if not self.search_source.search_parameters:
-                raise ValueError(
-                    "No search parameters defined for GitHub search source"
-                )
-
-            keywords = self.search_source.search_parameters.get("query", "")
-            scope = self.search_source.search_parameters.get("scope", "")
-            query = f"{keywords} in:{scope}"
-
-            # Getting API key
-            token = self._get_api_key()
-            auth = Auth.Token(token)
-            g = Github(auth=auth)
-
-            # Searching on Github
-            repositories = g.search_repositories(query=query)
-
-            # Saving search results
-            results = []
-            for repo in repositories:
-
-                data = {
-                    Fields.ENTRYTYPE: "software",
-                    Fields.URL: repo.html_url,
-                }
-                repo_data = colrev.record.record.Record(data=data)
-
-                try:
-                    repo_data = connector_utils.repo_to_record(repo=repo)
-                except Exception:
-                    print("Could not convert record: " + repo.html_url)
-
-                results.append(repo_data)
-
-            for record in results:
-                github_feed.add_update_record(retrieved_record=record)
-            github_feed.save()
-
-            g.close()
+            self._run_api_search(github_feed)
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
@@ -247,6 +252,7 @@ class GitHubSearchSource(JsonSchemaMixin):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
+        """Prepare the record based on GitHub"""
 
         if Fields.URL not in record.data:
             return record
