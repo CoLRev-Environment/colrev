@@ -99,6 +99,10 @@ For further information, see [tests](tests/readme.md), [changes](CHANGELOG.md), 
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/annaglr"><img src="https://avatars.githubusercontent.com/u/76491696?v=4?s=100" width="100px;" alt="Anna Geßler"/><br /><sub><b>Anna Geßler</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=annaglr" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/0xmtyset"><img src="https://avatars.githubusercontent.com/u/160525679?v=4?s=100" width="100px;" alt="0xmtyset"/><br /><sub><b>0xmtyset</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=0xmtyset" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/tobiaspffl"><img src="https://avatars.githubusercontent.com/u/134608287?v=4?s=100" width="100px;" alt="tobiaspffl"/><br /><sub><b>0xmtyset</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=tobiaspffl" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/CelinaSchwarz"><img src="https://avatars.githubusercontent.com/u/71493743?v=4?s=100" width="100px;" alt="CelinaSchwarz"/><br /><sub><b>CelinaSchwarz</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=CelinaSchwarz" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/QuynhMaiNguyen"><img src="https://avatars.githubusercontent.com/u/167417535?v=4?s=100" width="100px;" alt="QuynhMaiNguyen"/><br /><sub><b>QuynhMaiNguyen</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=QuynhMaiNguyen" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

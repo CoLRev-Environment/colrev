@@ -121,6 +121,16 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.springer_link",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Springer Link (:doc:`instructions </manual/packages/colrev.springer_link>`)",
+            "ci_supported": false,
+            "search_types": [
+                "DB",
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.synergy_datasets",
             "status": "|MATURING|",
             "short_description": "SYNERGY-datasets (:doc:`instructions </manual/packages/colrev.synergy_datasets>`)",
@@ -233,7 +243,8 @@
             "short_description": "Springer Link (:doc:`instructions </manual/packages/colrev.springer_link>`)",
             "ci_supported": false,
             "search_types": [
-                "DB"
+                "DB",
+                "API"
             ]
         },
         {

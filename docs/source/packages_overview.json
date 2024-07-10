@@ -345,7 +345,8 @@
         "short_description": "Springer Link (:doc:`instructions </manual/packages/colrev.springer_link>`)",
         "ci_supported": false,
         "search_types": [
-            "DB"
+            "DB",
+            "API"
         ],
         "endpoint_type": "search_source"
     },
