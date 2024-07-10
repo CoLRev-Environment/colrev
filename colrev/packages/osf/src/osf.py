@@ -50,7 +50,7 @@ class OSFSearchSource(JsonSchemaMixin):
     short_name = "OSF SearchSource"
     db_url = "https://osf.io/"
     SETTINGS = {
-        "api_key": "packages.osf.src.api_key",
+        "api_key": "packages.search_source.colrev.osf.api_key",
     }
 
     def __init__(
