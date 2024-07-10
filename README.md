@@ -21,7 +21,7 @@
 [![Downloads](https://static.pepy.tech/badge/colrev/month)](https://pepy.tech/project/colrev)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7148/badge)](https://bestpractices.coreinfrastructure.org/projects/7148)
 [![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/CoLRev-Environment/colrev/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/CoLRev-Environment/colrev/)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-21-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-22-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
 <!-- [![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/) -->
@@ -94,6 +94,7 @@ For further information, see [tests](tests/readme.md), [changes](CHANGELOG.md), 
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/k-schnickmann"><img src="https://avatars.githubusercontent.com/u/168131195?v=4?s=100" width="100px;" alt="Karl Schnickmann"/><br /><sub><b>Karl Schnickmann</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=k-schnickmann" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/edensarrival"><img src="https://avatars.githubusercontent.com/u/42614229?v=4?s=100" width="100px;" alt="edensarrival"/><br /><sub><b>edensarrival</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=edensarrival" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
