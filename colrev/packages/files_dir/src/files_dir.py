@@ -290,6 +290,8 @@ class FilesSearchSource(JsonSchemaMixin):
             del record_dict[Fields.ABSTRACT]
         if Fields.KEYWORDS in record_dict:
             del record_dict[Fields.KEYWORDS]
+        if Fields.DOI in record_dict:
+            record_dict[Fields.DOI] = record_dict[Fields.DOI].upper()
 
         # to allow users to update/reindex with newer version:
         record_dict[Fields.GROBID_VERSION] = (

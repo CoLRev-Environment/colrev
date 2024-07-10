@@ -175,6 +175,12 @@ class Fields:
     # https://www.nlm.nih.gov/bsd/mms/medlineelements.html#pmc
     EUROPE_PMC_ID = "colrev.europe_pmc.europe_pmc_id"
 
+    GITHUB_VERSION = "colrev.github.version"
+    GITHUB_LICENSE = "colrev.github.license"
+    GITHUB_LANGUAGE = "colrev.github.language"
+    GITHUB_NR_CONTRIBUTORS = "colrev.github.nr_contributors"
+    GITHUB_NR_COMMITS = "colrev.github.nr_commits"
+
 
 class LocalIndexFields:
     """Fields used in the local index"""

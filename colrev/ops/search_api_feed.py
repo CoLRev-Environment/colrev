@@ -474,5 +474,6 @@ class SearchAPIFeed:
 
         if not self.prep_mode:
             self.review_manager.dataset.save_records_dict(self.records)
-        self._nr_added = 0
-        self._nr_changed = 0
+        if not skip_print:
+            self._nr_added = 0
+            self._nr_changed = 0
