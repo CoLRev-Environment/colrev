@@ -13,7 +13,7 @@ from colrev.constants import Fields
 class OSFApiQuery:
     """Class for querying the OSF API."""
 
-    base_url = "https://api.osf.io/v2/nodes"
+    base_url = "https://api.osf.io/v2/nodes/?"
     fields = ["id", "type", "title", "year", "description", "tags", "date_created"]
 
     def __init__(self, parameters: dict, *, api_key: str) -> None:
@@ -86,12 +86,12 @@ class OSFApiQuery:
     def _build_query(self) -> str:
         """Creates the URL for querying the API with support for nested filter parameters."""
 
-        # Initialize the URL with the base endpoint
-        url = f"{self.base_url}/?filter["
-
+        filters = []
         # Add in filters with the correct formatting
         for key, value in self.params.items():
-            url += key + "]=" + str(value)
+            filters.append(f"filter[{key}]={value}")
+
+        url = self.base_url + "&".join(filters)
 
         return url
 
