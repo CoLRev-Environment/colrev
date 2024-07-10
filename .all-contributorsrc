@@ -202,6 +202,15 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "koljarinne",
+      "name": "koljarinne",
+      "avatar_url": "https://avatars.githubusercontent.com/u/167416691?v=4",
+      "profile": "https://github.com/koljarinne",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
