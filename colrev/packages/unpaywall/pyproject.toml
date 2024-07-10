@@ -12,3 +12,4 @@ repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/pack
 dev_status = "maturing"
 colrev_doc_link = "README.md"
 pdf_get = "colrev.packages.unpaywall.src.unpaywall:Unpaywall"
+search_source = "colrev.packages.unpaywall.src.unpaywall_search_source:UnpaywallSearchSource"
