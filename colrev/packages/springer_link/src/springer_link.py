@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import typing
+import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -20,6 +21,7 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.settings
+from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
@@ -95,9 +97,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             )
 
         elif search_type == SearchType.API:
-
             filename = operation.get_unique_filename(file_path_string="springer_link")
-
             search_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
                 filename=filename,
@@ -108,7 +108,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             params_dict.update(vars(search_source))
             instance = cls(source_operation=operation, settings=params_dict)
             instance.api_ui()
-            search_source.search_parameters = instance.add_constraints()
+            search_source.search_parameters = instance._add_constraints()
 
         else:
             raise NotImplementedError
@@ -137,22 +137,21 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def add_constraints(self) -> dict:
+    def _add_constraints(self) -> dict:
         """add constraints for API query"""
         complex_query_prompt = [
             inquirer.List(
                 name="complex_query",
-                message="Do you want to search via complex constrains or via search parameter?",
-                choices=["no", "yes"],
+                message="Select how the search will be entered",
+                choices=["interactively", "complete_search_string"],
             ),
         ]
 
         answers = inquirer.prompt(complex_query_prompt)
 
-        if answers["complex_query"] == "yes":
-            query = input("Please enter your complex query: ")
-
-            search_parameters = {"complex": query}
+        if answers["complex_query"] == "complete_search_string":
+            query = input("Please enter your search string: ")
+            search_parameters = {"query": query}
 
         else:
 
@@ -161,10 +160,81 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                 + "(or just press enter to continue):"
             )
             keyword = input("keyword: ")
-            subject = input("subject: ")
-            language = input("language: ")
-            year = input("year: ")
-            doc_type = input("type: ")
+            subject_choices = [
+                inquirer.Checkbox(
+                    name="subject",
+                    message="Select subject(s) or press Enter to skip:",
+                    choices=[
+                        "Astronomy",
+                        "Behavioral Sciences",
+                        "Biomedical Sciences",
+                        "Business and Management",
+                        "Chemistry",
+                        "Climate",
+                        "Computer Science",
+                        "Earth Sciences",
+                        "Economics",
+                        "Education and Language",
+                        "Energy",
+                        "Engineering",
+                        "Environmental Sciences",
+                        "Food Science and Nutrition",
+                        "General Interest",
+                        "Geography",
+                        "Law",
+                        "Life Sciences",
+                        "Materials",
+                        "Mathematics",
+                        "Medicine",
+                        "Philosophy",
+                        "Physics",
+                        "Public Health",
+                        "Social Sciences",
+                        "Statistics",
+                        "Water",
+                    ],
+                ),
+            ]
+            answers = inquirer.prompt(subject_choices)
+            subject = ",".join(answers["subject"])
+
+            language_choices = [
+                inquirer.Checkbox(
+                    name="language",
+                    message="Select language(s) or press Enter to skip:",
+                    choices=[
+                        "en",
+                        "de",
+                        "fr",
+                        "es",
+                        "it",
+                        "pt",
+                        "nl",
+                    ],
+                ),
+            ]
+            answers = inquirer.prompt(language_choices)
+            language = ",".join(answers["language"])
+
+            year_choices = [
+                inquirer.Text(
+                    name="year",
+                    message="Select year(s) or press Enter to skip:",
+                    validate=self._is_year,
+                ),
+            ]
+            answers = inquirer.prompt(year_choices)
+            year = answers["year"]
+
+            doc_type_choices = [
+                inquirer.Checkbox(
+                    name="doc_type",
+                    message="Select doc_type(s) or press Enter to skip:",
+                    choices=["Journal", "Book"],
+                ),
+            ]
+            answers = inquirer.prompt(doc_type_choices)
+            doc_type = ",".join(answers["doc_type"])
 
             search_parameters = {
                 "subject": subject,
@@ -179,20 +249,31 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     def build_query(self, search_parameters: dict) -> str:
         """build API query"""
 
-        if "complex" in search_parameters:
-            value = search_parameters["complex"]
-            encoded_value = value.replace(" ", "%20")
-            query = encoded_value.replace('"', "%22")
+        if "query" in search_parameters:
+            query = search_parameters["query"]
 
         else:
-
             constraints = []
             for key, value in search_parameters.items():
+                if value == "":
+                    continue
+
+                if key in ["subject", "language", "doc_type"]:
+
+                    subject_query = (
+                        f'{key}:"'
+                        + f'" OR {key}:"'.join(value for value in value.split(","))
+                        + '"'
+                    )
+                    constraints.append(f"({subject_query})")
+                    continue
+
                 if value:
-                    encoded_value = value.replace(" ", "%20")
-                    constraints.append(f"{key}:%22{encoded_value}%22")
-            query = " ".join(constraints)
-        return query
+                    constraints.append(f'{key}:"{value}"')
+
+            query = " AND ".join(constraints)
+
+        return urllib.parse.quote(query)
 
     def _build_api_search_url(self, query: str, api_key: str, start: int = 1) -> str:
         return f"https://api.springernature.com/meta/v2/json?q={query}&api_key={api_key}&s={start}"
@@ -362,37 +443,27 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
     def api_ui(self) -> None:
         """User API key insertion"""
-        run = True
 
         api_key = self.get_api_key()
 
-        print("\n API key is required for search \n\n")
+        if api_key:
+            print("Your API key is available\n")
 
-        while run:
+            change_api_key = [
+                inquirer.List(
+                    name="change_api_key",
+                    message="Do you want to change your saved API key?",
+                    choices=["no", "yes"],
+                ),
+            ]
 
-            if api_key:
-                print("Your API key is already available")
+            answers = inquirer.prompt(change_api_key)
 
-                change_api_key = [
-                    inquirer.List(
-                        name="change_api_key",
-                        message="Do you want to change your saved API key?",
-                        choices=["no", "yes"],
-                    ),
-                ]
+            if answers["change_api_key"] == "no":
+                return
 
-                answers = inquirer.prompt(change_api_key)
-
-                if answers["change_api_key"] == "no":
-                    run = False
-
-                else:
-                    self.api_key_ui()
-                    run = False
-
-            else:
-                self.api_key_ui()
-                run = False
+        print("\n An API key is required for search \n\n")
+        self._api_key_ui()
 
     def get_api_key(self) -> str:
         """Get API key from settings"""
@@ -403,27 +474,47 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             return api_key
         return ""
 
-    def api_key_ui(self) -> None:
+    def _is_springer_link_api_key(self, previous: dict, answer: str) -> bool:
+        """Validate SpringerLink API key format"""
+        api_key_pattern = re.compile(r"[a-z0-9]{32}")
+        if not api_key_pattern.fullmatch(answer):
+            raise inquirer.errors.ValidationError(
+                "", reason="Invalid SpringerLink API key format."
+            )
+
+        full_url = self._build_api_search_url(
+            query="doi:10.1007/978-3-319-07410-8_4", api_key=answer
+        )
+        response = requests.get(full_url, timeout=10)
+        if response.status_code != 200:
+            raise inquirer.errors.ValidationError("", reason="Error: Invalid API key.")
+        print(
+            f"\n{Colors.GREEN}Successfully authenticated with Springer Link API{Colors.END}"
+        )
+        return True
+
+    def _is_year(self, previous: dict, answer: str) -> bool:
+        """Validate year format"""
+        year_pattern = re.compile(r"\d{4}")
+        if not year_pattern.fullmatch(answer) and not answer == "":
+            raise inquirer.errors.ValidationError("", reason="Invalid year format.")
+        return True
+
+    def _api_key_ui(self) -> None:
         """User Interface to enter API key"""
-        run = True
-        while run:
 
-            api_key = input("Please enter your Springer Link API key: ")
-            if not re.match(r"^[a-z0-9]{32}$", api_key):
-                print("Error: Invalid API key.\n")
-            else:
-
-                full_url = self._build_api_search_url(
-                    query="doi:10.1007/978-3-319-07410-8_4", api_key=api_key
-                )
-                response = requests.get(full_url, timeout=10)
-                if response.status_code != 200:
-                    print("Error: Invalid API key")
-                else:
-                    self.review_manager.environment_manager.update_registry(
-                        self.SETTINGS["api_key"], api_key
-                    )
-                    run = False
+        questions = [
+            inquirer.Text(
+                "github_api_key",
+                message="Enter your Springer Link API key",
+                validate=self._is_springer_link_api_key,
+            ),
+        ]
+        answers = inquirer.prompt(questions)
+        input_key = answers["github_api_key"]
+        self.review_manager.environment_manager.update_registry(
+            self.SETTINGS["api_key"], input_key
+        )
 
     def _load_bib(self) -> dict:
         """load bib file"""
