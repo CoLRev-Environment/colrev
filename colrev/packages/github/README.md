@@ -1,6 +1,6 @@
 ## Summary
 
-[GitHub](https://github.com/) is a web-based platform used for version control and collaborative software development. It contains a vast repository of code and documentation.
+[GitHub](https://github.com/) hosts repositories for code, datasets, and documentation.
 
 ## search
 
