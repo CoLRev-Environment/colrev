@@ -63,7 +63,8 @@ class UnpaywallAPI:
             for author in z_authors:
                 given_name = author.get("given", "")
                 family_name = author.get("family", "")
-                authors.append(f"{family_name}, {given_name}")
+                if given_name and family_name:
+                    authors.append(f"{family_name}, {given_name}")
         return authors
 
     def _get_affiliation(self, article: dict) -> typing.List[str]:
