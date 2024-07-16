@@ -118,7 +118,7 @@ class PaperMarkdown(JsonSchemaMixin):
         self._create_non_sample_references_bib()
 
         if not self.review_manager.in_ci_environment():
-            self.pandoc_image = "pandoc/latex:3.1.13"
+            self.pandoc_image = "pandoc/latex:3.2.0"
             colrev.env.docker_manager.DockerManager.build_docker_image(
                 imagename=self.pandoc_image
             )
