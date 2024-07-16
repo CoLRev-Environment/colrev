@@ -72,6 +72,7 @@ Packages
    packages/colrev.eric.rst
    packages/colrev.europe_pmc.rst
    packages/colrev.files_dir.rst
+   packages/colrev.github.rst
    packages/colrev.google_scholar.rst
    packages/colrev.ieee.rst
    packages/colrev.jstor.rst
@@ -90,6 +91,7 @@ Packages
    packages/colrev.taylor_and_francis.rst
    packages/colrev.trid.rst
    packages/colrev.unknown_source.rst
+   packages/colrev.unpaywall.rst
    packages/colrev.web_of_science.rst
    packages/colrev.wiley.rst
 
@@ -108,6 +110,7 @@ Packages
    packages/colrev.get_masterdata_from_citeas.rst
    packages/colrev.get_masterdata_from_doi.rst
    packages/colrev.get_year_from_vol_iss_jour.rst
+   packages/colrev.github.rst
    packages/colrev.local_index.rst
    packages/colrev.open_alex.rst
    packages/colrev.open_library.rst

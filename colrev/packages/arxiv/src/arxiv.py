@@ -30,7 +30,7 @@ from colrev.constants import SearchType
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 @dataclass
 class ArXivSource:
-    """SearchSource for arXiv"""
+    """arXiv"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.arxiv"

@@ -118,7 +118,7 @@
         {
             "package_endpoint_identifier": "colrev.arxiv",
             "status": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for arXiv (:doc:`instructions </manual/packages/colrev.arxiv>`)",
+            "short_description": "arXiv (:doc:`instructions </manual/packages/colrev.arxiv>`)",
             "ci_supported": true,
             "search_types": [
                 "API"
@@ -191,6 +191,15 @@
             "ci_supported": false,
             "search_types": [
                 "FILES"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.github",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "GitHub API (:doc:`instructions </manual/packages/colrev.github>`)",
+            "ci_supported": true,
+            "search_types": [
+                "API"
             ]
         },
         {
@@ -365,6 +374,15 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.unpaywall",
+            "status": "|MATURING|",
+            "short_description": "Unpaywall Search Source (:doc:`instructions </manual/packages/colrev.unpaywall>`)",
+            "ci_supported": false,
+            "search_types": [
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.web_of_science",
             "status": "|EXPERIMENTAL|",
             "short_description": "Web of Science (:doc:`instructions </manual/packages/colrev.web_of_science>`)",
@@ -466,6 +484,12 @@
             "package_endpoint_identifier": "colrev.get_year_from_vol_iss_jour",
             "status": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on year-volume-issue dependency (:doc:`instructions </manual/packages/colrev.get_year_from_vol_iss_jour>`)",
+            "ci_supported": true
+        },
+        {
+            "package_endpoint_identifier": "colrev.github",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Prepares records based on GitHub metadata (:doc:`instructions </manual/packages/colrev.github>`)",
             "ci_supported": true
         },
         {

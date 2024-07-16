@@ -14,7 +14,7 @@
         {
             "package_endpoint_identifier": "colrev.arxiv",
             "status": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for arXiv (:doc:`instructions </manual/packages/colrev.arxiv>`)",
+            "short_description": "arXiv (:doc:`instructions </manual/packages/colrev.arxiv>`)",
             "ci_supported": true,
             "search_types": [
                 "API"
@@ -69,6 +69,15 @@
                 "API",
                 "DB",
                 "MD"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.github",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "GitHub API (:doc:`instructions </manual/packages/colrev.github>`)",
+            "ci_supported": true,
+            "search_types": [
+                "API"
             ]
         },
         {
@@ -143,6 +152,15 @@
             "package_endpoint_identifier": "colrev.synergy_datasets",
             "status": "|MATURING|",
             "short_description": "SYNERGY-datasets (:doc:`instructions </manual/packages/colrev.synergy_datasets>`)",
+            "ci_supported": false,
+            "search_types": [
+                "API"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.unpaywall",
+            "status": "|MATURING|",
+            "short_description": "Unpaywall Search Source (:doc:`instructions </manual/packages/colrev.unpaywall>`)",
             "ci_supported": false,
             "search_types": [
                 "API"
