@@ -470,7 +470,8 @@ class FilesSearchSource(JsonSchemaMixin):
     ) -> dict:
         new_record: dict = {}
 
-        if self._is_broken_filepath(file_path=file_path):
+        file_path_abs = self.review_manager.path / file_path
+        if self._is_broken_filepath(file_path=file_path_abs):
             return new_record
 
         if not self.review_manager.force_mode:
@@ -493,29 +494,29 @@ class FilesSearchSource(JsonSchemaMixin):
         try:
             if not self.review_manager.settings.is_curated_masterdata_repo():
                 # retrieve_based_on_colrev_pdf_id
-
                 colrev_pdf_id = colrev.record.record.Record.get_colrev_pdf_id(
-                    pdf_path=Path(file_path)
+                    pdf_path=file_path_abs
                 )
                 new_record_object = local_index.retrieve_based_on_colrev_pdf_id(
                     colrev_pdf_id=colrev_pdf_id
                 )
                 new_record = new_record_object.data
-                new_record[Fields.FILE] = str(file_path)
                 # Note : an alternative to replacing all data with the curated version
                 # is to just add the curation_ID
                 # (and retrieve the curated metadata separately/non-redundantly)
             else:
                 new_record = self._get_grobid_metadata(file_path=file_path)
         except FileNotFoundError:
+            self.review_manager.logger.error(f"File not found: {file_path} (skipping)")
             return {}
         except (
             colrev_exceptions.PDFHashError,
             colrev_exceptions.RecordNotInIndexException,
         ):
             # otherwise, get metadata from grobid (indexing)
-            new_record = self._get_grobid_metadata(file_path=file_path)
+            new_record = self._get_grobid_metadata(file_path=file_path_abs)
 
+        new_record[Fields.FILE] = str(file_path)
         new_record = self._add_md_string(record_dict=new_record)
 
         # Note: identical md_string as a heuristic for duplicates
