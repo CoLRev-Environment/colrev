@@ -12,11 +12,13 @@ import webbrowser
 from functools import partial
 from functools import wraps
 from pathlib import Path
+from runpy import run_module
 
 import click
 import click_completion.core
 import click_repl
 import pandas as pd
+import pkg_resources
 from git.exc import GitCommandError
 
 import colrev.env.local_index
@@ -3068,6 +3070,75 @@ def version(
     from importlib.metadata import version
 
     print(f'colrev version {version("colrev")}')
+
+
+@main.command(help_priority=34)
+@click.argument("packages", nargs=-1, required=False)
+@click.option(
+    "-U", "--upgrade", is_flag=True, help="Upgrade packages to latest version"
+)
+@click.option(
+    "-e",
+    "--editable",
+    help="Install a project in editable mode from this path",
+)
+@click.option(
+    "--force-reinstall",
+    is_flag=True,
+    help="Reinstall all packages even if they are already up-to-date",
+)
+@click.option(
+    "--no-cache-dir",
+    is_flag=True,
+    help="Disable the cache",
+)
+def install(
+    packages: typing.List[str],
+    upgrade: bool,
+    editable: str,
+    force_reinstall: bool,
+    no_cache_dir: bool,
+) -> None:
+    """Install packages"""
+
+    # Install packages from colrev monorepository first
+    colrev_packages = []
+    for package in packages:
+        if (
+            package.replace(".", "-").replace("_", "-")
+            in pkg_resources.get_distribution("colrev").extras
+        ):
+            colrev_packages.append(package)
+
+    packages = [p for p in packages if p not in colrev_packages]
+
+    if colrev_packages:
+        args = ["pip", "install"]
+        if upgrade:
+            args += ["--upgrade"]
+        if editable:
+            args += ["--editable", editable]
+        if force_reinstall:
+            args += ["--force-reinstall"]
+        if no_cache_dir:
+            args += ["--no-cache-dir"]
+        args += [f"colrev[{','.join(colrev_packages)}]"]
+        input(args)
+        sys.argv = args
+        run_module("pip", run_name="__main__")
+
+    args = ["pip", "install"]
+    if upgrade:
+        args += ["--upgrade"]
+    if editable:
+        args += ["--editable", editable]
+    if force_reinstall:
+        args += ["--force-reinstall"]
+    if no_cache_dir:
+        args += ["--no-cache-dir"]
+    args += list(packages)
+    sys.argv = args
+    run_module("pip", run_name="__main__")
 
 
 @main.command(hidden=True)
