@@ -39,10 +39,6 @@ class ERICSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.oni
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/eric.md"
-    )
     short_name = "ERIC"
 
     API_FIELDS = [
@@ -141,7 +137,7 @@ class ERICSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
 
         params_dict = {}
@@ -156,7 +152,7 @@ class ERICSearchSource(JsonSchemaMixin):
         # all API searches
 
         if len(params_dict) == 0:
-            search_source = operation.add_db_source(
+            search_source = operation.create_db_source(
                 search_source_cls=cls, params=params_dict
             )
 
@@ -184,6 +180,7 @@ class ERICSearchSource(JsonSchemaMixin):
             )
 
         operation.add_source_and_search(search_source)
+        return search_source
 
     def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
         """Get the records from a query"""

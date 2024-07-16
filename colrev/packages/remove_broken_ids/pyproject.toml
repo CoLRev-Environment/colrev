@@ -2,10 +2,11 @@
 name = "colrev.remove_broken_ids"
 description = "CoLRev package for remove_broken_ids"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/remove_broken_ids/README.md"
-
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/remove_broken_ids"
 
 [[tool.poetry.packages]]
 include = "src"

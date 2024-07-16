@@ -43,13 +43,41 @@ layout: home
 
             tableData.forEach(function (row) {
                 html += '<tr id="' + row['id'] + '">';
-                html += '<td>' + row['author'].map(author => author['family'] + ', ' + author['given']).join(" and ") + '</td>';
-                html += '<td>' + row['title'] + '</td>';
-                html += '<td>' + row['issued']['date-parts'][0][0] + '</td>';
-                html += '<td>' + (row['container-title'] === undefined ? '' : row['container-title']) + '</td>';
-                html += '<td>' + (row['volume'] === undefined ? '' : row['volume']) + '</td>';
-                html += '<td>' + (row['issue'] === undefined ? '' : row['issue']) + '</td>';
-                html += '<td>' + (row['page'] === undefined ? '' : row['page']) + '</td>';
+                try {
+                    html += '<td>' + row['author'].map(author => author['family'] + ', ' + author['given']).join(" and ") + '</td>';
+                } catch (error) {
+                    html += '<td></td>';
+                }
+                try {
+                    html += '<td>' + row['title'] + '</td>';
+                } catch (error) {
+                    html += '<td></td>';
+                }
+                try {
+                    html += '<td>' + row['issued']['date-parts'][0][0] + '</td>';
+                } catch (error) {
+                    html += '<td></td>';
+                }
+                try {
+                    html += '<td>' + (row['container-title'] === undefined ? '' : row['container-title']) + '</td>';
+                } catch (error) {
+                    html += '<td></td>';
+                }
+                try {
+                    html += '<td>' + (row['volume'] === undefined ? '' : row['volume']) + '</td>';
+                } catch (error) {
+                    html += '<td></td>';
+                }
+                try {
+                    html += '<td>' + (row['issue'] === undefined ? '' : row['issue']) + '</td>';
+                } catch (error) {
+                    html += '<td></td>';
+                }
+                try {
+                    html += '<td>' + (row['page'] === undefined ? '' : row['page']) + '</td>';
+                } catch (error) {
+                    html += '<td></td>';
+                }
                 html += '</tr>';
             });
 

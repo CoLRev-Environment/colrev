@@ -2,10 +2,11 @@
 name = "colrev.colrev_cli_pdf_get_man"
 description = "CoLRev package for pdf_get_man_cli"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/colrev_cli_pdf_get_man/README.md"
-
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_pdf_get_man"
 
 [[tool.poetry.packages]]
 include = "src"

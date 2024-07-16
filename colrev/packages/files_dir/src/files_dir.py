@@ -52,10 +52,6 @@ class FilesSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Files directory"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/files_dir.md"
-    )
 
     _doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
     _batch_size = 20
@@ -259,7 +255,7 @@ class FilesSearchSource(JsonSchemaMixin):
         if record_dict.get(Fields.AUTHOR, "NA") in ["NA", ""]:
             if "author" in doc.metadata:
                 try:
-                    pdf_md_author = doc.metadata["author"].decode("utf-8")
+                    pdf_md_author = doc.metadata["author"]
                     if (
                         "Mirko Janc" not in pdf_md_author
                         and "wendy" != pdf_md_author
@@ -294,6 +290,8 @@ class FilesSearchSource(JsonSchemaMixin):
             del record_dict[Fields.ABSTRACT]
         if Fields.KEYWORDS in record_dict:
             del record_dict[Fields.KEYWORDS]
+        if Fields.DOI in record_dict:
+            record_dict[Fields.DOI] = record_dict[Fields.DOI].upper()
 
         # to allow users to update/reindex with newer version:
         record_dict[Fields.GROBID_VERSION] = (
@@ -472,7 +470,8 @@ class FilesSearchSource(JsonSchemaMixin):
     ) -> dict:
         new_record: dict = {}
 
-        if self._is_broken_filepath(file_path=file_path):
+        file_path_abs = self.review_manager.path / file_path
+        if self._is_broken_filepath(file_path=file_path_abs):
             return new_record
 
         if not self.review_manager.force_mode:
@@ -495,29 +494,29 @@ class FilesSearchSource(JsonSchemaMixin):
         try:
             if not self.review_manager.settings.is_curated_masterdata_repo():
                 # retrieve_based_on_colrev_pdf_id
-
                 colrev_pdf_id = colrev.record.record.Record.get_colrev_pdf_id(
-                    pdf_path=Path(file_path)
+                    pdf_path=file_path_abs
                 )
                 new_record_object = local_index.retrieve_based_on_colrev_pdf_id(
                     colrev_pdf_id=colrev_pdf_id
                 )
                 new_record = new_record_object.data
-                new_record[Fields.FILE] = str(file_path)
                 # Note : an alternative to replacing all data with the curated version
                 # is to just add the curation_ID
                 # (and retrieve the curated metadata separately/non-redundantly)
             else:
                 new_record = self._get_grobid_metadata(file_path=file_path)
         except FileNotFoundError:
+            self.review_manager.logger.error(f"File not found: {file_path} (skipping)")
             return {}
         except (
             colrev_exceptions.PDFHashError,
             colrev_exceptions.RecordNotInIndexException,
         ):
             # otherwise, get metadata from grobid (indexing)
-            new_record = self._get_grobid_metadata(file_path=file_path)
+            new_record = self._get_grobid_metadata(file_path=file_path_abs)
 
+        new_record[Fields.FILE] = str(file_path)
         new_record = self._add_md_string(record_dict=new_record)
 
         # Note: identical md_string as a heuristic for duplicates
@@ -674,7 +673,7 @@ class FilesSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         filename = operation.get_unique_filename(file_path_string="files")
@@ -687,6 +686,7 @@ class FilesSearchSource(JsonSchemaMixin):
             comment="",
         )
         operation.add_source_and_search(search_source)
+        return search_source
 
     def _update_based_on_doi(self, *, record_dict: dict) -> None:
         if Fields.DOI not in record_dict:

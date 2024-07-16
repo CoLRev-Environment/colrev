@@ -78,6 +78,10 @@ class GithubPages(JsonSchemaMixin):
         }
 
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
+        operation.review_manager.save_settings()
+        operation.review_manager.dataset.create_commit(
+            msg=f"Add {operation.type} github_pages",
+        )
 
     def _setup_github_pages_branch(self) -> None:
         # if branch does not exist: create and add index.html
@@ -145,14 +149,16 @@ class GithubPages(JsonSchemaMixin):
         }
 
         self.git_repo.git.checkout(self.GH_PAGES_BRANCH_NAME)
-        if not Path("pre-commit-config.yaml").is_file():
+        if not self.review_manager.paths.pre_commit_config.is_file():
             colrev.env.utils.retrieve_package_file(
                 template_file=Path(
                     "packages/github_pages/github_pages/pre-commit-config.yaml"
                 ),
-                target=Path(".pre-commit-config.yaml"),
+                target=self.review_manager.paths.PRE_COMMIT_CONFIG,
             )
-            self.review_manager.dataset.add_changes(Path(".pre-commit-config.yaml"))
+            self.review_manager.dataset.add_changes(
+                self.review_manager.paths.PRE_COMMIT_CONFIG
+            )
 
         data_file = Path("data.bib")
         write_file(records_dict=included_records, filename=data_file)

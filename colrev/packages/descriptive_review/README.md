@@ -1,30 +1,26 @@
-# Descriptive review
+## Summary
 
-Note: This document is currently under development. It will contain the following elements.
+Descriptive reviews aim to reveal patterns or trends in prior research without aggregating empirical evidence, or contributing to theory development. These reviews collect, codify, and analyze papers to derive insights related to the frequency of topics, authors, methods, or publication types, for instance. Results are typically tabulated or illustrated in the form of charts.
 
-## Short summary
+## Characteristics
 
-- explanation
-- goals
-- dimensions
-- differences between disciplines
+| Dimension                  | Description                                    |
+|----------------------------|------------------------------------------------|
+| Goal with regard to theory | Describing                                     |
+| Scope of questions         | Broad                                          |
+| Nature of sources          | Often restricted to empirical papers           |
 
-## Steps and operations
+## Data extraction, analysis, and synthesis
 
-### Problem formulation
+The following packages are automatically set up in a descriptive review:
 
-### Metadata retrieval
+- [colrev.prisma](colrev.prisma.html)
+- [colrev.profile](colrev.profile.html)
+- [colrev.structured](colrev.structured.html)
+- [colrev.paper_md](colrev.paper_md.html)
 
-### Metadata prescreen
+## Examples
 
-### PDF retrieval
+Dahlberg, T., Mallat, N., Ondrus, J., & Zmijewska, A. (2008). Past, present and future of mobile payments research: A literature review. *Electronic Commerce Research and Applications*, 7(2), 165-181. doi:[10.1016/j.elerap.2007.02.001](https://doi.org/10.1016/j.elerap.2007.02.001)
 
-### PDF screen
-
-### Data extraction and synthesis
-
-- For manuscript development see separate page for Word/Tex/Md, Reference Managers
-
-## Software recommendations
-
-## References
+Sidorova, A., Evangelopoulos, N., Valacich, J. S., & Ramakrishnan, T. (2008). Uncovering the intellectual core of the information systems discipline. *MIS Quarterly* 32(3), 467-482. doi:[10.2307/25148852](https://doi.org/10.2307/25148852)

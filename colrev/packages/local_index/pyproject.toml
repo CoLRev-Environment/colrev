@@ -2,8 +2,11 @@
 name = "colrev.local_index"
 description = "CoLRev package for local_index"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
-
+license = "MIT"
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/local_index"
 
 [[tool.poetry.packages]]
 include = "src"

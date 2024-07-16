@@ -29,6 +29,21 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 class DocRegistryManager:
     """DocRegistryManager"""
 
+    ENDPOINT_TYPES = [
+        "review_type",
+        "search_source",
+        "prep",
+        "prep_man",
+        "dedupe",
+        "prescreen",
+        "pdf_get",
+        "pdf_get_man",
+        "pdf_prep",
+        "pdf_prep_man",
+        "screen",
+        "data",
+    ]
+
     def __init__(
         self,
         *,
@@ -111,7 +126,7 @@ class DocRegistryManager:
     def _write_docs_for_index(self) -> None:
         """Writes data from self.docs_for_index to the packages.rst file."""
 
-        packages_index_path = Path(__file__).parent.parent.parent / Path(
+        packages_index_path = self._colrev_path / Path(
             "docs/source/manual/packages.rst"
         )
         packages_index_path_content = packages_index_path.read_text(encoding="utf-8")
@@ -124,20 +139,7 @@ class DocRegistryManager:
                 break
 
         # append new links
-        for endpoint_type in [
-            "review_type",
-            "search_source",
-            "prep",
-            "prep_man",
-            "dedupe",
-            "prescreen",
-            "pdf_get",
-            "pdf_get_man",
-            "pdf_prep",
-            "pdf_prep_man",
-            "screen",
-            "data",
-        ]:
+        for endpoint_type in self.ENDPOINT_TYPES:
             new_doc.append("")
             new_doc.append("")
 
@@ -152,23 +154,127 @@ class DocRegistryManager:
             for line in new_doc:
                 file.write(line + "\n")
 
+    # pylint: disable=line-too-long
+    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-statements
+    # flake8: noqa: E501
+    def _get_header_info(self, package: colrev.package_manager.package.Package) -> str:
+
+        # To format the table (adjust row height), the following is suggested:
+        # from bs4 import BeautifulSoup
+
+        # # Parse the generated HTML
+        # with open('output.html', 'r') as f:
+        #     soup = BeautifulSoup(f, 'html.parser')
+
+        # # Find the table and add the ID
+        # table = soup.find('table')
+        # table['id'] = 'endpoint_overview_container'
+
+        # # Write the modified HTML back to the file
+        # with open('output.html', 'w') as f:
+        #     f.write(str(soup))
+        header_info = ""
+        header_info += ".. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue\n"
+        header_info += "   :height: 14pt\n"
+        header_info += "   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html\n"
+        header_info += ".. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen\n"
+        header_info += "   :height: 14pt\n"
+        header_info += "   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html\n"
+        header_info += ".. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen\n"
+        header_info += "   :height: 14pt\n"
+        header_info += "   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html\n"
+        header_info += ".. |GIT_REPO| image:: /_static/svg/iconmonstr-code-fork-1.svg\n"
+        header_info += "   :width: 15\n"
+        header_info += "   :alt: Git repository\n"
+        header_info += ".. |LICENSE| image:: /_static/svg/iconmonstr-copyright-2.svg\n"
+        header_info += "   :width: 15\n"
+        header_info += "   :alt: Licencse\n"
+        header_info += ".. |MAINTAINER| image:: /_static/svg/iconmonstr-user-29.svg\n"
+        header_info += "   :width: 20\n"
+        header_info += "   :alt: Maintainer\n"
+        header_info += (
+            ".. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg\n"
+        )
+        header_info += "   :width: 15\n"
+        header_info += "   :alt: Documentation\n"
+
+        header_info += f"{package.name}\n"
+        header_info += "=" * len(package.name) + "\n\n"
+        header_info += "Package\n"
+        header_info += "-" * 20 + "\n\n"
+        header_info += f"|MAINTAINER| Maintainer: {', '.join(x['name'] for x in package.authors)}\n\n"
+        header_info += f"|LICENSE| License: {package.license}\n\n"
+        if package.repository != "":
+            repo_name = package.repository.replace("https://github.com/", "")
+            if "CoLRev-Environment/colrev" in repo_name:
+                repo_name = "CoLRev-Environment/colrev"
+            header_info += (
+                f"|GIT_REPO| Repository: `{repo_name} <{package.repository}>`_ \n\n"
+            )
+
+        if package.documentation != "":
+            header_info += (
+                f"|DOCUMENTATION| `Documentation <{package.documentation}>`_ \n\n"
+            )
+
+        header_info += ".. list-table::\n"
+        header_info += "   :header-rows: 1\n"
+        header_info += "   :widths: 20 30 80\n\n"
+        header_info += "   * - Endpoint\n"
+        header_info += "     - Status\n"
+        header_info += "     - Add\n"
+
+        for endpoint_type in EndpointType:
+            if package.has_endpoint(endpoint_type):
+                header_info += f"   * - {endpoint_type.value}\n"
+                header_info += f"     - |{package.status.upper()}|\n"
+                if endpoint_type == EndpointType.review_type:
+                    header_info += f"     - .. code-block:: \n\n\n         colrev init --type {package.name}\n\n"
+                elif endpoint_type == EndpointType.search_source:
+                    header_info += f"     - .. code-block:: \n\n\n         colrev search --add {package.name}\n\n"
+                elif endpoint_type == EndpointType.prep:
+                    header_info += f"     - .. code-block:: \n\n\n         colrev prep --add {package.name}\n\n"
+                elif endpoint_type == EndpointType.prep_man:
+                    header_info += f"     - .. code-block:: \n\n\n         colrev prep-man --add {package.name}\n\n"
+                elif endpoint_type == EndpointType.dedupe:
+                    header_info += f"     - .. code-block:: \n\n\n         colrev dedupe --add {package.name}\n\n"
+                elif endpoint_type == EndpointType.prescreen:
+                    header_info += f"     - .. code-block:: \n\n\n         colrev prescreen --add {package.name}\n\n"
+                elif endpoint_type == EndpointType.pdf_get:
+                    header_info += f"     - .. code-block:: \n\n\n         colrev pdf-get --add {package.name}\n\n"
+                elif endpoint_type == EndpointType.pdf_get_man:
+                    header_info += f"     - .. code-block:: \n\n\n         colrev pdf-get-man --add {package.name}\n\n"
+                elif endpoint_type == EndpointType.pdf_prep:
+                    header_info += f"     - .. code-block:: \n\n\n         colrev pdf-prep --add {package.name}\n\n"
+                elif endpoint_type == EndpointType.pdf_prep_man:
+                    header_info += f"     - .. code-block:: \n\n\n         colrev pdf-prep-man --add {package.name}\n\n"
+                elif endpoint_type == EndpointType.screen:
+                    header_info += f"     - .. code-block:: \n\n\n         colrev screen --add {package.name}\n\n"
+                elif endpoint_type == EndpointType.data:
+                    header_info += f"     - .. code-block:: \n\n\n         colrev data --add {package.name}\n\n"
+
+        return header_info
+
     def _import_package_docs(
         self, package: colrev.package_manager.package.Package
     ) -> str:
 
         docs_link = package.package_dir / package.colrev_doc_link
 
-        packages_index_path = Path(__file__).parent.parent.parent / Path(
-            "docs/source/manual/packages"
-        )
+        packages_index_path = self._colrev_path / Path("docs/source/manual/packages")
 
         output = parse_from_file(docs_link)
+        output = output.replace(".. list-table::", ".. list-table::\n   :align: left")
+
+        header_info = self._get_header_info(package)
 
         file_path = Path(f"{package.name}.rst")
         target = packages_index_path / file_path
         with open(target, "w", encoding="utf-8") as file:
             # NOTE: at this point, we may add metadata
             # (such as package status, authors, url etc.)
+            file.write(header_info)
             file.write(output)
 
         return str(file_path)
@@ -215,17 +321,7 @@ class DocRegistryManager:
         packages_overview = []
         # for key, packages in self.package_endpoints_json.items():
 
-        for endpoint_type in [
-            "review_type",
-            "search_source",
-            "prep",
-            "dedupe",
-            "prescreen",
-            "pdf_get",
-            "pdf_prep",
-            "screen",
-            "data",
-        ]:
+        for endpoint_type in self.ENDPOINT_TYPES:
             packages = self.package_endpoints_json[endpoint_type]
             for package in packages:
                 package["endpoint_type"] = endpoint_type
@@ -243,7 +339,7 @@ class DocRegistryManager:
     def update(self) -> None:
         """Update the package endpoints and the package status."""
 
-        self._extract_search_source_types()
         self._update_package_endpoints_json()
+        self._extract_search_source_types()
         self._update_packages_overview()
         self._write_docs_for_index()

@@ -1,4 +1,4 @@
-# PDF Backward Search
+## Summary
 
 ## search
 
@@ -24,4 +24,4 @@ colrev search -bws record_id
 ```
 References can be selected interactively for import.
 
-## Links
+<!-- ## Links -->

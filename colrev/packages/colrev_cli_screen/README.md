@@ -1,10 +1,9 @@
-# Interactive CLI screen
+## Summary
 
 ## screen
 
-Note: This document is currently under development. It will contain the following elements.
+The cli screen asks for user input, indicating for each paper whether it should be included or not. At the beginning, screening criteria can be defined.
 
-- description
-- example
-
+<!--
 ## Links
+-->

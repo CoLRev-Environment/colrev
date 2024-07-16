@@ -1,10 +1,10 @@
-# Citeas linking
+## Summary
 
 ## prep
 
-Note: This document is currently under development. It will contain the following elements.
+This package retrieves metadata from [citeas](https://citeas.org/).
 
-- description
-- example
 
-## Links
+## Link
+
+- [citeas.org](https://citeas.org/)

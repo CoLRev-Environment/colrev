@@ -2,10 +2,11 @@
 name = "colrev.pdf_backward_search"
 description = "CoLRev package for pdf_backward_search"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/pdf_backward_search/README.md"
-
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/pdf_backward_search"
 
 [[tool.poetry.packages]]
 include = "src"

@@ -46,7 +46,8 @@ class Load(colrev.process.operation.Operation):
         if not hide_load_explanation:
             self.review_manager.logger.info("Load")
             self.review_manager.logger.info(
-                "Load converts search results and adds them to the shared data/records.bib."
+                "Load converts search results and adds them to the shared "
+                f"{self.review_manager.paths.records}."
             )
             self.review_manager.logger.info(
                 "Original records (search results) are stored in the directory data/search"
@@ -368,19 +369,26 @@ class Load(colrev.process.operation.Operation):
             sources_settings.append(source)
         sources = []
         for source in sources_settings:
+            try:
+                search_source_class = self.package_manager.get_package_endpoint_class(
+                    package_type=EndpointType.search_source,
+                    package_identifier=source.endpoint,
+                )
+                endpoint = search_source_class(
+                    source_operation=self, settings=source.get_dict()
+                )
 
-            search_source_class = self.package_manager.get_package_endpoint_class(
-                package_type=EndpointType.search_source,
-                package_identifier=source.endpoint,
-            )
-            endpoint = search_source_class(
-                source_operation=self, settings=source.get_dict()
-            )
+                s_type = endpoint.search_source.search_type  # type: ignore
+                if s_type == SearchType.MD and not include_md:
+                    continue
+                sources.append(endpoint)
 
-            s_type = endpoint.search_source.search_type  # type: ignore
-            if s_type == SearchType.MD and not include_md:
-                continue
-            sources.append(endpoint)
+            except colrev_exceptions.MissingDependencyError as exc:
+                self.review_manager.logger.error(exc)
+                self.review_manager.logger.error(
+                    f"Cannot load records for {source.filename}"
+                )
+                print()
 
         return sources
 

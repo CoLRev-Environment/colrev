@@ -2,7 +2,7 @@
     "review_type": [
         {
             "package_endpoint_identifier": "colrev.blank",
-            "status": "|MATURING|",
+            "status": "|STABLE|",
             "short_description": "Blank review (:doc:`instructions </manual/packages/colrev.blank>`)",
             "ci_supported": true
         },
@@ -14,7 +14,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.critical_review",
-            "status": "|EXPERIMENTAL|",
+            "status": "|STABLE|",
             "short_description": "Critical review (:doc:`instructions </manual/packages/colrev.critical_review>`)",
             "ci_supported": true
         },
@@ -26,13 +26,13 @@
         },
         {
             "package_endpoint_identifier": "colrev.descriptive_review",
-            "status": "|EXPERIMENTAL|",
+            "status": "|STABLE|",
             "short_description": "Descriptive review (:doc:`instructions </manual/packages/colrev.descriptive_review>`)",
             "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.literature_review",
-            "status": "|MATURING|",
+            "status": "|STABLE|",
             "short_description": "Literature review (simple) (:doc:`instructions </manual/packages/colrev.literature_review>`)",
             "ci_supported": true
         },
@@ -43,8 +43,14 @@
             "ci_supported": true
         },
         {
-            "package_endpoint_identifier": "colrev.narrative_review",
+            "package_endpoint_identifier": "colrev.methodological_review",
             "status": "|EXPERIMENTAL|",
+            "short_description": "Methodological review (:doc:`instructions </manual/packages/colrev.methodological_review>`)",
+            "ci_supported": true
+        },
+        {
+            "package_endpoint_identifier": "colrev.narrative_review",
+            "status": "|STABLE|",
             "short_description": "Narrative review (:doc:`instructions </manual/packages/colrev.narrative_review>`)",
             "ci_supported": true
         },
@@ -62,7 +68,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.scoping_review",
-            "status": "|MATURING|",
+            "status": "|STABLE|",
             "short_description": "Scoping review (:doc:`instructions </manual/packages/colrev.scoping_review>`)",
             "ci_supported": true
         },
@@ -112,7 +118,7 @@
         {
             "package_endpoint_identifier": "colrev.arxiv",
             "status": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for arXiv (:doc:`instructions </manual/packages/colrev.arxiv>`)",
+            "short_description": "arXiv (:doc:`instructions </manual/packages/colrev.arxiv>`)",
             "ci_supported": true,
             "search_types": [
                 "API"
@@ -188,6 +194,15 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.github",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "GitHub API (:doc:`instructions </manual/packages/colrev.github>`)",
+            "ci_supported": true,
+            "search_types": [
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.google_scholar",
             "status": "|EXPERIMENTAL|",
             "short_description": "GoogleScholar (:doc:`instructions </manual/packages/colrev.google_scholar>`)",
@@ -253,6 +268,15 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.osf",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "OSF (:doc:`instructions </manual/packages/colrev.osf>`)",
+            "ci_supported": true,
+            "search_types": [
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.pdf_backward_search",
             "status": "|MATURING|",
             "short_description": "Backward search extracting references from PDFs using GROBID (:doc:`instructions </manual/packages/colrev.pdf_backward_search>`)",
@@ -305,7 +329,8 @@
             "short_description": "Springer Link (:doc:`instructions </manual/packages/colrev.springer_link>`)",
             "ci_supported": false,
             "search_types": [
-                "DB"
+                "DB",
+                "API"
             ]
         },
         {
@@ -349,6 +374,15 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.unpaywall",
+            "status": "|MATURING|",
+            "short_description": "Unpaywall Search Source (:doc:`instructions </manual/packages/colrev.unpaywall>`)",
+            "ci_supported": false,
+            "search_types": [
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.web_of_science",
             "status": "|EXPERIMENTAL|",
             "short_description": "Web of Science (:doc:`instructions </manual/packages/colrev.web_of_science>`)",
@@ -371,7 +405,7 @@
         {
             "package_endpoint_identifier": "colrev.add_journal_ranking",
             "status": "|EXPERIMENTAL|",
-            "short_description": "Class for add _journal_ranking (:doc:`instructions </manual/packages/colrev.add_journal_ranking>`)",
+            "short_description": "Prepares records based on journal rankings (:doc:`instructions </manual/packages/colrev.add_journal_ranking>`)",
             "ci_supported": false
         },
         {
@@ -453,6 +487,12 @@
             "ci_supported": true
         },
         {
+            "package_endpoint_identifier": "colrev.github",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Prepares records based on GitHub metadata (:doc:`instructions </manual/packages/colrev.github>`)",
+            "ci_supported": true
+        },
+        {
             "package_endpoint_identifier": "colrev.local_index",
             "status": "|MATURING|",
             "short_description": "Prepares records based on LocalIndex metadata (:doc:`instructions </manual/packages/colrev.local_index>`)",
@@ -530,7 +570,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.dedupe",
-            "status": "|MATURING|",
+            "status": "|STABLE|",
             "short_description": "Default deduplication (:doc:`instructions </manual/packages/colrev.dedupe>`)",
             "ci_supported": true
         }
@@ -678,6 +718,12 @@
             "package_endpoint_identifier": "colrev.prisma",
             "status": "|EXPERIMENTAL|",
             "short_description": "Create a PRISMA diagram (:doc:`instructions </manual/packages/colrev.prisma>`)",
+            "ci_supported": false
+        },
+        {
+            "package_endpoint_identifier": "colrev.profile",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Create a profile (:doc:`instructions </manual/packages/colrev.profile>`)",
             "ci_supported": false
         },
         {

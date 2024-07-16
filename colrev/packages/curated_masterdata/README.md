@@ -1,4 +1,4 @@
-# Curated masterdata repository
+## Summary
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -21,7 +21,9 @@ colrev search --add "crossref:jissn=123456"
 
 ```
 
+<!--
 ### Problem formulation
+-->
 
 ### Metadata retrieval
 
@@ -29,6 +31,7 @@ colrev search --add "crossref:jissn=123456"
 - The curation endpoint supports the specification of ``masterdata_restrictions``, defining the name of the outlet, whether volume or issue fields are required (for which time-frame).
 - Dedicated dedupe endpoints are activated.
 
+<!--
 ### Metadata prescreen
 
 ### PDF retrieval
@@ -42,3 +45,4 @@ colrev search --add "crossref:jissn=123456"
 ## Software recommendations
 
 ## References
+-->

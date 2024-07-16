@@ -2,6 +2,7 @@
 """Functionality to determine similarity betwen records."""
 from __future__ import annotations
 
+import re
 import typing
 
 import colrev.env.utils
@@ -82,6 +83,21 @@ def _select_author(
     return record.data[Fields.AUTHOR]
 
 
+def _select_year(
+    record: colrev.record.record.Record, merging_record: colrev.record.record.Record
+) -> str:
+    year_pattern = r"\d{4}"
+    if (
+        re.match(year_pattern, merging_record.data[Fields.YEAR])
+        or not re.match(
+            year_pattern, record.data[Fields.YEAR]
+        )  # could be "forthcoming" or "UNKNOWN"
+        # record.data[Fields.YEAR] == "forthcoming"
+    ):
+        return merging_record.data[Fields.YEAR]
+    return record.data[Fields.YEAR]
+
+
 def _select_pages(
     record: colrev.record.record.Record,
     merging_record: colrev.record.record.Record,
@@ -160,15 +176,17 @@ CUSTOM_FIELD_SELECTORS = {
     Fields.TITLE: _select_title,
     Fields.JOURNAL: _select_journal,
     Fields.BOOKTITLE: _select_booktitle,
+    Fields.YEAR: _select_year,
 }
 
 
-def _fuse_fields(
+def fuse_fields(
     main_record: colrev.record.record.Record,
     *,
     merging_record: colrev.record.record.Record,
     key: str,
 ) -> None:
+    """Fuse fields based on quality heuristics"""
     # Note : the assumption is that we need masterdata_provenance notes
     # only for authors
 
@@ -226,15 +244,26 @@ def _fuse_fields(
                 append_edit=False,
             )
 
-    elif FieldValues.UNKNOWN == main_record.data.get(
-        key, ""
-    ) and FieldValues.UNKNOWN != merging_record.data.get(key, ""):
+    elif main_record.data.get(key, "") in [
+        "",
+        FieldValues.UNKNOWN,
+    ] and merging_record.data.get(key, "") not in ["", FieldValues.UNKNOWN]:
+        if _preserve_ignore_missing(main_record, key=key):
+            return
         main_record.update_field(
             key=key,
             value=merging_record.data[key],
             source=merging_record.get_field_provenance_source(key),
             append_edit=False,
         )
+
+
+def _preserve_ignore_missing(
+    main_record: colrev.record.record.Record, *, key: str
+) -> bool:
+    if main_record.ignored_defect(key=key, defect=DefectCodes.MISSING):
+        return True
+    return False
 
 
 def _merging_record_preferred(
@@ -323,7 +352,7 @@ def merge(
 
             # Fuse best fields if none is curated
             else:
-                _fuse_fields(
+                fuse_fields(
                     main_record,
                     merging_record=merging_record,
                     key=key,

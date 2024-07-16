@@ -2,10 +2,11 @@
 name = "colrev.website_screenshot"
 description = "CoLRev package for website_screenshot"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/website_screenshot/README.md"
-
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/website_screenshot"
 
 [[tool.poetry.packages]]
 include = "src"

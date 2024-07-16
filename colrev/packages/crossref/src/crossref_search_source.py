@@ -71,10 +71,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.oni
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/crossref.md"
-    )
+
     short_name = "Crossref"
     _crossref_md_filename = Path("data/search/md_crossref.bib")
 
@@ -514,7 +511,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 if save_feed:
                     crossref_feed.save()
 
-            except (colrev_exceptions.NotFeedIdentifiableException,):
+            except colrev_exceptions.NotFeedIdentifiableException:
                 pass
             finally:
                 try:
@@ -933,7 +930,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint"""
 
         params_dict = cls._parse_params(params)
@@ -942,7 +939,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.add_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(endpoint=cls.endpoint)
             else:
                 if Fields.URL in params_dict:
                     query = {
@@ -982,6 +979,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             raise NotImplementedError
 
         operation.add_source_and_search(search_source)
+        return search_source
 
     @classmethod
     def _add_toc_interactively(

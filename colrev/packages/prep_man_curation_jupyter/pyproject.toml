@@ -2,10 +2,11 @@
 name = "colrev.prep_man_curation_jupyter"
 description = "CoLRev package for curation_jupyter_prep_man"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/prep_man_curation_jupyter/README.md"
-
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/prep_man_curation_jupyter"
 
 [[tool.poetry.packages]]
 include = "src"

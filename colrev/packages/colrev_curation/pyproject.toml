@@ -2,9 +2,12 @@
 name = "colrev.colrev_curation"
 description = "CoLRev package for colrev_curation"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/colrev_curation/README.md"
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_curation"
+
 [[tool.poetry.packages]]
 include = "src"
 

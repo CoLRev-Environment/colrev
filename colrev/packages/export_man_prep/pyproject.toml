@@ -2,10 +2,11 @@
 name = "colrev.export_man_prep"
 description = "CoLRev package for export_man_prep"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/export_man_prep/README.md"
-
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/export_man_prep"
 
 [[tool.poetry.packages]]
 include = "src"

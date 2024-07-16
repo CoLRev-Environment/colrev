@@ -14,7 +14,7 @@
         {
             "package_endpoint_identifier": "colrev.arxiv",
             "status": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for arXiv (:doc:`instructions </manual/packages/colrev.arxiv>`)",
+            "short_description": "arXiv (:doc:`instructions </manual/packages/colrev.arxiv>`)",
             "ci_supported": true,
             "search_types": [
                 "API"
@@ -72,6 +72,15 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.github",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "GitHub API (:doc:`instructions </manual/packages/colrev.github>`)",
+            "ci_supported": true,
+            "search_types": [
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.ieee",
             "status": "|EXPERIMENTAL|",
             "short_description": "IEEEXplore (:doc:`instructions </manual/packages/colrev.ieee>`)",
@@ -101,6 +110,15 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.osf",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "OSF (:doc:`instructions </manual/packages/colrev.osf>`)",
+            "ci_supported": true,
+            "search_types": [
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.pubmed",
             "status": "|MATURING|",
             "short_description": "Pubmed (:doc:`instructions </manual/packages/colrev.pubmed>`)",
@@ -121,9 +139,28 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.springer_link",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Springer Link (:doc:`instructions </manual/packages/colrev.springer_link>`)",
+            "ci_supported": false,
+            "search_types": [
+                "DB",
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.synergy_datasets",
             "status": "|MATURING|",
             "short_description": "SYNERGY-datasets (:doc:`instructions </manual/packages/colrev.synergy_datasets>`)",
+            "ci_supported": false,
+            "search_types": [
+                "API"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.unpaywall",
+            "status": "|MATURING|",
+            "short_description": "Unpaywall Search Source (:doc:`instructions </manual/packages/colrev.unpaywall>`)",
             "ci_supported": false,
             "search_types": [
                 "API"
@@ -233,7 +270,8 @@
             "short_description": "Springer Link (:doc:`instructions </manual/packages/colrev.springer_link>`)",
             "ci_supported": false,
             "search_types": [
-                "DB"
+                "DB",
+                "API"
             ]
         },
         {

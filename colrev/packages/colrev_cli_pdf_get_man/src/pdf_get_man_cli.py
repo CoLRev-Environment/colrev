@@ -2,6 +2,7 @@
 """CLI interface for manual retrieval of PDFs"""
 from __future__ import annotations
 
+import shutil
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,7 +18,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 
@@ -44,7 +44,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         self.pdf_get_man_operation = pdf_get_man_operation
 
         self._get_from_downloads_folder = False
-        self.pdf_dir = self.review_manager.get_path(Filepaths.PDF_DIR)
+        self.pdf_dir = self.review_manager.paths.pdf
 
     def _get_pdf_from_google(
         self, record: colrev.record.record.Record
@@ -146,8 +146,9 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             f"{record.data.get('volume', 'NA')}/{record.data.get('number', 'NA')}"
         )
         if vol_slash_nr_path.is_dir():
-            pdf_in_downloads_folder.rename(
-                vol_slash_nr_path / Path(f"{record.data['ID']}.pdf")
+            shutil.move(
+                str(pdf_in_downloads_folder),
+                str(vol_slash_nr_path / Path(f"{record.data['ID']}.pdf")),
             )
             return
 
@@ -155,22 +156,32 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             f"{record.data.get('volume', 'NA')}_{record.data.get('number', 'NA')}"
         )
         if vol_underscore_nr_path.is_dir():
-            pdf_in_downloads_folder.rename(
-                vol_underscore_nr_path / Path(f"{record.data['ID']}.pdf")
+            shutil.move(
+                str(pdf_in_downloads_folder),
+                str(vol_underscore_nr_path / Path(f"{record.data['ID']}.pdf")),
             )
             return
 
         vol_path = self.pdf_dir / Path(f"{record.data.get('volume', 'NA')}")
         if vol_path.is_dir():
-            pdf_in_downloads_folder.rename(vol_path / Path(f"{record.data['ID']}.pdf"))
+            shutil.move(
+                str(pdf_in_downloads_folder),
+                str(vol_path / Path(f"{record.data['ID']}.pdf")),
+            )
             return
 
         year_path = self.pdf_dir / Path(f"{record.data.get('year', 'NA')}")
         if year_path.is_dir():
-            pdf_in_downloads_folder.rename(year_path / Path(f"{record.data['ID']}.pdf"))
+            shutil.move(
+                str(pdf_in_downloads_folder),
+                str(year_path / Path(f"{record.data['ID']}.pdf")),
+            )
             return
 
-        pdf_in_downloads_folder.rename(self.pdf_dir / Path(f"{record.data['ID']}.pdf"))
+        shutil.move(
+            str(pdf_in_downloads_folder),
+            str(self.pdf_dir / Path(f"{record.data['ID']}.pdf")),
+        )
 
     def print_record(self, *, record_dict: dict) -> None:
         """Print the record for pdf-get-man (cli)"""

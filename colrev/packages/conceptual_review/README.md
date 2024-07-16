@@ -1,4 +1,4 @@
-# Conceptual review
+## Summary
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -9,6 +9,7 @@ Note: This document is currently under development. It will contain the followin
 - dimensions
 - differences between disciplines
 
+<!--
 ## Steps and operations
 
 ### Problem formulation
@@ -28,3 +29,4 @@ Note: This document is currently under development. It will contain the followin
 ## Software recommendations
 
 ## References
+-->

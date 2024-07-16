@@ -2,9 +2,11 @@
 name = "colrev.sync"
 description = "CoLRev package for sync"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/sync/README.md"
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/sync"
 
 [tool.poetry.scripts]
 colrev = "colrev.ui_cli.cli:main"

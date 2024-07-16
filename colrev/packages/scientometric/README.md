@@ -11,6 +11,8 @@ Note: This document is currently under development. It will contain the followin
 
 For the analysis of citation data, established software packages like [VosViewer](https://www.vosviewer.com/) are recommended.
 
+<!--
+
 ## Steps and operations
 
 ### Problem formulation
@@ -30,3 +32,4 @@ For the analysis of citation data, established software packages like [VosViewer
 ## Software recommendations
 
 ## References
+-->

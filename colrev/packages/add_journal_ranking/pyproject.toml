@@ -2,10 +2,15 @@
 name = "colrev.add_journal_ranking"
 description = "CoLRev package for add_journal_ranking"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/add_journal_ranking/README.md"
-
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>",
+    "Alexa Steinheimer",
+    "Robert Ahr",
+    "Thomas Fleischmann",
+    "Anton Liam Frisch"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/add_journal_ranking"
 
 [[tool.poetry.packages]]
 include = "src"

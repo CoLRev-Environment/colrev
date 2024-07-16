@@ -10,6 +10,7 @@ from random import randint
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.loader.load_utils_formatter
+import colrev.record.record_merger
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
@@ -251,7 +252,6 @@ class SearchAPIFeed:
         *,
         record: colrev.record.record.Record,
         main_record: colrev.record.record.Record,
-        origin: str,
     ) -> None:
 
         self._update_record_retract(record=record, main_record=main_record)
@@ -259,7 +259,7 @@ class SearchAPIFeed:
         if main_record.masterdata_is_curated() and not self.source.is_curated_source():
             return
 
-        for key, value in record.data.items():
+        for key in list(record.data.keys()):
             if self.update_only and key in FieldSet.TIME_VARIANT_FIELDS:
                 continue
 
@@ -269,26 +269,18 @@ class SearchAPIFeed:
             if key not in main_record.data:
                 if self._missing_ignored_field(main_record, key):
                     continue
-
-                main_record.update_field(
-                    key=key,
-                    value=value,
-                    source=origin,
-                    keep_source_if_equal=True,
-                    append_edit=False,
+                colrev.record.record_merger.fuse_fields(
+                    main_record, merging_record=record, key=key
                 )
+
             else:
                 # Ignore minor changes
-                if value.replace(" - ", ": ") == main_record.data[key].replace(
-                    " - ", ": "
-                ):
+                if record.data[key].replace(" - ", ": ") == main_record.data[
+                    key
+                ].replace(" - ", ": "):
                     continue
-                main_record.update_field(
-                    key=key,
-                    value=value,
-                    source=origin,
-                    keep_source_if_equal=True,
-                    append_edit=False,
+                colrev.record.record_merger.fuse_fields(
+                    main_record, merging_record=record, key=key
                 )
 
     def _forthcoming_published(
@@ -356,7 +348,6 @@ class SearchAPIFeed:
         self._update_record_fields(
             record=retrieved_record,
             main_record=main_record,
-            origin=colrev_origin,
         )
 
         if self._forthcoming_published(
@@ -408,7 +399,8 @@ class SearchAPIFeed:
         else:
             if self.records:
                 self.review_manager.logger.info(
-                    f"{Colors.GREEN}Records (data/records.bib) up-to-date{Colors.END}"
+                    f"{Colors.GREEN}Records ({self.review_manager.paths.RECORDS_FILE})"
+                    f" up-to-date{Colors.END}"
                 )
 
     def get_prev_feed_record(
@@ -482,5 +474,6 @@ class SearchAPIFeed:
 
         if not self.prep_mode:
             self.review_manager.dataset.save_records_dict(self.records)
-        self._nr_added = 0
-        self._nr_changed = 0
+        if not skip_print:
+            self._nr_added = 0
+            self._nr_changed = 0

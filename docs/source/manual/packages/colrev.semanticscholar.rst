@@ -1,17 +1,62 @@
+.. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
+   :height: 14pt
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |GIT_REPO| image:: /_static/svg/iconmonstr-code-fork-1.svg
+   :width: 15
+   :alt: Git repository
+.. |LICENSE| image:: /_static/svg/iconmonstr-copyright-2.svg
+   :width: 15
+   :alt: Licencse
+.. |MAINTAINER| image:: /_static/svg/iconmonstr-user-29.svg
+   :width: 20
+   :alt: Maintainer
+.. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
+   :width: 15
+   :alt: Documentation
+colrev.semanticscholar
+======================
 
-Semantic Scholar
-================
+Package
+--------------------
+
+|MAINTAINER| Maintainer: Gerit Wagner, Louis Langenhan, Peter Eckhardt, Amadou-Choumoussidine Kouotou-Ngapout, Robert Theis
+
+|LICENSE| License: MIT
+
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/semanticscholar>`_
 
 .. list-table::
    :header-rows: 1
+   :widths: 20 30 80
 
-   * - SearchSource
-     - Scope
-     - Size
-   * - Semantic Scholar
-     - Cross-disciplinary
-     - > 175,000,000
+   * - Endpoint
+     - Status
+     - Add
+   * - search_source
+     - |EXPERIMENTAL|
+     - .. code-block::
 
+
+         colrev search --add colrev.semanticscholar
+
+   * - prep
+     - |EXPERIMENTAL|
+     - .. code-block::
+
+
+         colrev prep --add colrev.semanticscholar
+
+
+Summary
+-------
+
+Semantic Scholar is a cross-disciplinary search source with a vast collection of over 175 million items.
 
 This class supports the search function for Semantic Scholar via an unofficial python client (link below).
 
@@ -22,6 +67,8 @@ So far, only API search is implemented. Other search types such as MD search or 
 
 API search
 ^^^^^^^^^^
+
+ℹ️ Restriction: API searches do not support complex queries (yet)
 
 The API search is launched with the following command:
 
@@ -78,11 +125,7 @@ Additionally, the result file has not been adapted to author search yet. Althoug
 prep
 ----
 
-Note: This document is currently under development. It will contain the following elements.
-
-
-* description
-* example
+Semantic scholar can be used to link metadata to existing records.
 
 Links
 -----

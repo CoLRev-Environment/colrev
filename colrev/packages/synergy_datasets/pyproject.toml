@@ -2,10 +2,11 @@
 name = "colrev.synergy_datasets"
 description = "CoLRev package for synergy_datasets"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/synergy_datasets/TODO/README.md"
-
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/synergy_datasets"
 
 [[tool.poetry.packages]]
 include = "src"

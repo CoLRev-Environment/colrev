@@ -2,9 +2,11 @@
 name = "colrev.exclude_non_latin_alphabets"
 description = "CoLRev package for exclude_non_latin_alphabets"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/exclude_non_latin_alphabets/README.md"
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/exclude_non_latin_alphabets"
 
 [[tool.poetry.packages]]
 include = "src"

@@ -2,10 +2,11 @@
 name = "colrev.colrev_cli_prescreen"
 description = "CoLRev package for colrev_cli_prescreen"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/colrev_cli_prescreen/README.md"
-
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_prescreen"
 
 [[tool.poetry.packages]]
 include = "src"

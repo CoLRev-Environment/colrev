@@ -34,7 +34,6 @@ import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
 
@@ -55,7 +54,9 @@ from colrev.constants import ScreenCriterionType
 
 EXACT_CALL = "colrev " + subprocess.list2cmdline(sys.argv[1:])  # nosec
 
-package_manager = colrev.package_manager.package_manager.PackageManager()
+PACKAGE_MANAGER = colrev.package_manager.package_manager.PackageManager()
+# TYPE_IDENTIFIER_ENDPOINT_DICT = PACKAGE_MANAGER.load_type_identifier_endpoint_dict()
+
 SHELL_MODE = False
 
 
@@ -242,11 +243,7 @@ def exit(
 @main.command(help_priority=1)
 @click.option(
     "--type",
-    # type=click.Choice(
-    #     package_manager.discover_packages(
-    #         package_type=EndpointType.review_type,
-    #     )
-    # ),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.review_type]),
     default="colrev.literature_review",
     help="Review type for the setup.",
 )
@@ -269,13 +266,6 @@ def exit(
     default=False,
     help="Add search results example",
 )
-@click.option(
-    "-lpdf",
-    "--local_pdf_collection",
-    is_flag=True,
-    default=False,
-    help="Add a local PDF collection repository",
-)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def init(
@@ -284,7 +274,6 @@ def init(
     example: bool,
     force: bool,
     light: bool,
-    local_pdf_collection: bool,
 ) -> None:
     """Initialize (define review objectives and type)
 
@@ -298,7 +287,6 @@ def init(
         example=example,
         force_mode=force,
         light=light,
-        local_pdf_collection=local_pdf_collection,
         exact_call=EXACT_CALL,
     )
 
@@ -396,8 +384,8 @@ def retrieve(
         {"verbose_mode": verbose, "force_mode": force, "high_level_operation": True},
     )
 
-    pdf_dir = review_manager.get_path(Filepaths.PDF_DIR)
-    search_dir = review_manager.get_path(Filepaths.SEARCH_DIR)
+    pdf_dir = review_manager.paths.pdf
+    search_dir = review_manager.paths.search
     if not any(search_dir.iterdir()) and not any(pdf_dir.iterdir()):
         # Note : API-based searches automatically retrieve files
         # when they are added, i.e., the following message should
@@ -405,8 +393,8 @@ def retrieve(
         print(
             "To retrieve search results,\n"
             " - copy files (*.bib, *.ris, *.xlsx, ...) "
-            f"to the directory {Filepaths.SEARCH_DIR} or\n"
-            f" - copy PDF files to the directory {Filepaths.PDF_DIR} or \n"
+            f"to the directory {review_manager.paths.SEARCH_DIR} or\n"
+            f" - copy PDF files to the directory {review_manager.paths.PDF_DIR} or \n"
             " - add an API-based search, as described in the documentation:\n"
             "https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html"
         )
@@ -445,11 +433,7 @@ def retrieve(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(
-    #     package_manager.discover_packages(
-    #         package_type=EndpointType.search_source,
-    #     )
-    # ),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.search_source]),
     help="""Search source to be added.""",
 )
 @click.option(
@@ -540,9 +524,8 @@ def search(
         # pylint: disable=reimported
         import colrev.ui_cli.add_package_to_settings
 
-        package_manager = review_manager.get_package_manager()
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=search_operation,
             package_identifier=add,
             params=params,
@@ -566,7 +549,9 @@ def search(
             review_manager=review_manager
         )
         print("Activated custom_search_script.py.")
-        print("Please update the source in settings.json and commit.")
+        print(
+            f"Please update the source in {review_manager.paths.SETTINGS_FILE} and commit."
+        )
     elif bws:
         import colrev.ui_cli.search_backward_selective
 
@@ -654,11 +639,7 @@ def load(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(
-    #     package_manager.discover_packages(
-    #         package_type=EndpointType.prep,
-    #     )
-    # ),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prep]),
     help="""Prep package to be added.""",
 )
 @click.option(
@@ -752,13 +733,14 @@ def prep(
             prep_operation.setup_custom_script()
             print("Activated custom_prep_script.py.")
             print(
-                "Please check and adapt its position in the settings.json and commit."
+                "Please check and adapt its position in the "
+                f"{review_manager.paths.SETTINGS_FILE} and commit."
             )
             return
         if add:
-            package_manager = review_manager.get_package_manager()
+
             colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-                package_manager,
+                PACKAGE_MANAGER,
                 operation=prep_operation,
                 package_identifier=add,
                 params=params,
@@ -778,11 +760,7 @@ def prep(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(
-    #     package_manager.discover_packages(
-    #         package_type=EndpointType.prep_man,
-    #     )
-    # ),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prep_man]),
     help="""Prep-man script  to be added.""",
 )
 @click.option(
@@ -847,9 +825,9 @@ def prep_man(
         return
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=prep_man_operation,
             package_identifier=add,
             params=params,
@@ -873,12 +851,7 @@ def _view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(
-    #     package_manager.discover_packages(
-    #         package_type=EndpointType.dedupe,
-    #     ),
-    #     case_sensitive=False,
-    # ),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.dedupe]),
     help="""Dedupe package to be added.""",
 )
 @click.option(
@@ -965,9 +938,9 @@ def dedupe(
     )
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=dedupe_operation,
             package_identifier=add,
             params=params,
@@ -1026,11 +999,7 @@ def dedupe(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(
-    #     package_manager.discover_packages(
-    #         package_type=EndpointType.prescreen,
-    #     )
-    # ),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prescreen]),
     help="""Prescreen package to be added.""",
 )
 @click.option(
@@ -1160,9 +1129,9 @@ def prescreen(
         prescreen_operation.setup_custom_script()
         print("Activated custom_prescreen_script.py.")
     elif add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=prescreen_operation,
             package_identifier=add,
             params=params,
@@ -1188,11 +1157,7 @@ def prescreen(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(
-    #     package_manager.discover_packages(
-    #         package_type=EndpointType.screen,
-    #     )
-    # ),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.screen]),
     help="""Screen package to be added.""",
 )
 @click.option(
@@ -1297,9 +1262,9 @@ def screen(
         screen_operation.add_abstracts_from_tei()
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=screen_operation,
             package_identifier=add,
             params=params,
@@ -1467,11 +1432,7 @@ def pdfs(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(
-    #     package_manager.discover_packages(
-    #         package_type=EndpointType.pdf_get,
-    #     )
-    # ),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_get]),
     help="""PDF-get package to be added.""",
 )
 @click.option(
@@ -1554,9 +1515,9 @@ def pdf_get(
     )
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=pdf_get_operation,
             package_identifier=add,
             params=params,
@@ -1583,11 +1544,7 @@ def pdf_get(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(
-    #     package_manager.discover_packages(
-    #         package_type=EndpointType.pdf_get_man,
-    #     )
-    # ),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_get_man]),
     help="""PDF-get-man package to be added.""",
 )
 @click.option(
@@ -1650,9 +1607,9 @@ def pdf_get_man(
     pdf_get_man_operation = review_manager.get_pdf_get_man_operation()
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=pdf_get_man_operation,
             package_identifier=add,
             params=params,
@@ -1724,11 +1681,7 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(
-    #     package_manager.discover_packages(
-    #         package_type=EndpointType.pdf_prep,
-    #     )
-    # ),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_prep]),
     help="""PDF-prep package to be added.""",
 )
 @click.option(
@@ -1813,9 +1766,9 @@ def pdf_prep(
     pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=pdf_prep_operation,
             package_identifier=add,
             params=params,
@@ -1865,11 +1818,7 @@ def _delete_first_pages_cli(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(
-    #     package_manager.discover_packages(
-    #         package_type=EndpointType.pdf_prep_man,
-    #     )
-    # ),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_prep_man]),
     help="""PDF-prep-man package to be added.""",
 )
 @click.option(
@@ -1952,9 +1901,9 @@ def pdf_prep_man(
     pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=pdf_prep_man_operation,
             package_identifier=add,
             params=params,
@@ -1982,11 +1931,7 @@ def pdf_prep_man(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(
-    #     package_manager.discover_packages(
-    #         package_type=EndpointType.data,
-    #     )
-    # ),
+    # click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.data]),
     help="Data package to be added.",
 )
 @click.option(
@@ -1994,12 +1939,6 @@ def pdf_prep_man(
     "--params",
     type=str,
     help="Parameters",
-)
-@click.option(
-    "--profile",
-    is_flag=True,
-    default=False,
-    help="Create a sample profile (papers per journal and year)",
 )
 @click.option(
     "--reading_heuristics",
@@ -2034,7 +1973,6 @@ def data(
     ctx: click.core.Context,
     add: str,
     params: str,
-    profile: bool,
     reading_heuristics: bool,
     setup_custom_script: bool,
     verbose: bool,
@@ -2049,15 +1987,12 @@ def data(
         ctx,
         {
             "verbose_mode": verbose,
-            "force_mode": (force or profile),
+            "force_mode": force,
             "exact_call": EXACT_CALL,
         },
     )
     data_operation = review_manager.get_data_operation()
 
-    if profile:
-        data_operation.profile()
-        return
     if reading_heuristics:
         heuristic_results = data_operation.reading_heuristics()
         review_manager.p_printer.pprint(heuristic_results)
@@ -2065,13 +2000,15 @@ def data(
     if setup_custom_script:
         data_operation.setup_custom_script()
         print("Activated custom_data_script.py.")
-        print("Please update the data_format in settings.json and commit.")
+        print(
+            f"Please update the data_format in {review_manager.paths.SETTINGS_FILE} and commit."
+        )
         return
 
     if add:
-        package_manager = review_manager.get_package_manager()
+
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
-            package_manager,
+            PACKAGE_MANAGER,
             operation=data_operation,
             package_identifier=add,
             params=params,
@@ -2393,8 +2330,7 @@ def env(
         ):
             return
 
-        package_manager = colrev.package_manager.package_manager.PackageManager()
-        package_manager.update_package_list()
+        PACKAGE_MANAGER.update_package_list()
         return
 
     if index:
@@ -2553,7 +2489,7 @@ def settings(
         for script_to_call in scripts_to_call:
             check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)  # nosec
 
-        review_manager.dataset.add_changes(Path(".pre-commit-config.yaml"))
+        review_manager.dataset.add_changes(review_manager.paths.PRE_COMMIT_CONFIG)
         review_manager.dataset.create_commit(msg="Update pre-commit hooks")
         print("Successfully updated pre-commit hooks")
         return
@@ -2578,15 +2514,15 @@ def settings(
         value = ast.literal_eval(value_string)
         review_manager.logger.info("Change settings.%s to %s", path, value)
 
-        with open("settings.json", encoding="utf-8") as file:
+        with open(review_manager.paths.settings, encoding="utf-8") as file:
             project_settings = json.load(file)
 
         glom.assign(project_settings, path, value)
 
-        with open("settings.json", "w", encoding="utf-8") as outfile:
+        with open(review_manager.paths.settings, "w", encoding="utf-8") as outfile:
             json.dump(project_settings, outfile, indent=4)
 
-        review_manager.dataset.add_changes(Path("settings.json"))
+        review_manager.dataset.add_changes(review_manager.paths.SETTINGS_FILE)
         review_manager.dataset.create_commit(msg="Change settings", manual_author=True)
 
     # import colrev_ui.ui_web.settings_editor

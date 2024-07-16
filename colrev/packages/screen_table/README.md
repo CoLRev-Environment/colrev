@@ -1,10 +1,5 @@
-# Export screen table
+## Summary
 
 ## screen
 
-Note: This document is currently under development. It will contain the following elements.
-
-- description
-- example
-
-## Links
+This package exports a csv/excel file for screening and imports the results afterwards.

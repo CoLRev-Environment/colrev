@@ -1,25 +1,17 @@
-# Exclude Complementary Material - Literature Review Prescreening Package
+## Summary
 
 The Exclude Complementary Material - Literature Review Prescreening Package is a time-saving software package designed to automate the identification and exclusion of records with specific titles.
 The tool recognizes titles such as "Editorial Board," "About the Authors," or "Thanks to Reviewers."
 
-## Key Features
+**Key Features**
 
 - Title Pattern Recognition: Utilizes a matching algorithms to identify titles for prescreen exclusion.
 - Efficient Workflow: Accelerates the prescreening process, allowing quick focus on relevant literature.
 
-## Benefits
+**Benefits**
 
 - Time Savings: Reduces manual screening effort significantly.
 - Consistency: Eliminates human error for consistent application of prescreening criteria.
-
-## Usage
-
-The package is enabled by default. To add it, run:
-
-```
-colrev.exclude_complementary_materials
-```
 
 ## Links to Exclusion Lists
 

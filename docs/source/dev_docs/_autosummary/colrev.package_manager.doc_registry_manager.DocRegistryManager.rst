@@ -17,3 +17,13 @@ colrev.package\_manager.doc\_registry\_manager.DocRegistryManager
       :nosignatures:
 
       ~DocRegistryManager.update
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~DocRegistryManager.ENDPOINT_TYPES

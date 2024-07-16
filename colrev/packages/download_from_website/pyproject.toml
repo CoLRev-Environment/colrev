@@ -2,9 +2,11 @@
 name = "colrev.download_from_website"
 description = "CoLRev package for download_from_website"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/download_from_website/README.md"
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/download_from_website"
 
 [[tool.poetry.packages]]
 include = "src"

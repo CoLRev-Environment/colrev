@@ -13,7 +13,6 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
@@ -79,7 +78,7 @@ class Search(colrev.process.operation.Operation):
             self.review_manager.dataset.add_changes(query_filename)
         return query_filename
 
-    def add_db_source(  # type: ignore
+    def create_db_source(  # type: ignore
         self, *, search_source_cls, params: dict
     ) -> colrev.settings.SearchSource:
         """Interactively add a DB SearchSource"""
@@ -88,7 +87,7 @@ class Search(colrev.process.operation.Operation):
             raise NotImplementedError  # or parameter error
 
         if "search_file" in params:
-            filename = params["search_file"]
+            filename = Path(params["search_file"])
         else:
             filename = self.get_unique_filename(
                 file_path_string=search_source_cls.endpoint.replace("colrev.", "")
@@ -126,15 +125,10 @@ class Search(colrev.process.operation.Operation):
             search_parameters={"query_file": str(query_file)},
             comment="",
         )
-        self.review_manager.settings.sources.append(add_source)
-        self.review_manager.save_settings()
-        self.review_manager.dataset.create_commit(
-            msg=f"Add search {search_source_cls.endpoint}"
-        )
         print()
         return add_source
 
-    def add_api_source(self, *, endpoint: str) -> colrev.settings.SearchSource:
+    def create_api_source(self, *, endpoint: str) -> colrev.settings.SearchSource:
         """Interactively add an API SearchSource"""
 
         print(f"Add {endpoint} as an API SearchSource")
@@ -276,7 +270,7 @@ class Search(colrev.process.operation.Operation):
     def get_new_search_files(self) -> list[Path]:
         """Retrieve new search files (not yet registered in settings)"""
 
-        search_dir = self.review_manager.get_path(Filepaths.SEARCH_DIR)
+        search_dir = self.review_manager.paths.search
         files = [
             f.relative_to(self.review_manager.path) for f in search_dir.glob("**/*")
         ]
@@ -434,7 +428,9 @@ class Search(colrev.process.operation.Operation):
 
         self.review_manager.settings.sources.append(search_source)
         self.review_manager.save_settings()
-        self.review_manager.dataset.create_commit(msg="Add search source")
+        self.review_manager.dataset.create_commit(
+            msg=f"Add search: {search_source.endpoint}"
+        )
         if not search_source.filename.is_file():
             self.main(selection_str=str(search_source.filename), rerun=False)
 
@@ -463,35 +459,37 @@ class Search(colrev.process.operation.Operation):
         # Reload the settings because the search sources may have been updated
         self.review_manager.settings = self.review_manager.load_settings()
         for source in self._get_search_sources(selection_str=selection_str):
-            search_source_class = self.package_manager.get_package_endpoint_class(
-                package_type=EndpointType.search_source,
-                package_identifier=source.endpoint,
-            )
-            endpoint = search_source_class(
-                source_operation=self, settings=source.get_dict()
-            )
-
-            if not self.review_manager.high_level_operation:
-                print()
-            self.review_manager.logger.info(
-                f"search [{source.endpoint}:{source.search_type} > "
-                f"data/search/{source.filename.name}]"
-            )
-
             try:
+                if not self.review_manager.high_level_operation:
+                    print()
+                self.review_manager.logger.info(
+                    f"search [{source.endpoint}:{source.search_type} > "
+                    f"data/search/{source.filename.name}]"
+                )
+
+                search_source_class = self.package_manager.get_package_endpoint_class(
+                    package_type=EndpointType.search_source,
+                    package_identifier=source.endpoint,
+                )
+                endpoint = search_source_class(
+                    source_operation=self, settings=source.get_dict()
+                )
+
                 endpoint.search(rerun=rerun)  # type: ignore
+
+                if not source.filename.is_file():
+                    continue
+
+                self._remove_forthcoming(source)
+                self.review_manager.dataset.add_changes(source.filename)
+                if not skip_commit:
+                    self.review_manager.dataset.create_commit(msg="Run search")
             except colrev_exceptions.ServiceNotAvailableException:
                 self.review_manager.logger.warning("ServiceNotAvailableException")
             except colrev_exceptions.SearchNotAutomated as exc:
-                print(exc)
-
-            if not source.filename.is_file():
-                continue
-
-            self._remove_forthcoming(source)
-            self.review_manager.dataset.add_changes(source.filename)
-            if not skip_commit:
-                self.review_manager.dataset.create_commit(msg="Run search")
+                self.review_manager.logger.warning(exc)
+            except colrev_exceptions.MissingDependencyError as exc:
+                self.review_manager.logger.warning(exc)
 
         if self.review_manager.in_ci_environment():
             print("\n\n")

@@ -1,10 +1,5 @@
-# Source-specific prep
+## Summary
 
 ## prep
 
-Note: This document is currently under development. It will contain the following elements.
-
-- description
-- example
-
-## Links
+This package applies source-specific preparation rules, i.e., rules that apply to a selected database.
