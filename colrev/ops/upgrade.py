@@ -717,6 +717,7 @@ class Upgrade(colrev.process.operation.Operation):
 
         return self.repo.is_dirty()
 
+
 # Note: we can ask users to make decisions (when defaults are not clear)
 # via input() or simply cancel the process (raise a CoLrevException)
 
