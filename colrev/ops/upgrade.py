@@ -195,6 +195,12 @@ class Upgrade(colrev.process.operation.Operation):
                 "script": self._migrate_0_12_0,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.12.0"),
+                "target_version": CoLRevVersion("0.13.0"),
+                "script": self._migrate_0_13_0,
+                "released": False,
+            },
         ]
         print(f"installed_colrev_version: {installed_colrev_version}")
         print(f"settings_version: {settings_version}")
@@ -686,6 +692,28 @@ class Upgrade(colrev.process.operation.Operation):
                         fp=file,
                     )
                 shutil.move(str(registry_yaml), str(backup_file))
+
+        return self.repo.is_dirty()
+
+    def _migrate_0_13_0(self) -> bool:
+        # Rename "warning" to "colrev.dblp.warning" in all DBLP search_sources
+
+        settings = self._load_settings_dict()
+        for source in settings["sources"]:
+            if source["endpoint"] == "colrev.dblp":
+                records = colrev.loader.load_utils.load(
+                    filename=Path(source["filename"]),
+                    logger=self.review_manager.logger,
+                )
+                for record_dict in records.values():
+                    if "warning" in record_dict:
+                        record_dict["colrev.dblp.warning"] = record_dict.pop("warning")
+                    record_dict.pop("metadata_source", None)
+
+                bibtex_str = to_string(records_dict=records, implementation="bib")
+                with open(source["filename"], "w", encoding="utf-8") as out:
+                    out.write(bibtex_str + "\n")
+                self.repo.index.add([source["filename"]])
 
         return self.repo.is_dirty()
 

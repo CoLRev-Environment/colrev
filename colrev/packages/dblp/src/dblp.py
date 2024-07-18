@@ -199,7 +199,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 item["type"] = "Journal Articles"
             if item["key"][:4] == "conf":
                 item["type"] = "Conference and Workshop Papers"
-            item["warning"] = "Withdrawn (according to DBLP)"
+            item["colrev.dblp.warning"] = "Withdrawn (according to DBLP)"
 
         elif item["type"] == "Journal Articles":
             item[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
@@ -690,9 +690,11 @@ class DBLPSearchSource(JsonSchemaMixin):
                     masterdata_repository=self.review_manager.settings.is_curated_repo(),
                 )
                 record.set_status(RecordState.md_prepared)
-                if "Withdrawn (according to DBLP)" in record.data.get("warning", ""):
+                if "Withdrawn (according to DBLP)" in record.data.get(
+                    "colrev.dblp.warning", ""
+                ):
                     record.prescreen_exclude(reason=FieldValues.RETRACTED)
-                    record.remove_field(key="warning")
+                    # record.remove_field(key="warning")
 
                 dblp_feed.save()
                 self.dblp_lock.release()
