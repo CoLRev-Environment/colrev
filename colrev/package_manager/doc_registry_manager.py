@@ -8,6 +8,7 @@ import os
 import typing
 from pathlib import Path
 
+import requests
 import toml
 from m2r import parse_from_file
 
@@ -47,65 +48,80 @@ class PackageDoc:
     documentation: str
     repository: str = ""
     search_types: list
+    URL: str = ""
     package_dir: Path
 
     def __init__(self, package_id: str) -> None:
         self.package_id = package_id
 
-        pyproject_toml_path = COLREV_PATH / Path("pyproject.toml")
+        methods = [
+            self._initialize_from_colrev_monorepo,
+            self._initialize_from_pypi,
+        ]
 
-        # Load pyproject.toml using toml library
-        with open(pyproject_toml_path, encoding="utf-8") as file:
-            pyproject_toml = toml.load(file)
-
-        # List tool.poetry.dependencies
-        dependencies = pyproject_toml["tool"]["poetry"]["dependencies"]
-
-        if package_id not in dependencies:
-            raise NotImplementedError(f"Package {package_id} not found")
-
-        dir_in_colrev_monorepo = COLREV_PATH / dependencies[package_id]["path"]
-        self.package_dir = dir_in_colrev_monorepo
-        if dir_in_colrev_monorepo.is_dir():
-            pyproject_toml_path = dir_in_colrev_monorepo / Path("pyproject.toml")
+        for method in methods:
+            if method(package_id):
+                break
         else:
-            # TODO : load from pypi/linked repo
-            raise NotImplementedError(f"Package {package_id} not found")
+            raise NotImplementedError(
+                f"Package {package_id} not found on PyPI/in CoLRev monorepo"
+            )
 
-        # Load pyproject.toml using toml library
-        with open(pyproject_toml_path, encoding="utf-8") as file:
-            pyproject_toml = toml.load(file)
+        main_section = self.package_metadata["tool"]["poetry"]
+        self.license = main_section["license"]
+        self.authors = main_section["authors"]
+        self.documentation = main_section.get("documentation", None)
+        self.repository = main_section.get("repository", None)
+        self.endpoints = list(main_section.get("plugins", {}).get("colrev", {}).keys())
 
-        self.endpoints = list(
-            pyproject_toml.get("tool", {})
-            .get("poetry", {})
-            .get("plugins", {})
-            .get("colrev", {})
-            .keys()
-        )
-        self.license = pyproject_toml["tool"]["poetry"]["license"]
-        self.authors = pyproject_toml["tool"]["poetry"]["authors"]
-        # self.colrev_doc_link = Path("docs/source/manual/packages") / Path(
-        #     f"{package_id}.rst"
-        # )
-        self.colrev_doc_link = self.package_dir / pyproject_toml.get("tool", {}).get(
-            "colrev", {}
-        ).get("colrev_doc_link")
-        self.description = (
-            pyproject_toml.get("tool", {})
-            .get("colrev", {})
-            .get("colrev_doc_description", "NA")
-        )
-        self.documentation = pyproject_toml["tool"]["poetry"].get("documentation", None)
-        self.repository = pyproject_toml["tool"]["poetry"].get("repository", None)
-        self.search_types = (
-            pyproject_toml.get("tool", {}).get("colrev", {}).get("search_types", [])
+        colrev_section = self.package_metadata.get("tool", {}).get("colrev", {})
+        self.colrev_doc_link = colrev_section.get("colrev_doc_link")
+        self.description = colrev_section.get("colrev_doc_description", "NA")
+        self.search_types = colrev_section.get("search_types", [])
+
+        assert self.repository.endswith(package_id.replace("colrev.", "")), package_id
+        assert str(self.package_dir).endswith(
+            package_id.replace("colrev.", "")
+        ), package_id
+
+        # TODO: endpoint-specific descriptions? - Prepares records based on dblp.org metadata
+
+    def _initialize_from_colrev_monorepo(self, package_id: str) -> bool:
+
+        with open(COLREV_PATH / Path("pyproject.toml"), encoding="utf-8") as file:
+            colrev_pyproject_toml = toml.load(file)
+
+        colrev_dependencies = colrev_pyproject_toml["tool"]["poetry"]["dependencies"]
+
+        if package_id not in colrev_dependencies:
+            return False
+
+        self.package_dir = COLREV_PATH / colrev_dependencies[package_id]["path"]
+        if not self.package_dir.is_dir():
+            return False
+
+        with open(self.package_dir / Path("pyproject.toml"), encoding="utf-8") as file:
+            self.package_metadata = toml.load(file)
+
+        return True
+
+    def _initialize_from_pypi(self, package_id: str) -> bool:
+
+        response = requests.get(f"https://pypi.org/pypi/{package_id}/json")
+        if response.status_code != 200:
+            return False
+
+        self.repository_url = (
+            response.json()["info"].get("project_urls", {}).get("Repository")
         )
 
-        # TODO: compare: package_identifier in colrev.pyproject.toml = directory = package.pyproject.toml.package-name = repository ending (monorepos)
-        input(
-            "TODO: endpoint-specific descriptions? - Prepares records based on dblp.org metadata"
-        )
+        gh_response = requests.get(f"{self.repository_url}/blob/main/pyproject.toml")
+        if response.status_code != 200:
+            return False
+
+        self.package_metadata = toml.loads(gh_response.text)
+
+        return True
 
     def has_endpoint(self, endpoint_type: EndpointType) -> bool:
         """Check if the package has a specific endpoint type"""
@@ -184,8 +200,8 @@ class DocRegistryManager:
                 package_doc = PackageDoc(package_id)
                 package_doc.dev_status = package_data["dev_status"]
                 self.packages.append(package_doc)
-            except toml.decoder.TomlDecodeError as exc:
-                raise exc
+            except (toml.decoder.TomlDecodeError, NotImplementedError) as exc:
+                print(exc)
                 print(f"Error loading package {package_id}")
 
         # TODO : get the package metadata from pypi / pyproject.toml
@@ -363,9 +379,11 @@ class DocRegistryManager:
 
     def _import_package_docs(self, package: PackageDoc) -> str:
 
-        # TODO : download if no available locally?
-        # docs_link = package.package_dir / package.colrev_doc_link
-        docs_link = COLREV_PATH / package.colrev_doc_link
+        if package.URL:
+            # TODO : download if no available locally?
+            docs_link = package.URL / package.colrev_doc_link
+        elif package.package_dir:
+            docs_link = package.package_dir / package.colrev_doc_link
 
         packages_index_path = COLREV_PATH / Path("docs/source/manual/packages")
 
