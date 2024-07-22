@@ -6,7 +6,7 @@ license = "MIT"
 authors = [
     "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
-repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/remove_cover_page"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/remove_coverpage"
 
 [[tool.poetry.packages]]
 include = "src"

@@ -59,10 +59,6 @@ class Package:
         self.name = self.package.metadata["Name"]
         self.version = self.package.metadata["Version"]
 
-        # TODO : status etc. is not available through pyproject.toml (needed for docus)
-        # self.status = package_metadata["dev_status"]
-        # self.colrev_doc_link = package_metadata["colrev_doc_link"]
-
     def has_endpoint(self, endpoint_type: EndpointType) -> bool:
         """Check if the package has a specific endpoint type"""
 
