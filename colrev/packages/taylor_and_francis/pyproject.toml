@@ -15,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+colrev_doc_description = "Taylor and Francis"
 colrev_doc_link = "README.md"
+search_types = ["DB"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.taylor_and_francis.src.taylor_and_francis:TaylorAndFrancisSearchSource"

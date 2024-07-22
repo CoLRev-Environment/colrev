@@ -16,9 +16,9 @@ python = ">=3.8, <4"
 beautifulsoup4 = "^4.11.1"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Download PDF from website"
 colrev_doc_link = "README.md"
+search_types = []
 
 [tool.poetry.plugins.colrev]
 pdf_get = "colrev.packages.download_from_website.src.download_from_website:WebsiteDownload"

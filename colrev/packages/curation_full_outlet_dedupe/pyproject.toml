@@ -15,9 +15,10 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+
+colrev_doc_description = "Curation full outlet dedupe"
 colrev_doc_link = "README.md"
+search_types = []
 
 [tool.poetry.plugins.colrev]
 dedupe = "colrev.packages.curation_full_outlet_dedupe.src.curation_dedupe:CurationDedupe"

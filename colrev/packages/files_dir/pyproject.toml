@@ -15,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Files directories (PDFs based on GROBID)"
 colrev_doc_link = "README.md"
+search_types = ["FILES"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.files_dir.src.files_dir:FilesSearchSource"

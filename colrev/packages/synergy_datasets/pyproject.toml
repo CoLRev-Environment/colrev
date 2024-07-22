@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "colrev.synergy_datasets"
-description = "CoLRev package for synergy_datasets"
+description = "CoLRev package for SYNERGY Datasets"
 version = "0.1.0"
 license = "MIT"
 authors = [
@@ -15,12 +15,12 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "SYNERGY Datasets"
 colrev_doc_link = "README.md"
+search_types = ["API"]
 
 [tool.poetry.plugins.colrev]
-search_source = "colrev.packages.synergy_datasets.src.synergy_datasets:SYNERGYDatasetsSearchSource"
+search_source = "colrev.packages.springer_link.src.springer_link:SpringerLinkSearchSource"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "cython<3.0"]

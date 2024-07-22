@@ -15,9 +15,10 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+
+colrev_doc_description = "JSTOR"
 colrev_doc_link = "README.md"
+search_types = ["DB"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.jstor.src.jstor:JSTORSearchSource"

@@ -18,5 +18,4 @@ colrev.package\_manager.package\_manager.PackageManager
 
       ~PackageManager.discover_packages
       ~PackageManager.get_package_endpoint_class
-      ~PackageManager.load_type_identifier_endpoint_dict
       ~PackageManager.update_package_list

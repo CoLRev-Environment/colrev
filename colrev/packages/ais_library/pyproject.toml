@@ -15,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "AIS electronic Library (AISeL)"
 colrev_doc_link = "README.md"
+search_types = ["DB", "API", "TOC"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.ais_library.src.aisel:AISeLibrarySearchSource"

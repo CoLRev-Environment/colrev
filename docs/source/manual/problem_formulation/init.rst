@@ -22,7 +22,7 @@ It is recommended to select a review type using the ``--type`` parameter:
 
 Depending on the selected review type, the ``settings.json`` file is created with reasonable defaults. For example, a theoretical review may involve an emergent data analysis and synthesis approach, while a meta-analysis would involve a structured data extraction and a PRISMA flow chart for transparent reporting.
 
-Once the CoLRev project is set up, it can be `pushed to a Git server <>`__ and shared with the team (see :doc:`instructions </manual/collaboration>`).
+Once the CoLRev project is set up, it can be pushed to a Git server and shared with the team (see :doc:`instructions </manual/collaboration>`).
 
 The specific setup of the available review types is available in the following table:
 

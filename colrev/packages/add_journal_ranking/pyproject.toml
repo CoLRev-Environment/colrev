@@ -19,9 +19,10 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+
+colrev_doc_description = "Add Journal ranking information"
 colrev_doc_link = "README.md"
+search_types = []
 
 [tool.poetry.plugins.colrev]
 prep = "colrev.packages.add_journal_ranking.src.add_journal_ranking:AddJournalRanking"

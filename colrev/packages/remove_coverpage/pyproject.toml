@@ -15,8 +15,8 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Remove Cover Page"
+search_types = []
 colrev_doc_link = "README.md"
 
 [tool.poetry.plugins.colrev]

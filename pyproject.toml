@@ -175,6 +175,10 @@ docutils = {version = "!=0.21.post1", optional = true }
 "colrev.prisma" = {path="./colrev/packages/prisma"}
 "colrev.screen_table" = {path="./colrev/packages/screen_table"}
 "colrev.open_citations_forward_search" = {path="./colrev/packages/open_citations_forward_search"}
+"colrev.profile" = {path="./colrev/packages/profile"}
+"colrev.methodological_review" = {path="./colrev/packages/methodological_review"}
+"colrev.osf" = {path="./colrev/packages/osf"}
+"colrev.github" = {path="./colrev/packages/github"}
 
 [tool.poetry.extras]
 "colrev.ui_web" = ["colrev.ui_web"]
@@ -226,9 +230,6 @@ omit = [
 
 [tool.ruff]
 line-length = 160
-
-[tool.ruff.lint]
-per-file-ignores = { "**/{tests,docs}/*" = ["E501"] }
 
 [build-system]
 # requires = ["poetry>=1.2.0b1"]

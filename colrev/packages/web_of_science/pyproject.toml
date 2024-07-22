@@ -15,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+colrev_doc_description = "Web of Science"
 colrev_doc_link = "README.md"
+search_types = ["DB"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.web_of_science.src.web_of_science:WebOfScienceSearchSource"

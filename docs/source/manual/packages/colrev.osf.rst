@@ -29,7 +29,7 @@ Package
 
 |LICENSE| License: MIT
 
-|DOCUMENTATION| `Documentation <README.md>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/osf>`_
 
 .. list-table::
    :header-rows: 1

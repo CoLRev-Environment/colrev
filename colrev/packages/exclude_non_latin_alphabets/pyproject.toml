@@ -16,9 +16,9 @@ python = ">=3.8, <4"
 alphabet-detector = "^0.0.7"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Exclude Non-Latin Alphabets"
 colrev_doc_link = "README.md"
+search_types = []
 
 [tool.poetry.plugins.colrev]
 prep = "colrev.packages.exclude_non_latin_alphabets.src.exclude_non_latin_alphabets:ExcludeNonLatinAlphabetsPrep"

@@ -15,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Prep PDFs manually (CLI)"
 colrev_doc_link = "README.md"
+search_types = []
 
 [tool.poetry.plugins.colrev]
 pdf_prep_man = "colrev.packages.colrev_cli_pdf_prep_man.src.pdf_prep_man_cli:CoLRevCLIPDFManPrep"

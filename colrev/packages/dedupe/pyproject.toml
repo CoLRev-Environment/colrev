@@ -15,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "stable"
-documentation = "README.md"
+colrev_doc_description = "Dedupe (BibDedupe)"
 colrev_doc_link = "README.md"
+search_types = []
 
 [tool.poetry.plugins.colrev]
 dedupe = "colrev.packages.dedupe.src.dedupe:Dedupe"

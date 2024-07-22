@@ -20,9 +20,9 @@ python = ">=3.8, <4"
 semanticscholar = "^0.6.0"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+colrev_doc_description = "Semantic Scholar API"
 colrev_doc_link = "README.md"
+search_types = ["API"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.semanticscholar.src.semanticscholar_search_source:SemanticScholarSearchSource"
