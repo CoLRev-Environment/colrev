@@ -20,7 +20,7 @@ colrev_doc_link = "README.md"
 search_types = ["API"]
 
 [tool.poetry.plugins.colrev]
-search_source = "colrev.packages.springer_link.src.springer_link:SpringerLinkSearchSource"
+search_source = "colrev.packages.synergy_datasets.src.synergy_datasets:SYNERGYDatasetsSearchSource"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "cython<3.0"]
