@@ -663,6 +663,9 @@ python-versions = ">=3.8, <4"
 files = []
 develop = false
 
+[package.dependencies]
+pandasql = "^0.7.3"
+
 [package.source]
 type = "directory"
 url = "colrev/packages/colrev_project"
@@ -5050,4 +5053,4 @@ docs = ["Sphinx", "docutils", "repoze-sphinx-autointerface", "sphinx-autodoc-typ
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <4"
-content-hash = "5b1aa23e4309c9ebbe0cecdca44ca2fcfa4af3c083d459f9883128cebd6eb906"
+content-hash = "23e47195ff1248300e3fc7a57cfb3ab11f72bc7aa76792810c5418a53898c9ba"

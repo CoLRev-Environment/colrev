@@ -13,6 +13,7 @@ include = "src"
 
 [tool.poetry.dependencies]
 python = ">=3.8, <4"
+pandasql = "^0.7.3"
 
 [tool.colrev]
 colrev_doc_description = "CoLRev projects"

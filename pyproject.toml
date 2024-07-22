@@ -18,6 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering",
     "Operating System :: OS Independent",
     "Typing :: Typed",
@@ -54,7 +55,6 @@ docker = "6.0.0"
 lxml = "^4.9.1"
 pandas = "^1.5.0"
 openpyxl = "^3.1.2"   # required by pandas for Excel
-pandasql = "^0.7.3"
 PyYAML = "^6.0.0"
 feedparser = "^6.0.10"       # internally?
 pybtex = "^0.24.0"           # internally?
@@ -66,10 +66,6 @@ pycountry = "^22.3.5"
 nameparser = "^1.1.2"
 number-parser = "^0.3.2"
 pymupdf = "^1.24.3"
-pyalex = "^0.10"
-crossrefapi = "^1.5.0"
-semanticscholar = "^0.6.0"
-pygithub = "^2.3.0"
 m2r = "^0.3.1"
 toml = "^0.10.2"
 Sphinx = {version = "^5.2.3", optional = true }
