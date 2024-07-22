@@ -15,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "stable"
-documentation = "README.md"
+colrev_doc_description = "Scoping Review"
 colrev_doc_link = "README.md"
+search_types = []
 
 [tool.poetry.plugins.colrev]
 review_type = "colrev.packages.scoping_review.src.scoping_review:ScopingReview"

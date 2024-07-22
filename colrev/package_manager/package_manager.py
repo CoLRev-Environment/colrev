@@ -41,21 +41,16 @@ class PackageManager:
         return type_identifier_endpoint_dict
 
     def update_package_list(self) -> None:
-        """Generates the package_endpoints.json
-        based on the packages in packages/packages.json
-        and the endpoints.json files in the top directory of each package."""
+        """Updates the list of packages in the CoLRev documentation
 
-        packages = []
-        for package_dir in self._get_package_identifiers():
-            try:
-                packages.append(colrev.package_manager.package.Package(package_dir))
-            except colrev_exceptions.MissingDependencyError as exc:
-                print(exc)
-                continue
+        Generates
+        - docs/source/packages_overview.json
+        - docs/source/package_endpoints.json
+        - docs/source/search_source_types.jsons"""
 
         doc_reg_manager = (
             colrev.package_manager.doc_registry_manager.DocRegistryManager(
-                package_manager=self, packages=packages
+                package_manager=self
             )
         )
         doc_reg_manager.update()

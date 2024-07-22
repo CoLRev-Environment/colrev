@@ -15,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+colrev_doc_description = "OpenLibrary API"
 colrev_doc_link = "README.md"
+search_types = ["MD"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.open_library.src.open_library:OpenLibrarySearchSource"

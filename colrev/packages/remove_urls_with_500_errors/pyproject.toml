@@ -15,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Remove URLs with 500 Errors"
 colrev_doc_link = "README.md"
+search_types = []
 
 [tool.poetry.plugins.colrev]
 prep = "colrev.packages.remove_urls_with_500_errors.src.remove_urls_with_500_errors:RemoveError500URLsPrep"

@@ -1,0 +1,272 @@
+{
+    "colrev.ui_web": {
+        "dev_status": "maturing"
+    },
+    "colrev.local_index": {
+        "dev_status": "maturing"
+    },
+    "colrev.exclude_non_latin_alphabets": {
+        "dev_status": "maturing"
+    },
+    "colrev.dedupe": {
+        "dev_status": "stable"
+    },
+    "colrev.meta_analysis": {
+        "dev_status": "experimental"
+    },
+    "colrev.colrev_cli_pdf_get_man": {
+        "dev_status": "maturing"
+    },
+    "colrev.acm_digital_library": {
+        "dev_status": "experimental"
+    },
+    "colrev.ebsco_host": {
+        "dev_status": "experimental"
+    },
+    "colrev.jstor": {
+        "dev_status": "experimental"
+    },
+    "colrev.remove_last_page": {
+        "dev_status": "maturing"
+    },
+    "colrev.scope_prescreen": {
+        "dev_status": "maturing"
+    },
+    "colrev.descriptive_review": {
+        "dev_status": "stable"
+    },
+    "colrev.ocrmypdf": {
+        "dev_status": "maturing"
+    },
+    "colrev.sync": {
+        "dev_status": "experimental"
+    },
+    "colrev.web_of_science": {
+        "dev_status": "experimental"
+    },
+    "colrev.website_screenshot": {
+        "dev_status": "experimental"
+    },
+    "colrev.crossref": {
+        "dev_status": "maturing"
+    },
+    "colrev.paper_md": {
+        "dev_status": "maturing"
+    },
+    "colrev.scopus": {
+        "dev_status": "experimental"
+    },
+    "colrev.grobid_tei": {
+        "dev_status": "maturing"
+    },
+    "colrev.pdf_backward_search": {
+        "dev_status": "maturing"
+    },
+    "colrev.export_man_prep": {
+        "dev_status": "maturing"
+    },
+    "colrev.files_dir": {
+        "dev_status": "maturing"
+    },
+    "colrev.eric": {
+        "dev_status": "experimental"
+    },
+    "colrev.prep_man_curation_jupyter": {
+        "dev_status": "experimental"
+    },
+    "colrev.critical_review": {
+        "dev_status": "stable"
+    },
+    "colrev.exclude_languages": {
+        "dev_status": "maturing"
+    },
+    "colrev.google_scholar": {
+        "dev_status": "experimental"
+    },
+    "colrev.colrev_curation": {
+        "dev_status": "maturing"
+    },
+    "colrev.open_alex": {
+        "dev_status": "experimental"
+    },
+    "colrev.curation_full_outlet_dedupe": {
+        "dev_status": "experimental"
+    },
+    "colrev.europe_pmc": {
+        "dev_status": "maturing"
+    },
+    "colrev.theoretical_review": {
+        "dev_status": "experimental"
+    },
+    "colrev.open_library": {
+        "dev_status": "experimental"
+    },
+    "colrev.colrev_project": {
+        "dev_status": "maturing"
+    },
+    "colrev.add_journal_ranking": {
+        "dev_status": "experimental"
+    },
+    "colrev.psycinfo": {
+        "dev_status": "experimental"
+    },
+    "colrev.get_masterdata_from_citeas": {
+        "dev_status": "experimental"
+    },
+    "colrev.taylor_and_francis": {
+        "dev_status": "experimental"
+    },
+    "colrev.unpaywall": {
+        "dev_status": "maturing"
+    },
+    "colrev.remove_broken_ids": {
+        "dev_status": "maturing"
+    },
+    "colrev.ieee": {
+        "dev_status": "experimental"
+    },
+    "colrev.source_specific_prep": {
+        "dev_status": "maturing"
+    },
+    "colrev.umbrella": {
+        "dev_status": "experimental"
+    },
+    "colrev.springer_link": {
+        "dev_status": "experimental"
+    },
+    "colrev.general_polish": {
+        "dev_status": "experimental"
+    },
+    "colrev.curated_masterdata": {
+        "dev_status": "experimental"
+    },
+    "colrev.remove_urls_with_500_errors": {
+        "dev_status": "maturing"
+    },
+    "colrev.qualitative_systematic_review": {
+        "dev_status": "experimental"
+    },
+    "colrev.colrev_cli_prescreen": {
+        "dev_status": "maturing"
+    },
+    "colrev.dblp": {
+        "dev_status": "maturing"
+    },
+    "colrev.bibliography_export": {
+        "dev_status": "experimental"
+    },
+    "colrev.arxiv": {
+        "dev_status": "experimental"
+    },
+    "colrev.conceptual_review": {
+        "dev_status": "experimental"
+    },
+    "colrev.doi_org": {
+        "dev_status": "maturing"
+    },
+    "colrev.github_pages": {
+        "dev_status": "maturing"
+    },
+    "colrev.download_from_website": {
+        "dev_status": "maturing"
+    },
+    "colrev.get_year_from_vol_iss_jour": {
+        "dev_status": "experimental"
+    },
+    "colrev.pubmed": {
+        "dev_status": "maturing"
+    },
+    "colrev.blank": {
+        "dev_status": "stable"
+    },
+    "colrev.exclude_collections": {
+        "dev_status": "maturing"
+    },
+    "colrev.curation_missing_dedupe": {
+        "dev_status": "experimental"
+    },
+    "colrev.ais_library": {
+        "dev_status": "maturing"
+    },
+    "colrev.semanticscholar": {
+        "dev_status": "experimental"
+    },
+    "colrev.abi_inform_proquest": {
+        "dev_status": "experimental"
+    },
+    "colrev.scientometric": {
+        "dev_status": "experimental"
+    },
+    "colrev.remove_coverpage": {
+        "dev_status": "maturing"
+    },
+    "colrev.scoping_review": {
+        "dev_status": "stable"
+    },
+    "colrev.get_doi_from_urls": {
+        "dev_status": "experimental"
+    },
+    "colrev.prescreen_table": {
+        "dev_status": "maturing"
+    },
+    "colrev.obsidian": {
+        "dev_status": "experimental"
+    },
+    "colrev.colrev_cli_screen": {
+        "dev_status": "maturing"
+    },
+    "colrev.synergy_datasets": {
+        "dev_status": "maturing"
+    },
+    "colrev.get_masterdata_from_doi": {
+        "dev_status": "experimental"
+    },
+    "colrev.trid": {
+        "dev_status": "experimental"
+    },
+    "colrev.wiley": {
+        "dev_status": "experimental"
+    },
+    "colrev.exclude_complementary_materials": {
+        "dev_status": "maturing"
+    },
+    "colrev.narrative_review": {
+        "dev_status": "stable"
+    },
+    "colrev.conditional_prescreen": {
+        "dev_status": "maturing"
+    },
+    "colrev.structured": {
+        "dev_status": "experimental"
+    },
+    "colrev.unknown_source": {
+        "dev_status": "maturing"
+    },
+    "colrev.literature_review": {
+        "dev_status": "stable"
+    },
+    "colrev.colrev_cli_pdf_prep_man": {
+        "dev_status": "maturing"
+    },
+    "colrev.prisma": {
+        "dev_status": "experimental"
+    },
+    "colrev.screen_table": {
+        "dev_status": "maturing"
+    },
+    "colrev.open_citations_forward_search": {
+        "dev_status": "maturing"
+    },
+    "colrev.profile": {
+        "dev_status": "experimental"
+    },
+    "colrev.methodological_review": {
+        "dev_status": "experimental"
+    },
+    "colrev.osf": {
+        "dev_status": "experimental"
+    },
+    "colrev.github": {
+        "dev_status": "maturing"
+    }
+}

@@ -15,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Forward search based on OpenCitations"
 colrev_doc_link = "README.md"
+search_types = ["FORWARD_SEARCH"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.open_citations_forward_search.src.open_citations_forward_search:OpenCitationsSearchSource"

@@ -15,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Screen Table"
 colrev_doc_link = "README.md"
+search_types = []
 
 [tool.poetry.plugins.colrev]
 screen = "colrev.packages.screen_table.src.screen_table:TableScreen"

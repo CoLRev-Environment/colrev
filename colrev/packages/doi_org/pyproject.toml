@@ -16,9 +16,9 @@ python = ">=3.8, <4"
 beautifulsoup4 = "^4.11.1"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Doi.org"
 colrev_doc_link = "README.md"
+search_types = []
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "cython<3.0"]

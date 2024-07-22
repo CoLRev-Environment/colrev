@@ -15,9 +15,10 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+
+colrev_doc_description = "Year-Vol-Iss Prep"
 colrev_doc_link = "README.md"
+search_types = []
 
 [tool.poetry.plugins.colrev]
 prep = "colrev.packages.get_year_from_vol_iss_jour.src.year_vol_iss_prep:YearVolIssPrep"

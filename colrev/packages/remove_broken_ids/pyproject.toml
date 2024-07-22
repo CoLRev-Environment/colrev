@@ -15,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Remove Broken IDs"
 colrev_doc_link = "README.md"
+search_types = []
 
 [tool.poetry.plugins.colrev]
 prep = "colrev.packages.remove_broken_ids.src.remove_broken_ids:RemoveBrokenIDPrep"

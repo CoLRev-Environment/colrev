@@ -16,9 +16,9 @@ python = ">=3.8, <4"
 crossrefapi = "^1.5.0"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Crossref API"
 colrev_doc_link = "README.md"
+search_types = ["API", "TOC", "MD"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.crossref.src.crossref_search_source:CrossrefSearchSource"

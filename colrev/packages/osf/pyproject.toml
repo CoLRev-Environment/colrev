@@ -18,9 +18,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+colrev_doc_description = "OSF"
 colrev_doc_link = "README.md"
+search_types = ["API"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.osf.src.osf:OSFSearchSource"

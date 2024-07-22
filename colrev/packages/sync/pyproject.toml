@@ -19,9 +19,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+colrev_doc_description = "Sync"
 colrev_doc_link = "README.md"
+search_types = []
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "cython<3.0"]

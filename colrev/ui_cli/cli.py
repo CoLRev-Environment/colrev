@@ -2322,14 +2322,6 @@ def env(
     # pylint: disable=too-many-branches
 
     if update_package_list:
-        if "y" != input(
-            "The following process instantiates objects listed in the "
-            + "packages/packages.json "
-            + "(including ones that may not be secure).\n"
-            + "Please confirm (y) to proceed."
-        ):
-            return
-
         PACKAGE_MANAGER.update_package_list()
         return
 

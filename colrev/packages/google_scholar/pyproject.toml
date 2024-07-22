@@ -15,9 +15,10 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+
+colrev_doc_description = "GoogleScholar"
 colrev_doc_link = "README.md"
+search_types = ["DB"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.google_scholar.src.google_scholar:GoogleScholarSearchSource"

@@ -29,7 +29,7 @@ Package
 
 |LICENSE| License: MIT
 
-|DOCUMENTATION| `Documentation <README.md>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/github>`_
 
 .. list-table::
    :header-rows: 1
@@ -39,14 +39,14 @@ Package
      - Status
      - Add
    * - search_source
-     - |EXPERIMENTAL|
+     - |MATURING|
      - .. code-block::
 
 
          colrev search --add colrev.github
 
    * - prep
-     - |EXPERIMENTAL|
+     - |MATURING|
      - .. code-block::
 
 

@@ -15,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+colrev_doc_description = "Prep-man Jupyter Notebook"
 colrev_doc_link = "README.md"
+search_types = []
 
 [tool.poetry.plugins.colrev]
 prep_man = "colrev.packages.prep_man_curation_jupyter.src.curation_jupyter_prep_man:CurationJupyterNotebookManPrep"

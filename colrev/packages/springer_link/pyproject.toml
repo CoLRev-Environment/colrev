@@ -15,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+colrev_doc_description = "Springer Link"
 colrev_doc_link = "README.md"
+search_types = ["DB", "API"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.springer_link.src.springer_link:SpringerLinkSearchSource"
