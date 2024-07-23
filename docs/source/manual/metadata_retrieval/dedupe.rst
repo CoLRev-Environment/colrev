@@ -42,7 +42,7 @@ The ``colrev dedupe`` operation identifies and merges duplicate records. Non-dup
 
 The following options for ``dedupe`` are available:
 
-.. datatemplate:json:: ../../package_endpoints.json
+.. datatemplate:json:: ../package_endpoints.json
 
     {{ make_list_table_from_mappings(
         [("Identifier", "package_endpoint_identifier"), ("Dedupe packages", "short_description"), ("Status", "status")],

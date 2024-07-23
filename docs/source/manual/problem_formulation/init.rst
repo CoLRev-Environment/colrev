@@ -26,7 +26,7 @@ Once the CoLRev project is set up, it can be pushed to a Git server and shared w
 
 The specific setup of the available review types is available in the following table:
 
-.. datatemplate:json:: ../../package_endpoints.json
+.. datatemplate:json:: ../package_endpoints.json
 
     {{ make_list_table_from_mappings(
         [("Identifier", "package_endpoint_identifier"), ("Review type", "short_description"), ("Status", "status")],

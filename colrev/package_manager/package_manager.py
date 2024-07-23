@@ -7,7 +7,6 @@ import typing
 from typing import Any
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.doc_registry_manager
 import colrev.package_manager.package
 from colrev.constants import EndpointType
 
@@ -39,21 +38,6 @@ class PackageManager:
                 print(exc)
 
         return type_identifier_endpoint_dict
-
-    def update_package_list(self) -> None:
-        """Updates the list of packages in the CoLRev documentation
-
-        Generates
-        - docs/source/packages_overview.json
-        - docs/source/package_endpoints.json
-        - docs/source/search_source_types.jsons"""
-
-        doc_reg_manager = (
-            colrev.package_manager.doc_registry_manager.DocRegistryManager(
-                package_manager=self
-            )
-        )
-        doc_reg_manager.update()
 
     def discover_packages(self, *, package_type: EndpointType) -> typing.Dict:
         """Discover packages"""

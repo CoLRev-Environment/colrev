@@ -2322,7 +2322,12 @@ def env(
     # pylint: disable=too-many-branches
 
     if update_package_list:
-        PACKAGE_MANAGER.update_package_list()
+        import colrev.package_manager.doc_registry_manager
+
+        doc_reg_manager = (
+            colrev.package_manager.doc_registry_manager.DocRegistryManager()
+        )
+        doc_reg_manager.update()
         return
 
     if index:

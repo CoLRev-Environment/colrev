@@ -16,8 +16,10 @@ colrev.package\_manager.doc\_registry\_manager.PackageDoc
    .. autosummary::
       :nosignatures:
 
-      ~PackageDoc.get_authors_for_docs
+      ~PackageDoc.get_docs_item
+      ~PackageDoc.get_endpoint_item
       ~PackageDoc.has_endpoint
+      ~PackageDoc.import_package_docs
 
 
 
@@ -28,13 +30,15 @@ colrev.package\_manager.doc\_registry\_manager.PackageDoc
    .. autosummary::
 
       ~PackageDoc.repository
-      ~PackageDoc.dev_status
       ~PackageDoc.package_id
-      ~PackageDoc.endpoints
       ~PackageDoc.license
       ~PackageDoc.authors
-      ~PackageDoc.colrev_doc_link
-      ~PackageDoc.description
       ~PackageDoc.documentation
-      ~PackageDoc.search_types
       ~PackageDoc.package_dir
+      ~PackageDoc.package_metadata
+      ~PackageDoc.description
+      ~PackageDoc.dev_status
+      ~PackageDoc.endpoints
+      ~PackageDoc.search_types
+      ~PackageDoc.docs_package_readme_path
+      ~PackageDoc.docs_rst_path

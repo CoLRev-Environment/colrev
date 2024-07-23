@@ -35,7 +35,7 @@ The selection of screening criteria is recorded when initializing the screen.
 
 The following options for ``screen`` are available:
 
-.. datatemplate:json:: ../../package_endpoints.json
+.. datatemplate:json:: ../package_endpoints.json
 
     {{ make_list_table_from_mappings(
         [("Identifier", "package_endpoint_identifier"), ("Screen packages", "short_description"), ("Status", "status")],

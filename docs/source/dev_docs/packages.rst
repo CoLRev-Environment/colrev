@@ -149,7 +149,7 @@ Documentation
 -----------------
 
 * Link the documentation (`README.md`) in the pyproject.toml.
-* To integrate the package documentation into the official CoLRev documentation, run the ``colrev env --update_package_list`` command. This updates the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/docs/source/package_endpoints.json>`_, and the `search_source_types.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/docs/source/search_source_types.json>`_, which are used to generate the documentation pages.
+* To integrate the package documentation into the official CoLRev documentation, run the ``colrev env --update_package_list`` command. This updates the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/docs/source/manual/package_endpoints.json>`_, and the `search_source_types.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/docs/source/search_source_types.json>`_, which are used to generate the documentation pages.
 * See `tests/REAMDE.md <https://github.com/CoLRev-Environment/colrev/tree/main/docs>`_ for details on building the CoLRev docs.
 
 Testing

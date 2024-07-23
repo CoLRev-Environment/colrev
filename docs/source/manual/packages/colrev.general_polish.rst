@@ -46,8 +46,8 @@ Package
          colrev prep --add colrev.general_polish
 
 
-Polish
-======
+Summary
+-------
 
 prep
 ----

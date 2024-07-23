@@ -46,8 +46,11 @@ Package
          colrev search --add colrev.osf
 
 
-Open Science Framework(OSF) Search Source
-=========================================
+Summary
+-------
+
+search
+------
 
 API search
 ^^^^^^^^^^

@@ -19,8 +19,8 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-colrev.scientometric
-====================
+colrev.sync
+===========
 
 Package
 --------------------
@@ -29,7 +29,7 @@ Package
 
 |LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/scientometric>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/sync>`_
 
 .. list-table::
    :header-rows: 1
@@ -38,52 +38,10 @@ Package
    * - Endpoint
      - Status
      - Add
-   * - review_type
+   * - na
      - |EXPERIMENTAL|
-     - .. code-block::
-
-
-         colrev init --type colrev.scientometric
-
 
 Summary
 -------
 
-Note: This document is currently under development. It will contain the following elements.
-
-Short summary
--------------
-
-
-* explanation
-* goals
-* dimensions
-* differences between disciplines
-
-For the analysis of citation data, established software packages like `VosViewer <https://www.vosviewer.com/>`_ are recommended.
-
-
-.. raw:: html
-
-   <!--
-
-   ## Steps and operations
-
-   ### Problem formulation
-
-   ### Metadata retrieval
-
-   ### Metadata prescreen
-
-   ### PDF retrieval
-
-   ### PDF screen
-
-   ### Data extraction and synthesis
-
-   - For manuscript development see separate page for Word/Tex/Md, Reference Managers
-
-   ## Software recommendations
-
-   ## References
-   -->
+TODO : add description

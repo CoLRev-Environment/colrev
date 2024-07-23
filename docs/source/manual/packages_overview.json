@@ -708,5 +708,23 @@
         "status": "|EXPERIMENTAL|",
         "short_description": "Structured Data Extraction (:doc:`instructions </manual/packages/colrev.structured>`)",
         "endpoint_type": "data"
+    },
+    {
+        "package_endpoint_identifier": "colrev.doi_org",
+        "status": "|MATURING|",
+        "short_description": "Doi.org (:doc:`instructions </manual/packages/colrev.doi_org>`)",
+        "endpoint_type": "na"
+    },
+    {
+        "package_endpoint_identifier": "colrev.sync",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "Sync (:doc:`instructions </manual/packages/colrev.sync>`)",
+        "endpoint_type": "na"
+    },
+    {
+        "package_endpoint_identifier": "colrev.ui_web",
+        "status": "|MATURING|",
+        "short_description": "Web-UI (:doc:`instructions </manual/packages/colrev.ui_web>`)",
+        "endpoint_type": "na"
     }
 ]

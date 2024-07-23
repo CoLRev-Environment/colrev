@@ -46,8 +46,8 @@ Package
          colrev search --add colrev.wiley
 
 
-Wiley
-=====
+Summary
+-------
 
 search
 ------
