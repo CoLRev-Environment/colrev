@@ -883,7 +883,6 @@ class Prep(colrev.process.operation.Operation):
         *,
         previous_preparation_data: list,
         prepared_records: list,
-        prep_round: colrev.settings.PrepRound,
     ) -> None:
         self._log_record_change_scores(
             preparation_data=previous_preparation_data,
@@ -895,7 +894,7 @@ class Prep(colrev.process.operation.Operation):
         )
         self._log_details(prepared_records)
         self.review_manager.dataset.create_commit(
-            msg=f"Prepare records ({prep_round.name})",
+            msg="Prep: improve record metadata",
         )
         self._prep_commit_id = self.review_manager.dataset.get_repo().head.commit.hexsha
         if not self.review_manager.high_level_operation:
@@ -957,7 +956,6 @@ class Prep(colrev.process.operation.Operation):
                 self._create_prep_commit(
                     previous_preparation_data=previous_preparation_data,
                     prepared_records=prepared_records,
-                    prep_round=prep_round,
                 )
 
         except requests_ConnectionError as exc:

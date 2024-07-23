@@ -559,9 +559,9 @@ def search(
         )
         return
 
-    import colrev.ui_cli.cli_add_source
+    import colrev.ui_cli.detect_and_add_source
 
-    cli_source_adder = colrev.ui_cli.cli_add_source.CLISourceAdder(
+    cli_source_adder = colrev.ui_cli.detect_and_add_source.CLISourceAdder(
         search_operation=search_operation
     )
     sources_added = cli_source_adder.add_new_sources()

@@ -103,7 +103,7 @@ class Dedupe(JsonSchemaMixin):
         )
 
         self.review_manager.dataset.create_commit(
-            msg="Merge duplicate records",
+            msg="Dedupe: merge duplicate records",
         )
 
         export_maybe(records_df, matched_df=matched_df)
