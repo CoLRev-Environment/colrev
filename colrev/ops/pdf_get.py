@@ -646,7 +646,7 @@ class PDFGet(colrev.process.operation.Operation):
         if self.review_manager.settings.pdf_get.rename_pdfs:
             self.rename_pdfs()
 
-        self.review_manager.dataset.create_commit(msg="Get PDFs")
+        self.review_manager.dataset.create_commit(msg="PDFs: get and prepare")
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed pdf-get operation{Colors.END}"
         )

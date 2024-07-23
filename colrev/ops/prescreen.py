@@ -138,9 +138,9 @@ class Prescreen(colrev.process.operation.Operation):
 
         self.review_manager.dataset.save_records_dict(records)
 
-        msg = f"Pre-screen (exclude {ids})"
+        msg = f"Prescreen: exclude {ids}"
         if include:
-            msg = f"Pre-screen (include {ids})"
+            msg = f"Prescreen: include {ids}"
 
         self.review_manager.dataset.create_commit(
             msg=msg,
@@ -222,7 +222,7 @@ class Prescreen(colrev.process.operation.Operation):
                 record.set_status(RecordState.rev_prescreen_included)
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
-            msg="Pre-screen (include_all)",
+            msg="Prescreen: include all",
             manual_author=False,
         )
 
