@@ -1,7 +1,7 @@
-colrev.ui\_cli.cli\_add\_source
-===============================
+colrev.ui\_cli.detect\_and\_add\_source
+=======================================
 
-.. automodule:: colrev.ui_cli.cli_add_source
+.. automodule:: colrev.ui_cli.detect_and_add_source
 
 
 

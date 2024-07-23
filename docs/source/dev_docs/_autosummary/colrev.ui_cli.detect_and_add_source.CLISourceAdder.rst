@@ -1,7 +1,7 @@
-colrev.ui\_cli.cli\_add\_source.CLISourceAdder
-==============================================
+colrev.ui\_cli.detect\_and\_add\_source.CLISourceAdder
+======================================================
 
-.. currentmodule:: colrev.ui_cli.cli_add_source
+.. currentmodule:: colrev.ui_cli.detect_and_add_source
 
 .. autoclass:: CLISourceAdder
    :members:
