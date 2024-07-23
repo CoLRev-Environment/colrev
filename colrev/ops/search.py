@@ -429,9 +429,11 @@ class Search(colrev.process.operation.Operation):
         self.review_manager.settings.sources.append(search_source)
         self.review_manager.save_settings()
         self.review_manager.dataset.create_commit(
-            msg=f"Add search: {search_source.endpoint}"
+            msg=f"Search: add {search_source.endpoint}:{search_source.search_type} → "
+            f"data/search/{search_source.filename.name}"
         )
         if not search_source.filename.is_file():
+            print()
             self.main(selection_str=str(search_source.filename), rerun=False)
 
     @_check_source_selection_exists(  # pylint: disable=too-many-function-args
@@ -463,8 +465,8 @@ class Search(colrev.process.operation.Operation):
                 if not self.review_manager.high_level_operation:
                     print()
                 self.review_manager.logger.info(
-                    f"search [{source.endpoint}:{source.search_type} > "
-                    f"data/search/{source.filename.name}]"
+                    f"search: {source.endpoint}:{source.search_type} → "
+                    f"data/search/{source.filename.name}"
                 )
 
                 search_source_class = self.package_manager.get_package_endpoint_class(
@@ -483,7 +485,10 @@ class Search(colrev.process.operation.Operation):
                 self._remove_forthcoming(source)
                 self.review_manager.dataset.add_changes(source.filename)
                 if not skip_commit:
-                    self.review_manager.dataset.create_commit(msg="Run search")
+                    self.review_manager.dataset.create_commit(
+                        msg=f"Search: run {source.endpoint}:{source.search_type} → "
+                        f"data/search/{source.filename.name}"
+                    )
             except colrev_exceptions.ServiceNotAvailableException:
                 self.review_manager.logger.warning("ServiceNotAvailableException")
             except colrev_exceptions.SearchNotAutomated as exc:

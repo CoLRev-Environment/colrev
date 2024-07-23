@@ -392,6 +392,17 @@ class ImportException(CoLRevException):
         super().__init__(self.message)
 
 
+class NoRecordsToImport(CoLRevException):
+    """No records to import."""
+
+    def __init__(
+        self,
+        msg: str,
+    ) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
+
 class UnsupportedImportFormatError(CoLRevException):
     """The file format is not supported."""
 

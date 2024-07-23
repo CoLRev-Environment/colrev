@@ -85,7 +85,7 @@ class Initializer:
         self.review_manager = colrev.review_manager.ReviewManager(exact_call=exact_call)
 
         self.review_manager.dataset.create_commit(
-            msg="Initial commit",
+            msg="Init: create repository for the review project",
             manual_author=True,
             skip_hooks=True,
         )
