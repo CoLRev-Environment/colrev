@@ -163,7 +163,7 @@ class Load(colrev.process.operation.Operation):
     ) -> None:
         # pylint: disable=too-many-branches
         if len(source_records_list) == 0:
-            raise colrev_exceptions.ImportException(
+            raise colrev_exceptions.NoRecordsToImport(
                 msg=f"{source} has no records to load"
             )
         for source_record in source_records_list:
@@ -447,7 +447,9 @@ class Load(colrev.process.operation.Operation):
         #     f"{part_exact_call} -s {source.search_source.filename.name}"
         # )
         self.review_manager.dataset.create_commit(
-            msg=f"Load {source.search_source.filename.name}", skip_hooks=True
+            msg=f"Load: data/search/{source.search_source.filename.name} → "
+            f"{self.review_manager.paths.RECORDS_FILE}",
+            skip_hooks=True,
         )
         if stashed:
             git_repo.git.stash("pop")
@@ -475,8 +477,11 @@ class Load(colrev.process.operation.Operation):
             except FileNotFoundError:
                 self.review_manager.logger.info(" Nothing to load")
                 print()
+            except colrev_exceptions.NoRecordsToImport as exc:
+                self.review_manager.logger.info(exc)
+                print()
             except colrev_exceptions.ImportException as exc:
-                print(exc)
+                self.review_manager.logger.error(f"{Colors.RED}{exc}{Colors.END}")
 
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed load operation{Colors.END}"

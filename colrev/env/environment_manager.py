@@ -98,7 +98,7 @@ class EnvironmentManager:
 
         if registered_paths:
             if str(path_to_register) in registered_paths:
-                logger.warning(f"Warning: Path already registered: {path_to_register}")
+                logger.warning(f"Path already registered: {path_to_register}")
                 return
         else:
             logger.info("Register %s in %s", path_to_register, Filepaths.REGISTRY_FILE)
