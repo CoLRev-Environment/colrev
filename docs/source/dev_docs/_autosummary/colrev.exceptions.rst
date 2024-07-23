@@ -44,6 +44,7 @@ colrev.exceptions
       MissingDependencyError
       MissingRecordQualityRuleSpecification
       NoRecordsError
+      NoRecordsToImport
       NonEmptyDirectoryError
       NotEnoughDataToIdentifyException
       NotFeedIdentifiableException
