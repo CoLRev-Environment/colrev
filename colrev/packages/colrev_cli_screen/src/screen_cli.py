@@ -243,7 +243,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 return records
 
         self.review_manager.dataset.create_commit(
-            msg="Screening (manual)", manual_author=True
+            msg="Screen: manual (cli)", manual_author=True
         )
         return records
 

@@ -114,35 +114,35 @@ def test_contributor_validation(
     expected_report = {
         "contributor_commits": [
             {
-                "msg": "Get PDFs",
+                "msg": "PDFs: get and prepare",
                 "author": "script:",
                 "author_email": "tester@email.de",
                 "committer": "Tester Name",
                 "committer_email": "tester@email.de",
             },
             {
-                "msg": "Pre-screen (include_all)",
+                "msg": "Prescreen: include all",
                 "author": "script:",
                 "author_email": "tester@email.de",
                 "committer": "Tester Name",
                 "committer_email": "tester@email.de",
             },
             {
-                "msg": "Merge duplicate records",
+                "msg": "Dedupe: merge duplicate records",
                 "author": "script:",
                 "author_email": "tester@email.de",
                 "committer": "Tester Name",
                 "committer_email": "tester@email.de",
             },
             {
-                "msg": "Prepare records (prep)",
+                "msg": "Prep: improve record metadata",
                 "author": "script:",
                 "author_email": "tester@email.de",
                 "committer": "Tester Name",
                 "committer_email": "tester@email.de",
             },
             {
-                "msg": "Load test_records.bib",
+                "msg": "Load: data/search/test_records.bib → data/records.bib",
                 "author": "script:",
                 "author_email": "tester@email.de",
                 "committer": "Tester Name",
@@ -170,7 +170,7 @@ def test_contributor_validation(
                 "committer_email": "tester@email.de",
             },
             {
-                "msg": "Initial commit",
+                "msg": "Init: create repository for the review project",
                 "author": "Tester Name",
                 "author_email": "tester@email.de",
                 "committer": "Tester Name",

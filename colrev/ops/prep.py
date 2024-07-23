@@ -895,7 +895,7 @@ class Prep(colrev.process.operation.Operation):
         )
         self._log_details(prepared_records)
         self.review_manager.dataset.create_commit(
-            msg=f"Prepare records ({prep_round.name})",
+            msg="Prep: improve record metadata",
         )
         self._prep_commit_id = self.review_manager.dataset.get_repo().head.commit.hexsha
         if not self.review_manager.high_level_operation:

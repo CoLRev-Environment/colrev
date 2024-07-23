@@ -172,6 +172,6 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         #         return records
 
         self.review_manager.dataset.create_commit(
-            msg="Pre-screening (manual)", manual_author=True
+            msg="Pre-screen: manual screen (cli)", manual_author=True
         )
         return records
