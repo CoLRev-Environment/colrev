@@ -34,6 +34,7 @@ class PackageDoc:
     """PackageDoc"""
 
     package_id: str
+    version: str
     license: str
     authors: list
     documentation: str
@@ -70,6 +71,7 @@ class PackageDoc:
 
         main_section = self.package_metadata["tool"]["poetry"]
         self.license = main_section["license"]
+        self.version = main_section["version"]
         self.authors = main_section["authors"]
         self.documentation = main_section.get("documentation", None)
         self.repository = main_section.get("repository", None)
@@ -191,6 +193,9 @@ class PackageDoc:
         header_info += ".. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen\n"
         header_info += "   :height: 14pt\n"
         header_info += "   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html\n"
+        header_info += ".. |VERSION| image:: /_static/svg/iconmonstr-product-10.svg\n"
+        header_info += "   :width: 15\n"
+        header_info += "   :alt: Version\n"
         header_info += ".. |GIT_REPO| image:: /_static/svg/iconmonstr-code-fork-1.svg\n"
         header_info += "   :width: 15\n"
         header_info += "   :alt: Git repository\n"
@@ -208,8 +213,7 @@ class PackageDoc:
 
         header_info += f"{self.package_id}\n"
         header_info += "=" * len(self.package_id) + "\n\n"
-        header_info += "Package\n"
-        header_info += "-" * 20 + "\n\n"
+        header_info += f"|VERSION| Version: {self.version}\n\n"
         header_info += f"|MAINTAINER| Maintainer: {self._get_authors_for_docs()}\n\n"
         header_info += f"|LICENSE| License: {self.license}  \n\n"
         if self.repository != "":

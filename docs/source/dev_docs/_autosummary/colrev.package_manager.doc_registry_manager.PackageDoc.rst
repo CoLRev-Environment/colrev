@@ -31,6 +31,7 @@ colrev.package\_manager.doc\_registry\_manager.PackageDoc
 
       ~PackageDoc.repository
       ~PackageDoc.package_id
+      ~PackageDoc.version
       ~PackageDoc.license
       ~PackageDoc.authors
       ~PackageDoc.documentation
