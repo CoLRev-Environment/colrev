@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import tempfile
 import typing
 from pathlib import Path
 
@@ -88,8 +89,6 @@ class PackageDoc:
 
         self.docs_rst_path = Path(f"{self.package_id}.rst")
 
-        # TODO: endpoint-specific descriptions? - Prepares records based on dblp.org metadata
-
     def _initialize_from_colrev_monorepo(self, package_id: str) -> bool:
 
         if package_id not in COLREV_DEPENDENCIES:
@@ -149,19 +148,18 @@ class PackageDoc:
         if self.package_dir:
             self.docs_package_readme_path = self.package_dir / colrev_doc_link
         else:
-            raise NotImplementedError("Download from GitHub")
-            # self.docs_package_readme_path = .... / self.colrev_doc_link
-            # TODO : download if no available locally
+            response = requests.get(self.repository + "/" + colrev_doc_link, timeout=30)
+            if response.status_code != 200:
+                raise ValueError("Failed to download package readme from repository")
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                temp_file.write(response.content)
+                self.docs_package_readme_path = Path(temp_file.name)
 
         readme_content = self.docs_package_readme_path.read_text(encoding="utf-8")
         if not readme_content.startswith("## Summary"):
             raise ValueError(
                 f"Package {self.package_id} readme does not start with '## Summary'"
             )
-        # if readme_content.count("\n# ") > 0:
-        #     raise ValueError(
-        #         f"Package {self.package_id} readme contains first-level headings"
-        #     )
 
     # pylint: disable=line-too-long
     # pylint: disable=too-many-branches
