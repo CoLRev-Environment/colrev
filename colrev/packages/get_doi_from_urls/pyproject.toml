@@ -15,7 +15,6 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-
 colrev_doc_description = "Get DOI from URLs"
 colrev_doc_link = "README.md"
 search_types = []

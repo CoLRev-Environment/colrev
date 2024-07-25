@@ -19,7 +19,6 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-
 colrev_doc_description = "Add Journal ranking information"
 colrev_doc_link = "README.md"
 search_types = []

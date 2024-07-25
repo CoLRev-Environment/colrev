@@ -98,6 +98,7 @@ docutils = {version = "!=0.21.post1", optional = true }
 "colrev.remove_last_page" = {path="./colrev/packages/remove_last_page"}
 "colrev.scope_prescreen" = {path="./colrev/packages/scope_prescreen"}
 "colrev.descriptive_review" = {path="./colrev/packages/descriptive_review"}
+"colrev.genai" = {path="./colrev/packages/genai", optional = true}
 "colrev.ocrmypdf" = {path="./colrev/packages/ocrmypdf"}
 "colrev.sync" = {path="./colrev/packages/sync"}
 "colrev.web_of_science" = {path="./colrev/packages/web_of_science"}
@@ -178,6 +179,7 @@ docutils = {version = "!=0.21.post1", optional = true }
 "colrev.github" = {path="./colrev/packages/github"}
 
 [tool.poetry.extras]
+"colrev.genai" = ["colrev.genai"]
 "colrev.ui_web" = ["colrev.ui_web"]
 docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinxcontrib.datatemplates", "sphinx_collapse", "repoze-sphinx-autointerface", "sphinx-design", "sphinx-copybutton", "docutils"]
 dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock", "pytest-skip-slow"]
