@@ -31,6 +31,7 @@ class Sync:
     """Synchronize records into a non-CoLRev repository"""
 
     cited_papers: list
+    pre_commit_config = Path(".pre-commit-config.yaml")
 
     def __init__(self) -> None:
         self.records_to_import: typing.List[colrev.record.record.Record] = []
@@ -50,14 +51,14 @@ class Sync:
             print("Other filenames are not (yet) supported.")
             return
 
-        if Path(".pre-commit-config.yaml").is_file():
-            if "colrev-hooks-update" in Path(".pre-commit-config.yaml").read_text(
+        if self.pre_commit_config.is_file():
+            if "colrev-hooks-update" in self.pre_commit_config.read_text(
                 encoding="utf-8"
             ):
                 print("Hook already registered")
                 return
 
-        with open(".pre-commit-config.yaml", "a", encoding="utf-8") as file:
+        with open(self.pre_commit_config, "a", encoding="utf-8") as file:
             file.write(
                 """\n-   repo: local
         hooks:

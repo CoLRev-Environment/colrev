@@ -19,7 +19,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
-from colrev.constants import Filepaths
 from colrev.constants import IDPattern
 from colrev.constants import PDFPathType
 from colrev.constants import ScreenCriterionType
@@ -127,7 +126,7 @@ class SearchSource(JsonSchemaMixin):
         # pylint: disable=attribute-defined-outside-init
         # Note : define outside init because the following
         # attributes are temporary. They should not be
-        # saved to settings.json.
+        # saved to SETTINGS_FILE.
 
         self.to_import = len(source_records_list)
         self.imported_origins: typing.List[str] = imported_origins
@@ -137,9 +136,7 @@ class SearchSource(JsonSchemaMixin):
     def get_origin_prefix(self) -> str:
         """Get the corresponding origin prefix"""
         assert not any(x in str(self.filename.name) for x in [";", "/"])
-        return (
-            str(self.filename.name).replace(str(Filepaths.SEARCH_DIR), "").lstrip("/")
-        )
+        return str(self.filename.name).lstrip("/")
 
     def is_md_source(self) -> bool:
         """Check whether the source is a metadata source (for preparation)"""
@@ -154,7 +151,7 @@ class SearchSource(JsonSchemaMixin):
     def get_query(self) -> str:
         """Get the query filepath"""
         assert self.search_type == SearchType.DB
-        # Note : save API queries in settings.json
+        # Note : save API queries in SETTINGS_FILE
         if "query_file" not in self.search_parameters:
             raise KeyError
         if not Path(self.search_parameters["query_file"]).is_file():
@@ -501,8 +498,14 @@ def load_settings(*, settings_path: Path) -> Settings:
     if not settings_path.is_file():
         raise colrev_exceptions.RepoSetupError()
 
-    with open(settings_path, encoding="utf-8") as file:
-        loaded_dict = json.load(file)
+    try:
+        with open(settings_path, encoding="utf-8") as file:
+            loaded_dict = json.load(file)
+
+    except json.decoder.JSONDecodeError as exc:
+        raise colrev_exceptions.RepoSetupError(
+            f"Failed to load settings: {exc}"
+        ) from exc
 
     return _load_settings_from_dict(loaded_dict=loaded_dict)
 
@@ -514,6 +517,6 @@ def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Non
         review_manager.settings, dict_factory=colrev.env.utils.custom_asdict_factory
     )
 
-    with open("settings.json", "w", encoding="utf-8") as outfile:
+    with open(review_manager.paths.settings, "w", encoding="utf-8") as outfile:
         json.dump(exported_dict, outfile, indent=4)
-    review_manager.dataset.add_changes(Path("settings.json"))
+    review_manager.dataset.add_changes(review_manager.paths.settings)

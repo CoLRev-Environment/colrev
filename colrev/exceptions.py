@@ -109,11 +109,11 @@ class ParameterError(CoLRevException):
 
 class InvalidSettingsError(CoLRevException):
     """
-    Invalid value in settings.json.
+    Invalid value in SETTINGS_FILE.
     """
 
     def __init__(self, *, msg: str, fix_per_upgrade: bool = True) -> None:
-        msg = f"Error in settings.json: {msg}"
+        msg = f"Error in SETTINGS_FILE: {msg}"
         if fix_per_upgrade:
             msg += (
                 "\nTo solve this, use\n  " f"{Colors.ORANGE}colrev upgrade{Colors.END}"
@@ -383,6 +383,17 @@ class RecordNotFoundException(CoLRevException):
 
 class ImportException(CoLRevException):
     """An error occured in the import functions."""
+
+    def __init__(
+        self,
+        msg: str,
+    ) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
+
+class NoRecordsToImport(CoLRevException):
+    """No records to import."""
 
     def __init__(
         self,

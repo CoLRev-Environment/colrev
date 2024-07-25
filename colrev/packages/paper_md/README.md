@@ -1,4 +1,4 @@
-# paper_md
+## Summary
 
 ## data
 
@@ -26,8 +26,8 @@ _Records to synthesize_:<!-- NEW_RECORD_SOURCE -->
 
 - @Smith2010
 - @Webster2020
-
 ```
+
 Once record citations are moved from the to-do list to other parts of the manuscript, they are considered synthesized and are set to `rev_synthesized` upon running `colrev data`.
 
 ## Links

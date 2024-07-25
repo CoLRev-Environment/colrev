@@ -53,10 +53,6 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "SYNERGY-datasets"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/synergy_datasets.md"
-    )
 
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
@@ -90,7 +86,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -130,6 +126,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             comment="",
         )
         operation.add_source_and_search(search_source)
+        return search_source
 
     def _load_dataset(self) -> pd.DataFrame:
         date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

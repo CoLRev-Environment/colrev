@@ -46,7 +46,8 @@ class Load(colrev.process.operation.Operation):
         if not hide_load_explanation:
             self.review_manager.logger.info("Load")
             self.review_manager.logger.info(
-                "Load converts search results and adds them to the shared data/records.bib."
+                "Load converts search results and adds them to the shared "
+                f"{self.review_manager.paths.records}."
             )
             self.review_manager.logger.info(
                 "Original records (search results) are stored in the directory data/search"
@@ -162,7 +163,7 @@ class Load(colrev.process.operation.Operation):
     ) -> None:
         # pylint: disable=too-many-branches
         if len(source_records_list) == 0:
-            raise colrev_exceptions.ImportException(
+            raise colrev_exceptions.NoRecordsToImport(
                 msg=f"{source} has no records to load"
             )
         for source_record in source_records_list:
@@ -368,19 +369,26 @@ class Load(colrev.process.operation.Operation):
             sources_settings.append(source)
         sources = []
         for source in sources_settings:
+            try:
+                search_source_class = self.package_manager.get_package_endpoint_class(
+                    package_type=EndpointType.search_source,
+                    package_identifier=source.endpoint,
+                )
+                endpoint = search_source_class(
+                    source_operation=self, settings=source.get_dict()
+                )
 
-            search_source_class = self.package_manager.get_package_endpoint_class(
-                package_type=EndpointType.search_source,
-                package_identifier=source.endpoint,
-            )
-            endpoint = search_source_class(
-                source_operation=self, settings=source.get_dict()
-            )
+                s_type = endpoint.search_source.search_type  # type: ignore
+                if s_type == SearchType.MD and not include_md:
+                    continue
+                sources.append(endpoint)
 
-            s_type = endpoint.search_source.search_type  # type: ignore
-            if s_type == SearchType.MD and not include_md:
-                continue
-            sources.append(endpoint)
+            except colrev_exceptions.MissingDependencyError as exc:
+                self.review_manager.logger.error(exc)
+                self.review_manager.logger.error(
+                    f"Cannot load records for {source.filename}"
+                )
+                print()
 
         return sources
 
@@ -439,7 +447,9 @@ class Load(colrev.process.operation.Operation):
         #     f"{part_exact_call} -s {source.search_source.filename.name}"
         # )
         self.review_manager.dataset.create_commit(
-            msg=f"Load {source.search_source.filename.name}", skip_hooks=True
+            msg=f"Load: data/search/{source.search_source.filename.name} → "
+            f"{self.review_manager.paths.RECORDS_FILE_GIT}",
+            skip_hooks=True,
         )
         if stashed:
             git_repo.git.stash("pop")
@@ -467,8 +477,11 @@ class Load(colrev.process.operation.Operation):
             except FileNotFoundError:
                 self.review_manager.logger.info(" Nothing to load")
                 print()
+            except colrev_exceptions.NoRecordsToImport as exc:
+                self.review_manager.logger.info(exc)
+                print()
             except colrev_exceptions.ImportException as exc:
-                print(exc)
+                self.review_manager.logger.error(f"{Colors.RED}{exc}{Colors.END}")
 
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed load operation{Colors.END}"

@@ -30,8 +30,8 @@ def test_install_curated_resource_with_records(tmp_path, mocker):  # type: ignor
     curated_resource = "example/repo"
 
     def patched_clone_from(curated_repo, repo_dir, depth):  # type: ignore
-        (repo_dir / Filepaths.README_FILE).parent.mkdir(parents=True, exist_ok=True)
-        (repo_dir / Filepaths.README_FILE).write_text(
+        (repo_dir / Path("README.md")).parent.mkdir(parents=True, exist_ok=True)
+        (repo_dir / Path("README.md")).write_text(
             """# Readme
 
 To install this curation, run
@@ -62,8 +62,8 @@ def test_install_curated_resource_with_readme(tmp_path, mocker):  # type: ignore
     curated_resource = "example/repo"
 
     def patched_clone_from(curated_repo, repo_dir, depth):  # type: ignore
-        (repo_dir / Filepaths.RECORDS_FILE).parent.mkdir(parents=True, exist_ok=True)
-        (repo_dir / Filepaths.RECORDS_FILE).write_text("test")
+        (repo_dir / Path("data/records.bib")).parent.mkdir(parents=True, exist_ok=True)
+        (repo_dir / Path("data/records.bib")).write_text("test")
         return True
 
     mocker.patch(
@@ -88,8 +88,8 @@ def test_install_curated_resource_already_exists(tmp_path, mocker):  # type: ign
     curated_resource = "example/repo"
 
     def patched_clone_from(curated_repo, repo_dir, depth):  # type: ignore
-        (repo_dir / Filepaths.RECORDS_FILE).parent.mkdir(parents=True, exist_ok=True)
-        (repo_dir / Filepaths.RECORDS_FILE).write_text("test")
+        (repo_dir / Path("data/records.bib")).parent.mkdir(parents=True, exist_ok=True)
+        (repo_dir / Path("data/records.bib")).write_text("test")
         return True
 
     mocker.patch(

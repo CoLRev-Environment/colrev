@@ -1,8 +1,6 @@
-# Europe PMC
+## Summary
 
-| SearchSource                         | Scope                                     | Size         |
-|--------------------------------------|-------------------------------------------|--------------|
-| [Europe PMC](https://europepmc.org/) | Including PubMed Central (PMC) (metadata) | > 40,000,000 |
+Europe PMC is a comprehensive database that includes metadata from PubMed Central (PMC) and provides access to over 40 million records.
 
 ## search
 

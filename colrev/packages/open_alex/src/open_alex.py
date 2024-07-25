@@ -41,10 +41,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.oni
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/open_alex.md"
-    )
+
     short_name = "OpenAlex"
     _open_alex_md_filename = Path("data/search/md_open_alex.bib")
 
@@ -303,7 +300,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         raise colrev_exceptions.PackageParameterError(

@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "colrev.osf"
+description = "CoLRev package for osf"
+version = "0.1.0"
+license = "MIT"
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>",
+    "Peiyao Mao <peiyao.mao@stud.uni-bamberg.de>",
+    "Mingxin Jiang <mingxin.jiang@stud.uni-bamberg.de>",
+    "Johannes Maximilian Diel <jm_diel@stud.uni-bamberg.de>",
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/osf"
+
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
+
+[tool.colrev]
+colrev_doc_description = "OSF"
+colrev_doc_link = "README.md"
+search_types = ["API"]
+
+[tool.poetry.plugins.colrev]
+search_source = "colrev.packages.osf.src.osf:OSFSearchSource"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

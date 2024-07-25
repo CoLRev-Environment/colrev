@@ -36,9 +36,13 @@ class Status(colrev.process.operation.Operation):
                 commit.message,
                 commit.author.name,
                 commit.committed_date,
-                (commit.tree / "status.yaml").data_stream.read(),
+                (
+                    commit.tree / str(self.review_manager.paths.STATUS_FILE)
+                ).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(paths="status.yaml")
+            for commit in git_repo.iter_commits(
+                paths=str(self.review_manager.paths.STATUS_FILE)
+            )
         )
         for ind, (
             commit_id,
@@ -49,7 +53,7 @@ class Status(colrev.process.operation.Operation):
         ) in enumerate(revlist):
             var_t = io.StringIO(filecontents.decode("utf-8"))
 
-            # TBD: we could simply include the whole status.yaml
+            # TBD: we could simply include the whole STATUS_FILE
             # (to create a general-purpose status analyzer)
             # -> flatten nested structures (e.g., overall/currently)
             # -> integrate with get_status (current data) -

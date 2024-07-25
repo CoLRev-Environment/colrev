@@ -28,7 +28,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.writer.write_utils import write_file
 
 
@@ -106,20 +105,20 @@ class PaperMarkdown(JsonSchemaMixin):
 
         self.settings = self.settings_class.load_settings(data=settings)
 
-        self.data_dir = self.review_manager.get_path(Filepaths.DATA_DIR)
+        self.data_dir = self.review_manager.paths.data
         self.settings.paper_path = self.data_dir / self.settings.paper_path
         self.settings.word_template = self.data_dir / self.settings.word_template
         self.non_sample_references = self.data_dir / self.NON_SAMPLE_REFERENCES_RELATIVE
         self.sample_references = self.data_dir / self.SAMPLE_REFERENCES_RELATIVE
         self.data_operation = data_operation
 
-        output_dir = self.review_manager.get_path(Filepaths.OUTPUT_DIR)
+        output_dir = self.review_manager.paths.output
         self.settings.paper_output = output_dir / self.settings.paper_output
 
         self._create_non_sample_references_bib()
 
         if not self.review_manager.in_ci_environment():
-            self.pandoc_image = "pandoc/latex:3.1.13"
+            self.pandoc_image = "pandoc/latex:3.2.0"
             colrev.env.docker_manager.DockerManager.build_docker_image(
                 imagename=self.pandoc_image
             )
@@ -176,7 +175,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         if "http" in csl_link:
             ret = requests.get(csl_link, allow_redirects=True, timeout=30)
-            csl_filename = Filepaths.DATA_DIR / Path(csl_link).name
+            csl_filename = self.review_manager.paths.DATA_DIR / Path(csl_link).name
             with open(csl_filename, "wb") as file:
                 file.write(ret.content)
             colrev.env.utils.inplace_change(
@@ -369,7 +368,7 @@ class PaperMarkdown(JsonSchemaMixin):
             self.review_manager.logger.info("Create paper")
 
         title = "Paper template"
-        readme_file = self.review_manager.get_path(Filepaths.README_FILE)
+        readme_file = self.review_manager.paths.readme
         if readme_file.is_file():
             with open(readme_file, encoding="utf-8") as file:
                 title = file.readline()
@@ -441,7 +440,7 @@ class PaperMarkdown(JsonSchemaMixin):
         paper_path = self.settings.paper_path
         Path(temp.name).unlink(missing_ok=True)
         self._temp_path.mkdir(exist_ok=True, parents=True)
-        shutil.move(str(paper_path), temp.name)
+        shutil.move(str(paper_path), str(temp.name))
 
         screen_operation = self.review_manager.get_screen_operation(
             notify_state_transition_operation=False
@@ -587,7 +586,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 temp = tempfile.NamedTemporaryFile(dir=self._temp_path)
                 paper_path = self.settings.paper_path
                 Path(temp.name).unlink(missing_ok=True)
-                paper_path.rename(temp.name)
+                shutil.move(str(paper_path), str(temp.name))
                 with open(temp.name, encoding="utf-8") as reader, open(
                     paper_path, "w", encoding="utf-8"
                 ) as writer:
@@ -664,8 +663,8 @@ class PaperMarkdown(JsonSchemaMixin):
 
     def _call_docker_build_process(self, *, script: str) -> None:
         try:
-            uid = os.stat(self.review_manager.get_path(Filepaths.RECORDS_FILE)).st_uid
-            gid = os.stat(self.review_manager.get_path(Filepaths.RECORDS_FILE)).st_gid
+            uid = os.stat(self.review_manager.paths.records).st_uid
+            gid = os.stat(self.review_manager.paths.records).st_gid
             user = f"{uid}:{gid}"
 
             client = docker.from_env()
@@ -695,8 +694,8 @@ class PaperMarkdown(JsonSchemaMixin):
     def build_paper(self) -> None:
         """Build the paper (based on pandoc)"""
 
-        if not self.review_manager.get_path(Filepaths.RECORDS_FILE).is_file():
-            self.review_manager.get_path(Filepaths.RECORDS_FILE).touch()
+        if not self.review_manager.paths.records.is_file():
+            self.review_manager.paths.records.touch()
 
         if not self.settings.paper_path.is_file():
             self.review_manager.logger.error(

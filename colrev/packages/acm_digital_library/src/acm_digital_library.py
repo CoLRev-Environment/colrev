@@ -32,14 +32,10 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     # "https://dl.acm.org/doi/{{ID}}"
     source_identifier = "doi"
     search_types = [SearchType.DB]
+    short_name = "ACM Digital Library"
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "ACM Digital Library"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/"
-        + "packages/search_sources/acm_digital_library.md"
-    )
     db_url = "https://dl.acm.org/"
 
     def __init__(
@@ -66,7 +62,7 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -80,7 +76,7 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         )
 
         if search_type == SearchType.DB:
-            search_source = operation.add_db_source(
+            search_source = operation.create_db_source(
                 search_source_cls=cls,
                 params=params_dict,
             )
@@ -88,6 +84,7 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
             raise NotImplementedError
 
         operation.add_source_and_search(search_source)
+        return search_source
 
     def search(self, rerun: bool) -> None:
         """Run a search of ACM Digital Library"""

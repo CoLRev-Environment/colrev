@@ -44,10 +44,6 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.na
     short_name = "OpenLibrary"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/open_library.md"
-    )
     _open_library_md_filename = Path("data/search/md_open_library.bib")
 
     requests_headers = {
@@ -253,7 +249,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         raise NotImplementedError
 

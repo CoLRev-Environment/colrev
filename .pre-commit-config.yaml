@@ -35,29 +35,29 @@ repos:
     hooks:
     -   id: autoflake
 -   repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
+    rev: 7.1.0
     hooks:
     -   id: flake8
         additional_dependencies: [flake8-typing-imports==1.12.0]
         args: ['--max-line-length=110', '--extend-ignore=E203,TYP006']
 -   repo: https://github.com/asottile/reorder-python-imports
-    rev: v3.12.0
+    rev: v3.13.0
     hooks:
     -   id: reorder-python-imports
         args: [--py3-plus]
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.2
+    rev: v3.16.0
     hooks:
     -   id: pyupgrade
         args: [--py36-plus, --keep-runtime-typing]
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.10.0'
+    rev: 'v1.11.0'
     hooks:
     -   id: mypy
         args: [--disallow-untyped-defs, --disallow-incomplete-defs, --disallow-untyped-calls]
         additional_dependencies: [types-toml]
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.4.3
+  rev: v0.5.4
   hooks:
     - id: ruff # runs faster than pylint
       args: [--fix, --exit-non-zero-on-fix]

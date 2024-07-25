@@ -39,6 +39,10 @@ class DescriptiveReview(JsonSchemaMixin):
 
         settings.data.data_package_endpoints = [
             {"endpoint": "colrev.prisma", "version": "1.0"},
+            {"endpoint": "colrev.profile"},
+            {
+                "endpoint": "colrev.structured",
+            },
             {
                 "endpoint": "colrev.paper_md",
                 "version": "1.0",

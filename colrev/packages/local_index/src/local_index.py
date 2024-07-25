@@ -48,10 +48,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "LocalIndex"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/local_index.md"
-    )
     _local_index_md_filename = Path("data/search/md_curated.bib")
 
     essential_md_keys = [
@@ -250,13 +246,13 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         # always API search
 
         if len(params) == 0:
-            search_source = operation.add_api_source(endpoint=cls.endpoint)
+            search_source = operation.create_api_source(endpoint=cls.endpoint)
         else:
             filename = operation.get_unique_filename(
                 file_path_string=f"local_index_{params}".replace("%", "").replace(
@@ -271,6 +267,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 comment="",
             )
         operation.add_source_and_search(search_source)
+        return search_source
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""

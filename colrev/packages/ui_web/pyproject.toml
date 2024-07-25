@@ -2,9 +2,15 @@
 name = "colrev.ui_web"
 description = "Web-UI package for CoLRev"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/ui_web/README.md"
+authors = [
+    "Jessica Petry Klarmann",
+    "Katharina Maria Ernst",
+    "Luca Rita Ossendorf",
+    "Simon Mühlbauer",
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/ui_web"
 
 [[tool.poetry.packages]]
 include = "src"
@@ -14,9 +20,9 @@ python = ">=3.8, <4"
 dash = "^2.11.1"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Web-UI"
 colrev_doc_link = "README.md"
+search_types = []
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "cython<3.0"]

@@ -1,10 +1,7 @@
-# YearVolIss prep
+## Summary
 
 ## prep
 
-Note: This document is currently under development. It will contain the following elements.
+This package adds missing ``year`` fields if the ``journal``, ``volume``, and ``number`` fields are set. Based on crossref.
 
-- description
-- example
-
-## Links
+<!-- ## Links -->

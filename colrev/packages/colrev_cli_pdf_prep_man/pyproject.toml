@@ -2,10 +2,11 @@
 name = "colrev.colrev_cli_pdf_prep_man"
 description = "CoLRev package for colrev_cli_pdf_prep_man"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/colrev_cli_pdf_prep_man/README.md"
-
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_pdf_prep_man"
 
 [[tool.poetry.packages]]
 include = "src"
@@ -14,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Prep PDFs manually (CLI)"
 colrev_doc_link = "README.md"
+search_types = []
 
 [tool.poetry.plugins.colrev]
 pdf_prep_man = "colrev.packages.colrev_cli_pdf_prep_man.src.pdf_prep_man_cli:CoLRevCLIPDFManPrep"

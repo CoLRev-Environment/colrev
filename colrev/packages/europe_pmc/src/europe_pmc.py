@@ -54,10 +54,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Europe PMC"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/europe_pmc.md"
-    )
     _europe_pmc_md_filename = Path("data/search/md_europe_pmc.bib")
     _SOURCE_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
     _next_page_url: str = ""
@@ -496,7 +492,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -509,7 +505,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     params_dict[key] = value
 
         if len(params_dict) == 0:
-            search_source = operation.add_api_source(endpoint=cls.endpoint)
+            search_source = operation.create_api_source(endpoint=cls.endpoint)
 
         # pylint: disable=colrev-missed-constant-usage
         elif "url" in params_dict:
@@ -531,6 +527,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             raise NotImplementedError
 
         operation.add_source_and_search(search_source)
+        return search_source
 
     def _load_bib(self) -> dict:
         def field_mapper(record_dict: dict) -> None:

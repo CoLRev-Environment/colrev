@@ -12,6 +12,7 @@ include = "src"
 python = ">=3.8, <4"
 instructor = "^1.2.6"
 litellm = "^1.37.0"
+pydantic = "^2.7.1"
 
 [tool.colrev]
 dev_status = "experimental"

@@ -7,6 +7,7 @@ import pytest
 
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
+from colrev.constants import Colors
 
 # flake8: noqa: E501
 
@@ -52,7 +53,9 @@ def test_get_colrev_versions(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     colrev_versions = base_repo_review_manager.get_colrev_versions()
-    assert ["0.12.2", "0.12.2"] == colrev_versions
+    assert ["0.12.3", "0.12.3"] == colrev_versions, print(
+        f"To install the current version, run {Colors.ORANGE}pip install -e .{Colors.END}"
+    )
 
 
 def test_check_repository_setup(

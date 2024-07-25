@@ -1,10 +1,5 @@
-# Exclude languages
+## Summary
 
 ## prep
 
-Note: This document is currently under development. It will contain the following elements.
-
-- description
-- example
-
-## Links
+This package excludes papers if a particular language scope is set.

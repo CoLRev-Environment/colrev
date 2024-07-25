@@ -21,7 +21,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 
@@ -89,7 +88,7 @@ Example 2:
             settings["data_path_relative"] = Path("data.csv")
 
         self.settings = self.settings_class.load_settings(data=settings)
-        data_dir = self.review_manager.get_path(Filepaths.DATA_DIR)
+        data_dir = self.review_manager.paths.data
         self.data_path = data_dir / self.settings.data_path_relative
         self.review_manager = self.review_manager
 
@@ -105,6 +104,10 @@ Example 2:
             "data_path_relative": "data/data.csv",
         }
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
+        operation.review_manager.save_settings()
+        operation.review_manager.dataset.create_commit(
+            msg=f"Add {operation.type} colrev.structured",
+        )
 
     def validate_structured_data(self) -> None:
         """Validate the extracted data"""
@@ -190,6 +193,8 @@ Example 2:
             review_manager: colrev.review_manager.ReviewManager,
             synthesized_record_status_matrix: dict,
         ) -> typing.Dict:
+            if silent_mode:
+                return synthesized_record_status_matrix
             if not self.data_path.is_file():
                 self._set_fields()
 
@@ -249,7 +254,9 @@ Example 2:
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
 
-        self.review_manager.dataset.add_changes(self.settings.data_path_relative)
+        self.review_manager.dataset.add_changes(
+            self.settings.data_path_relative, ignore_missing=True
+        )
 
     def update_record_status_matrix(
         self,

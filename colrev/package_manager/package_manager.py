@@ -7,7 +7,6 @@ import typing
 from typing import Any
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.doc_registry_manager
 import colrev.package_manager.package
 from colrev.constants import EndpointType
 
@@ -39,26 +38,6 @@ class PackageManager:
                 print(exc)
 
         return type_identifier_endpoint_dict
-
-    def update_package_list(self) -> None:
-        """Generates the package_endpoints.json
-        based on the packages in packages/packages.json
-        and the endpoints.json files in the top directory of each package."""
-
-        packages = []
-        for package_dir in self._get_package_identifiers():
-            try:
-                packages.append(colrev.package_manager.package.Package(package_dir))
-            except colrev_exceptions.MissingDependencyError as exc:
-                print(exc)
-                continue
-
-        doc_reg_manager = (
-            colrev.package_manager.doc_registry_manager.DocRegistryManager(
-                package_manager=self, packages=packages
-            )
-        )
-        doc_reg_manager.update()
 
     def discover_packages(self, *, package_type: EndpointType) -> typing.Dict:
         """Discover packages"""

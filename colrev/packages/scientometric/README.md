@@ -1,4 +1,4 @@
-# Scientometric
+## Summary
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -10,6 +10,8 @@ Note: This document is currently under development. It will contain the followin
 - differences between disciplines
 
 For the analysis of citation data, established software packages like [VosViewer](https://www.vosviewer.com/) are recommended.
+
+<!--
 
 ## Steps and operations
 
@@ -30,3 +32,4 @@ For the analysis of citation data, established software packages like [VosViewer
 ## Software recommendations
 
 ## References
+-->

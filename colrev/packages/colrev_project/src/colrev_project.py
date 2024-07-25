@@ -44,10 +44,6 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "CoLRev project"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/colrev_project.md"
-    )
 
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
@@ -79,7 +75,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         # Always API search
@@ -93,6 +89,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             comment="",
         )
         operation.add_source_and_search(search_source)
+        return search_source
 
     def _load_records_to_import(self, *, project_url: str, project_name: str) -> dict:
         temp_path = tempfile.gettempdir() / Path(project_name)

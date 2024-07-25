@@ -1,10 +1,9 @@
-# DOI linking
+## Summary
 
 ## prep
 
-Note: This document is currently under development. It will contain the following elements.
+This package retrieves meta data from doi.org.
 
-- description
-- example
-
+<!--
 ## Links
+-->

@@ -2,9 +2,11 @@
 name = "colrev.abi_inform_proquest"
 description = "CoLRev package for abi_inform_proquest"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/abi_inform_proquest/README.md"
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/abi_inform_proquest"
 
 [[tool.poetry.packages]]
 include = "src"
@@ -13,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-documentation = "README.md"
+colrev_doc_description = "ABI/INFORM (ProQuest)"
 colrev_doc_link = "README.md"
-dev_status = "experimental"
+search_types = ["DB"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.abi_inform_proquest.src.abi_inform_proquest:ABIInformProQuestSearchSource"

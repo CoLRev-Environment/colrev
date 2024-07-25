@@ -9,7 +9,6 @@ import git
 from docker.errors import DockerException
 
 import colrev.exceptions as colrev_exceptions
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.process.model import ProcessModel
 
@@ -91,7 +90,7 @@ class Operation:
         if not git_repo.is_dirty():
             return True
 
-        ignored_file_list = [str(Filepaths.STATUS_FILE)]
+        ignored_file_list = [str(self.review_manager.paths.STATUS_FILE)]
         if ignored_files:
             ignored_file_list += ignored_files
         ignored_file_list = [str(x).replace("\\", "/") for x in ignored_file_list]
@@ -122,14 +121,16 @@ class Operation:
         if self.type == OperationsType.load:
             self._require_clean_repo_general(
                 ignored_files=[
-                    Filepaths.SEARCH_DIR,
-                    Filepaths.SETTINGS_FILE,
+                    self.review_manager.paths.SEARCH_DIR,
+                    self.review_manager.paths.SETTINGS_FILE,
                 ]
             )
             self._check_model_precondition()
 
         elif self.type == OperationsType.prep_man:  # pragma: no cover
-            self._require_clean_repo_general(ignored_files=[Filepaths.RECORDS_FILE_GIT])
+            self._require_clean_repo_general(
+                ignored_files=[self.review_manager.paths.RECORDS_FILE_GIT]
+            )
             self._check_model_precondition()
 
         elif self.type in [
@@ -146,7 +147,9 @@ class Operation:
             OperationsType.pdf_get,
             OperationsType.pdf_get_man,
         ]:
-            self._require_clean_repo_general(ignored_files=[Filepaths.PDF_DIR])
+            self._require_clean_repo_general(
+                ignored_files=[self.review_manager.paths.PDF_DIR]
+            )
             self._check_model_precondition()
 
         elif self.type == OperationsType.data:

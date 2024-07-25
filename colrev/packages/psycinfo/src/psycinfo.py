@@ -36,10 +36,7 @@ class PsycINFOSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.oni
     short_name = "PsycInfo (APA)"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/psycinfo.md"
-    )
+
     db_url = "https://www.apa.org/search"
 
     def __init__(
@@ -69,14 +66,15 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        search_source = operation.add_db_source(
+        search_source = operation.create_db_source(
             search_source_cls=cls,
             params={},
         )
         operation.add_source_and_search(search_source)
+        return search_source
 
     def search(self, rerun: bool) -> None:
         """Run a search of Psycinfo"""

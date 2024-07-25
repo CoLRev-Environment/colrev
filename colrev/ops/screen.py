@@ -108,7 +108,7 @@ class Screen(colrev.process.operation.Operation):
         self.review_manager.dataset.save_records_dict(records)
         self._print_stats(selected_record_ids)
         self.review_manager.dataset.create_commit(
-            msg="Screen (include_all)",
+            msg="Screen: include all",
             manual_author=False,
         )
 
@@ -183,7 +183,7 @@ class Screen(colrev.process.operation.Operation):
 
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
-            msg=f"Add screening criterion: {criterion_name}",
+            msg=f"Screen: add criterion: {criterion_name}",
         )
 
     def delete_criterion(self, criterion_to_delete: str) -> None:
@@ -235,7 +235,7 @@ class Screen(colrev.process.operation.Operation):
 
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
-            msg=f"Removed screening criterion: {criterion_to_delete}",
+            msg=f"Screen: remove criterion {criterion_to_delete}",
         )
 
     def create_screen_split(self, *, create_split: int) -> list:
@@ -285,7 +285,7 @@ class Screen(colrev.process.operation.Operation):
                 record.set_status(RecordState.rev_included)
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
-            msg="Screen (include_all)",
+            msg="Screen: include all",
             manual_author=False,
         )
 
@@ -404,7 +404,8 @@ class Screen(colrev.process.operation.Operation):
             record.remove_field(key="include_flag")
 
         self.review_manager.dataset.create_commit(
-            msg="Include records (include_flag)", manual_author=True
+            msg=f"Screen: include records {','.join(selected_auto_include_ids)}",
+            manual_author=True,
         )
         return selected_auto_include_ids
 

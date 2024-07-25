@@ -2,10 +2,11 @@
 name = "colrev.open_library"
 description = "CoLRev package for open_library"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/open_library/README.md"
-
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/open_library"
 
 [[tool.poetry.packages]]
 include = "src"
@@ -14,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+colrev_doc_description = "OpenLibrary API"
 colrev_doc_link = "README.md"
+search_types = ["MD"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.open_library.src.open_library:OpenLibrarySearchSource"

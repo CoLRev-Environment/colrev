@@ -47,10 +47,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "AIS eLibrary"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/aisel.md"
-    )
     db_url = "https://aisel.aisnet.org/"
 
     _conference_abbreviations = {
@@ -164,7 +160,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         params_dict = {}
         if params:
@@ -180,7 +176,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         )
 
         if search_type == SearchType.DB:
-            search_source = operation.add_db_source(
+            search_source = operation.create_db_source(
                 search_source_cls=cls,
                 params=params_dict,
             )
@@ -201,13 +197,14 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 )
             else:
                 # Add API search without params
-                search_source = operation.add_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(endpoint=cls.endpoint)
 
         # elif search_type == SearchType.TOC:
         else:
             raise NotImplementedError
 
         operation.add_source_and_search(search_source)
+        return search_source
 
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""

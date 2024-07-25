@@ -55,10 +55,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
 
     # SearchSourceInterface constants
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/semanticscholar.md"
-    )
     heuristic_status = SearchSourceHeuristicStatus.oni
     search_types = [SearchType.API]
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -345,7 +341,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         # get search parameters from the user interface
@@ -385,6 +381,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             comment="",
         )
         operation.add_source_and_search(search_source)
+        return search_source
 
     def prep_link_md(
         self,

@@ -55,10 +55,6 @@ class BackwardSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "PDF backward search"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/pdf_backward_search.md"
-    )
 
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
@@ -206,6 +202,8 @@ class BackwardSearchSource(JsonSchemaMixin):
             for record_id, refs in all_references.items()
             for ref in refs
         ]
+        if len(all_references_flat) == 0:
+            return pd.DataFrame()
 
         for ref in all_references_flat:
             ref[Fields.ID] = ref["record_id"] + "_backward_search_" + ref[Fields.ID]
@@ -561,7 +559,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -589,6 +587,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             )
 
         operation.add_source_and_search(search_source)
+        return search_source
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""

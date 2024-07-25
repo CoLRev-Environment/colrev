@@ -2,10 +2,11 @@
 name = "colrev.open_citations_forward_search"
 description = "CoLRev package for open_citations_forward_search"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/open_citations_forward_search/README.md"
-
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/open_citations_forward_search"
 
 [[tool.poetry.packages]]
 include = "src"
@@ -14,9 +15,9 @@ include = "src"
 python = ">=3.8, <4"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Forward search based on OpenCitations"
 colrev_doc_link = "README.md"
+search_types = ["FORWARD_SEARCH"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.open_citations_forward_search.src.open_citations_forward_search:OpenCitationsSearchSource"

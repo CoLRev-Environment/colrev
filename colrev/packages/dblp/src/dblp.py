@@ -56,10 +56,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "DBLP"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/dblp.md"
-    )
+
     _dblp_md_filename = Path("data/search/md_dblp.bib")
     _timeout: int = 10
 
@@ -202,7 +199,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 item["type"] = "Journal Articles"
             if item["key"][:4] == "conf":
                 item["type"] = "Conference and Workshop Papers"
-            item["warning"] = "Withdrawn (according to DBLP)"
+            item["colrev.dblp.warning"] = "Withdrawn (according to DBLP)"
 
         elif item["type"] == "Journal Articles":
             item[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
@@ -536,7 +533,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -554,7 +551,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.add_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(endpoint=cls.endpoint)
 
             # pylint: disable=colrev-missed-constant-usage
             elif "url" in params_dict:
@@ -582,6 +579,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             )
 
         operation.add_source_and_search(search_source)
+        return search_source
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
@@ -692,9 +690,11 @@ class DBLPSearchSource(JsonSchemaMixin):
                     masterdata_repository=self.review_manager.settings.is_curated_repo(),
                 )
                 record.set_status(RecordState.md_prepared)
-                if "Withdrawn (according to DBLP)" in record.data.get("warning", ""):
+                if "Withdrawn (according to DBLP)" in record.data.get(
+                    "colrev.dblp.warning", ""
+                ):
                     record.prescreen_exclude(reason=FieldValues.RETRACTED)
-                    record.remove_field(key="warning")
+                    # record.remove_field(key="warning")
 
                 dblp_feed.save()
                 self.dblp_lock.release()

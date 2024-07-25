@@ -1,0 +1,654 @@
+{
+    "review_type": [
+        {
+            "package_endpoint_identifier": "colrev.blank",
+            "status": "|STABLE|",
+            "short_description": "Blank Review (:doc:`instructions </manual/packages/colrev.blank>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.conceptual_review",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Conceptual review (:doc:`instructions </manual/packages/colrev.conceptual_review>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.critical_review",
+            "status": "|STABLE|",
+            "short_description": "Critical Review (:doc:`instructions </manual/packages/colrev.critical_review>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.curated_masterdata",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Curated masterdata (:doc:`instructions </manual/packages/colrev.curated_masterdata>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.descriptive_review",
+            "status": "|STABLE|",
+            "short_description": "Descriptive Review (:doc:`instructions </manual/packages/colrev.descriptive_review>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.literature_review",
+            "status": "|STABLE|",
+            "short_description": "Literature Review (:doc:`instructions </manual/packages/colrev.literature_review>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.meta_analysis",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Meta-Analysis (:doc:`instructions </manual/packages/colrev.meta_analysis>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.methodological_review",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Methodological Review (:doc:`instructions </manual/packages/colrev.methodological_review>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.narrative_review",
+            "status": "|STABLE|",
+            "short_description": "Narrative Review (:doc:`instructions </manual/packages/colrev.narrative_review>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.qualitative_systematic_review",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Qualitative Systematic Review (:doc:`instructions </manual/packages/colrev.qualitative_systematic_review>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.scientometric",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Scientometric Review (:doc:`instructions </manual/packages/colrev.scientometric>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.scoping_review",
+            "status": "|STABLE|",
+            "short_description": "Scoping Review (:doc:`instructions </manual/packages/colrev.scoping_review>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.theoretical_review",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Theoretical Review (:doc:`instructions </manual/packages/colrev.theoretical_review>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.umbrella",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Umbrella Review (:doc:`instructions </manual/packages/colrev.umbrella>`)"
+        }
+    ],
+    "search_source": [
+        {
+            "package_endpoint_identifier": "colrev.abi_inform_proquest",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "ABI/INFORM (ProQuest) (:doc:`instructions </manual/packages/colrev.abi_inform_proquest>`)",
+            "search_types": [
+                "DB"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.acm_digital_library",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "ACM digital Library (:doc:`instructions </manual/packages/colrev.acm_digital_library>`)",
+            "search_types": [
+                "DB"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.ais_library",
+            "status": "|MATURING|",
+            "short_description": "AIS electronic Library (AISeL) (:doc:`instructions </manual/packages/colrev.ais_library>`)",
+            "search_types": [
+                "DB",
+                "API",
+                "TOC"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.arxiv",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "arXiv (:doc:`instructions </manual/packages/colrev.arxiv>`)",
+            "search_types": [
+                "API"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.colrev_project",
+            "status": "|MATURING|",
+            "short_description": "CoLRev projects (:doc:`instructions </manual/packages/colrev.colrev_project>`)",
+            "search_types": [
+                "API"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.crossref",
+            "status": "|MATURING|",
+            "short_description": "Crossref API (:doc:`instructions </manual/packages/colrev.crossref>`)",
+            "search_types": [
+                "API",
+                "TOC",
+                "MD"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.dblp",
+            "status": "|MATURING|",
+            "short_description": "DBLP API (:doc:`instructions </manual/packages/colrev.dblp>`)",
+            "search_types": [
+                "API",
+                "TOC",
+                "MD"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.ebsco_host",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "EBSCOHost (:doc:`instructions </manual/packages/colrev.ebsco_host>`)",
+            "search_types": [
+                "DB"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.eric",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "ERIC API (:doc:`instructions </manual/packages/colrev.eric>`)",
+            "search_types": [
+                "API"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.europe_pmc",
+            "status": "|MATURING|",
+            "short_description": "Europe PMC (:doc:`instructions </manual/packages/colrev.europe_pmc>`)",
+            "search_types": [
+                "API",
+                "DB",
+                "MD"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.files_dir",
+            "status": "|MATURING|",
+            "short_description": "Files directories (PDFs based on GROBID) (:doc:`instructions </manual/packages/colrev.files_dir>`)",
+            "search_types": [
+                "FILES"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.github",
+            "status": "|MATURING|",
+            "short_description": "GitHub API (:doc:`instructions </manual/packages/colrev.github>`)",
+            "search_types": [
+                "API"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.google_scholar",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "GoogleScholar (:doc:`instructions </manual/packages/colrev.google_scholar>`)",
+            "search_types": [
+                "DB"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.ieee",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "IEEEXplore (:doc:`instructions </manual/packages/colrev.ieee>`)",
+            "search_types": [
+                "API"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.jstor",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "JSTOR (:doc:`instructions </manual/packages/colrev.jstor>`)",
+            "search_types": [
+                "DB"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.local_index",
+            "status": "|MATURING|",
+            "short_description": "LocalIndex (:doc:`instructions </manual/packages/colrev.local_index>`)",
+            "search_types": [
+                "API",
+                "MD"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.open_alex",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "OpenAlex API (:doc:`instructions </manual/packages/colrev.open_alex>`)",
+            "search_types": [
+                "API",
+                "MD"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.open_citations_forward_search",
+            "status": "|MATURING|",
+            "short_description": "Forward search based on OpenCitations (:doc:`instructions </manual/packages/colrev.open_citations_forward_search>`)",
+            "search_types": [
+                "FORWARD_SEARCH"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.open_library",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "OpenLibrary API (:doc:`instructions </manual/packages/colrev.open_library>`)",
+            "search_types": [
+                "MD"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.osf",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "OSF (:doc:`instructions </manual/packages/colrev.osf>`)",
+            "search_types": [
+                "API"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.pdf_backward_search",
+            "status": "|MATURING|",
+            "short_description": "Backward search extracting references from PDFs using GROBID (:doc:`instructions </manual/packages/colrev.pdf_backward_search>`)",
+            "search_types": [
+                "BACKWARD_SEARCH"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.psycinfo",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "PsycINFO (:doc:`instructions </manual/packages/colrev.psycinfo>`)",
+            "search_types": [
+                "DB"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.pubmed",
+            "status": "|MATURING|",
+            "short_description": "Pubmed (:doc:`instructions </manual/packages/colrev.pubmed>`)",
+            "search_types": [
+                "DB",
+                "API",
+                "MD"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.scopus",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Scopus (:doc:`instructions </manual/packages/colrev.scopus>`)",
+            "search_types": [
+                "DB"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.semanticscholar",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Semantic Scholar API (:doc:`instructions </manual/packages/colrev.semanticscholar>`)",
+            "search_types": [
+                "API"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.springer_link",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Springer Link (:doc:`instructions </manual/packages/colrev.springer_link>`)",
+            "search_types": [
+                "DB",
+                "API"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.synergy_datasets",
+            "status": "|MATURING|",
+            "short_description": "SYNERGY Datasets (:doc:`instructions </manual/packages/colrev.synergy_datasets>`)",
+            "search_types": [
+                "API"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.taylor_and_francis",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Taylor and Francis (:doc:`instructions </manual/packages/colrev.taylor_and_francis>`)",
+            "search_types": [
+                "DB"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.trid",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Transport Research International Documentation (:doc:`instructions </manual/packages/colrev.trid>`)",
+            "search_types": [
+                "DB"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.unknown_source",
+            "status": "|MATURING|",
+            "short_description": "Unknown SearchSource (:doc:`instructions </manual/packages/colrev.unknown_source>`)",
+            "search_types": [
+                "DB",
+                "OTHER",
+                "TOC",
+                "FORWARD_SEARCH",
+                "BACKWARD_SEARCH"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.unpaywall",
+            "status": "|MATURING|",
+            "short_description": "Unpaywall (:doc:`instructions </manual/packages/colrev.unpaywall>`)",
+            "search_types": [
+                "API"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.web_of_science",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Web of Science (:doc:`instructions </manual/packages/colrev.web_of_science>`)",
+            "search_types": [
+                "DB"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.wiley",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Wiley (:doc:`instructions </manual/packages/colrev.wiley>`)",
+            "search_types": [
+                "DB"
+            ]
+        }
+    ],
+    "prep": [
+        {
+            "package_endpoint_identifier": "colrev.add_journal_ranking",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Add Journal ranking information (:doc:`instructions </manual/packages/colrev.add_journal_ranking>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.colrev_curation",
+            "status": "|MATURING|",
+            "short_description": "CoLRev Curations (:doc:`instructions </manual/packages/colrev.colrev_curation>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.crossref",
+            "status": "|MATURING|",
+            "short_description": "Crossref API (:doc:`instructions </manual/packages/colrev.crossref>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.dblp",
+            "status": "|MATURING|",
+            "short_description": "DBLP API (:doc:`instructions </manual/packages/colrev.dblp>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.europe_pmc",
+            "status": "|MATURING|",
+            "short_description": "Europe PMC (:doc:`instructions </manual/packages/colrev.europe_pmc>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.exclude_collections",
+            "status": "|MATURING|",
+            "short_description": "Exclude collections (:doc:`instructions </manual/packages/colrev.exclude_collections>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.exclude_complementary_materials",
+            "status": "|MATURING|",
+            "short_description": "Exclude Complementary Materials (:doc:`instructions </manual/packages/colrev.exclude_complementary_materials>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.exclude_languages",
+            "status": "|MATURING|",
+            "short_description": "Exclude Languages (:doc:`instructions </manual/packages/colrev.exclude_languages>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.exclude_non_latin_alphabets",
+            "status": "|MATURING|",
+            "short_description": "Exclude Non-Latin Alphabets (:doc:`instructions </manual/packages/colrev.exclude_non_latin_alphabets>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.general_polish",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "General Polish (:doc:`instructions </manual/packages/colrev.general_polish>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.get_doi_from_urls",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Get DOI from URLs (:doc:`instructions </manual/packages/colrev.get_doi_from_urls>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.get_masterdata_from_citeas",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Get Masterdata from CiteAs (:doc:`instructions </manual/packages/colrev.get_masterdata_from_citeas>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.get_masterdata_from_doi",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Get Masterdata from DOI (:doc:`instructions </manual/packages/colrev.get_masterdata_from_doi>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.get_year_from_vol_iss_jour",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Year-Vol-Iss Prep (:doc:`instructions </manual/packages/colrev.get_year_from_vol_iss_jour>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.github",
+            "status": "|MATURING|",
+            "short_description": "GitHub API (:doc:`instructions </manual/packages/colrev.github>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.local_index",
+            "status": "|MATURING|",
+            "short_description": "LocalIndex (:doc:`instructions </manual/packages/colrev.local_index>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.open_alex",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "OpenAlex API (:doc:`instructions </manual/packages/colrev.open_alex>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.open_library",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "OpenLibrary API (:doc:`instructions </manual/packages/colrev.open_library>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.pubmed",
+            "status": "|MATURING|",
+            "short_description": "Pubmed (:doc:`instructions </manual/packages/colrev.pubmed>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.remove_broken_ids",
+            "status": "|MATURING|",
+            "short_description": "Remove Broken IDs (:doc:`instructions </manual/packages/colrev.remove_broken_ids>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.remove_urls_with_500_errors",
+            "status": "|MATURING|",
+            "short_description": "Remove URLs with 500 Errors (:doc:`instructions </manual/packages/colrev.remove_urls_with_500_errors>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.semanticscholar",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Semantic Scholar API (:doc:`instructions </manual/packages/colrev.semanticscholar>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.source_specific_prep",
+            "status": "|MATURING|",
+            "short_description": "Source-specific Prep (:doc:`instructions </manual/packages/colrev.source_specific_prep>`)"
+        }
+    ],
+    "prep_man": [
+        {
+            "package_endpoint_identifier": "colrev.export_man_prep",
+            "status": "|MATURING|",
+            "short_description": "Export Man Prep (:doc:`instructions </manual/packages/colrev.export_man_prep>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.prep_man_curation_jupyter",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Prep-man Jupyter Notebook (:doc:`instructions </manual/packages/colrev.prep_man_curation_jupyter>`)"
+        }
+    ],
+    "dedupe": [
+        {
+            "package_endpoint_identifier": "colrev.curation_full_outlet_dedupe",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Curation full outlet dedupe (:doc:`instructions </manual/packages/colrev.curation_full_outlet_dedupe>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.curation_missing_dedupe",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Curation missing dedupe (:doc:`instructions </manual/packages/colrev.curation_missing_dedupe>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.dedupe",
+            "status": "|STABLE|",
+            "short_description": "Dedupe (BibDedupe) (:doc:`instructions </manual/packages/colrev.dedupe>`)"
+        }
+    ],
+    "prescreen": [
+        {
+            "package_endpoint_identifier": "colrev.colrev_cli_prescreen",
+            "status": "|MATURING|",
+            "short_description": "Prescreen (CLI) (:doc:`instructions </manual/packages/colrev.colrev_cli_prescreen>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.conditional_prescreen",
+            "status": "|MATURING|",
+            "short_description": "Conditional Prescreen (:doc:`instructions </manual/packages/colrev.conditional_prescreen>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.prescreen_table",
+            "status": "|MATURING|",
+            "short_description": "Prescreen Table (:doc:`instructions </manual/packages/colrev.prescreen_table>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.scope_prescreen",
+            "status": "|MATURING|",
+            "short_description": "Scope-based Prescreen (:doc:`instructions </manual/packages/colrev.scope_prescreen>`)"
+        }
+    ],
+    "pdf_get": [
+        {
+            "package_endpoint_identifier": "colrev.download_from_website",
+            "status": "|MATURING|",
+            "short_description": "Download PDF from website (:doc:`instructions </manual/packages/colrev.download_from_website>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.local_index",
+            "status": "|MATURING|",
+            "short_description": "LocalIndex (:doc:`instructions </manual/packages/colrev.local_index>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.unpaywall",
+            "status": "|MATURING|",
+            "short_description": "Unpaywall (:doc:`instructions </manual/packages/colrev.unpaywall>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.website_screenshot",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Website Screenshot (:doc:`instructions </manual/packages/colrev.website_screenshot>`)"
+        }
+    ],
+    "pdf_get_man": [
+        {
+            "package_endpoint_identifier": "colrev.colrev_cli_pdf_get_man",
+            "status": "|MATURING|",
+            "short_description": "Get PDFs Manually (CLI) (:doc:`instructions </manual/packages/colrev.colrev_cli_pdf_get_man>`)"
+        }
+    ],
+    "pdf_prep": [
+        {
+            "package_endpoint_identifier": "colrev.grobid_tei",
+            "status": "|MATURING|",
+            "short_description": "GROBID TEI (:doc:`instructions </manual/packages/colrev.grobid_tei>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.ocrmypdf",
+            "status": "|MATURING|",
+            "short_description": "OCRMyPDF (:doc:`instructions </manual/packages/colrev.ocrmypdf>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.remove_coverpage",
+            "status": "|MATURING|",
+            "short_description": "Remove Cover Page (:doc:`instructions </manual/packages/colrev.remove_coverpage>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.remove_last_page",
+            "status": "|MATURING|",
+            "short_description": "Remove Last Page (:doc:`instructions </manual/packages/colrev.remove_last_page>`)"
+        }
+    ],
+    "pdf_prep_man": [
+        {
+            "package_endpoint_identifier": "colrev.colrev_cli_pdf_prep_man",
+            "status": "|MATURING|",
+            "short_description": "Prep PDFs manually (CLI) (:doc:`instructions </manual/packages/colrev.colrev_cli_pdf_prep_man>`)"
+        }
+    ],
+    "screen": [
+        {
+            "package_endpoint_identifier": "colrev.colrev_cli_screen",
+            "status": "|MATURING|",
+            "short_description": "Screen (CLI) (:doc:`instructions </manual/packages/colrev.colrev_cli_screen>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.screen_table",
+            "status": "|MATURING|",
+            "short_description": "Screen Table (:doc:`instructions </manual/packages/colrev.screen_table>`)"
+        }
+    ],
+    "data": [
+        {
+            "package_endpoint_identifier": "colrev.bibliography_export",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Bibliography export (:doc:`instructions </manual/packages/colrev.bibliography_export>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.colrev_curation",
+            "status": "|MATURING|",
+            "short_description": "CoLRev Curations (:doc:`instructions </manual/packages/colrev.colrev_curation>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.github_pages",
+            "status": "|MATURING|",
+            "short_description": "GitHub pages (:doc:`instructions </manual/packages/colrev.github_pages>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.obsidian",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Obsidian (:doc:`instructions </manual/packages/colrev.obsidian>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.paper_md",
+            "status": "|MATURING|",
+            "short_description": "Paper (Markdown) (:doc:`instructions </manual/packages/colrev.paper_md>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.prisma",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "PRISMA Flow Chart (:doc:`instructions </manual/packages/colrev.prisma>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.profile",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Profile of the Sample (:doc:`instructions </manual/packages/colrev.profile>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.structured",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Structured Data Extraction (:doc:`instructions </manual/packages/colrev.structured>`)"
+        }
+    ],
+    "na": [
+        {
+            "package_endpoint_identifier": "colrev.doi_org",
+            "status": "|MATURING|",
+            "short_description": "Doi.org (:doc:`instructions </manual/packages/colrev.doi_org>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.sync",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Sync (:doc:`instructions </manual/packages/colrev.sync>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev.ui_web",
+            "status": "|MATURING|",
+            "short_description": "Web-UI (:doc:`instructions </manual/packages/colrev.ui_web>`)"
+        }
+    ]
+}

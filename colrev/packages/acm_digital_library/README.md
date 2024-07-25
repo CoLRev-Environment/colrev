@@ -1,16 +1,12 @@
-# ACM Digital Library
+## Summary
 
 ## search
 
 ### DB search
 
 ```
-colrev search --add abi_inform_proquest
+colrev search --add colrev.acm_digital_library
 ```
-
-### API search
-
-TODO
 
 ## Links
 

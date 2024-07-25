@@ -21,7 +21,6 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 # pylint: disable=too-few-public-methods
@@ -51,12 +50,12 @@ class Dedupe(JsonSchemaMixin):
         maybe_file = self.review_manager.path / Path(
             bib_dedupe.maybe_cases.MAYBE_CASES_FILEPATH
         )
-        target_path = self.review_manager.get_path(Filepaths.PDF_DIR) / Path(
+        target_path = self.review_manager.paths.dedupe / Path(
             bib_dedupe.maybe_cases.MAYBE_CASES_FILEPATH
         )
         if not maybe_file.is_file():
             return
-        shutil.move(str(maybe_file), target_path)
+        shutil.move(str(maybe_file), str(target_path))
 
     def run_dedupe(self) -> None:
         """Run default dedupe"""
@@ -104,7 +103,7 @@ class Dedupe(JsonSchemaMixin):
         )
 
         self.review_manager.dataset.create_commit(
-            msg="Merge duplicate records",
+            msg="Dedupe: merge duplicate records",
         )
 
         export_maybe(records_df, matched_df=matched_df)

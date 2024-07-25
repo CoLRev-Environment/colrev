@@ -44,6 +44,11 @@ colrev.constants.Fields
       ~Fields.EUROPE_PMC_ID
       ~Fields.FILE
       ~Fields.FULLTEXT
+      ~Fields.GITHUB_LANGUAGE
+      ~Fields.GITHUB_LICENSE
+      ~Fields.GITHUB_NR_COMMITS
+      ~Fields.GITHUB_NR_CONTRIBUTORS
+      ~Fields.GITHUB_VERSION
       ~Fields.GROBID_VERSION
       ~Fields.ID
       ~Fields.INSTITUTION

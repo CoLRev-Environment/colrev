@@ -11,7 +11,7 @@ Packages
    :height: 12pt
    :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
 
-.. datatemplate:json:: ../packages_overview.json
+.. datatemplate:json:: packages_overview.json
 
     {{ make_list_table_from_mappings(
         [("Type", "endpoint_type"), ("Identifier", "package_endpoint_identifier"), ("Short description", "short_description"), ("Status", "status")],
@@ -52,6 +52,7 @@ Packages
    packages/colrev.descriptive_review.rst
    packages/colrev.literature_review.rst
    packages/colrev.meta_analysis.rst
+   packages/colrev.methodological_review.rst
    packages/colrev.narrative_review.rst
    packages/colrev.qualitative_systematic_review.rst
    packages/colrev.scientometric.rst
@@ -71,6 +72,7 @@ Packages
    packages/colrev.eric.rst
    packages/colrev.europe_pmc.rst
    packages/colrev.files_dir.rst
+   packages/colrev.github.rst
    packages/colrev.google_scholar.rst
    packages/colrev.ieee.rst
    packages/colrev.jstor.rst
@@ -78,6 +80,7 @@ Packages
    packages/colrev.open_alex.rst
    packages/colrev.open_citations_forward_search.rst
    packages/colrev.open_library.rst
+   packages/colrev.osf.rst
    packages/colrev.pdf_backward_search.rst
    packages/colrev.psycinfo.rst
    packages/colrev.pubmed.rst
@@ -88,6 +91,7 @@ Packages
    packages/colrev.taylor_and_francis.rst
    packages/colrev.trid.rst
    packages/colrev.unknown_source.rst
+   packages/colrev.unpaywall.rst
    packages/colrev.web_of_science.rst
    packages/colrev.wiley.rst
 
@@ -106,6 +110,7 @@ Packages
    packages/colrev.get_masterdata_from_citeas.rst
    packages/colrev.get_masterdata_from_doi.rst
    packages/colrev.get_year_from_vol_iss_jour.rst
+   packages/colrev.github.rst
    packages/colrev.local_index.rst
    packages/colrev.open_alex.rst
    packages/colrev.open_library.rst
@@ -159,4 +164,10 @@ Packages
    packages/colrev.obsidian.rst
    packages/colrev.paper_md.rst
    packages/colrev.prisma.rst
+   packages/colrev.profile.rst
    packages/colrev.structured.rst
+
+
+   packages/colrev.doi_org.rst
+   packages/colrev.sync.rst
+   packages/colrev.ui_web.rst

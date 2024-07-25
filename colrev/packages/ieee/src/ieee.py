@@ -42,10 +42,6 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.oni
     short_name = "IEEE Xplore"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/ieee.md"
-    )
     db_url = "https://ieeexplore.ieee.org/Xplore/home.jsp"
     SETTINGS = {
         "api_key": "packages.search_source.colrev.ieee.api_key",
@@ -134,7 +130,9 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls, operation: colrev.ops.search.Search, params: str
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -152,7 +150,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.add_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(endpoint=cls.endpoint)
 
             # pylint: disable=colrev-missed-constant-usage
             if (
@@ -188,7 +186,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 )
 
         elif search_type == SearchType.DB:
-            search_source = operation.add_db_source(
+            search_source = operation.create_db_source(
                 search_source_cls=cls,
                 params=params_dict,
             )
@@ -196,6 +194,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             raise NotImplementedError
 
         operation.add_source_and_search(search_source)
+        return search_source
 
     def search(self, rerun: bool) -> None:
         """Run a search of IEEEXplore"""

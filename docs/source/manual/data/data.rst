@@ -22,9 +22,6 @@ Parallel independent data extraction is only supported through the built-in git 
 
     colrev data [options]
 
-    # Generate a sample profile.
-    colrev data --profile
-
     # Calculate heuristic (influence of each paper within the selected sample) to prioritize reading efforts (see :cite:p:`WagnerEmplSchryen2020`.).
     colrev data --reading_heuristics
 
@@ -33,7 +30,7 @@ To set the data format, run any (combination) of the following:
 
 .. code:: bash
 
-    colrev data --add colrev.manuscript
+    colrev data --add colrev.paper_md
     colrev data --add colrev.structured
     colrev data --add colrev.prisma
     ...
@@ -42,16 +39,18 @@ To export the bibliography in different formats, run any of the following:
 
 .. code:: bash
 
-    colrev data --add endnote
-    colrev data --add zotero
-    colrev data --add jabref
-    colrev data --add mendeley
-    colrev data --add citavi
+    colrev data -a colrev.bibliography_export -p zotero
+    colrev data -a colrev.bibliography_export -p jabref
+    colrev data -a colrev.bibliography_export -p citavi
+    colrev data -a colrev.bibliography_export -p BiBTeX
+    colrev data -a colrev.bibliography_export -p RIS
+    colrev data -a colrev.bibliography_export -p CSV
+    colrev data -a colrev.bibliography_export -p EXCEL
 
 
 The following options for ``data`` are available:
 
-.. datatemplate:json:: ../../package_endpoints.json
+.. datatemplate:json:: ../package_endpoints.json
 
     {{ make_list_table_from_mappings(
         [("Identifier", "package_endpoint_identifier"), ("Data packages", "short_description"), ("Status", "status")],

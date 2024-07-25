@@ -272,6 +272,7 @@ Five different entry examples for dummy values used in the tests.
 Links informing the standard
 ------------------------------------------------------------
 
+-  `author formatting guidelines <https://tp.libguides.com/c.php?g=920621&p=6640859>`__
 -  first source `bibtex.com <https://www.bibtex.com/e/entry-types/>`__
    required and optional fields are not specified
 -  better `bibtex.eu <https://bibtex.eu/types/>`__

@@ -42,10 +42,6 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "OpenCitations forward search"
-    docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/packages/search_sources/open_citations_forward_search.md"
-    )
 
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
@@ -204,11 +200,12 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint"""
 
         search_source = cls.get_default_source()
         operation.add_source_and_search(search_source)
+        return search_source
 
     def prep_link_md(
         self,

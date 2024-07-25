@@ -98,7 +98,7 @@ class EnvironmentManager:
 
         if registered_paths:
             if str(path_to_register) in registered_paths:
-                logger.warning(f"Warning: Path already registered: {path_to_register}")
+                logger.warning(f"Path already registered: {path_to_register}")
                 return
         else:
             logger.info("Register %s in %s", path_to_register, Filepaths.REGISTRY_FILE)
@@ -145,7 +145,7 @@ class EnvironmentManager:
 
     def _get_status(self, review_manager: colrev.review_manager.ReviewManager) -> dict:
         status_dict = {}
-        status_yml = review_manager.get_path(Filepaths.STATUS_FILE)
+        status_yml = review_manager.paths.status
         with open(status_yml, encoding="utf8") as stream:
             try:
                 status_dict = yaml.safe_load(stream)
@@ -273,7 +273,9 @@ class EnvironmentManager:
         return True
 
     def get_settings_by_key(self, key: str) -> str | None:
-        """Loads setting by the given key"""
+        """Loads setting by the given key
+
+        The registry is stored in /home/username/colrev/registry.json"""
         environment_registry = self.load_environment_registry()
         keys = key.split(".")
         if self._dict_keys_exists(environment_registry, *keys):
@@ -281,7 +283,9 @@ class EnvironmentManager:
         return None
 
     def update_registry(self, key: str, value: str) -> None:
-        """updates given key in the registry with new value"""
+        """Updates a given key in the registry with new value
+
+        The registry is stored in /home/username/colrev/registry.json"""
 
         keys = key.split(".")
         # We don't want to allow user to replace any core settings, so check for packages key

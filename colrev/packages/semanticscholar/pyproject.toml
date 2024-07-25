@@ -2,9 +2,15 @@
 name = "colrev.semanticscholar"
 description = "CoLRev package for semanticscholar"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/semanticscholar/README.md"
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>",
+    "Louis Langenhan",
+    "Peter Eckhardt",
+    "Amadou-Choumoussidine Kouotou-Ngapout",
+    "Robert Theis",
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/semanticscholar"
 
 [[tool.poetry.packages]]
 include = "src"
@@ -14,9 +20,9 @@ python = ">=3.8, <4"
 semanticscholar = "^0.6.0"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+colrev_doc_description = "Semantic Scholar API"
 colrev_doc_link = "README.md"
+search_types = ["API"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.semanticscholar.src.semanticscholar_search_source:SemanticScholarSearchSource"

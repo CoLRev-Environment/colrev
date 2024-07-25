@@ -14,17 +14,19 @@ colrev init
 
 ``colrev init`` initializes a new CoLRev project. It requires an empty directory.
 With this operation, the directories and files, including the git history, are set up.
-Ideally, the selected review type is passed as a parameter:
+It is recommended to select a review type using the ``--type`` parameter:
 
 .. code:: bash
 
 	colrev init --type REVIEW_TYPE
 
-With this parameter, the ``settings.json`` file is created with reasonable defaults for the selected review type. For example, a theoretical review may involve an emergent data analysis and synthesis approach, while a meta-analysis would involve a structured data extraction and a PRISMA flow chart for transparent reporting.
+Depending on the selected review type, the ``settings.json`` file is created with reasonable defaults. For example, a theoretical review may involve an emergent data analysis and synthesis approach, while a meta-analysis would involve a structured data extraction and a PRISMA flow chart for transparent reporting.
+
+Once the CoLRev project is set up, it can be pushed to a Git server and shared with the team (see :doc:`instructions </manual/collaboration>`).
 
 The specific setup of the available review types is available in the following table:
 
-.. datatemplate:json:: ../../package_endpoints.json
+.. datatemplate:json:: ../package_endpoints.json
 
     {{ make_list_table_from_mappings(
         [("Identifier", "package_endpoint_identifier"), ("Review type", "short_description"), ("Status", "status")],

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import multiprocessing as mp
 import os
+import shutil
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
@@ -16,7 +17,6 @@ import colrev.record.record_pdf
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
@@ -74,8 +74,8 @@ class PDFPrep(colrev.process.operation.Operation):
                 backup_filename = self.review_manager.path / Path(
                     original_filename.replace(".pdf", "_backup.pdf")
                 )
-                original_file.rename(backup_filename)
-                current_file.rename(original_filename)
+                shutil.move(str(original_file), str(backup_filename))
+                shutil.move(str(current_file), str(original_filename))
                 record.data[Fields.FILE] = str(
                     original_file.relative_to(self.review_manager.path)
                 )
@@ -95,7 +95,7 @@ class PDFPrep(colrev.process.operation.Operation):
             if target_fname.name != linked_file.name:
                 if target_fname.is_file():
                     os.remove(target_fname)
-                linked_file.rename(target_fname)
+                shutil.move(str(linked_file), str(target_fname))
                 record.data[Fields.FILE] = str(
                     target_fname.relative_to(self.review_manager.path)
                 )
@@ -103,7 +103,7 @@ class PDFPrep(colrev.process.operation.Operation):
             if not self.review_manager.verbose_mode:
                 # Delete temporary PDFs for which processing has failed:
                 if target_fname.is_file():
-                    pdf_dir = self.review_manager.get_path(Filepaths.PDF_DIR)
+                    pdf_dir = self.review_manager.paths.pdf
                     for fpath in pdf_dir.glob("*.pdf"):
                         if (
                             record.data[Fields.ID] in str(fpath)
@@ -468,7 +468,7 @@ class PDFPrep(colrev.process.operation.Operation):
         # Note: for formatting...
         records = self.review_manager.dataset.load_records_dict()
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(msg="Prepare PDFs")
+        self.review_manager.dataset.create_commit(msg="PDFs: prepare")
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed pdf-prep operation{Colors.END}"
         )

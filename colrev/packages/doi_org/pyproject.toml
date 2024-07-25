@@ -2,10 +2,11 @@
 name = "colrev.doi_org"
 description = "CoLRev package for doi_org"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/doi_org/README.md"
-
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/doi_org"
 
 [[tool.poetry.packages]]
 include = "src"
@@ -15,9 +16,9 @@ python = ">=3.8, <4"
 beautifulsoup4 = "^4.11.1"
 
 [tool.colrev]
-dev_status = "maturing"
-documentation = "README.md"
+colrev_doc_description = "Doi.org"
 colrev_doc_link = "README.md"
+search_types = []
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "cython<3.0"]

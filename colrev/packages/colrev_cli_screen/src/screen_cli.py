@@ -99,7 +99,8 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         question = [
             Checkbox(
                 "violated_criteria",
-                message="Select the criteria that are violated:",
+                message="Select the criteria that are violated "
+                + "[use space to select (if any), use Enter to confirm]:",
                 choices=choices,
             ),
         ]
@@ -242,7 +243,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 return records
 
         self.review_manager.dataset.create_commit(
-            msg="Screening (manual)", manual_author=True
+            msg="Screen: manual (cli)", manual_author=True
         )
         return records
 

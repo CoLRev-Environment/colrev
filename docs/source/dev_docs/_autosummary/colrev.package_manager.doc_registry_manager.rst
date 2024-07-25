@@ -21,3 +21,4 @@ colrev.package\_manager.doc\_registry\_manager
       :nosignatures:
 
       DocRegistryManager
+      PackageDoc

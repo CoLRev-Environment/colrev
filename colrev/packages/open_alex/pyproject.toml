@@ -2,9 +2,11 @@
 name = "colrev.open_alex"
 description = "CoLRev package for open_alex"
 version = "0.1.0"
-authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
 license = "MIT"
-documentation = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/open_alex/README.md"
+authors = [
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/open_alex"
 
 [[tool.poetry.packages]]
 include = "src"
@@ -14,9 +16,9 @@ python = ">=3.8, <4"
 pyalex = "^0.10"
 
 [tool.colrev]
-dev_status = "experimental"
-documentation = "README.md"
+colrev_doc_description = "OpenAlex API"
 colrev_doc_link = "README.md"
+search_types = ["API", "MD"]
 
 [tool.poetry.plugins.colrev]
 search_source = "colrev.packages.open_alex.src.open_alex:OpenAlexSearchSource"

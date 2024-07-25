@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "colrev.github"
+description = "CoLRev package for GitHub"
+version = "0.1.1"
+license = "MIT"
+authors = [
+    "Kolja Rinne <kolja.rinne@stud.uni-bamberg.de>",
+    "Philipp Kasimir <philipp-william.kasimir@stud.uni-bamberg.de>",
+    "Chris Vierath <chris-norman.vierath@stud.uni-bamberg.de>",
+    "Karl Schnickmann <karl.schnickmann@stud.uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/github"
+
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
+PyGithub = "^2.3.0"
+
+[tool.colrev]
+
+colrev_doc_description = "GitHub API"
+colrev_doc_link = "README.md"
+search_types = ["API"]
+
+[tool.poetry.plugins.colrev]
+search_source = "colrev.packages.github.src.github_search_source:GitHubSearchSource"
+prep = "colrev.packages.github.src.github_prep:GithubMetadataPrep"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

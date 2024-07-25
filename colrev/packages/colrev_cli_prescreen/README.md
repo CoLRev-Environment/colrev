@@ -1,10 +1,5 @@
-# Interactive CLI prescreen
+## Summary
 
 ## prescreen
 
-Note: This document is currently under development. It will contain the following elements.
-
-- description
-- example
-
-## Links
+Interactively prescreen records using the CLI.

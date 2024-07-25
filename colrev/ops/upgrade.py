@@ -53,12 +53,12 @@ class Upgrade(colrev.process.operation.Operation):
     def _move_file(self, source: Path, target: Path) -> None:
         target.parent.mkdir(exist_ok=True, parents=True)
         if source.is_file():
-            shutil.move(str(source), self.review_manager.path / target)
+            shutil.move(str(source), str(self.review_manager.path / target))
             self.repo.index.remove([str(source)])
             self.repo.index.add([str(target)])
 
     def _load_settings_dict(self) -> dict:
-        settings_path = self.review_manager.get_path(Filepaths.SETTINGS_FILE)
+        settings_path = self.review_manager.paths.settings
         if not settings_path.is_file():
             raise colrev_exceptions.CoLRevException()
         with open(settings_path, encoding="utf-8") as file:
@@ -194,6 +194,12 @@ class Upgrade(colrev.process.operation.Operation):
                 "target_version": CoLRevVersion("0.12.0"),
                 "script": self._migrate_0_12_0,
                 "released": True,
+            },
+            {
+                "version": CoLRevVersion("0.12.0"),
+                "target_version": CoLRevVersion("0.13.0"),
+                "script": self._migrate_0_13_0,
+                "released": False,
             },
         ]
         print(f"installed_colrev_version: {installed_colrev_version}")
@@ -685,7 +691,29 @@ class Upgrade(colrev.process.operation.Operation):
                         indent=4,
                         fp=file,
                     )
-                registry_yaml.rename(backup_file)
+                shutil.move(str(registry_yaml), str(backup_file))
+
+        return self.repo.is_dirty()
+
+    def _migrate_0_13_0(self) -> bool:
+        # Rename "warning" to "colrev.dblp.warning" in all DBLP search_sources
+
+        settings = self._load_settings_dict()
+        for source in settings["sources"]:
+            if source["endpoint"] == "colrev.dblp":
+                records = colrev.loader.load_utils.load(
+                    filename=Path(source["filename"]),
+                    logger=self.review_manager.logger,
+                )
+                for record_dict in records.values():
+                    if "warning" in record_dict:
+                        record_dict["colrev.dblp.warning"] = record_dict.pop("warning")
+                    record_dict.pop("metadata_source", None)
+
+                bibtex_str = to_string(records_dict=records, implementation="bib")
+                with open(source["filename"], "w", encoding="utf-8") as out:
+                    out.write(bibtex_str + "\n")
+                self.repo.index.add([source["filename"]])
 
         return self.repo.is_dirty()
 
