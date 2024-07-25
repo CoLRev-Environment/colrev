@@ -15,7 +15,11 @@ litellm = "^1.37.0"
 pydantic = "^2.7.1"
 
 [tool.colrev]
-dev_status = "experimental"
+colrev_doc_description = "GenAI"
+colrev_doc_link = "README.md"
+search_types = []
+
+[tool.poetry.plugins.colrev]
 prescreen = "colrev.packages.genai.src.genai_prescreen:GenAIPrescreen"
 screen = "colrev.packages.genai.src.genai_screen:GenAIScreen"
 

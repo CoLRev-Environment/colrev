@@ -29,7 +29,10 @@ class PreScreenDecision(BaseModel):
     """
 
     SYSTEM_PROMPT: ClassVar[str] = (
-        "You are an expert screener of scientific literature. You are tasked with identifying relevant articles for a literature review. You are provided with the metadata of an article and are asked to determine whether the article should be included in the review based on an inclusion criterion."
+        "You are an expert screener of scientific literature. "
+        "You are tasked with identifying relevant articles for a literature review. "
+        "You are provided with the metadata of an article and are asked to determine "
+        "whether the article should be included in the review based on an inclusion criterion."
     )
     included: bool = Field(
         description="Whether the article should be included in the review based on the inclusion criterion."
@@ -87,7 +90,9 @@ class GenAIPrescreen(JsonSchemaMixin):
                 messages=[
                     {
                         "role": "user",
-                        "content": f"{PreScreenDecision.SYSTEM_PROMPT}\n\nINCLUSION CRITERION:\n\n{inclusion_criterion}\n\nMETADATA:\n\n{record}",
+                        "content": f"{PreScreenDecision.SYSTEM_PROMPT}\n\n"
+                        + f"INCLUSION CRITERION:\n\n{inclusion_criterion}\n\n"
+                        + f"METADATA:\n\n{record}",
                     }
                 ],
                 response_model=PreScreenDecision,
