@@ -6,10 +6,11 @@ from dataclasses import dataclass
 from typing import ClassVar
 
 import instructor
-from litellm import completion
-from pydantic import BaseModel, Field
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
+from litellm import completion
+from pydantic import BaseModel
+from pydantic import Field
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -26,8 +27,13 @@ class PreScreenDecision(BaseModel):
     """
     Class for a prescreen
     """
-    SYSTEM_PROMPT: ClassVar[str] = "You are an expert screener of scientific literature. You are tasked with identifying relevant articles for a literature review. You are provided with the metadata of an article and are asked to determine whether the article should be included in the review based on an inclusion criterion."
-    included: bool = Field(description="Whether the article should be included in the review based on the inclusion criterion.")
+
+    SYSTEM_PROMPT: ClassVar[str] = (
+        "You are an expert screener of scientific literature. You are tasked with identifying relevant articles for a literature review. You are provided with the metadata of an article and are asked to determine whether the article should be included in the review based on an inclusion criterion."
+    )
+    included: bool = Field(
+        description="Whether the article should be included in the review based on the inclusion criterion."
+    )
     explanation: str = Field(description="Explanation of the inclusion decision.")
 
 
