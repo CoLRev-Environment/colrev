@@ -1,14 +1,27 @@
-[project]
+[tool.poetry]
 name = "colrev.exclude_languages"
 description = "CoLRev package for exclude_languages"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/exclude_languages"
 
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
+
 [tool.colrev]
-dev_status = "maturing"
+colrev_doc_description = "Exclude Languages"
 colrev_doc_link = "README.md"
+search_types = []
+
+[tool.poetry.plugins.colrev]
 prep = "colrev.packages.exclude_languages.src.exclude_languages:ExcludeLanguagesPrep"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

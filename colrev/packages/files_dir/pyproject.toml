@@ -1,14 +1,27 @@
-[project]
+[tool.poetry]
 name = "colrev.files_dir"
 description = "CoLRev package for files_dir"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/files_dir"
 
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
+
 [tool.colrev]
-dev_status = "maturing"
+colrev_doc_description = "Files directories (PDFs based on GROBID)"
 colrev_doc_link = "README.md"
+search_types = ["FILES"]
+
+[tool.poetry.plugins.colrev]
 search_source = "colrev.packages.files_dir.src.files_dir:FilesSearchSource"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

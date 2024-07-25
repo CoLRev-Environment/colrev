@@ -1,18 +1,32 @@
-[project]
+[tool.poetry]
 name = "colrev.add_journal_ranking"
 description = "CoLRev package for add_journal_ranking"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
-    { name = "Alexa Steinheimer"},
-    { name = "Robert Ahr"},
-    { name = "Thomas Fleischmann"},
-    { name = "Anton Liam Frisch"}
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>",
+    "Alexa Steinheimer",
+    "Robert Ahr",
+    "Thomas Fleischmann",
+    "Anton Liam Frisch"
 ]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/add_journal_ranking"
 
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
+
 [tool.colrev]
-dev_status = "experimental"
+
+colrev_doc_description = "Add Journal ranking information"
 colrev_doc_link = "README.md"
+search_types = []
+
+[tool.poetry.plugins.colrev]
 prep = "colrev.packages.add_journal_ranking.src.add_journal_ranking:AddJournalRanking"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

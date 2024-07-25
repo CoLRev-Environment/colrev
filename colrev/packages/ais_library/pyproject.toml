@@ -1,14 +1,27 @@
-[project]
+[tool.poetry]
 name = "colrev.ais_library"
 description = "CoLRev package for aisel"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/ais_library"
 
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
+
 [tool.colrev]
-dev_status = "maturing"
+colrev_doc_description = "AIS electronic Library (AISeL)"
 colrev_doc_link = "README.md"
+search_types = ["DB", "API", "TOC"]
+
+[tool.poetry.plugins.colrev]
 search_source = "colrev.packages.ais_library.src.aisel:AISeLibrarySearchSource"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

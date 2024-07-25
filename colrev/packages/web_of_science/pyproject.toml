@@ -1,14 +1,27 @@
-[project]
+[tool.poetry]
 name = "colrev.web_of_science"
 description = "CoLRev package for web_of_science"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/web_of_science"
 
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
+
 [tool.colrev]
-dev_status = "experimental"
+colrev_doc_description = "Web of Science"
 colrev_doc_link = "README.md"
+search_types = ["DB"]
+
+[tool.poetry.plugins.colrev]
 search_source = "colrev.packages.web_of_science.src.web_of_science:WebOfScienceSearchSource"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

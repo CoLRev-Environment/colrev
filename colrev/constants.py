@@ -623,6 +623,8 @@ class EndpointType(Enum):
     """Endpoint for screen"""
     data = "data"
     """Endpoint for data"""
+    na = "na"
+    """Endpoint for not available"""
 
 
 class ExitCodes:

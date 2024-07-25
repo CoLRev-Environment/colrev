@@ -11,7 +11,7 @@ Packages
    :height: 12pt
    :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
 
-.. datatemplate:json:: ../packages_overview.json
+.. datatemplate:json:: packages_overview.json
 
     {{ make_list_table_from_mappings(
         [("Type", "endpoint_type"), ("Identifier", "package_endpoint_identifier"), ("Short description", "short_description"), ("Status", "status")],
@@ -166,3 +166,8 @@ Packages
    packages/colrev.prisma.rst
    packages/colrev.profile.rst
    packages/colrev.structured.rst
+
+
+   packages/colrev.doi_org.rst
+   packages/colrev.sync.rst
+   packages/colrev.ui_web.rst

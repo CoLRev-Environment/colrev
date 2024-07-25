@@ -1,14 +1,28 @@
-[project]
+[tool.poetry]
 name = "colrev.get_masterdata_from_citeas"
 description = "CoLRev package for citeas"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/get_masterdata_from_citeas"
 
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
+
 [tool.colrev]
-dev_status = "experimental"
+
+colrev_doc_description = "Get Masterdata from CiteAs"
 colrev_doc_link = "README.md"
+search_types = []
+
+[tool.poetry.plugins.colrev]
 prep = "colrev.packages.get_masterdata_from_citeas.src.citeas_prep:CiteAsPrep"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

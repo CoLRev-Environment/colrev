@@ -1,13 +1,28 @@
-[project]
+[tool.poetry]
 name = "colrev.sync"
 description = "CoLRev package for sync"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/sync"
 
+[tool.poetry.scripts]
+colrev = "colrev.ui_cli.cli:main"
+colrev-sync = "colrev.packages.sync.src.sync:main"
+
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
+
 [tool.colrev]
+colrev_doc_description = "Sync"
 colrev_doc_link = "README.md"
-dev_status = "experimental"
+search_types = []
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

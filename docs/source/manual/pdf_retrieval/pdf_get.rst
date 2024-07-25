@@ -37,7 +37,7 @@ Per default, CoLRev creates symlinks (setting ``pdf_path_type=symlink``). To cop
 
 The following options for ``pdf-get`` are available:
 
-.. datatemplate:json:: ../../package_endpoints.json
+.. datatemplate:json:: ../package_endpoints.json
 
     {{ make_list_table_from_mappings(
         [("Identifier", "package_endpoint_identifier"), ("PDF get packages", "short_description"), ("Status", "status")],
@@ -62,7 +62,7 @@ In the ``colrev pdf-get-man`` operation, records transition from `pdf_needs_manu
 
 The following options for ``pdf-get-man`` are available:
 
-.. datatemplate:json:: ../../package_endpoints.json
+.. datatemplate:json:: ../package_endpoints.json
 
     {{ make_list_table_from_mappings(
         [("Identifier", "package_endpoint_identifier"), ("PDF prep packages", "short_description"), ("Status", "status")],

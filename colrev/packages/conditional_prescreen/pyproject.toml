@@ -1,14 +1,27 @@
-[project]
+[tool.poetry]
 name = "colrev.conditional_prescreen"
 description = "CoLRev package for conditional_prescreen"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/conditional_prescreen"
 
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
+
 [tool.colrev]
-dev_status = "maturing"
+colrev_doc_description = "Conditional Prescreen"
 colrev_doc_link = "README.md"
+search_types = []
+
+[tool.poetry.plugins.colrev]
 prescreen = "colrev.packages.conditional_prescreen.src.conditional_prescreen:ConditionalPrescreen"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

@@ -7,6 +7,9 @@
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 14pt
    :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |VERSION| image:: /_static/svg/iconmonstr-product-10.svg
+   :width: 15
+   :alt: Version
 .. |GIT_REPO| image:: /_static/svg/iconmonstr-code-fork-1.svg
    :width: 15
    :alt: Git repository
@@ -22,14 +25,13 @@
 colrev.remove_coverpage
 =======================
 
-Package
---------------------
+|VERSION| Version: 0.1.0
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
 |LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/remove_cover_page>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/remove_coverpage>`_
 
 .. list-table::
    :header-rows: 1

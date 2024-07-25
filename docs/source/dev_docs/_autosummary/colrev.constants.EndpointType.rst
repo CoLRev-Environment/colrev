@@ -31,3 +31,4 @@ colrev.constants.EndpointType
       ~EndpointType.pdf_prep_man
       ~EndpointType.screen
       ~EndpointType.data
+      ~EndpointType.na

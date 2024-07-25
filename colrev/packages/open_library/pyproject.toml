@@ -1,15 +1,28 @@
-[project]
+[tool.poetry]
 name = "colrev.open_library"
 description = "CoLRev package for open_library"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/open_library"
 
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
+
 [tool.colrev]
-dev_status = "experimental"
+colrev_doc_description = "OpenLibrary API"
 colrev_doc_link = "README.md"
+search_types = ["MD"]
+
+[tool.poetry.plugins.colrev]
 search_source = "colrev.packages.open_library.src.open_library:OpenLibrarySearchSource"
 prep = "colrev.packages.open_library.src.open_library_prep:OpenLibraryMetadataPrep"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

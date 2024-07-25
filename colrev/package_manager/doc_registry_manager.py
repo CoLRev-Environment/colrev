@@ -5,160 +5,167 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import tempfile
 import typing
 from pathlib import Path
 
+import requests
+import toml
 from m2r import parse_from_file
 
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
-import colrev.package_manager.package
-import colrev.process.operation
-import colrev.record.record
-import colrev.settings
 from colrev.constants import EndpointType
 from colrev.constants import SearchType
 
-if typing.TYPE_CHECKING:  # pragma: no cover
-    import colrev.package_manager.package_manager
+colrev_spec = importlib.util.find_spec("colrev")
+if colrev_spec is None:  # pragma: no cover
+    raise colrev_exceptions.MissingDependencyError(dep="colrev")
+if colrev_spec.origin is None:  # pragma: no cover
+    raise colrev_exceptions.MissingDependencyError(dep="colrev")
+COLREV_PATH = Path(colrev_spec.origin).parents[1]
 
-# pylint: disable=too-few-public-methods
+with open(COLREV_PATH / Path("pyproject.toml"), encoding="utf-8") as cdep_file:
+    colrev_pyproject_toml = toml.load(cdep_file)
+
+COLREV_DEPENDENCIES = colrev_pyproject_toml["tool"]["poetry"]["dependencies"]
 
 
-class DocRegistryManager:
-    """DocRegistryManager"""
+# pylint: disable=too-many-instance-attributes
+class PackageDoc:
+    """PackageDoc"""
 
-    ENDPOINT_TYPES = [
-        "review_type",
-        "search_source",
-        "prep",
-        "prep_man",
-        "dedupe",
-        "prescreen",
-        "pdf_get",
-        "pdf_get_man",
-        "pdf_prep",
-        "pdf_prep_man",
-        "screen",
-        "data",
-    ]
+    package_id: str
+    version: str
+    license: str
+    authors: list
+    documentation: str
+    repository: str = ""
 
-    def __init__(
-        self,
-        *,
-        package_manager: colrev.package_manager.package_manager.PackageManager,
-        packages: typing.List[colrev.package_manager.package.Package],
-    ) -> None:
-        self.package_manager = package_manager
-        self.packages = packages
+    # For monorepo packages
+    package_dir: Path
 
-        self.package_endpoints_json: typing.Dict[str, list] = {
-            x.name: [] for x in colrev.package_manager.interfaces.ENDPOINT_OVERVIEW
-        }
-        self.docs_for_index: typing.Dict[str, list] = {}
+    package_metadata: dict
 
-        self._colrev_path = self._get_colrev_path()
+    description: str
+    dev_status: str
+    endpoints: list
+    search_types: list
 
-        os.chdir(self._colrev_path)
-        for package in self.packages:
-            self._add_package_endpoints(package)
+    docs_package_readme_path: Path
+    docs_rst_path: Path
 
-    def _get_colrev_path(self) -> Path:
-        colrev_spec = importlib.util.find_spec("colrev")
-        if colrev_spec is None:  # pragma: no cover
-            raise colrev_exceptions.MissingDependencyError(dep="colrev")
-        if colrev_spec.origin is None:  # pragma: no cover
-            raise colrev_exceptions.MissingDependencyError(dep="colrev")
-        return Path(colrev_spec.origin).parents[1]
+    def __init__(self, package_id: str) -> None:
+        self.package_id = package_id
 
-    def _add_package_endpoints(
-        self, package: colrev.package_manager.package.Package
-    ) -> None:
-        # package_endpoints_json: should be updated based on the package classes etc.
+        methods = [
+            self._initialize_from_colrev_monorepo,
+            self._initialize_from_pypi,
+        ]
 
-        for endpoint_type in EndpointType:
-            if not package.has_endpoint(endpoint_type):
-                continue
-
-            print(f"-  {package.name} / {endpoint_type.value}")
-
-            endpoint_class = package.get_endpoint_class(endpoint_type)
-            status = (
-                package.status.replace("stable", "|STABLE|")
-                .replace("maturing", "|MATURING|")
-                .replace("experimental", "|EXPERIMENTAL|")
-            )
-            short_description = endpoint_class.__doc__
-            if "\n" in endpoint_class.__doc__:
-                short_description = endpoint_class.__doc__.split("\n")[0]
-            short_description = (
-                short_description
-                + " (:doc:`instructions </manual/packages/"
-                + f"{package.name}>`)"
-            )
-
-            endpoint_item = {
-                "package_endpoint_identifier": package.name,
-                "status": status,
-                "short_description": short_description,
-                "ci_supported": endpoint_class.ci_supported,
-            }
-
-            if endpoint_type == EndpointType.search_source:
-                endpoint_item["search_types"] = [
-                    x.value for x in endpoint_class.search_types
-                ]
-
-            self.package_endpoints_json[endpoint_type.value] += [endpoint_item]
-
-            package_index_path = self._import_package_docs(package)
-            item = {
-                "path": package_index_path,
-                "short_description": endpoint_item["short_description"],
-                "identifier": package.name,
-            }
-            try:
-                self.docs_for_index[endpoint_type.value].append(item)
-            except KeyError:
-                self.docs_for_index[endpoint_type.value] = [item]
-
-    def _write_docs_for_index(self) -> None:
-        """Writes data from self.docs_for_index to the packages.rst file."""
-
-        packages_index_path = self._colrev_path / Path(
-            "docs/source/manual/packages.rst"
-        )
-        packages_index_path_content = packages_index_path.read_text(encoding="utf-8")
-        new_doc = []
-        # append header
-        for line in packages_index_path_content.split("\n"):
-            new_doc.append(line)
-            if ":caption:" in line:
-                new_doc.append("")
+        for method in methods:
+            if method(package_id):
                 break
+        else:
+            raise NotImplementedError(
+                f"Package {package_id} not found on PyPI/in CoLRev monorepo"
+            )
 
-        # append new links
-        for endpoint_type in self.ENDPOINT_TYPES:
-            new_doc.append("")
-            new_doc.append("")
+        main_section = self.package_metadata["tool"]["poetry"]
+        self.license = main_section["license"]
+        self.version = main_section["version"]
+        self.authors = main_section["authors"]
+        self.documentation = main_section.get("documentation", None)
+        self.repository = main_section.get("repository", None)
+        self.endpoints = list(
+            main_section.get("plugins", {}).get("colrev", {"na": "na"}).keys()
+        )
 
-            doc_items = self.docs_for_index[endpoint_type]
-            for doc_item in sorted(doc_items, key=lambda d: d["identifier"]):
-                if doc_item == "NotImplemented":
-                    print(doc_item["path"])
-                    continue
-                new_doc.append(f"   packages/{doc_item['path']}")
+        colrev_section = self.package_metadata.get("tool", {}).get("colrev", {})
+        self.description = colrev_section.get("colrev_doc_description", "NA")
+        self.search_types = colrev_section.get("search_types", [])
 
-        with open(packages_index_path, "w", encoding="utf-8") as file:
-            for line in new_doc:
-                file.write(line + "\n")
+        colrev_doc_link = colrev_section.get("colrev_doc_link")
+        self._set_docs_package_readme_path(colrev_doc_link)
+
+        self.docs_rst_path = Path(f"{self.package_id}.rst")
+
+    def _initialize_from_colrev_monorepo(self, package_id: str) -> bool:
+
+        if package_id not in COLREV_DEPENDENCIES:
+            return False
+
+        self.package_dir = COLREV_PATH / COLREV_DEPENDENCIES[package_id]["path"]
+        if not self.package_dir.is_dir():
+            return False
+
+        with open(self.package_dir / Path("pyproject.toml"), encoding="utf-8") as file:
+            self.package_metadata = toml.load(file)
+
+        assert str(self.package_dir).endswith(
+            package_id.replace("colrev.", "")
+        ), package_id
+
+        return True
+
+    def _initialize_from_pypi(self, package_id: str) -> bool:
+
+        response = requests.get(f"https://pypi.org/pypi/{package_id}/json", timeout=30)
+        if response.status_code != 200:
+            return False
+
+        repo_url = response.json()["info"].get("project_urls", {}).get("Repository")
+        gh_response = requests.get(f"{repo_url}/blob/main/pyproject.toml", timeout=30)
+        if response.status_code != 200:
+            return False
+
+        self.package_metadata = toml.loads(gh_response.text)
+
+        return True
+
+    def has_endpoint(self, endpoint_type: EndpointType) -> bool:
+        """Check if the package has a specific endpoint type"""
+
+        return endpoint_type.value in self.endpoints
+
+    def _get_authors_for_docs(self) -> str:
+        """Get the authors for the documentation  (without emails in <>)"""
+
+        authors = []
+        for author in self.authors:
+            authors.append(author.split("<")[0].strip())
+
+        return ", ".join(authors)
+
+    def _get_docs_short_description(self) -> str:
+        return (
+            self.description
+            + " (:doc:`instructions </manual/packages/"
+            + f"{self.package_id}>`)"
+        )
+
+    def _set_docs_package_readme_path(self, colrev_doc_link: str) -> None:
+
+        if self.package_dir:
+            self.docs_package_readme_path = self.package_dir / colrev_doc_link
+        else:
+            response = requests.get(self.repository + "/" + colrev_doc_link, timeout=30)
+            if response.status_code != 200:
+                raise ValueError("Failed to download package readme from repository")
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                temp_file.write(response.content)
+                self.docs_package_readme_path = Path(temp_file.name)
+
+        readme_content = self.docs_package_readme_path.read_text(encoding="utf-8")
+        if not readme_content.startswith("## Summary"):
+            raise ValueError(
+                f"Package {self.package_id} readme does not start with '## Summary'"
+            )
 
     # pylint: disable=line-too-long
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-statements
     # flake8: noqa: E501
-    def _get_header_info(self, package: colrev.package_manager.package.Package) -> str:
+    def _get_header_info(self) -> str:
 
         # To format the table (adjust row height), the following is suggested:
         # from bs4 import BeautifulSoup
@@ -184,6 +191,9 @@ class DocRegistryManager:
         header_info += ".. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen\n"
         header_info += "   :height: 14pt\n"
         header_info += "   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html\n"
+        header_info += ".. |VERSION| image:: /_static/svg/iconmonstr-product-10.svg\n"
+        header_info += "   :width: 15\n"
+        header_info += "   :alt: Version\n"
         header_info += ".. |GIT_REPO| image:: /_static/svg/iconmonstr-code-fork-1.svg\n"
         header_info += "   :width: 15\n"
         header_info += "   :alt: Git repository\n"
@@ -199,23 +209,22 @@ class DocRegistryManager:
         header_info += "   :width: 15\n"
         header_info += "   :alt: Documentation\n"
 
-        header_info += f"{package.name}\n"
-        header_info += "=" * len(package.name) + "\n\n"
-        header_info += "Package\n"
-        header_info += "-" * 20 + "\n\n"
-        header_info += f"|MAINTAINER| Maintainer: {', '.join(x['name'] for x in package.authors)}\n\n"
-        header_info += f"|LICENSE| License: {package.license}\n\n"
-        if package.repository != "":
-            repo_name = package.repository.replace("https://github.com/", "")
+        header_info += f"{self.package_id}\n"
+        header_info += "=" * len(self.package_id) + "\n\n"
+        header_info += f"|VERSION| Version: {self.version}\n\n"
+        header_info += f"|MAINTAINER| Maintainer: {self._get_authors_for_docs()}\n\n"
+        header_info += f"|LICENSE| License: {self.license}  \n\n"
+        if self.repository != "":
+            repo_name = self.repository.replace("https://github.com/", "")
             if "CoLRev-Environment/colrev" in repo_name:
                 repo_name = "CoLRev-Environment/colrev"
             header_info += (
-                f"|GIT_REPO| Repository: `{repo_name} <{package.repository}>`_ \n\n"
+                f"|GIT_REPO| Repository: `{repo_name} <{self.repository}>`_ \n\n"
             )
 
-        if package.documentation != "":
+        if self.documentation:
             header_info += (
-                f"|DOCUMENTATION| `Documentation <{package.documentation}>`_ \n\n"
+                f"|DOCUMENTATION| `External documentation <{self.documentation}>`_\n\n"
             )
 
         header_info += ".. list-table::\n"
@@ -226,58 +235,173 @@ class DocRegistryManager:
         header_info += "     - Add\n"
 
         for endpoint_type in EndpointType:
-            if package.has_endpoint(endpoint_type):
+            if self.has_endpoint(endpoint_type):
                 header_info += f"   * - {endpoint_type.value}\n"
-                header_info += f"     - |{package.status.upper()}|\n"
+                header_info += f"     - |{self.dev_status.upper()}|\n"
                 if endpoint_type == EndpointType.review_type:
-                    header_info += f"     - .. code-block:: \n\n\n         colrev init --type {package.name}\n\n"
+                    header_info += f"     - .. code-block:: \n\n\n         colrev init --type {self.package_id}\n\n"
                 elif endpoint_type == EndpointType.search_source:
-                    header_info += f"     - .. code-block:: \n\n\n         colrev search --add {package.name}\n\n"
+                    header_info += f"     - .. code-block:: \n\n\n         colrev search --add {self.package_id}\n\n"
                 elif endpoint_type == EndpointType.prep:
-                    header_info += f"     - .. code-block:: \n\n\n         colrev prep --add {package.name}\n\n"
+                    header_info += f"     - .. code-block:: \n\n\n         colrev prep --add {self.package_id}\n\n"
                 elif endpoint_type == EndpointType.prep_man:
-                    header_info += f"     - .. code-block:: \n\n\n         colrev prep-man --add {package.name}\n\n"
+                    header_info += f"     - .. code-block:: \n\n\n         colrev prep-man --add {self.package_id}\n\n"
                 elif endpoint_type == EndpointType.dedupe:
-                    header_info += f"     - .. code-block:: \n\n\n         colrev dedupe --add {package.name}\n\n"
+                    header_info += f"     - .. code-block:: \n\n\n         colrev dedupe --add {self.package_id}\n\n"
                 elif endpoint_type == EndpointType.prescreen:
-                    header_info += f"     - .. code-block:: \n\n\n         colrev prescreen --add {package.name}\n\n"
+                    header_info += f"     - .. code-block:: \n\n\n         colrev prescreen --add {self.package_id}\n\n"
                 elif endpoint_type == EndpointType.pdf_get:
-                    header_info += f"     - .. code-block:: \n\n\n         colrev pdf-get --add {package.name}\n\n"
+                    header_info += f"     - .. code-block:: \n\n\n         colrev pdf-get --add {self.package_id}\n\n"
                 elif endpoint_type == EndpointType.pdf_get_man:
-                    header_info += f"     - .. code-block:: \n\n\n         colrev pdf-get-man --add {package.name}\n\n"
+                    header_info += f"     - .. code-block:: \n\n\n         colrev pdf-get-man --add {self.package_id}\n\n"
                 elif endpoint_type == EndpointType.pdf_prep:
-                    header_info += f"     - .. code-block:: \n\n\n         colrev pdf-prep --add {package.name}\n\n"
+                    header_info += f"     - .. code-block:: \n\n\n         colrev pdf-prep --add {self.package_id}\n\n"
                 elif endpoint_type == EndpointType.pdf_prep_man:
-                    header_info += f"     - .. code-block:: \n\n\n         colrev pdf-prep-man --add {package.name}\n\n"
+                    header_info += f"     - .. code-block:: \n\n\n         colrev pdf-prep-man --add {self.package_id}\n\n"
                 elif endpoint_type == EndpointType.screen:
-                    header_info += f"     - .. code-block:: \n\n\n         colrev screen --add {package.name}\n\n"
+                    header_info += f"     - .. code-block:: \n\n\n         colrev screen --add {self.package_id}\n\n"
                 elif endpoint_type == EndpointType.data:
-                    header_info += f"     - .. code-block:: \n\n\n         colrev data --add {package.name}\n\n"
+                    header_info += f"     - .. code-block:: \n\n\n         colrev data --add {self.package_id}\n\n"
 
         return header_info
 
-    def _import_package_docs(
-        self, package: colrev.package_manager.package.Package
-    ) -> str:
+    def import_package_docs(self) -> None:
+        """Import the package documentation"""
 
-        docs_link = package.package_dir / package.colrev_doc_link
-
-        packages_index_path = self._colrev_path / Path("docs/source/manual/packages")
-
-        output = parse_from_file(docs_link)
-        output = output.replace(".. list-table::", ".. list-table::\n   :align: left")
-
-        header_info = self._get_header_info(package)
-
-        file_path = Path(f"{package.name}.rst")
-        target = packages_index_path / file_path
-        with open(target, "w", encoding="utf-8") as file:
-            # NOTE: at this point, we may add metadata
-            # (such as package status, authors, url etc.)
-            file.write(header_info)
+        with open(
+            COLREV_PATH / Path(f"docs/source/manual/packages/{self.docs_rst_path}"),
+            "w",
+            encoding="utf-8",
+        ) as file:
+            file.write(self._get_header_info())
+            output = parse_from_file(self.docs_package_readme_path)
+            output = output.replace(
+                ".. list-table::", ".. list-table::\n   :align: left"
+            )
             file.write(output)
 
-        return str(file_path)
+    def get_endpoint_item(self, endpoint_type: EndpointType) -> dict:
+        """Get the endpoint item for the package
+
+        Format:
+        {
+            "package_endpoint_identifier": package_id,
+            "status": status,
+            "short_description": docs_short_description,
+            "search_types": search_types,
+        }
+        """
+
+        status = (
+            self.dev_status.replace("stable", "|STABLE|")
+            .replace("maturing", "|MATURING|")
+            .replace("experimental", "|EXPERIMENTAL|")
+        )
+        endpoint_item = {
+            "package_endpoint_identifier": self.package_id,
+            "status": status,
+            "short_description": self._get_docs_short_description(),
+        }
+
+        if endpoint_type == EndpointType.search_source:
+            endpoint_item["search_types"] = self.search_types  # type: ignore
+
+        return endpoint_item
+
+    def get_docs_item(self) -> dict:
+        """Get the documentation item for the package
+
+        Format:
+        {
+            "identifier": package_id,
+            "short_description": short_description,
+            "path": docs_rst_path,
+        }
+
+        """
+        item = {
+            "identifier": self.package_id,
+            "short_description": self._get_docs_short_description(),
+            "path": self.docs_rst_path,
+        }
+        return item
+
+    def __repr__(self) -> str:
+        package_str = f"Package name: {self.package_id}\n"
+        package_str += f"Package license: {self.license}\n"
+        package_str += f"Package endpoints: {self.endpoints}\n"
+        package_str += f"Package search types: {self.search_types}\n"
+        package_str += f"Package authors: {self.authors}\n"
+        package_str += f"Package documentation: {self.docs_package_readme_path}\n"
+        package_str += f"Package description: {self.description}\n"
+
+        return package_str
+
+
+# pylint: disable=too-few-public-methods
+class DocRegistryManager:
+    """DocRegistryManager"""
+
+    # Contains the official list of packages for the documentation
+    packages_json = COLREV_PATH / Path("colrev/package_manager/packages.json")
+
+    # Overview page of packages: rst
+    packages_index_path = COLREV_PATH / Path("docs/source/manual/packages.rst")
+    # Overview page of packages: json
+    packages_overview_json_file = COLREV_PATH / Path(
+        "docs/source/manual/packages_overview.json"
+    )
+
+    # Overviews of endpoints
+    package_endpoints_json_file = COLREV_PATH / Path(
+        "docs/source/manual/package_endpoints.json"
+    )
+
+    # Overviews of search source types
+    search_source_types_json_file = COLREV_PATH / Path(
+        "docs/source/manual/search_source_types.json"
+    )
+
+    package_endpoints_json: typing.Dict[str, list] = {x.value: [] for x in EndpointType}
+    docs_for_index: typing.Dict[str, list] = {x.value: [] for x in EndpointType}
+
+    def __init__(self) -> None:
+        self._load_packages()
+
+    def _load_packages(self) -> None:
+
+        with open(self.packages_json, encoding="utf-8") as file:
+            packages_data = json.load(file)
+
+        self.packages = []
+        for package_id, package_data in packages_data.items():
+            try:
+                package_doc = PackageDoc(package_id)
+                package_doc.dev_status = package_data["dev_status"]
+                self.packages.append(package_doc)
+            except (
+                toml.decoder.TomlDecodeError,
+                NotImplementedError,
+                ValueError,
+            ) as exc:
+                print(exc)
+                print(f"Error loading package {package_id}")
+
+        # Add package endpoints
+        os.chdir(COLREV_PATH)
+        for package in self.packages:
+            for endpoint_type in EndpointType:
+                if not package.has_endpoint(endpoint_type):
+                    continue
+
+                print(f"-  {package.package_id} / {endpoint_type.value}")
+
+                package.import_package_docs()
+
+                self.package_endpoints_json[endpoint_type.value].append(
+                    package.get_endpoint_item(endpoint_type)
+                )
+                self.docs_for_index[endpoint_type.value].append(package.get_docs_item())
 
     def _extract_search_source_types(self) -> None:
         search_source_types: typing.Dict[str, list] = {}
@@ -294,11 +418,8 @@ class DocRegistryManager:
                 key=lambda d: d["package_endpoint_identifier"],
             )
 
-        search_source_types_json_file = self._colrev_path / Path(
-            "docs/source/search_source_types.json"
-        )
         json_object = json.dumps(search_source_types, indent=4)
-        with open(search_source_types_json_file, "w", encoding="utf-8") as file:
+        with open(self.search_source_types_json_file, "w", encoding="utf-8") as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
 
@@ -308,12 +429,10 @@ class DocRegistryManager:
                 self.package_endpoints_json[key],
                 key=lambda d: d["package_endpoint_identifier"],
             )
-        package_endpoints_json_file = self._colrev_path / Path(
-            "docs/source/package_endpoints.json"
-        )
-        package_endpoints_json_file.unlink(missing_ok=True)
+
+        self.package_endpoints_json_file.unlink(missing_ok=True)
         json_object = json.dumps(self.package_endpoints_json, indent=4)
-        with open(package_endpoints_json_file, "w", encoding="utf-8") as file:
+        with open(self.package_endpoints_json_file, "w", encoding="utf-8") as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
 
@@ -321,20 +440,47 @@ class DocRegistryManager:
         packages_overview = []
         # for key, packages in self.package_endpoints_json.items():
 
-        for endpoint_type in self.ENDPOINT_TYPES:
+        for endpoint_type in [x.value for x in EndpointType]:
             packages = self.package_endpoints_json[endpoint_type]
             for package in packages:
                 package["endpoint_type"] = endpoint_type
                 packages_overview.append(package)
 
-        packages_overview_json_file = self._colrev_path / Path(
-            "docs/source/packages_overview.json"
-        )
-        packages_overview_json_file.unlink(missing_ok=True)
+        self.packages_overview_json_file.unlink(missing_ok=True)
         json_object = json.dumps(packages_overview, indent=4)
-        with open(packages_overview_json_file, "w", encoding="utf-8") as file:
+        with open(self.packages_overview_json_file, "w", encoding="utf-8") as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
+
+    def _write_docs_for_index(self) -> None:
+        """Writes data from self.docs_for_index to the packages.rst file."""
+
+        packages_index_path_content = self.packages_index_path.read_text(
+            encoding="utf-8"
+        )
+        new_doc = []
+        # append header
+        for line in packages_index_path_content.split("\n"):
+            new_doc.append(line)
+            if ":caption:" in line:
+                new_doc.append("")
+                break
+
+        # append new links
+        for endpoint_type in [x.value for x in EndpointType]:
+            new_doc.append("")
+            new_doc.append("")
+
+            doc_items = self.docs_for_index[endpoint_type]
+            for doc_item in sorted(doc_items, key=lambda d: d["identifier"]):
+                if doc_item == "NotImplemented":
+                    print(doc_item["path"])
+                    continue
+                new_doc.append(f"   packages/{doc_item['path']}")
+
+        with open(self.packages_index_path, "w", encoding="utf-8") as file:
+            for line in new_doc:
+                file.write(line + "\n")
 
     def update(self) -> None:
         """Update the package endpoints and the package status."""

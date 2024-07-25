@@ -12,11 +12,13 @@ import webbrowser
 from functools import partial
 from functools import wraps
 from pathlib import Path
+from runpy import run_module
 
 import click
 import click_completion.core
 import click_repl
 import pandas as pd
+import pkg_resources
 from git.exc import GitCommandError
 
 import colrev.env.local_index
@@ -31,7 +33,6 @@ import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
-from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
@@ -54,7 +55,7 @@ from colrev.constants import ScreenCriterionType
 EXACT_CALL = "colrev " + subprocess.list2cmdline(sys.argv[1:])  # nosec
 
 PACKAGE_MANAGER = colrev.package_manager.package_manager.PackageManager()
-TYPE_IDENTIFIER_ENDPOINT_DICT = PACKAGE_MANAGER.load_type_identifier_endpoint_dict()
+# TYPE_IDENTIFIER_ENDPOINT_DICT = PACKAGE_MANAGER.load_type_identifier_endpoint_dict()
 
 SHELL_MODE = False
 
@@ -242,7 +243,7 @@ def exit(
 @main.command(help_priority=1)
 @click.option(
     "--type",
-    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.review_type]),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.review_type]),
     default="colrev.literature_review",
     help="Review type for the setup.",
 )
@@ -432,7 +433,7 @@ def retrieve(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.search_source]),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.search_source]),
     help="""Search source to be added.""",
 )
 @click.option(
@@ -638,7 +639,7 @@ def load(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prep]),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prep]),
     help="""Prep package to be added.""",
 )
 @click.option(
@@ -759,7 +760,7 @@ def prep(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prep_man]),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prep_man]),
     help="""Prep-man script  to be added.""",
 )
 @click.option(
@@ -850,7 +851,7 @@ def _view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.dedupe]),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.dedupe]),
     help="""Dedupe package to be added.""",
 )
 @click.option(
@@ -998,7 +999,7 @@ def dedupe(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prescreen]),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prescreen]),
     help="""Prescreen package to be added.""",
 )
 @click.option(
@@ -1156,7 +1157,7 @@ def prescreen(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.screen]),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.screen]),
     help="""Screen package to be added.""",
 )
 @click.option(
@@ -1431,7 +1432,7 @@ def pdfs(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_get]),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_get]),
     help="""PDF-get package to be added.""",
 )
 @click.option(
@@ -1543,7 +1544,7 @@ def pdf_get(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_get_man]),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_get_man]),
     help="""PDF-get-man package to be added.""",
 )
 @click.option(
@@ -1680,7 +1681,7 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_prep]),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_prep]),
     help="""PDF-prep package to be added.""",
 )
 @click.option(
@@ -1817,7 +1818,7 @@ def _delete_first_pages_cli(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_prep_man]),
+    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_prep_man]),
     help="""PDF-prep-man package to be added.""",
 )
 @click.option(
@@ -1930,7 +1931,7 @@ def pdf_prep_man(
 @click.option(
     "-a",
     "--add",
-    type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.data]),
+    # click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.data]),
     help="Data package to be added.",
 )
 @click.option(
@@ -2321,15 +2322,12 @@ def env(
     # pylint: disable=too-many-branches
 
     if update_package_list:
-        if "y" != input(
-            "The following process instantiates objects listed in the "
-            + "packages/packages.json "
-            + "(including ones that may not be secure).\n"
-            + "Please confirm (y) to proceed."
-        ):
-            return
+        import colrev.package_manager.doc_registry_manager
 
-        PACKAGE_MANAGER.update_package_list()
+        doc_reg_manager = (
+            colrev.package_manager.doc_registry_manager.DocRegistryManager()
+        )
+        doc_reg_manager.update()
         return
 
     if index:
@@ -3005,6 +3003,75 @@ def version(
     from importlib.metadata import version
 
     print(f'colrev version {version("colrev")}')
+
+
+@main.command(help_priority=34)
+@click.argument("packages", nargs=-1, required=False)
+@click.option(
+    "-U", "--upgrade", is_flag=True, help="Upgrade packages to latest version"
+)
+@click.option(
+    "-e",
+    "--editable",
+    help="Install a project in editable mode from this path",
+)
+@click.option(
+    "--force-reinstall",
+    is_flag=True,
+    help="Reinstall all packages even if they are already up-to-date",
+)
+@click.option(
+    "--no-cache-dir",
+    is_flag=True,
+    help="Disable the cache",
+)
+def install(
+    packages: typing.List[str],
+    upgrade: bool,
+    editable: str,
+    force_reinstall: bool,
+    no_cache_dir: bool,
+) -> None:
+    """Install packages"""
+
+    # Install packages from colrev monorepository first
+    colrev_packages = []
+    for package in packages:
+        if (
+            package.replace(".", "-").replace("_", "-")
+            in pkg_resources.get_distribution("colrev").extras
+        ):
+            colrev_packages.append(package)
+
+    packages = [p for p in packages if p not in colrev_packages]
+
+    if colrev_packages:
+        args = ["pip", "install"]
+        if upgrade:
+            args += ["--upgrade"]
+        if editable:
+            args += ["--editable", editable]
+        if force_reinstall:
+            args += ["--force-reinstall"]
+        if no_cache_dir:
+            args += ["--no-cache-dir"]
+        args += [f"colrev[{','.join(colrev_packages)}]"]
+        input(args)
+        sys.argv = args
+        run_module("pip", run_name="__main__")
+
+    args = ["pip", "install"]
+    if upgrade:
+        args += ["--upgrade"]
+    if editable:
+        args += ["--editable", editable]
+    if force_reinstall:
+        args += ["--force-reinstall"]
+    if no_cache_dir:
+        args += ["--no-cache-dir"]
+    args += list(packages)
+    sys.argv = args
+    run_module("pip", run_name="__main__")
 
 
 @main.command(hidden=True)

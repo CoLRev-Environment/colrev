@@ -32,7 +32,7 @@ Per default, CoLRev keeps a backup of PDFs that are changed by the ``pdf-prep`` 
 
 The following options for ``pdf-prep`` are available:
 
-.. datatemplate:json:: ../../package_endpoints.json
+.. datatemplate:json:: ../package_endpoints.json
 
     {{ make_list_table_from_mappings(
         [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Status", "status")],
@@ -49,7 +49,7 @@ The ``colrev pdf-prep-man`` operation provides an interactive convenience functi
 
 The following options for ``pdf-prep-man`` are available:
 
-.. datatemplate:json:: ../../package_endpoints.json
+.. datatemplate:json:: ../package_endpoints.json
 
     {{ make_list_table_from_mappings(
         [("Identifier", "package_endpoint_identifier"), ("Description", "short_description"), ("Status", "status")],

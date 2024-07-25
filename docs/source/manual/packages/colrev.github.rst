@@ -7,6 +7,9 @@
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 14pt
    :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+.. |VERSION| image:: /_static/svg/iconmonstr-product-10.svg
+   :width: 15
+   :alt: Version
 .. |GIT_REPO| image:: /_static/svg/iconmonstr-code-fork-1.svg
    :width: 15
    :alt: Git repository
@@ -22,14 +25,13 @@
 colrev.github
 =============
 
-Package
---------------------
+|VERSION| Version: 0.1.1
 
 |MAINTAINER| Maintainer: Kolja Rinne, Philipp Kasimir, Chris Vierath, Karl Schnickmann
 
 |LICENSE| License: MIT
 
-|DOCUMENTATION| `Documentation <README.md>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/github>`_
 
 .. list-table::
    :header-rows: 1
@@ -39,14 +41,14 @@ Package
      - Status
      - Add
    * - search_source
-     - |EXPERIMENTAL|
+     - |MATURING|
      - .. code-block::
 
 
          colrev search --add colrev.github
 
    * - prep
-     - |EXPERIMENTAL|
+     - |MATURING|
      - .. code-block::
 
 

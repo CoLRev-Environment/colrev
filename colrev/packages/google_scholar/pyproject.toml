@@ -1,14 +1,28 @@
-[project]
+[tool.poetry]
 name = "colrev.google_scholar"
 description = "CoLRev package for google_scholar"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/google_scholar"
 
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
+
 [tool.colrev]
-dev_status = "experimental"
+
+colrev_doc_description = "GoogleScholar"
 colrev_doc_link = "README.md"
+search_types = ["DB"]
+
+[tool.poetry.plugins.colrev]
 search_source = "colrev.packages.google_scholar.src.google_scholar:GoogleScholarSearchSource"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

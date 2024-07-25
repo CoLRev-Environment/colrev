@@ -18,6 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering",
     "Operating System :: OS Independent",
     "Typing :: Typed",
@@ -26,7 +27,6 @@ include = ["CONTRIBUTING.md", "CHANGELOG.md", "LICENSE", "README.md", "colrev/py
 
 [tool.poetry.scripts]
 colrev = "colrev.ui_cli.cli:main"
-colrev-sync = "colrev.packages.sync.src.sync:main"
 colrev-hooks-check = "colrev.hooks.check:main"
 colrev-hooks-format = "colrev.hooks.format:main"
 colrev-hooks-report = "colrev.hooks.report:main"
@@ -55,27 +55,19 @@ docker = "6.0.0"
 lxml = "^4.9.1"
 pandas = "^1.5.0"
 openpyxl = "^3.1.2"   # required by pandas for Excel
-pandasql = "^0.7.3"
 PyYAML = "^6.0.0"
 feedparser = "^6.0.10"       # internally?
 pybtex = "^0.24.0"           # internally?
-toml = "^0.10.2"
 requests = "<2.32.0"
 urllib3 = "<2.0" # https://github.com/google-deepmind/alphafold/issues/867
 requests-cache = "^0.9.6"
-beautifulsoup4 = "^4.11.1"
 lingua-language-detector = "^2.0.2"
-alphabet-detector = "^0.0.7"
 pycountry = "^22.3.5"
 nameparser = "^1.1.2"
 number-parser = "^0.3.2"
 pymupdf = "^1.24.3"
-pyalex = "^0.10"
-crossrefapi = "^1.5.0"
-semanticscholar = "^0.6.0"
-pygithub = "^2.3.0"
 m2r = "^0.3.1"
-dash = {version = "^2.11.1", optional = true }
+toml = "^0.10.2"
 Sphinx = {version = "^5.2.3", optional = true }
 sphinx-autodoc-typehints = {version = "^1.19.4", optional = true }
 sphinx-click = {version = "^4.3.0", optional = true }
@@ -94,9 +86,99 @@ coverage = {extras = ["toml"], version = "^7.3.2", optional = true }
 types-click = {version = "^7.1.8", optional = true }
 # Can't do 0.21 with poetry because of https://github.com/python-poetry/poetry/issues/9293
 docutils = {version = "!=0.21.post1", optional = true }
+"colrev.ui_web" = {path = "./colrev/packages/ui_web", optional = true}
+"colrev.local_index" = {path="./colrev/packages/local_index"}
+"colrev.exclude_non_latin_alphabets" = {path="./colrev/packages/exclude_non_latin_alphabets"}
+"colrev.dedupe" = {path="./colrev/packages/dedupe"}
+"colrev.meta_analysis" = {path="./colrev/packages/meta_analysis"}
+"colrev.colrev_cli_pdf_get_man" = {path="./colrev/packages/colrev_cli_pdf_get_man"}
+"colrev.acm_digital_library" = {path="./colrev/packages/acm_digital_library"}
+"colrev.ebsco_host" = {path="./colrev/packages/ebsco_host"}
+"colrev.jstor" = {path="./colrev/packages/jstor"}
+"colrev.remove_last_page" = {path="./colrev/packages/remove_last_page"}
+"colrev.scope_prescreen" = {path="./colrev/packages/scope_prescreen"}
+"colrev.descriptive_review" = {path="./colrev/packages/descriptive_review"}
+"colrev.ocrmypdf" = {path="./colrev/packages/ocrmypdf"}
+"colrev.sync" = {path="./colrev/packages/sync"}
+"colrev.web_of_science" = {path="./colrev/packages/web_of_science"}
+"colrev.website_screenshot" = {path="./colrev/packages/website_screenshot"}
+"colrev.crossref" = {path="./colrev/packages/crossref"}
+"colrev.paper_md" = {path="./colrev/packages/paper_md"}
+"colrev.scopus" = {path="./colrev/packages/scopus"}
+"colrev.grobid_tei" = {path="./colrev/packages/grobid_tei"}
+"colrev.pdf_backward_search" = {path="./colrev/packages/pdf_backward_search"}
+"colrev.export_man_prep" = {path="./colrev/packages/export_man_prep"}
+"colrev.files_dir" = {path="./colrev/packages/files_dir"}
+"colrev.eric" = {path="./colrev/packages/eric"}
+"colrev.prep_man_curation_jupyter" = {path="./colrev/packages/prep_man_curation_jupyter"}
+"colrev.critical_review" = {path="./colrev/packages/critical_review"}
+"colrev.exclude_languages" = {path="./colrev/packages/exclude_languages"}
+"colrev.google_scholar" = {path="./colrev/packages/google_scholar"}
+"colrev.colrev_curation" = {path="./colrev/packages/colrev_curation"}
+"colrev.open_alex" = {path="./colrev/packages/open_alex"}
+"colrev.curation_full_outlet_dedupe" = {path="./colrev/packages/curation_full_outlet_dedupe"}
+"colrev.europe_pmc" = {path="./colrev/packages/europe_pmc"}
+"colrev.theoretical_review" = {path="./colrev/packages/theoretical_review"}
+"colrev.open_library" = {path="./colrev/packages/open_library"}
+"colrev.colrev_project" = {path="./colrev/packages/colrev_project"}
+"colrev.add_journal_ranking" = {path="./colrev/packages/add_journal_ranking"}
+"colrev.psycinfo" = {path="./colrev/packages/psycinfo"}
+"colrev.get_masterdata_from_citeas" = {path="./colrev/packages/get_masterdata_from_citeas"}
+"colrev.taylor_and_francis" = {path="./colrev/packages/taylor_and_francis"}
+"colrev.unpaywall" = {path="./colrev/packages/unpaywall"}
+"colrev.remove_broken_ids" = {path="./colrev/packages/remove_broken_ids"}
+"colrev.ieee" = {path="./colrev/packages/ieee"}
+"colrev.source_specific_prep" = {path="./colrev/packages/source_specific_prep"}
+"colrev.umbrella" = {path="./colrev/packages/umbrella"}
+"colrev.springer_link" = {path="./colrev/packages/springer_link"}
+"colrev.general_polish" = {path="./colrev/packages/general_polish"}
+"colrev.curated_masterdata" = {path="./colrev/packages/curated_masterdata"}
+"colrev.remove_urls_with_500_errors" = {path="./colrev/packages/remove_urls_with_500_errors"}
+"colrev.qualitative_systematic_review" = {path="./colrev/packages/qualitative_systematic_review"}
+"colrev.colrev_cli_prescreen" = {path="./colrev/packages/colrev_cli_prescreen"}
+"colrev.dblp" = {path="./colrev/packages/dblp"}
+"colrev.bibliography_export" = {path="./colrev/packages/bibliography_export"}
+"colrev.arxiv" = {path="./colrev/packages/arxiv"}
+"colrev.conceptual_review" = {path="./colrev/packages/conceptual_review"}
+"colrev.doi_org" = {path="./colrev/packages/doi_org"}
+"colrev.github_pages" = {path="./colrev/packages/github_pages"}
+"colrev.download_from_website" = {path="./colrev/packages/download_from_website"}
+"colrev.get_year_from_vol_iss_jour" = {path="./colrev/packages/get_year_from_vol_iss_jour"}
+"colrev.pubmed" = {path="./colrev/packages/pubmed"}
+"colrev.blank" = {path="./colrev/packages/blank"}
+"colrev.exclude_collections" = {path="./colrev/packages/exclude_collections"}
+"colrev.curation_missing_dedupe" = {path="./colrev/packages/curation_missing_dedupe"}
+"colrev.ais_library" = {path="./colrev/packages/ais_library"}
+"colrev.semanticscholar" = {path="./colrev/packages/semanticscholar"}
+"colrev.abi_inform_proquest" = {path="./colrev/packages/abi_inform_proquest"}
+"colrev.scientometric" = {path="./colrev/packages/scientometric"}
+"colrev.remove_coverpage" = {path="./colrev/packages/remove_coverpage"}
+"colrev.scoping_review" = {path="./colrev/packages/scoping_review"}
+"colrev.get_doi_from_urls" = {path="./colrev/packages/get_doi_from_urls"}
+"colrev.prescreen_table" = {path="./colrev/packages/prescreen_table"}
+"colrev.obsidian" = {path="./colrev/packages/obsidian"}
+"colrev.colrev_cli_screen" = {path="./colrev/packages/colrev_cli_screen"}
+"colrev.synergy_datasets" = {path="./colrev/packages/synergy_datasets"}
+"colrev.get_masterdata_from_doi" = {path="./colrev/packages/get_masterdata_from_doi"}
+"colrev.trid" = {path="./colrev/packages/trid"}
+"colrev.wiley" = {path="./colrev/packages/wiley"}
+"colrev.exclude_complementary_materials" = {path="./colrev/packages/exclude_complementary_materials"}
+"colrev.narrative_review" = {path="./colrev/packages/narrative_review"}
+"colrev.conditional_prescreen" = {path="./colrev/packages/conditional_prescreen"}
+"colrev.structured" = {path="./colrev/packages/structured"}
+"colrev.unknown_source" = {path="./colrev/packages/unknown_source"}
+"colrev.literature_review" = {path="./colrev/packages/literature_review"}
+"colrev.colrev_cli_pdf_prep_man" = {path="./colrev/packages/colrev_cli_pdf_prep_man"}
+"colrev.prisma" = {path="./colrev/packages/prisma"}
+"colrev.screen_table" = {path="./colrev/packages/screen_table"}
+"colrev.open_citations_forward_search" = {path="./colrev/packages/open_citations_forward_search"}
+"colrev.profile" = {path="./colrev/packages/profile"}
+"colrev.methodological_review" = {path="./colrev/packages/methodological_review"}
+"colrev.osf" = {path="./colrev/packages/osf"}
+"colrev.github" = {path="./colrev/packages/github"}
 
 [tool.poetry.extras]
-web_ui = ["dash"]
+"colrev.ui_web" = ["colrev.ui_web"]
 docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinxcontrib.datatemplates", "sphinx_collapse", "repoze-sphinx-autointerface", "sphinx-design", "sphinx-copybutton", "docutils"]
 dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock", "pytest-skip-slow"]
 
@@ -145,9 +227,6 @@ omit = [
 
 [tool.ruff]
 line-length = 160
-
-[tool.ruff.lint]
-per-file-ignores = { "**/{tests,docs}/*" = ["E501"] }
 
 [build-system]
 # requires = ["poetry>=1.2.0b1"]

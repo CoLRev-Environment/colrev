@@ -1,14 +1,27 @@
-[project]
+[tool.poetry]
 name = "colrev.pdf_backward_search"
 description = "CoLRev package for pdf_backward_search"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/pdf_backward_search"
 
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4"
+
 [tool.colrev]
-dev_status = "maturing"
+colrev_doc_description = "Backward search extracting references from PDFs using GROBID"
 colrev_doc_link = "README.md"
+search_types = ["BACKWARD_SEARCH"]
+
+[tool.poetry.plugins.colrev]
 search_source = "colrev.packages.pdf_backward_search.src.pdf_backward_search:BackwardSearchSource"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

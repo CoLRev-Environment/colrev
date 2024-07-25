@@ -137,7 +137,7 @@ The development of additional SearchSources is tracked in the `SearchSource road
 DB searches
 --------------------
 
-.. datatemplate:json:: ../../search_source_types.json
+.. datatemplate:json:: ../search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
@@ -151,7 +151,7 @@ DB searches
 API searches
 --------------------
 
-.. datatemplate:json:: ../../search_source_types.json
+.. datatemplate:json:: ../search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
@@ -165,7 +165,7 @@ API searches
 TOC searches
 --------------------
 
-.. datatemplate:json:: ../../search_source_types.json
+.. datatemplate:json:: ../search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
@@ -179,7 +179,7 @@ TOC searches
 BACKWARD_SEARCH searches
 ----------------------------------------
 
-.. datatemplate:json:: ../../search_source_types.json
+.. datatemplate:json:: ../search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
@@ -193,7 +193,7 @@ BACKWARD_SEARCH searches
 FORWARD_SEARCH searches
 ----------------------------------------
 
-.. datatemplate:json:: ../../search_source_types.json
+.. datatemplate:json:: ../search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
@@ -207,7 +207,7 @@ FORWARD_SEARCH searches
 FILES searches
 -------------------
 
-.. datatemplate:json:: ../../search_source_types.json
+.. datatemplate:json:: ../search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
@@ -222,7 +222,7 @@ FILES searches
 OTHER searches
 --------------------
 
-.. datatemplate:json:: ../../search_source_types.json
+.. datatemplate:json:: ../search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],
@@ -237,7 +237,7 @@ OTHER searches
 MD searches
 --------------------
 
-.. datatemplate:json:: ../../search_source_types.json
+.. datatemplate:json:: ../search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status")],

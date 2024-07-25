@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import importlib.util
+from importlib.metadata import distribution
+from importlib.metadata import distributions
+from importlib.metadata import PackageNotFoundError
 from pathlib import Path
 from typing import Any
 
-import toml
 import zope.interface.exceptions
 from zope.interface.verify import verifyClass
 
@@ -29,55 +31,50 @@ ENDPOINT_OVERVIEW = colrev.package_manager.interfaces.ENDPOINT_OVERVIEW
 class Package:
     """A Python package for CoLRev"""
 
-    # pylint: disable=too-many-instance-attributes
+    def __init__(self, package_identifier: str) -> None:
+        try:
+            self.package = distribution(package_identifier)
+        except PackageNotFoundError as exc:
+            # Note: The distribution(package_identifier)
+            # does not seem to work reliably (across matrix tests on GitHub Actions)
+            for dist in distributions():
+                if dist.metadata["Name"] == package_identifier:
+                    self.package = dist
+                    break
+            else:
+                raise colrev_exceptions.MissingDependencyError(
+                    f"Package {package_identifier} not found"
+                ) from exc
 
-    def __init__(self, package_dir: Path) -> None:
-        self.package_dir = package_dir
-        self.config = self._load_config()
-        self.name = self.config["project"]["name"]
-        self.version = self.config["project"]["version"]
-        self.authors = self.config["project"]["authors"]
-        self.license = self.config["project"]["license"]
-        self.repository = self.config["project"].get("repository", "")
-        self.documentation = self.config["project"].get("documentation", "")
+        if not self.package.files:
+            raise colrev_exceptions.MissingDependencyError(
+                f"Package {package_identifier} not a CoLRev package " "(no files found)"
+            )
 
-        self.status = self.config["tool"]["colrev"]["dev_status"]
-        self.colrev_doc_link = self.config["tool"]["colrev"]["colrev_doc_link"]
+        package_path = self.package.files[0].locate()
+        self.package_dir = Path(package_path).parent
 
-    def _load_config(self) -> dict:
-        config_path = self.package_dir / "pyproject.toml"
-        if not self.package_dir.is_dir():
-            raise colrev_exceptions.MissingDependencyError(
-                f"Package {self.package_dir} not a CoLRev package "
-                "(directory does not exist)"
-            )
-        if not config_path.is_file():
-            raise colrev_exceptions.MissingDependencyError(
-                f"Package {self.package_dir} not a CoLRev package "
-                "(pyproject.toml missing)"
-            )
-        with open(config_path, encoding="utf-8") as file:
-            config = toml.load(file)
-        if "tool" not in config or "colrev" not in config["tool"]:
-            raise colrev_exceptions.MissingDependencyError(
-                f"Package {self.package_dir} not a CoLRev package "
-                "(section tool.colrev missing in pyproject.toml)"
-            )
-        colrev_details = config["tool"]["colrev"]
-        if "dev_status" not in colrev_details:
-            raise colrev_exceptions.MissingDependencyError(
-                f"Package {self.package_dir} not a CoLRev package "
-                "(dev_status missing in tool.colrev)"
-            )
-        return config
+        # Note: The metadata() function does not work reliably
+        # package_metadata = metadata(package_identifier)
+        self.name = self.package.metadata["Name"]
+        self.version = self.package.metadata["Version"]
 
     def has_endpoint(self, endpoint_type: EndpointType) -> bool:
         """Check if the package has a specific endpoint type"""
-        return endpoint_type.value in self.config["tool"]["colrev"]
+
+        return endpoint_type.value in [e.name for e in self.package.entry_points]
 
     def get_endpoint(self, endpoint_type: EndpointType) -> str:
         """Get the endpoint for a package type"""
-        return self.config["tool"]["colrev"][endpoint_type.value]
+
+        if endpoint_type.value not in [e.name for e in self.package.entry_points]:
+            raise colrev_exceptions.MissingDependencyError(
+                f"Package {self.name} does not have a {endpoint_type} endpoint"
+            )
+
+        return [e for e in self.package.entry_points if e.name == endpoint_type.value][
+            0
+        ].value
 
     def _endpoint_verified(
         self, endpoint_class: Any, endpoint_type: EndpointType, identifier: str
@@ -112,8 +109,6 @@ class Package:
         self, type_identifier_endpoint_dict: dict
     ) -> None:
         """Add the package to the type_identifier_endpoint_dict dict"""
-        if "tool" not in self.config or "colrev" not in self.config["tool"]:
-            return
 
         for endpoint_type in EndpointType:
             if self.has_endpoint(endpoint_type):
