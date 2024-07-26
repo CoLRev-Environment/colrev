@@ -2,8 +2,9 @@
 name = "colrev.genai"
 description = "CoLRev package for GenAI"
 version = "0.1.0"
+license = "MIT"
 authors = ["Julian Prester <julian.prester@sydney.edu.au>", "Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
-documentation = "README.md"
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/genai"
 
 [[tool.poetry.packages]]
 include = "src"

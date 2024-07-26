@@ -23,7 +23,7 @@ The following packages are automatically set up in a critical review:
 
 Bélanger, F., & Crossler, R. E. (2011). Privacy in the digital age: a review of information privacy research in information systems. MIS Quarterly, 35(4), 1017-1041. doi:[10.2307/41409971](https://doi.org/10.2307/41409971)
 
-Jones, M. R., & Karsten, H. (2008). Giddens's structuration theory and information systems research. MIS Q1uarterly, 32(1), 127-157. doi:[10.2307/25148831
+Jones, M. R., & Karsten, H. (2008). Giddens's structuration theory and information systems research. MIS Quarterly, 32(1), 127-157. doi:[10.2307/25148831
 ](https://doi.org/10.2307/25148831)
 
 ## Methods papers

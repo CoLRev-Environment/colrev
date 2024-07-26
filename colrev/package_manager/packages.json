@@ -268,5 +268,8 @@
     },
     "colrev.github": {
         "dev_status": "maturing"
+    },
+    "colrev.genai": {
+        "dev_status": "experimental"
     }
 }

@@ -132,6 +132,7 @@ Packages
 
    packages/colrev.colrev_cli_prescreen.rst
    packages/colrev.conditional_prescreen.rst
+   packages/colrev.genai.rst
    packages/colrev.prescreen_table.rst
    packages/colrev.scope_prescreen.rst
 
@@ -155,6 +156,7 @@ Packages
 
 
    packages/colrev.colrev_cli_screen.rst
+   packages/colrev.genai.rst
    packages/colrev.screen_table.rst
 
 
