@@ -36,6 +36,7 @@ class GenAIScreen(JsonSchemaMixin):
 
         # TODO : load API-Key and initialize connection here
 
+    # pylint: disable=unused-argument
     def run_screen(self, records: dict, split: list) -> dict:
         """Screen records based on GenAI"""
 
@@ -47,7 +48,8 @@ class GenAIScreen(JsonSchemaMixin):
             # record.data[Fields.FILE] should be available (maybe even TEI documents)
             record.set_status(RecordState.rev_excluded)
             record.set_status(RecordState.rev_included)
-            # screening_criteria_field = "reason_1=in;reason_2=out" # reasons: see screening_criteria
+            # reasons: see screening_criteria
+            # screening_criteria_field = "reason_1=in;reason_2=out"
             # record.data[Fields.SCREENING_CRITERIA] = screening_criteria_field
 
         self.review_manager.dataset.save_records_dict(records)

@@ -9,7 +9,7 @@ import instructor
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from litellm import completion
-from pydantic import BaseModel
+from pydantic import BaseModel  # pylint: disable=E0611
 from pydantic import Field
 
 import colrev.package_manager.interfaces
@@ -35,7 +35,8 @@ class PreScreenDecision(BaseModel):
         "whether the article should be included in the review based on an inclusion criterion."
     )
     included: bool = Field(
-        description="Whether the article should be included in the review based on the inclusion criterion."
+        description="Whether the article should be included in the review "
+        + "based on the inclusion criterion."
     )
     explanation: str = Field(description="Explanation of the inclusion decision.")
 
@@ -71,6 +72,7 @@ class GenAIPrescreen(JsonSchemaMixin):
         self.review_manager = prescreen_operation.review_manager
         self.settings = self.settings_class.load_settings(data=settings)
 
+    # pylint: disable=unused-argument
     def run_prescreen(
         self,
         records: dict,
