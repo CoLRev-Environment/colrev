@@ -2,12 +2,7 @@
 """Discovering and using packages."""
 from __future__ import annotations
 
-import colrev.env.utils
-import colrev.package_manager.doc_registry_manager
-import colrev.package_manager.interfaces
 import colrev.process.operation
-import colrev.record.record
-import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import OperationsType
