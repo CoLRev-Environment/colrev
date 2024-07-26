@@ -120,7 +120,7 @@ class Data(colrev.process.operation.Operation):
                 "analysis, and synthesis."
             )
             self.review_manager.logger.info(
-                "See https://colrev.readthedocs.io/en/latest/manual/data/data.html"
+                "See https://colrev-environment.github.io/colrev/manual/data/data.html"
             )
         self._pad = min((max(len(ID) for ID in list(records.keys()) + [""]) + 2), 35)
 

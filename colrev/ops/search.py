@@ -455,7 +455,7 @@ class Search(colrev.process.operation.Operation):
             "Retrieve new records from an API or files (search sources)."
         )
         self.review_manager.logger.info(
-            "See https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html"
+            "See https://colrev-environment.github.io/colrev/manual/metadata_retrieval/search.html"
         )
 
         # Reload the settings because the search sources may have been updated

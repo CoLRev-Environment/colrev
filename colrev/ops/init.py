@@ -169,7 +169,7 @@ class Initializer:
                 raise colrev_exceptions.CoLRevException(
                     "Docker not installed. Docker is optional but recommended.\n"
                     "For more information, see "
-                    "https://colrev.readthedocs.io/en/latest/manual/manual.html"
+                    "https://colrev-environment.github.io/colrev/manual/manual.html"
                     "To init a repository without Docker, run "
                     f"{Colors.ORANGE}colrev init --light{Colors.END}"
                 ) from exc

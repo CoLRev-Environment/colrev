@@ -53,7 +53,7 @@ class Load(colrev.process.operation.Operation):
                 "Original records (search results) are stored in the directory data/search"
             )
             self.review_manager.logger.info(
-                "See https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/load.html"
+                "See https://colrev-environment.github.io/colrev/manual/metadata_retrieval/load.html"
             )
 
     def _get_currently_imported_origin_list(self) -> list:

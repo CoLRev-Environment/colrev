@@ -50,7 +50,7 @@ class GitHubSearchSource(JsonSchemaMixin):
     heuristic_status = SearchSourceHeuristicStatus.todo
     short_name = "GitHubSearch"
     docs_link = (
-        "https://colrev.readthedocs.io/en/latest/dev_docs/packages/"
+        "https://colrev-environment.github.io/colrev/dev_docs/packages/"
         + "package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface"
         + "https://docs.github.com/en/rest?apiVersion=2022-11-28"
     )

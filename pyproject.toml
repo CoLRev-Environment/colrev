@@ -5,9 +5,9 @@ description = "CoLRev: An open-source environment for collaborative reviews"
 authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>", "Julian Prester <julian.prester@sydney.edu.au>"]
 license = "MIT"
 readme = "README.md"
-homepage="https://colrev.readthedocs.io/en/latest/"
+homepage="https://colrev-environment.github.io/colrev/"
 repository = "https://github.com/CoLRev-Environment/colrev"
-documentation = "https://colrev.readthedocs.io/en/latest/"
+documentation = "https://colrev-environment.github.io/colrev/"
 keywords = ["research", "reproducible research", "open science", "literature", "literature review", "systematic review", "systematic literature review"]
 classifiers = [
    "Development Status :: 4 - Beta",

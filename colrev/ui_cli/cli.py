@@ -159,7 +159,7 @@ def main(ctx: click.core.Context) -> None:
 
     Recommended workflow: colrev status > colrev OPERATION > colrev validate
 
-    Documentation:  https://colrev.readthedocs.io/
+    Documentation:  https://colrev-environment.github.io/colrev/
     """
 
     try:
@@ -215,7 +215,7 @@ def shell(
 
     print(f"CoLRev version {colrev.__version__}")
     print("Workflow: status > OPERATION > validate")
-    print("https://colrev.readthedocs.io/en/latest/")
+    print("https://colrev-environment.github.io/colrev/")
     print("Type exit to close the shell")
     print()
     prompt_kwargs = {"history": FileHistory(".history"), "message": "CoLRev > "}
@@ -277,7 +277,7 @@ def init(
 ) -> None:
     """Initialize (define review objectives and type)
 
-    Docs: https://colrev.readthedocs.io/en/latest/manual/problem_formulation/init.html
+    Docs: https://colrev-environment.github.io/colrev/manual/problem_formulation/init.html
     """
     import colrev.ops.init
 
@@ -376,7 +376,7 @@ def retrieve(
     - Copy PDF files to the directory data/pdfs or
     - Add an API-based search, as described in the documentation:
 
-    https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html
+    https://colrev-environment.github.io/colrev/manual/metadata_retrieval/search.html
     """
 
     review_manager = get_review_manager(
@@ -396,7 +396,7 @@ def retrieve(
             f"to the directory {review_manager.paths.SEARCH_DIR} or\n"
             f" - copy PDF files to the directory {review_manager.paths.PDF_DIR} or \n"
             " - add an API-based search, as described in the documentation:\n"
-            "https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html"
+            "https://colrev-environment.github.io/colrev/manual/metadata_retrieval/search.html"
         )
         return
 
@@ -505,7 +505,7 @@ def search(
 ) -> None:
     """Search for records
 
-    Docs: https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html
+    Docs: https://colrev-environment.github.io/colrev/manual/metadata_retrieval/search.html
     """
 
     review_manager = get_review_manager(
@@ -621,7 +621,7 @@ def load(
 ) -> None:
     """Load records
 
-    Docs: https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/load.html
+    Docs: https://colrev-environment.github.io/colrev/manual/metadata_retrieval/load.html
     """
 
     review_manager = get_review_manager(
@@ -709,7 +709,7 @@ def prep(
 ) -> None:
     """Prepare records
 
-    Docs: https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/prep.html
+    Docs: https://colrev-environment.github.io/colrev/manual/metadata_retrieval/prep.html
     """
 
     try:
@@ -809,7 +809,7 @@ def prep_man(
 ) -> None:
     """Prepare records manually
 
-    Docs: https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/prep.html
+    Docs: https://colrev-environment.github.io/colrev/manual/metadata_retrieval/prep.html
     """
 
     review_manager = get_review_manager(
@@ -926,7 +926,7 @@ def dedupe(
 ) -> None:
     """Deduplicate records
 
-    Docs: https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/dedupe.html
+    Docs: https://colrev-environment.github.io/colrev/manual/metadata_retrieval/dedupe.html
     """
 
     review_manager = get_review_manager(
@@ -1095,7 +1095,7 @@ def prescreen(
 ) -> None:
     """Pre-screen exclusion based on metadata (titles and abstracts)
 
-    Docs: https://colrev.readthedocs.io/en/latest/manual/metadata_prescreen/prescreen.html
+    Docs: https://colrev-environment.github.io/colrev/manual/metadata_prescreen/prescreen.html
     """
 
     # pylint: disable=too-many-locals
@@ -1146,8 +1146,7 @@ def prescreen(
             "In the screen, they can be included or excluded based on full-text documents."
         )
         review_manager.logger.info(
-            "See https://colrev.readthedocs.io/en/"
-            "latest/manual/metadata_prescreen/prescreen.html"
+            "See https://colrev-environment.github.io/colrev/manual/metadata_prescreen/prescreen.html"
         )
 
         prescreen_operation.main(split_str=split)
@@ -1250,7 +1249,7 @@ def screen(
 ) -> None:
     """Screen based on PDFs and inclusion/exclusion criteria
 
-    Docs: https://colrev.readthedocs.io/en/latest/manual/pdf_screen/screen.html
+    Docs: https://colrev-environment.github.io/colrev/manual/pdf_screen/screen.html
     """
 
     review_manager = get_review_manager(
@@ -1497,7 +1496,7 @@ def pdf_get(
 ) -> None:
     """Get PDFs
 
-    Docs: https://colrev.readthedocs.io/en/latest/manual/pdf_retrieval/pdf_get.html
+    Docs: https://colrev-environment.github.io/colrev/manual/pdf_retrieval/pdf_get.html
     """
 
     review_manager = get_review_manager(
@@ -1593,7 +1592,7 @@ def pdf_get_man(
 ) -> None:
     """Get PDFs manually
 
-    Docs: https://colrev.readthedocs.io/en/latest/manual/pdf_retrieval/pdf_get.html
+    Docs: https://colrev-environment.github.io/colrev/manual/pdf_retrieval/pdf_get.html
     """
 
     review_manager = get_review_manager(
@@ -1750,7 +1749,7 @@ def pdf_prep(
 ) -> None:
     """Prepare PDFs
 
-    Docs: https://colrev.readthedocs.io/en/latest/manual/pdf_retrieval/pdf_prep.html
+    Docs: https://colrev-environment.github.io/colrev/manual/pdf_retrieval/pdf_prep.html
     """
 
     # pylint: disable=import-outside-toplevel
@@ -1887,7 +1886,7 @@ def pdf_prep_man(
 ) -> None:
     """Prepare PDFs manually
 
-    Docs: https://colrev.readthedocs.io/en/latest/manual/pdf_retrieval/pdf_prep.html
+    Docs: https://colrev-environment.github.io/colrev/manual/pdf_retrieval/pdf_prep.html
     """
 
     review_manager = get_review_manager(
@@ -1980,7 +1979,7 @@ def data(
 ) -> None:
     """Complete selected forms of data analysis and synthesis
 
-    Docs: https://colrev.readthedocs.io/en/latest/manual/data/data.html
+    Docs: https://colrev-environment.github.io/colrev/manual/data/data.html
     """
 
     review_manager = get_review_manager(
@@ -2910,7 +2909,7 @@ def docs(
 ) -> None:
     """Show the CoLRev documentation."""
 
-    webbrowser.open("https://colrev.readthedocs.io/en/latest/")
+    webbrowser.open("https://colrev-environment.github.io/colrev/")
 
 
 @main.command(help_priority=31)

@@ -404,7 +404,7 @@ class PDFPrep(colrev.process.operation.Operation):
             "removing additional pages, ensuring machine readability."
         )
         self.review_manager.logger.info(
-            "See https://colrev.readthedocs.io/en/latest/manual/pdf_retrieval/pdf_prep.html"
+            "See https://colrev-environment.github.io/colrev/manual/pdf_retrieval/pdf_prep.html"
         )
 
         self.review_manager.logger.info(

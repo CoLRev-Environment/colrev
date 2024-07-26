@@ -853,7 +853,7 @@ class Prep(colrev.process.operation.Operation):
             "Prep completes and corrects record metadata based on APIs and preparation rules."
         )
         self.review_manager.logger.info(
-            "See https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/prep.html"
+            "See https://colrev-environment.github.io/colrev/manual/metadata_retrieval/prep.html"
         )
 
     def _prep_packages_ram_heavy(self, prep_round: colrev.settings.PrepRound) -> bool:

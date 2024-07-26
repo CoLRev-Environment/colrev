@@ -445,7 +445,7 @@ class Screen(colrev.process.operation.Operation):
             "based on the PDFs and screening criteria."
         )
         self.review_manager.logger.info(
-            "See https://colrev.readthedocs.io/en/latest/manual/pdf_screen/screen.html"
+            "See https://colrev-environment.github.io/colrev/manual/pdf_screen/screen.html"
         )
 
         # pylint: disable=duplicate-code

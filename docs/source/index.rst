@@ -21,16 +21,16 @@ The following features stand out:
 A complete example run of CoLRev can be seen below:
 
 ..
-   Note: the demo is not displayed locally due to cross-origin restrictions and different urls ("/en/latest/" is not needed locally)
+   Note: the demo is not displayed locally due to cross-origin restrictions
 
 .. raw:: html
 
    <div id="demo"></div>
 
-   <script src="/en/latest/_static/js/asciinema-player.min.js"></script>
+   <script src="_static/js/asciinema-player.min.js"></script>
    <script>
       window.onload = function() {
-         AsciinemaPlayer.create('/en/latest/_static/colrev_demo.cast', document.getElementById('demo'),
+         AsciinemaPlayer.create('_static/colrev_demo.cast', document.getElementById('demo'),
          {autoPlay: true,
          rows: 30,
          terminalFontSize: "80px",

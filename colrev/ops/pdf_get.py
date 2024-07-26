@@ -614,7 +614,7 @@ class PDFGet(colrev.process.operation.Operation):
             f"({Colors.ORANGE}colrev pdfs --dir{Colors.END})"
         )
         self.review_manager.logger.info(
-            "See https://colrev.readthedocs.io/en/latest/manual/pdf_retrieval/pdf_get.html"
+            "See https://colrev-environment.github.io/colrev/manual/pdf_retrieval/pdf_get.html"
         )
 
         records = self.review_manager.dataset.load_records_dict()
