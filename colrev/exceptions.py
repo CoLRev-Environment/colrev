@@ -19,7 +19,9 @@ class RepoSetupError(CoLRevException):
     The project files are not properly set up as a CoLRev project.
     """
 
-    lr_docs = "https://colrev-environment.github.io/colrev/manual/problem_formulation.html"
+    lr_docs = (
+        "https://colrev-environment.github.io/colrev/manual/problem_formulation.html"
+    )
 
     def __init__(self, msg: typing.Optional[str] = None) -> None:
         try:
