@@ -12,7 +12,7 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/colrev)
 [![License](https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Environment/colrev/releases/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![Documentation Status](https://readthedocs.org/projects/colrev/badge/?version=latest)](https://colrev.readthedocs.io/en/latest/?badge=latest)
+![Documentation Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/documentation.yml)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/tests.yml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/CoLRev-Ecosystem/colrev/main.svg)](https://results.pre-commit.ci/latest/github/CoLRev-Ecosystem/colrev/main)
 ![Coverage](https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/tests/coverage.svg)
@@ -24,7 +24,6 @@
 [![All Contributors](https://img.shields.io/badge/all_contributors-32-green.svg?style=flat-square)](#contributors)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
-<!-- [![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/) -->
 
 </div>
 
@@ -42,7 +41,7 @@ The following features stand out:
 - Operates a model for data quality, content curation, and reuse
 - Enables typological and methodological pluralism throughout the process
 
-See the [documentation](https://colrev.readthedocs.io/en/latest/) and [statements of development status](https://colrev.readthedocs.io/en/latest/foundations/dev_status.html) for more details. A brief overview presented at ESMARConf2023 is available on [YouTube](https://www.youtube.com/watch?v=yfGGraQC6vs).
+See the [documentation](https://colrev-environment.github.io/colrev/) and [statements of development status](https://colrev-environment.github.io/colrev/foundations/dev_status.html) for more details. A brief overview presented at ESMARConf2023 is available on [YouTube](https://www.youtube.com/watch?v=yfGGraQC6vs).
 
 ## Demo
 
@@ -52,7 +51,7 @@ A live demonstration is available via GitHub codespaces: [start demo](https://gi
 
 Contributions, code and features are always welcome
 
-- See [contributing guidelines](CONTRIBUTING.md), [help page](https://colrev.readthedocs.io/en/latest/manual/help.html), and [github repository](https://github.com/CoLRev-Environment/colrev).
+- See [contributing guidelines](CONTRIBUTING.md), [help page](https://colrev-environment.github.io/colrev/manual/help.html), and [github repository](https://github.com/CoLRev-Environment/colrev).
 - Bug reports or feedback? Please use the [issue tracker](https://github.com/CoLRev-Environment/colrev/issues) and let us know.
 - To get your work included, fork the repository, implement your changes, and create a [pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
