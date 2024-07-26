@@ -17,6 +17,8 @@ jobs:
         run: pipx install poetry
       - name: Update setuptools
         run: python -m pip install --upgrade pip setuptools
+      - name: Set POETRY_CACHE_DIR
+        run: echo "POETRY_CACHE_DIR=${{runner.temp}}/poetry_cache" >> $GITHUB_ENV
       - name: Install poetry dependencies
         run: |
           poetry install -E dev --verbose
@@ -45,6 +47,8 @@ jobs:
         run: |
           pipx install poetry
           poetry cache clear --all pypi
+      - name: Set POETRY_CACHE_DIR
+        run: echo "POETRY_CACHE_DIR=${{runner.temp}}/poetry_cache" >> $GITHUB_ENV
       - name: Install poetry dependencies
         run: |
           poetry env remove python || true
