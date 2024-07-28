@@ -69,6 +69,22 @@ To install a CoLRev package, you can use the following command (`pip install <pa
 
 Once installed, packages that implement endpoints can be used in the standard process by registering the package's endpoint in the `settings.json` of a project (e.g., by running `colrev search --add <package_name>`).
 
+Creating a new CoLRev package
+----------------------------------------
+
+To create a new CoLRev package, the following command sets up the necessary directories, files, and code skeleton:
+
+.. code-block:: bash
+
+    colrev package --init
+
+To check the package structure and metadata, use the following command:
+
+.. code-block:: bash
+
+    colrev package --check
+
+
 Package structure
 ------------------
 
