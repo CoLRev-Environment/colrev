@@ -78,12 +78,27 @@ To create a new CoLRev package, the following command sets up the necessary dire
 
     colrev package --init
 
+
+.. raw:: html
+
+   <div id="demo"></div>
+
+   <script src="_static/js/asciinema-player.min.js"></script>
+   <script>
+      window.onload = function() {
+         AsciinemaPlayer.create('_static/colrev_package_init.cast', document.getElementById('demo'),
+         {autoPlay: true,
+         rows: 30,
+         terminalFontSize: "80px",
+         theme: 'dracula',});
+      };
+   </script>
+
 To check the package structure and metadata, use the following command:
 
 .. code-block:: bash
 
     colrev package --check
-
 
 Package structure
 ------------------
@@ -174,6 +189,7 @@ Documentation
 
 * Link the documentation (`README.md`) in the pyproject.toml.
 * See `tests/REAMDE.md <https://github.com/CoLRev-Environment/colrev/tree/main/docs>`_ for details on building the CoLRev docs.
+* CLI demonstrations can be recorded with `asciinema <https://docs.asciinema.org/getting-started/>`_.
 
 Testing
 -----------
