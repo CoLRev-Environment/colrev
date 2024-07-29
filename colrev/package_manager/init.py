@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import inspect
+import json
 import os
+import re
 import subprocess
 from datetime import datetime
 from importlib import import_module
@@ -11,6 +13,7 @@ from pathlib import Path
 
 import git
 import inquirer
+import pkg_resources
 import zope.interface.interface
 
 from colrev.constants import Colors
@@ -55,7 +58,7 @@ DEFAULT_AUTHOR = _get_default_author()
 def _create_pyproject_toml(data: dict) -> None:
     plugins = "\n".join(
         [
-            f'{plugin} = "colrev.packages.genai.src.{module}:{klass}"'
+            f'{data["name"]} = "{data["name"]}.src.{module}:{klass}"'
             for plugin, module, klass in zip(
                 data["plugins"], data["modules"], data["classes"]
             )
@@ -113,6 +116,10 @@ def _create_built_in_package() -> bool:
 
 
 def _get_package_data(default_package_name: str, built_in: bool) -> dict:
+    # pylint: disable=unused-argument
+    # pylint: disable=too-many-statements
+    # pylint: disable=too-many-locals
+
     default_package_name_str = ""
     if default_package_name:
         default_package_name_str = (
@@ -123,10 +130,45 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
         f"[{Colors.GREEN}{DEFAULT_AUTHOR['name']} "
         + f"<{DEFAULT_AUTHOR['email']}>{Colors.END}]"
     )
+
+    def validate_name(answers: list, name: str) -> bool:
+        if name == "":  # Accept default package name
+            return True
+
+        installed_packages = list(pkg_resources.working_set)
+        # Check if the name corresponds to a currently installed python package
+        if name in installed_packages:
+            print(f"  {Colors.RED}The package name is already installed.{Colors.END}")
+            return False
+
+        # Check if the name is a valid python package name
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
+            print(
+                f"  {Colors.RED}The package name is not a valid python package name.{Colors.END}"
+            )
+            return False
+
+        if built_in and not name.startswith("colrev."):
+            print(
+                f"  {Colors.RED}The built-in package name must start with 'colrev.'{Colors.END}"
+            )
+            return False
+        return True
+
+    def validate_version(answers: list, version: str) -> bool:
+        # return false if the version is not a valid version number
+        if version == "":
+            return True
+        if not re.match(r"^\d+\.\d+\.\d+$", version):
+            print(f"  {Colors.RED}The version number is not valid.{Colors.END}")
+            return False
+        return True
+
     questions = [
         inquirer.Text(
             "name",
             message=f"Enter the package name, e.g., colrev.genai{default_package_name_str}",
+            validate=validate_name,
         ),
         inquirer.Text("description", message="Enter the package description"),
         inquirer.Text(
@@ -136,6 +178,7 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
         inquirer.Text(
             "version",
             message=f"Enter the package version number [{Colors.GREEN}0.1.0{Colors.END}]",
+            validate=validate_version,
         ),
         inquirer.Text(
             "license",
@@ -161,10 +204,56 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
 
     package_data = inquirer.prompt(questions)
 
+    def validate_module_name(answers: list, name: str) -> bool:
+        if name == "":  # Accept default module name
+            return True
+        # return false if the name is not a valid python module name
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
+            print(
+                f"  {Colors.RED}The module name is not a valid python module name.{Colors.END}"
+            )
+            return False
+        return True
+
+    def validate_class_name(answers: list, name: str) -> bool:
+        if name == "":  # Accept default class name
+            return True
+        # return false if the name is not a valid python class name
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
+            print(
+                f"  {Colors.RED}The class name is not a valid python class name.{Colors.END}"
+            )
+            return False
+        return True
+
+    plugin_questions = []
+    for plugin in package_data["plugins"]:
+        p_name = package_data["name"].replace("colrev.", "")
+        default_module_name = f"{p_name}_{plugin}"
+        default_class_name = f"{p_name.capitalize()}{plugin.capitalize()}"
+        plugin_questions.extend(
+            [
+                inquirer.Text(
+                    f"module_{plugin}",
+                    message=f"Enter the module name for {plugin} "
+                    + f"[{Colors.GREEN}{default_module_name}{Colors.END}]",
+                    validate=validate_module_name,
+                ),
+                inquirer.Text(
+                    f"class_{plugin}",
+                    message=f"Enter the class name for {plugin} "
+                    + f"[{Colors.GREEN}{default_class_name}{Colors.END}]",
+                    validate=validate_class_name,
+                ),
+            ]
+        )
+
+    plugin_data = inquirer.prompt(plugin_questions)
+
     if built_in:
         package_data["repository"] = (
             f"https://github.com/CoLRev-Environment/colrev/tree/"
-            f"main/colrev/packages/{package_data['name']}"
+            f"main/colrev/packages/{package_data['name'].replace('colrev.', '')}"
         )
 
     if not package_data["version"]:
@@ -180,22 +269,15 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
         package_data["repository"] = "TODO"
 
     package_data["doc_description"] = "TODO"
-    # package_data['author'] = [author.strip() for author in package_data['author'].split(',')]
 
-    plugin_questions = []
+    # for plugin: if module name is empty, use default module name
     for plugin in package_data["plugins"]:
-        plugin_questions.extend(
-            [
-                inquirer.Text(
-                    f"module_{plugin}", message=f"Enter the module name for {plugin}"
-                ),
-                inquirer.Text(
-                    f"class_{plugin}", message=f"Enter the class name for {plugin}"
-                ),
-            ]
-        )
-
-    plugin_data = inquirer.prompt(plugin_questions)
+        if not plugin_data[f"module_{plugin}"]:
+            plugin_data[f"module_{plugin}"] = f"{package_data['name']}_{plugin}"
+        if not plugin_data[f"class_{plugin}"]:
+            plugin_data[f"class_{plugin}"] = (
+                f"{package_data['name'].capitalize()}{plugin.capitalize()}"
+            )
 
     package_data["modules"] = [
         plugin_data[f"module_{plugin}"] for plugin in package_data["plugins"]
@@ -277,8 +359,8 @@ def _create_src_init(package_data: dict) -> None:
         f.write(
             f'''"""Package for {package_data['name']}."""
 
-    __author__ = "{package_data['author']['name']}"
-    __email__ = "{package_data['author']['email']}"'''
+__author__ = "{package_data['author']['name']}"
+__email__ = "{package_data['author']['email']}"'''
         )
 
 
@@ -291,10 +373,22 @@ def _create_docs_readme() -> None:
 
 
 def _create_readme(package_data: dict) -> None:
-    print(f"TODO : take infos from {package_data}")
 
     with open("README.md", "w", encoding="utf-8") as f:
-        f.write("""# TODO : README""")
+        f.write(f"""# {package_data['name']}""")
+        if package_data["description"]:
+            f.write(f"\n\n{package_data['description']}")
+        f.write("\n\n## Installation")
+        f.write("\n\n```bash")
+        f.write(f"\ncolrev install {package_data['name']}")
+        f.write("\n```")
+        f.write("\n\n## Usage")
+        f.write("\n\nTODO")
+        f.write("\n\n## License")
+        f.write(
+            f"\n\nThis project is licensed under the {package_data['license']} "
+            "License - see the [LICENSE](LICENSE) file for details."
+        )
 
 
 def _create_license_file(package_data: dict) -> None:
@@ -409,22 +503,69 @@ repos:
         f.write(pre_commit_hooks)
 
 
+def _add_to_colrev_pyproject_toml(package_data: dict) -> None:
+    colrev_pyproject_toml_path = (
+        Path(__file__).resolve().parent.parent.parent / "pyproject.toml"
+    )
+    current_dir = Path.cwd()
+    with open(colrev_pyproject_toml_path, "r+", encoding="utf-8") as f:
+        toml_data = f.read()
+        package_name = package_data["name"]
+        package_path = f"./colrev/packages/{current_dir.name}"
+        toml_data = toml_data.replace(
+            "\n[tool.poetry.extras]",
+            f'"{package_name}" = {{"path": "{package_path}"}}\n\n[tool.poetry.extras]',
+        )
+        f.seek(0)
+        f.write(toml_data)
+        f.truncate()
+
+
+def _add_to_packages_json(package_data: dict) -> None:
+    packages_json_path = (
+        Path(__file__).resolve().parent.parent.parent
+        / "colrev/package_manager/packages.json"
+    )
+    with open(packages_json_path, encoding="utf-8") as f:
+
+        data = json.load(f)
+
+        # Add the package with "experimental" status
+        data[package_data["name"]] = {"dev_status": "experimental"}
+
+        with open(packages_json_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+
+
 def main() -> None:
     """Main function to create a CoLRev package."""
 
     built_in = _create_built_in_package()
+    current_dir = Path.cwd()
+    if any(Path(current_dir).iterdir()):
+        print("The current directory is not empty. Please select an empty directory.")
+        return
+    colrev_packages_dir = Path(__file__).resolve().parent.parent / "packages"
     if built_in:
-
-        packages_dir = Path(__file__).resolve().parent.parent / "packages"
-        print(packages_dir)
-        default_package_name = "NONE"
+        if not colrev_packages_dir.is_dir() or not str(current_dir).startswith(
+            str(colrev_packages_dir)
+        ):
+            print(
+                "To create a built-in package, "
+                "please navigate to a subdirectory of the 'packages' directory:"
+                f"\n{colrev_packages_dir}/{Colors.ORANGE}<your-package_name>{Colors.END}"
+            )
+            return
+        if current_dir.name.startswith("colrev."):
+            print("The built-in package dir should not start with 'colrev.'")
+            return
+        default_package_name = f"colrev.{current_dir.name}"
 
     else:
-
-        current_dir = Path.cwd()
-        if any(Path(current_dir).iterdir()):
+        if not str(current_dir).startswith(str(colrev_packages_dir)):
             print(
-                "The current directory is not empty. Please select an empty directory."
+                "To create a standalone package, "
+                "please navigate to a directory outside of the CoLRev package."
             )
             return
 
@@ -439,7 +580,12 @@ def main() -> None:
     _create_license_file(package_data)
     _create_pre_commit_hooks()
     _create_docs_readme()
-    _create_git_repo()
+    if not built_in:
+        _create_git_repo()
+
+    if built_in:
+        _add_to_colrev_pyproject_toml(package_data)
+        _add_to_packages_json(package_data)
 
     # tests
     # gh-actions: pypi-publishing setup
