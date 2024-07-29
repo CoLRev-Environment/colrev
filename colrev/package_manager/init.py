@@ -562,7 +562,7 @@ def main() -> None:
         default_package_name = f"colrev.{current_dir.name}"
 
     else:
-        if not str(current_dir).startswith(str(colrev_packages_dir)):
+        if str(current_dir).startswith(str(colrev_packages_dir)):
             print(
                 "To create a standalone package, "
                 "please navigate to a directory outside of the CoLRev package."
