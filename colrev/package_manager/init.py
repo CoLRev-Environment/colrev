@@ -17,21 +17,7 @@ import pkg_resources
 import zope.interface.interface
 
 from colrev.constants import Colors
-
-INTERFACE_MAP = {
-    "review_type": "ReviewTypeInterface",
-    "search_source": "SearchSourceInterface",
-    "prep": "PrepInterface",
-    "prep_man": "PrepManInterface",
-    "dedupe": "DedupeInterface",
-    "prescreen": "PrescreenInterface",
-    "pdf_get": "PDFGetInterface",
-    "pdf_get_man": "PDFGetManInterface",
-    "pdf_prep": "PDFPrepInterface",
-    "pdf_prep_man": "PDFPrepManInterface",
-    "screen": "ScreenInterface",
-    "data": "DataInterface",
-}
+from colrev.package_manager.interfaces import INTERFACE_MAP
 
 
 def _get_default_author() -> dict:
@@ -58,7 +44,7 @@ DEFAULT_AUTHOR = _get_default_author()
 def _create_pyproject_toml(data: dict) -> None:
     plugins = "\n".join(
         [
-            f'{data["name"]} = "{data["name"]}.src.{module}:{klass}"'
+            f'{plugin} = "{data["name"]}.src.{module}:{klass}"'
             for plugin, module, klass in zip(
                 data["plugins"], data["modules"], data["classes"]
             )
@@ -313,8 +299,9 @@ def _generate_method_signatures(module_path: str, class_name: str) -> list:
 
         for name, attr in attrs_dict.items():
             if isinstance(attr, zope.interface.interface.Method):
+                sig_string = attr.getSignatureString().replace("(", "(self, ")
                 method_signatures.append(
-                    f"   def {name}{attr.getSignatureString()}:\n"
+                    f"   def {name}{sig_string}:\n"
                     f'      """{attr.getDoc()}"""\n      # TODO\n\n'
                 )
 

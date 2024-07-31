@@ -2,11 +2,27 @@
 """Package check."""
 from __future__ import annotations
 
+import subprocess
 import sys
+from pathlib import Path
 from typing import Any
 from typing import Dict
 
 import toml
+from zope.interface.verify import verifyClass
+
+import colrev.package_manager.interfaces
+from colrev.package_manager.interfaces import INTERFACE_MAP
+
+
+def _check_package_installed(data: dict) -> bool:
+    package_name = data["tool"]["poetry"]["name"]
+    try:
+        subprocess.check_output(["pip", "show", package_name])
+    except subprocess.CalledProcessError:
+        print(f"Warning: Package '{package_name}' is not installed.")
+
+    return True
 
 
 def _check_key_exists(data: Dict[str, Any], key: str) -> bool:
@@ -19,48 +35,67 @@ def _check_key_exists(data: Dict[str, Any], key: str) -> bool:
     return True
 
 
-def _check_value(data: Dict[str, Any], key: str, expected: Any) -> bool:
-    keys = key.split(".")
-    sub_data = data
-    for k in keys[:-1]:
-        if k not in sub_data:
-            return False
-        sub_data = sub_data[k]
-    return sub_data.get(keys[-1]) == expected
-
-
-def _check_list_length(data: Dict[str, Any], key: str, expected_length: int) -> bool:
-    keys = key.split(".")
-    sub_data = data
-    for k in keys:
-        if k not in sub_data:
-            return False
-        sub_data = sub_data[k]
-    return len(sub_data) == expected_length
-
-
 def _check_tool_poetry(data: dict) -> bool:
     return _check_key_exists(data, "tool.poetry")
 
 
-def __check_tool_poetry_name(data: dict) -> bool:
-    return _check_value(data, "tool.poetry.name", "colrev.genai")
+def _check_tool_poetry_name(data: dict) -> bool:
+    return _check_key_exists(data, "tool.poetry.name")
 
 
-def __check_tool_poetry_description(data: dict) -> bool:
-    return _check_value(data, "tool.poetry.description", "CoLRev package for GenAI")
+def _check_tool_poetry_description(data: dict) -> bool:
+    return _check_key_exists(data, "tool.poetry.description")
 
 
-def __check_tool_poetry_version(data: dict) -> bool:
-    return _check_value(data, "tool.poetry.version", "0.1.0")
+def _check_tool_poetry_version(data: dict) -> bool:
+    return _check_key_exists(data, "tool.poetry.version")
 
 
-def __check_tool_poetry_license(data: dict) -> bool:
-    return _check_value(data, "tool.poetry.license", "MIT")
+def _check_tool_poetry_license(data: dict) -> bool:
+    return _check_key_exists(data, "tool.poetry.license")
 
 
-def __check_tool_poetry_authors(data: dict) -> bool:
-    return _check_list_length(data, "tool.poetry.authors", 2)
+def _check_tool_poetry_authors(data: dict) -> bool:
+    return _check_key_exists(data, "tool.poetry.authors")
+
+
+def _check_tool_poetry_plugins_colrev(data: dict) -> bool:
+    return _check_key_exists(data, "tool.poetry.plugins.colrev")
+
+
+def _check_tool_poetry_plugins_colrev_keys(data: dict) -> bool:
+    colrev_data = (
+        data.get("tool", {}).get("poetry", {}).get("plugins", {}).get("colrev", {})
+    )
+    return all(key in list(INTERFACE_MAP) for key in list(colrev_data))
+
+
+def _check_tool_poetry_plugins_colrev_classes(data: dict) -> bool:
+    colrev_data = (
+        data.get("tool", {}).get("poetry", {}).get("plugins", {}).get("colrev", {})
+    )
+    import importlib.util
+
+    for interface_identifier, endpoint_str in colrev_data.items():
+        module_path, class_name = endpoint_str.rsplit(":")
+        try:
+            cwd = Path.cwd()
+            file_path = (
+                f"{cwd}{module_path[module_path.find('.') :].replace('.', '/')}.py"
+            )
+            spec = importlib.util.spec_from_file_location(module_path, file_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            cls = getattr(module, class_name)
+            interface = INTERFACE_MAP.get(interface_identifier)
+
+            interface_class = getattr(colrev.package_manager.interfaces, interface)
+            if not interface or not verifyClass(interface_class, cls):
+                return False
+        except (ImportError, AttributeError) as exc:
+            print(exc)
+            return False
+    return True
 
 
 def _check_build_system(data: dict) -> bool:
@@ -69,28 +104,44 @@ def _check_build_system(data: dict) -> bool:
 
 # Define checks with preconditions
 checks = {
-    "_check_tool_poetry": {"method": _check_tool_poetry, "preconditions": []},
-    "__check_tool_poetry_name": {
-        "method": __check_tool_poetry_name,
+    "check_tool_poetry": {"method": _check_tool_poetry, "preconditions": []},
+    "check_tool_poetry_name": {
+        "method": _check_tool_poetry_name,
         "preconditions": ["_check_tool_poetry"],
     },
-    "__check_tool_poetry_description": {
-        "method": __check_tool_poetry_description,
+    "check_tool_poetry_description": {
+        "method": _check_tool_poetry_description,
         "preconditions": ["_check_tool_poetry"],
     },
-    "__check_tool_poetry_version": {
-        "method": __check_tool_poetry_version,
+    "check_tool_poetry_version": {
+        "method": _check_tool_poetry_version,
         "preconditions": ["_check_tool_poetry"],
     },
-    "__check_tool_poetry_license": {
-        "method": __check_tool_poetry_license,
+    "check_tool_poetry_license": {
+        "method": _check_tool_poetry_license,
         "preconditions": ["_check_tool_poetry"],
     },
-    "__check_tool_poetry_authors": {
-        "method": __check_tool_poetry_authors,
+    "check_tool_poetry_authors": {
+        "method": _check_tool_poetry_authors,
         "preconditions": ["_check_tool_poetry"],
     },
-    "_check_build_system": {"method": _check_build_system, "preconditions": []},
+    "check_tool_poetry_plugins_colrev": {
+        "method": _check_tool_poetry_plugins_colrev,
+        "preconditions": ["_check_tool_poetry"],
+    },
+    "check_tool_poetry_plugins_colrev_keys": {
+        "method": _check_tool_poetry_plugins_colrev_keys,
+        "preconditions": ["_check_tool_poetry_plugins_colrev"],
+    },
+    "check_tool_poetry_plugins_colrev_classes": {
+        "method": _check_tool_poetry_plugins_colrev_classes,
+        "preconditions": ["_check_tool_poetry_plugins_colrev"],
+    },
+    "check_package_installed": {
+        "method": _check_package_installed,
+        "preconditions": [],
+    },
+    "check_build_system": {"method": _check_build_system, "preconditions": []},
 }
 
 

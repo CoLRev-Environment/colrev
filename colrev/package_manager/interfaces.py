@@ -334,3 +334,8 @@ ENDPOINT_OVERVIEW = {
         "operation_name": "data_operation",
     },
 }
+
+INTERFACE_MAP = {}
+for endpoint_type, endpoint_data in ENDPOINT_OVERVIEW.items():
+    import_name = endpoint_data["import_name"].__name__
+    INTERFACE_MAP[endpoint_type.name] = import_name
