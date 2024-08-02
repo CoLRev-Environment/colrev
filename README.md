@@ -41,11 +41,13 @@ The following features stand out:
 - Operates a model for data quality, content curation, and reuse
 - Enables typological and methodological pluralism throughout the process
 
-See the [documentation](https://colrev-environment.github.io/colrev/) and [statements of development status](https://colrev-environment.github.io/colrev/foundations/dev_status.html) for more details. A brief overview presented at ESMARConf2023 is available on [YouTube](https://www.youtube.com/watch?v=yfGGraQC6vs).
+![Demo](docs/source/_static/demo.gif)
+
+For details, consult the [documentation](https://colrev-environment.github.io/colrev/).
 
 ## Demo
 
-A live demonstration is available via GitHub codespaces: [start demo](https://github.com//codespaces/new?hide_repo_select=true&ref=main&repo=767717822).
+You can try a live demonstration of CoLRev via GitHub codespaces: [start demo](https://github.com//codespaces/new?hide_repo_select=true&ref=main&repo=767717822).
 
 ## Contributing, changes, and releases
 
