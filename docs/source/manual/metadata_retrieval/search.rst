@@ -17,8 +17,8 @@ Two steps are necessary to add a SearchSource and run a search:
 
 .. code-block:: bash
 
-    # Add a new SearchSource, such as Scopus
-    colrev search --add colrev.scopus
+    # Add a new SearchSource interactively
+    colrev search --add
 
     # Run search for all SearchSources in the settings
     colrev search

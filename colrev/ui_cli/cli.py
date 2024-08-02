@@ -17,6 +17,7 @@ from runpy import run_module
 import click
 import click_completion.core
 import click_repl
+import inquirer
 import pandas as pd
 import pkg_resources
 from git.exc import GitCommandError
@@ -33,12 +34,12 @@ import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
+from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
 
 # pylint: disable=too-many-lines
-# pylint: disable=redefined-builtin
 # pylint: disable=redefined-outer-name
 # pylint: disable=too-many-arguments
 # pylint: disable=unused-argument
@@ -70,6 +71,22 @@ def _custom_startswith(string: str, incomplete: str) -> bool:
 
 click_completion.core.startswith = _custom_startswith
 click_completion.init()
+
+
+def _add_interactively(add: str, endpoint_type: EndpointType) -> str:
+    """Add package interactively"""
+    if add != "add_interactively":
+        return add
+    packages = PACKAGE_MANAGER.discover_packages(package_type=endpoint_type)
+    questions = [
+        inquirer.List(
+            "package",
+            message=f"Select a {endpoint_type.name} package to add:",
+            choices=sorted(list(packages.keys())),
+        )
+    ]
+    answers = inquirer.prompt(questions)
+    return answers["package"]
 
 
 def get_search_files() -> list:
@@ -243,9 +260,11 @@ def exit(
 @main.command(help_priority=1)
 @click.option(
     "--type",
-    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.review_type]),
+    "review_type",
     default="colrev.literature_review",
     help="Review type for the setup.",
+    is_flag=False,
+    flag_value="add_interactively",
 )
 @click.option(
     "-f",
@@ -270,7 +289,7 @@ def exit(
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def init(
     ctx: click.core.Context,
-    type: str,
+    review_type: str,
     example: bool,
     force: bool,
     light: bool,
@@ -281,8 +300,9 @@ def init(
     """
     import colrev.ops.init
 
+    review_type = _add_interactively(review_type, EndpointType.review_type)
     colrev.ops.init.Initializer(
-        review_type=type,
+        review_type=review_type,
         target_path=Path.cwd(),
         example=example,
         force_mode=force,
@@ -433,15 +453,12 @@ def retrieve(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.search_source]),
     help="""Search source to be added.""",
+    is_flag=False,
+    flag_value="add_interactively",
+    default="",
 )
-@click.option(
-    "-p",
-    "--params",
-    type=str,
-    help="Parameters",
-)
+@click.option("-p", "--params", type=str, help="Parameters", default="")
 @click.option("--view", is_flag=True, default=False, help="View search sources")
 @click.option(
     "-s",
@@ -524,6 +541,7 @@ def search(
         # pylint: disable=reimported
         import colrev.ui_cli.add_package_to_settings
 
+        add = _add_interactively(add, EndpointType.search_source)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=search_operation,
@@ -639,8 +657,10 @@ def load(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prep]),
     help="""Prep package to be added.""",
+    is_flag=False,
+    flag_value="add_interactively",
+    default="",
 )
 @click.option(
     "-p",
@@ -738,7 +758,7 @@ def prep(
             )
             return
         if add:
-
+            add = _add_interactively(add, EndpointType.prep)
             colrev.ui_cli.add_package_to_settings.add_package_to_settings(
                 PACKAGE_MANAGER,
                 operation=prep_operation,
@@ -760,8 +780,10 @@ def prep(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prep_man]),
     help="""Prep-man script  to be added.""",
+    is_flag=False,
+    flag_value="add_interactively",
+    default="",
 )
 @click.option(
     "-p",
@@ -825,7 +847,7 @@ def prep_man(
         return
 
     if add:
-
+        add = _add_interactively(add, EndpointType.prep_man)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=prep_man_operation,
@@ -851,8 +873,10 @@ def _view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.dedupe]),
     help="""Dedupe package to be added.""",
+    is_flag=False,
+    flag_value="add_interactively",
+    default="",
 )
 @click.option(
     "-p",
@@ -938,7 +962,7 @@ def dedupe(
     )
 
     if add:
-
+        add = _add_interactively(add, EndpointType.dedupe)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=dedupe_operation,
@@ -999,8 +1023,10 @@ def dedupe(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.prescreen]),
     help="""Prescreen package to be added.""",
+    is_flag=False,
+    flag_value="add_interactively",
+    default="",
 )
 @click.option(
     "-p",
@@ -1129,7 +1155,7 @@ def prescreen(
         prescreen_operation.setup_custom_script()
         print("Activated custom_prescreen_script.py.")
     elif add:
-
+        add = _add_interactively(add, EndpointType.prescreen)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=prescreen_operation,
@@ -1146,7 +1172,8 @@ def prescreen(
             "In the screen, they can be included or excluded based on full-text documents."
         )
         review_manager.logger.info(
-            "See https://colrev-environment.github.io/colrev/manual/metadata_prescreen/prescreen.html"
+            "See https://colrev-environment.github.io/"
+            "colrev/manual/metadata_prescreen/prescreen.html"
         )
 
         prescreen_operation.main(split_str=split)
@@ -1156,8 +1183,10 @@ def prescreen(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.screen]),
     help="""Screen package to be added.""",
+    is_flag=False,
+    flag_value="add_interactively",
+    default="",
 )
 @click.option(
     "-p",
@@ -1261,7 +1290,7 @@ def screen(
         screen_operation.add_abstracts_from_tei()
 
     if add:
-
+        add = _add_interactively(add, EndpointType.screen)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=screen_operation,
@@ -1431,8 +1460,10 @@ def pdfs(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_get]),
     help="""PDF-get package to be added.""",
+    is_flag=False,
+    flag_value="add_interactively",
+    default="",
 )
 @click.option(
     "-p",
@@ -1514,7 +1545,7 @@ def pdf_get(
     )
 
     if add:
-
+        add = _add_interactively(add, EndpointType.pdf_get)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_get_operation,
@@ -1543,8 +1574,10 @@ def pdf_get(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_get_man]),
     help="""PDF-get-man package to be added.""",
+    is_flag=False,
+    flag_value="add_interactively",
+    default="",
 )
 @click.option(
     "-p",
@@ -1606,7 +1639,7 @@ def pdf_get_man(
     pdf_get_man_operation = review_manager.get_pdf_get_man_operation()
 
     if add:
-
+        add = _add_interactively(add, EndpointType.pdf_get_man)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_get_man_operation,
@@ -1680,8 +1713,10 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_prep]),
     help="""PDF-prep package to be added.""",
+    is_flag=False,
+    flag_value="add_interactively",
+    default="",
 )
 @click.option(
     "-p",
@@ -1765,7 +1800,7 @@ def pdf_prep(
     pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
 
     if add:
-
+        add = _add_interactively(add, EndpointType.pdf_prep)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_prep_operation,
@@ -1817,8 +1852,10 @@ def _delete_first_pages_cli(
 @click.option(
     "-a",
     "--add",
-    # type=click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.pdf_prep_man]),
     help="""PDF-prep-man package to be added.""",
+    is_flag=False,
+    flag_value="add_interactively",
+    default="",
 )
 @click.option(
     "-p",
@@ -1900,7 +1937,7 @@ def pdf_prep_man(
     pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
 
     if add:
-
+        add = _add_interactively(add, EndpointType.pdf_prep_man)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_prep_man_operation,
@@ -1930,8 +1967,10 @@ def pdf_prep_man(
 @click.option(
     "-a",
     "--add",
-    # click.Choice(TYPE_IDENTIFIER_ENDPOINT_DICT[EndpointType.data]),
     help="Data package to be added.",
+    is_flag=False,
+    flag_value="add_interactively",
+    default="",
 )
 @click.option(
     "-p",
@@ -2005,7 +2044,7 @@ def data(
         return
 
     if add:
-
+        add = _add_interactively(add, EndpointType.data)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=data_operation,

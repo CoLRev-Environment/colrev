@@ -18,7 +18,7 @@ It is recommended to select a review type using the ``--type`` parameter:
 
 .. code:: bash
 
-	colrev init --type REVIEW_TYPE
+	colrev init --type
 
 Depending on the selected review type, the ``settings.json`` file is created with reasonable defaults. For example, a theoretical review may involve an emergent data analysis and synthesis approach, while a meta-analysis would involve a structured data extraction and a PRISMA flow chart for transparent reporting.
 
