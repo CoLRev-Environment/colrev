@@ -6,6 +6,11 @@ Packages can support specific endpoints (e.g., `search_source`, `prescreen`, `pd
 
 The following guide explains how to develop built-in packages, i.e., packages that reside in the `packages <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages>`_ directory. Built-in packages should also be registered as a dependency in the `pyproject.toml <https://github.com/CoLRev-Environment/colrev/blob/main/pyproject.toml>`_.
 
+.. figure:: ../../figures/package_overview.png
+   :width: 500
+   :align: center
+   :alt: Overview package development
+
 ..
     CoLRev comes with batteries included, i.e., a reference implementation for all steps of the process. At the same time you can easily include other packages or custom scripts (batteries are swappable). Everything is specified in the settings.json (simply add the package/script name as the endpoint in the ``settings.json`` of the project):
 
@@ -58,19 +63,8 @@ The following guide explains how to develop built-in packages, i.e., packages th
 
     * `Add <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics>`_ the ```colrev-packages``` `topic tag on GitHub <https://github.com/topics/colrev-package>`_ to allow others to find and use your work.
 
-Installation and use of CoLRev packages
-----------------------------------------
-
-To install a CoLRev package, you can use the following command (`pip install <package_name>` is also possible):
-
-.. code-block:: bash
-
-    colrev install <package_name>
-
-Once installed, packages that implement endpoints can be used in the standard process by registering the package's endpoint in the `settings.json` of a project (e.g., by running `colrev search --add <package_name>`).
-
-Creating a new CoLRev package
-----------------------------------------
+Init
+------
 
 To create a new CoLRev package, the following command sets up the necessary directories, files, and code skeleton:
 
@@ -100,8 +94,28 @@ To check the package structure and metadata, use the following command:
 
     colrev package --check
 
-Package structure
-------------------
+Install and use
+-----------------
+
+To install a CoLRev package, you can use the following command (`pip install <package_name>` is also possible):
+
+.. code-block:: bash
+
+    colrev install <package_name>
+
+Once installed, packages that implement endpoints can be used in the standard process by registering the package's endpoint in the `settings.json` of a project (e.g., by running `colrev search --add <package_name>`).
+
+
+Develop, test, document and check
+-----------------------------------
+
+The `init` command should set up the package structure and metadata. The following sections provide more details on how to develop, test, document, and check the package.
+
+It is recommended to run the following check regularly:
+
+.. code-block:: bash
+
+    colrev package --check
 
 A package contains the following files and directories:
 
@@ -118,9 +132,6 @@ A package contains the following files and directories:
    .. note::
 
       The``.pre-commit-config.yaml`` should be copied from the CoLRev repo to ensure CoLRev’s coding standards
-
-Package metadata: pyproject.toml
---------------------------------
 
 The package metadata is stored in the ``pyproject.toml`` file. The metadata is used by the CoLRev to identify the package and its dependencies. The metadata should include the following fields:
 
@@ -143,9 +154,24 @@ The package metadata is stored in the ``pyproject.toml`` file. The metadata is u
     [tool.poetry.plugins.colrev]
     search_source = "colrev.packages.abi_inform_proquest.src.package_functionality:ABIInformProQuestSearchSource"
 
+In the `tool.poetry.plugins.colrev` section, the endpoints can be specified. The endpoint class is a string that contains the module path and the class name of the endpoint. The module path is relative to the package directory.
 
-Implementing endpoints
--------------------------
+Develop
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Package development is done in the `src` directory. The package should implement the respective endpoint interface.
+
+Best practices
+
+* Remember to install CoLRev in editable mode, so that changes are immediately available (run `pip install -e /path/to/cloned/colrev`)
+* Check the other package implementations for getting a good idea on how to proceed
+* Use the `colrev constants <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/constants.py>`__
+* Get paths from review_manager
+* Use the ``logger`` and ``colrev_report_logger`` to help users examine and validate the process, including links to the docs where instructions for tracing and fixing errors are available.
+* Before committing do a pre-commit test
+* Use poetry for dependency management (run `poetry add <package_name>` to add a new dependency)
+* Once the package development is completed, make a PR to the CoLRev, with brief description of the package.
+* The ``add_endpoint`` is only required for SearchSources. It is optional for other endpoint types.
 
 Endpoints allow packages to implement functionality that can be called in the :doc:`standard process </manual/operations>` if users register the endpoint in the `settings.json` of a project.
 
@@ -184,38 +210,35 @@ The following endpoint - interface pairs are available:
    * - data
      - `DataInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.DataInterface>`_
 
-Documentation
------------------
-
-* Link the documentation (`README.md`) in the pyproject.toml.
-* See `tests/REAMDE.md <https://github.com/CoLRev-Environment/colrev/tree/main/docs>`_ for details on building the CoLRev docs.
-* CLI demonstrations can be recorded with `asciinema <https://docs.asciinema.org/getting-started/>`_.
-
-Testing
------------
+Test
+^^^^^^^^^^^^^^^
 
 * Tests for built-in packages are currently in the tests of the CoLRev packages.
 * See `tests/REAMDE.md <https://github.com/CoLRev-Environment/colrev/tree/main/tests>`_ for details.
 
-Publication
+Document
+^^^^^^^^^^^^^^^^^
+
+* Link the documentation (`README.md`) in the pyproject.toml.
+* See `docs/REAMDE.md <https://github.com/CoLRev-Environment/colrev/tree/main/docs>`_ for details on building the CoLRev docs.
+* CLI demonstrations can be recorded with `asciinema <https://docs.asciinema.org/getting-started/>`_.
+
+Publish
 ------------
 
-* Currently, built-in packages are not published separately. They are automatically provided with every PyPI-release of CoLRev.
-* To have a package registered as an official CoLRev package, create a pull-request adding it to the `packages.json <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/package_manager/packages.json>`_.
-* To integrate the package documentation into the official CoLRev documentation, run the ``colrev env --update_package_list`` command. This updates the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/docs/source/manual/package_endpoints.json>`_, and the `search_source_types.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/docs/source/search_source_types.json>`_, which are used to generate the documentation pages.
+* Standalone CoLRev packages are published on PyPI.
+* Built-in packages are not published separately. They are automatically provided with every PyPI-release of CoLRev.
 
-Best practices
-------------------
+Register
+----------------
 
-* Remember to install CoLRev in editable mode, so that changes are immediately available (run `pip install -e /path/to/cloned/colrev`)
-* Check the other package implementations for getting a good idea on how to proceed
-* Use the `colrev constants <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/constants.py>`__
-* Get paths from review_manager
-* Use the ``logger`` and ``colrev_report_logger`` to help users examine and validate the process, including links to the docs where instructions for tracing and fixing errors are available.
-* Before committing do a pre-commit test
-* Use poetry for dependency management (run `poetry add <package_name>` to add a new dependency)
-* Once the package development is completed, make a PR to the CoLRev, with brief description of the package.
-* The ``add_endpoint`` is only required for SearchSources. It is optional for other endpoint types.
+To have a package registered as an official CoLRev package, create a pull-request adding it to the `packages.json <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/package_manager/packages.json>`_.
+
+To integrate the package documentation into the official CoLRev documentation, the CoLRev team
+
+* Reviews the package.
+* Assigns a package status.
+* Runs the ``colrev env --update_package_list`` command. This updates the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/docs/source/manual/package_endpoints.json>`_, and the `search_source_types.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/docs/source/search_source_types.json>`_, which are used to generate the documentation pages.
 
 Package development resources
 ------------------------------
