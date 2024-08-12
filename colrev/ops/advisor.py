@@ -284,6 +284,8 @@ class Advisor:
             )
 
             if len(in_progress_processes) == 1:
+                if list(in_progress_processes)[0] == "invalid_transition":
+                    return
                 instruction = {
                     "msg": f"Detected {list(in_progress_processes)[0]} in progress. "
                     + "Complete this process",
