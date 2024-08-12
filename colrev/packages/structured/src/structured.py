@@ -85,7 +85,7 @@ Example 2:
         if "fields" not in settings:
             settings["fields"] = []
         if "data_path_relative" not in settings:
-            settings["data_path_relative"] = Path("data.csv")
+            settings["data_path_relative"] = Path("data/data/data.csv")
 
         self.settings = self.settings_class.load_settings(data=settings)
         self.data_path = self.review_manager.path / self.settings.data_path_relative
@@ -100,7 +100,7 @@ Example 2:
             "endpoint": "colrev.structured",
             "version": "0.1",
             "fields": [],
-            "data_path_relative": "data/data.csv",
+            "data_path_relative": "data/data/data.csv",
         }
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
         operation.review_manager.save_settings()
