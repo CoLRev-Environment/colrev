@@ -327,28 +327,27 @@ class UnknownSearchSource(JsonSchemaMixin):
         return records
 
     # pylint: disable=colrev-missed-constant-usage
-    def _table_drop_fields(self, *, records_dict: dict) -> None:
-        for r_dict in records_dict.values():
-            for key in list(r_dict.keys()):
-                if r_dict[key] in [f"no {key}", "", "nan"]:
-                    del r_dict[key]
-            if (
-                r_dict.get("number_of_cited_references", "NA")
-                == "no Number-of-Cited-References"
-            ):
-                del r_dict["number_of_cited_references"]
-            if "no file" in r_dict.get("file_name", "NA"):
-                del r_dict["file_name"]
+    def _table_drop_fields(self, *, record_dict: dict) -> None:
+        for key in list(record_dict.keys()):
+            if record_dict[key] in [f"no {key}", "", "nan"]:
+                del record_dict[key]
+        if (
+            record_dict.get("number_of_cited_references", "NA")
+            == "no Number-of-Cited-References"
+        ):
+            del record_dict["number_of_cited_references"]
+        if "no file" in record_dict.get("file_name", "NA"):
+            del record_dict["file_name"]
 
-            if r_dict.get("cited_by", "NA") in [
-                "no Times-Cited",
-            ]:
-                del r_dict["cited_by"]
+        if record_dict.get("cited_by", "NA") in [
+            "no Times-Cited",
+        ]:
+            del record_dict["cited_by"]
 
-            if "author_count" in r_dict:
-                del r_dict["author_count"]
-            if "citation_key" in r_dict:
-                del r_dict["citation_key"]
+        if "author_count" in record_dict:
+            del record_dict["author_count"]
+        if "citation_key" in record_dict:
+            del record_dict["citation_key"]
 
     def _load_table(self, *, load_operation: colrev.ops.load.Load) -> dict:
         def entrytype_setter(record_dict: dict) -> None:
@@ -408,7 +407,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             if "author" in record_dict and ";" in record_dict["author"]:
                 record_dict["author"] = record_dict["author"].replace("; ", " and ")
 
-            self._table_drop_fields(records_dict=records)
+            self._table_drop_fields(record_dict=record_dict)
 
             for key in list(record_dict.keys()):
                 value = record_dict[key]
@@ -416,11 +415,17 @@ class UnknownSearchSource(JsonSchemaMixin):
                 if value == "" or pd.isna(value):
                     del record_dict[key]
 
+        def id_labeler(records: list) -> None:
+            """Labeler for IDs."""
+            for counter, record_dict in enumerate(records):
+                if Fields.ID not in record_dict:
+                    record_dict[Fields.ID] = str(counter).zfill(6)
+
         load_operation.ensure_append_only(self.search_source.filename)
 
         records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
-            unique_id_field="ID",
+            id_labeler=id_labeler,
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
             logger=self.review_manager.logger,
