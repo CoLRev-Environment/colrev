@@ -357,11 +357,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             logger=self.review_manager.logger,
+            field_mapper=ais_load_utils.bib_field_mapper,
             unique_id_field="ID",
         )
-
-        for record_dict in records.values():
-            record_dict.pop("type", None)
 
         return records
 
