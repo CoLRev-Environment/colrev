@@ -36,14 +36,14 @@ class Screen(colrev.process.operation.Operation):
 
     def to_screen(self, record_dict: dict) -> bool:
         """
-        This method checks if the record is ready to be screened.
-        It returns True if the status of the record is 'pdf_prepared', otherwise it returns False.
+        This method checks if the record needs to be screened.
         """
         if RecordState.pdf_prepared == record_dict[Fields.STATUS]:
             return True
         if (
             "screening_criteria" in record_dict
             and "TODO" in record_dict["screening_criteria"]
+            and not RecordState.rev_excluded == record_dict[Fields.STATUS]
         ):
             return True
         return False
