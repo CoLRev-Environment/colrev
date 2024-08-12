@@ -28,7 +28,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
-import colrev.packages.crossref.src.utils as connector_utils
 import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.record.record
 import colrev.record.record_prep
@@ -39,6 +38,7 @@ from colrev.constants import FieldValues
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.packages.crossref.src import record_transformer
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.settings
@@ -191,7 +191,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     msg="Record not found in crossref (based on doi)"
                 )
 
-            retrieved_record = connector_utils.json_to_record(
+            retrieved_record = record_transformer.json_to_record(
                 item=crossref_query_return
             )
             return retrieved_record
@@ -411,7 +411,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             record=record, jour_vol_iss_list=jour_vol_iss_list, timeout=timeout
         ):
             try:
-                retrieved_record = connector_utils.json_to_record(item=item)
+                retrieved_record = record_transformer.json_to_record(item=item)
                 similarity = self._get_similarity(
                     record=record, retrieved_record_dict=retrieved_record.data
                 )
@@ -734,7 +734,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             nr_added = 0
             for item in retrieve_exploratory_papers(keyword=keyword):
                 try:
-                    retrieved_record = connector_utils.json_to_record(item=item)
+                    retrieved_record = record_transformer.json_to_record(item=item)
 
                     # Skip papers that do not have the keyword in the title
                     if keyword not in retrieved_record.data.get(
@@ -816,7 +816,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         try:
             for item in self._get_crossref_query_return(rerun=rerun):
                 try:
-                    retrieved_record = connector_utils.json_to_record(item=item)
+                    retrieved_record = record_transformer.json_to_record(item=item)
                     if self._scope_excluded(
                         retrieved_record_dict=retrieved_record.data
                     ):
