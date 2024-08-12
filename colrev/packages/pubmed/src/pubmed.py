@@ -6,19 +6,13 @@ import typing
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
-from sqlite3 import OperationalError
 from urllib.parse import urlparse
-from xml.etree import ElementTree  # nosec
-from xml.etree.ElementTree import Element  # nosec
 
 import pandas as pd
 import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from lxml import etree
-from lxml import html
-from lxml.etree import XMLSyntaxError
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -32,6 +26,7 @@ from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.packages.pubmed.src import pubmed_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -208,14 +203,17 @@ class PubMedSearchSource(JsonSchemaMixin):
                 Fields.ENTRYTYPE: "article",
                 "pubmedid": "10024335",
             }
-            returned_record_dict = self._pubmed_query_id(
-                pubmed_id=test_rec["pubmedid"],
-                timeout=20,
-            )
 
-            if returned_record_dict:
-                assert returned_record_dict[Fields.TITLE] == test_rec[Fields.TITLE]
-                assert returned_record_dict[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
+            api = pubmed_api.PubmedAPI(
+                parameters=self.search_source.search_parameters,
+                email=self.email,
+                session=self.review_manager.get_cached_session(),
+            )
+            returned_record = api.query_id(pubmed_id=test_rec["pubmedid"])
+
+            if returned_record:
+                assert returned_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
+                assert returned_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
             else:
                 if not self.review_manager.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("Pubmed")
@@ -223,174 +221,6 @@ class PubMedSearchSource(JsonSchemaMixin):
             print(exc)
             if not self.review_manager.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException("Pubmed") from exc
-
-    @classmethod
-    def _get_author_string_from_node(cls, *, author_node: Element) -> str:
-        authors_string = ""
-        author_last_name_node = author_node.find("LastName")
-        if author_last_name_node is not None:
-            if author_last_name_node.text is not None:
-                authors_string += author_last_name_node.text
-        author_fore_name_node = author_node.find("ForeName")
-        if author_fore_name_node is not None:
-            if author_fore_name_node.text is not None:
-                authors_string += ", "
-                authors_string += author_fore_name_node.text
-        return authors_string
-
-    @classmethod
-    def _get_author_string(cls, *, root) -> str:  # type: ignore
-        authors_list = []
-        for author_node in root.xpath(
-            "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/AuthorList/Author"
-        ):
-            authors_list.append(
-                cls._get_author_string_from_node(author_node=author_node)
-            )
-        return " and ".join(authors_list)
-
-    @classmethod
-    def _get_title_string(cls, *, root) -> str:  # type: ignore
-        title = root.xpath(
-            "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/ArticleTitle"
-        )
-        if title:
-            if title[0].text:
-                title = title[0].text.strip().rstrip(".")
-                if title.startswith("[") and title.endswith("]"):
-                    title = title[1:-1]
-                return title
-        return ""
-
-    @classmethod
-    def _get_abstract_string(cls, *, root) -> str:  # type: ignore
-        abstract = root.xpath(
-            "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/Abstract"
-        )
-        if abstract:
-            return ElementTree.tostring(abstract[0], encoding="unicode")
-        return ""
-
-    # pylint: disable=colrev-missed-constant-usage
-    @classmethod
-    def _pubmed_xml_to_record(cls, *, root) -> dict:  # type: ignore
-        retrieved_record_dict: dict = {Fields.ENTRYTYPE: "misc"}
-
-        pubmed_article = root.find("PubmedArticle")
-        if pubmed_article is None:
-            return {}
-        if pubmed_article.find("MedlineCitation") is None:
-            return {}
-
-        retrieved_record_dict[Fields.TITLE] = cls._get_title_string(root=root)
-        retrieved_record_dict[Fields.AUTHOR] = cls._get_author_string(root=root)
-
-        journal_path = "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/Journal"
-        journal_name = root.xpath(journal_path + "/ISOAbbreviation")
-        if journal_name:
-            retrieved_record_dict[Fields.ENTRYTYPE] = "article"
-            retrieved_record_dict[Fields.JOURNAL] = journal_name[0].text
-
-        volume = root.xpath(journal_path + "/JournalIssue/Volume")
-        if volume:
-            retrieved_record_dict[Fields.VOLUME] = volume[0].text
-
-        number = root.xpath(journal_path + "/JournalIssue/Issue")
-        if number:
-            retrieved_record_dict[Fields.NUMBER] = number[0].text
-
-        year = root.xpath(journal_path + "/JournalIssue/PubDate/Year")
-        if year:
-            retrieved_record_dict[Fields.YEAR] = year[0].text
-
-        retrieved_record_dict[Fields.ABSTRACT] = cls._get_abstract_string(root=root)
-
-        article_id_list = root.xpath(
-            "/PubmedArticleSet/PubmedArticle/PubmedData/ArticleIdList"
-        )
-        for article_id in article_id_list[0]:
-            id_type = article_id.attrib.get("IdType")
-            if article_id.attrib.get("IdType") == "pubmed":
-                retrieved_record_dict["pubmedid"] = article_id.text.upper()
-            elif article_id.attrib.get("IdType") == "doi":
-                retrieved_record_dict[Fields.DOI] = article_id.text.upper()
-            else:
-                retrieved_record_dict[id_type] = article_id.text
-
-        retrieved_record_dict = {
-            k: v for k, v in retrieved_record_dict.items() if v != ""
-        }
-        if (
-            retrieved_record_dict.get("pii", "pii").lower()
-            == retrieved_record_dict.get("doi", "doi").lower()
-        ):
-            del retrieved_record_dict["pii"]
-
-        return retrieved_record_dict
-
-    def _get_pubmed_ids(self, query: str, retstart: int, page: int) -> typing.List[str]:
-        headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
-        session = self.review_manager.get_cached_session()
-        if not query.startswith("https://pubmed.ncbi.nlm.nih.gov/?term="):
-            query = "https://pubmed.ncbi.nlm.nih.gov/?term=" + query
-        url = query + f"&retstart={retstart}&page={page}"
-        ret = session.request("GET", url, headers=headers, timeout=30)
-        ret.raise_for_status()
-        if ret.status_code != 200:
-            # review_manager.logger.debug(
-            #     f"crossref_query failed with status {ret.status_code}"
-            # )
-            return []
-
-        root = html.fromstring(str.encode(ret.text))
-        meta_tags = root.findall(".//meta[@name='log_displayeduids']")
-        displayed_uids = [tag.get("content") for tag in meta_tags][0].split(",")
-        return displayed_uids
-
-    def _pubmed_query_id(
-        self,
-        *,
-        pubmed_id: str,
-        timeout: int = 60,
-    ) -> dict:
-        """Retrieve records from Pubmed based on a query"""
-
-        try:
-            database = "pubmed"
-            url = (
-                "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?"
-                + f"db={database}&id={pubmed_id}&rettype=xml&retmode=text"
-            )
-
-            headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
-            session = self.review_manager.get_cached_session()
-
-            # review_manager.logger.debug(url)
-            ret = session.request("GET", url, headers=headers, timeout=timeout)
-            ret.raise_for_status()
-            if ret.status_code != 200:
-                # review_manager.logger.debug(
-                #     f"crossref_query failed with status {ret.status_code}"
-                # )
-                return {"pubmed_id": pubmed_id}
-
-            root = etree.fromstring(str.encode(ret.text))
-            retrieved_record = self._pubmed_xml_to_record(root=root)
-            if not retrieved_record:
-                return {"pubmed_id": pubmed_id}
-        except requests.exceptions.RequestException:
-            return {"pubmed_id": pubmed_id}
-        except XMLSyntaxError as exc:
-            raise colrev_exceptions.RecordNotParsableException(
-                "Error parsing xml"
-            ) from exc
-        # pylint: disable=duplicate-code
-        except OperationalError as exc:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                "sqlite, required for requests CachedSession "
-                "(possibly caused by concurrent operations)"
-            ) from exc
-        return retrieved_record
 
     def _get_masterdata_record(
         self,
@@ -400,29 +230,19 @@ class PubMedSearchSource(JsonSchemaMixin):
         timeout: int,
     ) -> colrev.record.record.Record:
         try:
-            retrieved_record_dict = self._pubmed_query_id(
-                pubmed_id=record.data["pubmedid"],
-                timeout=timeout,
+            api = pubmed_api.PubmedAPI(
+                parameters=self.search_source.search_parameters,
+                email=self.email,
+                session=self.review_manager.get_cached_session(),
+                logger=self.review_manager.logger,
             )
 
-            retries = 0
-            while (
-                not retrieved_record_dict
-                and retries < prep_operation.max_retries_on_error
-            ):
-                retries += 1
+            retrieved_record = api.query_id(pubmed_id=record.data["pubmedid"])
 
-                retrieved_record_dict = self._pubmed_query_id(
-                    pubmed_id=record.data["pubmedid"],
-                    timeout=timeout,
-                )
-
-            if not retrieved_record_dict:
+            if not retrieved_record:
                 raise colrev_exceptions.RecordNotFoundInPrepSourceException(
                     msg="Pubmed: no records retrieved"
                 )
-
-            retrieved_record = colrev.record.record.Record(retrieved_record_dict)
 
             if not colrev.record.record_similarity.matches(record, retrieved_record):
                 return record
@@ -511,22 +331,6 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         return record
 
-    def _get_pubmed_query_return(self) -> typing.Iterator[dict]:
-        params = self.search_source.search_parameters
-
-        retstart = 10
-        page = 1
-        while True:
-            pubmed_ids = self._get_pubmed_ids(
-                query=params["query"], retstart=retstart, page=page
-            )
-            if not pubmed_ids:
-                break
-            for pubmed_id in pubmed_ids:
-                yield self._pubmed_query_id(pubmed_id=pubmed_id)
-
-            page += 1
-
     def _run_api_search(
         self,
         *,
@@ -538,45 +342,38 @@ class PubMedSearchSource(JsonSchemaMixin):
                 "Performing a search of the full history (may take time)"
             )
 
-        try:
-            for record_dict in self._get_pubmed_query_return():
-                try:
-                    # Note : discard "empty" records
-                    if "" == record_dict.get(
-                        Fields.AUTHOR, ""
-                    ) and "" == record_dict.get(Fields.TITLE, ""):
-                        self.review_manager.logger.warning(
-                            f"Skipped record: {record_dict}"
-                        )
-                        continue
-                    prep_record = colrev.record.record_prep.PrepRecord(record_dict)
+        api = pubmed_api.PubmedAPI(
+            parameters=self.search_source.search_parameters,
+            email=self.email,
+            session=self.review_manager.get_cached_session(),
+            logger=self.review_manager.logger,
+        )
 
-                    if Fields.D_PROV in prep_record.data:
-                        del prep_record.data[Fields.D_PROV]
-
-                    added = pubmed_feed.add_update_record(prep_record)
-
-                    # Note : only retrieve/update the latest deposits (unless in rerun mode)
-                    if not added and not rerun:
-                        # problem: some publishers don't necessarily
-                        # deposit papers chronologically
-                        break
-                except colrev_exceptions.NotFeedIdentifiableException:
-                    print("Cannot set id for record")
+        for record in api.get_query_return():
+            try:
+                # Note : discard "empty" records
+                if "" == record.data.get(Fields.AUTHOR, "") and "" == record.data.get(
+                    Fields.TITLE, ""
+                ):
+                    self.review_manager.logger.warning(f"Skipped record: {record.data}")
                     continue
+                prep_record = colrev.record.record_prep.PrepRecord(record.data)
 
-            pubmed_feed.save()
+                if Fields.D_PROV in prep_record.data:
+                    del prep_record.data[Fields.D_PROV]
 
-        except requests.exceptions.JSONDecodeError as exc:
-            # watch github issue:
-            # https://github.com/fabiobatalha/crossrefapi/issues/46
-            if "504 Gateway Time-out" in str(exc):
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    "Crossref (check https://status.crossref.org/)"
-                )
-            raise colrev_exceptions.ServiceNotAvailableException(
-                f"Crossref (check https://status.crossref.org/) ({exc})"
-            )
+                added = pubmed_feed.add_update_record(prep_record)
+
+                # Note : only retrieve/update the latest deposits (unless in rerun mode)
+                if not added and not rerun:
+                    # problem: some publishers don't necessarily
+                    # deposit papers chronologically
+                    break
+            except colrev_exceptions.NotFeedIdentifiableException:
+                print("Cannot set id for record")
+                continue
+
+        pubmed_feed.save()
 
     def _run_md_search(
         self,
@@ -584,21 +381,26 @@ class PubMedSearchSource(JsonSchemaMixin):
         pubmed_feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
 
+        api = pubmed_api.PubmedAPI(
+            parameters=self.search_source.search_parameters,
+            email=self.email,
+            session=self.review_manager.get_cached_session(),
+            logger=self.review_manager.logger,
+        )
+
         for feed_record_dict in pubmed_feed.feed_records.values():
             feed_record = colrev.record.record.Record(feed_record_dict)
 
             try:
-                retrieved_record_dict = self._pubmed_query_id(
-                    pubmed_id=feed_record_dict["pubmedid"]
-                )
+                retrieved_record = api.query_id(pubmed_id=feed_record_dict["pubmedid"])
 
-                if retrieved_record_dict["pubmedid"] != feed_record.data["pubmedid"]:
-                    continue
-                retrieved_record = colrev.record.record.Record(retrieved_record_dict)
-                pubmed_feed.add_update_record(retrieved_record)
+                if retrieved_record.data["pubmedid"] == feed_record.data["pubmedid"]:
+                    pubmed_feed.add_update_record(retrieved_record)
+
             except (
                 colrev_exceptions.RecordNotFoundInPrepSourceException,
                 colrev_exceptions.NotFeedIdentifiableException,
+                colrev_exceptions.SearchSourceException,
             ):
                 continue
 
