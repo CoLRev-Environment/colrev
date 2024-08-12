@@ -7,7 +7,6 @@ import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
 
-import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -21,6 +20,7 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.packages.eric.src import eric_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -37,45 +37,11 @@ class ERICSearchSource(JsonSchemaMixin):
     search_types = [SearchType.API]
     endpoint = "colrev.eric"
 
+    db_url = "https://eric.ed.gov/"
+
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.oni
     short_name = "ERIC"
-
-    API_FIELDS = [
-        "title",
-        "author",
-        "source",
-        "publicationdateyear",
-        "description",
-        "subject",
-        "peerreviewed",
-        "abstractor",
-        "audience",
-        "authorxlink",
-        "e_datemodified",
-        "e_fulltextauth",
-        "e yearadded",
-        "educationlevel",
-        "identifiersgeo",
-        "identifierslaw",
-        "identifierstest",
-        "iescited",
-        "iesfunded",
-        "iesgrantcontractnum",
-        "iesgrantcontractnumxlink",
-        "ieslinkpublication",
-        "ieslinkwwcreviewguide",
-        "ieswwcreviewed",
-        "institution",
-        "isbn",
-        "issn",
-        "language",
-        "publisher",
-        "sourceid",
-        "sponsor",
-        "url",
-    ]
-    FIELD_MAPPING = {"publicationdateyear": "year", "description": "abstract"}
 
     def __init__(
         self,
@@ -84,6 +50,7 @@ class ERICSearchSource(JsonSchemaMixin):
         settings: typing.Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
+        self.source_operation = source_operation
         if settings:
             # ERIC as a search_source
             self.search_source = from_dict(
@@ -97,7 +64,6 @@ class ERICSearchSource(JsonSchemaMixin):
                 search_parameters={},
                 comment="",
             )
-        self.language_service = colrev.env.language_service.LanguageService()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -182,30 +148,12 @@ class ERICSearchSource(JsonSchemaMixin):
         operation.add_source_and_search(search_source)
         return search_source
 
-    def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
-        """Get the records from a query"""
-        full_url = self._build_search_url()
-
-        response = requests.get(full_url, timeout=90)
-        if response.status_code != 200:
-            return
-        with open("test.json", "wb") as file:
-            file.write(response.content)
-        data = response.json()
-
-        if "docs" not in data["response"]:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                "Could not reach API. Status Code: " + response.status_code
-            )
-
-        for doc in data["response"]["docs"]:
-            record = self._create_record(doc)
-            yield record
-
     def _run_api_search(
         self, *, eric_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
-        for record in self.get_query_return():
+
+        api = eric_api.ERICAPI(params=self.search_source.search_parameters)
+        for record in api.get_query_return():
             eric_feed.add_update_record(record)
 
         eric_feed.save()
@@ -221,65 +169,13 @@ class ERICSearchSource(JsonSchemaMixin):
 
         if self.search_source.search_type == SearchType.API:
             self._run_api_search(eric_feed=eric_feed, rerun=rerun)
+        elif self.search_source.search_type == SearchType.DB:
+            self.source_operation.run_db_search(  # type: ignore
+                search_source_cls=self.__class__,
+                source=self.search_source,
+            )
         else:
             raise NotImplementedError
-
-    def _build_search_url(self) -> str:
-        url = "https://api.ies.ed.gov/eric/"
-        params = self.search_source.search_parameters
-        query = params["query"]
-        format_param = "json"
-        start_param = params.get("start", "0")
-        rows_param = params.get("rows", "2000")
-        return f"{url}?search={query}&format={format_param}&start={start_param}&rows={rows_param}"
-
-    def _create_record(self, doc: dict) -> colrev.record.record.Record:
-        # pylint: disable=too-many-branches
-        record_dict = {Fields.ID: doc["id"]}
-        record_dict[Fields.ENTRYTYPE] = "other"
-        if "Journal Articles" in doc["publicationtype"]:
-            record_dict[Fields.ENTRYTYPE] = "article"
-        elif "Books" in doc["publicationtype"]:
-            record_dict[Fields.ENTRYTYPE] = "book"
-
-        for field in self.API_FIELDS:
-            field_value = doc.get(field)
-            if field_value is not None:
-                record_dict[field] = field_value
-
-        for api_field, rec_field in self.FIELD_MAPPING.items():
-            if api_field not in record_dict:
-                continue
-            record_dict[rec_field] = record_dict.pop(api_field)
-
-        if "source" in doc:
-            record_dict[Fields.JOURNAL] = doc.pop("source")
-
-        if "subject" in record_dict:
-            record_dict["subject"] = ", ".join(record_dict["subject"])
-
-        if Fields.AUTHOR in record_dict:
-            # pylint: disable=colrev-missed-constant-usage
-            record_dict[Fields.AUTHOR] = " and ".join(record_dict["author"])
-        if Fields.ISSN in record_dict:
-            # pylint: disable=colrev-missed-constant-usage
-            record_dict[Fields.ISSN] = record_dict["issn"][0].lstrip("EISSN-")
-        if Fields.ISBN in record_dict:
-            # pylint: disable=colrev-missed-constant-usage
-            record_dict[Fields.ISBN] = record_dict["isbn"][0].lstrip("ISBN-")
-
-        if Fields.YEAR in record_dict:
-            # pylint: disable=colrev-missed-constant-usage
-            record_dict[Fields.YEAR] = str(record_dict["year"])
-
-        record = colrev.record.record.Record(record_dict)
-        if Fields.LANGUAGE in record.data:
-            try:
-                record.data[Fields.LANGUAGE] = record.data[Fields.LANGUAGE][0]
-                self.language_service.unify_to_iso_639_3_language_codes(record=record)
-            except colrev_exceptions.InvalidLanguageCodeException:
-                del record.data[Fields.LANGUAGE]
-        return record
 
     def prep_link_md(
         self,
