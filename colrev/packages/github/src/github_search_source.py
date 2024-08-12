@@ -20,10 +20,10 @@ import colrev.ops.search
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
-import colrev.packages.github.src.utils as connector_utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.packages.github.src import record_transformer
 
 # pylint: disable=unused-argument
 
@@ -211,7 +211,7 @@ class GitHubSearchSource(JsonSchemaMixin):
         # Saving search results
         for repo in repositories:
 
-            record = connector_utils.repo_to_record(repo=repo)
+            record = record_transformer.repo_to_record(repo=repo)
             github_feed.add_update_record(record)
 
         github_feed.save()
@@ -268,7 +268,7 @@ class GitHubSearchSource(JsonSchemaMixin):
             g = Github(auth=auth)
 
             repo = g.get_repo(match.group(1) + "/" + match.group(2))
-            new_record = connector_utils.repo_to_record(repo=repo)
+            new_record = record_transformer.repo_to_record(repo=repo)
             record.data.update(new_record.data)
 
         return record
