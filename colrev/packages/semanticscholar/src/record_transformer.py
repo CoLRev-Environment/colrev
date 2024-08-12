@@ -7,6 +7,7 @@ import re
 from semanticscholar import Paper
 
 import colrev.exceptions as colrev_exceptions
+import colrev.record.record
 import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -199,16 +200,17 @@ def _remove_fields(*, record: dict) -> dict:
     return record_dict
 
 
-def s2_dict_to_record(*, item: dict) -> dict:
+def dict_to_record(*, item: dict) -> colrev.record.record.Record:
     """Convert a semanticscholar item to a record dict"""
 
     try:
         record_dict = _item_to_record(item=item)
         record_dict = _remove_fields(record=record_dict)
+        record = colrev.record.record.Record(record_dict)
 
     except (IndexError, KeyError) as exc:
         raise colrev_exceptions.RecordNotParsableException(
             f"Exception: Record not parsable: {exc}"
         ) from exc
 
-    return record_dict
+    return record
