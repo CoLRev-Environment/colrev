@@ -2,15 +2,12 @@
 """SearchSource: DBLP"""
 from __future__ import annotations
 
-import html
-import json
 import re
 import typing
 from dataclasses import dataclass
 from datetime import datetime
 from multiprocessing import Lock
 from pathlib import Path
-from sqlite3 import OperationalError
 
 import requests
 import zope.interface
@@ -25,12 +22,12 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
 import colrev.settings
-from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.packages.dblp.src import dblp_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -42,7 +39,6 @@ class DBLPSearchSource(JsonSchemaMixin):
     """DBLP API"""
 
     _api_url = "https://dblp.org/search/publ/api?q="
-    _api_url_venues = "https://dblp.org/search/venue/api?q="
     _START_YEAR = 1980
 
     source_identifier = "dblp_key"
@@ -88,32 +84,34 @@ class DBLPSearchSource(JsonSchemaMixin):
         settings: typing.Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
-        if settings:
-            # DBLP as a search_source
-            self.search_source = from_dict(
-                data_class=self.settings_class, data=settings
-            )
-        else:
-            # DBLP as an md-prep source
-            dblp_md_source_l = [
-                s
-                for s in self.review_manager.settings.sources
-                if s.filename == self._dblp_md_filename
-            ]
-            if dblp_md_source_l:
-                self.search_source = dblp_md_source_l[0]
-            else:
-                self.search_source = colrev.settings.SearchSource(
-                    endpoint=self.endpoint,
-                    filename=self._dblp_md_filename,
-                    search_type=SearchType.MD,
-                    search_parameters={},
-                    comment="",
-                )
+        self.search_source = self._get_search_source(settings)
         self.dblp_lock = Lock()
         self.origin_prefix = self.search_source.get_origin_prefix()
 
         _, self.email = self.review_manager.get_committer()
+
+    def _get_search_source(
+        self, settings: typing.Optional[dict]
+    ) -> colrev.settings.SearchSource:
+        if settings:
+            # DBLP as a search_source
+            return from_dict(data_class=self.settings_class, data=settings)
+        # DBLP as an md-prep source
+        dblp_md_source_l = [
+            s
+            for s in self.review_manager.settings.sources
+            if s.filename == self._dblp_md_filename
+        ]
+        if dblp_md_source_l:
+            return dblp_md_source_l[0]
+
+        return colrev.settings.SearchSource(
+            endpoint=self.endpoint,
+            filename=self._dblp_md_filename,
+            search_type=SearchType.MD,
+            search_parameters={},
+            comment="",
+        )
 
     def check_availability(
         self, *, source_operation: colrev.process.operation.Operation
@@ -136,11 +134,15 @@ class DBLPSearchSource(JsonSchemaMixin):
                 Fields.STATUS: RecordState.md_prepared,  # type: ignore
             }
 
-            query = "" + str(test_rec.get(Fields.TITLE, "")).replace("-", "_")
+            api = dblp_api.DBLPAPI(
+                email=self.email,
+                session=self.review_manager.get_cached_session(),
+                query=str(test_rec[Fields.TITLE]),
+                timeout=self._timeout,
+            )
 
-            dblp_record = self._retrieve_dblp_records(
-                query=query,
-            )[0]
+            retrieved_records = api.retrieve_records()
+            dblp_record = retrieved_records[0]
 
             if 0 != len(dblp_record.data):
                 assert dblp_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
@@ -151,209 +153,6 @@ class DBLPSearchSource(JsonSchemaMixin):
         except requests.exceptions.RequestException as exc:
             if not self.review_manager.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException("DBLP") from exc
-
-    def _get_dblp_venue(
-        self,
-        *,
-        session: requests.Session,
-        venue_string: str,
-        venue_type: str,
-    ) -> str:
-        # Note : venue_string should be like "behaviourIT"
-        # Note : journals that have been renamed seem to return the latest
-        # journal name. Example:
-        # https://dblp.org/db/journals/jasis/index.html
-        venue = venue_string
-        url = self._api_url_venues + venue_string.replace(" ", "+") + "&format=json"
-        headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
-        try:
-            ret = session.request("GET", url, headers=headers, timeout=self._timeout)
-            ret.raise_for_status()
-            data = json.loads(ret.text)
-            if "hit" not in data["result"]["hits"]:
-                return ""
-            hits = data["result"]["hits"]["hit"]
-            for hit in hits:
-                if hit["info"]["type"] != venue_type:
-                    continue
-                # pylint: disable=colrev-missed-constant-usage
-                if f"/{venue_string.lower()}/" in hit["info"]["url"].lower():
-                    venue = hit["info"]["venue"]
-                    break
-
-            venue = re.sub(r" \(.*?\)", "", venue)
-        except requests.exceptions.RequestException:
-            pass
-        return venue
-
-    def _dblp_json_set_type(self, *, item: dict, session: requests.Session) -> None:
-        lpos = item["key"].find("/") + 1
-        rpos = item["key"].rfind("/")
-        ven_key = item["key"][lpos:rpos]
-
-        if "corr" == ven_key:
-            item[Fields.ENTRYTYPE] = ENTRYTYPES.TECHREPORT
-
-        elif item["type"] == "Withdrawn Items":
-            if item["key"][:8] == "journals":
-                item["type"] = "Journal Articles"
-            if item["key"][:4] == "conf":
-                item["type"] = "Conference and Workshop Papers"
-            item["colrev.dblp.warning"] = "Withdrawn (according to DBLP)"
-
-        elif item["type"] == "Journal Articles":
-            item[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-            item[Fields.JOURNAL] = self._get_dblp_venue(
-                session=session,
-                venue_string=ven_key,
-                venue_type="Journal",
-            )
-        elif item["type"] == "Conference and Workshop Papers":
-            item[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
-            item[Fields.BOOKTITLE] = self._get_dblp_venue(
-                session=session,
-                venue_string=ven_key,
-                venue_type="Conference or Workshop",
-            )
-        elif item["type"] == "Informal and Other Publications":
-            item[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
-            item[Fields.BOOKTITLE] = item["venue"]
-        elif item["type"] == "Parts in Books or Collections":
-            item[Fields.ENTRYTYPE] = ENTRYTYPES.INBOOK
-            item[Fields.BOOKTITLE] = item["venue"]
-        else:
-            item[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
-            if item["type"] != "Editorship":
-                self.review_manager.logger.warning("DBLP: Unknown type: %s", item)
-
-    def _dblp_json_to_dict(
-        self,
-        *,
-        session: requests.Session,
-        item: dict,
-    ) -> dict:
-        # pylint: disable=too-many-branches
-        # To test in browser:
-        # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
-
-        self._dblp_json_set_type(item=item, session=session)
-        if "title" in item:
-            item[Fields.TITLE] = item["title"].rstrip(".").rstrip().replace("\n", " ")
-            item[Fields.TITLE] = re.sub(r"\s+", " ", item[Fields.TITLE])
-        if "pages" in item:
-            item[Fields.PAGES] = item[Fields.PAGES].replace("-", "--")
-        if "authors" in item:
-            if Fields.AUTHOR in item["authors"]:
-                if isinstance(item["authors"][Fields.AUTHOR], dict):
-                    author_string = item["authors"][Fields.AUTHOR]["text"]
-                else:
-                    authors_nodes = [
-                        author
-                        for author in item["authors"][Fields.AUTHOR]
-                        if isinstance(author, dict)
-                    ]
-                    authors = [x["text"] for x in authors_nodes if "text" in x]
-                    author_string = " and ".join(authors)
-                author_string = (
-                    colrev.record.record_prep.PrepRecord.format_author_field(
-                        author_string
-                    )
-                )
-                item[Fields.AUTHOR] = author_string
-
-        if "key" in item:
-            item["dblp_key"] = "https://dblp.org/rec/" + item["key"]
-
-        if Fields.DOI in item:
-            item[Fields.DOI] = item[Fields.DOI].upper()
-        if "ee" in item:
-            if not any(
-                x in item["ee"] for x in ["https://doi.org", "https://dblp.org"]
-            ):
-                item[Fields.URL] = item["ee"]
-        if Fields.URL in item:
-            if "https://dblp.org" in item[Fields.URL]:
-                del item[Fields.URL]
-
-        item = {
-            k: v
-            for k, v in item.items()
-            if k not in ["venue", "type", "access", "key", "ee", "authors"]
-        }
-        for key, value in item.items():
-            item[key] = html.unescape(value).replace("{", "").replace("}", "")
-
-        return item
-
-    def _retrieve_dblp_records(
-        self,
-        *,
-        query: typing.Optional[str] = None,
-        url: typing.Optional[str] = None,
-    ) -> list:
-        """Retrieve records from DBLP based on a query"""
-
-        # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
-
-        try:
-            assert query is not None or url is not None
-            session = self.review_manager.get_cached_session()
-            items = []
-
-            if query:
-                query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
-                url = self._api_url + query.replace(" ", "+") + "&format=json"
-            if url is not None and not url.startswith("http"):
-                url = f"https://dblp.org/search/publ/api?q={url}"
-
-            headers = {"user-agent": f"{__name__}  (mailto:{self.email})"}
-            # review_manager.logger.debug(url)
-            ret = session.request(
-                "GET", url, headers=headers, timeout=self._timeout  # type: ignore
-            )
-            ret.raise_for_status()
-            if ret.status_code == 500:
-                return []
-
-            data = json.loads(ret.text)
-            if "hits" not in data["result"]:
-                return []
-            if "hit" not in data["result"]["hits"]:
-                return []
-            hits = data["result"]["hits"]["hit"]
-            items = [hit["info"] for hit in hits]
-            dblp_dicts = [
-                self._dblp_json_to_dict(
-                    session=session,
-                    item=item,
-                )
-                for item in items
-            ]
-            retrieved_records = [
-                colrev.record.record_prep.PrepRecord(dblp_dict)
-                for dblp_dict in dblp_dicts
-            ]
-            for retrieved_record in retrieved_records:
-                # Note : DBLP provides number-of-pages (instead of pages start-end)
-                if Fields.PAGES in retrieved_record.data:
-                    del retrieved_record.data[Fields.PAGES]
-                retrieved_record.add_provenance_all(
-                    source=retrieved_record.data["dblp_key"]
-                )
-
-        # pylint: disable=duplicate-code
-        except OperationalError as exc:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                "sqlite, required for requests CachedSession "
-                "(possibly caused by concurrent operations)"
-            ) from exc
-        except (requests.exceptions.ReadTimeout, requests.exceptions.HTTPError) as exc:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                "requests timed out "
-                "(possibly because the DBLP service is temporarily not available)"
-            ) from exc
-
-        return retrieved_records
 
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
@@ -391,16 +190,22 @@ class DBLPSearchSource(JsonSchemaMixin):
         dblp_feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
 
+        api = dblp_api.DBLPAPI(
+            email=self.email,
+            session=self.review_manager.get_cached_session(),
+            query="",
+            timeout=self._timeout,
+        )
+
         for feed_record_dict in dblp_feed.feed_records.values():
-            feed_record = colrev.record.record.Record(feed_record_dict)
-            query = "" + feed_record.data.get(Fields.TITLE, "").replace("-", "_")
-            for retrieved_record in self._retrieve_dblp_records(
-                query=query,
-            ):
+            if Fields.TITLE not in feed_record_dict:
+                continue
+            api.set_url_from_query(feed_record_dict[Fields.TITLE])
+            for retrieved_record in api.retrieve_records():
                 try:
                     if (
                         retrieved_record.data["dblp_key"]
-                        != feed_record.data["dblp_key"]
+                        != feed_record_dict["dblp_key"]
                     ):
                         continue
                     if retrieved_record.data.get("type", "") == "Editorship":
@@ -415,19 +220,27 @@ class DBLPSearchSource(JsonSchemaMixin):
     def _run_param_search_year_batch(
         self,
         *,
-        query: str,
         dblp_feed: colrev.ops.search_api_feed.SearchAPIFeed,
+        year: int,
     ) -> None:
         batch_size_cumulative = 0
         batch_size = 250
+        api = dblp_api.DBLPAPI(
+            email=self.email,
+            session=self.review_manager.get_cached_session(),
+            url="",
+            timeout=self._timeout,
+        )
         while True:
-            url = (
-                query.replace(" ", "+")
-                + f"&format=json&h={batch_size}&f={batch_size_cumulative}"
-            )
             batch_size_cumulative += batch_size
+            api.url = self._get_url(
+                year=year,
+                batch_size=batch_size,
+                batch_size_cumulative=batch_size_cumulative,
+            )
+
             retrieved = False
-            for retrieved_record in self._retrieve_dblp_records(url=url):
+            for retrieved_record in api.retrieve_records():
                 try:
                     retrieved = True
 
@@ -452,7 +265,9 @@ class DBLPSearchSource(JsonSchemaMixin):
             if not retrieved:
                 break
 
-    def _get_query(self, *, year: int) -> str:
+    def _get_url(
+        self, *, year: int, batch_size: int, batch_size_cumulative: int
+    ) -> str:
         if "scope" in self.search_source.search_parameters:
             # Note : journal_abbreviated is the abbreviated venue_key
             query = (
@@ -464,7 +279,10 @@ class DBLPSearchSource(JsonSchemaMixin):
             # query = params['scope']["venue_key"] + "+" + str(year)
         elif "query" in self.search_source.search_parameters:
             query = self.search_source.search_parameters["query"] + "+" + str(year)
-        return query
+        return (
+            query.replace(" ", "+")
+            + f"&format=json&h={batch_size}&f={batch_size_cumulative}"
+        )
 
     def _run_api_search(
         self,
@@ -479,10 +297,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
             for year in range(start, datetime.now().year + 1):
                 self.review_manager.logger.debug(f"Retrieve year {year}")
-                self._run_param_search_year_batch(
-                    query=self._get_query(year=year),
-                    dblp_feed=dblp_feed,
-                )
+                self._run_param_search_year_batch(dblp_feed=dblp_feed, year=year)
             dblp_feed.save()
 
         except (requests.exceptions.RequestException,):
@@ -644,17 +459,25 @@ class DBLPSearchSource(JsonSchemaMixin):
         if any(self.origin_prefix in o for o in record.data[Fields.ORIGIN]):
             # Already linked to a crossref record
             return record
+        if Fields.TITLE not in record.data:
+            return record
 
         self._timeout = timeout
 
         try:
-            # Note: queries combining title+author/journal do not seem to work any more
-            query = "" + record.data.get(Fields.TITLE, "").replace("-", "_")
 
-            ret = self._retrieve_dblp_records(query=query)
-            if not ret:
+            # Note: queries combining title+author/journal do not seem to work any more
+            api = dblp_api.DBLPAPI(
+                email=self.email,
+                session=self.review_manager.get_cached_session(),
+                query=record.data[Fields.TITLE],
+                timeout=self._timeout,
+            )
+
+            retrieved_records = api.retrieve_records()
+            if not retrieved_records:
                 return record
-            retrieved_record = ret[0]
+            retrieved_record = retrieved_records[0]
             if Fields.DBLP_KEY in record.data:
                 if retrieved_record.data["dblp_key"] != record.data[Fields.DBLP_KEY]:
                     return record
@@ -698,7 +521,6 @@ class DBLPSearchSource(JsonSchemaMixin):
 
                 dblp_feed.save()
                 self.dblp_lock.release()
-                return record
 
             except (colrev_exceptions.NotFeedIdentifiableException,):
                 self.dblp_lock.release()
