@@ -16,7 +16,7 @@ class OSFApiQuery:
     base_url = "https://api.osf.io/v2/nodes/?"
     fields = ["id", "type", "title", "year", "description", "tags", "date_created"]
 
-    def __init__(self, parameters: dict, *, api_key: str) -> None:
+    def __init__(self, *, parameters: dict, api_key: str) -> None:
         self.api_key = api_key
         self.headers = {"Authorization": f"Bearer {self.api_key}"}
         self.params: typing.Dict[str, str] = {}
