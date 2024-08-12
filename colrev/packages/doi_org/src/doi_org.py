@@ -11,12 +11,12 @@ from bs4 import BeautifulSoup
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_manager
-import colrev.packages.crossref.src.utils as connector_utils
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
+from colrev.packages.crossref.src import record_transformer
 
 # Note: not (yet) implemented as a full search_source
 # (including SearchSourceInterface, packages_endpoints.json)
@@ -71,7 +71,7 @@ class DOIConnector:
             retrieved_json = json.loads(ret.text)
             language_service = colrev.env.language_service.LanguageService()
             language_service.unify_to_iso_639_3_language_codes(record=record)
-            retrieved_record = connector_utils.json_to_record(item=retrieved_json)
+            retrieved_record = record_transformer.json_to_record(item=retrieved_json)
             retrieved_record.add_provenance_all(source=url)
             record.merge(retrieved_record, default_source=url)
             record.set_masterdata_complete(
