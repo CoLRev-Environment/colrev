@@ -47,51 +47,6 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         "api_key": "packages.search_source.colrev.ieee.api_key",
     }
 
-    # pylint: disable=colrev-missed-constant-usage
-    API_FIELDS = [
-        "abstract",
-        "author_url",
-        "accessType",
-        "article_number",
-        "author_order",
-        "author_terms",
-        "affiliation",
-        "citing_paper_count",
-        "conference_dates",
-        "conference_location",
-        "content_type",
-        "doi",
-        "publisher",
-        "pubtype",
-        "d-year",
-        "end_page",
-        "facet",
-        "full_name",
-        "html_url",
-        "ieee_terms",
-        "isbn",
-        "issn",
-        "issue",
-        "pdf_url",
-        "publication_year",
-        "publication_title",
-        "standard_number",
-        "standard_status",
-        "start_page",
-        "title",
-        "totalfound",
-        "totalsearched",
-        "volume",
-    ]
-
-    FIELD_MAPPING = {
-        "citing_paper_count": "citations",
-        "publication_year": Fields.YEAR,
-        "html_url": Fields.URL,
-        "pdf_url": Fields.FULLTEXT,
-        "issue": Fields.NUMBER,
-    }
-
     def __init__(
         self,
         *,
@@ -153,7 +108,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 search_source = operation.create_api_source(endpoint=cls.endpoint)
 
             # pylint: disable=colrev-missed-constant-usage
-            if (
+            elif (
                 "https://ieeexploreapi.ieee.org/api/v1/search/articles?"
                 in params_dict["url"]
             ):
@@ -227,104 +182,25 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             )
         return api_key
 
-    # pylint: disable=colrev-missed-constant-usage
-    def _run_api_query(self) -> colrev.packages.ieee.src.ieee_api.XPLORE:
-        api_key = self._get_api_key()
-        query = colrev.packages.ieee.src.ieee_api.XPLORE(api_key)
-        query.dataType("json")
-        query.dataFormat("object")
-        query.maximumResults(50000)
-        query.usingOpenAccess = False
-
-        parameter_methods = {}
-        parameter_methods["article_number"] = query.articleNumber
-        parameter_methods["doi"] = query.doi
-        parameter_methods["author"] = query.authorText
-        parameter_methods["isbn"] = query.isbn
-        parameter_methods["issn"] = query.issn
-        parameter_methods["publication_year"] = query.publicationYear
-        parameter_methods["queryText"] = query.queryText
-        parameter_methods["parameter"] = query.queryText
-
-        parameters = self.search_source.search_parameters
-        for key, value in parameters.items():
-            if key in parameter_methods:
-                method = parameter_methods[key]
-                method(value)
-        return query
-
     def _run_api_search(
         self, ieee_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
-        query = self._run_api_query()
-        query.startRecord = 1
-        response = query.callAPI()
-        while "articles" in response:
-            articles = response["articles"]
+        api_key = self._get_api_key()
 
-            for article in articles:
+        api = colrev.packages.ieee.src.ieee_api.XPLORE(
+            parameters=self.search_source.search_parameters, api_key=api_key
+        )
+        while True:
+            retrieved_records = api.get_records()
+            if not retrieved_records:
+                break
 
-                record_dict = self._create_record_dict(article)
-                record = colrev.record.record.Record(record_dict)
+            for retrieved_record in retrieved_records:
+                ieee_feed.add_update_record(retrieved_record)
 
-                ieee_feed.add_update_record(record)
-
-            query.startRecord += 200
-            response = query.callAPI()
+            api.startRecord += api.resultSetMax
 
         ieee_feed.save()
-
-    def _update_special_case_fields(self, *, record_dict: dict, article: dict) -> None:
-        if "start_page" in article:
-            record_dict[Fields.PAGES] = article.pop("start_page")
-            if "end_page" in article:
-                record_dict[Fields.PAGES] += "--" + article.pop("end_page")
-
-        if "authors" in article and "authors" in article["authors"]:
-            author_list = []
-            for author in article["authors"]["authors"]:
-                author_list.append(author["full_name"])
-            record_dict[Fields.AUTHOR] = (
-                colrev.record.record_prep.PrepRecord.format_author_field(
-                    " and ".join(author_list)
-                )
-            )
-
-        if (
-            "index_terms" in article
-            and "author_terms" in article["index_terms"]
-            and "terms" in article["index_terms"]["author_terms"]
-        ):
-            record_dict[Fields.KEYWORDS] = ", ".join(
-                article["index_terms"]["author_terms"]["terms"]
-            )
-
-    def _create_record_dict(self, article: dict) -> dict:
-        record_dict = {Fields.ID: article["article_number"]}
-        # self.review_manager.p_printer.pprint(article)
-
-        if article["content_type"] == "Conferences":
-            record_dict[Fields.ENTRYTYPE] = "inproceedings"
-            if "publication_title" in article:
-                record_dict[Fields.BOOKTITLE] = article.pop("publication_title")
-        else:
-            record_dict[Fields.ENTRYTYPE] = "article"
-            if "publication_title" in article:
-                record_dict[Fields.JOURNAL] = article.pop("publication_title")
-
-        for field in self.API_FIELDS:
-            if article.get(field) is None:
-                continue
-            record_dict[field] = str(article.get(field))
-
-        for api_field, rec_field in self.FIELD_MAPPING.items():
-            if api_field not in record_dict:
-                continue
-            record_dict[rec_field] = record_dict.pop(api_field)
-
-        self._update_special_case_fields(record_dict=record_dict, article=article)
-
-        return record_dict
 
     def prep_link_md(
         self,

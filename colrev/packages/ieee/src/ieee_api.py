@@ -1,33 +1,112 @@
 #! /usr/bin/env python
-"""SDK for IEEE Xplore API"""
+"""IEEE Xplore API"""
 import json
 import math
 import urllib.parse
 import urllib.request
-import xml.etree.ElementTree as ET
+
+import colrev.record.record
+from colrev.constants import Fields
 
 # pylint: disable=invalid-name
 # pylint: disable=too-many-public-methods
+# pylint: disable=colrev-missed-constant-usage
 
 
 class XPLORE:
-    """XPLORE SDK"""
+    """XPLORE API class"""
 
     # pylint: disable=too-many-instance-attributes
-    # API endpoint (all non-Open Access)
-    endPoint = "http://ieeexploreapi.ieee.org/api/v1/search/articles"
+    # API ENDPOINT (all non-Open Access)
+    ENDPOINT = "http://ieeexploreapi.ieee.org/api/v1/search/articles"
 
-    # Open Access Document endpoint
-    openAccessEndPoint = "http://ieeexploreapi.ieee.org/api/v1/search/document/"
+    # Open Access Document ENDPOINT
+    OPEN_ACCESS_ENDPOINT = "http://ieeexploreapi.ieee.org/api/v1/search/document/"
 
-    def __init__(self, apiKey: str) -> None:
+    # pylint: disable=colrev-missed-constant-usage
+    API_FIELDS = [
+        "abstract",
+        "author_url",
+        "accessType",
+        "article_number",
+        "author_order",
+        "author_terms",
+        "affiliation",
+        "citing_paper_count",
+        "conference_dates",
+        "conference_location",
+        "content_type",
+        "doi",
+        "publisher",
+        "pubtype",
+        "d-year",
+        "end_page",
+        "facet",
+        "full_name",
+        "html_url",
+        "ieee_terms",
+        "isbn",
+        "issn",
+        "issue",
+        "pdf_url",
+        "publication_year",
+        "publication_title",
+        "standard_number",
+        "standard_status",
+        "start_page",
+        "title",
+        "totalfound",
+        "totalsearched",
+        "volume",
+    ]
+
+    FIELD_MAPPING = {
+        "citing_paper_count": "citations",
+        "publication_year": Fields.YEAR,
+        "html_url": Fields.URL,
+        "pdf_url": Fields.FULLTEXT,
+        "issue": Fields.NUMBER,
+    }
+
+    # array of permitted search fields for _search_field() method
+    ALLOWED_SEARCH_FIELDS = [
+        "abstract",
+        "affiliation",
+        "article_number",
+        "article_title",
+        "author",
+        "boolean_text",
+        "content_type",
+        "d-au",
+        "d-pubtype",
+        "d-publisher",
+        "d-year",
+        "doi",
+        "end_year",
+        "facet",
+        "index_terms",
+        "isbn",
+        "issn",
+        "is_number",
+        "meta_data",
+        "open_access",
+        "publication_number",
+        "publication_title",
+        "publication_year",
+        "publisher",
+        "querytext",
+        "start_year",
+        "thesaurus_terms",
+    ]
+
+    def __init__(self, *, parameters: dict, api_key: str) -> None:
         # API key
-        self.apiKey = apiKey
+        self.apiKey = api_key
 
         # flag that some search criteria has been provided
         self.queryProvided = False
 
-        # flag for Open Access, which changes endpoint in use and limits results to just Open Access
+        # flag for Open Access, which changes ENDPOINT in use and limits results to just Open Access
         self.usingOpenAccess = False
 
         # flag that article number has been provided, which overrides all other search criteria
@@ -41,12 +120,6 @@ class XPLORE:
 
         # flag that a facet has been applied, in the event that multiple facets are passed
         self.facetApplied = False
-
-        # data type for results; default is json (other option is xml)
-        self.outputType = "json"
-
-        # data format for results; default is raw (returned string); other option is object
-        self.outputDataFormat = "raw"
 
         # default of 25 results returned
         self.resultSetMax = 25
@@ -63,67 +136,22 @@ class XPLORE:
         # field name that is being used for sorting
         self.sortField = "article_title"
 
-        # array of permitted search fields for searchField() method
-        self.allowedSearchFields = [
-            "abstract",
-            "affiliation",
-            "article_number",
-            "article_title",
-            "author",
-            "boolean_text",
-            "content_type",
-            "d-au",
-            "d-pubtype",
-            "d-publisher",
-            "d-year",
-            "doi",
-            "end_year",
-            "facet",
-            "index_terms",
-            "isbn",
-            "issn",
-            "is_number",
-            "meta_data",
-            "open_access",
-            "publication_number",
-            "publication_title",
-            "publication_year",
-            "publisher",
-            "querytext",
-            "start_year",
-            "thesaurus_terms",
-        ]
-
         # dictionary of all search parameters in use and their values
         self.parameters: dict = {}
 
         # dictionary of all filters in use and their values
         self.filters: dict = {}
 
-    # ensuring == can be used reliably
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
-        return False
+        parameter_methods = {}
+        parameter_methods["query"] = self.queryText
+        parameter_methods["parameter"] = self.queryText
 
-    # ensuring != can be used reliably
-    def __ne__(self, other: object) -> bool:
-        return not self.__eq__(other)
-
-    def dataType(self, outputType: str) -> None:
-        """set the data type for the API output
-        string outputType   Format for the returned result (JSON, XML)"""
-
-        outputType = outputType.strip().lower()
-        self.outputType = outputType
-
-    def dataFormat(self, outputDataFormat: str) -> None:
-        """set the data format for the API output
-        string outputDataFormat   Data structure for the returned result (raw string or object)
-        """
-
-        outputDataFormat = outputDataFormat.strip().lower()
-        self.outputDataFormat = outputDataFormat
+        for key, value in parameters.items():
+            if key in parameter_methods:
+                method = parameter_methods[key]
+                method(value)
+            else:
+                self._search_field(key, value)
 
     def startingResult(self, start: int) -> None:
         """Set the start position in the results
@@ -162,102 +190,30 @@ class XPLORE:
         self.sortField = field
         self.sortOrder = order
 
-    def searchField(self, field: str, value: str) -> None:
+    def queryText(self, value: str) -> None:
+        """Text to query across metadata fields, abstract and document text"""
+        self._add_parameter("querytext", value)
+
+    def articleNumber(self, value: str) -> None:
+        """Article number to query"""
+        self._add_parameter("article_number", value)
+
+    def _search_field(self, field: str, value: str) -> None:
         """Shortcut method for assigning search parameters and values
         string field   Field used for searching
         string value   Text to query"""
 
         field = field.strip().lower()
-        if field in self.allowedSearchFields:
-            self.addParameter(field, value)
+        if field in self.ALLOWED_SEARCH_FIELDS:
+            self._add_parameter(field, value)
         else:
             print("Searches against field " + field + " are not supported")
 
-    def abstractText(self, value: str) -> None:
-        """Abstract text to query"""
-        self.addParameter("abstract", value)
-
-    def affiliationText(self, value: str) -> None:
-        """Affiliation text to query"""
-        self.addParameter("affiliation", value)
-
-    def articleNumber(self, value: str) -> None:
-        """Article number to query"""
-        self.addParameter("article_number", value)
-
-    def articleTitle(self, value: str) -> None:
-        """Article title to query"""
-        self.addParameter("article_title", value)
-
-    def authorText(self, value: str) -> None:
-        """Author to query"""
-        self.addParameter("author", value)
-
-    def authorFacetText(self, value: str) -> None:
-        """Author Facet text to query"""
-        self.addParameter("d-au", value)
-
-    def booleanText(self, value: str) -> None:
-        """Value(s) to use in the boolean query"""
-        self.addParameter("boolean_text", value)
-
-    def contentTypeFacetText(self, value: str) -> None:
-        """Content Type Facet text to query"""
-        self.addParameter("d-pubtype", value)
-
-    def doi(self, value: str) -> None:
-        """DOI (Digital Object Identifier) to query"""
-        self.addParameter("doi", value)
-
     def facetText(self, value: str) -> None:
         """Facet text to query"""
-        self.addParameter("facet", value)
+        self._add_parameter("facet", value)
 
-    def indexTerms(self, value: str) -> None:
-        """Author Keywords, IEEE Terms, and Mesh Terms to query"""
-        self.addParameter("index_terms", value)
-
-    def isbn(self, value: str) -> None:
-        """ISBN (International Standard Book Number) to query"""
-        self.addParameter("isbn", value)
-
-    def issn(self, value: str) -> None:
-        """ISSN (International Standard Serial number) to query"""
-        self.addParameter("issn", value)
-
-    def issueNumber(self, value: str) -> None:
-        """Issue number to query"""
-        self.addParameter("is_number", value)
-
-    def metaDataText(self, value: str) -> None:
-        """Text to query across metadata fields and the abstract"""
-        self.addParameter("meta_data", value)
-
-    def publicationFacetText(self, value: str) -> None:
-        """Publication Facet text to query"""
-        self.addParameter("d-year", value)
-
-    def publisherFacetText(self, value: str) -> None:
-        """Publisher Facet text to query"""
-        self.addParameter("d-publisher", value)
-
-    def publicationTitle(self, value: str) -> None:
-        """Publication title to query"""
-        self.addParameter("publication_title", value)
-
-    def publicationYear(self, value: str) -> None:
-        """Publication year to query"""
-        self.addParameter("publication_year", value)
-
-    def queryText(self, value: str) -> None:
-        """Text to query across metadata fields, abstract and document text"""
-        self.addParameter("querytext", value)
-
-    def thesaurusTerms(self, value: str) -> None:
-        """Thesaurus terms (IEEE Terms) to query"""
-        self.addParameter("thesaurus_terms", value)
-
-    def addParameter(self, parameter: str, value: str) -> None:
+    def _add_parameter(self, parameter: str, value: str) -> None:
         """Add parameter"""
         value = value.strip()
 
@@ -283,41 +239,24 @@ class XPLORE:
         self.queryProvided = True
         self.articleNumber(article)
 
-    def callAPI(self) -> dict:
-        """Calls the API
-        string debugMode  If this mode is on (True) then output query and not data
-        return either raw result string, XML or JSON object, or array"""
-
-        if self.usingOpenAccess is True:
-            ret = self.buildOpenAccessQuery()
-
-        else:
-            ret = self.buildQuery()
-
-        if self.queryProvided is False:
-            print("No search criteria provided")
-
-        data = self.queryAPI(ret)
-        formattedData = self.formatData(data)
-        return formattedData
-
-    def buildOpenAccessQuery(self) -> str:
+    def _build_open_access_query(self) -> str:
         """Creates the URL for the Open Access Document API call
         return string: full URL for querying the API"""
-        url = self.openAccessEndPoint
+
+        url = self.OPEN_ACCESS_ENDPOINT
         url += str(self.parameters["article_number"]) + "/fulltext"
         url += "?apikey=" + str(self.apiKey)
-        url += "&format=" + str(self.outputType)
+        url += "&format=json"
 
         return url
 
-    def buildQuery(self) -> str:
+    def _build_query(self) -> str:
         """Creates the URL for the non-Open Access Document API call
         return string: full URL for querying the API"""
-        url = self.endPoint
 
+        url = self.ENDPOINT
         url += "?apikey=" + str(self.apiKey)
-        url += "&format=" + str(self.outputType)
+        url += "&format=json"
         url += "&max_records=" + str(self.resultSetMax)
         url += "&start_record=" + str(self.startRecord)
         url += "&sort_order=" + str(self.sortOrder)
@@ -351,7 +290,7 @@ class XPLORE:
 
         return url
 
-    def queryAPI(self, url: str) -> str:
+    def _query_api(self, url: str) -> str:
         """Creates the URL for the API call
         string url  Full URL to pass to API
         return string: Results from API"""
@@ -359,19 +298,78 @@ class XPLORE:
             content = con.read()
         return content
 
-    def formatData(self, data: str):  # type: ignore
-        """Formats the data returned by the API
-        string data    Result string from API"""
+    def _update_special_case_fields(self, *, record_dict: dict, article: dict) -> None:
+        if "start_page" in article:
+            record_dict[Fields.PAGES] = article.pop("start_page")
+            if "end_page" in article:
+                record_dict[Fields.PAGES] += "--" + article.pop("end_page")
 
-        if self.outputDataFormat == "raw":
-            return data
+        if "authors" in article and "authors" in article["authors"]:
+            author_list = []
+            for author in article["authors"]["authors"]:
+                author_list.append(author["full_name"])
+            record_dict[Fields.AUTHOR] = (
+                colrev.record.record_prep.PrepRecord.format_author_field(
+                    " and ".join(author_list)
+                )
+            )
 
-        if self.outputDataFormat == "object":
-            if self.outputType == "xml":
-                obj = ET.ElementTree(ET.fromstring(data))
-                return obj
+        if (
+            "index_terms" in article
+            and "author_terms" in article["index_terms"]
+            and "terms" in article["index_terms"]["author_terms"]
+        ):
+            record_dict[Fields.KEYWORDS] = ", ".join(
+                article["index_terms"]["author_terms"]["terms"]
+            )
 
-            obj = json.loads(data)
-            return obj
+    def _create_record_dict(self, article: dict) -> dict:
+        record_dict = {Fields.ID: article["article_number"]}
+        # self.review_manager.p_printer.pprint(article)
 
-        return data
+        if article["content_type"] == "Conferences":
+            record_dict[Fields.ENTRYTYPE] = "inproceedings"
+            if "publication_title" in article:
+                record_dict[Fields.BOOKTITLE] = article.pop("publication_title")
+        else:
+            record_dict[Fields.ENTRYTYPE] = "article"
+            if "publication_title" in article:
+                record_dict[Fields.JOURNAL] = article.pop("publication_title")
+
+        for field in self.API_FIELDS:
+            if article.get(field) is None:
+                continue
+            record_dict[field] = str(article.get(field))
+
+        for api_field, rec_field in self.FIELD_MAPPING.items():
+            if api_field not in record_dict:
+                continue
+            record_dict[rec_field] = record_dict.pop(api_field)
+
+        self._update_special_case_fields(record_dict=record_dict, article=article)
+
+        return record_dict
+
+    def get_records(self) -> list:
+        """Calls the API to receive the records"""
+
+        if self.usingOpenAccess is True:
+            url = self._build_open_access_query()
+
+        else:
+            url = self._build_query()
+
+        if self.queryProvided is False:
+            print("No search criteria provided")
+
+        data = self._query_api(url)
+        formattedData = json.loads(data)
+        if "articles" not in formattedData:
+            return []
+        articles = formattedData["articles"]
+        records = []
+        for article in articles:
+            record_dict = self._create_record_dict(article)
+            record = colrev.record.record.Record(record_dict)
+            records.append(record)
+        return records
