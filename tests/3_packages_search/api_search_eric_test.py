@@ -2,36 +2,16 @@
 """Test the eric SearchSource"""
 from pathlib import Path
 
-import pytest
 import requests_mock
 
 import colrev.ops.prep
 import colrev.packages.eric.src.eric
-from colrev.constants import SearchType
+from colrev.packages.eric.src import eric_api
 
 # pylint: disable=line-too-long
 
 
-@pytest.fixture(scope="package", name="eric_search_source")
-def fixture_eric_search_source(
-    prep_operation: colrev.ops.prep.Prep,
-) -> colrev.packages.eric.src.eric.ERICSearchSource:
-    """Fixture for eric SearchSource"""
-    settings = {
-        "endpoint": "colrev.eric",
-        "filename": Path("data/search/eric.bib"),
-        "search_type": SearchType.DB,
-        "search_parameters": {"query": "blockchain"},
-        "comment": "",
-    }
-    instance = colrev.packages.eric.src.eric.ERICSearchSource(
-        source_operation=prep_operation, settings=settings
-    )
-    return instance
-
-
 def test_eric(  # type: ignore
-    eric_search_source: colrev.packages.eric.src.eric.ERICSearchSource,
     helpers,
 ) -> None:
     """Test eric"""
@@ -79,5 +59,9 @@ def test_eric(  # type: ignore
             content=json_str.encode("utf-8"),
         )
 
-        for actual_record in eric_search_source.get_query_return():
+        settings = {"query": "blockchain"}
+
+        api = eric_api.ERICAPI(params=settings)
+        for actual_record in api.get_query_return():
+
             assert actual_record == expected_record
