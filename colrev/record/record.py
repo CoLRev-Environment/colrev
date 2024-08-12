@@ -479,7 +479,7 @@ class Record:
         return defects
 
     def has_quality_defects(self, *, key: str = "") -> bool:
-        """Check whether a record has quality defects"""
+        """Check whether a record (or specific field/key) has quality defects"""
         if key != "":
             if key in self.data.get(Fields.MD_PROV, {}):
                 note = self.data[Fields.MD_PROV][key]["note"]

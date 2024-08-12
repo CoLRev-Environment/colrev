@@ -194,7 +194,10 @@ class Search(colrev.process.operation.Operation):
             + Colors.END
         )
         input("Press enter to continue")
-        self.review_manager.dataset.add_changes(source.filename)
+        if source.filename.is_file():
+            self.review_manager.dataset.add_changes(source.filename)
+        else:
+            print("Search results not found.")
 
     def _get_search_sources(
         self, *, selection_str: typing.Optional[str] = None

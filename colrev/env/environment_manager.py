@@ -118,7 +118,7 @@ class EnvironmentManager:
                     break
         self.environment_registry["local_index"]["repos"].append(new_record)
         self.save_environment_registry(self.environment_registry)
-        logger.info(f"Registered path ({path_to_register})")
+        logger.info("Registered path (%s)", path_to_register)
 
     @classmethod
     def get_name_mail_from_git(cls) -> typing.Tuple[str, str]:  # pragma: no cover

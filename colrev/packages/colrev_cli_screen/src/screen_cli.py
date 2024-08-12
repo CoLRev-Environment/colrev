@@ -64,7 +64,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 f"({color}{criterion_settings.criterion_type}{Colors.END}): "
                 f"{criterion_settings.explanation}"
             )
-            if criterion_settings.comment is not None:
+            if criterion_settings.comment:
                 print(f"   {criterion_settings.comment}")
 
     def _screen_with_criteria_print_overall_decision(
@@ -81,6 +81,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 f"{Colors.RED}exclude{Colors.END}"
             )
 
+    # pylint: disable=too-many-branches
     def _screen_record_with_criteria(
         self,
         record: colrev.record.record.Record,
@@ -194,7 +195,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         if "abstract" in record.data:
             print()
             print(record.data["abstract"])
-
+        print()
         if self.criteria_available:
             ret = self._screen_record_with_criteria(record)
 

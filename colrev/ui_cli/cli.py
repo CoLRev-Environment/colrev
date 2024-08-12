@@ -73,7 +73,7 @@ click_completion.core.startswith = _custom_startswith
 click_completion.init()
 
 
-def _add_interactively(add: str, endpoint_type: EndpointType) -> str:
+def _add_endpoint_interactively(add: str, endpoint_type: EndpointType) -> str:
     """Add package interactively"""
     if add != "add_interactively":
         return add
@@ -87,6 +87,46 @@ def _add_interactively(add: str, endpoint_type: EndpointType) -> str:
     ]
     answers = inquirer.prompt(questions)
     return answers["package"]
+
+
+def _add_screen_criterion_interactively(
+    add: str, screen_operation: colrev.ops.screen.Screen
+) -> None:
+    """Add screening criterion interactively"""
+    if add != "add_interactively":
+        assert add.count(",") == 2
+        (
+            criterion_name,
+            criterion_type_str,
+            criterion_explanation,
+        ) = add.split(",")
+
+    else:
+
+        questions = [
+            inquirer.Text(
+                "criterion_name", message="Criterion name (e.g., empirical study)"
+            ),
+            inquirer.Text("criterion_explanation", message="Criterion explanation"),
+            inquirer.List(
+                "criterion_type",
+                message="Criterion type",
+                choices=[x.name for x in ScreenCriterionType],
+            ),
+        ]
+        answers = inquirer.prompt(questions)
+        criterion_name = answers["criterion_name"]
+        criterion_explanation = answers["criterion_explanation"]
+        criterion_type_str = answers["criterion_type"]
+
+    criterion_type = ScreenCriterionType[criterion_type_str]
+    criterion = colrev.settings.ScreenCriterion(
+        explanation=criterion_explanation,
+        criterion_type=criterion_type,
+        comment="",
+    )
+
+    screen_operation.add_criterion(criterion_name=criterion_name, criterion=criterion)
 
 
 def get_search_files() -> list:
@@ -242,10 +282,10 @@ def shell(
     click_repl.repl(ctx, prompt_kwargs=prompt_kwargs)
 
 
-@main.command(help_priority=100)
+@main.command(name="exit", help_priority=100)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
-def exit(
+def exit_command(
     ctx: click.core.Context,
 ) -> None:
     """Starts a interactive terminal"""
@@ -300,7 +340,7 @@ def init(
     """
     import colrev.ops.init
 
-    review_type = _add_interactively(review_type, EndpointType.review_type)
+    review_type = _add_endpoint_interactively(review_type, EndpointType.review_type)
     colrev.ops.init.Initializer(
         review_type=review_type,
         target_path=Path.cwd(),
@@ -541,7 +581,7 @@ def search(
         # pylint: disable=reimported
         import colrev.ui_cli.add_package_to_settings
 
-        add = _add_interactively(add, EndpointType.search_source)
+        add = _add_endpoint_interactively(add, EndpointType.search_source)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=search_operation,
@@ -758,7 +798,7 @@ def prep(
             )
             return
         if add:
-            add = _add_interactively(add, EndpointType.prep)
+            add = _add_endpoint_interactively(add, EndpointType.prep)
             colrev.ui_cli.add_package_to_settings.add_package_to_settings(
                 PACKAGE_MANAGER,
                 operation=prep_operation,
@@ -847,7 +887,7 @@ def prep_man(
         return
 
     if add:
-        add = _add_interactively(add, EndpointType.prep_man)
+        add = _add_endpoint_interactively(add, EndpointType.prep_man)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=prep_man_operation,
@@ -962,7 +1002,7 @@ def dedupe(
     )
 
     if add:
-        add = _add_interactively(add, EndpointType.dedupe)
+        add = _add_endpoint_interactively(add, EndpointType.dedupe)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=dedupe_operation,
@@ -1155,7 +1195,7 @@ def prescreen(
         prescreen_operation.setup_custom_script()
         print("Activated custom_prescreen_script.py.")
     elif add:
-        add = _add_interactively(add, EndpointType.prescreen)
+        add = _add_endpoint_interactively(add, EndpointType.prescreen)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=prescreen_operation,
@@ -1209,9 +1249,11 @@ def prescreen(
 @click.option(
     "-ac",
     "--add_criterion",
-    type=str,
     help="Add a screening criterion. "
     "Format: -ac 'criterion_name,criterion explanation'",
+    is_flag=False,
+    flag_value="add_interactively",
+    default="",
 )
 @click.option(
     "-dc",
@@ -1290,7 +1332,7 @@ def screen(
         screen_operation.add_abstracts_from_tei()
 
     if add:
-        add = _add_interactively(add, EndpointType.screen)
+        add = _add_endpoint_interactively(add, EndpointType.screen)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=screen_operation,
@@ -1303,22 +1345,8 @@ def screen(
         screen_operation.include_all_in_screen(persist=include_all_always)
         return
     if add_criterion:
-        assert add_criterion.count(",") == 2
-        (
-            criterion_name,
-            criterion_type_str,
-            criterion_explanation,
-        ) = add_criterion.split(",")
-        criterion_type = ScreenCriterionType[criterion_type_str]
-        criterion = colrev.settings.ScreenCriterion(
-            explanation=criterion_explanation,
-            criterion_type=criterion_type,
-            comment="",
-        )
-        screen_operation.add_criterion(
-            criterion_name=criterion_name, criterion=criterion
-        )
-        return
+        _add_screen_criterion_interactively(add_criterion, screen_operation)
+
     if delete_criterion:
         screen_operation.delete_criterion(delete_criterion)
         return
@@ -1388,6 +1416,7 @@ def pdf(
 @click.option(
     "-d",
     "--dir",
+    "open_dir",
     is_flag=True,
     default=False,
     help="Open the PDFs directory",
@@ -1411,7 +1440,7 @@ def pdf(
 def pdfs(
     ctx: click.core.Context,
     discard: bool,
-    dir: bool,
+    open_dir: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -1427,7 +1456,7 @@ def pdfs(
         },
     )
 
-    if dir:
+    if open_dir:
         # pylint: disable=consider-using-with
         # pylint: disable=no-member
 
@@ -1545,7 +1574,7 @@ def pdf_get(
     )
 
     if add:
-        add = _add_interactively(add, EndpointType.pdf_get)
+        add = _add_endpoint_interactively(add, EndpointType.pdf_get)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_get_operation,
@@ -1639,7 +1668,7 @@ def pdf_get_man(
     pdf_get_man_operation = review_manager.get_pdf_get_man_operation()
 
     if add:
-        add = _add_interactively(add, EndpointType.pdf_get_man)
+        add = _add_endpoint_interactively(add, EndpointType.pdf_get_man)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_get_man_operation,
@@ -1800,7 +1829,7 @@ def pdf_prep(
     pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
 
     if add:
-        add = _add_interactively(add, EndpointType.pdf_prep)
+        add = _add_endpoint_interactively(add, EndpointType.pdf_prep)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_prep_operation,
@@ -1937,7 +1966,7 @@ def pdf_prep_man(
     pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
 
     if add:
-        add = _add_interactively(add, EndpointType.pdf_prep_man)
+        add = _add_endpoint_interactively(add, EndpointType.pdf_prep_man)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_prep_man_operation,
@@ -2044,7 +2073,7 @@ def data(
         return
 
     if add:
-        add = _add_interactively(add, EndpointType.data)
+        add = _add_endpoint_interactively(add, EndpointType.data)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=data_operation,
@@ -2084,6 +2113,7 @@ def data(
 @click.argument("scope", nargs=1)
 @click.option(
     "--filter",
+    "filter_settings",
     type=click.Choice(["prepare", "dedupe", "merge", "all"], case_sensitive=False),
     default="all",
     help="prepare, merge, or all.",
@@ -2119,7 +2149,7 @@ def data(
 def validate(
     ctx: click.core.Context,
     scope: str,
-    filter: str,
+    filter_settings: str,
     threshold: float,
     properties: bool,
     verbose: bool,
@@ -2147,7 +2177,7 @@ def validate(
 
     validation_details = validate_operation.main(
         scope=scope,
-        filter_setting=filter,
+        filter_setting=filter_settings,
         properties=properties,
     )
 
@@ -2164,6 +2194,7 @@ def validate(
 @main.command(help_priority=18)
 @click.option(
     "--id",  # pylint: disable=invalid-name
+    "record_id",
     help="Record ID to trace (citation_key).",
     required=True,
 )
@@ -2171,7 +2202,7 @@ def validate(
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def trace(
     ctx: click.core.Context,
-    id: str,  # pylint: disable=invalid-name
+    record_id: str,  # pylint: disable=invalid-name
 ) -> None:
     """Trace a record"""
 
@@ -2184,7 +2215,7 @@ def trace(
         },
     )
     trace_operation = review_manager.get_trace_operation()
-    trace_operation.main(record_id=id)
+    trace_operation.main(record_id=record_id)
 
 
 def _select_target_repository(environment_registry: list) -> Path:
@@ -2637,6 +2668,7 @@ def clone(
 @click.option(
     "-a",
     "--all",
+    "all_records",
     is_flag=True,
     default=False,
     help="Push record changes/corrections to all sources (not just curations).",
@@ -2661,7 +2693,7 @@ def push(
     ctx: click.core.Context,
     records_only: bool,
     project_only: bool,
-    all: bool,
+    all_records: bool,
     verbose: bool,
     force: bool,
 ) -> None:

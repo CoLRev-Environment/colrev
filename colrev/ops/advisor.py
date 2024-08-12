@@ -425,13 +425,6 @@ class Advisor:
         # Check pdf files
         if self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis:
             missing_files = self._get_missing_files()
-            if len(missing_files) > 0:
-                review_instructions.append(
-                    {
-                        "msg": "record with colrev_status requiring a PDF file but missing "
-                        + f"the path (file = ...): {missing_files}"
-                    }
-                )
 
             if len(missing_files) > 0:
                 if len(missing_files) < 10:
