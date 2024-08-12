@@ -78,3 +78,4 @@ colrev.record.record\_pdf.PDFRecord
 
       ~PDFRecord.pp
       ~PDFRecord.data
+      ~PDFRecord.path
