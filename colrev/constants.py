@@ -247,6 +247,7 @@ class FieldSet:
             Fields.FILE,
             Fields.MONTH,
             Fields.SERIES,
+            Fields.EDITION,
             Fields.LANGUAGE,
             Fields.DATE,
             Fields.SCHOOL,
