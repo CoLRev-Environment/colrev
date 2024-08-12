@@ -120,7 +120,6 @@ class PDFLastPage(JsonSchemaMixin):
 
             record.extract_pages(
                 pages=last_pages,
-                project_path=self.review_manager.path,
                 save_to_path=lp_path,
             )
             self.review_manager.report_logger.info(

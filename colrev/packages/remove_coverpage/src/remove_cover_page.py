@@ -184,7 +184,6 @@ class PDFCoverPage(JsonSchemaMixin):
             shutil.copy(original, file_copy)
             record.extract_pages(
                 pages=coverpages,
-                project_path=self.review_manager.path,
                 save_to_path=cp_path,
             )
             self.review_manager.report_logger.info(

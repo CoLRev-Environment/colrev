@@ -1371,10 +1371,10 @@ def _extract_coverpage(*, cover: Path) -> None:
     cp_path.mkdir(exist_ok=True)
 
     assert Path(cover).suffix == ".pdf"
-    record = colrev.record.record_pdf.PDFRecord({Fields.FILE: cover})
-    record.extract_pages(
-        pages=[0], project_path=Path(cover).parent, save_to_path=cp_path
+    record = colrev.record.record_pdf.PDFRecord(
+        {Fields.FILE: cover}, path=Path(cover).parent
     )
+    record.extract_pages(pages=[0], save_to_path=cp_path)
 
 
 @main.command(help_priority=17)
@@ -1726,7 +1726,9 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
     last_page_nr = doc.page_count
 
     assert Path(pdf_path).suffix == ".pdf"
-    record = colrev.record.record_pdf.PDFRecord({"file": pdf_path})
+    record = colrev.record.record_pdf.PDFRecord(
+        {Fields.FILE: pdf_path.name, Fields.ID: "NA"}, path=pdf_path.parents[0]
+    )
     first_page_average_hash_16 = record.get_pdf_hash(page_nr=1, hash_size=16)
     print(f"first page: {first_page_average_hash_16}")
     first_page_average_hash_32 = record.get_pdf_hash(page_nr=1, hash_size=32)

@@ -310,7 +310,9 @@ class FilesSearchSource(JsonSchemaMixin):
             with pymupdf.open(file_path) as doc:
                 pages_in_file = doc.page_count
                 if pages_in_file < 6:
-                    record = colrev.record.record_pdf.PDFRecord(record_dict)
+                    record = colrev.record.record_pdf.PDFRecord(
+                        record_dict, path=self.review_manager.path
+                    )
                     record.set_text_from_pdf()
                     record_dict = record.get_data()
                     if Fields.TEXT_FROM_PDF in record_dict:
@@ -605,7 +607,9 @@ class FilesSearchSource(JsonSchemaMixin):
     def _add_doi_from_pdf_if_not_available(self, record_dict: dict) -> None:
         if Path(record_dict[Fields.FILE]).suffix != ".pdf":
             return
-        record = colrev.record.record_pdf.PDFRecord(record_dict)
+        record = colrev.record.record_pdf.PDFRecord(
+            record_dict, path=self.review_manager.path
+        )
         if Fields.DOI not in record_dict:
             record.set_text_from_pdf()
             res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])

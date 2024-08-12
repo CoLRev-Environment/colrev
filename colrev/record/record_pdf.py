@@ -22,15 +22,37 @@ from colrev.constants import Fields
 class PDFRecord(colrev.record.record.Record):
     """The PDFRecord class provides a range of convenience functions for PDF handling"""
 
+    def __init__(self, data: dict, path: Path) -> None:
+        self.data = data
+        """Dictionary containing the record data"""
+
+        self.path = path
+        """Path to the repository (record.data[Fields.File] is relative to path)"""
+
+        super().__init__(data=data)
+
+    def _get_path(self) -> Path:
+        if Fields.FILE not in self.data:
+            raise colrev_exceptions.InvalidPDFException(path=self.data[Fields.ID])
+
+        pdf_path = (self.path / Path(self.data[Fields.FILE])).absolute()
+
+        if not pdf_path.is_file():
+            raise colrev_exceptions.InvalidPDFException(path=pdf_path)
+
+        if 0 == os.path.getsize(pdf_path):
+            logging.error("%sPDF with size 0: %s %s", Colors.RED, pdf_path, Colors.END)
+            raise colrev_exceptions.InvalidPDFException(path=pdf_path)
+        return pdf_path
+
     def extract_text_by_page(
         self,
         *,
         pages: typing.Optional[list] = None,
     ) -> str:
         """Extract the text from the PDF for a given number of pages"""
+        pdf_path = self._get_path()
         text_list: list = []
-        pdf_path = Path(self.data[Fields.FILE]).absolute()
-
         with pymupdf.open(pdf_path) as doc:
             for i, page in enumerate(doc):
                 if pages is None or i in pages:
@@ -48,7 +70,8 @@ class PDFRecord(colrev.record.record.Record):
 
     def set_nr_pages_in_pdf(self) -> None:
         """Set the pages_in_file field based on the PDF"""
-        pdf_path = Path(self.data[Fields.FILE]).absolute()
+        pdf_path = self._get_path()
+
         with pymupdf.open(pdf_path) as doc:
             pages_in_file = doc.page_count
         self.data[Fields.NR_PAGES_IN_FILE] = pages_in_file
@@ -95,11 +118,10 @@ class PDFRecord(colrev.record.record.Record):
         self,
         *,
         pages: list,
-        project_path: Path,
         save_to_path: typing.Optional[Path] = None,
     ) -> None:  # pragma: no cover
         """Extract pages from the PDF"""
-        pdf_path = project_path / Path(self.data[Fields.FILE])
+        pdf_path = self._get_path()
         self.extract_pages_from_pdf(
             pages=pages, pdf_path=pdf_path, save_to_path=save_to_path
         )
@@ -109,13 +131,7 @@ class PDFRecord(colrev.record.record.Record):
         assert page_nr > 0
         assert hash_size in [16, 32]
 
-        if Fields.FILE not in self.data or not Path(self.data[Fields.FILE]).is_file():
-            raise colrev_exceptions.InvalidPDFException(path=self.data[Fields.ID])
-
-        pdf_path = Path(self.data[Fields.FILE]).resolve()
-        if 0 == os.path.getsize(pdf_path):
-            logging.error("%sPDF with size 0: %s %s", Colors.RED, pdf_path, Colors.END)
-            raise colrev_exceptions.InvalidPDFException(path=pdf_path)
+        pdf_path = self._get_path()
 
         with tempfile.NamedTemporaryFile(suffix=".png") as temp_file:
             file_name = temp_file.name
