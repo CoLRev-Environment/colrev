@@ -437,7 +437,7 @@ class Search(colrev.process.operation.Operation):
         )
         if not search_source.filename.is_file():
             print()
-            self.main(selection_str=str(search_source.filename), rerun=False)
+            self.main(selection_str=str(search_source.filename), rerun=True)
 
     @_check_source_selection_exists(  # pylint: disable=too-many-function-args
         "selection_str"

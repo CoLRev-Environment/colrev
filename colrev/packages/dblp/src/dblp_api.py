@@ -230,6 +230,8 @@ class DBLPAPI:
             # query = params['scope']["venue_key"]
         elif "query" in self.params:
             query = self.params["query"]
+        else:
+            raise ValueError("No query or scope provided")
 
         return self._api_url + query.replace(" ", "+")
 
@@ -275,7 +277,7 @@ class DBLPAPI:
             if "@total" not in data["result"]["hits"]:
                 return -1
             return int(data["result"]["hits"]["@total"])
-        except requests.exceptions.RequestException:
+        except (requests.exceptions.RequestException, ValueError):
             return -1
 
     def retrieve_records(self) -> list:
