@@ -3,8 +3,8 @@
 import html
 import json
 import re
-import typing
-from sqlite3 import OperationalError
+import time
+from datetime import datetime
 
 import requests
 
@@ -13,8 +13,8 @@ import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
-
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-instance-attributes
 
 
 class DBLPAPI:
@@ -24,32 +24,64 @@ class DBLPAPI:
     _api_url_venues = "https://dblp.org/search/venue/api?q="
     _api_url = "https://dblp.org/search/publ/api?q="
 
+    url = ""
+    _batch_next = False
+
     # pylint: disable=too-many-arguments
     def __init__(
         self,
+        *,
+        params: dict,
         email: str,
         session: requests.Session,
-        query: typing.Optional[str] = None,
-        url: typing.Optional[str] = None,
+        rerun: bool = False,
         timeout: int = 60,
     ):
+        self.params = params
         self.email = email
         self.session = session
         self._timeout = timeout
 
-        assert query is not None or url is not None
-        if query:
-            self.set_url_from_query(query)
+        self.headers = {"user-agent": f"{__name__}  (mailto:{self.email})"}
 
-        elif url is not None and not url.startswith("http"):
-            url = f"https://dblp.org/search/publ/api?q={url}"
+        self.batch_size_cumulative = 0
+        self.batch_size = 250
+        self.year = datetime.now().year - 2
+        if rerun:
+            self.year = 1980
+        self.total = self.get_total()
 
-        self.url = url
+    def check_availability(self) -> None:
+        """Check if the DBLP API is available"""
 
-    def set_url_from_query(self, query: str) -> None:
-        """Set the URL from a query"""
-        query = re.sub(r"[\W]+", " ", query.replace(" ", "_").replace("-", "_"))
-        self.url = self._api_url + query.replace(" ", "+") + "&format=json"
+        try:
+            # pylint: disable=duplicate-code
+            test_rec = {
+                Fields.ENTRYTYPE: "article",
+                Fields.DOI: "10.17705/1cais.04607",
+                Fields.AUTHOR: "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
+                "and Paré, Guy",
+                Fields.TITLE: "A Knowledge Development Perspective on Literature Reviews: "
+                "Validation of a new Typology in the IS Field",
+                Fields.ID: "SchryenEtAl2021",
+                Fields.JOURNAL: "Communications of the Association for Information Systems",
+                Fields.VOLUME: "46",
+                Fields.YEAR: "2020",
+                # Fields.STATUS: RecordState.md_prepared,  # type: ignore
+            }
+            self.params = {"query": str(test_rec[Fields.TITLE])}
+            self.set_url_from_query()
+
+            retrieved_records = self.retrieve_records()
+            dblp_record = retrieved_records[0]
+
+            if 0 != len(dblp_record.data):
+                assert dblp_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
+                assert dblp_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
+            else:
+                raise colrev_exceptions.ServiceNotAvailableException("DBLP")
+        except requests.exceptions.RequestException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException("DBLP") from exc
 
     def _get_dblp_venue(
         self,
@@ -63,10 +95,9 @@ class DBLPAPI:
         # https://dblp.org/db/journals/jasis/index.html
         venue = venue_string
         url = self._api_url_venues + venue_string.replace(" ", "+") + "&format=json"
-        headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
         try:
             ret = self.session.request(
-                "GET", url, headers=headers, timeout=self._timeout
+                "GET", url, headers=self.headers, timeout=self._timeout
             )
             ret.raise_for_status()
             data = json.loads(ret.text)
@@ -86,20 +117,22 @@ class DBLPAPI:
             pass
         return venue
 
+    # pylint: disable=too-many-branches
     def _dblp_json_set_type(self, *, item: dict) -> None:
         lpos = item["key"].find("/") + 1
         rpos = item["key"].rfind("/")
         ven_key = item["key"][lpos:rpos]
 
-        if "corr" == ven_key:
-            item[Fields.ENTRYTYPE] = ENTRYTYPES.TECHREPORT
-
-        elif item["type"] == "Withdrawn Items":
+        if item["type"] == "Withdrawn Items":
             if item["key"][:8] == "journals":
                 item["type"] = "Journal Articles"
             if item["key"][:4] == "conf":
                 item["type"] = "Conference and Workshop Papers"
             item["colrev.dblp.warning"] = "Withdrawn (according to DBLP)"
+
+        if "corr" == ven_key:
+            item[Fields.ENTRYTYPE] = ENTRYTYPES.TECHREPORT
+
         elif item["type"] == "Journal Articles":
             item[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
             item[Fields.JOURNAL] = self._get_dblp_venue(
@@ -118,6 +151,12 @@ class DBLPAPI:
         elif item["type"] == "Parts in Books or Collections":
             item[Fields.ENTRYTYPE] = ENTRYTYPES.INBOOK
             item[Fields.BOOKTITLE] = item["venue"]
+        elif item["type"] == "Books and Theses":
+            if item["key"].startswith("phd/"):
+                item[Fields.ENTRYTYPE] = ENTRYTYPES.PHDTHESIS
+            else:
+                item[Fields.ENTRYTYPE] = ENTRYTYPES.BOOK
+
         else:
             item[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
             if item["type"] != "Editorship":
@@ -182,53 +221,131 @@ class DBLPAPI:
 
         return item
 
+    def get_query_url(self) -> str:
+        """Get the query"""
+
+        if "scope" in self.params:
+            # Note : journal_abbreviated is the abbreviated venue_key
+            query = self.params["scope"]["journal_abbreviated"]
+            # query = params['scope']["venue_key"]
+        elif "query" in self.params:
+            query = self.params["query"]
+
+        return self._api_url + query.replace(" ", "+")
+
+    def set_next_url(self) -> None:
+        """Set the next URL"""
+
+        self.url = self.get_query_url()
+        if self.total > self.batch_size:
+            self.url += "+" + str(self.year)
+            if self._batch_next:
+                self.batch_size_cumulative += self.batch_size
+            else:
+                self.batch_size_cumulative = 0
+            self.year += 1
+
+        self.url += f"&format=json&h={self.batch_size}&f={self.batch_size_cumulative}"
+
+    def processed_all_urls(self) -> bool:
+        """Check if all URLs have been processed"""
+
+        if self.total < self.batch_size:
+            return True
+        return self.year > datetime.now().year
+
+    def get_total(self) -> int:
+        """Get the total number of records"""
+
+        try:
+            ret = self.session.request(
+                "GET",
+                self.get_query_url() + "&format=json",
+                headers=self.headers,
+                timeout=self._timeout,
+            )
+            ret.raise_for_status()
+
+            data = json.loads(ret.text)
+
+            if "result" not in data:
+                return -1
+            if "hits" not in data["result"]:
+                return -1
+            if "@total" not in data["result"]["hits"]:
+                return -1
+            return int(data["result"]["hits"]["@total"])
+        except requests.exceptions.RequestException:
+            return -1
+
     def retrieve_records(self) -> list:
         """Retrieve records from DBLP"""
 
-        try:
-            headers = {"user-agent": f"{__name__}  (mailto:{self.email})"}
+        # try:
+        while True:
             # review_manager.logger.debug(url)
             ret = self.session.request(
-                "GET", self.url, headers=headers, timeout=self._timeout  # type: ignore
+                "GET", self.url, headers=self.headers, timeout=self._timeout  # type: ignore
             )
+
+            if ret.status_code == 429:
+                time.sleep(60)
+                print("Waiting for 60 seconds (request limit reached)")
+                continue
             ret.raise_for_status()
+            # 429 - too many requests
             if ret.status_code == 500:
                 return []
+            break
 
-            data = json.loads(ret.text)
-            if "hits" not in data["result"]:
-                return []
-            if "hit" not in data["result"]["hits"]:
-                return []
-            hits = data["result"]["hits"]["hit"]
-            items = [hit["info"] for hit in hits]
+        data = json.loads(ret.text)
+        response_ms = float(data["result"]["time"]["text"])
+        time.sleep(response_ms / 10)
 
-            dblp_dicts = [
-                self._dblp_json_to_dict(
-                    item=item,
-                )
-                for item in items
-            ]
-            retrieved_records = [
-                colrev.record.record_prep.PrepRecord(dblp_dict)
-                for dblp_dict in dblp_dicts
-            ]
+        if "hits" not in data["result"]:
+            return []
+        if "hit" not in data["result"]["hits"]:
+            return []
+        hits = data["result"]["hits"]["hit"]
+        items = [hit["info"] for hit in hits]
 
-            for retrieved_record in retrieved_records:
-                retrieved_record.add_provenance_all(
-                    source=retrieved_record.data["dblp_key"]
-                )
+        dblp_dicts = [
+            self._dblp_json_to_dict(
+                item=item,
+            )
+            for item in items
+        ]
+        if len(dblp_dicts) > self.batch_size:
+            self._batch_next = True
+        else:
+            self._batch_next = False
 
-        # pylint: disable=duplicate-code
-        except OperationalError as exc:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                "sqlite, required for requests CachedSession "
-                "(possibly caused by concurrent operations)"
-            ) from exc
-        except (requests.exceptions.ReadTimeout, requests.exceptions.HTTPError) as exc:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                "requests timed out "
-                "(possibly because the DBLP service is temporarily not available)"
-            ) from exc
+        retrieved_records = [
+            colrev.record.record_prep.PrepRecord(dblp_dict) for dblp_dict in dblp_dicts
+        ]
+
+        for retrieved_record in retrieved_records:
+            retrieved_record.add_provenance_all(
+                source=retrieved_record.data["dblp_key"]
+            )
+
+        # # pylint: disable=duplicate-code
+        # except OperationalError as exc:
+        #     raise colrev_exceptions.ServiceNotAvailableException(
+        #         "sqlite, required for requests CachedSession "
+        #         "(possibly caused by concurrent operations)"
+        #     ) from exc
+        # except (requests.exceptions.ReadTimeout, requests.exceptions.HTTPError) as exc:
+        #     raise colrev_exceptions.ServiceNotAvailableException(
+        #         "requests timed out "
+        #         "(possibly because the DBLP service is temporarily not available)"
+        #     ) from exc
 
         return retrieved_records
+
+    def set_url_from_query(self) -> None:
+        """Set the URL from a query"""
+        query = re.sub(
+            r"[\W]+", " ", self.params["query"].replace(" ", "_").replace("-", "_")
+        )
+        self.url = self._api_url + query.replace(" ", "+") + "&format=json"
