@@ -2,9 +2,9 @@
 """Prescreen based on GenAI"""
 from __future__ import annotations
 
+import textwrap
 from dataclasses import dataclass
 from typing import ClassVar
-import textwrap
 
 import instructor
 import zope.interface
@@ -86,21 +86,28 @@ class GenAIPrescreen(JsonSchemaMixin):
         for row in data:
             for col, value in row.items():
                 # Limit the maximum width of any column
-                col_widths[col] = min(max(col_widths[col], len(str(value).split('\n')[0])), max_width)
+                col_widths[col] = min(
+                    max(col_widths[col], len(str(value).split("\n")[0])), max_width
+                )
 
         # Print header
-        header = " | ".join(f"{col[:col_widths[col]]:<{col_widths[col]}}" for col in col_names)
+        header = " | ".join(
+            f"{col[:col_widths[col]]:<{col_widths[col]}}" for col in col_names
+        )
         print(header)
         print("-" * len(header))
 
         # Print rows
         for row in data:
             # Wrap text for each cell
-            wrapped_row = {col: textwrap.wrap(str(row.get(col, '')), width=col_widths[col]) for col in col_names}
-            
+            wrapped_row = {
+                col: textwrap.wrap(str(row.get(col, "")), width=col_widths[col])
+                for col in col_names
+            }
+
             # Find the maximum number of lines in any cell of this row
             max_lines = max(len(cell) for cell in wrapped_row.values())
-            
+
             # Print each line of the row
             for i in range(max_lines):
                 line = []
@@ -111,7 +118,6 @@ class GenAIPrescreen(JsonSchemaMixin):
                     else:
                         line.append(" " * col_widths[col])
                 print(" | ".join(line))
-
 
     # pylint: disable=unused-argument
     def run_prescreen(
@@ -147,12 +153,15 @@ class GenAIPrescreen(JsonSchemaMixin):
             else:
                 record.set_status(RecordState.rev_prescreen_excluded)
 
-
-            screening_decisions.append({
-                "Record": record.get_data()["ID"],
-                "Inclusion/Exclusion Decision": "Included" if response.included else "Excluded",
-                "Explanation": response.explanation
-            })
+            screening_decisions.append(
+                {
+                    "Record": record.get_data()["ID"],
+                    "Inclusion/Exclusion Decision": (
+                        "Included" if response.included else "Excluded"
+                    ),
+                    "Explanation": response.explanation,
+                }
+            )
 
         print(f"\nGenAI (model: {self.settings.model}) screening decisions:")
         self._print_table(screening_decisions)
