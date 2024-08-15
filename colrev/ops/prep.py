@@ -782,20 +782,6 @@ class Prep(colrev.process.operation.Operation):
                 )
 
     def _log_commit_details(self, prepared_records: list) -> None:
-        nr_curated_recs = len(
-            [
-                r
-                for r in prepared_records
-                if colrev.record.record_prep.PrepRecord(r).masterdata_is_curated()
-            ]
-        )
-
-        self.review_manager.logger.info(
-            "curated (✔)".ljust(29)
-            + f"{Colors.GREEN}{nr_curated_recs}{Colors.END}".rjust(20, " ")
-            + " records"
-        )
-
         nr_recs = len(
             [
                 record
@@ -807,7 +793,21 @@ class Prep(colrev.process.operation.Operation):
         self.review_manager.logger.info(
             "md_prepared".ljust(29)
             + f"{Colors.GREEN}{nr_recs}{Colors.END}".rjust(20, " ")
-            + " records"
+            + f" records ({nr_recs/len(prepared_records):.2%})"
+        )
+
+        nr_recs = len(
+            [
+                r
+                for r in prepared_records
+                if colrev.record.record_prep.PrepRecord(r).masterdata_is_curated()
+            ]
+        )
+
+        self.review_manager.logger.info(
+            "curated (✔)".ljust(29)
+            + f"{Colors.GREEN}{nr_recs}{Colors.END}".rjust(20, " ")
+            + f" records ({nr_recs/len(prepared_records):.2%})"
         )
 
         nr_recs = len(
@@ -835,7 +835,7 @@ class Prep(colrev.process.operation.Operation):
             self.review_manager.logger.info(
                 "rev_prescreen_excluded".ljust(29)
                 + f"{Colors.RED}{nr_recs}{Colors.END}".rjust(20, " ")
-                + " records"
+                + f" records ({nr_recs/len(prepared_records):.2%})"
             )
 
     def _print_startup_infos(self) -> None:
