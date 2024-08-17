@@ -3128,7 +3128,6 @@ def install(
         if no_cache_dir:
             args += ["--no-cache-dir"]
         args += [f"colrev[{','.join(colrev_packages)}]"]
-        input(args)
         sys.argv = args
         run_module("pip", run_name="__main__")
 
