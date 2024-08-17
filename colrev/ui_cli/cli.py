@@ -12,14 +12,12 @@ import webbrowser
 from functools import partial
 from functools import wraps
 from pathlib import Path
-from runpy import run_module
 
 import click
 import click_completion.core
 import click_repl
 import inquirer
 import pandas as pd
-import pkg_resources
 from git.exc import GitCommandError
 
 import colrev.env.local_index
@@ -3106,43 +3104,15 @@ def install(
 ) -> None:
     """Install packages"""
 
-    # Install packages from colrev monorepository first
-    colrev_packages = []
-    for package in packages:
-        if (
-            package.replace(".", "-").replace("_", "-")
-            in pkg_resources.get_distribution("colrev").extras
-        ):
-            colrev_packages.append(package)
+    import colrev.ui_cli.install
 
-    packages = [p for p in packages if p not in colrev_packages]
-
-    if colrev_packages:
-        args = ["pip", "install"]
-        if upgrade:
-            args += ["--upgrade"]
-        if editable:
-            args += ["--editable", editable]
-        if force_reinstall:
-            args += ["--force-reinstall"]
-        if no_cache_dir:
-            args += ["--no-cache-dir"]
-        args += [f"colrev[{','.join(colrev_packages)}]"]
-        sys.argv = args
-        run_module("pip", run_name="__main__")
-
-    args = ["pip", "install"]
-    if upgrade:
-        args += ["--upgrade"]
-    if editable:
-        args += ["--editable", editable]
-    if force_reinstall:
-        args += ["--force-reinstall"]
-    if no_cache_dir:
-        args += ["--no-cache-dir"]
-    args += list(packages)
-    sys.argv = args
-    run_module("pip", run_name="__main__")
+    colrev.ui_cli.install.main(
+        packages=packages,
+        upgrade=upgrade,
+        editable=editable,
+        force_reinstall=force_reinstall,
+        no_cache_dir=no_cache_dir,
+    )
 
 
 @main.command(hidden=True)
