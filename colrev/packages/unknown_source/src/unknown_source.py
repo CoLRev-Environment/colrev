@@ -376,11 +376,19 @@ class UnknownSearchSource(JsonSchemaMixin):
                     record_dict[Fields.JOURNAL] = record_dict.pop(Fields.BOOKTITLE)
 
         def field_mapper(record_dict: dict) -> None:
-            record_dict[Fields.TITLE] = record_dict.pop("Title", "")
-            record_dict[Fields.AUTHOR] = record_dict.pop("Authors", "")
-            record_dict[Fields.ABSTRACT] = record_dict.pop("Abstract", "")
-            record_dict[Fields.JOURNAL] = record_dict.pop("Publication", "")
-            record_dict[Fields.DOI] = record_dict.pop("DOI", "")
+            # replace all keys with lower case
+            record_dict = {k.lower(): v for k, v in record_dict.items()}
+
+            if "id" in record_dict:
+                record_dict[Fields.ID] = record_dict.pop("id")
+            if "entrytype" in record_dict:
+                record_dict[Fields.ENTRYTYPE] = record_dict.pop("entrytype")
+            if "type" in record_dict:
+                record_dict[Fields.ENTRYTYPE] = record_dict.pop("type")
+            if "authors" in record_dict:
+                record_dict[Fields.AUTHOR] = record_dict.pop("authors", "")
+            if "publication" in record_dict:
+                record_dict[Fields.JOURNAL] = record_dict.pop("publication", "")
 
             record_dict.pop("Category", None)
             record_dict.pop("Affiliations", None)
@@ -389,9 +397,6 @@ class UnknownSearchSource(JsonSchemaMixin):
                 record_dict[Fields.NUMBER] = record_dict.pop("issue")
                 if record_dict[Fields.NUMBER] == "no issue":
                     del record_dict[Fields.NUMBER]
-
-            if "authors" in record_dict and Fields.AUTHOR not in record_dict:
-                record_dict[Fields.AUTHOR] = record_dict.pop("authors")
 
             if "publication_year" in record_dict and Fields.YEAR not in record_dict:
                 record_dict[Fields.YEAR] = record_dict.pop("publication_year")
@@ -419,7 +424,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             """Labeler for IDs."""
             for counter, record_dict in enumerate(records):
                 if Fields.ID not in record_dict:
-                    record_dict[Fields.ID] = str(counter).zfill(6)
+                    record_dict[Fields.ID] = str(counter + 1).zfill(6)
 
         load_operation.ensure_append_only(self.search_source.filename)
 
