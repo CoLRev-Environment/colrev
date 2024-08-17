@@ -117,6 +117,8 @@ class OpenAlexAPI:
         return record
 
     def get_record(self, *, open_alex_id: str) -> colrev.record.record.Record:
+        """Get a record from OpenAlex"""
 
-        retrieved_record = self._parse_item_to_record(item=Works()[open_alex_id])
+        item = Works()[open_alex_id]
+        retrieved_record = self._parse_item_to_record(item=item)
         return retrieved_record
