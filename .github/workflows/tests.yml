@@ -48,7 +48,7 @@ jobs:
       - name: Install poetry dependencies
         run: |
           poetry env remove python || true
-          poetry install -E dev --verbose
+          poetry install -E dev --verbose --no-cache
       - name: Setup git
         run: |
           git config --global user.name "CoLRev update"
