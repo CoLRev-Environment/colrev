@@ -313,8 +313,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
             )
             record.set_status(RecordState.md_prepared)
 
-
-
     def _validate_api_params(self) -> None:
         source = self.search_source
 
@@ -645,7 +643,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 print(exc)
 
         return record
-
 
     def _check_doi_masterdata(
         self, record: colrev.record.record.Record
