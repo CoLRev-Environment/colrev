@@ -16,12 +16,12 @@ import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
-import colrev.packages.crossref.src.crossref_search_source
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.packages.crossref.src import crossref_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -48,12 +48,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
-        self.crossref_connector = (
-            colrev.packages.crossref.src.crossref_search_source.CrossrefSearchSource(
-                source_operation=source_operation
-            )
-        )
-        self._etiquette = self.crossref_connector.get_etiquette()
+        self.crossref_api = crossref_api.CrossrefAPI(params={})
 
     @classmethod
     def get_default_source(cls) -> colrev.settings.SearchSource:
@@ -123,9 +118,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             items = json.loads(ret.text)
 
             for doi in [x["citing"] for x in items]:
-                retrieved_record = self.crossref_connector.query_doi(
-                    doi=doi, etiquette=self._etiquette
-                )
+                retrieved_record = self.crossref_api.query_doi(doi=doi)
                 # if not crossref_query_return:
                 #     raise colrev_exceptions.RecordNotFoundInPrepSourceException()
                 retrieved_record.data[Fields.ID] = retrieved_record.data[Fields.DOI]
