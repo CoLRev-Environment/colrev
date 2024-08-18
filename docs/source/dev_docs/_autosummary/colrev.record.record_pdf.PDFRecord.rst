@@ -29,6 +29,7 @@ colrev.record.record\_pdf.PDFRecord
       ~PDFRecord.extract_pages_from_pdf
       ~PDFRecord.extract_text_by_page
       ~PDFRecord.format_bib_style
+      ~PDFRecord.get_citation_format
       ~PDFRecord.get_colrev_id
       ~PDFRecord.get_colrev_pdf_id
       ~PDFRecord.get_container_title

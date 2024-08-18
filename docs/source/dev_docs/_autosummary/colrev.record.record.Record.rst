@@ -26,6 +26,7 @@ colrev.record.record.Record
       ~Record.copy_prep_rec
       ~Record.defects
       ~Record.format_bib_style
+      ~Record.get_citation_format
       ~Record.get_colrev_id
       ~Record.get_colrev_pdf_id
       ~Record.get_container_title

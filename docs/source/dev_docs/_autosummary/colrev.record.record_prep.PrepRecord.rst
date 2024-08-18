@@ -28,6 +28,7 @@ colrev.record.record\_prep.PrepRecord
       ~PrepRecord.format_author_field
       ~PrepRecord.format_bib_style
       ~PrepRecord.format_if_mostly_upper
+      ~PrepRecord.get_citation_format
       ~PrepRecord.get_colrev_id
       ~PrepRecord.get_colrev_pdf_id
       ~PrepRecord.get_container_title
