@@ -4,6 +4,6 @@
 
 ### DB Search
 
+- API-access not available (per definition).
 - Typical Excel column names include: ...
-
-Download search results and store in `data/search/` directory. API-access not available (per definition).
+- Markdown files (*.md) containing a bibliography section (formatted references) are parsed upon `colrev load` based on GROBID.
