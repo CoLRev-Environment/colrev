@@ -18,7 +18,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
-import colrev.packages.crossref.src.crossref_search_source
 import colrev.packages.pdf_backward_search.src.pdf_backward_search as bws
 import colrev.record.qm.checkers.missing_field
 import colrev.record.record
@@ -31,6 +30,7 @@ from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.packages.crossref.src import crossref_api
 from colrev.writer.write_utils import write_file
 
 # pylint: disable=unused-argument
@@ -88,12 +88,8 @@ class FilesSearchSource(JsonSchemaMixin):
                 self.r_subdir_pattern = re.compile("([0-9]{1,3})(_|/)([0-9]{1,2})")
             if self.subdir_pattern == Fields.VOLUME:
                 self.r_subdir_pattern = re.compile("([0-9]{1,4})")
-        self.crossref_connector = (
-            colrev.packages.crossref.src.crossref_search_source.CrossrefSearchSource(
-                source_operation=source_operation
-            )
-        )
-        self._etiquette = self.crossref_connector.get_etiquette()
+
+        self.crossref_api = crossref_api.CrossrefAPI(params={})
 
     def _update_if_pdf_renamed(
         self,
@@ -696,8 +692,8 @@ class FilesSearchSource(JsonSchemaMixin):
         if Fields.DOI not in record_dict:
             return
         try:
-            retrieved_record = self.crossref_connector.query_doi(
-                doi=record_dict[Fields.DOI], etiquette=self._etiquette
+            retrieved_record = self.crossref_api.query_doi(
+                doi=record_dict[Fields.DOI],
             )
 
             if not colrev.record.record_similarity.matches(

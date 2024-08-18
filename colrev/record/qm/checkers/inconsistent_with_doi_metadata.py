@@ -5,11 +5,11 @@ from __future__ import annotations
 from rapidfuzz import fuzz
 
 import colrev.exceptions as colrev_exceptions
-import colrev.packages.crossref.src.crossref_search_source as crossref_connector
 import colrev.record.qm.quality_model
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.packages.crossref.src import crossref_api
 
 # pylint: disable=too-few-public-methods
 
@@ -31,7 +31,8 @@ class InconsistentWithDOIMetadataChecker:
         self, quality_model: colrev.record.qm.quality_model.QualityModel
     ) -> None:
         self.quality_model = quality_model
-        self._etiquette = crossref_connector.CrossrefSearchSource.get_etiquette()
+
+        self.crossref_api = crossref_api.CrossrefAPI(params={})
 
     def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the inconsistent-with-doi-metadata checks"""
@@ -53,9 +54,7 @@ class InconsistentWithDOIMetadataChecker:
         record_copy = record.copy_prep_rec()
 
         try:
-            crossref_md = crossref_connector.CrossrefSearchSource.query_doi(
-                doi=record_copy.data[Fields.DOI], etiquette=self._etiquette
-            )
+            crossref_md = self.crossref_api.query_doi(doi=record_copy.data[Fields.DOI])
 
             for key in crossref_md.data.keys():
                 if key not in self._fields_to_check:
