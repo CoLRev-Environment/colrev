@@ -22,7 +22,7 @@ def fixture_crossref_search_source(
         "endpoint": "colrev.crossref",
         "filename": Path("data/search/md_crossref.bib"),
         "search_type": SearchType.DB,
-        "search_parameters": {},
+        "search_parameters": {"url": "test"},
         "comment": "",
     }
     instance = colrev.packages.crossref.src.crossref_search_source.CrossrefSearchSource(

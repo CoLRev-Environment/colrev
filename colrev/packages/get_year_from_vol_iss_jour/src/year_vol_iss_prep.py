@@ -19,9 +19,8 @@ from colrev.constants import RecordState
 from colrev.packages.crossref.src import crossref_api
 
 # pylint: disable=duplicate-code
-
-
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-instance-attributes
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
@@ -163,7 +162,6 @@ class YearVolIssPrep(JsonSchemaMixin):
             retrieved_records = self.api.crossref_query(
                 record_input=record,
                 jour_vol_iss_list=True,
-                timeout=self.prep_operation.timeout,
             )
             retries = 0
             while (
@@ -174,7 +172,6 @@ class YearVolIssPrep(JsonSchemaMixin):
                 retrieved_records = self.api.crossref_query(
                     record_input=record,
                     jour_vol_iss_list=True,
-                    timeout=self.prep_operation.timeout,
                 )
             if 0 == len(retrieved_records):
                 return
