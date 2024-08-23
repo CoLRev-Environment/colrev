@@ -34,6 +34,7 @@ Install the following tools mandatory for CoLRev (using the shell / ``Ctrl``\ +\
 ::
 
    # install python and pip package manager
+   sudo apt install python3-full
    sudo apt install python-is-python3
    sudo apt install python3-pip
 .. these lines are obsolete/redundant, will get handled later by "$ pip install -e .[dev,docs]"
@@ -44,15 +45,33 @@ Install the following tools mandatory for CoLRev (using the shell / ``Ctrl``\ +\
 .. note::
    In the following, we assume that the ``colrev`` directory and the ``test`` directory are located on the Desktop. If you have chosen a different location, please adjust the paths accordingly.
 
-Clone and install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
+Clone CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
 
 ::
 
-   # Clone and install CoLRev on your Desktop
+   # Clone CoLRev on your Desktop
    # Make sure you have registered your SSH key on GitHub beforehand, see "Setup part 2: Git and SSH"
    mkdir -p ~/Desktop
    cd ~/Desktop
    git clone git@github.com:CoLRev-Environment/colrev.git
+
+Create and activate a virtual environment (venv) in Python (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
+
+::
+
+   # Create a virtual environment called "venv-colrev" and activate it (you can use any other name or create multiple virtual environments)
+   cd ~/Desktop
+   python -m venv venv-colrev
+   source venv-colrev/bin/activate
+
+.. note::
+   In the following, we assume that the virtual environment "venv-colrev" is activated. ``(venv-colrev)`` should be precede the prompt. The active virtual environment can be deactivated with the command ``deactivate``
+
+Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
+
+::
+
+   # Install CoLRev
    cd ~/Desktop/colrev
    pip install -e .[dev,docs]
    pre-commit install
