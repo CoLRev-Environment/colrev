@@ -177,6 +177,7 @@ docutils = {version = "!=0.21.post1", optional = true }
 "colrev.methodological_review" = {path="./colrev/packages/methodological_review"}
 "colrev.osf" = {path="./colrev/packages/osf"}
 "colrev.github" = {path="./colrev/packages/github"}
+"colrev.ref_check" = {path="./colrev/packages/ref_check"}
 
 [tool.poetry.extras]
 "colrev.genai" = ["colrev.genai"]
