@@ -87,7 +87,9 @@ def _add_endpoint_interactively(add: str, endpoint_type: EndpointType) -> str:
     return answers["package"]
 
 
-def _select_source_interactively(selected: str, review_manager) -> str:
+def _select_source_interactively(
+    selected: str, review_manager: colrev.review_manager.ReviewManager
+) -> str:
     """Select a source interactively"""
     if selected != "select_interactively":
         return selected
