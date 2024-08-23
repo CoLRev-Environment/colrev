@@ -23,4 +23,9 @@ Install **Docker Engine for Ubuntu** with the following commands (using the shel
    sudo gpasswd -a $USER docker
    newgrp docker
 
-Please reboot your system afterwards to fully activate docker.
+Please reboot your system afterwards to fully activate docker:
+
+::
+
+   # This command immediately reboots the system, please save any open files beforehand
+   sudo reboot
