@@ -2,8 +2,9 @@ Setup part 1: Docker
 ------------------------
 
 .. note::
-   - If you are running Windows or macOS, please perform the steps in their respective sections first (:doc:`Windows </dev_docs/setup/windows_wsl2>`, :doc:`macOS </dev_docs/setup/macos_vm>`)!
-   - If you are using a distribution other than Ubuntu (e.g. Debian, Linux Mint, Kali Linux etc.), please refer to the official install instructions of the Docker Engine (`Install Docker Engine <https://docs.docker.com/engine/install/>`__)!
+   - If you are running Windows please perform the steps in :doc:`"Windows 10/11: WSL2" </dev_docs/setup/windows_wsl2>`
+   - If you are running macOS, please refer to the instructions in :doc:`"Install GitHub Codespaces" </dev_docs/setup/github_codespaces>`
+   - If you are using a distribution other than Ubuntu (e.g. Debian, Linux Mint, Kali Linux etc.), please refer to the official install instructions of the Docker Engine (`Install Docker Engine <https://docs.docker.com/engine/install/>`__)
 
 Install **Docker Engine for Ubuntu** with the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
 
