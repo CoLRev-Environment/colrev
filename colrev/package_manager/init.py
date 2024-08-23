@@ -501,7 +501,7 @@ def _add_to_colrev_pyproject_toml(package_data: dict) -> None:
         package_path = f"./colrev/packages/{current_dir.name}"
         toml_data = toml_data.replace(
             "\n[tool.poetry.extras]",
-            f'"{package_name}" = {{"path": "{package_path}"}}\n\n[tool.poetry.extras]',
+            f'"{package_name}" = {{path="{package_path}"}}\n\n[tool.poetry.extras]',
         )
         f.seek(0)
         f.write(toml_data)
