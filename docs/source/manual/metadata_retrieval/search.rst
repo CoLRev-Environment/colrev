@@ -23,6 +23,9 @@ Two steps are necessary to add a SearchSource and run a search:
     # Run search for all SearchSources in the settings
     colrev search
 
+    # Run search for selected SearchSources
+    colrev search --select
+
 ..
     For search result files, `heuristics <https://colrev.readthedocs.io/en/latest/foundations/packages.html#colrev.package_manager.interfaces.SearchSourceInterface.heuristic>`_ are used to identify the SearchSource (e.g., GoogleScholar or Web of Science) and users are asked to provide the corresponding search parameters, which are stored in the ``settings.json``.
 

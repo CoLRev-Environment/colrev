@@ -87,6 +87,23 @@ def _add_endpoint_interactively(add: str, endpoint_type: EndpointType) -> str:
     return answers["package"]
 
 
+def _select_source_interactively(selected: str, review_manager) -> str:
+    """Select a source interactively"""
+    if selected != "select_interactively":
+        return selected
+
+    sources = [str(s.filename) for s in review_manager.settings.sources]
+    questions = [
+        inquirer.Checkbox(
+            "source",
+            message="Select a search source:",
+            choices=sorted(sources),
+        )
+    ]
+    answers = inquirer.prompt(questions)
+    return ",".join(answers["source"])
+
+
 def _add_screen_criterion_interactively(
     add: str, screen_operation: colrev.ops.screen.Screen
 ) -> None:
@@ -501,7 +518,9 @@ def retrieve(
 @click.option(
     "-s",
     "--selected",
-    type=click.Choice(get_search_files()),
+    is_flag=False,
+    flag_value="select_interactively",
+    default=None,
     help="Only retrieve search results for selected sources",
 )
 @click.option(
@@ -633,6 +652,8 @@ def search(
             )
         else:
             input(selected)  # notify /handle pre-selected when adding new
+    else:
+        selected = _select_source_interactively(selected, review_manager)
 
     search_operation.main(selection_str=selected, rerun=rerun)
 
