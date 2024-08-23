@@ -715,6 +715,8 @@ class Upgrade(colrev.process.operation.Operation):
                     out.write(bibtex_str + "\n")
                 self.repo.index.add([source["filename"]])
 
+        # TODO : remove "inconsistent-with-url-metadata" from settings
+
         return self.repo.is_dirty()
 
 

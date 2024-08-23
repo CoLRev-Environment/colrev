@@ -444,7 +444,7 @@ def test_change_entrytype_article(
             },
         },
         Fields.D_PROV: {"language": {"note": "", "source": "manual"}},
-        Fields.STATUS: RecordState.md_needs_manual_preparation,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "Editorial",
@@ -1263,7 +1263,7 @@ def test_set_status() -> None:
 
     record = colrev.record.record.Record(record_dict)
     record.set_status(RecordState.md_prepared)
-    expected = RecordState.md_needs_manual_preparation
+    expected = RecordState.md_prepared
     assert expected == record.data[Fields.STATUS]
 
 
@@ -1317,6 +1317,67 @@ def test_defects() -> None:
     actual = record.defects("literature_review")
     assert actual == ["custom-defect"]
     assert record.has_quality_defects(key="literature_review")
+
+
+def test_has_fatal_quality_defects() -> None:
+    record_dict = {
+        Fields.ID: "r1",
+        Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
+        Fields.ORIGIN: ["import.bib/id_0001"],
+        Fields.YEAR: "2009",
+        Fields.TITLE: "The Working Lifeworld of Situated Subjects and the World System of Software Maintenance: Destabilizing a Distinction",
+        Fields.AUTHOR: "Campagnolo, Gianmarco",
+        Fields.JOURNAL: "All Sprouts Content",
+        Fields.VOLUME: "9",
+        Fields.NUMBER: "2",
+        Fields.URL: "https://aisel.aisnet.org/sprouts_all/257",
+        Fields.ABSTRACT: "This is a theory of the ways post-sale software maintenance processes relate with local contexts of software usage. The larger topic addressed by the theory is the relationship between situated subjects' life world and social theories and the possibility to define situations in contemporary analyses of global phenomena. The narrower topic concerns the covariance of local usage practices with software maintenance processes within and across public sector organizations. The theory builds upon fieldwork conducted since 2006 in a number of Italian public sector organizations. Three different approaches to software maintenance with their relation with local software usage practices have been devised: in-house providing, contract work, and internal maintenance. In this position paper, I will present some evidence only from the case of the in-house providing model.",
+        Fields.DATE: "February 3, 2009",
+    }
+
+    record = colrev.record.record.Record(record_dict)
+    assert not record.has_fatal_quality_defects()
+
+    record_dict = {
+        "ID": "Curran2020",
+        "ENTRYTYPE": "article",
+        "colrev_origin": ["web_of_science.bib/WOS:000616658300022"],
+        "colrev_status": RecordState.md_needs_manual_preparation,
+        "colrev_masterdata_provenance": {
+            "author": {"source": "web_of_science.bib/WOS:000616658300022", "note": ""},
+            "journal": {"source": "web_of_science.bib/WOS:000616658300022", "note": ""},
+            "pages": {"source": "web_of_science.bib/WOS:000616658300022", "note": ""},
+            "title": {"source": "web_of_science.bib/WOS:000616658300022", "note": ""},
+            "volume": {"source": "web_of_science.bib/WOS:000616658300022", "note": ""},
+            "year": {"source": "web_of_science.bib/WOS:000616658300022", "note": ""},
+            "number": {"source": "generic_field_requirements", "note": "missing"},
+        },
+        "colrev_data_provenance": {
+            "abstract": {
+                "source": "web_of_science.bib/WOS:000616658300022",
+                "note": "",
+            },
+            "colrev.web_of_science.unique-id": {
+                "source": "web_of_science.bib/WOS:000616658300022",
+                "note": "",
+            },
+            "issn": {"source": "web_of_science.bib/WOS:000616658300022", "note": ""},
+            "language": {"source": "LanguageDetector", "note": ""},
+        },
+        "colrev.web_of_science.unique-id": "WOS:000616658300022",
+        "journal": "International Journal of Communication",
+        "title": "Intersectional English(es) and the Gig Economy: Teaching English Online",
+        "year": "2020",
+        "volume": "14",
+        "number": "UNKNOWN",
+        "pages": "2667--2686",
+        "abstract": "This article introduces LanguaSpeak, a heretofore underexplored digital platform that functions as a market for language learners and teachers. It argues that LanguaSpeak, through both its interface and users' communicative practice, unwittingly reinforces existing language ideologies, particularly around race. In making this argument, the article suggests the notion of ``intersectional English(es){''} as a means through which scholars can productively consider the ways in which race, nationality, and language intersect and are (re)enforced through online interfaces/interaction. Drawing on data collected from the profiles of English teachers from the United States and the Philippines, this article examines how language, nationality, and race intersect on LanguaSpeak. Key differences identified between the two countries' teachers include price and marketing strategies. Specifically, White male American teachers are found to enjoy significant advantages over other teachers, reflecting dominant language ideologies. This has implications for English language teaching and language discrimination more broadly.",
+        "issn": "1932-8036",
+        "author": "Curran, Nathaniel Ming",
+        "language": "eng",
+    }
+    record = colrev.record.record.Record(record_dict)
+    assert not record.has_fatal_quality_defects()
 
 
 def test_get_field_provenance_source() -> None:

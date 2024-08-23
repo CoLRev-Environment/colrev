@@ -504,6 +504,36 @@ class Record:
         ]
         return bool(defect_codes)
 
+    def has_fatal_quality_defects(self) -> bool:
+        """Check whether a record has fatal quality defects"""
+
+        required_fields = [Fields.TITLE, Fields.AUTHOR, Fields.YEAR]
+        if not all(r in self.data for r in required_fields) or not all(
+            self.data[r] != FieldValues.UNKNOWN for r in required_fields
+        ):
+            return True
+
+        if (
+            self.data.get(Fields.JOURNAL, FieldValues.UNKNOWN) == FieldValues.UNKNOWN
+            and self.data.get(Fields.BOOKTITLE, FieldValues.UNKNOWN)
+            == FieldValues.UNKNOWN
+            and self.data[Fields.ENTRYTYPE]
+            in [ENTRYTYPES.ARTICLE, ENTRYTYPES.INPROCEEDINGS]
+        ):
+            return True
+
+        if (
+            DefectCodes.IDENTICAL_VALUES_BETWEEN_TITLE_AND_CONTAINER
+            in self.get_field_provenance_notes(Fields.TITLE)
+        ):
+            return True
+
+        # TODO: add problematic regex (for title, author, container-title, year)
+
+        # TODO : offer quality-check for the data phase (e.g., check inconsistent-with-doi)
+        # TODO add upgrade script (adding data package)
+        return False
+
     def has_pdf_defects(self) -> bool:
         """Check whether the PDF has quality defects"""
 
@@ -660,9 +690,8 @@ class Record:
         self.require_prov()
         self.is_retracted()
 
-        if self.masterdata_is_curated():
-            if set_prepared:
-                self.set_status(RecordState.md_prepared)
+        if self.masterdata_is_curated() and set_prepared:
+            self.set_status(RecordState.md_prepared)
             return
 
         # Apply the checkers (including field key requirements etc.)
@@ -674,10 +703,11 @@ class Record:
         ):
             return
 
-        if self.has_quality_defects():
-            self.set_status(RecordState.md_needs_manual_preparation)
-        elif set_prepared:
-            self.set_status(RecordState.md_prepared)
+        if set_prepared:
+            if self.has_fatal_quality_defects():
+                self.set_status(RecordState.md_needs_manual_preparation)
+            else:
+                self.set_status(RecordState.md_prepared)
 
     def is_retracted(self) -> bool:
         """Check for potential retracts"""
@@ -758,7 +788,7 @@ class Record:
         """Set the record status"""
 
         if RecordState.md_prepared == target_state and not force:
-            if self.has_quality_defects():
+            if self.has_fatal_quality_defects():
                 target_state = RecordState.md_needs_manual_preparation
         # pylint: disable=colrev-direct-status-assign
         self.data[Fields.STATUS] = target_state

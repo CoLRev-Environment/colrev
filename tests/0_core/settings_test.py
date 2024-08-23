@@ -59,7 +59,7 @@ def test_settings_load() -> None:
         "search": {"retrieve_forthcoming": True},
         "prep": {
             "fields_to_keep": [],
-            "defects_to_ignore": ["inconsistent-with-url-metadata"],
+            "defects_to_ignore": [],
             "prep_rounds": [
                 {
                     "name": "prep",
