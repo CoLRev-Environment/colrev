@@ -2,6 +2,7 @@
 """Package check."""
 from __future__ import annotations
 
+import importlib.util
 import subprocess
 import sys
 from pathlib import Path
@@ -74,7 +75,6 @@ def _check_tool_poetry_plugins_colrev_classes(data: dict) -> bool:
     colrev_data = (
         data.get("tool", {}).get("poetry", {}).get("plugins", {}).get("colrev", {})
     )
-    import importlib.util
 
     for interface_identifier, endpoint_str in colrev_data.items():
         module_path, class_name = endpoint_str.rsplit(":")
@@ -84,10 +84,10 @@ def _check_tool_poetry_plugins_colrev_classes(data: dict) -> bool:
                 f"{cwd}{module_path[module_path.find('.') :].replace('.', '/')}.py"
             )
             spec = importlib.util.spec_from_file_location(module_path, file_path)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            cls = getattr(module, class_name)
-            interface = INTERFACE_MAP.get(interface_identifier)
+            module = importlib.util.module_from_spec(spec)  # type: ignore
+            spec.loader.exec_module(module)  # type: ignore
+            cls = getattr(module, class_name)  # type: ignore
+            interface: str = INTERFACE_MAP.get(interface_identifier)  # type: ignore
 
             interface_class = getattr(colrev.package_manager.interfaces, interface)
             if not interface or not verifyClass(interface_class, cls):

@@ -10,6 +10,7 @@ import subprocess
 from datetime import datetime
 from importlib import import_module
 from pathlib import Path
+from typing import Type
 
 import git
 import inquirer
@@ -17,7 +18,19 @@ import pkg_resources
 import zope.interface.interface
 
 from colrev.constants import Colors
+from colrev.package_manager.interfaces import DataInterface
+from colrev.package_manager.interfaces import DedupeInterface
 from colrev.package_manager.interfaces import INTERFACE_MAP
+from colrev.package_manager.interfaces import PDFGetInterface
+from colrev.package_manager.interfaces import PDFGetManInterface
+from colrev.package_manager.interfaces import PDFPrepInterface
+from colrev.package_manager.interfaces import PDFPrepManInterface
+from colrev.package_manager.interfaces import PrepInterface
+from colrev.package_manager.interfaces import PrepManInterface
+from colrev.package_manager.interfaces import PrescreenInterface
+from colrev.package_manager.interfaces import ReviewTypeInterface
+from colrev.package_manager.interfaces import ScreenInterface
+from colrev.package_manager.interfaces import SearchSourceInterface
 
 
 def _get_default_author() -> dict:
@@ -42,14 +55,14 @@ DEFAULT_AUTHOR = _get_default_author()
 
 # Function to create the pyproject.toml file
 def _create_pyproject_toml(data: dict) -> None:
-    plugins = "\n".join(
-        [
-            f'{plugin} = "{data["name"]}.src.{module}:{klass}"'
-            for plugin, module, klass in zip(
-                data["plugins"], data["modules"], data["classes"]
-            )
-        ]
-    )
+
+    plugins = []
+    for key, value in data["plugins"].items():
+        formatted_string = (
+            f"{key} = \"{data['name']}.{value['module']}:{value['class']}\""
+        )
+        plugins.append(formatted_string)
+    plugins_string = "\n".join(plugins)
 
     content = f"""
 [tool.poetry]
@@ -72,7 +85,7 @@ colrev_doc_link = "docs/README.md"
 search_types = []
 
 [tool.poetry.plugins.colrev]
-{plugins}
+{plugins_string}
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "cython<3.0"]
@@ -212,29 +225,10 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
             return False
         return True
 
-    plugin_questions = []
-    for plugin in package_data["plugins"]:
-        p_name = package_data["name"].replace("colrev.", "")
-        default_module_name = f"{p_name}_{plugin}"
-        default_class_name = f"{p_name.capitalize()}{plugin.capitalize()}"
-        plugin_questions.extend(
-            [
-                inquirer.Text(
-                    f"module_{plugin}",
-                    message=f"Enter the module name for {plugin} "
-                    + f"[{Colors.GREEN}{default_module_name}{Colors.END}]",
-                    validate=validate_module_name,
-                ),
-                inquirer.Text(
-                    f"class_{plugin}",
-                    message=f"Enter the class name for {plugin} "
-                    + f"[{Colors.GREEN}{default_class_name}{Colors.END}]",
-                    validate=validate_class_name,
-                ),
-            ]
-        )
-
-    plugin_data = inquirer.prompt(plugin_questions)
+    def to_camel_case(snake_str: str) -> str:
+        components = snake_str.split("_")
+        # Capitalize the first letter of each component and join them together
+        return "".join(x.capitalize() for x in components)
 
     if built_in:
         package_data["repository"] = (
@@ -242,6 +236,8 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
             f"main/colrev/packages/{package_data['name'].replace('colrev.', '')}"
         )
 
+    if not package_data["name"]:
+        package_data["name"] = default_package_name
     if not package_data["version"]:
         package_data["version"] = "0.1.0"
     if not package_data["license"]:
@@ -249,29 +245,149 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
     if not package_data["author"]:
         # pylint: disable=colrev-missed-constant-usage
         package_data["author"] = DEFAULT_AUTHOR
-    if not package_data["name"]:
-        package_data["name"] = default_package_name
     if not package_data["repository"]:
         package_data["repository"] = "TODO"
 
     package_data["doc_description"] = "TODO"
 
-    # for plugin: if module name is empty, use default module name
+    # Example: package_data["plugins"] = ["data", "screen"]
+    plugin_data = {}
     for plugin in package_data["plugins"]:
-        if not plugin_data[f"module_{plugin}"]:
-            plugin_data[f"module_{plugin}"] = f"{package_data['name']}_{plugin}"
-        if not plugin_data[f"class_{plugin}"]:
-            plugin_data[f"class_{plugin}"] = (
-                f"{package_data['name'].capitalize()}{plugin.capitalize()}"
-            )
+        p_name = package_data["name"].replace("colrev.", "")
+        default_module_name = f"{p_name}_{plugin}"
+        default_class_name = to_camel_case(
+            f"{p_name.capitalize()}_{plugin.capitalize()}"
+        )
+        plugin_questions = [
+            inquirer.Text(
+                "module",
+                message=f"Enter the module name for {plugin} "
+                + f"[{Colors.GREEN}{default_module_name}{Colors.END}]",
+                validate=validate_module_name,
+            ),
+            inquirer.Text(
+                "class",
+                message=f"Enter the class name for {plugin} "
+                + f"[{Colors.GREEN}{default_class_name}{Colors.END}]",
+                validate=validate_class_name,
+            ),
+        ]
 
-    package_data["modules"] = [
-        plugin_data[f"module_{plugin}"] for plugin in package_data["plugins"]
-    ]
-    package_data["classes"] = [
-        plugin_data[f"class_{plugin}"] for plugin in package_data["plugins"]
-    ]
+        data = inquirer.prompt(plugin_questions)
+
+        if data["module"] == "":
+            data["module"] = default_module_name
+        if data["class"] == "":
+            data["class"] = default_class_name
+        plugin_data[plugin] = data
+
+    package_data["plugins"] = plugin_data
+
     return package_data
+
+
+# pylint: disable=too-many-branches
+def _get_init_method(interface_class: Type) -> str:
+
+    # pylint: disable=line-too-long
+    init_method = """    settings_class = colrev.package_manager.package_settings.DefaultSettings
+
+"""
+    if interface_class is ReviewTypeInterface:
+        init_method += """    def __init__(
+        self, *, operation: colrev.process.operation.Operation, settings: dict
+    ) -> None:
+        self.settings = self.settings_class.load_settings(data=settings)"""
+    elif interface_class is SearchSourceInterface:
+        init_method += """
+    def __init__(
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: typing.Optional[dict] = None,
+    ) -> None:
+      pass # TODO"""
+    elif interface_class is PrepInterface:
+        init_method += """    def __init__(
+        self,
+        *,
+        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        settings: dict,
+    ) -> None:
+        self.settings = self.settings_class.load_settings(data=settings)"""
+    elif interface_class is PrepManInterface:
+        init_method += """    def __init__(
+        self, *, prep_man_operation: colrev.ops.prep_man.PrepMan, settings: dict
+    ) -> None:
+        self.settings = self.settings_class.load_settings(data=settings)"""
+    elif interface_class is DedupeInterface:
+        init_method += """    def __init__(
+        self,
+        *,
+        dedupe_operation: colrev.ops.dedupe.Dedupe,
+        settings: dict,
+    ) -> None:
+      pass # TODO"""
+    elif interface_class is PrescreenInterface:
+        init_method += """    def __init__(
+        self,
+        *,
+        prescreen_operation: colrev.ops.prescreen.Prescreen,
+        settings: dict,
+    ) -> None:
+      pass # TODO"""
+    elif interface_class is PDFGetInterface:
+        init_method += """    def __init__(
+        self,
+        *,
+        pdf_get_operation: colrev.ops.pdf_get.PDFGet,
+        settings: dict,
+    ) -> None:
+      pass # TODO"""
+    elif interface_class is PDFGetManInterface:
+        init_method += """    def __init__(
+        self,
+        *,
+        pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
+        settings: dict,
+    ) -> None:
+      pass # TODO"""
+    elif interface_class is PDFPrepInterface:
+        init_method += """    def __init__(
+        self,
+        *,
+        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
+        settings: dict,
+    ) -> None:
+      pass # TODO"""
+    elif interface_class is PDFPrepManInterface:
+        init_method += """    def __init__(
+        self,
+        *,
+        pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
+        settings: dict,
+    ) ->: None:
+      pass # TODO"""
+    elif interface_class is ScreenInterface:
+        init_method += """    def __init__(
+        self,
+        *,
+        screen_operation: colrev.ops.screen.Screen,
+        settings: dict,
+    ) -> None:
+      pass # TODO"""
+    elif interface_class is DataInterface:
+        init_method += """    def __init__(
+        self,
+        *,
+        data_operation: colrev.ops.data.Data,
+        settings: dict,
+    ) -> None:
+      pass # TODO"""
+    else:
+        init_method += "#TODO"
+
+    return init_method
 
 
 def _generate_method_signatures(module_path: str, class_name: str) -> list:
@@ -291,17 +407,17 @@ def _generate_method_signatures(module_path: str, class_name: str) -> list:
             if isinstance(attr, zope.interface.interface.Attribute) and not isinstance(
                 attr, zope.interface.interface.Method
             ):
-                method_signatures.append(f"   {name} = '' #TODO\n")
+                method_signatures.append(f"    {name} = '' #TODO\n")
         method_signatures.append("\n")
-
-        method_signatures.append("   def __init__(self) -> None:\n")
-        method_signatures.append("      pass\n\n")
+        method_signatures.append(_get_init_method(interface_class))
+        method_signatures.append("\n")
+        method_signatures.append("\n")
 
         for name, attr in attrs_dict.items():
             if isinstance(attr, zope.interface.interface.Method):
                 sig_string = attr.getSignatureString().replace("(", "(self, ")
                 method_signatures.append(
-                    f"   def {name}{sig_string}:\n"
+                    f"    def {name}{sig_string}:\n"
                     f'      """{attr.getDoc()}"""\n      # TODO\n\n'
                 )
 
@@ -310,14 +426,42 @@ def _generate_method_signatures(module_path: str, class_name: str) -> list:
     return ["Attribute '_InterfaceClass__attrs' not found."]
 
 
+# pylint: disable=too-many-return-statements
+# pylint: disable=too-many-branches
+def _get_package_imports(plugin: str) -> str:
+    if plugin == "review_type":
+        return "import colrev.ops.data"
+    if plugin == "search_source":
+        return "import colrev.process.operation"
+    if plugin == "prep":
+        return "import colrev.ops.prep"
+    if plugin == "prep_man":
+        return "import colrev.ops.prep_man"
+    if plugin == "dedupe":
+        return "import colrev.ops.dedupe"
+    if plugin == "prescreen":
+        return "import colrev.ops.prescreen"
+    if plugin == "pdf_get":
+        return "import colrev.ops.pdf_get"
+    if plugin == "pdf_get_man":
+        return "import colrev.ops.pdf_get_man"
+    if plugin == "pdf_prep":
+        return "import colrev.ops.pdf_prep"
+    if plugin == "pdf_prep_man":
+        return "import colrev.ops.pdf_prep_man"
+    if plugin == "screen":
+        return "import colrev.ops.screen"
+    if plugin == "data":
+        return "import colrev.ops.data"
+    return "#TODO"
+
+
 def _create_module_files(package_data: dict) -> None:
 
     os.makedirs("src", exist_ok=True)
 
-    for plugin, module, class_name in zip(
-        package_data["plugins"], package_data["modules"], package_data["classes"]
-    ):
-        file_path = os.path.join("src", f"{module}.py")
+    for plugin, data in package_data["plugins"].items():
+        file_path = os.path.join("src", f"{data['module']}.py")
         interface = INTERFACE_MAP[plugin]
 
         module_path = "colrev.package_manager.interfaces"
@@ -326,14 +470,15 @@ def _create_module_files(package_data: dict) -> None:
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(
                 f'''#! /usr/bin/env python
-"""{interface}: {class_name}"""
+"""{interface}: {data['class']}"""
 
 from zope.interface import implementer
 from colrev.package_manager.interfaces import {interface}
+import colrev.package_manager.package_settings
+{_get_package_imports(plugin)}
 
 @implementer({interface})
-class {class_name}:
-
+class {data['class']}:
 '''
             )
             for signature in method_signatures:
