@@ -26,9 +26,11 @@ Parallel independent data extraction is only supported through the built-in git 
     colrev data --reading_heuristics
 
 
-To set the data format, run any (combination) of the following:
+To add data packages, run any (combination) of the following:
 
 .. code:: bash
+
+    colrev data --add
 
     colrev data --add colrev.paper_md
     colrev data --add colrev.structured

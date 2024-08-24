@@ -139,6 +139,7 @@ class LoadFormatter:
         for field in record.data:
             if field not in self._FIELDS_TO_PROCESS:
                 continue
+            record.data[field] = str(record.data[field])
             if "\\" in record.data[field]:
                 record.data[field] = self._unescape_latex(input_str=record.data[field])
             record.data[field] = self._unescape_html(input_str=record.data[field])

@@ -22,6 +22,7 @@ import colrev.record.record_prep
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.packages.arxiv.src import record_transformer
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -241,61 +242,6 @@ class ArXivSource:
         # id_list
         return record
 
-    # pylint: disable=too-many-branches
-    # pylint: disable=colrev-missed-constant-usage
-    def _parse_record(self, entry: dict) -> dict:
-        entry[Fields.ENTRYTYPE] = "techreport"
-        entry["arxivid"] = entry.pop("id").replace("http://arxiv.org/abs/", "")
-        entry[Fields.AUTHOR] = " and ".join([a["name"] for a in entry.pop("authors")])
-        entry[Fields.YEAR] = entry.pop("published")[:4]
-        entry[Fields.ABSTRACT] = entry.pop("summary")
-        entry[Fields.ABSTRACT] = (
-            entry[Fields.ABSTRACT].replace("\n", " ").replace("\r", " ")
-        )
-        if "arxiv_journal_ref" in entry:
-            entry["arxiv_journal_ref"] = (
-                entry["arxiv_journal_ref"].replace("\n", " ").replace("\r", " ")
-            )
-        entry[Fields.TITLE] = entry["title"].replace("\n ", "")
-        if "arxiv_doi" in entry:
-            entry[Fields.DOI] = entry.pop("arxiv_doi")
-        if "links" in entry:
-            for link in entry["links"]:
-                if link["type"] == "application/pdf":
-                    entry[Fields.FULLTEXT] = link["href"]
-                else:
-                    entry[Fields.URL] = link["href"]
-        if "link" in entry:
-            if "url" in entry:
-                del entry["link"]
-            else:
-                entry[Fields.URL] = entry.pop("link")
-        if "arxiv_comment" in entry:
-            entry[Fields.KEYWORDS] = (
-                entry.pop("arxiv_comment").replace("Key words: ", "").replace("\n", "")
-            )
-
-        fields_to_remove = [
-            "links",
-            "href",
-            "guidislink",
-            "summary_detail",
-            "title_detail",
-            "updated",
-            "updated_parsed",
-            "author_detail",
-            "published_parsed",
-            "arxiv_primary_category",
-            "tags",
-        ]
-        for field_to_remove in fields_to_remove:
-            if field_to_remove in entry:
-                del entry[field_to_remove]
-
-        if "keywords" in entry and "pages" in entry["keywords"]:
-            del entry["keywords"]
-        return entry
-
     def _get_arxiv_ids(self, query: str, retstart: int) -> typing.List[dict]:
         url = (
             "https://export.arxiv.org/api/query?search_query="
@@ -312,7 +258,7 @@ class ArXivSource:
             if not entries:
                 break
             for entry in entries:
-                yield self._parse_record(entry)
+                yield record_transformer.parse_record(entry)
 
             retstart += 20
 
@@ -436,7 +382,7 @@ class ArXivSource:
                 logger=self.review_manager.logger,
             )
             for record in records.values():
-                record["institution"] = "ArXiv"
+                record[Fields.INSTITUTION] = "ArXiv"
             return records
 
         raise NotImplementedError

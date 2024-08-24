@@ -8,6 +8,7 @@ import requests_mock
 import colrev.ops.prep
 import colrev.packages.crossref.src.crossref_search_source
 from colrev.constants import SearchType
+from colrev.packages.crossref.src import crossref_api
 
 # pylint: disable=line-too-long
 
@@ -21,7 +22,7 @@ def fixture_crossref_search_source(
         "endpoint": "colrev.crossref",
         "filename": Path("data/search/md_crossref.bib"),
         "search_type": SearchType.DB,
-        "search_parameters": {},
+        "search_parameters": {"url": "test"},
         "comment": "",
     }
     instance = colrev.packages.crossref.src.crossref_search_source.CrossrefSearchSource(
@@ -144,7 +145,8 @@ def test_crossref_query(  # type: ignore
 ) -> None:
     """Test the crossref query_doi()"""
     # note: replace the / in filenames by _
-    etiquette = crossref_search_source.get_etiquette()
+
+    api = crossref_api.CrossrefAPI(params={})
 
     json_str = helpers.retrieve_test_file_content(
         source=Path(
@@ -156,7 +158,7 @@ def test_crossref_query(  # type: ignore
             f"https://api.crossref.org/works/{doi}", content=json_str.encode("utf-8")
         )
 
-        actual = crossref_search_source.query_doi(doi=doi, etiquette=etiquette)
+        actual = api.query_doi(doi=doi)
         expected = colrev.record.record_prep.PrepRecord(expected_dict)
 
         assert actual.data == expected.data

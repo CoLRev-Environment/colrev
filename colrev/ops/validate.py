@@ -129,9 +129,11 @@ class Validate(colrev.process.operation.Operation):
     def _validate_prep_changes(self, *, report: dict) -> None:
         """Validate preparation changes"""
 
-        self.review_manager.logger.debug("Load records...")
+        self.review_manager.logger.info("Load records...")
 
-        load_operation = self.review_manager.get_load_operation()
+        load_operation = self.review_manager.get_load_operation(
+            hide_load_explanation=True
+        )
         origin_records = {}
         for source in load_operation.load_active_sources(include_md=True):
             if not source.search_source.filename.is_file():

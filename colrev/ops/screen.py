@@ -36,14 +36,14 @@ class Screen(colrev.process.operation.Operation):
 
     def to_screen(self, record_dict: dict) -> bool:
         """
-        This method checks if the record is ready to be screened.
-        It returns True if the status of the record is 'pdf_prepared', otherwise it returns False.
+        This method checks if the record needs to be screened.
         """
         if RecordState.pdf_prepared == record_dict[Fields.STATUS]:
             return True
         if (
             "screening_criteria" in record_dict
             and "TODO" in record_dict["screening_criteria"]
+            and not RecordState.rev_excluded == record_dict[Fields.STATUS]
         ):
             return True
         return False
@@ -156,6 +156,7 @@ class Screen(colrev.process.operation.Operation):
         self.review_manager.dataset.add_setting_changes()
 
         records = self.review_manager.dataset.load_records_dict()
+        counter = 0
         for record_dict in records.values():
             if record_dict[Fields.STATUS] not in [
                 RecordState.rev_included,
@@ -167,6 +168,10 @@ class Screen(colrev.process.operation.Operation):
                 record_dict[Fields.SCREENING_CRITERIA] = ";".join(
                     f"{c}=TODO" for c in self.review_manager.settings.screen.criteria
                 )
+                record = colrev.record.record.Record(record_dict)
+                record.set_status(RecordState.pdf_prepared)
+                counter += 1
+                continue
             if record_dict[Fields.STATUS] in [
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
@@ -176,15 +181,20 @@ class Screen(colrev.process.operation.Operation):
                 # decisions have to be updated (resulting in inclusion or exclusion)
                 record = colrev.record.record.Record(record_dict)
                 record.set_status(RecordState.pdf_prepared)
+                counter += 1
             if record_dict[Fields.STATUS] == RecordState.rev_excluded:
                 record_dict[Fields.SCREENING_CRITERIA] += f";{criterion_name}=TODO"
                 # Note : no change in colrev_status
                 # because at least one of the other criteria led to exclusion decision
 
+        print(f"Number of records that need to be screened again: {counter}")
+        print()
+
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
             msg=f"Screen: add criterion: {criterion_name}",
         )
+        print()
 
     def delete_criterion(self, criterion_to_delete: str) -> None:
         """Delete a screening criterion from the records and settings"""

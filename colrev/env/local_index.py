@@ -167,7 +167,8 @@ class LocalIndex:
             # ie. no sqlite database available
             pass  # return False
         finally:
-            sqlite_index_toc.connection.close()
+            if sqlite_index_toc is not None:  # Check if it was initialized
+                sqlite_index_toc.connection.close()
             self.thread_lock.release()
         return False
 

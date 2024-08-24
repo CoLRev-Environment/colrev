@@ -313,14 +313,17 @@ def fixture_pdedupe_operation(
 
 
 @pytest.fixture
-def record_with_pdf() -> colrev.record.record.Record:
+def record_with_pdf(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> colrev.record.record.Record:
     """Fixture returning a record containing a file (PDF)"""
     return colrev.record.record_pdf.PDFRecord(
         {
             Fields.ID: "WagnerLukyanenkoParEtAl2022",
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
             Fields.FILE: Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
-        }
+        },
+        path=base_repo_review_manager.path,
     )
 
 
@@ -458,9 +461,12 @@ def fixture_v_t_record() -> colrev.record.record.Record:
 @pytest.fixture(name="v_t_pdf_record")
 def fixture_v_t_pdf_record(
     v_t_record: colrev.record.record.Record,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> colrev.record.record_pdf.PDFRecord:
     """Record for testing quality defects"""
-    return colrev.record.record_pdf.PDFRecord(v_t_record.data)
+    return colrev.record.record_pdf.PDFRecord(
+        v_t_record.data, path=base_repo_review_manager.path
+    )
 
 
 @pytest.fixture(name="book_record")

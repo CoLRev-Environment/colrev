@@ -282,7 +282,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                         record_dict[Fields.URL] = record_dict.pop("link")
                 for key in list(record_dict.keys()):
                     if key not in FieldSet.STANDARDIZED_FIELD_KEYS:
-                        self.review_manager.logger.warning(
+                        self.review_manager.logger.debug(
                             f"Field {key} not in standard field set"
                         )
                         del record_dict[key]

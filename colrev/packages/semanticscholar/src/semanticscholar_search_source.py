@@ -23,7 +23,6 @@ import colrev.ops.load
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
-import colrev.packages.semanticscholar.src.semanticscholar_utils as connector_utils
 import colrev.process.operation
 import colrev.record.record
 import colrev.settings
@@ -31,6 +30,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.packages.semanticscholar.src import record_transformer
 from colrev.packages.semanticscholar.src.semanticscholar_ui import SemanticScholarUI
 
 if typing.TYPE_CHECKING:  # pragma: no cover
@@ -320,9 +320,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         try:
             for item in _search_return:
-                retrieved_record_dict = connector_utils.s2_dict_to_record(item=item)
-
-                retrieved_record = colrev.record.record.Record(retrieved_record_dict)
+                retrieved_record = record_transformer.dict_to_record(item=item)
                 s2_feed.add_update_record(retrieved_record)
 
         except (

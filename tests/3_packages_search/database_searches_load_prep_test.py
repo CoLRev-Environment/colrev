@@ -48,7 +48,9 @@ NO_CUSTOM_SOURCE = None
                 endpoint="colrev.crossref",
                 filename=Path("data/search/crossref_bib.bib"),
                 search_type=SearchType.API,
-                search_parameters={},
+                search_parameters={
+                    "url": "https://api.crossref.org/works?query.bibliographic=test"
+                },
                 comment="",
             ),
             Path("crossref_bib_result.bib"),

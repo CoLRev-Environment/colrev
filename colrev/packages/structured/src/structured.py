@@ -85,11 +85,10 @@ Example 2:
         if "fields" not in settings:
             settings["fields"] = []
         if "data_path_relative" not in settings:
-            settings["data_path_relative"] = Path("data.csv")
+            settings["data_path_relative"] = Path("data/data/data.csv")
 
         self.settings = self.settings_class.load_settings(data=settings)
-        data_dir = self.review_manager.paths.data
-        self.data_path = data_dir / self.settings.data_path_relative
+        self.data_path = self.review_manager.path / self.settings.data_path_relative
         self.review_manager = self.review_manager
 
     # pylint: disable=unused-argument
@@ -101,7 +100,7 @@ Example 2:
             "endpoint": "colrev.structured",
             "version": "0.1",
             "fields": [],
-            "data_path_relative": "data/data.csv",
+            "data_path_relative": "data/data/data.csv",
         }
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
         operation.review_manager.save_settings()
@@ -198,7 +197,7 @@ Example 2:
             if not self.data_path.is_file():
                 self._set_fields()
 
-                field_names = [f["name"] for f in self.settings.fields]
+                field_names = [f.name for f in self.settings.fields]
                 data_df = pd.DataFrame([], columns=[Fields.ID] + field_names)
                 data_df.sort_values(by=[Fields.ID], inplace=True)
 

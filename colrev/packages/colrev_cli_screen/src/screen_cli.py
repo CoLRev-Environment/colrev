@@ -64,7 +64,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 f"({color}{criterion_settings.criterion_type}{Colors.END}): "
                 f"{criterion_settings.explanation}"
             )
-            if criterion_settings.comment is not None:
+            if criterion_settings.comment:
                 print(f"   {criterion_settings.comment}")
 
     def _screen_with_criteria_print_overall_decision(
@@ -81,6 +81,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 f"{Colors.RED}exclude{Colors.END}"
             )
 
+    # pylint: disable=too-many-branches
     def _screen_record_with_criteria(
         self,
         record: colrev.record.record.Record,
@@ -93,7 +94,8 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 == criterion_settings.criterion_type
             ):
                 color = Colors.RED
-            choices.append(f"{color}{criterion_name}{Colors.END}")
+            choices.append(f"{color}{criterion_name}{Colors.END} violated")
+        choices.append("Include (no criterion violated)")
         choices.append("Skip")
         choices.append("Quit")
         question = [
@@ -105,8 +107,40 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             ),
         ]
 
-        answers = prompt(question)
-        violated_criteria = answers["violated_criteria"]
+        while True:
+            answers = prompt(question)
+            violated_criteria = answers["violated_criteria"]
+
+            # can only select one of the options quit, skip, or include/no criterion violated
+            if "Quit" in violated_criteria and len(violated_criteria) > 1:
+                print(
+                    "Contradiction: 'Quit' and other criteria selected. Please select again."
+                )
+                continue
+            if "Skip" in violated_criteria and len(violated_criteria) > 1:
+                print(
+                    "Contradiction: 'Skip' and other criteria selected. Please select again."
+                )
+                continue
+            if (
+                "Include (no criterion violated)" in violated_criteria
+                and len(violated_criteria) > 1
+            ):
+                print(
+                    "Contradiction: 'Include (no criterion violated)'"
+                    " and other criteria selected. Please select again."
+                )
+                continue
+            # prevent contradiction (include and criterion violated)
+            if "Include (no criterion violated)" in violated_criteria:
+                violated_criteria.remove("Include (no criterion violated)")
+                if violated_criteria:
+                    print(
+                        "Contradiction: 'Include (no criterion violated)' "
+                        "and other criteria selected. Please select again."
+                    )
+                    continue
+            break
 
         if "Skip" in violated_criteria:
             return "skip"
@@ -114,12 +148,14 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             return "quit"
 
         decisions = {c: "in" for c in self.screening_criteria.keys()}
-        for criterion_name in violated_criteria:
-            decisions[
-                criterion_name.replace(Colors.RED, "")
-                .replace(Colors.END, "")
-                .replace(Colors.GREEN, "")
-            ] = "out"
+        if "Include (no criterion violated)" not in violated_criteria:
+            for criterion_name in violated_criteria:
+                decisions[
+                    criterion_name.replace(Colors.RED, "")
+                    .replace(Colors.END, "")
+                    .replace(Colors.GREEN, "")
+                    .replace(" violated", "")
+                ] = "out"
 
         c_field = ""
         for criterion_name, decision in decisions.items():
@@ -194,7 +230,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         if "abstract" in record.data:
             print()
             print(record.data["abstract"])
-
+        print()
         if self.criteria_available:
             ret = self._screen_record_with_criteria(record)
 

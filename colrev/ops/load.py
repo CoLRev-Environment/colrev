@@ -53,7 +53,8 @@ class Load(colrev.process.operation.Operation):
                 "Original records (search results) are stored in the directory data/search"
             )
             self.review_manager.logger.info(
-                "See https://colrev-environment.github.io/colrev/manual/metadata_retrieval/load.html"
+                "See https://colrev-environment.github.io/"
+                "colrev/manual/metadata_retrieval/load.html"
             )
 
     def _get_currently_imported_origin_list(self) -> list:
@@ -185,7 +186,7 @@ class Load(colrev.process.operation.Operation):
                 )
             if any(x == "" for x in source_record.values()):
                 raise colrev_exceptions.ImportException(
-                    f"Values should not be empty ({source_record.values()})"
+                    f"Values should not be empty ({source_record})"
                 )
 
             for key in source_record.keys():

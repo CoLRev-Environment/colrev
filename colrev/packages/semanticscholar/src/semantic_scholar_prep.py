@@ -16,6 +16,7 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
 from colrev.constants import Fields
+from colrev.packages.semanticscholar.src import record_transformer
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -48,56 +49,14 @@ class SemanticScholarPrep(JsonSchemaMixin):
         self.headers = {"user-agent": f"{__name__} (mailto:{email})"}
         self.session = prep_operation.review_manager.get_cached_session()
 
-    def _get_record_from_item(
-        self, *, item: dict, record_in: colrev.record.record_prep.PrepRecord
-    ) -> colrev.record.record_prep.PrepRecord:
-        # pylint: disable=too-many-branches
-        retrieved_record: dict = {}
-        if "authors" in item:
-            authors_string = " and ".join(
-                [author["name"] for author in item["authors"] if "name" in author]
-            )
-            authors_string = colrev.record.record_prep.PrepRecord.format_author_field(
-                authors_string
-            )
-            retrieved_record.update(author=authors_string)
-        if Fields.ABSTRACT in item:
-            retrieved_record.update(abstract=item[Fields.ABSTRACT])
-        if Fields.DOI in item:
-            if str(item[Fields.DOI]).lower() != "none":
-                retrieved_record.update(doi=str(item[Fields.DOI]).upper())
-        if Fields.TITLE in item:
-            retrieved_record.update(title=item[Fields.TITLE])
-        if Fields.YEAR in item:
-            retrieved_record.update(year=item[Fields.YEAR])
-        # Note: semantic scholar does not provide data on the type of venue.
-        # we therefore use the original ENTRYTYPE
-        if "venue" in item:
-            if Fields.JOURNAL in record_in.data:
-                retrieved_record.update(journal=item["venue"])
-            if Fields.BOOKTITLE in record_in.data:
-                retrieved_record.update(booktitle=item["venue"])
-        if Fields.URL in item:
-            retrieved_record[Fields.SEMANTIC_SCHOLAR_ID] = item[Fields.URL]
-
-        keys_to_drop = []
-        for key, value in retrieved_record.items():
-            retrieved_record[key] = str(value).replace("\n", " ").lstrip().rstrip()
-            if value in ["", "None"] or value is None:
-                keys_to_drop.append(key)
-        for key in keys_to_drop:
-            record_in.remove_field(key=key)
-
-        record = colrev.record.record_prep.PrepRecord(retrieved_record)
-        return record
-
-    def retrieve_record_from_semantic_scholar(
+    def _retrieve_record_from_semantic_scholar(
         self,
-        *,
-        url: str,
         record_in: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record_prep.PrepRecord:
         """Prepare the record metadata based on SemanticScholar"""
+
+        search_api_url = "https://api.semanticscholar.org/graph/v1/paper/search?query="
+        url = search_api_url + record_in.data.get(Fields.TITLE, "").replace(" ", "+")
 
         # prep_operation.review_manager.logger.debug(url)
         ret = self.session.request(
@@ -124,10 +83,10 @@ class SemanticScholarPrep(JsonSchemaMixin):
         ret_ent.raise_for_status()
         item = json.loads(ret_ent.text)
 
-        record = self._get_record_from_item(item=item, record_in=record_in)
-        record.add_provenance_all(source=record_retrieval_url)
+        retrieved_record = record_transformer.dict_to_record(item=item)
+        retrieved_record.add_provenance_all(source=record_retrieval_url)
 
-        return record
+        return retrieved_record.copy_prep_rec()
 
     def prepare(
         self, record: colrev.record.record_prep.PrepRecord
@@ -135,14 +94,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
         """Prepare a record based on metadata from SemanticScholar"""
 
         try:
-            search_api_url = (
-                "https://api.semanticscholar.org/graph/v1/paper/search?query="
-            )
-            url = search_api_url + record.data.get(Fields.TITLE, "").replace(" ", "+")
-
-            retrieved_record = self.retrieve_record_from_semantic_scholar(
-                url=url, record_in=record
-            )
+            retrieved_record = self._retrieve_record_from_semantic_scholar(record)
             if Fields.SEMANTIC_SCHOLAR_ID not in retrieved_record.data:
                 return record
 

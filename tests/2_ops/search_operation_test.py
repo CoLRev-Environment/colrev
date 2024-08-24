@@ -51,7 +51,9 @@ def test_search_add_source(  # type: ignore
         endpoint="colrev.crossref",
         filename=Path("data/search/crossref_search.bib"),
         search_type=SearchType.DB,
-        search_parameters={"query": "test"},
+        search_parameters={
+            "url": "https://api.crossref.org/works?query.bibliographic=test"
+        },
         comment="",
     )
 

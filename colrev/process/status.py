@@ -231,8 +231,15 @@ class StatusStats:
             operations_type = [
                 x["trigger"]
                 for x in ProcessModel.transitions
-                if x["source"] == transitioned_record["source"]
-                and x["dest"] == transitioned_record["dest"]
+                if (
+                    x["source"] == transitioned_record["source"]
+                    and x["dest"] == transitioned_record["dest"]
+                )
+                # Allow for reverse transitions
+                or (
+                    x["source"] == transitioned_record["dest"]
+                    and x["dest"] == transitioned_record["source"]
+                )
             ]
             if len(operations_type) == 0:
                 transitioned_record["type"] = "invalid_transition"

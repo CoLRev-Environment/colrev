@@ -31,6 +31,21 @@ def enl_entrytype_setter(record_dict: dict) -> None:
             record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
 
+def bib_field_mapper(record_dict: dict) -> None:
+    """Map the fields for BibTeX files."""
+
+    record_dict.pop("type", None)
+    record_dict.pop("IG", None)
+
+    record_dict.pop("H", None)
+    record_dict.pop("NT", None)
+    record_dict.pop("OO", None)
+    record_dict.pop("OU", None)
+    record_dict.pop("ND", None)
+    record_dict.pop("pe", None)
+    record_dict.pop("ns", None)
+
+
 def enl_field_mapper(record_dict: dict) -> None:
     """Map the fields for ENL files."""
     key_maps = {

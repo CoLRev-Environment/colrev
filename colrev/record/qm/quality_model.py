@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import typing
 from multiprocessing import Lock
 from pathlib import Path
 
@@ -21,11 +22,13 @@ class QualityModel:
         *,
         defects_to_ignore: list[str],
         pdf_mode: bool = False,
+        path: typing.Optional[Path] = None,
     ) -> None:
         self.pdf_mode = pdf_mode
         self.defects_to_ignore = defects_to_ignore
         self._register_checkers()
         self.local_index_lock = Lock()
+        self.path = path
 
     def _register_checkers(self) -> None:
         """Register checkers from the checker directory, looking for a
@@ -67,6 +70,8 @@ class QualityModel:
         """Run the checkers"""
 
         if self.pdf_mode:
+            if not self.path:
+                raise ValueError("Path is required for PDF mode")
             if (
                 Fields.FILE not in record.data
                 or not Path(record.data[Fields.FILE]).is_file()
@@ -78,7 +83,7 @@ class QualityModel:
                 or Fields.NR_PAGES_IN_FILE not in record.data
             ):
                 # The following should be improved.
-                record = colrev.record.record_pdf.PDFRecord(record.data)
+                record = colrev.record.record_pdf.PDFRecord(record.data, path=self.path)
                 record.set_text_from_pdf()
 
         for checker in self.checkers:

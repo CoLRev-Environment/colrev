@@ -640,7 +640,8 @@ class PaperMarkdown(JsonSchemaMixin):
         return records
 
     def _create_non_sample_references_bib(self) -> None:
-        if not self.NON_SAMPLE_REFERENCES_RELATIVE.is_file():
+
+        if not self.non_sample_references.is_file():
             try:
                 retrieval_path = Path(
                     "packages/paper_md/paper_md/non_sample_references.bib"
@@ -660,6 +661,7 @@ class PaperMarkdown(JsonSchemaMixin):
             records[record_id] = record_dict
 
         write_file(records_dict=records, filename=self.sample_references)
+        self.review_manager.dataset.add_changes(self.sample_references)
 
     def _call_docker_build_process(self, *, script: str) -> None:
         try:

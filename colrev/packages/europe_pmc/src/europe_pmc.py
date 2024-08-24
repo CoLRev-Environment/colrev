@@ -10,13 +10,11 @@ from pathlib import Path
 from sqlite3 import OperationalError
 from urllib.parse import quote
 from urllib.parse import urlparse
-from xml.etree.ElementTree import Element  # nosec
 
 import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from lxml import etree
 from rapidfuzz import fuzz
 
 import colrev.exceptions as colrev_exceptions
@@ -27,14 +25,33 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
 import colrev.settings
-from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.packages.europe_pmc.src import europe_pmc_api
 
 # pylint: disable=duplicate-code
 # pylint: disable=unused-argument
+
+
+@dataclass
+class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
+    """Settings for EuropePMCSearchSource"""
+
+    # pylint: disable=too-many-instance-attributes
+    endpoint: str
+    filename: Path
+    search_type: SearchType
+    search_parameters: dict
+    comment: typing.Optional[str]
+
+    _details = {
+        "search_parameters": {
+            "tooltip": "Currently supports a scope item "
+            "with venue_key and journal_abbreviated fields."
+        },
+    }
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
@@ -56,25 +73,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     short_name = "Europe PMC"
     _europe_pmc_md_filename = Path("data/search/md_europe_pmc.bib")
     _SOURCE_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
-    _next_page_url: str = ""
-
-    @dataclass
-    class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
-        """Settings for EuropePMCSearchSource"""
-
-        # pylint: disable=too-many-instance-attributes
-        endpoint: str
-        filename: Path
-        search_type: SearchType
-        search_parameters: dict
-        comment: typing.Optional[str]
-
-        _details = {
-            "search_parameters": {
-                "tooltip": "Currently supports a scope item "
-                "with venue_key and journal_abbreviated fields."
-            },
-        }
 
     settings_class = EuropePMCSearchSourceSettings
 
@@ -108,75 +106,12 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     comment="",
                 )
 
-            self.europe_pmc_lock = Lock()
+        self.europe_pmc_lock = Lock()
         self.source_operation = source_operation
 
     # @classmethod
     # def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
     # ...
-
-    @classmethod
-    def _get_string_from_item(cls, *, item, key: str) -> str:  # type: ignore
-        return_string = ""
-        for selected_node in item.findall(key):
-            return_string = selected_node.text
-        return return_string
-
-    # pylint: disable=colrev-missed-constant-usage
-    @classmethod
-    def _europe_pmc_xml_to_record(
-        cls, *, item: Element
-    ) -> colrev.record.record_prep.PrepRecord:
-        retrieved_record_dict: dict = {Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE}
-        retrieved_record_dict[Fields.AUTHOR] = cls._get_string_from_item(
-            item=item, key="authorString"
-        )
-        retrieved_record_dict[Fields.JOURNAL] = cls._get_string_from_item(
-            item=item, key="journalTitle"
-        )
-        retrieved_record_dict[Fields.DOI] = cls._get_string_from_item(
-            item=item, key="doi"
-        )
-        retrieved_record_dict[Fields.TITLE] = cls._get_string_from_item(
-            item=item, key="title"
-        )
-        retrieved_record_dict[Fields.YEAR] = cls._get_string_from_item(
-            item=item, key="pubYear"
-        )
-        retrieved_record_dict[Fields.VOLUME] = cls._get_string_from_item(
-            item=item, key="journalVolume"
-        )
-        retrieved_record_dict[Fields.NUMBER] = cls._get_string_from_item(
-            item=item, key="issue"
-        )
-        retrieved_record_dict[Fields.PUBMED_ID] = cls._get_string_from_item(
-            item=item, key="pmid"
-        )
-        retrieved_record_dict[Fields.PMCID] = cls._get_string_from_item(
-            item=item, key="pmcid"
-        )
-
-        retrieved_record_dict["epmc_source"] = cls._get_string_from_item(
-            item=item, key="source"
-        )
-        retrieved_record_dict["epmc_id"] = cls._get_string_from_item(
-            item=item, key="id"
-        )
-        retrieved_record_dict[Fields.EUROPE_PMC_ID] = (
-            retrieved_record_dict.get("epmc_source", "NO_SOURCE")
-            + "/"
-            + retrieved_record_dict.get("epmc_id", "NO_ID")
-        )
-        retrieved_record_dict[Fields.ID] = retrieved_record_dict[Fields.EUROPE_PMC_ID]
-
-        retrieved_record_dict = {
-            k: v
-            for k, v in retrieved_record_dict.items()
-            if k not in ["epmc_id", "epmc_source"] and v != ""
-        }
-
-        record = colrev.record.record_prep.PrepRecord(retrieved_record_dict)
-        return record
 
     @classmethod
     def _get_similarity(
@@ -199,27 +134,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         similarity = sum(similarities[g] * weights[g] for g in range(len(similarities)))
         return similarity
 
-    def _get_europe_pmc_items(self, *, url: str, timeout: int) -> list:
-        _, email = self.review_manager.get_committer()
-        headers = {"user-agent": f"{__name__} (mailto:{email})"}
-        session = self.review_manager.get_cached_session()
-        self.review_manager.logger.debug(url)
-        ret = session.request("GET", url, headers=headers, timeout=timeout)
-        ret.raise_for_status()
-        if ret.status_code != 200:
-            return []
-
-        root = etree.fromstring(str.encode(ret.text))
-        result_list = root.findall("resultList")[0]
-
-        self._next_page_url = "END"
-        next_page_url_node = root.find("nextPageUrl")
-        if next_page_url_node is not None:
-            if next_page_url_node.text is not None:
-                self._next_page_url = next_page_url_node.text
-
-        return result_list.findall("result")
-
     def _europe_pmc_query(
         self,
         *,
@@ -230,19 +144,18 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         """Retrieve records from Europe PMC based on a query"""
 
         try:
-            record = record_input.copy_prep_rec()
-
-            url = (
-                "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query="
-                + quote(record.data[Fields.TITLE])
+            api = europe_pmc_api.EPMCAPI(
+                params={"query": quote(record_input.data[Fields.TITLE])},
+                email=self.review_manager.get_committer()[1],
+                session=self.review_manager.get_cached_session(),
             )
 
+            record = record_input.copy_prep_rec()
+
             record_list = []
-            while True:
-                result_list = self._get_europe_pmc_items(url=url, timeout=timeout)
+            while api.url:
                 most_similar, most_similar_record = 0.0, {}
-                for result_item in result_list:
-                    retrieved_record = self._europe_pmc_xml_to_record(item=result_item)
+                for retrieved_record in api.get_records():
 
                     if Fields.TITLE not in retrieved_record.data:
                         continue
@@ -263,13 +176,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     elif most_similar < similarity:
                         most_similar = similarity
                         most_similar_record = retrieved_record.get_data()
-
-                url = "END"
-                if not most_similar_only:
-                    url = self._next_page_url
-
-                if url == "END":
-                    break
 
         except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
             return []
@@ -410,38 +316,18 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         europe_pmc_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         rerun: bool,
     ) -> None:
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-locals
-        # pylint: disable=too-many-nested-blocks
 
         try:
-            params = self.search_source.search_parameters
-            url = (
-                "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query="
-                + params["query"]
+            _, email = self.review_manager.get_committer()
+            api = europe_pmc_api.EPMCAPI(
+                params=self.search_source.search_parameters,
+                email=email,
+                session=self.review_manager.get_cached_session(),
             )
 
-            _, email = self.review_manager.get_committer()
+            while api.url:
 
-            headers = {"user-agent": f"{__name__} (mailto:{email})"}
-            session = self.review_manager.get_cached_session()
-
-            while url != "END":
-                self.review_manager.logger.debug(url)
-                ret = session.request("GET", url, headers=headers, timeout=60)
-                ret.raise_for_status()
-                if ret.status_code != 200:
-                    # review_manager.logger.debug(
-                    #     f"europe_pmc failed with status {ret.status_code}"
-                    # )
-                    return
-
-                root = etree.fromstring(str.encode(ret.text))
-                result_list = root.findall("resultList")[0]
-
-                for result_item in result_list.findall("result"):
-                    retrieved_record = self._europe_pmc_xml_to_record(item=result_item)
-
+                for retrieved_record in api.get_records():
                     if Fields.TITLE not in retrieved_record.data:
                         self.review_manager.logger.warning(
                             f"Skipped record: {retrieved_record.data}"
@@ -455,12 +341,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     )
 
                     europe_pmc_feed.add_update_record(retrieved_record)
-
-                url = "END"
-                next_page_url_node = root.find("nextPageUrl")
-                if next_page_url_node is not None:
-                    if next_page_url_node.text is not None:
-                        url = next_page_url_node.text
 
         except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
             pass

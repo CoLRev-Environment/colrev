@@ -311,7 +311,9 @@ class ReviewManager:
         """Get the PDF quality model"""
 
         return colrev.record.qm.quality_model.QualityModel(
-            defects_to_ignore=self.settings.pdf_get.defects_to_ignore, pdf_mode=True
+            defects_to_ignore=self.settings.pdf_get.defects_to_ignore,
+            pdf_mode=True,
+            path=self.path,
         )
 
     def get_status_stats(

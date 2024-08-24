@@ -56,15 +56,19 @@ class Record:
     def __eq__(self, other: object) -> bool:
         return self.__dict__ == other.__dict__
 
-    def print_citation_format(self) -> None:
-        """Print the record as a citation"""
+    def get_citation_format(self) -> str:
+        """Get the record as a citation"""
         formatted_ref = (
             f"{self.data.get(Fields.AUTHOR, '')} ({self.data.get(Fields.YEAR, '')}) "
             f"{self.data.get(Fields.TITLE, '')}. "
             f"{self.data.get(Fields.JOURNAL, '')}{self.data.get(Fields.BOOKTITLE, '')}, "
             f"{self.data.get(Fields.VOLUME, '')} ({self.data.get(Fields.NUMBER, '')})"
         )
-        print(formatted_ref)
+        return formatted_ref
+
+    def print_citation_format(self) -> None:
+        """Print the record as a citation"""
+        print(self.get_citation_format())
 
     def copy(self) -> Record:
         """Copy the record object"""
@@ -479,7 +483,7 @@ class Record:
         return defects
 
     def has_quality_defects(self, *, key: str = "") -> bool:
-        """Check whether a record has quality defects"""
+        """Check whether a record (or specific field/key) has quality defects"""
         if key != "":
             if key in self.data.get(Fields.MD_PROV, {}):
                 note = self.data[Fields.MD_PROV][key]["note"]

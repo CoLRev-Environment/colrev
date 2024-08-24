@@ -194,7 +194,10 @@ class Search(colrev.process.operation.Operation):
             + Colors.END
         )
         input("Press enter to continue")
-        self.review_manager.dataset.add_changes(source.filename)
+        if source.filename.is_file():
+            self.review_manager.dataset.add_changes(source.filename)
+        else:
+            print("Search results not found.")
 
     def _get_search_sources(
         self, *, selection_str: typing.Optional[str] = None
@@ -434,7 +437,7 @@ class Search(colrev.process.operation.Operation):
         )
         if not search_source.filename.is_file():
             print()
-            self.main(selection_str=str(search_source.filename), rerun=False)
+            self.main(selection_str=str(search_source.filename), rerun=True)
 
     @_check_source_selection_exists(  # pylint: disable=too-many-function-args
         "selection_str"

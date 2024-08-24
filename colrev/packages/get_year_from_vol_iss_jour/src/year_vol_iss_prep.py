@@ -13,15 +13,14 @@ import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
-import colrev.packages.crossref.src.crossref_search_source as crossref_connector
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
+from colrev.packages.crossref.src import crossref_api
 
 # pylint: disable=duplicate-code
-
-
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-instance-attributes
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
@@ -53,6 +52,7 @@ class YearVolIssPrep(JsonSchemaMixin):
         )
         self.vol_nr_dict = self._get_vol_nr_dict()
         self.quality_model = self.review_manager.get_qm()
+        self.api = crossref_api.CrossrefAPI(params={})
 
     def _get_vol_nr_dict(self) -> dict:
         vol_nr_dict: dict = {}
@@ -158,13 +158,10 @@ class YearVolIssPrep(JsonSchemaMixin):
 
     def _get_year_from_crossref(self, *, record: colrev.record.record.Record) -> None:
         try:
-            crossref_source = crossref_connector.CrossrefSearchSource(
-                source_operation=self.prep_operation
-            )
-            retrieved_records = crossref_source.crossref_query(
+
+            retrieved_records = self.api.crossref_query(
                 record_input=record,
                 jour_vol_iss_list=True,
-                timeout=self.prep_operation.timeout,
             )
             retries = 0
             while (
@@ -172,10 +169,9 @@ class YearVolIssPrep(JsonSchemaMixin):
                 and retries < self.prep_operation.max_retries_on_error
             ):
                 retries += 1
-                retrieved_records = crossref_source.crossref_query(
+                retrieved_records = self.api.crossref_query(
                     record_input=record,
                     jour_vol_iss_list=True,
-                    timeout=self.prep_operation.timeout,
                 )
             if 0 == len(retrieved_records):
                 return

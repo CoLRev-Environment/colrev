@@ -161,9 +161,10 @@ class OSFSearchSource(JsonSchemaMixin):
         self, osf_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
 
-        api_key = self._get_api_key()
-        params = self.search_source.search_parameters["query"]
-        api = OSFApiQuery(params, api_key=api_key)
+        api = OSFApiQuery(
+            parameters=self.search_source.search_parameters["query"],
+            api_key=self._get_api_key(),
+        )
         self.review_manager.logger.info(f"Retrieve {api.overall()} records")
 
         while True:

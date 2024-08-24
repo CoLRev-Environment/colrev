@@ -1052,10 +1052,10 @@ def test_inconsistent_with_doi_metadata(
         InconsistentWithDOIMetadataChecker,
     )
 
-    import colrev.packages.crossref.src.crossref_search_source as crossref_connector
+    import colrev.packages.crossref.src.crossref_api as crossref_api
 
     @classmethod  # type: ignore
-    def patched_query_doi(cls, *, doi, etiquette):  # type: ignore
+    def patched_query_doi(cls, *, doi):  # type: ignore
         """
         Patched method to simulate Crossref DOI query responses for testing purposes.
         """
@@ -1085,8 +1085,8 @@ def test_inconsistent_with_doi_metadata(
             return None
 
     # Patch the CrossrefSearchSource.query_doi method
-    original_method = crossref_connector.CrossrefSearchSource.query_doi
-    crossref_connector.CrossrefSearchSource.query_doi = patched_query_doi  # type: ignore
+    original_method = crossref_api.CrossrefAPI.query_doi
+    crossref_api.CrossrefAPI.query_doi = patched_query_doi  # type: ignore
 
     doi_consistency_checker = InconsistentWithDOIMetadataChecker(quality_model)
 
@@ -1184,7 +1184,7 @@ def test_inconsistent_with_doi_metadata(
     print(v_t_record)
     assert not v_t_record.has_quality_defects()
 
-    crossref_connector.CrossrefSearchSource.query_doi = original_method  # type: ignore
+    crossref_api.CrossrefAPI.query_doi = original_method  # type: ignore
 
 
 # TODO : fix the following

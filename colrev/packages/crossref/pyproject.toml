@@ -13,7 +13,6 @@ include = "src"
 
 [tool.poetry.dependencies]
 python = ">=3.8, <4"
-crossrefapi = "^1.5.0"
 
 [tool.colrev]
 colrev_doc_description = "Crossref API"
