@@ -29,9 +29,9 @@ colrev.exclude_languages
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/exclude_languages>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/exclude_languages>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.exclude_languages
      - Add
    * - prep
      - |MATURING|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev prep --add colrev.exclude_languages

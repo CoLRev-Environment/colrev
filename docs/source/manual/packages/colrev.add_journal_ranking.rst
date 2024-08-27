@@ -29,9 +29,9 @@ colrev.add_journal_ranking
 
 |MAINTAINER| Maintainer: Gerit Wagner, Alexa Steinheimer, Robert Ahr, Thomas Fleischmann, Anton Liam Frisch
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/add_journal_ranking>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/add_journal_ranking>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.add_journal_ranking
      - Add
    * - prep
      - |EXPERIMENTAL|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev prep --add colrev.add_journal_ranking
