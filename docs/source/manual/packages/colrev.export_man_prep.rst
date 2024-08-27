@@ -1,12 +1,12 @@
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |VERSION| image:: /_static/svg/iconmonstr-product-10.svg
    :width: 15
    :alt: Version
@@ -74,7 +74,7 @@ Exports the ``records_prep_man.bib`` (containing the records) and the ``records_
 #. Manually fix the errors
 
 Manually change the bib file (based on error codes in csv file)
-Error code descriptions are available `here <https://colrev.readthedocs.io/en/latest/resources/quality_model.html>`_.
+Error code descriptions are available `here <https://colrev-environment.github.io/colrev/resources/quality_model.html>`_.
 
 
 #. (Re) import the records

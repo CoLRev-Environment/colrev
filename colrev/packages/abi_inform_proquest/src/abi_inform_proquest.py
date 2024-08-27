@@ -36,7 +36,6 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "ABI/INFORM (ProQuest)"
 
     db_url = "https://search.proquest.com/abicomplete/advanced"
 

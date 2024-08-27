@@ -35,7 +35,6 @@ class PsycINFOSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.oni
-    short_name = "PsycInfo (APA)"
 
     db_url = "https://www.apa.org/search"
 

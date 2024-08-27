@@ -56,8 +56,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.oni
 
-    short_name = "Crossref"
-
     _availability_exception_message = (
         f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
     )

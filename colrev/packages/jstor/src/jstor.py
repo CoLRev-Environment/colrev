@@ -35,7 +35,6 @@ class JSTORSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "JSTOR"
 
     db_url = "http://www.jstor.org"
 

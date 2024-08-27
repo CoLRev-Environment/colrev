@@ -39,7 +39,6 @@ class OpenAlexSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.oni
 
-    short_name = "OpenAlex"
     _open_alex_md_filename = Path("data/search/md_open_alex.bib")
 
     def __init__(

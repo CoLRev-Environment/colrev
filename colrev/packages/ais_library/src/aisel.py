@@ -46,7 +46,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "AIS eLibrary"
+
     db_url = "https://aisel.aisnet.org/"
 
     _conference_abbreviations = {

@@ -67,7 +67,6 @@ class DBLPSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "DBLP"
 
     settings_class = DBLPSearchSourceSettings
 

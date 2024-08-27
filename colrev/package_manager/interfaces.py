@@ -60,7 +60,6 @@ class SearchSourceInterface(
     heuristic_status: SearchSourceHeuristicStatus = zope.interface.Attribute(
         """The status of the SearchSource heuristic"""
     )
-    short_name = zope.interface.Attribute("""Short name of the SearchSource""")
 
     # pylint: disable=no-self-argument
     def heuristic(filename: Path, data: str):  # type: ignore
