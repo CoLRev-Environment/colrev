@@ -32,7 +32,6 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     # "https://dl.acm.org/doi/{{ID}}"
     source_identifier = "doi"
     search_types = [SearchType.DB]
-    short_name = "ACM Digital Library"
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported

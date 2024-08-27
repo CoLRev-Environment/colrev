@@ -43,7 +43,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
 
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.na
-    short_name = "OpenLibrary"
+
     _open_library_md_filename = Path("data/search/md_open_library.bib")
 
     requests_headers = {

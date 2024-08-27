@@ -35,7 +35,7 @@ class ScopusSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "Scopus"
+
     db_url = "https://www.scopus.com/search/form.uri?display=advanced"
 
     def __init__(

@@ -1,12 +1,12 @@
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |VERSION| image:: /_static/svg/iconmonstr-product-10.svg
    :width: 15
    :alt: Version
@@ -29,9 +29,9 @@ colrev.local_index
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/local_index>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/local_index>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,21 +42,21 @@ colrev.local_index
      - Add
    * - search_source
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev search --add colrev.local_index
 
    * - prep
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev prep --add colrev.local_index
 
    * - pdf_get
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev pdf-get --add colrev.local_index
@@ -92,3 +92,4 @@ Retrieves PDF documents from other local CoLRev repositories, given that they ar
 .. raw:: html
 
    <!-- ## Links -->
+

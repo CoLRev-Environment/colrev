@@ -1,12 +1,12 @@
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |VERSION| image:: /_static/svg/iconmonstr-product-10.svg
    :width: 15
    :alt: Version
@@ -29,9 +29,9 @@ colrev.unpaywall
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/unpaywall>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/unpaywall>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,14 +42,14 @@ colrev.unpaywall
      - Add
    * - search_source
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev search --add colrev.unpaywall
 
    * - pdf_get
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev pdf-get --add colrev.unpaywall
@@ -103,7 +103,7 @@ The user can enter a single term or use the Boolean ``AND``\ , ``OR``\ , ``NOT``
 * The boolean operators ``AND``\ , ``OR`` , ``NOT`` must be written in capital letters
 * The boolean operators ``AND``\ , ``OR`` , ``NOT`` must be separated from the search term with a whitespace
 * If you enter two terms without a boolean operator but a whitespace in between, the default is ``AND``
-*
+* 
   Search phrases must be enclosed in double quotes ``"``
 
     ##### Examples
@@ -119,10 +119,10 @@ Option 2: Search with URL for simple single-term query
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-#.
+#. 
    Visit the `Unpaywall Article Search tool <https://unpaywall.org/articles>`_\ , enter the keyword for a simple single-term query and click on "View in API" to copy the URL.
 
-#.
+#. 
    Use the following command to add the endpoint with the copied URL:
     ##### Example
 
@@ -134,7 +134,7 @@ Unpaywall Query Parameters
 """"""""""""""""""""""""""
 
 
-*
+* 
   ``is_oa:`` (Optional) A boolean value indicating whether the returned records should be Open Access or not.
 
 
@@ -142,7 +142,7 @@ Unpaywall Query Parameters
   * false: filter the results to non-OA articles
   * null/unspecified: return the most relevant results regardless of OA status
 
-*
+* 
   ``query:`` (Required) Keywords to search for.
 
 * ``email:`` Your email address to access the API. If the email address is manually specified in the URL, this email will be saved and used for later requests.

@@ -47,7 +47,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "Springer Link"
+
     SETTINGS = {
         "api_key": "packages.search_source.colrev.springer_link.api_key",
     }

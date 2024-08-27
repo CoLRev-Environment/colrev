@@ -40,7 +40,6 @@ class ArXivSource:
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "arXiv"
     db_url = "https://arxiv.org/"
     _arxiv_md_filename = Path("data/search/md_arxiv.bib")
 

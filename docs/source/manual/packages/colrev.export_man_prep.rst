@@ -1,12 +1,12 @@
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |VERSION| image:: /_static/svg/iconmonstr-product-10.svg
    :width: 15
    :alt: Version
@@ -29,9 +29,9 @@ colrev.export_man_prep
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/export_man_prep>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/export_man_prep>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.export_man_prep
      - Add
    * - prep_man
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev prep-man --add colrev.export_man_prep
@@ -74,7 +74,7 @@ Exports the ``records_prep_man.bib`` (containing the records) and the ``records_
 #. Manually fix the errors
 
 Manually change the bib file (based on error codes in csv file)
-Error code descriptions are available `here <https://colrev.readthedocs.io/en/latest/resources/quality_model.html>`_.
+Error code descriptions are available `here <https://colrev-environment.github.io/colrev/resources/quality_model.html>`_.
 
 
 #. (Re) import the records

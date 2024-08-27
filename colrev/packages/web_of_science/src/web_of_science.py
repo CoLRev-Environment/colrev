@@ -35,7 +35,6 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "Web of Science"
 
     db_url = "http://webofscience.com/"
 

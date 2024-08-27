@@ -35,7 +35,6 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "GoogleScholar"
 
     db_url = "https://scholar.google.de/"
 

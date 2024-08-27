@@ -35,7 +35,6 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "TRID"
 
     db_url = "https://trid.trb.org/"
 

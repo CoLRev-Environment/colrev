@@ -54,7 +54,6 @@ class UnknownSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.na
-    short_name = "Unknown Source"
 
     db_url = ""
 

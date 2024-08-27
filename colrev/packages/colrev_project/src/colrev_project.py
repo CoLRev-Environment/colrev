@@ -43,7 +43,6 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "CoLRev project"
 
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict

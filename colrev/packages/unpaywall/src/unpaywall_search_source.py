@@ -40,8 +40,6 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         + "colrev/packages/unpaywall/README.md"
     )
 
-    short_name = "Unpaywall"
-
     def __init__(
         self,
         *,

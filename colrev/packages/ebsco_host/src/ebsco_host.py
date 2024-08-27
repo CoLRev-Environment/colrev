@@ -39,7 +39,7 @@ class EbscoHostSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "EBSCOHost"
+
     db_url = "https://search.ebscohost.com/"
 
     def __init__(

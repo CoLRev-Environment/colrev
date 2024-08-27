@@ -33,7 +33,6 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
     search_types = [SearchType.DB]
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "Taylor and Francis"
 
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
