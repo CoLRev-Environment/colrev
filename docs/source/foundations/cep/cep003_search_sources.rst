@@ -155,6 +155,19 @@ Methods
 
 .. _documentation:
 
+Standards
+------------------------------
+
+API Searches
+
+- Search parameters are stored in the standard JSON-format (Haddaway)
+- Queries are validated (upon entry and execution) based on the search-query package
+- Before running an API search, users are informed about rate limits, and presented with an indication of the number of results and an estimated runtime
+- Users are warned when the API/DB has an overall limit of results
+- Number of records retrieved are compared with number of records available in the API/DB
+
+See pubmed-api!
+
 Specifics for SearchTypes
 -------------------------------
 

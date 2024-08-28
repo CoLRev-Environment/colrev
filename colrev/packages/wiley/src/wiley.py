@@ -33,7 +33,6 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "Wiley"
 
     db_url = "https://onlinelibrary.wiley.com/"
 

@@ -60,7 +60,6 @@ class SearchSourceInterface(
     heuristic_status: SearchSourceHeuristicStatus = zope.interface.Attribute(
         """The status of the SearchSource heuristic"""
     )
-    short_name = zope.interface.Attribute("""Short name of the SearchSource""")
 
     # pylint: disable=no-self-argument
     def heuristic(filename: Path, data: str):  # type: ignore
@@ -334,3 +333,8 @@ ENDPOINT_OVERVIEW = {
         "operation_name": "data_operation",
     },
 }
+
+INTERFACE_MAP = {}
+for endpoint_type, endpoint_data in ENDPOINT_OVERVIEW.items():
+    import_name = endpoint_data["import_name"].__name__  # type: ignore
+    INTERFACE_MAP[endpoint_type.name] = import_name

@@ -52,7 +52,6 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = False
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "SYNERGY-datasets"
 
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict

@@ -1,12 +1,12 @@
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |VERSION| image:: /_static/svg/iconmonstr-product-10.svg
    :width: 15
    :alt: Version
@@ -66,7 +66,7 @@ Data extraction, analysis, and synthesis
 
 
 * For the synthesis, the `colrev.paper_md <colrev.paper_md.html>`_ is activated, which creates the ``data/data/paper.md`` file. This file can be used to keep notes, draft a review protocol, and to write a synthesis. Based on the ``paper.md``\ , the ``output/paper.docx`` is generated automatically.
-* To extract structured data, or conduct other forms of analysis and synthesis, other `data packages <https://colrev.readthedocs.io/en/latest/manual/data/data.html>`_ can be activated.
+* To extract structured data, or conduct other forms of analysis and synthesis, other `data packages <https://colrev-environment.github.io/colrev/manual/data/data.html>`_ can be activated.
 
 Textbooks
 ---------

@@ -2502,6 +2502,35 @@ def env(
 
 
 @main.command(help_priority=21)
+@click.option(
+    "--init",
+    is_flag=True,
+    help="Initialize a CoLRev package",
+)
+@click.option(
+    "--check",
+    is_flag=True,
+    help="Check a CoLRev package",
+)
+@click.pass_context
+def package(
+    ctx: click.core.Context,
+    init: bool,
+    check: bool,
+) -> None:
+    """Manage CoLRev packages"""
+
+    if init:
+        import colrev.package_manager.init
+
+        colrev.package_manager.init.main()
+    if check:
+        import colrev.package_manager.check
+
+        colrev.package_manager.check.main()
+
+
+@main.command(help_priority=22)
 # @click.option("-v", "--view", is_flag=True, default=False)
 @click.option(
     "-uh",

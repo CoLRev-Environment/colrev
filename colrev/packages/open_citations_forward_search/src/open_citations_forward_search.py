@@ -41,7 +41,6 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "OpenCitations forward search"
 
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict

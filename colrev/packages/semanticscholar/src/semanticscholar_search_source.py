@@ -58,7 +58,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     heuristic_status = SearchSourceHeuristicStatus.oni
     search_types = [SearchType.API]
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    short_name = "S2"
+
     source_identifier = Fields.SEMANTIC_SCHOLAR_ID
 
     SETTINGS = {

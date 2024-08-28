@@ -26,6 +26,8 @@ def _get_local_editable_colrev_path() -> str:
     # Construct the .dist-info directory name
     dist_info_folder = f"{distribution.project_name.replace('-', '_')}"
     dist_info_folder += f"-{distribution.version}.dist-info"
+    if not distribution.location:
+        raise ValueError
     dist_info_folder = os.path.join(distribution.location, dist_info_folder)
 
     direct_url_path = os.path.join(dist_info_folder, "direct_url.json")

@@ -105,6 +105,29 @@ To install a CoLRev package, you can use the following command (`pip install <pa
 
 Once installed, packages that implement endpoints can be used in the standard process by registering the package's endpoint in the `settings.json` of a project (e.g., by running `colrev search --add <package_name>`).
 
+Creating a new CoLRev package
+----------------------------------------
+
+To create a new CoLRev package, the following command sets up the necessary directories, files, and code skeleton:
+
+.. code-block:: bash
+
+    colrev package --init
+
+.. raw:: html
+
+   <div id="demo"></div>
+
+   <script src="_static/js/asciinema-player.min.js"></script>
+   <script>
+      window.onload = function() {
+         AsciinemaPlayer.create('_static/colrev_package_init.cast', document.getElementById('demo'),
+         {autoPlay: true,
+         rows: 30,
+         terminalFontSize: "80px",
+         theme: 'dracula',});
+      };
+   </script>
 
 Develop, test, document and check
 -----------------------------------
@@ -116,6 +139,9 @@ It is recommended to run the following check regularly:
 .. code-block:: bash
 
     colrev package --check
+
+Package structure
+------------------
 
 A package contains the following files and directories:
 
@@ -210,8 +236,15 @@ The following endpoint - interface pairs are available:
    * - data
      - `DataInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.DataInterface>`_
 
-Test
-^^^^^^^^^^^^^^^
+Documentation
+-----------------
+
+* Link the documentation (`README.md`) in the pyproject.toml.
+* See `tests/REAMDE.md <https://github.com/CoLRev-Environment/colrev/tree/main/docs>`_ for details on building the CoLRev docs.
+* CLI demonstrations can be recorded with `asciinema <https://docs.asciinema.org/getting-started/>`_.
+
+Testing
+-----------
 
 * Tests for built-in packages are currently in the tests of the CoLRev packages.
 * See `tests/REAMDE.md <https://github.com/CoLRev-Environment/colrev/tree/main/tests>`_ for details.

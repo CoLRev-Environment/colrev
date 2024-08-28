@@ -47,7 +47,7 @@ class OSFSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.oni
-    short_name = "OSF SearchSource"
+
     db_url = "https://osf.io/"
     SETTINGS = {
         "api_key": "packages.search_source.colrev.osf.api_key",

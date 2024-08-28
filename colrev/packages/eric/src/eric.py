@@ -41,7 +41,6 @@ class ERICSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.oni
-    short_name = "ERIC"
 
     def __init__(
         self,

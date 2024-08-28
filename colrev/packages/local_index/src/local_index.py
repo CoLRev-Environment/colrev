@@ -47,7 +47,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.supported
-    short_name = "LocalIndex"
+
     _local_index_md_filename = Path("data/search/md_curated.bib")
 
     essential_md_keys = [
