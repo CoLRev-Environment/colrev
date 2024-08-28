@@ -185,6 +185,18 @@ def _validate_prep_prescreen_exclusions(
             )
 
 
+# def _remove_from_feed(*, review_manager, origin) -> None:
+#     feed_name, feed_id = origin.split("/")
+#     feed_file = review_manager.paths.search / Path(feed_name)
+#     records = colrev.loader.load_utils.load(
+#         filename=feed_file,
+#         logger=review_manager.logger,
+#         unique_id_field="ID",
+#     )
+#     records = {k: v for k, v in records.items() if k != feed_id}
+#     write_file(records_dict=records, filename=feed_file)
+
+
 def _validate_prep(
     *,
     validate_operation: colrev.process.operation.Operation,
@@ -221,14 +233,54 @@ def _validate_prep(
         user_selection = input("Validate [y,n,q for yes, no (undo), or quit]?")
 
         if user_selection == "n":
-            validate_operation.review_manager.dataset.save_records_dict(
-                {
-                    validation_element["prior_record_dict"][
-                        Fields.ID
-                    ]: validation_element["prior_record_dict"]
-                },
-                partial=True,
-            )
+            if len(validation_element["origins"]) == 1:
+                validate_operation.review_manager.dataset.save_records_dict(
+                    {
+                        validation_element["origins"][0][Fields.ID]: validation_element[
+                            "origins"
+                        ][0]
+                    },
+                    partial=True,
+                )
+            else:
+                user_selection = input("Remove origin [y,n]?")
+                if user_selection == "y":
+                    options = {
+                        o[Fields.ORIGIN][0]: colrev.record.record.Record(
+                            o
+                        ).get_citation_format()
+                        for o in validation_element["origins"]
+                    }
+                    choice = inquirer.list_input(
+                        "Which origins should be removed?", choices=options.values()
+                    )
+
+                    origin_to_remove = [k for k, v in options.items() if v == choice][0]
+                    # other_rec = [
+                    #     o
+                    #     for o in validation_element["origins"]
+                    #     if o[Fields.ORIGIN][0] != origin_to_remove
+                    # ][0]
+
+                    # TODO : if the other record is an md_record,
+                    # it should be removed, otherwise, records must be split?
+                    record_dict[Fields.ORIGIN].remove(origin_to_remove)
+                    # TODO : also remove all fields that are based on origin_to_remove?! /
+                    # or update the record_dict with the other_rec?!
+
+                    validate_operation.review_manager.dataset.save_records_dict(
+                        {validation_element["record_dict"][Fields.ID]: record_dict},
+                        partial=True,
+                    )
+
+                    # Note: the feed record could be linked to multiple records...
+                    # _remove_from_feed(
+                    #               review_manager=validate_operation.review_manager,
+                    #               origin=origin_to_remove
+                    # )
+
+                else:
+                    input("Not implemented")
 
         if user_selection == "q":
             break
