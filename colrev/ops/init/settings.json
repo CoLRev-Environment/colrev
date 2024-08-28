@@ -153,6 +153,10 @@
         ]
     },
     "data": {
-        "data_package_endpoints": []
+        "data_package_endpoints": [
+            {
+                "endpoint": "colrev.rev_check"
+            }
+        ]
     }
 }
