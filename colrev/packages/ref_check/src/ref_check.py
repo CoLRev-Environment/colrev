@@ -3,8 +3,8 @@
 from zope.interface import implementer
 
 import colrev.ops.data
-from colrev.package_manager.interfaces import DataInterface
 import colrev.package_manager.package_settings
+from colrev.package_manager.interfaces import DataInterface
 
 # pylint: disable=unused-argument
 
