@@ -1342,8 +1342,8 @@ def test_has_fatal_quality_defects() -> None:
         "ID": "Curran2020",
         "ENTRYTYPE": "article",
         "colrev_origin": ["web_of_science.bib/WOS:000616658300022"],
-        "colrev_status": RecordState.md_needs_manual_preparation,
-        "colrev_masterdata_provenance": {
+        "colrev_status": RecordState.md_needs_manual_preparation,  # type: ignore
+        "colrev_masterdata_provenance": {  # type: ignore
             "author": {"source": "web_of_science.bib/WOS:000616658300022", "note": ""},
             "journal": {"source": "web_of_science.bib/WOS:000616658300022", "note": ""},
             "pages": {"source": "web_of_science.bib/WOS:000616658300022", "note": ""},
@@ -1352,7 +1352,7 @@ def test_has_fatal_quality_defects() -> None:
             "year": {"source": "web_of_science.bib/WOS:000616658300022", "note": ""},
             "number": {"source": "generic_field_requirements", "note": "missing"},
         },
-        "colrev_data_provenance": {
+        "colrev_data_provenance": {  # type: ignore
             "abstract": {
                 "source": "web_of_science.bib/WOS:000616658300022",
                 "note": "",
