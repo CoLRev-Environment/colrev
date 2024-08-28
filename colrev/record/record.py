@@ -530,8 +530,6 @@ class Record:
 
         # TODO: add problematic regex (for title, author, container-title, year)
 
-        # TODO : offer quality-check for the data phase (e.g., check inconsistent-with-doi)
-        # TODO add upgrade script (adding data package)
         return False
 
     def has_pdf_defects(self) -> bool:
