@@ -25,7 +25,9 @@ colrev.constants.Filepaths
 
    .. autosummary::
 
+      ~Filepaths.COVERPAGES
       ~Filepaths.CURATIONS_PATH
+      ~Filepaths.LASTPAGES
       ~Filepaths.LOCAL_ENVIRONMENT_DIR
       ~Filepaths.LOCAL_INDEX_SQLITE_FILE
       ~Filepaths.PREP_REQUESTS_CACHE_FILE
