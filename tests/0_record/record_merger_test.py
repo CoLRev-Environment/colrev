@@ -157,7 +157,7 @@ from colrev.constants import RecordState
                 Fields.NUMBER: "1",
             },
         ),
-        # Merge other ifelds
+        # Merge other fields
         (
             {
                 Fields.ID: "001",
@@ -197,6 +197,45 @@ from colrev.constants import RecordState
                 Fields.VOLUME: "45",
                 Fields.NUMBER: "1",
                 "literature_review": "yes",
+            },
+        ),
+        # Prefer curated (set number, journal, ...)
+        (
+            {
+                Fields.ID: "002",
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.ORIGIN: ["crossref.bib/001"],
+                Fields.AUTHOR: "Rai, Arun",
+                Fields.YEAR: "2020",
+                Fields.TITLE: "Editorial",
+                Fields.VOLUME: "45",
+                Fields.NUMBER: "UNKNOWN",
+                Fields.JOURNAL: "MIS Q.",
+            },
+            {
+                Fields.ID: "001",
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.MD_PROV: {FieldValues.CURATED: {"source": "www...", "note": ""}},
+                Fields.ORIGIN: ["md_curated.bib/001"],
+                Fields.AUTHOR: "Guo, Wenbo and Straub, D.",
+                Fields.YEAR: "2020",
+                Fields.TITLE: "Editorial",
+                Fields.VOLUME: "45",
+                Fields.NUMBER: "1",
+                Fields.JOURNAL: "MIS Quarterly",
+            },
+            [],
+            {
+                Fields.ID: "001",
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.MD_PROV: {FieldValues.CURATED: {"source": "www...", "note": ""}},
+                Fields.ORIGIN: ["crossref.bib/001", "md_curated.bib/001"],
+                Fields.AUTHOR: "Guo, Wenbo and Straub, D.",
+                Fields.YEAR: "2020",
+                Fields.TITLE: "Editorial",
+                Fields.VOLUME: "45",
+                Fields.NUMBER: "1",
+                Fields.JOURNAL: "MIS Quarterly",
             },
         ),
     ],

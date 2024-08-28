@@ -412,11 +412,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
             retrieved_record.remove_field(key=Fields.CURATION_ID)
 
-            record.set_masterdata_curated(source=default_source)
             record.merge(
                 retrieved_record,
                 default_source=default_source,
             )
+
             # If volume/number are no longer in the CURATED record
             if (
                 Fields.NUMBER in record.data
@@ -429,6 +429,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             ):
                 del record.data[Fields.VOLUME]
 
+            record.set_masterdata_curated(source=default_source)
             record.set_status(RecordState.md_prepared)
             if (
                 record.data.get(Fields.PRESCREEN_EXCLUSION, "NA")
