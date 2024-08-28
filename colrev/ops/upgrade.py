@@ -715,6 +715,13 @@ class Upgrade(colrev.process.operation.Operation):
                     out.write(bibtex_str + "\n")
                 self.repo.index.add([source["filename"]])
 
+        # Rename LOCAL_ENVIRONMENT_DIR
+        if not Filepaths.LOCAL_ENVIRONMENT_DIR.is_dir():
+            shutil.move(
+                str(Path.home().joinpath("colrev")),
+                str(Filepaths.LOCAL_ENVIRONMENT_DIR),
+            )
+
         return self.repo.is_dirty()
 
 

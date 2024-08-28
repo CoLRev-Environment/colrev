@@ -50,8 +50,7 @@ class PDFLastPage(JsonSchemaMixin):
         if not record.data[Fields.FILE].endswith(".pdf"):
             return record.data
 
-        lp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".lastpages")
-        lp_path.mkdir(exist_ok=True)
+        Filepaths.LASTPAGES.mkdir(exist_ok=True)
 
         def _get_last_pages(*, pdf: str) -> typing.List[int]:
             last_pages: typing.List[int] = []
@@ -120,7 +119,7 @@ class PDFLastPage(JsonSchemaMixin):
 
             record.extract_pages(
                 pages=last_pages,
-                save_to_path=lp_path,
+                save_to_path=Filepaths.LASTPAGES,
             )
             self.review_manager.report_logger.info(
                 f"removed last page for ({record.data[Fields.ID]})"

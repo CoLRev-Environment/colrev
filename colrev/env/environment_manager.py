@@ -218,7 +218,7 @@ class EnvironmentManager:
         for repo_source_path in [
             x["repo_source_path"]
             for x in self.local_repos()
-            if "colrev/curated_metadata/" in x["repo_source_path"]
+            if ".colrev/curated_metadata/" in x["repo_source_path"]
         ]:
             try:
                 with open(f"{repo_source_path}/readme.md", encoding="utf-8") as file:

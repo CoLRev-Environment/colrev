@@ -235,29 +235,27 @@ class PDFPrepMan(colrev.process.operation.Operation):
     def extract_coverpage(self, *, filepath: Path) -> None:
         """Extract coverpage from PDF"""
 
-        cp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".coverpages")
-        cp_path.mkdir(exist_ok=True)
+        Filepaths.COVERPAGES.mkdir(exist_ok=True)
 
         doc1 = pymupdf.Document(str(filepath))
         if doc1.page_count > 0:
             colrev.record.record_pdf.PDFRecord.extract_pages_from_pdf(
                 pages=[0],
                 pdf_path=filepath,
-                save_to_path=cp_path,
+                save_to_path=Filepaths.COVERPAGES,
             )
 
     def extract_lastpage(self, *, filepath: Path) -> None:
         """Extract last page from PDF"""
 
-        lp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".lastpages")
-        lp_path.mkdir(exist_ok=True)
+        Filepaths.LASTPAGES.mkdir(exist_ok=True)
 
         doc1 = pymupdf.Document(str(filepath))
         if doc1.page_count > 0:
             colrev.record.record_pdf.PDFRecord.extract_pages_from_pdf(
                 pages=[doc1.page_count - 1],
                 pdf_path=filepath,
-                save_to_path=lp_path,
+                save_to_path=Filepaths.LASTPAGES,
             )
 
     def extract_pages(self, *, filepath: Path, pages_to_remove: list) -> None:
