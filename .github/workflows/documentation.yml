@@ -32,7 +32,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        poetry install --extras "docs"
+        poetry install -E docs --no-cache
         echo "Dependencies installed successfully"
       env:
         POETRY_VIRTUALENVS_CREATE: false
