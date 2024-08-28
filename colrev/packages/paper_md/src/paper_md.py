@@ -826,10 +826,8 @@ class PaperMarkdown(JsonSchemaMixin):
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
-        data_endpoint = "Data operation [paper_md endpoint]: "
-
         advice = {
-            "msg": f"{data_endpoint}"
+            "msg": "Data operation [paper_md endpoint]: "
             + "\n    1. Edit the paper (data/data/paper.md)"
             + "\n    2. To build the paper (output/paper.docx), run: colrev data"
             + "\n    3. To create a version, run: git add data/data/paper.md && "

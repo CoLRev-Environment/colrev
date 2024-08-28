@@ -96,6 +96,7 @@ def main(
             colrev_packages.append(package)
     packages = [p for p in packages if p not in colrev_packages]
 
+    print(f"ColRev packages: {colrev_packages}")
     colrev_path = _get_colrev_path()
     if colrev_packages:
         for colrev_package in colrev_packages:
@@ -114,6 +115,7 @@ def main(
             sys.argv = args
             run_module("pip", run_name="__main__")
 
+    print(f"Other packages: {packages}")
     if packages:
         args = ["pip", "install"]
         if upgrade:
