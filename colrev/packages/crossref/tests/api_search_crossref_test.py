@@ -8,9 +8,9 @@ import requests_mock
 import colrev.ops.prep
 import colrev.packages.crossref.src.crossref_search_source
 from colrev.packages.crossref.src import crossref_api
-from pathlib import Path
 
 # pylint: disable=line-too-long
+
 
 @pytest.mark.parametrize(
     "doi, expected_dict",
@@ -128,9 +128,9 @@ def test_crossref_query(  # type: ignore
 
     # replace the / in filenames by _
     filename = Path(__file__).parent / f"data/{doi.replace('/', '_')}.json"
-    with open(filename, "r") as file:
+    with open(filename) as file:
         json_str = file.read()
-    
+
     with requests_mock.Mocker() as req_mock:
         req_mock.get(
             f"https://api.crossref.org/works/{doi}", content=json_str.encode("utf-8")
