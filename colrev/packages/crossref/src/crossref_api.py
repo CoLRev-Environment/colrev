@@ -276,6 +276,8 @@ class CrossrefAPI:
     # https://github.com/CrossRef/rest-api-doc
     _api_url = "https://api.crossref.org/"
 
+    last_updated: str = ""
+
     # pylint: disable=too-many-arguments
     def __init__(
         self,
@@ -305,7 +307,15 @@ class CrossrefAPI:
         if "url" in self.params:
             url = self.params["url"]
             if not self.rerun:
-                url = url + "&sort=deposited&order=desc"
+                # see https://api.staging.crossref.org/swagger-ui/
+                # index.html#/Journals/get_journals__issn__works
+                # "Notes on incremental metadata updates"
+
+                if self.last_updated:
+                    last_updated = self.last_updated.split("T", maxsplit=1)[0]
+                    url = url + f"?filter=from-index-date:{last_updated}"
+                    print(f"Retrieve papers indexed since {last_updated}")
+
             endpoint = Endpoint(url, email=self.email)
 
             for item in endpoint:
