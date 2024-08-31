@@ -226,7 +226,7 @@ from colrev.constants import RecordState
             },
             [],
             {
-                Fields.ID: "001",
+                Fields.ID: "002",
                 Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
                 Fields.MD_PROV: {FieldValues.CURATED: {"source": "www...", "note": ""}},
                 Fields.ORIGIN: ["crossref.bib/001", "md_curated.bib/001"],

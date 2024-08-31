@@ -731,6 +731,13 @@ class Upgrade(colrev.process.operation.Operation):
         ]
         self._save_settings(settings)
 
+        # Rename LOCAL_ENVIRONMENT_DIR
+        if not Filepaths.LOCAL_ENVIRONMENT_DIR.is_dir():
+            shutil.move(
+                str(Path.home().joinpath("colrev")),
+                str(Filepaths.LOCAL_ENVIRONMENT_DIR),
+            )
+
         return self.repo.is_dirty()
 
 

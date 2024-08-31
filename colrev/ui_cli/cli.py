@@ -34,6 +34,7 @@ import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
 
@@ -1388,14 +1389,13 @@ def _extract_coverpage(*, cover: Path) -> None:
     # pylint: disable=import-outside-toplevel
     import colrev.record.record_pdf
 
-    cp_path = Path.home().joinpath("colrev") / Path(".coverpages")
-    cp_path.mkdir(exist_ok=True)
+    Filepaths.COVERPAGES.mkdir(exist_ok=True)
 
     assert Path(cover).suffix == ".pdf"
     record = colrev.record.record_pdf.PDFRecord(
         {Fields.FILE: cover}, path=Path(cover).parent
     )
-    record.extract_pages(pages=[0], save_to_path=cp_path)
+    record.extract_pages(pages=[0], save_to_path=Filepaths.COVERPAGES)
 
 
 @main.command(help_priority=17)

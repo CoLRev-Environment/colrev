@@ -11,7 +11,7 @@ class Filepaths:
     """Filepaths for CoLRev"""
 
     # Environment-specific paths
-    LOCAL_ENVIRONMENT_DIR = Path.home().joinpath("colrev")
+    LOCAL_ENVIRONMENT_DIR = Path.home().joinpath(".colrev")
     CURATIONS_PATH = LOCAL_ENVIRONMENT_DIR.joinpath("curated_metadata")
 
     LOCAL_INDEX_SQLITE_FILE = LOCAL_ENVIRONMENT_DIR / Path("sqlite_index.db")
@@ -20,6 +20,9 @@ class Filepaths:
     REGISTRY_FILE = LOCAL_ENVIRONMENT_DIR.joinpath(Path("registry.json"))
 
     PREP_REQUESTS_CACHE_FILE = LOCAL_ENVIRONMENT_DIR / Path("prep_requests_cache")
+
+    COVERPAGES = LOCAL_ENVIRONMENT_DIR / Path(".coverpages")
+    LASTPAGES = LOCAL_ENVIRONMENT_DIR / Path(".lastpages")
 
 
 class FileSets:
