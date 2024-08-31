@@ -8,27 +8,32 @@ import subprocess
 import sys
 import tempfile
 import typing
+from importlib.metadata import distribution
+from importlib.metadata import PackageNotFoundError
 from runpy import run_module
 
 import pkg_resources
 import toml
+
+import colrev.review_manager
+from colrev.constants import Colors
 
 
 # pylint: disable=too-many-return-statements
 def _get_local_editable_colrev_path() -> str:
 
     try:
-        distribution = pkg_resources.get_distribution("colrev")
+        dist = pkg_resources.get_distribution("colrev")
     except pkg_resources.DistributionNotFound:
         print("CoLRev not installed")
         return ""
 
     # Construct the .dist-info directory name
-    dist_info_folder = f"{distribution.project_name.replace('-', '_')}"
-    dist_info_folder += f"-{distribution.version}.dist-info"
-    if not distribution.location:
+    dist_info_folder = f"{dist.project_name.replace('-', '_')}"
+    dist_info_folder += f"-{dist.version}.dist-info"
+    if not dist.location:
         raise ValueError
-    dist_info_folder = os.path.join(distribution.location, dist_info_folder)
+    dist_info_folder = os.path.join(dist.location, dist_info_folder)
 
     direct_url_path = os.path.join(dist_info_folder, "direct_url.json")
     if not os.path.exists(direct_url_path):
@@ -77,6 +82,40 @@ def _get_colrev_package_path(editable_dir: str, colrev_package: str) -> str:
     return colrev_package_path
 
 
+def _is_package_installed(package_name: str) -> bool:
+    try:
+        p_dist = distribution(package_name.replace("-", "_"))
+    except PackageNotFoundError:
+        return False
+    return p_dist is not None
+
+
+def _install_project(
+    force_reinstall: bool, review_manager: colrev.review_manager.ReviewManager
+) -> typing.List[str]:
+
+    review_manager.logger.info("Install project")
+    packages = review_manager.settings.get_packages()
+    review_manager.logger.info("Packages:")
+
+    installed_packages = []
+    for package in packages:
+        if _is_package_installed(package):
+            installed_packages.append(package)
+            review_manager.logger.info(
+                f" {Colors.GREEN}{package}: installed{Colors.END}"
+            )
+        else:
+            review_manager.logger.info(
+                f" {Colors.ORANGE}{package}: not installed{Colors.END}"
+            )
+
+    if not force_reinstall:
+        packages = [p for p in packages if p not in installed_packages]
+
+    return packages
+
+
 # pylint: disable=too-many-branches
 def main(
     packages: typing.List[str],
@@ -86,6 +125,16 @@ def main(
     no_cache_dir: bool,
 ) -> None:
     """Main method for colrev install"""
+
+    if len(packages) == 1 and packages[0] == ".":
+        review_manager = colrev.review_manager.ReviewManager()
+        packages = _install_project(
+            force_reinstall=force_reinstall, review_manager=review_manager
+        )
+        if len(packages) == 0:
+            review_manager.logger.info("All packages are already installed")
+            return
+
     # Install packages from colrev monorepository first
     colrev_packages = []
     for package in packages:
@@ -99,21 +148,25 @@ def main(
     print(f"ColRev packages: {colrev_packages}")
     colrev_path = _get_colrev_path()
     if colrev_packages:
-        for colrev_package in colrev_packages:
-            colrev_package_path = _get_colrev_package_path(colrev_path, colrev_package)
 
-            args = ["pip", "install"]
-            args += [colrev_package_path]
-            if upgrade:
-                args += ["--upgrade"]
-            if editable:
-                args += ["--editable", editable]
-            if force_reinstall:
-                args += ["--force-reinstall"]
-            if no_cache_dir:
-                args += ["--no-cache-dir"]
-            sys.argv = args
-            run_module("pip", run_name="__main__")
+        colrev_package_paths = [
+            _get_colrev_package_path(colrev_path, colrev_package)
+            for colrev_package in colrev_packages
+        ]
+
+        args = ["pip", "install"]
+        args += colrev_package_paths
+        if upgrade:
+            args += ["--upgrade"]
+        if editable:
+            args += ["--editable", editable]
+        if force_reinstall:
+            args += ["--force-reinstall"]
+        if no_cache_dir:
+            args += ["--no-cache-dir"]
+        input(args)
+        sys.argv = args
+        run_module("pip", run_name="__main__")
 
     print(f"Other packages: {packages}")
     if packages:

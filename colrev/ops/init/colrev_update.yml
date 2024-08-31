@@ -35,6 +35,7 @@ jobs:
           git checkout -b ${{ env.BRANCH_NAME }}
       - name: Run CoLRev update
         run: |
+          poetry run --directory ${{ runner.temp }}/colrev colrev install .
           poetry run --directory ${{ runner.temp }}/colrev colrev env -i
           poetry run --directory ${{ runner.temp }}/colrev colrev search -f
           poetry run --directory ${{ runner.temp }}/colrev colrev load

@@ -459,6 +459,32 @@ class Settings(JsonSchemaMixin):
             + str(self.data)
         )
 
+    def get_packages(self) -> typing.List[str]:
+        """Get the list of all package names"""
+
+        def extract_endpoints(package_endpoints: list) -> list:
+            return [
+                e for pe in package_endpoints for k, e in pe.items() if k == "endpoint"
+            ]
+
+        all_packages = (
+            [self.project.review_type]
+            + [s.endpoint for s in self.sources]
+            + extract_endpoints(self.prep.prep_man_package_endpoints)
+            + extract_endpoints(self.dedupe.dedupe_package_endpoints)
+            + extract_endpoints(self.prescreen.prescreen_package_endpoints)
+            + extract_endpoints(self.pdf_get.pdf_get_package_endpoints)
+            + extract_endpoints(self.pdf_get.pdf_get_man_package_endpoints)
+            + extract_endpoints(self.pdf_prep.pdf_prep_package_endpoints)
+            + extract_endpoints(self.pdf_prep.pdf_prep_man_package_endpoints)
+            + extract_endpoints(self.screen.screen_package_endpoints)
+            + extract_endpoints(self.data.data_package_endpoints)
+        )
+        for pr in self.prep.prep_rounds:
+            all_packages.extend(extract_endpoints(pr.prep_package_endpoints))
+
+        return all_packages
+
 
 def _add_missing_attributes(loaded_dict: dict) -> None:  # pragma: no cover
     # replace dict with defaults if values are missing (to avoid exceptions)
