@@ -614,3 +614,8 @@ class Dataset:
             if remote.name == "origin":
                 remote_url = remote.url
         return remote_url
+
+    def get_last_commit_date(self, filename: Path) -> str:
+        """Get the last commit date for a file"""
+        last_commit = next(self._git_repo.iter_commits(paths=filename))
+        return last_commit.committed_datetime.isoformat()

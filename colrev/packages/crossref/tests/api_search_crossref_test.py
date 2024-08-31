@@ -7,29 +7,10 @@ import requests_mock
 
 import colrev.ops.prep
 import colrev.packages.crossref.src.crossref_search_source
-from colrev.constants import SearchType
 from colrev.packages.crossref.src import crossref_api
+from pathlib import Path
 
 # pylint: disable=line-too-long
-
-
-@pytest.fixture(scope="package", name="crossref_search_source")
-def fixture_crossref_search_source(
-    prep_operation: colrev.ops.prep.Prep,
-) -> colrev.packages.crossref.src.crossref_search_source.CrossrefSearchSource:
-    """Fixture for crossref SearchSource"""
-    settings = {
-        "endpoint": "colrev.crossref",
-        "filename": Path("data/search/md_crossref.bib"),
-        "search_type": SearchType.DB,
-        "search_parameters": {"url": "test"},
-        "comment": "",
-    }
-    instance = colrev.packages.crossref.src.crossref_search_source.CrossrefSearchSource(
-        source_operation=prep_operation, settings=settings
-    )
-    return instance
-
 
 @pytest.mark.parametrize(
     "doi, expected_dict",
@@ -140,19 +121,16 @@ def fixture_crossref_search_source(
 def test_crossref_query(  # type: ignore
     doi: str,
     expected_dict: dict,
-    crossref_search_source: colrev.packages.crossref.src.crossref_search_source.CrossrefSearchSource,
-    helpers,
 ) -> None:
     """Test the crossref query_doi()"""
-    # note: replace the / in filenames by _
 
     api = crossref_api.CrossrefAPI(params={})
 
-    json_str = helpers.retrieve_test_file_content(
-        source=Path(
-            f"3_packages_search/api_output/crossref/{doi.replace('/', '_')}.json"
-        )
-    )
+    # replace the / in filenames by _
+    filename = Path(__file__).parent / f"data/{doi.replace('/', '_')}.json"
+    with open(filename, "r") as file:
+        json_str = file.read()
+    
     with requests_mock.Mocker() as req_mock:
         req_mock.get(
             f"https://api.crossref.org/works/{doi}", content=json_str.encode("utf-8")

@@ -468,6 +468,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ) -> None:
 
         self.api.rerun = rerun
+        self.api.last_updated = crossref_feed.get_last_updated()
 
         nrecs = self.api.get_len()
         self.review_manager.logger.info(f"Retrieve {nrecs} records")
@@ -496,20 +497,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
                     self._restore_url(record=retrieved_record, feed=crossref_feed)
 
-                    added = crossref_feed.add_update_record(
-                        retrieved_record=retrieved_record
-                    )
+                    crossref_feed.add_update_record(retrieved_record=retrieved_record)
 
-                    # Note : only retrieve/update the latest deposits (unless in rerun mode)
-                    if (
-                        not added
-                        and not rerun
-                        and not self._potentially_overlapping_issn_search()
-                    ):
-                        # problem: some publishers don't necessarily
-                        # deposit papers chronologically
-                        self.review_manager.logger.debug("Break condition")
-                        break
                 except colrev_exceptions.NotFeedIdentifiableException:
                     pass
         except RuntimeError as exc:

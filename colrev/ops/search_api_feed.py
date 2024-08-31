@@ -71,6 +71,13 @@ class SearchAPIFeed:
         if not prep_mode:
             self.records = self.review_manager.dataset.load_records_dict()
 
+    def get_last_updated(self) -> str:
+        """Returns the date of the last update (if available) in YYYY-MM-DD format"""
+        file = self.feed_file
+        if not file.is_file():
+            return ""
+        return self.review_manager.dataset.get_last_commit_date(self.feed_file)
+
     def _load_feed(self) -> None:
         if not self.feed_file.is_file():
             self._available_ids = {}
@@ -336,7 +343,7 @@ class SearchAPIFeed:
         *,
         retrieved_record: colrev.record.record.Record,
         prev_feed_record: colrev.record.record.Record,
-    ) -> None:
+    ) -> bool:
         """Convenience function to update existing records (main data/records.bib)"""
 
         colrev_origin = f"{self.origin_prefix}/{retrieved_record.data['ID']}"
@@ -354,7 +361,7 @@ class SearchAPIFeed:
             record=retrieved_record, prev_record=prev_feed_record
         ):
             # (notified when updating feed record)
-            return
+            return True
 
         if self._have_changed(retrieved_record, prev_feed_record):
             similarity_score = colrev.record.record.Record.get_record_similarity(
@@ -375,6 +382,8 @@ class SearchAPIFeed:
                         [x for x in dict_diff if "change" == x[0]]
                     )
                 )
+            return True
+        return False
 
     def _print_post_run_search_infos(self) -> None:
         """Print the search infos (after running the search)"""
@@ -428,9 +437,10 @@ class SearchAPIFeed:
         prev_feed_record = self._get_prev_feed_record(retrieved_record)
 
         added = self._add_record_to_feed(retrieved_record, prev_feed_record)
+        updated = False
         if not self.prep_mode:
             try:
-                self._update_record(
+                updated = self._update_record(
                     retrieved_record=retrieved_record.copy(),
                     prev_feed_record=prev_feed_record.copy(),
                 )
@@ -441,7 +451,7 @@ class SearchAPIFeed:
             retrieved_record.data[Fields.ORIGIN] = [
                 f"{self.origin_prefix}/{retrieved_record.data['ID']}"
             ]
-        return added
+        return added or updated
 
     def save(self, *, skip_print: bool = False) -> None:
         """Save the feed file and records, printing post-run search infos."""
