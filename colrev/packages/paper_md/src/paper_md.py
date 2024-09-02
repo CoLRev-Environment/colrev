@@ -28,6 +28,7 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.writer.write_utils import write_file
 
 
@@ -82,7 +83,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
     settings_class = PaperMarkdownSettings
 
-    _temp_path = Path.home().joinpath("colrev") / Path(".colrev_temp")
+    _temp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".colrev_temp")
 
     def __init__(
         self,
