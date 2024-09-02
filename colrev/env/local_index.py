@@ -290,10 +290,7 @@ class LocalIndex:
         except (
             colrev_exceptions.RecordNotInIndexException,
             colrev_exceptions.NotEnoughDataToIdentifyException,
-        ) as exc:
-            if self.verbose_mode:
-                print(exc)
-                print(f"{record_dict[Fields.ID]} - no exact match")
+        ):
 
             # 2. Try using global-ids
             retrieved_record_dict = {}

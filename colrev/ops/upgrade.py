@@ -202,8 +202,12 @@ class Upgrade(colrev.process.operation.Operation):
                 "released": False,
             },
         ]
-        print(f"installed_colrev_version: {installed_colrev_version}")
-        print(f"settings_version: {settings_version}")
+        self.review_manager.logger.info(
+            f"Colrev version installed:           {installed_colrev_version}"
+        )
+        self.review_manager.logger.info(
+            f"Colrev version in project settings: {settings_version}"
+        )
         # Note: we should always update the colrev_version in settings.json because the
         # checker._check_software requires the settings version and
         # the installed version to be identical
