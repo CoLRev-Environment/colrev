@@ -345,7 +345,7 @@ class CrossrefAPI:
             )
             return retrieved_record
 
-        except (requests.exceptions.RequestException,) as exc:
+        except (requests.exceptions.RequestException, StopIteration) as exc:
             raise colrev_exceptions.RecordNotFoundInPrepSourceException(
                 msg="Record not found in crossref (based on doi)"
             ) from exc

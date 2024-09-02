@@ -61,7 +61,7 @@ class LocalIndex:
             finally:
                 sqlite_index_record.connection.close()
 
-        raise colrev_exceptions.RecordNotInIndexException()
+        raise colrev_exceptions.RecordNotInIndexException(cid_to_retrieve)
 
     def _retrieve_from_github_curation(
         self, record_dict: dict
@@ -86,7 +86,7 @@ class LocalIndex:
             pass
 
         if record_id not in ret:
-            raise colrev_exceptions.RecordNotInIndexException
+            raise colrev_exceptions.RecordNotInIndexException(record_dict[Fields.ID])
 
         ret[record_id][Fields.CURATION_ID] = record_dict[Fields.CURATION_ID]
         return colrev.record.record.Record(ret[record_id])
@@ -103,7 +103,7 @@ class LocalIndex:
                 "https://github.com/"
             ):
                 return self._retrieve_from_github_curation(record_dict=record_dict)
-            raise colrev_exceptions.RecordNotInIndexException
+            raise colrev_exceptions.RecordNotInIndexException(record_dict[Fields.ID])
         return retrieved_record
 
     def search(self, query: str) -> list[colrev.record.record.Record]:
@@ -180,7 +180,7 @@ class LocalIndex:
         else:
             if not search_across_tocs:
                 sqlite_index_toc.connection.close()
-                raise colrev_exceptions.RecordNotInIndexException()
+                raise colrev_exceptions.RecordNotInIndexException(toc_key)
 
         if not toc_items and search_across_tocs:
             try:
@@ -195,10 +195,12 @@ class LocalIndex:
                 colrev_exceptions.NotTOCIdentifiableException,
                 KeyError,
             ) as exc:
-                raise colrev_exceptions.RecordNotInIndexException() from exc
+                raise colrev_exceptions.RecordNotInIndexException(
+                    partial_toc_key
+                ) from exc
 
         if not toc_items:
-            raise colrev_exceptions.RecordNotInIndexException()
+            raise colrev_exceptions.RecordNotInIndexException(toc_key)
         return toc_items
 
     def retrieve_from_toc(
@@ -215,7 +217,9 @@ class LocalIndex:
         try:
             toc_key = record.get_toc_key()
         except colrev_exceptions.NotTOCIdentifiableException as exc:
-            raise colrev_exceptions.RecordNotInIndexException() from exc
+            raise colrev_exceptions.RecordNotInIndexException(
+                record.data[Fields.ID]
+            ) from exc
 
         toc_items = self._get_toc_items(toc_key, search_across_tocs=search_across_tocs)
         # SQLiteIndexRecord() must be after _get_toc_items(), which also uses the sqlite file
@@ -244,7 +248,7 @@ class LocalIndex:
 
         sqlite_index_record.connection.close()
 
-        raise colrev_exceptions.RecordNotInIndexException()
+        raise colrev_exceptions.RecordNotInIndexException(record.data[Fields.ID])
 
     def retrieve_based_on_colrev_pdf_id(
         self, *, colrev_pdf_id: str
