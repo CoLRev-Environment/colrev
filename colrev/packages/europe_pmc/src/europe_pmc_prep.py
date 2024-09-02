@@ -38,17 +38,14 @@ class EuropePMCMetadataPrep(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
+        self.epmc_source = europe_pmc_connector.EuropePMCSearchSource(
+            source_operation=self.prep_operation
+        )
 
     def prepare(
         self, record: colrev.record.record_prep.PrepRecord
     ) -> colrev.record.record.Record:
         """Prepare a record based on Europe PMC metadata"""
 
-        # pylint: disable=invalid-name
-        EuropePMCSearchSource = europe_pmc_connector.EuropePMCSearchSource(
-            source_operation=self.prep_operation
-        )
-        EuropePMCSearchSource.prep_link_md(
-            prep_operation=self.prep_operation, record=record
-        )
+        self.epmc_source.prep_link_md(prep_operation=self.prep_operation, record=record)
         return record
