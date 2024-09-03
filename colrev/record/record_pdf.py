@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import tempfile
 import typing
+import unicodedata
 from pathlib import Path
 
 import imagehash
@@ -45,6 +47,33 @@ class PDFRecord(colrev.record.record.Record):
             raise colrev_exceptions.InvalidPDFException(path=pdf_path)
         return pdf_path
 
+    def _fix_text_encoding_issues(self, text: str) -> str:
+        # Correct common incorrect encoding issues
+        # Handle cases where the diacritical mark is on a different line or misplaced
+        text = re.sub(r"(´)\n([aeiou])", r"\1\2", text)
+        text = re.sub(r"(ˆ)\n([aeiou])", r"\1\2", text)
+
+        # Replace sequences of characters back with the correct accented characters
+        text = (
+            text.replace("´e", "é")
+            .replace("´a", "á")
+            .replace("´i", "í")
+            .replace("´o", "ó")
+            .replace("´u", "ú")
+        )
+        text = (
+            text.replace("ˆo", "ô")
+            .replace("ˆa", "â")
+            .replace("ˆe", "ê")
+            .replace("ˆi", "î")
+            .replace("ˆu", "û")
+        )
+
+        # Normalize the text to combine characters and their diacritics properly
+        text = unicodedata.normalize("NFKC", text)
+
+        return text
+
     def extract_text_by_page(
         self,
         *,
@@ -60,13 +89,7 @@ class PDFRecord(colrev.record.record.Record):
                     text_list.append(text)
 
         text_all = "".join(text_list)
-        text_all = (
-            text_all.replace("´\ne", "é").replace("ˆ\no", "ô").replace("´\na", "á")
-        )
-        # does not work with newlines?!
-        # text_list = unicodedata.normalize('NFKD', text_all)
-
-        return text_all
+        return self._fix_text_encoding_issues(text_all)
 
     def set_nr_pages_in_pdf(self) -> None:
         """Set the pages_in_file field based on the PDF"""
