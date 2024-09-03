@@ -66,9 +66,12 @@ def _get_colrev_path() -> Path:
         print(f"Local editable colrev path: {local_editable_colrev_path}")
         colrev_path = Path(local_editable_colrev_path)
         # Check if the path starts with a slash and contains a colon (e.g., /D:/)
-        if local_editable_colrev_path.startswith("\\"):
+        print(colrev_path)
+        print(local_editable_colrev_path)
+        if local_editable_colrev_path.startswith("/D:"):
+            print('HERE')
             # Remove the leading slash to correct the path format
-            corrected_path_str = str(local_editable_colrev_path).lstrip("\\")
+            corrected_path_str = local_editable_colrev_path.lstrip("/")
             colrev_path = Path(corrected_path_str).resolve(strict=False)
         else:
             colrev_path = colrev_path.resolve(strict=False)
