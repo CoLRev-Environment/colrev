@@ -12,6 +12,8 @@ colrev prescreen
    :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
 
 In the ``colrev prescreen`` operation, the records transition from ``md_processed`` to ``rev_prescreen_included`` or ``rev_prescreen_excluded``.
+The order of prescreening is defined in the settings file.
+Typically, automated prescreening packages are applied first, followed by manual prescreening.
 
 The prescreen can be split among multiple authors (using ``colrev prescreen --split n``).
 Each author can independently screen the selection of records on a separate git branch.
