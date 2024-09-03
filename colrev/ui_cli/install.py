@@ -10,6 +10,7 @@ import tempfile
 import typing
 from importlib.metadata import distribution
 from importlib.metadata import PackageNotFoundError
+from pathlib import Path
 from runpy import run_module
 
 import pkg_resources
@@ -49,37 +50,21 @@ def _get_local_editable_colrev_path() -> str:
     return editable_dir
 
 
-def _clone_colrev_repository() -> str:
+def _clone_colrev_repository() -> Path:
     temp_dir = tempfile.mkdtemp()
     subprocess.run(
         ["git", "clone", "https://github.com/CoLRev-Environment/colrev", temp_dir],
         check=False,
     )
-    return temp_dir
+    return Path(temp_dir)
 
 
-def _get_colrev_path() -> str:
+def _get_colrev_path() -> Path:
     local_editable_colrev_path = _get_local_editable_colrev_path()
     if local_editable_colrev_path:
-        return local_editable_colrev_path
+        return Path(local_editable_colrev_path)
 
     return _clone_colrev_repository()
-
-
-def _get_colrev_package_path(editable_dir: str, colrev_package: str) -> str:
-
-    pyproject_path = os.path.join(editable_dir, "pyproject.toml")
-    with open(pyproject_path, encoding="utf-8") as f:
-        pyproject_data = toml.load(f)
-
-    if colrev_package not in pyproject_data["tool"]["poetry"]["dependencies"]:
-        print("Not in pyproject.toml")
-        return ""
-    path = pyproject_data["tool"]["poetry"]["dependencies"][colrev_package][
-        "path"
-    ].lstrip(".")
-    colrev_package_path = editable_dir + path
-    return colrev_package_path
 
 
 def _is_package_installed(package_name: str) -> bool:
@@ -116,6 +101,27 @@ def _install_project(
     return packages
 
 
+def _get_internal_packages_dict() -> dict:
+    colrev_path = _get_colrev_path()
+    packages_dir = colrev_path / Path("colrev/packages")
+
+    internal_packages_dict = {}
+    for package_dir in packages_dir.iterdir():
+        if package_dir.is_dir():
+            package_path = str(package_dir)
+
+            pyproject_path = os.path.join(package_path, "pyproject.toml")
+            if not os.path.exists(pyproject_path):
+                continue
+            with open(pyproject_path, encoding="utf-8") as f:
+                pyproject_data = toml.load(f)
+            package_name = pyproject_data["tool"]["poetry"]["name"]
+
+            internal_packages_dict[package_name] = package_path
+
+    return internal_packages_dict
+
+
 # pylint: disable=too-many-branches
 def main(
     packages: typing.List[str],
@@ -135,25 +141,22 @@ def main(
             review_manager.logger.info("All packages are already installed")
             return
 
+    internal_packages_dict = _get_internal_packages_dict()
     # Install packages from colrev monorepository first
     colrev_packages = []
     for package in packages:
-        if (
-            package.replace(".", "-").replace("_", "-")
-            in pkg_resources.get_distribution("colrev").extras
-        ):
+        if package in internal_packages_dict:
             colrev_packages.append(package)
     packages = [p for p in packages if p not in colrev_packages]
 
     print(f"ColRev packages: {colrev_packages}")
-    colrev_path = _get_colrev_path()
     if colrev_packages:
 
         colrev_package_paths = [
-            _get_colrev_package_path(colrev_path, colrev_package)
-            for colrev_package in colrev_packages
+            p_path
+            for p_name, p_path in internal_packages_dict.items()
+            if p_name in colrev_packages
         ]
-
         args = ["pip", "install"]
         args += colrev_package_paths
         if upgrade:
@@ -164,7 +167,6 @@ def main(
             args += ["--force-reinstall"]
         if no_cache_dir:
             args += ["--no-cache-dir"]
-        input(args)
         sys.argv = args
         run_module("pip", run_name="__main__")
 

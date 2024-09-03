@@ -722,6 +722,8 @@ class Upgrade(colrev.process.operation.Operation):
                 str(Filepaths.LOCAL_ENVIRONMENT_DIR),
             )
 
+        # TODO : add colrev install . for existing github update.yaml
+
         return self.repo.is_dirty()
 
 
