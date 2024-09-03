@@ -462,11 +462,11 @@ class DataException(CoLRevException):
 class RecordNotInRepoException(CoLRevException):
     """The record was not found in the main records."""
 
-    def __init__(self, record_id: typing.Optional[str] = None) -> None:
+    def __init__(self, record_id: str) -> None:
         if id is not None:
-            self.message = f"Record not in index ({record_id})"
+            self.message = f"Record not in repository ({record_id})"
         else:
-            self.message = "Record not in index"
+            self.message = "Record not in repository"
         super().__init__(self.message)
 
 
@@ -552,7 +552,7 @@ class TEIException(CoLRevException):
 class RecordNotInIndexException(CoLRevException):
     """The requested record was not found in the LocalIndex."""
 
-    def __init__(self, record_id: typing.Optional[str] = None) -> None:
+    def __init__(self, record_id: str) -> None:
         if id is not None:
             self.message = f"Record not in index ({record_id})"
         else:

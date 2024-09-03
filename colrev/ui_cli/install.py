@@ -60,11 +60,34 @@ def _clone_colrev_repository() -> Path:
 
 
 def _get_colrev_path() -> Path:
+
     local_editable_colrev_path = _get_local_editable_colrev_path()
     if local_editable_colrev_path:
-        return Path(local_editable_colrev_path)
+        print(f"Local editable colrev path: {local_editable_colrev_path}")
+        colrev_path = Path(local_editable_colrev_path)
+        # Check if the path starts with a slash and contains a colon (e.g., /D:/)
+        if local_editable_colrev_path.startswith("\\"):
+            # Remove the leading slash to correct the path format
+            corrected_path_str = str(local_editable_colrev_path).lstrip("\\")
+            colrev_path = Path(corrected_path_str).resolve(strict=False)
+        else:
+            colrev_path = colrev_path.resolve(strict=False)
+        print(f"Resolved local colrev path: {colrev_path}")
+    else:
+        colrev_path = _clone_colrev_repository().resolve(strict=False)
+        print(f"Resolved cloned colrev path: {colrev_path}")
 
-    return _clone_colrev_repository()
+    # Check if there is a nested colrev directory
+    potential_nested_path = colrev_path / "colrev"
+    if potential_nested_path.is_dir():
+        colrev_path = potential_nested_path
+        print(f"Using nested colrev path: {colrev_path}")
+    
+    # list files in colrev_path
+    for item in colrev_path.iterdir():
+        print(f"Item: {item}")
+
+    return colrev_path
 
 
 def _is_package_installed(package_name: str) -> bool:
@@ -103,7 +126,7 @@ def _install_project(
 
 def _get_internal_packages_dict() -> dict:
     colrev_path = _get_colrev_path()
-    packages_dir = colrev_path / Path("colrev/packages")
+    packages_dir = colrev_path / Path("packages")
 
     internal_packages_dict = {}
     for package_dir in packages_dir.iterdir():

@@ -634,7 +634,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             )
         ]
         if len(record_l) != 1:
-            raise colrev_exceptions.RecordNotInRepoException
+            raise colrev_exceptions.RecordNotInRepoException(
+                indexed_record.data[Fields.ID]
+            )
         return record_l[0]
 
     def _retrieve_record_for_correction(
@@ -690,7 +692,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self.review_manager.logger.error(
             f"{Colors.RED}Record not found: {original_record[Fields.ID]}{Colors.END}"
         )
-        raise colrev_exceptions.RecordNotInIndexException()
+        raise colrev_exceptions.RecordNotInIndexException(original_record[Fields.ID])
 
     def _create_correction_branch(
         self, *, git_repo: git.Repo, record_dict: dict

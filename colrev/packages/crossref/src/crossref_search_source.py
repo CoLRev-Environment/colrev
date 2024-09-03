@@ -22,7 +22,6 @@ import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
-from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
@@ -56,9 +55,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ci_supported: bool = True
     heuristic_status = SearchSourceHeuristicStatus.oni
 
-    _availability_exception_message = (
-        f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
-    )
     _api_url = "https://api.crossref.org/"
 
     def __init__(
@@ -291,39 +287,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check status (availability) of the Crossref API"""
-
-        try:
-            # pylint: disable=duplicate-code
-            test_rec = {
-                Fields.DOI: "10.17705/1cais.04607",
-                Fields.AUTHOR: "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
-                "and Paré, Guy",
-                Fields.TITLE: "A Knowledge Development Perspective on Literature Reviews: "
-                "Validation of a new Typology in the IS Field",
-                Fields.ID: "SchryenEtAl2021",
-                Fields.JOURNAL: "Communications of the Association for Information Systems",
-                Fields.ENTRYTYPE: "article",
-            }
-
-            returned_record = self.api.crossref_query(
-                record_input=colrev.record.record_prep.PrepRecord(test_rec),
-                jour_vol_iss_list=False,
-            )[0]
-
-            if 0 != len(returned_record.data):
-                assert returned_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
-                assert returned_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
-            else:
-                if not self.review_manager.force_mode:
-                    raise colrev_exceptions.ServiceNotAvailableException(
-                        self._availability_exception_message
-                    )
-        except (requests.exceptions.RequestException, IndexError) as exc:
-            print(exc)
-            if not self.review_manager.force_mode:
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    self._availability_exception_message
-                ) from exc
+        self.api.check_availability(
+            raise_service_not_available=(not self.review_manager.force_mode)
+        )
 
     def _prep_crossref_record(
         self,
@@ -517,26 +483,20 @@ class CrossrefSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        try:
-            if self.search_source.search_type in [
-                SearchType.API,
-                SearchType.TOC,
-            ]:
-                self._run_api_search(
-                    crossref_feed=crossref_feed,
-                    rerun=rerun,
-                )
-            elif self.search_source.search_type == SearchType.MD:
-                self._run_md_search(
-                    crossref_feed=crossref_feed,
-                )
-            else:
-                raise NotImplementedError
-
-        except requests.exceptions.RequestException as exc:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                self._availability_exception_message
-            ) from exc
+        if self.search_source.search_type in [
+            SearchType.API,
+            SearchType.TOC,
+        ]:
+            self._run_api_search(
+                crossref_feed=crossref_feed,
+                rerun=rerun,
+            )
+        elif self.search_source.search_type == SearchType.MD:
+            self._run_md_search(
+                crossref_feed=crossref_feed,
+            )
+        else:
+            raise NotImplementedError
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""

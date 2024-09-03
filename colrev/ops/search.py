@@ -159,6 +159,7 @@ class Search(colrev.process.operation.Operation):
         choices = [x for x in search_types if x != SearchType.MD]
         if len(choices) == 1:
             return choices[0]
+        choices.sort()
         questions = [
             inquirer.List(
                 "search_type",

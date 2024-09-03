@@ -7,24 +7,24 @@ Article reuse guidelines:
 sagepub.com/journals-permissions
 DOI: 10.1177/02683962211048201
 Journals.sagepub.com/jinf
-Artiﬁcial intelligence and the conduct of
+Artificial intelligence and the conduct of
 literature reviews
 Gerit Wagner, Roman Lukyanenko and Guy Paré
 Abstract
-Artiﬁcial intelligence (AI) is beginning to transform traditional research practices in many areas. In this context, literature
+Artificial intelligence (AI) is beginning to transform traditional research practices in many areas. In this context, literature
 reviews stand out because they operate on large and rapidly growing volumes of documents, that is, partially structured
 (meta)data, and pervade almost every type of paper published in information systems research or related social science
 disciplines. To familiarize researchers with some of the recent trends in this area, we outline how AI can expedite individual
 steps of the literature review process. Considering that the use of AI in this context is in an early stage of development, we
-propose a comprehensive research agenda for AI-based literature reviews (AILRs) in our ﬁeld. With this agenda, we would
+propose a comprehensive research agenda for AI-based literature reviews (AILRs) in our field. With this agenda, we would
 like to encourage design science research and a broader constructive discourse on shaping the future of AILRs in research.
 Keywords
-Artiﬁcial intelligence, machine learning, natural language processing, research data management, data infrastructure,
+Artificial intelligence, machine learning, natural language processing, research data management, data infrastructure,
 automation, literature review
 Introduction
-The potential of artiﬁcial intelligence (AI) to augment and
+The potential of artificial intelligence (AI) to augment and
 partially automate research has sparked vivid debates in
-many scientiﬁc disciplines, including the health sciences
+many scientific disciplines, including the health sciences
 (Adams et al., 2013; Tsafnat et al., 2014), biology (King
 et al., 2009), and management (Johnson et al., 2019). In
 particular, the concept of automated science is raising in-
@@ -40,19 +40,19 @@ et al., 2018). With this commentary, we join the discussion
 which has been resumed recently by Johnson et al. (2019) in
 the business disciplines. The authors observe that across this
 multi-disciplinary discourse, two dominant narratives have
-emerged. The ﬁrst narrative adopts a provocative and vi-
+emerged. The first narrative adopts a provocative and vi-
 sionary perspective to present its audience with a choice
 between accepting or rejecting future research practices in
 which AI plays a dominant role. The second narrative
 acknowledges that a gradual adoption of AI-based research
 tools has already begun and aims at engaging its readers in a
 constructive debate on how to leverage AI-based tools for
-the beneﬁt of the research ﬁeld and its stakeholders. In this
+the benefit of the research field and its stakeholders. In this
 paper, our position resonates more with the latter per-
 spective, which is focused on the mid-term instead of the
 long-term, and well-positioned to advance the discourse
 with less speculative and more actionable discussions of the
-speciﬁc research processes that are more amenable appli-
+specific research processes that are more amenable appli-
 cations of AI and those processes that rely more on the
 human ingenuity of researchers.
 In this essay, we focus on the use of AI-based tools in the
