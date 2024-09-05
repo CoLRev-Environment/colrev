@@ -231,6 +231,24 @@ class PDFGet(colrev.process.operation.Operation):
         # pylint: disable=too-many-branches
 
         pdf_dir = self.review_manager.paths.pdf
+        broken_symlinks = []
+
+        for pdf_candidate in list(pdf_dir.glob("**/*.pdf")):
+            relative_path = pdf_candidate.relative_to(self.review_manager.path)
+            if not relative_path.is_file():
+                if pdf_candidate.is_symlink():
+                    broken_symlinks.append(pdf_candidate)
+                continue
+
+        if broken_symlinks:
+            print("To fix broken symlinks:")
+            old_path = input("Enter the old path: ")
+            new_path = input("Enter the new path: ")
+            for broken_symlink in broken_symlinks:
+                new_file = str(broken_symlink.resolve()).replace(old_path, new_path)
+                print(f"Fix {broken_symlink}")
+                broken_symlink.unlink()
+                broken_symlink.symlink_to(new_file)
 
         # Relink files in source file
         corresponding_origin: str
@@ -251,28 +269,14 @@ class PDFGet(colrev.process.operation.Operation):
             source_records = list(source_records_dict.values())
 
             self.review_manager.logger.info("Calculate colrev_pdf_ids")
+
             pdf_candidates = {}
-            broken_symlinks = []
+
             for pdf_candidate in list(pdf_dir.glob("**/*.pdf")):
-                relative_path = pdf_candidate.relative_to(self.review_manager.path)
-                if not relative_path.is_file():
-                    if pdf_candidate.is_symlink():
-                        broken_symlinks.append(pdf_candidate)
-                    continue
                 colrev_pdf_id = colrev.record.record_pdf.PDFRecord.get_colrev_pdf_id(
                     pdf_candidate
                 )
                 pdf_candidates[relative_path] = colrev_pdf_id
-
-            if broken_symlinks:
-                print("To fix broken symlinks:")
-                old_path = input("Enter the old path: ")
-                new_path = input("Enter the new path: ")
-                for broken_symlink in broken_symlinks:
-                    new_file = str(broken_symlink.resolve()).replace(old_path, new_path)
-                    print(f"Fix {broken_symlink}")
-                    broken_symlink.unlink()
-                    broken_symlink.symlink_to(new_file)
 
             for record in records.values():
                 if Fields.FILE not in record:
