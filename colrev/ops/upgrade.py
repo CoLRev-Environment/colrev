@@ -726,7 +726,23 @@ class Upgrade(colrev.process.operation.Operation):
                 str(Filepaths.LOCAL_ENVIRONMENT_DIR),
             )
 
-        # TODO : add colrev install . for existing github update.yaml
+        # add colrev install . for existing .github/workflows/colrev_update.yml
+        if Path(".github/workflows/colrev_update.yml").is_file():
+            with open(".github/workflows/colrev_update.yml", encoding="utf-8") as file:
+                content = file.read()
+                if "colrev install" not in content:
+                    content = content.replace(
+                        "          poetry run --directory ${{ runner.temp }}/colrev colrev env -i",
+                        "          poetry run --directory ${{ runner.temp }}/colrev colrev install .\n"
+                        + "          poetry run --directory ${{ runner.temp }}/colrev colrev env -i",
+                    )
+
+                    with open(
+                        ".github/workflows/colrev_update.yml", "w", encoding="utf-8"
+                    ) as out:
+                        out.write(content)
+
+                    self.repo.index.add([".github/workflows/colrev_update.yml"])
 
         return self.repo.is_dirty()
 
