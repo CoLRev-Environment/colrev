@@ -69,7 +69,10 @@ class Initializer:
         no_docker: bool,
     ) -> None:
         self.no_docker = no_docker
-        if platform.system() != "Linux":
+        # check whether docker is available
+        try:
+            colrev.env.docker_manager.DockerManager.check_docker_installed()
+        except colrev_exceptions.MissingDependencyError:
             self.no_docker = True
 
         self._reset_if_existing_repo_with_single_commit()
