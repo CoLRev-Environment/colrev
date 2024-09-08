@@ -1,9 +1,13 @@
 name: Make Documentation
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
+  schedule:
+    - cron: '10 2 * * 3'
+  # workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+
 jobs:
   build_docs:
     runs-on: ubuntu-latest
@@ -38,6 +42,8 @@ jobs:
           git checkout -b ${{ env.BRANCH_NAME }}
       - name: Clean old documentation build
         run: rm -rf docs/source/dev_docs/_autosummary/*
+      - name: Run docs update
+        run: poetry run colrev env --update_package_list
       - name: Build documentation with Sphinx
         run: poetry run sphinx-build -b html docs/source docs/build
       - name: Run pre-commit hooks excluding black

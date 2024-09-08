@@ -174,11 +174,16 @@ class Endpoint:
         request_url = str(self.request_url)
         request_params["rows"] = "0"
 
-        result = self.retrieve(
-            request_url,
-            data=request_params,
-            headers=self.headers,
-        ).json()
+        try:
+            result = self.retrieve(
+                request_url,
+                data=request_params,
+                headers=self.headers,
+            ).json()
+        except requests.exceptions.RequestException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
+            ) from exc
 
         return int(result["message"]["total-results"])
 
@@ -298,6 +303,8 @@ class CrossrefAPI:
         self.rerun = rerun
 
     def check_availability(self, raise_service_not_available: bool = True) -> None:
+        """Check the availability of the API"""
+
         try:
             # pylint: disable=duplicate-code
             test_rec = {

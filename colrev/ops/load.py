@@ -194,7 +194,8 @@ class Load(colrev.process.operation.Operation):
                     continue
                 if key not in FieldSet.STANDARDIZED_FIELD_KEYS:
                     print(
-                        f"{Colors.RED}Drop non-standardized field without namespace ({key}){Colors.END}"
+                        f"{Colors.RED}Drop non-standardized field without namespace "
+                        f"({key}){Colors.END}"
                     )
                     source_record.pop(key)
 

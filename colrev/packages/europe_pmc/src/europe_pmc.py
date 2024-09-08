@@ -205,6 +205,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         """Retrieve masterdata from Europe PMC based on similarity with the record provided"""
 
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-return-statements
 
         # https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/23245604
         if len(record.data.get(Fields.TITLE, "")) < 35:
@@ -235,10 +236,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 update_only=False,
                 prep_mode=True,
             )
-            try:
-                europe_pmc_feed.add_update_record(retrieved_record=retrieved_record)
-            except colrev_exceptions.NotFeedIdentifiableException:
-                return record
+            europe_pmc_feed.add_update_record(retrieved_record=retrieved_record)
 
             record.merge(
                 retrieved_record,
@@ -250,12 +248,13 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 masterdata_repository=self.review_manager.settings.is_curated_repo(),
             )
             record.set_status(RecordState.md_prepared)
-
             europe_pmc_feed.save()
-            self.europe_pmc_lock.release()
-            return record
 
         except requests.exceptions.RequestException:
+            pass
+        except colrev_exceptions.NotFeedIdentifiableException:
+            pass
+        finally:
             self.europe_pmc_lock.release()
 
         return record
