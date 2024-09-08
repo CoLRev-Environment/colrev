@@ -14,6 +14,7 @@ import toml
 from m2r import parse_from_file
 
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.colrev_internal_packages
 from colrev.constants import EndpointType
 from colrev.constants import SearchType
 
@@ -24,10 +25,10 @@ if colrev_spec.origin is None:  # pragma: no cover
     raise colrev_exceptions.MissingDependencyError(dep="colrev")
 COLREV_PATH = Path(colrev_spec.origin).parents[1]
 
-with open(COLREV_PATH / Path("pyproject.toml"), encoding="utf-8") as cdep_file:
-    colrev_pyproject_toml = toml.load(cdep_file)
 
-COLREV_DEPENDENCIES = colrev_pyproject_toml["tool"]["poetry"]["dependencies"]
+INTERNAL_PACKAGES = (
+    colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
+)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -91,21 +92,19 @@ class PackageDoc:
 
     def _initialize_from_colrev_monorepo(self, package_id: str) -> bool:
 
-        if package_id not in COLREV_DEPENDENCIES:
-            return False
+        if package_id in INTERNAL_PACKAGES:
+            self.package_dir = Path(INTERNAL_PACKAGES[package_id])
+            with open(
+                self.package_dir / Path("pyproject.toml"), encoding="utf-8"
+            ) as file:
+                self.package_metadata = toml.load(file)
 
-        self.package_dir = COLREV_PATH / COLREV_DEPENDENCIES[package_id]["path"]
-        if not self.package_dir.is_dir():
-            return False
+            assert str(self.package_dir).endswith(
+                package_id.replace("colrev.", "")
+            ), package_id
 
-        with open(self.package_dir / Path("pyproject.toml"), encoding="utf-8") as file:
-            self.package_metadata = toml.load(file)
-
-        assert str(self.package_dir).endswith(
-            package_id.replace("colrev.", "")
-        ), package_id
-
-        return True
+            return True
+        return False
 
     def _initialize_from_pypi(self, package_id: str) -> bool:
 
