@@ -61,7 +61,7 @@ class LocalIndex:
             finally:
                 sqlite_index_record.connection.close()
 
-        raise colrev_exceptions.RecordNotInIndexException(cid_to_retrieve)
+        raise colrev_exceptions.RecordNotInIndexException(cids_to_retrieve[0])
 
     def _retrieve_from_github_curation(
         self, record_dict: dict
@@ -290,7 +290,7 @@ class LocalIndex:
         except (
             colrev_exceptions.RecordNotInIndexException,
             colrev_exceptions.NotEnoughDataToIdentifyException,
-        ):
+        ) as exc:
 
             # 2. Try using global-ids
             retrieved_record_dict = {}
@@ -330,7 +330,7 @@ class LocalIndex:
             if not retrieved_record_dict:
                 raise colrev_exceptions.RecordNotInIndexException(
                     record_dict.get(Fields.ID, "no-key")
-                )
+                ) from exc
 
         return prepare_record_for_return(
             retrieved_record_dict,
