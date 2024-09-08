@@ -146,13 +146,13 @@ class PRISMA(JsonSchemaMixin):
             self.review_manager.logger.info("Complete processing and use colrev data")
             return
 
-        csv_relative_path = self.csv_path.relative_to(self.review_manager.path)
+        csv_relative_path = self.csv_path.relative_to(self.review_manager.path).as_posix()
 
         if not silent_mode:
             self.review_manager.logger.info("Create PRISMA diagram")
 
         for diagram_path in self.settings.diagram_path:
-            diagram_relative_path = diagram_path.relative_to(self.review_manager.path)
+            diagram_relative_path = diagram_path.relative_to(self.review_manager.path).as_posix()
 
             script = (
                 "Rscript "
