@@ -150,6 +150,28 @@
             ]
         }
     ],
+    "BACKWARD_SEARCH": [
+        {
+            "package_endpoint_identifier": "colrev.pdf_backward_search",
+            "status": "|MATURING|",
+            "short_description": "Backward search extracting references from PDFs using GROBID (:doc:`instructions </manual/packages/colrev.pdf_backward_search>`)",
+            "search_types": [
+                "BACKWARD_SEARCH"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.unknown_source",
+            "status": "|MATURING|",
+            "short_description": "Unknown SearchSource (:doc:`instructions </manual/packages/colrev.unknown_source>`)",
+            "search_types": [
+                "DB",
+                "OTHER",
+                "TOC",
+                "FORWARD_SEARCH",
+                "BACKWARD_SEARCH"
+            ]
+        }
+    ],
     "DB": [
         {
             "package_endpoint_identifier": "colrev.abi_inform_proquest",
@@ -291,69 +313,13 @@
             ]
         }
     ],
-    "TOC": [
+    "FILES": [
         {
-            "package_endpoint_identifier": "colrev.ais_library",
+            "package_endpoint_identifier": "colrev.files_dir",
             "status": "|MATURING|",
-            "short_description": "AIS electronic Library (AISeL) (:doc:`instructions </manual/packages/colrev.ais_library>`)",
+            "short_description": "Files directories (PDFs based on GROBID) (:doc:`instructions </manual/packages/colrev.files_dir>`)",
             "search_types": [
-                "DB",
-                "API",
-                "TOC"
-            ]
-        },
-        {
-            "package_endpoint_identifier": "colrev.crossref",
-            "status": "|MATURING|",
-            "short_description": "Crossref API (:doc:`instructions </manual/packages/colrev.crossref>`)",
-            "search_types": [
-                "API",
-                "TOC",
-                "MD"
-            ]
-        },
-        {
-            "package_endpoint_identifier": "colrev.dblp",
-            "status": "|MATURING|",
-            "short_description": "DBLP API (:doc:`instructions </manual/packages/colrev.dblp>`)",
-            "search_types": [
-                "API",
-                "TOC",
-                "MD"
-            ]
-        },
-        {
-            "package_endpoint_identifier": "colrev.unknown_source",
-            "status": "|MATURING|",
-            "short_description": "Unknown SearchSource (:doc:`instructions </manual/packages/colrev.unknown_source>`)",
-            "search_types": [
-                "DB",
-                "OTHER",
-                "TOC",
-                "FORWARD_SEARCH",
-                "BACKWARD_SEARCH"
-            ]
-        }
-    ],
-    "BACKWARD_SEARCH": [
-        {
-            "package_endpoint_identifier": "colrev.pdf_backward_search",
-            "status": "|MATURING|",
-            "short_description": "Backward search extracting references from PDFs using GROBID (:doc:`instructions </manual/packages/colrev.pdf_backward_search>`)",
-            "search_types": [
-                "BACKWARD_SEARCH"
-            ]
-        },
-        {
-            "package_endpoint_identifier": "colrev.unknown_source",
-            "status": "|MATURING|",
-            "short_description": "Unknown SearchSource (:doc:`instructions </manual/packages/colrev.unknown_source>`)",
-            "search_types": [
-                "DB",
-                "OTHER",
-                "TOC",
-                "FORWARD_SEARCH",
-                "BACKWARD_SEARCH"
+                "FILES"
             ]
         }
     ],
@@ -366,30 +332,6 @@
                 "FORWARD_SEARCH"
             ]
         },
-        {
-            "package_endpoint_identifier": "colrev.unknown_source",
-            "status": "|MATURING|",
-            "short_description": "Unknown SearchSource (:doc:`instructions </manual/packages/colrev.unknown_source>`)",
-            "search_types": [
-                "DB",
-                "OTHER",
-                "TOC",
-                "FORWARD_SEARCH",
-                "BACKWARD_SEARCH"
-            ]
-        }
-    ],
-    "FILES": [
-        {
-            "package_endpoint_identifier": "colrev.files_dir",
-            "status": "|MATURING|",
-            "short_description": "Files directories (PDFs based on GROBID) (:doc:`instructions </manual/packages/colrev.files_dir>`)",
-            "search_types": [
-                "FILES"
-            ]
-        }
-    ],
-    "OTHER": [
         {
             "package_endpoint_identifier": "colrev.unknown_source",
             "status": "|MATURING|",
@@ -468,6 +410,64 @@
                 "DB",
                 "API",
                 "MD"
+            ]
+        }
+    ],
+    "OTHER": [
+        {
+            "package_endpoint_identifier": "colrev.unknown_source",
+            "status": "|MATURING|",
+            "short_description": "Unknown SearchSource (:doc:`instructions </manual/packages/colrev.unknown_source>`)",
+            "search_types": [
+                "DB",
+                "OTHER",
+                "TOC",
+                "FORWARD_SEARCH",
+                "BACKWARD_SEARCH"
+            ]
+        }
+    ],
+    "TOC": [
+        {
+            "package_endpoint_identifier": "colrev.ais_library",
+            "status": "|MATURING|",
+            "short_description": "AIS electronic Library (AISeL) (:doc:`instructions </manual/packages/colrev.ais_library>`)",
+            "search_types": [
+                "DB",
+                "API",
+                "TOC"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.crossref",
+            "status": "|MATURING|",
+            "short_description": "Crossref API (:doc:`instructions </manual/packages/colrev.crossref>`)",
+            "search_types": [
+                "API",
+                "TOC",
+                "MD"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.dblp",
+            "status": "|MATURING|",
+            "short_description": "DBLP API (:doc:`instructions </manual/packages/colrev.dblp>`)",
+            "search_types": [
+                "API",
+                "TOC",
+                "MD"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.unknown_source",
+            "status": "|MATURING|",
+            "short_description": "Unknown SearchSource (:doc:`instructions </manual/packages/colrev.unknown_source>`)",
+            "search_types": [
+                "DB",
+                "OTHER",
+                "TOC",
+                "FORWARD_SEARCH",
+                "BACKWARD_SEARCH"
             ]
         }
     ]

@@ -74,6 +74,8 @@ def _get_colrev_path() -> Path:
 
 
 def get_internal_packages_dict() -> dict:
+    """Get a dictionary of internal CoLRev packages"""
+
     colrev_path = _get_colrev_path()
     packages_dir = colrev_path / Path("packages")
 

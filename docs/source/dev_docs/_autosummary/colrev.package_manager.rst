@@ -27,6 +27,7 @@ colrev.package\_manager
    :recursive:
 
    colrev.package_manager.check
+   colrev.package_manager.colrev_internal_packages
    colrev.package_manager.doc_registry_manager
    colrev.package_manager.init
    colrev.package_manager.interfaces

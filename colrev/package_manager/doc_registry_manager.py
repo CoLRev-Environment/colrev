@@ -2,7 +2,6 @@
 """Discovering and using packages."""
 from __future__ import annotations
 
-import importlib.util
 import json
 import os
 import tempfile
@@ -13,17 +12,10 @@ import requests
 import toml
 from m2r import parse_from_file
 
-import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.colrev_internal_packages
 from colrev.constants import EndpointType
+from colrev.constants import Filepaths
 from colrev.constants import SearchType
-
-colrev_spec = importlib.util.find_spec("colrev")
-if colrev_spec is None:  # pragma: no cover
-    raise colrev_exceptions.MissingDependencyError(dep="colrev")
-if colrev_spec.origin is None:  # pragma: no cover
-    raise colrev_exceptions.MissingDependencyError(dep="colrev")
-COLREV_PATH = Path(colrev_spec.origin).parents[1]
 
 
 INTERNAL_PACKAGES = (
@@ -268,7 +260,8 @@ class PackageDoc:
         """Import the package documentation"""
 
         with open(
-            COLREV_PATH / Path(f"docs/source/manual/packages/{self.docs_rst_path}"),
+            Filepaths.COLREV_PATH
+            / Path(f"docs/source/manual/packages/{self.docs_rst_path}"),
             "w",
             encoding="utf-8",
         ) as file:
@@ -341,23 +334,22 @@ class PackageDoc:
 class DocRegistryManager:
     """DocRegistryManager"""
 
-    # Contains the official list of packages for the documentation
-    packages_json = COLREV_PATH / Path("colrev/package_manager/packages.json")
-
     # Overview page of packages: rst
-    packages_index_path = COLREV_PATH / Path("docs/source/manual/packages.rst")
+    docs_packages_index_path = Filepaths.COLREV_PATH / Path(
+        "docs/source/manual/packages.rst"
+    )
     # Overview page of packages: json
-    packages_overview_json_file = COLREV_PATH / Path(
+    docs_packages_overview_json_file = Filepaths.COLREV_PATH / Path(
         "docs/source/manual/packages_overview.json"
     )
 
     # Overviews of endpoints
-    package_endpoints_json_file = COLREV_PATH / Path(
+    docs_package_endpoints_json_file = Filepaths.COLREV_PATH / Path(
         "docs/source/manual/package_endpoints.json"
     )
 
     # Overviews of search source types
-    search_source_types_json_file = COLREV_PATH / Path(
+    docs_search_source_types_json_file = Filepaths.COLREV_PATH / Path(
         "docs/source/manual/search_source_types.json"
     )
 
@@ -369,7 +361,7 @@ class DocRegistryManager:
 
     def _load_packages(self) -> None:
 
-        with open(self.packages_json, encoding="utf-8") as file:
+        with open(Filepaths.PACKAGES_JSON, encoding="utf-8") as file:
             packages_data = json.load(file)
 
         self.packages = []
@@ -387,7 +379,7 @@ class DocRegistryManager:
                 print(f"Error loading package {package_id}")
 
         # Add package endpoints
-        os.chdir(COLREV_PATH)
+        os.chdir(Filepaths.COLREV_PATH)
         for package in self.packages:
             for endpoint_type in EndpointType:
                 if not package.has_endpoint(endpoint_type):
@@ -418,7 +410,9 @@ class DocRegistryManager:
             )
 
         json_object = json.dumps(search_source_types, indent=4)
-        with open(self.search_source_types_json_file, "w", encoding="utf-8") as file:
+        with open(
+            self.docs_search_source_types_json_file, "w", encoding="utf-8"
+        ) as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
 
@@ -429,9 +423,13 @@ class DocRegistryManager:
                 key=lambda d: d["package_endpoint_identifier"],
             )
 
-        self.package_endpoints_json_file.unlink(missing_ok=True)
+        self.docs_package_endpoints_json_file.unlink(missing_ok=True)
         json_object = json.dumps(self.package_endpoints_json, indent=4)
-        with open(self.package_endpoints_json_file, "w", encoding="utf-8") as file:
+        with open(self.docs_package_endpoints_json_file, "w", encoding="utf-8") as file:
+            file.write(json_object)
+            file.write("\n")  # to avoid pre-commit/eof-fix changes
+
+        with open(Filepaths.PACKAGES_ENDPOINTS_JSON, "w", encoding="utf-8") as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
 
@@ -445,21 +443,21 @@ class DocRegistryManager:
                 package["endpoint_type"] = endpoint_type
                 packages_overview.append(package)
 
-        self.packages_overview_json_file.unlink(missing_ok=True)
+        self.docs_packages_overview_json_file.unlink(missing_ok=True)
         json_object = json.dumps(packages_overview, indent=4)
-        with open(self.packages_overview_json_file, "w", encoding="utf-8") as file:
+        with open(self.docs_packages_overview_json_file, "w", encoding="utf-8") as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
 
     def _write_docs_for_index(self) -> None:
         """Writes data from self.docs_for_index to the packages.rst file."""
 
-        packages_index_path_content = self.packages_index_path.read_text(
+        docs_packages_index_path_content = self.docs_packages_index_path.read_text(
             encoding="utf-8"
         )
         new_doc = []
         # append header
-        for line in packages_index_path_content.split("\n"):
+        for line in docs_packages_index_path_content.split("\n"):
             new_doc.append(line)
             if ":caption:" in line:
                 new_doc.append("")
@@ -477,7 +475,7 @@ class DocRegistryManager:
                     continue
                 new_doc.append(f"   packages/{doc_item['path']}")
 
-        with open(self.packages_index_path, "w", encoding="utf-8") as file:
+        with open(self.docs_packages_index_path, "w", encoding="utf-8") as file:
             for line in new_doc:
                 file.write(line + "\n")
 

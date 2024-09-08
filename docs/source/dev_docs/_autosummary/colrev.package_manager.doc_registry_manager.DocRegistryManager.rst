@@ -27,9 +27,8 @@ colrev.package\_manager.doc\_registry\_manager.DocRegistryManager
    .. autosummary::
 
       ~DocRegistryManager.docs_for_index
+      ~DocRegistryManager.docs_package_endpoints_json_file
+      ~DocRegistryManager.docs_packages_index_path
+      ~DocRegistryManager.docs_packages_overview_json_file
+      ~DocRegistryManager.docs_search_source_types_json_file
       ~DocRegistryManager.package_endpoints_json
-      ~DocRegistryManager.package_endpoints_json_file
-      ~DocRegistryManager.packages_index_path
-      ~DocRegistryManager.packages_json
-      ~DocRegistryManager.packages_overview_json_file
-      ~DocRegistryManager.search_source_types_json_file

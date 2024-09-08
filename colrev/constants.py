@@ -2,6 +2,7 @@
 """Constants for CoLRev"""
 # pylint: disable=too-few-public-methods
 # pylint: disable=colrev-missed-constant-usage
+import importlib.util
 import typing
 from enum import Enum
 from enum import EnumMeta
@@ -24,6 +25,17 @@ class Filepaths:
 
     COVERPAGES = LOCAL_ENVIRONMENT_DIR / Path(".coverpages")
     LASTPAGES = LOCAL_ENVIRONMENT_DIR / Path(".lastpages")
+
+    colrev_spec = importlib.util.find_spec("colrev")
+    if colrev_spec is not None:  # pragma: no cover
+        if colrev_spec.origin is not None:  # pragma: no cover
+            COLREV_PATH = Path(colrev_spec.origin).parents[1]
+
+            # Contains the official list of packages for the documentation
+            PACKAGES_JSON = COLREV_PATH / Path("colrev/package_manager/packages.json")
+            PACKAGES_ENDPOINTS_JSON = COLREV_PATH / Path(
+                "colrev/package_manager/package_endpoints.json"
+            )
 
 
 class FileSets:
