@@ -7,9 +7,9 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
+
 import pkg_resources
 import toml
-import sys
 
 
 # pylint: disable=too-many-return-statements
