@@ -303,6 +303,8 @@ class CrossrefAPI:
         self.rerun = rerun
 
     def check_availability(self, raise_service_not_available: bool = True) -> None:
+        """Check the availability of the API"""
+
         try:
             # pylint: disable=duplicate-code
             test_rec = {
