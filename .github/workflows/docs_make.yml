@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies using Poetry with docs extra
         run: |
           python -m pip install poetry
-          poetry install -E docs -E dev --no-cache
+          poetry install -E docs --no-cache
       - name: Install pre-commit
         run: poetry run pip install pre-commit
       - name: Install modules from packages.json via poetry, skipping "colrev"
@@ -38,6 +38,8 @@ jobs:
           git checkout -b ${{ env.BRANCH_NAME }}
       - name: Clean old documentation build
         run: rm -rf docs/source/dev_docs/_autosummary/*
+      - name: Run docs update
+        run: poetry run colrev env --update_package_list
       - name: Build documentation with Sphinx
         run: poetry run sphinx-build -b html docs/source docs/build
       - name: Run pre-commit hooks excluding black
