@@ -40,3 +40,4 @@ colrev.constants
       SearchSourceHeuristicStatus
       SearchType
       ShareStatReq
+      SortedEnumMeta
