@@ -174,11 +174,16 @@ class Endpoint:
         request_url = str(self.request_url)
         request_params["rows"] = "0"
 
-        result = self.retrieve(
-            request_url,
-            data=request_params,
-            headers=self.headers,
-        ).json()
+        try:
+            result = self.retrieve(
+                request_url,
+                data=request_params,
+                headers=self.headers,
+            ).json()
+        except requests.exceptions.RequestException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
+            ) from exc
 
         return int(result["message"]["total-results"])
 
