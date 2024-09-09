@@ -255,7 +255,10 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         except colrev_exceptions.NotFeedIdentifiableException:
             pass
         finally:
-            self.europe_pmc_lock.release()
+            try:
+                self.europe_pmc_lock.release()
+            except ValueError:
+                pass
 
         return record
 
