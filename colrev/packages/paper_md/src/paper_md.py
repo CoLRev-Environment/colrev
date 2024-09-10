@@ -682,7 +682,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 image=self.pandoc_image,
                 command=script,
                 user=user,
-                volumes=[str(self.review_manager.path) + ":/data"],
+                volumes=[self.review_manager.path.as_posix() + ":/data"],
             )
 
         except docker.errors.ImageNotFound:
@@ -736,9 +736,9 @@ class PaperMarkdown(JsonSchemaMixin):
             self.review_manager.logger.info("Build paper")
 
         script = (
-            f"{self.paper_relative_path} --filter pandoc-crossref --citeproc "
-            + f"--reference-doc {word_template.relative_to(self.review_manager.path)} "
-            + f"--output {output_relative_path}"
+            f"{self.paper_relative_path.as_posix()} --filter pandoc-crossref --citeproc "
+            + f"--reference-doc {word_template.relative_to(self.review_manager.path).as_posix()} "
+            + f"--output {output_relative_path.as_posix()}"
         )
 
         Timer(
