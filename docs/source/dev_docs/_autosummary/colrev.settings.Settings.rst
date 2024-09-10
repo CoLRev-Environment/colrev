@@ -21,6 +21,7 @@ colrev.settings.Settings
       ~Settings.from_dict
       ~Settings.from_json
       ~Settings.from_object
+      ~Settings.get_packages
       ~Settings.is_curated_masterdata_repo
       ~Settings.is_curated_repo
       ~Settings.json_schema

@@ -22,6 +22,7 @@ import colrev.env.environment_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
+import colrev.package_manager.package_manager
 import colrev.review_manager
 import colrev.settings
 from colrev.constants import Colors
@@ -60,6 +61,10 @@ class Initializer:
             exact_call=exact_call,
             no_docker=light,
         )
+
+        # Install packages
+        p_man = colrev.package_manager.package_manager.PackageManager()
+        p_man.install_project(review_manager=self.review_manager, force_reinstall=False)
 
     def _setup_repo(
         self,

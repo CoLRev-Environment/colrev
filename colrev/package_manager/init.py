@@ -635,24 +635,6 @@ repos:
         f.write(pre_commit_hooks)
 
 
-def _add_to_colrev_pyproject_toml(package_data: dict) -> None:
-    colrev_pyproject_toml_path = (
-        Path(__file__).resolve().parent.parent.parent / "pyproject.toml"
-    )
-    current_dir = Path.cwd()
-    with open(colrev_pyproject_toml_path, "r+", encoding="utf-8") as f:
-        toml_data = f.read()
-        package_name = package_data["name"]
-        package_path = f"./colrev/packages/{current_dir.name}"
-        toml_data = toml_data.replace(
-            "\n[tool.poetry.extras]",
-            f'"{package_name}" = {{path="{package_path}"}}\n\n[tool.poetry.extras]',
-        )
-        f.seek(0)
-        f.write(toml_data)
-        f.truncate()
-
-
 def _add_to_packages_json(package_data: dict) -> None:
     packages_json_path = (
         Path(__file__).resolve().parent.parent.parent
@@ -716,7 +698,6 @@ def main() -> None:
         _create_git_repo()
 
     if built_in:
-        _add_to_colrev_pyproject_toml(package_data)
         _add_to_packages_json(package_data)
 
     # tests
