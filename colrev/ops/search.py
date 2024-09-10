@@ -409,7 +409,7 @@ class Search(colrev.process.operation.Operation):
 
         self.review_manager.logger.debug("Load available search_source endpoints...")
 
-        search_sources = self.package_manager.discover_packages(
+        search_sources = self.package_manager.discover_installed_packages(
             package_type=EndpointType.search_source
         )
 
