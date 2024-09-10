@@ -67,9 +67,11 @@ class OCRMyPDF(JsonSchemaMixin):
         #     options = options + '--deskew '
         docker_home_path = Path("/home/docker")
 
+        non_ocr_fname = docker_home_path / non_ocred_filename.name
+        docker_output_fname = docker_home_path / pdf_path.name
         args = (
-            f"--force-ocr --jobs 4 -l eng {str(docker_home_path / non_ocred_filename.name)} "
-            f"{str(docker_home_path / pdf_path.name)}"
+            f"--force-ocr --jobs 4 -l eng {non_ocr_fname.as_posix()} "
+            f"{docker_output_fname.as_posix()}"
         )
 
         client = docker.from_env(timeout=120)
