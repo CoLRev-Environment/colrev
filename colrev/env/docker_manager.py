@@ -28,11 +28,15 @@ class DockerManager:
 
             if imagename not in repo_tags:
                 if dockerfile:
-                    print(f"Building {imagename} Docker image ...")
+                    if ":" not in imagename:
+                        tag = f"{imagename}:latest"
+                    else:
+                        tag = imagename
                     dockerfile.resolve()
                     client.images.build(
                         path=str(dockerfile.parent).replace("\\", "/"),
-                        tag=f"{imagename}:latest",
+                        tag=tag,
+                        rm=True,
                     )
 
                 else:
