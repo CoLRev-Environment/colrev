@@ -174,7 +174,7 @@ class PRISMA(JsonSchemaMixin):
                 )
 
             self._call_docker_build_process(script=script)
-            csv_relative_path.unlink()
+            self.csv_path.unlink()
 
     def _call_docker_build_process(self, *, script: str) -> None:
         try:
