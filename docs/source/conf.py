@@ -100,7 +100,7 @@ html_context = {
     "display_github": True,  # Integrate GitHub
     "github_user": "CoLRev-Environment",  # Username
     "github_repo": "colrev",  # Repo name
-    "github_version": "master",  # Version
+    "github_version": "main",  # Version
     "conf_py_path": "docs/source/",  # Path in the checkout to the docs root
     "meta_http_equiv": True,  # for asciinema
     "html5_doctype": True,  # for asciinema
