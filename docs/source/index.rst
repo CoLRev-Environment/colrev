@@ -48,8 +48,11 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
 
 .. code-block::
 
-   # Install
+   # Install CoLRev
    pip install colrev
+
+   # Install packages required for the CoLRev project
+   colrev install .
 
    # ... and start with the main command
    colrev status
