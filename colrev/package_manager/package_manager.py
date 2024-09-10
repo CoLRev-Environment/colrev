@@ -74,11 +74,6 @@ class PackageManager:
     ):
         """Load a package endpoint"""
 
-        if not package_identifier.startswith("colrev."):
-            raise colrev_exceptions.MissingDependencyError(
-                f"{package_identifier} is not a CoLRev package"
-            )
-
         package = colrev.package_manager.package.Package(package_identifier)
         return package.get_endpoint_class(package_type)
 
