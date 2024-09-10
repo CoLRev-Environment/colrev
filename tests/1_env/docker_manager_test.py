@@ -25,11 +25,22 @@ def test_build_docker_image(tmp_path) -> None:  # type: ignore
         except docker.errors.ImageNotFound:
             print(f"Image '{image_name}' not found.")
 
+    def remove_docker_container(container_name: str) -> None:
+        client = docker.from_env()
+        containers = client.containers.list(
+            all=True, filters={"ancestor": container_name}
+        )
+        for container in containers:
+            container.remove()
+
     # Do not run on macOS (GH-Actions) as Docker is not available
     if os.getenv("RUNNER_OS") == "macOS":
         return
 
+    remove_docker_container("hello-world")
+    remove_docker_image("hello-world")
     colrev.env.docker_manager.DockerManager.build_docker_image(imagename="hello-world")
+    remove_docker_container("hello-world")
     remove_docker_image("hello-world")
 
     # Docker not available on Windows (GH-Actions)
