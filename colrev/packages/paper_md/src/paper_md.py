@@ -678,12 +678,17 @@ class PaperMarkdown(JsonSchemaMixin):
             msg = f"Running docker container created from image {self.pandoc_image}"
             self.review_manager.report_logger.info(msg)
 
-            client.containers.run(
+            container = client.containers.run(
                 image=self.pandoc_image,
                 command=script,
                 user=user,
                 volumes=[self.review_manager.path.as_posix() + ":/data"],
+                detach=True,
             )
+            # Wait for the container to finish
+            container.wait()
+            container.stop()
+            container.remove()
 
         except docker.errors.ImageNotFound:
             self.review_manager.logger.error("Docker image not found")
