@@ -11,12 +11,6 @@ colrev.constants.Fields
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-
 
 
 

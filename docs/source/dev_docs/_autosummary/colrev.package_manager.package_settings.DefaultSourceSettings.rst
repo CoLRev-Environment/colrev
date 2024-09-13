@@ -16,22 +16,13 @@ colrev.package\_manager.package\_settings.DefaultSourceSettings
    .. autosummary::
       :nosignatures:
 
-      ~DefaultSourceSettings.all_json_schemas
-      ~DefaultSourceSettings.field_mapping
-      ~DefaultSourceSettings.from_dict
-      ~DefaultSourceSettings.from_json
-      ~DefaultSourceSettings.from_object
       ~DefaultSourceSettings.get_api_feed
-      ~DefaultSourceSettings.get_dict
       ~DefaultSourceSettings.get_origin_prefix
       ~DefaultSourceSettings.get_query
       ~DefaultSourceSettings.is_curated_source
       ~DefaultSourceSettings.is_md_source
-      ~DefaultSourceSettings.json_schema
-      ~DefaultSourceSettings.register_field_encoders
       ~DefaultSourceSettings.setup_for_load
-      ~DefaultSourceSettings.to_dict
-      ~DefaultSourceSettings.to_json
+      ~DefaultSourceSettings.validate_filename
 
 
 
@@ -46,3 +37,7 @@ colrev.package\_manager.package\_settings.DefaultSourceSettings
       ~DefaultSourceSettings.search_type
       ~DefaultSourceSettings.search_parameters
       ~DefaultSourceSettings.comment
+      ~DefaultSourceSettings.to_import
+      ~DefaultSourceSettings.imported_origins
+      ~DefaultSourceSettings.len_before
+      ~DefaultSourceSettings.source_records_list

@@ -2,12 +2,10 @@
 """SearchSource: PsycINFO"""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -23,8 +21,7 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class PsycINFOSearchSource(JsonSchemaMixin):
+class PsycINFOSearchSource:
     """PsycINFO"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -33,7 +30,7 @@ class PsycINFOSearchSource(JsonSchemaMixin):
     source_identifier = "url"
     search_types = [SearchType.DB]
 
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
     heuristic_status = SearchSourceHeuristicStatus.oni
 
     db_url = "https://www.apa.org/search"
@@ -41,7 +38,7 @@ class PsycINFOSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source = self.settings_class(**settings)
         self.source_operation = source_operation
         self.review_manager = source_operation.review_manager
 

@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import re
 import urllib.parse
-from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -30,11 +28,11 @@ from colrev.packages.ais_library.src import ais_load_utils
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class AISeLibrarySearchSource(JsonSchemaMixin):
+class AISeLibrarySearchSource:
     """AIS electronic Library (AISeL)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
     search_types = [
@@ -44,7 +42,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     ]
     endpoint = "colrev.ais_library"
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     db_url = "https://aisel.aisnet.org/"
@@ -72,7 +70,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source = self.settings_class(**settings)
         self.review_manager = source_operation.review_manager
         self.quality_model = self.review_manager.get_qm()
         self.source_operation = source_operation

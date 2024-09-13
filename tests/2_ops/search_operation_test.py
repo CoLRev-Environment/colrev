@@ -63,8 +63,9 @@ def test_search_add_source(  # type: ignore
         package_type=EndpointType.search_source,
         package_identifier=add_source.endpoint,
     )
+
     endpoint = search_source_class(
-        source_operation=search_operation, settings=add_source.get_dict()
+        source_operation=search_operation, settings=add_source.model_dump()
     )
     query = "issn=1234-5678"
     endpoint.add_endpoint(search_operation, query)  # type: ignore

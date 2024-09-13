@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import csv
-from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -24,12 +23,11 @@ from colrev.constants import RecordState
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
-@dataclass
-class TablePrescreen(JsonSchemaMixin):
+class TablePrescreen:
     """Table-based prescreen (exported and imported)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
     export_todos_only: bool = True
 
     def __init__(
@@ -39,7 +37,7 @@ class TablePrescreen(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.review_manager = prescreen_operation.review_manager
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
     def export_table(
         self,

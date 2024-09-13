@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 
 import requests
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -23,12 +22,11 @@ from colrev.packages.semanticscholar.src import record_transformer
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
-@dataclass
-class SemanticScholarPrep(JsonSchemaMixin):
+class SemanticScholarPrep:
     """Prepares records based on SemanticScholar metadata"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
 
     source_correction_hint = (
         "fill out the online form: "
@@ -42,7 +40,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
         _, email = prep_operation.review_manager.get_committer()

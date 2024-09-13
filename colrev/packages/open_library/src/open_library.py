@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import json
 import typing
-from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 
 import requests
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -31,17 +29,17 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class OpenLibrarySearchSource(JsonSchemaMixin):
+class OpenLibrarySearchSource:
     """OpenLibrary API"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+
     endpoint = "colrev.open_library"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "isbn"
     search_types = [SearchType.MD]
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.na
 
     _open_library_md_filename = Path("data/search/md_open_library.bib")
@@ -60,9 +58,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         self.review_manager = source_operation.review_manager
         if settings:
             # OpenLibrary as a search_source
-            self.search_source = from_dict(
-                data_class=self.settings_class, data=settings
-            )
+            self.search_source = self.settings_class(**settings)
 
         else:
             # OpenLibrary as an md-prep source

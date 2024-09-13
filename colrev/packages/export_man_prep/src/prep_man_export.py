@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import platform
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import pymupdf
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import BaseModel
+from pydantic import Field
 
 import colrev.env.utils
 import colrev.package_manager.interfaces
@@ -29,13 +29,27 @@ from colrev.writer.write_utils import write_file
 # pylint: disable=too-many-instance-attributes
 
 
+class ExportManPrepSettings(
+    colrev.package_manager.package_settings.DefaultSettings, BaseModel
+):
+    """Settings for ExportManPrep"""
+
+    endpoint: str
+    pdf_handling_mode: str = "symlink"
+
+    _details = {
+        "pdf_handling_mode": {
+            "tooltip": "Indicates how linked PDFs are handled (symlink/copy_first_page)"
+        },
+    }
+
+
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepManInterface)
-@dataclass
-class ExportManPrep(JsonSchemaMixin):
+class ExportManPrep:
     """Manual preparation based on exported and imported metadata (and PDFs if any)"""
 
     settings: ExportManPrepSettings
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
 
     RELATIVE_PREP_MAN_PATH = Path("records_prep_man.bib")
     RELATIVE_PREP_MAN_INFO_PATH = Path("records_prep_man_info.csv")
@@ -56,21 +70,6 @@ class ExportManPrep(JsonSchemaMixin):
         Fields.FILE,
     ]
 
-    @dataclass
-    class ExportManPrepSettings(
-        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
-    ):
-        """Settings for ExportManPrep"""
-
-        endpoint: str
-        pdf_handling_mode: str = "symlink"
-
-        _details = {
-            "pdf_handling_mode": {
-                "tooltip": "Indicates how linked PDFs are handled (symlink/copy_first_page)"
-            },
-        }
-
     settings_class = ExportManPrepSettings
 
     def __init__(
@@ -83,7 +82,7 @@ class ExportManPrep(JsonSchemaMixin):
             settings["pdf_handling_mode"] = "symlink"
         assert settings["pdf_handling_mode"] in ["symlink", "copy_first_page"]
 
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
         self.review_manager = prep_man_operation.review_manager
         self.quality_model = self.review_manager.get_qm()

@@ -11,21 +11,6 @@ colrev.settings.PDFGetSettings
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-      ~PDFGetSettings.all_json_schemas
-      ~PDFGetSettings.field_mapping
-      ~PDFGetSettings.from_dict
-      ~PDFGetSettings.from_json
-      ~PDFGetSettings.from_object
-      ~PDFGetSettings.json_schema
-      ~PDFGetSettings.register_field_encoders
-      ~PDFGetSettings.to_dict
-      ~PDFGetSettings.to_json
-
 
 
 

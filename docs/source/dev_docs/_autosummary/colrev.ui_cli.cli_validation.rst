@@ -18,4 +18,3 @@ colrev.ui\_cli.cli\_validation
       print_diff
       print_diff_pair
       print_string_diff
-      validate

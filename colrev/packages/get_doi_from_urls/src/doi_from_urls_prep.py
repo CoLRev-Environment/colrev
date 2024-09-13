@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import collections
 import re
-from dataclasses import dataclass
 from sqlite3 import OperationalError
 
 import requests
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -26,12 +25,12 @@ from colrev.constants import Fields
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
-@dataclass
-class DOIFromURLsPrep(JsonSchemaMixin):
+class DOIFromURLsPrep:
     """Prepares records by retrieving its DOI from the website (URL)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = True
+
+    ci_supported: bool = Field(default=True)
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -45,7 +44,7 @@ class DOIFromURLsPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
         self.same_record_type_required = (

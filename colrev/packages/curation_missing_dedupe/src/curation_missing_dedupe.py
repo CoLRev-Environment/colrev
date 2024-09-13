@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -27,12 +26,11 @@ from colrev.constants import RecordState
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.DedupeInterface)
-@dataclass
-class CurationMissingDedupe(JsonSchemaMixin):
+class CurationMissingDedupe:
     """Deduplication of remaining records in a curated metadata repository"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
 
     def __init__(
         self,
@@ -40,7 +38,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
     ):
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.review_manager = dedupe_operation.review_manager
         self.dedupe_operation = dedupe_operation
 

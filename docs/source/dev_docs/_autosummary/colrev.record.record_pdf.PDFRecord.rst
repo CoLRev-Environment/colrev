@@ -22,7 +22,6 @@ colrev.record.record\_pdf.PDFRecord
       ~PDFRecord.align_provenance
       ~PDFRecord.change_entrytype
       ~PDFRecord.complete_provenance
-      ~PDFRecord.copy
       ~PDFRecord.copy_prep_rec
       ~PDFRecord.defects
       ~PDFRecord.extract_pages

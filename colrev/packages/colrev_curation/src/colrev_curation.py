@@ -5,12 +5,12 @@ from __future__ import annotations
 import collections
 import os
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import BaseModel
+from pydantic import Field
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -22,26 +22,25 @@ from colrev.constants import Fields
 from colrev.constants import RecordState
 
 
+class ColrevCurationSettings(
+    colrev.package_manager.package_settings.DefaultSettings, BaseModel
+):
+    """Colrev Curation settings"""
+
+    endpoint: str
+    version: str
+    curation_url: str
+    curated_masterdata: bool
+    masterdata_restrictions: dict
+    curated_fields: list
+
+
 @zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-@dataclass
-class ColrevCuration(JsonSchemaMixin):
+class ColrevCuration:
     """CoLRev Curation"""
 
     settings: ColrevCurationSettings
-    ci_supported: bool = True
-
-    @dataclass
-    class ColrevCurationSettings(
-        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
-    ):
-        """Colrev Curation settings"""
-
-        endpoint: str
-        version: str
-        curation_url: str
-        curated_masterdata: bool
-        masterdata_restrictions: dict
-        curated_fields: list
+    ci_supported: bool = Field(default=True)
 
     settings_class = ColrevCurationSettings
 
@@ -55,7 +54,7 @@ class ColrevCuration(JsonSchemaMixin):
         if "version" not in settings:
             settings["version"] = "0.1"
 
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = ColrevCurationSettings(**settings)
         self.review_manager = data_operation.review_manager
 
         self.data_operation = data_operation

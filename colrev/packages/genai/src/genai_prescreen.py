@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import textwrap
-from dataclasses import dataclass
 from typing import ClassVar
 
 import instructor
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
 from litellm import completion
-from pydantic import BaseModel  # pylint: disable=E0611
+from pydantic import BaseModel
 from pydantic import Field
 
 import colrev.package_manager.interfaces
@@ -24,7 +22,7 @@ from colrev.constants import RecordState
 # pylint: disable=duplicate-code
 
 
-class PreScreenDecision(BaseModel):
+class PreScreenDecision:
     """
     Class for a prescreen
     """
@@ -43,16 +41,14 @@ class PreScreenDecision(BaseModel):
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
-@dataclass
-class GenAIPrescreen(JsonSchemaMixin):
+class GenAIPrescreen:
     """GenAI-based prescreen"""
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     export_todos_only: bool = True
 
-    @dataclass
     class GenAIPrescreenSettings(
-        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
+        colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
         """Settings for GenAIPrescreen"""
 
@@ -71,7 +67,7 @@ class GenAIPrescreen(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.review_manager = prescreen_operation.review_manager
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
     def _print_table(self, data: list, max_width: int = 200) -> None:
         """Print a table with the given data"""

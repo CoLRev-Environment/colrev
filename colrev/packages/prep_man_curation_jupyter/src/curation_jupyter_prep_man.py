@@ -2,11 +2,10 @@
 """Jupyter notebook for prep-man operation"""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.env.utils
 import colrev.package_manager.interfaces
@@ -18,17 +17,16 @@ import colrev.record.record
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepManInterface)
-@dataclass
-class CurationJupyterNotebookManPrep(JsonSchemaMixin):
+class CurationJupyterNotebookManPrep:
     """Manual preparation based on a Jupyter Notebook"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
 
     def __init__(
         self, *, prep_man_operation: colrev.ops.prep_man.PrepMan, settings: dict
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
         Path("prep_man").mkdir(exist_ok=True)
         if not Path("prep_man/prep_man_curation.ipynb").is_file():

@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import shutil
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import pymupdf
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -24,12 +23,12 @@ from colrev.constants import Filepaths
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PDFPrepInterface)
-@dataclass
-class PDFLastPage(JsonSchemaMixin):
+class PDFLastPage:
     """Prepare PDFs by removing unnecessary last pages (e.g. copyright notices, cited-by infos)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = False
+
+    ci_supported: bool = Field(default=False)
 
     def __init__(
         self,
@@ -37,7 +36,7 @@ class PDFLastPage(JsonSchemaMixin):
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.review_manager = pdf_prep_operation.review_manager
 
     def prep_pdf(

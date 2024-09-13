@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import csv
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -22,12 +21,11 @@ from colrev.constants import RecordState
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.ScreenInterface)
-@dataclass
-class TableScreen(JsonSchemaMixin):
+class TableScreen:
     """Screen documents using tables (exported and imported)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
     export_todos_only: bool = True
 
     screen_table_path = Path("screen/screen.csv")
@@ -40,7 +38,7 @@ class TableScreen(JsonSchemaMixin):
     ) -> None:
         self.review_manager = screen_operation.review_manager
         self.screen_operation = screen_operation
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
     def _create_screening_table(self, *, records: dict, split: list) -> list:
         # pylint: disable=too-many-branches

@@ -9,6 +9,14 @@ colrev.process.status
 
 
 
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+
+      get_status_stats
+
 
 
 
@@ -23,4 +31,3 @@ colrev.process.status
       StatusStats
       StatusStatsCurrently
       StatusStatsOverall
-      StatusStatsParent

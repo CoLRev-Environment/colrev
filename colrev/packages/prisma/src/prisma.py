@@ -4,15 +4,14 @@ from __future__ import annotations
 
 import os
 import typing
-from dataclasses import dataclass
-from dataclasses import field
 from pathlib import Path
 
 import docker
 import pandas as pd
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
+from pydantic import BaseModel
+from pydantic import Field
 
 import colrev.env.docker_manager
 import colrev.env.utils
@@ -23,21 +22,19 @@ import colrev.package_manager.package_settings
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-@dataclass
-class PRISMA(JsonSchemaMixin):
+class PRISMA:
     """Create a PRISMA diagram"""
 
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
 
-    @dataclass
     class PRISMASettings(
-        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
+        colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
         """PRISMA settings"""
 
         endpoint: str
         version: str
-        diagram_path: typing.List[Path] = field(
+        diagram_path: typing.List[Path] = Field(
             default_factory=lambda: [Path("PRISMA.png")]
         )
 
@@ -62,7 +59,7 @@ class PRISMA(JsonSchemaMixin):
         else:
             settings["diagram_path"] = [Path("PRISMA.png")]
 
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
         output_dir = self.review_manager.paths.output
         self.csv_path = output_dir / Path("PRISMA.csv")

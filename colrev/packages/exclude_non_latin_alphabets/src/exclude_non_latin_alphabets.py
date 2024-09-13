@@ -2,11 +2,9 @@
 """Exclude records with non-latin alphabets as a prep operation"""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import zope.interface
 from alphabet_detector import AlphabetDetector
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -21,13 +19,13 @@ from colrev.constants import Fields
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
-@dataclass
-class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
+class ExcludeNonLatinAlphabetsPrep:
     """Prepares records by excluding ones that have a non-latin alphabet
     (in the title, author, journal, or booktitle field)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = True
+
+    ci_supported: bool = Field(default=True)
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -39,7 +37,7 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
 
     def _mostly_latin_alphabet(self, str_to_check: str) -> bool:

@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import json
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import requests
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -28,8 +26,7 @@ from colrev.packages.crossref.src import crossref_api
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class OpenCitationsSearchSource(JsonSchemaMixin):
+class OpenCitationsSearchSource:
     """Forward search based on OpenCitations
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
@@ -39,13 +36,13 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     source_identifier = "fwsearch_ref"
     search_types = [SearchType.FORWARD_SEARCH]
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source = self.settings_class(**settings)
         self.review_manager = source_operation.review_manager
         self.crossref_api = crossref_api.CrossrefAPI(params={})
 

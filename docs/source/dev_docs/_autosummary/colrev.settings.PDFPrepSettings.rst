@@ -11,21 +11,6 @@ colrev.settings.PDFPrepSettings
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-      ~PDFPrepSettings.all_json_schemas
-      ~PDFPrepSettings.field_mapping
-      ~PDFPrepSettings.from_dict
-      ~PDFPrepSettings.from_json
-      ~PDFPrepSettings.from_object
-      ~PDFPrepSettings.json_schema
-      ~PDFPrepSettings.register_field_encoders
-      ~PDFPrepSettings.to_dict
-      ~PDFPrepSettings.to_json
-
 
 
 

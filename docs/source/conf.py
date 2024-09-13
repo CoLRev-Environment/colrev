@@ -116,3 +116,45 @@ linkcheck_ignore = [
     + r"|https://ieeexplore.ieee.org"
     + r"|http://www.scopus.com"
 ]
+
+
+def skip_member(app, what, name, obj, skip, options):  # type: ignore
+    # Define members to skip (including private and internal Pydantic members)
+    excluded_members = [
+        "model_computed_fields",
+        "model_config",
+        "model_extra",
+        "model_fields",
+        "model_fields_set",
+        "construct",
+        "copy",
+        "dict",
+        "from_orm",
+        "json",
+        "model_construct",
+        "model_copy",
+        "model_dump",
+        "model_dump_json",
+        "model_json_schema",
+        "model_parametrized_name",
+        "model_post_init",
+        "model_rebuild",
+        "model_validate",
+        "model_validate_json",
+        "model_validate_strings",
+        "parse_file",
+        "parse_obj",
+        "parse_raw",
+        "schema",
+        "schema_json",
+        "update_forward_refs",
+        "validate",
+    ]
+
+    if name in excluded_members or name.startswith("_"):
+        return True
+    return skip
+
+
+def setup(app):  # type: ignore
+    app.connect("autodoc-skip-member", skip_member)

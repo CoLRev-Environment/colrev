@@ -2,12 +2,12 @@
 """Creation of a github-page for the review as part of the data operations"""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 
 import git
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import BaseModel
+from pydantic import Field
 
 import colrev.env.utils
 import colrev.package_manager.interfaces
@@ -20,31 +20,31 @@ from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
 
+class GHPagesSettings(
+    colrev.package_manager.package_settings.DefaultSettings, BaseModel
+):
+    """Settings for GithubPages"""
+
+    endpoint: str
+    version: str
+    auto_push: bool
+
+    _details = {
+        "auto_push": {
+            "tooltip": "Indicates whether the Github Pages branch "
+            "should be pushed automatically"
+        },
+    }
+
+
 @zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-@dataclass
-class GithubPages(JsonSchemaMixin):
+class GithubPages:
     """Export the literature review into a Github Page"""
 
     settings: GHPagesSettings
+    settings_class = GHPagesSettings
 
-    ci_supported: bool = False
-
-    @dataclass
-    class GHPagesSettings(
-        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
-    ):
-        """Settings for GithubPages"""
-
-        endpoint: str
-        version: str
-        auto_push: bool
-
-        _details = {
-            "auto_push": {
-                "tooltip": "Indicates whether the Github Pages branch "
-                "should be pushed automatically"
-            },
-        }
+    ci_supported: bool = Field(default=False)
 
     GH_PAGES_BRANCH_NAME = "gh-pages"
 
@@ -62,7 +62,7 @@ class GithubPages(JsonSchemaMixin):
         if "auto_push" not in settings:
             settings["auto_push"] = True
 
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.review_manager = data_operation.review_manager
         self.git_repo = self.review_manager.dataset.get_repo()
 

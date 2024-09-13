@@ -22,7 +22,6 @@ colrev.record.record\_prep.PrepRecord
       ~PrepRecord.align_provenance
       ~PrepRecord.change_entrytype
       ~PrepRecord.complete_provenance
-      ~PrepRecord.copy
       ~PrepRecord.copy_prep_rec
       ~PrepRecord.defects
       ~PrepRecord.format_author_field

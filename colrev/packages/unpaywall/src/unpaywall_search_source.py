@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -24,16 +22,16 @@ from colrev.packages.unpaywall.src.api import UnpaywallAPI
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class UnpaywallSearchSource(JsonSchemaMixin):
+class UnpaywallSearchSource:
     """Unpaywall Search Source"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+
     source_identifier = "doi"
     search_types = [SearchType.API]
     endpoint = "colrev.unpaywall"
 
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
     heuristic_status = SearchSourceHeuristicStatus.oni
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
@@ -49,9 +47,7 @@ class UnpaywallSearchSource(JsonSchemaMixin):
         self.review_manager = source_operation.review_manager
         if settings:
             # Unpaywall as a search_source
-            self.search_source = from_dict(
-                data_class=self.settings_class, data=settings
-            )
+            self.search_source = self.settings_class(**settings)
         else:
             self.search_source = colrev.settings.SearchSource(
                 endpoint=self.endpoint,

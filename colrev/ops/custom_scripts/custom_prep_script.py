@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import zope.interface
-from dacite import from_dict
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
@@ -18,9 +17,9 @@ from colrev.constants import Fields
 class CustomPrep:
     """Class for custom prep scripts"""
 
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
     source_correction_hint = "check with the developer"
     always_apply_changes = True
-    settings_class = colrev.package_manager.package_settings.DefaultSettings
 
     def __init__(
         self,
@@ -28,7 +27,7 @@ class CustomPrep:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class(**settings)
 
     def prepare(
         self,
