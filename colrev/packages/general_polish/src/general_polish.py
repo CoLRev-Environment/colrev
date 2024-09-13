@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
 
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -20,12 +19,12 @@ from colrev.constants import Fields
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
-@dataclass
-class GeneralPolishPrep(JsonSchemaMixin):
+class GeneralPolishPrep:
     """Prepares records by applying polishing rules"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = True
+
+    ci_supported: bool = Field(default=True)
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
@@ -57,7 +56,7 @@ class GeneralPolishPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
     def prepare(
         self, record: colrev.record.record_prep.PrepRecord

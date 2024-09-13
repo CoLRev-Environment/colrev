@@ -2,11 +2,10 @@
 """Creation of TEI as a PDF preparation operation"""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.env.utils
 import colrev.package_manager.interfaces
@@ -20,18 +19,18 @@ from colrev.constants import Fields
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PDFPrepInterface)
-@dataclass
-class GROBIDTEI(JsonSchemaMixin):
+class GROBIDTEI:
     """Prepare PDFs by creating an annotated TEI document"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
+
     TEI_PATH_RELATIVE = Path("data/.tei/")
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
 
     def __init__(
         self, *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, settings: dict
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.review_manager = pdf_prep_operation.review_manager
 
         if not pdf_prep_operation.review_manager.in_ci_environment():

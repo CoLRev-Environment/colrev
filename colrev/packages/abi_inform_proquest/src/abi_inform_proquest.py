@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -25,8 +23,7 @@ from colrev.writer.write_utils import write_file
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class ABIInformProQuestSearchSource(JsonSchemaMixin):
+class ABIInformProQuestSearchSource:
     """ABI/INFORM (ProQuest)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -34,7 +31,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     source_identifier = "{{ID}}"
     search_types = [SearchType.DB]
 
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     db_url = "https://search.proquest.com/abicomplete/advanced"
@@ -43,7 +40,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         self.review_manager = source_operation.review_manager
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source = self.settings_class(**settings)
         self.source_operation = source_operation
         self.quality_model = self.review_manager.get_qm()
 

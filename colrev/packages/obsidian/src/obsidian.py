@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from collections import Counter
-from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import BaseModel
+from pydantic import Field
 
 import colrev.env.utils
 import colrev.package_manager.interfaces
@@ -18,15 +18,13 @@ from colrev.constants import Fields
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-@dataclass
-class Obsidian(JsonSchemaMixin):
+class Obsidian:
     """Export the sample into an Obsidian database"""
 
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
 
-    @dataclass
     class ObsidianSettings(
-        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
+        colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
         """Settings for Obsidian"""
 
@@ -69,7 +67,7 @@ class Obsidian(JsonSchemaMixin):
         if "config" not in settings:
             settings["config"] = {}
 
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
         self.endpoint_path = self.review_manager.path / self.OBSIDIAN_PATH_RELATIVE
         self.endpoint_paper_path = (

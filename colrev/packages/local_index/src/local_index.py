@@ -5,15 +5,13 @@ from __future__ import annotations
 import difflib
 import typing
 import webbrowser
-from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from urllib.parse import urlparse
 
 import git
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
@@ -35,17 +33,17 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class LocalIndexSearchSource(JsonSchemaMixin):
+class LocalIndexSearchSource:
     """LocalIndex"""
 
     # pylint: disable=too-many-instance-attributes
+
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = Fields.CURATION_ID
     search_types = [SearchType.API, SearchType.MD]
     endpoint = "colrev.local_index"
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     _local_index_md_filename = Path("data/search/md_curated.bib")
@@ -73,9 +71,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self.review_manager = source_operation.review_manager
         if settings:
             # LocalIndex as a search_source
-            self.search_source = from_dict(
-                data_class=self.settings_class, data=settings
-            )
+            self.search_source = self.settings_class(**settings)
 
         else:
             # LocalIndex as an md-prep source

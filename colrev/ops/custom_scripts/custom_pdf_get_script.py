@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import zope.interface
-from dacite import from_dict
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
@@ -18,16 +17,15 @@ from colrev.constants import Fields
 class CustomPDFGet:
     """Class for custom pdf-get scripts"""
 
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
+
     def __init__(
         self,
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.package_manager.package_settings.DefaultSettings,
-            data=settings,
-        )
+        self.settings = self.settings_class(**settings)
 
     def get_pdf(
         self,

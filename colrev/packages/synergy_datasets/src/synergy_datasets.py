@@ -5,14 +5,12 @@ from __future__ import annotations
 import datetime
 import tempfile
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
 from git import Repo
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -30,8 +28,7 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
+class SYNERGYDatasetsSearchSource:
     """SYNERGY-datasets
 
     https://github.com/asreview/synergy-dataset
@@ -50,14 +47,14 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     source_identifier = "ID"
     search_types = [SearchType.API]
 
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         self.review_manager = source_operation.review_manager
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source = self.settings_class(**settings)
         self.quality_model = self.review_manager.get_qm()
 
     @classmethod

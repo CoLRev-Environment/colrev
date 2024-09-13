@@ -2,7 +2,6 @@
 """Tests of the CoLRev checks"""
 import platform
 import typing
-from dataclasses import asdict
 from pathlib import Path
 
 import colrev.review_manager
@@ -45,7 +44,7 @@ def test_checks(  # type: ignore
         assert expected == actual
 
     search_sources = base_repo_review_manager.settings.sources
-    actual = [asdict(s) for s in search_sources]  # type: ignore
+    actual = [s.model_dump() for s in search_sources]  # type: ignore
 
     if current_platform in ["Linux", "Darwin"]:
         expected = [  # type: ignore

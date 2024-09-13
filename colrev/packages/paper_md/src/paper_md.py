@@ -8,15 +8,15 @@ import shutil
 import tempfile
 import typing
 from collections import Counter
-from dataclasses import dataclass
 from pathlib import Path
 from threading import Timer
 
 import docker
 import requests
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
+from pydantic import BaseModel
+from pydantic import Field
 
 import colrev.env.docker_manager
 import colrev.env.utils
@@ -32,10 +32,33 @@ from colrev.constants import Filepaths
 from colrev.writer.write_utils import write_file
 
 
+class PaperMarkdownSettings(BaseModel):
+    """Paper settings"""
+
+    endpoint: str
+    version: str
+    word_template: Path
+    paper_path: Path = Field(
+        default=Path("paper.md"),
+        description="Path for the paper (markdown source document)",
+    )
+    paper_output: Path = Field(
+        default=Path("paper.docx"),
+        description="Path for the output (e.g., paper.docx/pdf/latex/html)",
+    )
+
+    # _details = {
+    #     "word_template": {"tooltip": "Path to the word template (for Pandoc)"},
+    #     "paper_path": {"tooltip": "Path for the paper (markdown source document)"},
+    #     "paper_output": {
+    #         "tooltip": "Path for the output (e.g., paper.docx/pdf/latex/html)"
+    #     },
+    # }
+
+
 # pylint: disable=too-many-instance-attributes
 @zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-@dataclass
-class PaperMarkdown(JsonSchemaMixin):
+class PaperMarkdown:
     """Synthesize the literature in a markdown paper
 
     The paper (paper.md) is created automatically.
@@ -59,29 +82,9 @@ class PaperMarkdown(JsonSchemaMixin):
     NON_SAMPLE_REFERENCES_RELATIVE = Path("non_sample_references.bib")
     SAMPLE_REFERENCES_RELATIVE = Path("sample_references.bib")
 
-    ci_supported: bool = False
-
-    @dataclass
-    class PaperMarkdownSettings(
-        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
-    ):
-        """Paper settings"""
-
-        endpoint: str
-        version: str
-        word_template: Path
-        paper_path: Path = Path("paper.md")
-        paper_output: Path = Path("paper.docx")
-
-        _details = {
-            "word_template": {"tooltip": "Path to the word template (for Pandoc)"},
-            "paper_path": {"tooltip": "Path for the paper (markdown source document)"},
-            "paper_output": {
-                "tooltip": "Path for the output (e.g., paper.docx/pdf/latex/html)"
-            },
-        }
-
     settings_class = PaperMarkdownSettings
+
+    ci_supported: bool = Field(default=False)
 
     _temp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".colrev_temp")
 
@@ -104,7 +107,7 @@ class PaperMarkdown(JsonSchemaMixin):
         if "paper_output" not in settings:
             settings["paper_output"] = Path("paper.docx")
 
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
         self.data_dir = self.review_manager.paths.data
         self.settings.paper_path = self.data_dir / self.settings.paper_path

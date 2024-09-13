@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import inquirer
@@ -16,8 +15,7 @@ from bib_dedupe.bib_dedupe import cluster
 from bib_dedupe.bib_dedupe import match
 from bib_dedupe.bib_dedupe import prep
 from bib_dedupe.merge import merge
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 from rapidfuzz import fuzz
 from tqdm import tqdm
 
@@ -39,8 +37,7 @@ from colrev.packages.crossref.src import crossref_api
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class BackwardSearchSource(JsonSchemaMixin):
+class BackwardSearchSource:
     """Backward search extracting references from PDFs using GROBID
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
@@ -52,7 +49,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     source_identifier = Fields.ID
     search_types = [SearchType.BACKWARD_SEARCH]
 
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
@@ -62,7 +59,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         if "min_intext_citations" not in settings["search_parameters"]:
             settings["search_parameters"]["min_intext_citations"] = 3
 
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source = self.settings_class(**settings)
         # Do not run in continuous-integration environment
         if not self.review_manager.in_ci_environment():
             self.grobid_service = self.review_manager.get_grobid_service()

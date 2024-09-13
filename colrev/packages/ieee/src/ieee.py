@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.ops.prep
 import colrev.package_manager.interfaces
@@ -28,18 +26,19 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class IEEEXploreSearchSource(JsonSchemaMixin):
+class IEEEXploreSearchSource:
     """IEEEXplore"""
 
     flag = True
+
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
     search_types = [SearchType.API]
     endpoint = "colrev.ieee"
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.oni
 
     db_url = "https://ieeexplore.ieee.org/Xplore/home.jsp"
@@ -56,9 +55,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         self.review_manager = source_operation.review_manager
 
         if settings:
-            self.search_source = from_dict(
-                data_class=self.settings_class, data=settings
-            )
+            self.search_source = self.settings_class(**settings)
         else:
             self.search_source = colrev.settings.SearchSource(
                 endpoint=self.endpoint,

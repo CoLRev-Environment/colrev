@@ -2,10 +2,8 @@
 """Conditional prescreen"""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -20,12 +18,11 @@ from colrev.constants import RecordState
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
-@dataclass
-class ConditionalPrescreen(JsonSchemaMixin):
+class ConditionalPrescreen:
     """Conditional prescreen (currently: include all)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
 
     def __init__(
         self,
@@ -33,7 +30,7 @@ class ConditionalPrescreen(JsonSchemaMixin):
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.review_manager = prescreen_operation.review_manager
 
     def run_prescreen(

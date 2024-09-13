@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import typing
-from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from urllib.parse import urlparse
@@ -11,7 +10,7 @@ from urllib.parse import urlparse
 import feedparser
 import requests
 import zope.interface
-from dacite import from_dict
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -29,16 +28,16 @@ from colrev.packages.arxiv.src import record_transformer
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
 class ArXivSource:
     """arXiv"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+
     endpoint = "colrev.arxiv"
     source_identifier = "arxivid"
     search_types = [SearchType.API]
     api_search_supported = True
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported
     db_url = "https://arxiv.org/"
     _arxiv_md_filename = Path("data/search/md_arxiv.bib")
@@ -52,9 +51,7 @@ class ArXivSource:
         self.review_manager = source_operation.review_manager
         if settings:
             # arXiv as a search_source
-            self.search_source = from_dict(
-                data_class=self.settings_class, data=settings
-            )
+            self.search_source = self.settings_class(**settings)
         else:
             # arXiv as an md-prep source
             arxiv_md_source_l = [

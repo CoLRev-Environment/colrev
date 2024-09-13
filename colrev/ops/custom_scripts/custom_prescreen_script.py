@@ -5,7 +5,6 @@ from __future__ import annotations
 import random
 
 import zope.interface
-from dacite import from_dict
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
@@ -20,16 +19,15 @@ import colrev.record.record
 class CustomPrescreen:
     """Class for custom prescreen scripts"""
 
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
+
     def __init__(
         self,
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.package_manager.package_settings.DefaultSettings,
-            data=settings,
-        )
+        self.settings = self.settings_class(**settings)
 
     def run_prescreen(
         self,

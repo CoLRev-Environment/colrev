@@ -4,16 +4,14 @@ from __future__ import annotations
 
 import re
 import typing
-from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 
 import inquirer
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
 from github import Auth
 from github import Github
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
@@ -37,15 +35,14 @@ def is_github_api_key(previous: dict, answer: str) -> bool:
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class GitHubSearchSource(JsonSchemaMixin):
+class GitHubSearchSource:
     """GitHub API"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     search_types = [SearchType.API]
     endpoint = "colrev.github"
     source_identifier = Fields.URL
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
 
     heuristic_status = SearchSourceHeuristicStatus.todo
 
@@ -69,9 +66,7 @@ class GitHubSearchSource(JsonSchemaMixin):
         self.review_manager = source_operation.review_manager
         if settings:
             # GitHub as a search source
-            self.search_source = from_dict(
-                data_class=self.settings_class, data=settings
-            )
+            self.search_source = self.settings_class(**settings)
         else:
             # GitHub as a md-prep source
             github_md_source_l = [

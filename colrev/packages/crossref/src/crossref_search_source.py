@@ -4,15 +4,13 @@ from __future__ import annotations
 
 import datetime
 import typing
-from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 
 import inquirer
 import requests
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
@@ -38,21 +36,20 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class CrossrefSearchSource(JsonSchemaMixin):
+class CrossrefSearchSource:
     """Crossref API"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.crossref"
     source_identifier = Fields.DOI
 
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     search_types = [
         SearchType.API,
         SearchType.MD,
         SearchType.TOC,
     ]
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.oni
 
     _api_url = "https://api.crossref.org/"
@@ -131,7 +128,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ) -> colrev.settings.SearchSource:
         if settings:
             # Crossref as a search_source
-            return from_dict(data_class=self.settings_class, data=settings)
+            return self.settings_class(**settings)
 
         # Crossref as an md-prep source
         crossref_md_filename = Path("data/search/md_crossref.bib")

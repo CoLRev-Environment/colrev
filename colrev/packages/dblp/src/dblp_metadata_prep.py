@@ -2,10 +2,8 @@
 """Consolidation of metadata based on DBLP API as a prep operation"""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -20,12 +18,11 @@ from colrev.constants import Fields
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
-@dataclass
-class DBLPMetadataPrep(JsonSchemaMixin):
+class DBLPMetadataPrep:
     """Prepares records based on dblp.org metadata"""
 
+    ci_supported: bool = Field(default=True)
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = True
 
     source_correction_hint = (
         "send and email to dblp@dagstuhl.de"
@@ -39,7 +36,7 @@ class DBLPMetadataPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.dblp_source = dblp_connector.DBLPSearchSource(
             source_operation=prep_operation

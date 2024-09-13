@@ -12,47 +12,10 @@ def compare(
     expected_stats: colrev.process.status.StatusStats,
     given_stats: colrev.process.status.StatusStats,
 ) -> None:
-    disagreement = False
-    for attr in dir(expected_stats):
-        if not attr.startswith("_") and attr not in [
-            "currently",
-            "overall",
-            "get_active_metadata_operation_info",
-            "get_active_pdf_operation_info",
-            "get_transitioned_records",
-            "get_priority_operations",
-            "get_active_operations",
-            "get_operation_in_progress",
-            "records",
-            "origin_states_dict",
-        ]:
-            if getattr(expected_stats, attr) != getattr(given_stats, attr):
-                print(
-                    f"{attr} is {getattr(given_stats, attr)} - should be {getattr(expected_stats, attr)}"
-                )
-                disagreement = True
 
-    for attr in dir(expected_stats.overall):
-        if not attr.startswith("_") and attr not in ["status_stats"]:
-            if getattr(expected_stats.overall, attr) != getattr(
-                given_stats.overall, attr
-            ):
-                print(
-                    f"overall.{attr} is {getattr(given_stats.overall, attr)} - should be {getattr(expected_stats.overall, attr)}"
-                )
-                disagreement = True
-
-    for attr in dir(expected_stats.currently):
-        if not attr.startswith("_") and attr not in ["status_stats"]:
-            if getattr(expected_stats.currently, attr) != getattr(
-                given_stats.currently, attr
-            ):
-                print(
-                    f"currently.{attr} is {getattr(given_stats.currently, attr)} - should be {getattr(expected_stats.currently, attr)}"
-                )
-                disagreement = True
-
-    assert not disagreement
+    expected = expected_stats.model_dump()
+    given = given_stats.model_dump()
+    assert expected == given
 
 
 def test_check_status_stats_attributes(  # type: ignore
@@ -104,7 +67,9 @@ def test_check_status_stats_attributes(  # type: ignore
     expected_stats.completed_atomic_steps = 2
     expected_stats.nr_incomplete = 1
     expected_stats.nr_origins = 1
-    expected_stats.status_list = [RecordState.md_imported]
+    expected_stats.origin_states_dict = {
+        "test_records.bib/Srivastava2015": RecordState.md_imported
+    }
     expected_stats.currently.md_imported = 1
     expected_stats.currently.non_completed = 1
     expected_stats.overall.md_imported = 1
@@ -119,10 +84,12 @@ def test_check_status_stats_attributes(  # type: ignore
     helpers.reset_commit(base_repo_review_manager, commit="prep_commit")
     given_stats = base_repo_review_manager.get_status_stats()
     expected_stats.completed_atomic_steps = 3
-    expected_stats.status_list = [RecordState.md_prepared]
     expected_stats.currently.md_imported = 0
     expected_stats.currently.md_prepared = 1
     expected_stats.overall.md_prepared = 1
+    expected_stats.origin_states_dict = {
+        "test_records.bib/Srivastava2015": RecordState.md_prepared
+    }
     compare(expected_stats, given_stats)
     assert "1 to deduplicate" == given_stats.get_active_metadata_operation_info()
     assert "" == given_stats.get_active_pdf_operation_info()
@@ -132,11 +99,13 @@ def test_check_status_stats_attributes(  # type: ignore
     helpers.reset_commit(base_repo_review_manager, commit="dedupe_commit")
     given_stats = base_repo_review_manager.get_status_stats()
     expected_stats.completed_atomic_steps = 4
-    expected_stats.status_list = [RecordState.md_processed]
     expected_stats.currently.md_prepared = 0
     expected_stats.currently.md_processed = 1
     expected_stats.overall.md_processed = 1
     expected_stats.overall.rev_prescreen = 1
+    expected_stats.origin_states_dict = {
+        "test_records.bib/Srivastava2015": RecordState.md_processed
+    }
     compare(expected_stats, given_stats)
     assert "" == given_stats.get_active_metadata_operation_info()
     assert "" == given_stats.get_active_pdf_operation_info()
@@ -146,12 +115,14 @@ def test_check_status_stats_attributes(  # type: ignore
     helpers.reset_commit(base_repo_review_manager, commit="prescreen_commit")
     given_stats = base_repo_review_manager.get_status_stats()
     expected_stats.completed_atomic_steps = 5
-    expected_stats.status_list = [RecordState.rev_prescreen_included]
     expected_stats.currently.md_processed = 0
     expected_stats.currently.rev_prescreen_included = 1
     expected_stats.currently.pdf_needs_retrieval = 1
     expected_stats.overall.rev_prescreen_included = 1
     expected_stats.overall.rev_prescreen = 1
+    expected_stats.origin_states_dict = {
+        "test_records.bib/Srivastava2015": RecordState.rev_prescreen_included
+    }
     compare(expected_stats, given_stats)
     assert "" == given_stats.get_active_metadata_operation_info()
     assert "1 to retrieve" == given_stats.get_active_pdf_operation_info()
@@ -161,10 +132,12 @@ def test_check_status_stats_attributes(  # type: ignore
     helpers.reset_commit(base_repo_review_manager, commit="pdf_get_commit")
     given_stats = base_repo_review_manager.get_status_stats()
     expected_stats.completed_atomic_steps = 5
-    expected_stats.status_list = [RecordState.pdf_needs_manual_retrieval]
     expected_stats.currently.pdf_needs_retrieval = 0
     expected_stats.currently.pdf_needs_manual_retrieval = 1
     expected_stats.currently.rev_prescreen_included = 0
+    expected_stats.origin_states_dict = {
+        "test_records.bib/Srivastava2015": RecordState.pdf_needs_manual_retrieval
+    }
     compare(expected_stats, given_stats)
     assert "" == given_stats.get_active_metadata_operation_info()
     assert "1 to retrieve manually" == given_stats.get_active_pdf_operation_info()
@@ -173,9 +146,6 @@ def test_check_status_stats_attributes(  # type: ignore
 
     helpers.reset_commit(base_repo_review_manager, commit="pdf_prep_commit")
     given_stats = base_repo_review_manager.get_status_stats()
-    expected_stats.status_list = [
-        RecordState.pdf_needs_manual_retrieval
-    ]  # TODO (and the following)
     compare(expected_stats, given_stats)
     assert "" == given_stats.get_active_metadata_operation_info()
     assert "1 to retrieve manually" == given_stats.get_active_pdf_operation_info()
@@ -184,7 +154,6 @@ def test_check_status_stats_attributes(  # type: ignore
 
     helpers.reset_commit(base_repo_review_manager, commit="screen_commit")
     given_stats = base_repo_review_manager.get_status_stats()
-    expected_stats.status_list = [RecordState.pdf_needs_manual_retrieval]
     compare(expected_stats, given_stats)
     assert "" == given_stats.get_active_metadata_operation_info()
     assert "1 to retrieve manually" == given_stats.get_active_pdf_operation_info()
@@ -193,7 +162,6 @@ def test_check_status_stats_attributes(  # type: ignore
 
     helpers.reset_commit(base_repo_review_manager, commit="data_commit")
     given_stats = base_repo_review_manager.get_status_stats()
-    expected_stats.status_list = [RecordState.pdf_needs_manual_retrieval]
     compare(expected_stats, given_stats)
     assert "" == given_stats.get_active_metadata_operation_info()
     assert "1 to retrieve manually" == given_stats.get_active_pdf_operation_info()
@@ -239,7 +207,9 @@ def test_get_transitioned_records(  # type: ignore
     base_repo_review_manager.dataset.save_records_dict(records)
 
     status_stats = base_repo_review_manager.get_status_stats()
-    transitioned_records = status_stats.get_transitioned_records()
+    transitioned_records = status_stats.get_transitioned_records(
+        base_repo_review_manager
+    )
     assert transitioned_records == [
         {
             "origin": "test_records.bib/Srivastava2015",
@@ -260,7 +230,9 @@ def test_get_transitioned_records(  # type: ignore
     base_repo_review_manager.dataset.save_records_dict(records)
 
     status_stats = base_repo_review_manager.get_status_stats()
-    transitioned_records = status_stats.get_transitioned_records()
+    transitioned_records = status_stats.get_transitioned_records(
+        base_repo_review_manager
+    )
     assert transitioned_records == [
         {
             "origin": "test_records.bib/Srivastava2015",

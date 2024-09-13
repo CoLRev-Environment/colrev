@@ -5,13 +5,13 @@ from __future__ import annotations
 import csv
 import typing
 from dataclasses import asdict
-from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
 from git.exc import GitCommandError
+from pydantic import BaseModel
+from pydantic import Field
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -24,9 +24,11 @@ from colrev.constants import Fields
 from colrev.constants import RecordState
 
 
+# pylint: disable=too-few-public-methods
+
+
 # an option: https://pypi.org/project/csv-schema/
-@dataclass
-class Field(JsonSchemaMixin):
+class DataField:
     """Field definition"""
 
     name: str
@@ -34,42 +36,38 @@ class Field(JsonSchemaMixin):
     data_type: str
 
 
+class StructuredDataSettings(BaseModel):
+    """Settings for StructuredData"""
+
+    endpoint: str
+    version: str
+    fields: typing.List[DataField]
+    data_path_relative: Path = Path("data.csv")
+
+    _details = {
+        "fields": {"tooltip": "Fields for the structured data extraction"},
+    }
+
+
 @zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-@dataclass
-class StructuredData(JsonSchemaMixin):
+class StructuredData:
     """Summarize the literature in a structured data extraction (a table)"""
 
     settings: StructuredDataSettings
-    ci_supported: bool = False
-
-    @dataclass
-    class StructuredDataSettings(
-        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
-    ):
-        """Settings for StructuredData"""
-
-        endpoint: str
-        version: str
-        fields: typing.List[Field]
-        data_path_relative: Path = Path("data.csv")
-
-        _details = {
-            "fields": {"tooltip": "Fields for the structured data extraction"},
-        }
-
     settings_class = StructuredDataSettings
 
     _FULL_DATA_FIELD_EXPLANATION = """Explanation: Data fields are used in the coding tables.
-Example 1:
+    Example 1:
     - name           : summary
     - explanation    : Brief summary of the principal findings
     - data_type      : str
 
-Example 2:
+    Example 2:
     - name           : sample_size
     - explanation    : Sample size of the study
     - data_type      : int
     """
+    ci_supported: bool = Field(default=False)
 
     def __init__(
         self,
@@ -87,7 +85,7 @@ Example 2:
         if "data_path_relative" not in settings:
             settings["data_path_relative"] = Path("data/data/data.csv")
 
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.data_path = self.review_manager.path / self.settings.data_path_relative
         self.review_manager = self.review_manager
 

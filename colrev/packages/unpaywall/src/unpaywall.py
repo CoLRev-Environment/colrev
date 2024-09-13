@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import dataclass
 from pathlib import Path
 
 import pymupdf
 import requests
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -24,12 +23,11 @@ from colrev.packages.unpaywall.src import utils
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PDFGetInterface)
-@dataclass
-class Unpaywall(JsonSchemaMixin):
+class Unpaywall:
     """Get PDFs from unpaywall.org"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
 
     SETTINGS = {
         "email": "packages.pdf_get.colrev.unpaywall.email",
@@ -41,7 +39,7 @@ class Unpaywall(JsonSchemaMixin):
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.review_manager = pdf_get_operation.review_manager
         self.pdf_get_operation = pdf_get_operation
 

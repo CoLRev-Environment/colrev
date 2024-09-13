@@ -290,14 +290,14 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
 def _get_init_method(interface_class: Type) -> str:
 
     # pylint: disable=line-too-long
-    init_method = """    settings_class = colrev.package_manager.package_settings.DefaultSettings
+    init_method = """
 
 """
     if interface_class is ReviewTypeInterface:
         init_method += """    def __init__(
         self, *, operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)"""
+        self.settings = colrev.package_manager.package_settings.DefaultSettings(**settings)"""
     elif interface_class is SearchSourceInterface:
         init_method += """
     def __init__(
@@ -314,12 +314,12 @@ def _get_init_method(interface_class: Type) -> str:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)"""
+        self.settings = colrev.package_manager.package_settings.DefaultSettings(**settings)"""
     elif interface_class is PrepManInterface:
         init_method += """    def __init__(
         self, *, prep_man_operation: colrev.ops.prep_man.PrepMan, settings: dict
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)"""
+        self.settings = colrev.package_manager.package_settings.DefaultSettings(**settings)"""
     elif interface_class is DedupeInterface:
         init_method += """    def __init__(
         self,
