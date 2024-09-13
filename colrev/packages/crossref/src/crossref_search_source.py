@@ -109,19 +109,12 @@ class CrossrefSearchSource:
         self.search_source.search_parameters["url"] = url
         self.search_source.search_parameters["version"] = "1.0.0"
 
-        self.search_source.filename = self.search_source.filename.relative_to(
-            self.review_manager.path
-        )
         for position, source in enumerate(self.review_manager.settings.sources):
             if str(self.search_source.filename).endswith(str(source.filename)):
                 self.review_manager.settings.sources[position] = self.search_source
                 break
 
         self.review_manager.save_settings()
-
-        self.search_source.filename = (
-            self.review_manager.path / self.search_source.filename
-        )
 
     def _get_search_source(
         self, settings: typing.Optional[dict]

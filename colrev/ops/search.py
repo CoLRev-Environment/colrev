@@ -211,8 +211,6 @@ class Search(colrev.process.operation.Operation):
             ]
 
         assert len(sources_selected) != 0
-        for source in sources_selected:
-            source.filename = self.review_manager.path / Path(source.filename)
         return sources_selected
 
     def _remove_forthcoming(self, source: colrev.settings.SearchSource) -> None:
