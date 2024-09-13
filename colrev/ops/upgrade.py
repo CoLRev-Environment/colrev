@@ -744,6 +744,8 @@ class Upgrade(colrev.process.operation.Operation):
 
                     self.repo.index.add([".github/workflows/colrev_update.yml"])
 
+        # TODO  : replace colrev for .colrev in registry.yaml
+
         return self.repo.is_dirty()
 
 
