@@ -776,7 +776,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 silent_mode=silent_mode,
             )
 
-        if not self.review_manager.in_ci_environment():
+        if not self.review_manager.in_ci_environment() and not silent_mode:
             self.build_paper()
 
     def _get_to_synthesize(self, *, paper: Path, records_for_synthesis: list) -> list:
