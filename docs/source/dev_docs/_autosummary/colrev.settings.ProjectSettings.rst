@@ -11,21 +11,6 @@ colrev.settings.ProjectSettings
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-      ~ProjectSettings.all_json_schemas
-      ~ProjectSettings.field_mapping
-      ~ProjectSettings.from_dict
-      ~ProjectSettings.from_json
-      ~ProjectSettings.from_object
-      ~ProjectSettings.json_schema
-      ~ProjectSettings.register_field_encoders
-      ~ProjectSettings.to_dict
-      ~ProjectSettings.to_json
-
 
 
 

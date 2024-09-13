@@ -16,22 +16,13 @@ colrev.settings.SearchSource
    .. autosummary::
       :nosignatures:
 
-      ~SearchSource.all_json_schemas
-      ~SearchSource.field_mapping
-      ~SearchSource.from_dict
-      ~SearchSource.from_json
-      ~SearchSource.from_object
       ~SearchSource.get_api_feed
-      ~SearchSource.get_dict
       ~SearchSource.get_origin_prefix
       ~SearchSource.get_query
       ~SearchSource.is_curated_source
       ~SearchSource.is_md_source
-      ~SearchSource.json_schema
-      ~SearchSource.register_field_encoders
       ~SearchSource.setup_for_load
-      ~SearchSource.to_dict
-      ~SearchSource.to_json
+      ~SearchSource.validate_filename
 
 
 
@@ -46,3 +37,7 @@ colrev.settings.SearchSource
       ~SearchSource.search_type
       ~SearchSource.search_parameters
       ~SearchSource.comment
+      ~SearchSource.to_import
+      ~SearchSource.imported_origins
+      ~SearchSource.len_before
+      ~SearchSource.source_records_list

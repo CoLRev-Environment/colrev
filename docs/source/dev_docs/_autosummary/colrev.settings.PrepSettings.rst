@@ -11,21 +11,6 @@ colrev.settings.PrepSettings
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-      ~PrepSettings.all_json_schemas
-      ~PrepSettings.field_mapping
-      ~PrepSettings.from_dict
-      ~PrepSettings.from_json
-      ~PrepSettings.from_object
-      ~PrepSettings.json_schema
-      ~PrepSettings.register_field_encoders
-      ~PrepSettings.to_dict
-      ~PrepSettings.to_json
-
 
 
 

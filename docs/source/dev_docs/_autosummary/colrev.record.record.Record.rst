@@ -22,7 +22,6 @@ colrev.record.record.Record
       ~Record.align_provenance
       ~Record.change_entrytype
       ~Record.complete_provenance
-      ~Record.copy
       ~Record.copy_prep_rec
       ~Record.defects
       ~Record.format_bib_style

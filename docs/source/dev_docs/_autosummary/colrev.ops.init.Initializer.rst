@@ -11,12 +11,6 @@ colrev.ops.init.Initializer
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-
 
 
 
