@@ -118,7 +118,7 @@ linkcheck_ignore = [
 ]
 
 
-def skip_member(app, what, name, obj, skip, options):
+def skip_member(app, what, name, obj, skip, options):  # type: ignore
     # Define members to skip (including private and internal Pydantic members)
     excluded_members = [
         "model_computed_fields",
@@ -156,5 +156,5 @@ def skip_member(app, what, name, obj, skip, options):
     return skip
 
 
-def setup(app):
+def setup(app):  # type: ignore
     app.connect("autodoc-skip-member", skip_member)
