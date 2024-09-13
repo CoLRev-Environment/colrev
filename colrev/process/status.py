@@ -12,6 +12,49 @@ from colrev.constants import RecordState
 from colrev.process.model import ProcessModel
 
 
+class StatusStatsCurrently(BaseModel):
+    """The current status statistics"""
+
+    # pylint: disable=too-many-instance-attributes
+    md_retrieved: int
+    md_imported: int
+    md_prepared: int
+    md_processed: int
+    rev_prescreen_excluded: int
+    rev_prescreen_included: int
+    pdf_not_available: int
+    pdf_imported: int
+    pdf_prepared: int
+    rev_excluded: int
+    rev_included: int
+    rev_synthesized: int
+    pdf_needs_retrieval: int
+    non_completed: int
+    exclusion: dict
+    md_needs_manual_preparation: int
+    pdf_needs_manual_retrieval: int
+    pdf_needs_manual_preparation: int
+
+
+class StatusStatsOverall(BaseModel):
+    """The overall-status statistics (records currently/previously in each state)"""
+
+    # pylint: disable=too-many-instance-attributes
+    md_retrieved: int
+    md_imported: int
+    md_prepared: int
+    md_processed: int
+    rev_prescreen_excluded: int
+    rev_prescreen_included: int
+    rev_prescreen: int
+    pdf_not_available: int
+    pdf_imported: int
+    pdf_prepared: int
+    rev_excluded: int
+    rev_included: int
+    rev_synthesized: int
+
+
 def _get_origin_states_dict(records: dict) -> dict:
     current_origin_states_dict = {}
     for record_dict in records.values():
@@ -169,7 +212,7 @@ def _get_md_retrieved(sources: list) -> int:
 
 
 def _get_status_stats_overall(
-    status_list: list, sources: list, records: dict, md_retrieved: int
+    status_list: list, records: dict, md_retrieved: int
 ) -> StatusStatsOverall:
 
     data = {
@@ -298,6 +341,7 @@ def _get_atomic_steps(
     )
 
 
+# pylint: disable=no-member
 def get_status_stats(
     *,
     review_manager: colrev.review_manager.ReviewManager,
@@ -316,7 +360,7 @@ def get_status_stats(
     currently = _get_status_stats_currently(
         status_list, records, screening_statistics, md_retrieved
     )
-    overall = _get_status_stats_overall(status_list, sources, records, md_retrieved)
+    overall = _get_status_stats_overall(status_list, records, md_retrieved)
     currently.md_retrieved = currently.md_retrieved - overall.md_imported
     nr_curated_records = _get_nr_curated_records(
         records, review_manager.settings.is_curated_masterdata_repo(), overall
@@ -489,47 +533,3 @@ class StatusStats(BaseModel):
         """Get the operation currently in progress"""
 
         return {x["type"] for x in transitioned_records}
-
-
-class StatusStatsCurrently(BaseModel):
-    """The current status statistics"""
-
-    # pylint: disable=too-many-instance-attributes
-    md_retrieved: int
-    md_imported: int
-    md_prepared: int
-    md_processed: int
-    rev_prescreen_excluded: int
-    rev_prescreen_included: int
-    pdf_not_available: int
-    pdf_imported: int
-    pdf_prepared: int
-    rev_excluded: int
-    rev_included: int
-    rev_synthesized: int
-    pdf_needs_retrieval: int
-    non_completed: int
-    exclusion: dict
-    md_needs_manual_preparation: int
-    pdf_needs_manual_retrieval: int
-    pdf_needs_manual_preparation: int
-
-
-class StatusStatsOverall(BaseModel):
-    """The overall-status statistics (records currently/previously in each state)"""
-
-    # pylint: disable=too-many-instance-attributes
-
-    md_retrieved: int
-    md_imported: int
-    md_prepared: int
-    md_processed: int
-    rev_prescreen_excluded: int
-    rev_prescreen_included: int
-    rev_prescreen: int
-    pdf_not_available: int
-    pdf_imported: int
-    pdf_prepared: int
-    rev_excluded: int
-    rev_included: int
-    rev_synthesized: int

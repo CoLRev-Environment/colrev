@@ -286,7 +286,7 @@ class Load(colrev.process.operation.Operation):
         self.review_manager.logger.debug(
             f"Import individual source records {source.search_source.filename}"
         )
-        for source_record in source.search_source._source_records_list:
+        for source_record in source.search_source.source_records_list:
             source_record = self._import_record(record_dict=source_record)
 
             # Make sure not to replace existing records
@@ -316,7 +316,7 @@ class Load(colrev.process.operation.Operation):
         self.review_manager.dataset.save_records_dict(records)
         self._validate_load(source=source)
 
-        if source.search_source._to_import == 0:
+        if source.search_source.to_import == 0:
             self.review_manager.logger.info("No additional records loaded")
             return
 
@@ -327,8 +327,7 @@ class Load(colrev.process.operation.Operation):
             records = self.review_manager.dataset.set_ids()
 
         self.review_manager.logger.info(
-            "New records loaded".ljust(38)
-            + f"{source.search_source._to_import} records"
+            "New records loaded".ljust(38) + f"{source.search_source.to_import} records"
         )
         self.review_manager.dataset.add_setting_changes()
         self.review_manager.dataset.add_changes(source.search_source.filename)
@@ -376,7 +375,6 @@ class Load(colrev.process.operation.Operation):
                     package_identifier=source.endpoint,
                 )
                 endpoint = search_source_class(
-                    # TODO : we could pass the source directly (instead of dicts?!)
                     source_operation=self,
                     settings=source.model_dump(),
                 )
@@ -401,24 +399,24 @@ class Load(colrev.process.operation.Operation):
         source: colrev.package_manager.interfaces.SearchSourceInterface,
     ) -> None:
         imported_origins = self._get_currently_imported_origin_list()
-        imported = len(imported_origins) - source.search_source._len_before
+        imported = len(imported_origins) - source.search_source.len_before
 
-        if imported == source.search_source._to_import:
+        if imported == source.search_source.to_import:
             return
         # Note : for diagnostics, it is easier if we complete the process
         # and create the commit (instead of raising an exception)
         self.review_manager.logger.error(
-            f"len_before: {source.search_source._len_before}"
+            f"len_before: {source.search_source.len_before}"
         )
         self.review_manager.logger.error(f"len_after: {len(imported_origins)}")
 
         origins_to_import = [
-            o[Fields.ORIGIN] for o in source.search_source._source_records_list
+            o[Fields.ORIGIN] for o in source.search_source.source_records_list
         ]
-        if source.search_source._to_import - imported > 0:
+        if source.search_source.to_import - imported > 0:
             self.review_manager.logger.error(
                 f"{Colors.RED}PROBLEM: delta: "
-                f"{source.search_source._to_import - imported} records missing{Colors.END}"
+                f"{source.search_source.to_import - imported} records missing{Colors.END}"
             )
 
             missing_origins = [
@@ -430,7 +428,7 @@ class Load(colrev.process.operation.Operation):
         else:
             self.review_manager.logger.error(
                 f"{Colors.RED}PROBLEM: "
-                f"{-1*(source.search_source._to_import - imported)}"
+                f"{-1*(source.search_source.to_import - imported)}"
                 f" records too much{Colors.END}"
             )
             additional_origins = [

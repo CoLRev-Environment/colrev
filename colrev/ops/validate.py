@@ -139,7 +139,7 @@ class Validate(colrev.process.operation.Operation):
             if not source.search_source.filename.is_file():
                 continue
             load_operation.setup_source_for_load(source, select_new_records=False)
-            for origin_record in source.search_source._source_records_list:
+            for origin_record in source.search_source.source_records_list:
                 origin_records[origin_record[Fields.ORIGIN][0]] = origin_record
 
         records = self.review_manager.dataset.load_records_dict()

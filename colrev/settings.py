@@ -6,12 +6,9 @@ import json
 import typing
 from pathlib import Path
 
-from dacite.exceptions import MissingValueError
-from dacite.exceptions import WrongTypeError
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import model_validator
-from pydantic import PrivateAttr
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -88,15 +85,14 @@ class SearchSource(BaseModel):
     search_parameters: dict
     comment: typing.Optional[str]
 
-    # Private fields that are temporary and should not be part of the model's schema
-    _to_import: int = PrivateAttr()
-    _imported_origins: typing.List[str] = PrivateAttr()
-    _len_before: int = PrivateAttr()
-    _source_records_list: typing.List[typing.Dict] = PrivateAttr()
+    to_import: int = 0
+    imported_origins: typing.List[str] = []
+    len_before: int = 0
+    source_records_list: typing.List[typing.Dict] = []
 
     # pylint: disable=no-self-argument
     @model_validator(mode="before")
-    def validate_filename(cls, values): # type: ignore
+    def validate_filename(cls, values):  # type: ignore
         """Validate the filename"""
         filename = values.get("filename")
         if filename and not str(filename).replace("\\", "/").startswith("data/search"):
@@ -104,6 +100,14 @@ class SearchSource(BaseModel):
                 msg=f"Source filename does not start with data/search: {filename}"
             )
         return values
+
+    def model_dump(self, **kwargs) -> dict:  # type: ignore
+        exclude = set(kwargs.pop("exclude", set()))
+        exclude.add("to_import")
+        exclude.add("imported_origins")
+        exclude.add("len_before")
+        exclude.add("source_records_list")
+        return super().model_dump(exclude=exclude, **kwargs)
 
     def setup_for_load(
         self,
@@ -117,10 +121,10 @@ class SearchSource(BaseModel):
         # attributes are temporary. They should not be
         # saved to SETTINGS_FILE.
 
-        self._to_import = len(source_records_list)
-        self._imported_origins: typing.List[str] = imported_origins
-        self._len_before = len(imported_origins)
-        self._source_records_list: typing.List[typing.Dict] = source_records_list
+        self.to_import = len(source_records_list)
+        self.imported_origins: typing.List[str] = imported_origins
+        self.len_before = len(imported_origins)
+        self.source_records_list: typing.List[typing.Dict] = source_records_list
 
     def get_origin_prefix(self) -> str:
         """Get the corresponding origin prefix"""
@@ -146,18 +150,6 @@ class SearchSource(BaseModel):
         if not Path(self.search_parameters["query_file"]).is_file():
             raise FileNotFoundError
         return Path(self.search_parameters["query_file"]).read_text(encoding="utf-8")
-
-    # def get_dict(self) -> dict:
-    #     """Get the dict of SearchSources (for endpoint initalization)"""
-
-    #     exported_dict = asdict(
-    #         self, dict_factory=colrev.env.utils.custom_asdict_factory
-    #     )
-
-    #     exported_dict["search_type"] = SearchType[exported_dict["search_type"]]
-    #     exported_dict["filename"] = Path(exported_dict["filename"])
-
-    #     return exported_dict
 
     def get_api_feed(
         self,
@@ -384,6 +376,14 @@ class Settings(BaseModel):
     screen: ScreenSettings
     data: DataSettings
 
+    def model_dump(self, **kwargs) -> dict:  # type: ignore
+        """Dump the settings model with recursive handling of SearchSource."""
+
+        sources_dump = [source.model_dump(**kwargs) for source in self.sources]
+        data = super().model_dump(**kwargs)
+        data["sources"] = sources_dump
+        return data
+
     def is_curated_repo(self) -> bool:
         """Check whether data is curated in this repository"""
 
@@ -480,11 +480,7 @@ def _load_settings_from_dict(loaded_dict: dict) -> Settings:
             msg = f"Non-unique source filename(s): {', '.join(non_unique)}"
             raise colrev_exceptions.InvalidSettingsError(msg=msg, fix_per_upgrade=False)
 
-    except (
-        ValueError,
-        MissingValueError,
-        WrongTypeError,
-    ) as exc:  # pragma: no cover
+    except (Exception,) as exc:  # pragma: no cover
         raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
 
     return settings
