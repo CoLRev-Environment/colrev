@@ -2,10 +2,8 @@
 """Consolidation of metadata based on OpenAlex API as a prep operation"""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -20,12 +18,11 @@ from colrev.constants import Fields
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
-@dataclass
-class OpenAlexMetadataPrep(JsonSchemaMixin):
+class OpenAlexMetadataPrep:
     """Prepares records based on OpenAlex metadata"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
 
     source_correction_hint = "TBD"
     always_apply_changes = False
@@ -36,7 +33,7 @@ class OpenAlexMetadataPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
 
         self.open_alex_source = open_alex_connector.OpenAlexSearchSource(

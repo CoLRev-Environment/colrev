@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import typing
-from dataclasses import dataclass
 
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import BaseModel
+from pydantic import Field
 
 import colrev.env.language_service
 import colrev.env.local_index
@@ -25,60 +25,59 @@ from colrev.constants import RecordState
 # to check: https://asistdl.onlinelibrary.wiley.com/doi/full/10.1002/asi.24816
 
 
+class ScopePrescreenSettings(
+    colrev.package_manager.package_settings.DefaultSettings, BaseModel
+):
+    """Settings for ScopePrescreen"""
+
+    # pylint: disable=invalid-name
+    # pylint: disable=too-many-instance-attributes
+
+    endpoint: str
+    ExcludePredatoryJournals: bool
+    TimeScopeFrom: typing.Optional[int]
+    TimeScopeTo: typing.Optional[int]
+    LanguageScope: typing.Optional[list]
+    ExcludeComplementaryMaterials: typing.Optional[bool]
+    OutletInclusionScope: typing.Optional[dict]
+    OutletExclusionScope: typing.Optional[dict]
+    ENTRYTYPEScope: typing.Optional[list]
+    RequireRankedJournals: typing.Optional[list]
+
+    _details = {
+        "TimeScopeFrom": {
+            "tooltip": "Lower bound for the time scope",
+            "min": 1900,
+            "max": 2050,
+        },
+        "TimeScopeTo": {
+            "tooltip": "Upper bound for the time scope",
+            "min": 1900,
+            "max": 2050,
+        },
+        "LanguageScope": {"tooltip": "Language scope"},
+        "ExcludeComplementaryMaterials": {
+            "tooltip": "Whether complementary materials (coverpages etc.) are excluded"
+        },
+        "OutletInclusionScope": {
+            "tooltip": "Particular outlets that should be included (exclusively)"
+        },
+        "OutletExclusionScope": {
+            "tooltip": "Particular outlets that should be excluded"
+        },
+        "ExcludePredatoryJournals": {"tooltip": "Exclude predatory journals"},
+        "ENTRYTYPEScope": {
+            "tooltip": "Particular ENTRYTYPEs that should be included (exclusively)"
+        },
+    }
+
+
 @zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
-@dataclass
-class ScopePrescreen(JsonSchemaMixin):
+class ScopePrescreen:
     """Rule-based prescreen (scope)"""
 
     settings: ScopePrescreenSettings
-    ci_supported: bool = True
-
-    @dataclass
-    class ScopePrescreenSettings(
-        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
-    ):
-        """Settings for ScopePrescreen"""
-
-        # pylint: disable=invalid-name
-        # pylint: disable=too-many-instance-attributes
-
-        endpoint: str
-        ExcludePredatoryJournals: bool
-        TimeScopeFrom: typing.Optional[int]
-        TimeScopeTo: typing.Optional[int]
-        LanguageScope: typing.Optional[list]
-        ExcludeComplementaryMaterials: typing.Optional[bool]
-        OutletInclusionScope: typing.Optional[dict]
-        OutletExclusionScope: typing.Optional[dict]
-        ENTRYTYPEScope: typing.Optional[list]
-        RequireRankedJournals: typing.Optional[list]
-
-        _details = {
-            "TimeScopeFrom": {
-                "tooltip": "Lower bound for the time scope",
-                "min": 1900,
-                "max": 2050,
-            },
-            "TimeScopeTo": {
-                "tooltip": "Upper bound for the time scope",
-                "min": 1900,
-                "max": 2050,
-            },
-            "LanguageScope": {"tooltip": "Language scope"},
-            "ExcludeComplementaryMaterials": {
-                "tooltip": "Whether complementary materials (coverpages etc.) are excluded"
-            },
-            "OutletInclusionScope": {
-                "tooltip": "Particular outlets that should be included (exclusively)"
-            },
-            "OutletExclusionScope": {
-                "tooltip": "Particular outlets that should be excluded"
-            },
-            "ExcludePredatoryJournals": {"tooltip": "Exclude predatory journals"},
-            "ENTRYTYPEScope": {
-                "tooltip": "Particular ENTRYTYPEs that should be included (exclusively)"
-            },
-        }
+    ci_supported: bool = Field(default=True)
 
     settings_class = ScopePrescreenSettings
 
@@ -113,7 +112,7 @@ class ScopePrescreen(JsonSchemaMixin):
             settings["ExcludePredatoryJournals"] = True
 
         self.review_manager = prescreen_operation.review_manager
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.local_index = colrev.env.local_index.LocalIndex()
 
         self.title_complementary_materials_keywords = (

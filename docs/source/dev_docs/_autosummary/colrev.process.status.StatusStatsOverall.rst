@@ -11,12 +11,6 @@ colrev.process.status.StatusStatsOverall
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-
 
 
 
@@ -31,6 +25,7 @@ colrev.process.status.StatusStatsOverall
       ~StatusStatsOverall.md_processed
       ~StatusStatsOverall.rev_prescreen_excluded
       ~StatusStatsOverall.rev_prescreen_included
+      ~StatusStatsOverall.rev_prescreen
       ~StatusStatsOverall.pdf_not_available
       ~StatusStatsOverall.pdf_imported
       ~StatusStatsOverall.pdf_prepared

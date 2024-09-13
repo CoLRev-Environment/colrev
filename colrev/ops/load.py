@@ -375,7 +375,8 @@ class Load(colrev.process.operation.Operation):
                     package_identifier=source.endpoint,
                 )
                 endpoint = search_source_class(
-                    source_operation=self, settings=source.get_dict()
+                    source_operation=self,
+                    settings=source.model_dump(),
                 )
 
                 s_type = endpoint.search_source.search_type  # type: ignore

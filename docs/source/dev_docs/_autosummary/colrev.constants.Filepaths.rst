@@ -11,12 +11,6 @@ colrev.constants.Filepaths
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-
 
 
 

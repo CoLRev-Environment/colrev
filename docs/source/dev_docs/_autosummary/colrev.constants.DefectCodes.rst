@@ -11,12 +11,6 @@ colrev.constants.DefectCodes
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-
 
 
 

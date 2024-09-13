@@ -27,4 +27,3 @@ colrev.constants.PDFPathType
    .. autosummary::
 
       ~PDFPathType.symlink
-      ~PDFPathType.copy

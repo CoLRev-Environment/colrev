@@ -4,15 +4,11 @@ from __future__ import annotations
 
 import re
 import shutil
-from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
 
-import dacite
 import pandas as pd
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 from rapidfuzz import fuzz
 
 import colrev.env.language_service
@@ -36,8 +32,7 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class UnknownSearchSource(JsonSchemaMixin):
+class UnknownSearchSource:
     """Unknown SearchSource"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -52,7 +47,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         SearchType.TOC,
     ]
 
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
     heuristic_status = SearchSourceHeuristicStatus.na
 
     db_url = ""
@@ -63,12 +58,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
-        converters = {Path: Path, Enum: Enum}
-        self.search_source = from_dict(
-            data_class=self.settings_class,
-            data=settings,
-            config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
-        )
+        self.search_source = self.settings_class(**settings)
         self.review_manager = source_operation.review_manager
         self.language_service = colrev.env.language_service.LanguageService()
         self.operation = source_operation

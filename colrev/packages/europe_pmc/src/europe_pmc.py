@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import typing
-from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
@@ -13,8 +12,8 @@ from urllib.parse import urlparse
 
 import requests
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import BaseModel
+from pydantic import Field
 from rapidfuzz import fuzz
 
 import colrev.exceptions as colrev_exceptions
@@ -35,8 +34,7 @@ from colrev.packages.europe_pmc.src import europe_pmc_api
 # pylint: disable=unused-argument
 
 
-@dataclass
-class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
+class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, BaseModel):
     """Settings for EuropePMCSearchSource"""
 
     # pylint: disable=too-many-instance-attributes
@@ -55,11 +53,11 @@ class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixi
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class EuropePMCSearchSource(JsonSchemaMixin):
+class EuropePMCSearchSource:
     """Europe PMC"""
 
-    # settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+    #
     source_identifier = Fields.EUROPE_PMC_ID
     search_types = [
         SearchType.API,
@@ -68,7 +66,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     ]
     endpoint = "colrev.europe_pmc"
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     _europe_pmc_md_filename = Path("data/search/md_europe_pmc.bib")
@@ -85,9 +83,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         self.review_manager = source_operation.review_manager
         if settings:
             # EuropePMC as a search_source
-            self.search_source = from_dict(
-                data_class=self.settings_class, data=settings
-            )
+            self.search_source = self.settings_class(**settings)
         else:
             # EuropePMC as an md-prep source
             europe_pmc_md_source_l = [

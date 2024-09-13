@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import zope.interface
-from dacite import from_dict
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
@@ -22,7 +21,7 @@ class CustomData:
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.settings = self.settings_class(**settings)
 
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:

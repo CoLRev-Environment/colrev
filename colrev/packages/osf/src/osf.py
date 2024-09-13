@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.env.environment_manager
 import colrev.loader.load_utils
@@ -35,8 +33,7 @@ from colrev.packages.osf.src.osf_api import OSFApiQuery
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class OSFSearchSource(JsonSchemaMixin):
+class OSFSearchSource:
     """OSF"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -45,7 +42,7 @@ class OSFSearchSource(JsonSchemaMixin):
     search_types = [SearchType.API]
     endpoint = "colrev.osf"
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.oni
 
     db_url = "https://osf.io/"
@@ -62,9 +59,7 @@ class OSFSearchSource(JsonSchemaMixin):
         self.review_manager = source_operation.review_manager
 
         if settings:
-            self.search_source = from_dict(
-                data_class=self.settings_class, data=settings
-            )
+            self.search_source = self.settings_class(**settings)
         else:
             self.search_source = colrev.settings.SearchSource(
                 endpoint=self.endpoint,

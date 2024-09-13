@@ -11,12 +11,6 @@ colrev.paths.PathManager
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-
 
 
 

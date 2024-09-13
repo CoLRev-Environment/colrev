@@ -11,12 +11,6 @@ colrev.constants.FileSets
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-
 
 
 

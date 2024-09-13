@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import re
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import pymupdf
 import requests
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
@@ -38,18 +36,18 @@ from colrev.writer.write_utils import write_file
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class FilesSearchSource(JsonSchemaMixin):
+class FilesSearchSource:
     """Files directories (PDFs based on GROBID)"""
 
     # pylint: disable=too-many-instance-attributes
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+
     endpoint = "colrev.files_dir"
     source_identifier = Fields.FILE
     search_types = [SearchType.FILES]
 
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     _doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
@@ -61,7 +59,9 @@ class FilesSearchSource(JsonSchemaMixin):
         self.review_manager = source_operation.review_manager
         self.source_operation = source_operation
 
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source = (
+            colrev.package_manager.package_settings.DefaultSourceSettings(**settings)
+        )
 
         if not self.review_manager.in_ci_environment():
             self.pdf_preparation_operation = self.review_manager.get_pdf_prep_operation(

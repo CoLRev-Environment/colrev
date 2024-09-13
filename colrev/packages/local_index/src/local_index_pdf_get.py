@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import shutil
-from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
@@ -22,12 +21,11 @@ from colrev.constants import Fields
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PDFGetInterface)
-@dataclass
-class LocalIndexPDFGet(JsonSchemaMixin):
+class LocalIndexPDFGet:
     """Get PDFs from LocalIndex"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
 
     def __init__(
         self,
@@ -35,7 +33,7 @@ class LocalIndexPDFGet(JsonSchemaMixin):
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.pdf_get_operation = pdf_get_operation
         self.review_manager = pdf_get_operation.review_manager
 

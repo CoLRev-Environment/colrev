@@ -11,21 +11,6 @@ colrev.settings.ScreenSettings
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-      ~ScreenSettings.all_json_schemas
-      ~ScreenSettings.field_mapping
-      ~ScreenSettings.from_dict
-      ~ScreenSettings.from_json
-      ~ScreenSettings.from_object
-      ~ScreenSettings.json_schema
-      ~ScreenSettings.register_field_encoders
-      ~ScreenSettings.to_dict
-      ~ScreenSettings.to_json
-
 
 
 

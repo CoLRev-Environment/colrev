@@ -4,12 +4,10 @@ from __future__ import annotations
 
 import typing
 import urllib.parse
-from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -27,11 +25,11 @@ from colrev.packages.eric.src import eric_api
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class ERICSearchSource(JsonSchemaMixin):
+class ERICSearchSource:
     """ERIC API"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
     search_types = [SearchType.API]
@@ -39,7 +37,7 @@ class ERICSearchSource(JsonSchemaMixin):
 
     db_url = "https://eric.ed.gov/"
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.oni
 
     def __init__(
@@ -52,9 +50,7 @@ class ERICSearchSource(JsonSchemaMixin):
         self.source_operation = source_operation
         if settings:
             # ERIC as a search_source
-            self.search_source = from_dict(
-                data_class=self.settings_class, data=settings
-            )
+            self.search_source = self.settings_class(**settings)
         else:
             self.search_source = colrev.settings.SearchSource(
                 endpoint=self.endpoint,

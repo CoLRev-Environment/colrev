@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import typing
-from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 
 import requests
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -27,8 +26,7 @@ from colrev.packages.open_alex.src import open_alex_api
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class OpenAlexSearchSource(JsonSchemaMixin):
+class OpenAlexSearchSource:
     """OpenAlex API"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -36,7 +34,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
     source_identifier = "openalex_id"
     search_types = [SearchType.MD]
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.oni
 
     _open_alex_md_filename = Path("data/search/md_open_alex.bib")
@@ -52,9 +50,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         # Note : once this is implemented, add "colrev.open_alex" to the default settings
         # if settings:
         #     # OpenAlex as a search_source
-        #     self.search_source = from_dict(
-        #         data_class=self.settings_class, data=settings
-        #     )
+        #     self.search_source = self.settings_class(**settings)
         # else:
         # OpenAlex as an md-prep source
         open_alex_md_source_l = [

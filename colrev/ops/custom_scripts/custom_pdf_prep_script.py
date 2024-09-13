@@ -5,7 +5,6 @@ from __future__ import annotations
 import random
 
 import zope.interface
-from dacite import from_dict
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
@@ -22,16 +21,15 @@ from colrev.constants import RecordState
 class CustomPDFPrep:
     """Class for custom pdf-prep scripts"""
 
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
+
     def __init__(
         self,
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.package_manager.package_settings.DefaultSettings,
-            data=settings,
-        )
+        self.settings = self.settings_class(**settings)
 
     def prep_pdf(
         self,

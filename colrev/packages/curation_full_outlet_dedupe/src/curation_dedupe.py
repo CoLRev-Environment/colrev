@@ -2,12 +2,11 @@
 """Dedupe functionality dedicated to curated metadata repositories"""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import numpy as np
 import pandas as pd
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import BaseModel
+from pydantic import Field
 from rapidfuzz import fuzz
 from tqdm import tqdm
 
@@ -25,30 +24,22 @@ from colrev.constants import RecordState
 # pylint: disable=duplicate-code
 
 
+class CurationDedupeSettings(BaseModel):
+    """Settings for CurationDedupe"""
+
+    endpoint: str
+    selected_source: str
+
+
 @zope.interface.implementer(colrev.package_manager.interfaces.DedupeInterface)
-@dataclass
-class CurationDedupe(JsonSchemaMixin):
+class CurationDedupe:
     """Deduplication endpoint for curations with full journals/proceedings
     retrieved from different sources (identifying duplicates in groups of
     volumes/issues or years)"""
 
-    settings: CurationDedupeSettings
-    ci_supported: bool = True
-
-    @dataclass
-    class CurationDedupeSettings(
-        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
-    ):
-        """Settings for CurationDedupe"""
-
-        endpoint: str
-        selected_source: str
-
-        _details = {
-            "selected_source": {"tooltip": "Source (path) selected for the dedupe run"},
-        }
-
     settings_class = CurationDedupeSettings
+    settings: CurationDedupeSettings
+    ci_supported: bool = Field(default=True)
 
     def __init__(
         self,
@@ -56,7 +47,7 @@ class CurationDedupe(JsonSchemaMixin):
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
     ):
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.dedupe_operation = dedupe_operation
         self.review_manager = dedupe_operation.review_manager
 

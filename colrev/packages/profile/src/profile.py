@@ -2,12 +2,12 @@
 """Creation of a profile of studies as part of the data operations"""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import BaseModel
+from pydantic import Field
 
 import colrev.env.docker_manager
 import colrev.env.utils
@@ -20,15 +20,13 @@ from colrev.constants import RecordState
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-@dataclass
-class Profile(JsonSchemaMixin):
+class Profile:
     """Create a profile"""
 
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
 
-    @dataclass
     class ProfileSettings(
-        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
+        colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
         """Profile settings"""
 
@@ -50,7 +48,7 @@ class Profile(JsonSchemaMixin):
         if "version" not in settings:
             settings["version"] = "0.1"
 
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
         # output_dir = self.review_manager.get_path(Filepaths.OUTPUT_DIR)
 

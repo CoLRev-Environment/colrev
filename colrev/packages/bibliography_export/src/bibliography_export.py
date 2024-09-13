@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
 import inquirer
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import BaseModel
+from pydantic import Field
 
 import colrev.env.docker_manager
 import colrev.env.utils
@@ -23,7 +23,6 @@ from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
 
-@dataclass
 class BibFormats(Enum):
     """Enum of available bibliography formats"""
 
@@ -40,29 +39,27 @@ class BibFormats(Enum):
     # rdf_bibliontology = "rdf_bibliontology"
 
 
+class BibliographyExportSettings(
+    colrev.package_manager.package_settings.DefaultSettings, BaseModel
+):
+    """Settings for BibliographyExport"""
+
+    endpoint: str
+    version: str
+    bib_format: BibFormats
+
+
 @zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-@dataclass
-class BibliographyExport(JsonSchemaMixin):
+class BibliographyExport:
     """Export the sample references in Endpoint format"""
 
     settings: BibliographyExportSettings
+    settings_class = BibliographyExportSettings
 
-    ci_supported: bool = True
-
-    @dataclass
-    class BibliographyExportSettings(
-        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
-    ):
-        """Settings for BibliographyExport"""
-
-        endpoint: str
-        version: str
-        bib_format: BibFormats
+    ci_supported: bool = Field(default=True)
 
     # A challenge for the incremental mode is that data is run every time
     # the status runs (potentially creating very small increments)
-
-    settings_class = BibliographyExportSettings
 
     def __init__(
         self,
@@ -78,7 +75,7 @@ class BibliographyExport(JsonSchemaMixin):
         if "version" not in settings:
             settings["version"] = "0.1"
 
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.endpoint_path = self.review_manager.paths.output
 
     def _export(self, *, selected_records: dict) -> None:

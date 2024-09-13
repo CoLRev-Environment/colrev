@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import typing
-from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from urllib.parse import urlparse
@@ -11,8 +10,7 @@ from urllib.parse import urlparse
 import pandas as pd
 import requests
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -33,8 +31,7 @@ from colrev.packages.pubmed.src import pubmed_api
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class PubMedSearchSource(JsonSchemaMixin):
+class PubMedSearchSource:
     """Pubmed"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -46,7 +43,7 @@ class PubMedSearchSource(JsonSchemaMixin):
     ]
     endpoint = "colrev.pubmed"
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     db_url = "https://pubmed.ncbi.nlm.nih.gov/"
@@ -61,9 +58,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         self.review_manager = source_operation.review_manager
         if settings:
             # Pubmed as a search_source
-            self.search_source = from_dict(
-                data_class=self.settings_class, data=settings
-            )
+            self.search_source = self.settings_class(**settings)
         else:
             # Pubmed as an md-prep source
             pubmed_md_source_l = [

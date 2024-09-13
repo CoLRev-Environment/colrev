@@ -6,7 +6,6 @@ import logging
 import os
 import pprint
 import typing
-from dataclasses import asdict
 from datetime import timedelta
 from pathlib import Path
 
@@ -252,7 +251,11 @@ class ReviewManager:
         """Update the STATUS_FILE"""
 
         status_stats = self.get_status_stats(records=records)
-        exported_dict = asdict(status_stats)
+        exported_dict = status_stats.model_dump()
+        exported_dict.pop("origin_states_dict")
+        exported_dict.pop("perc_curated")
+        exported_dict.pop("screening_statistics")
+        exported_dict.pop("nr_origins")
         with open(self.paths.status, "w", encoding="utf8") as file:
             yaml.dump(exported_dict, file, allow_unicode=True)
         if add_to_git:
@@ -327,7 +330,9 @@ class ReviewManager:
 
         if records is None:
             records = self.dataset.load_records_dict()
-        return colrev.process.status.StatusStats(review_manager=self, records=records)
+        return colrev.process.status.get_status_stats(
+            review_manager=self, records=records
+        )
 
     def get_completeness_condition(self) -> bool:
         """Get the completeness condition"""
