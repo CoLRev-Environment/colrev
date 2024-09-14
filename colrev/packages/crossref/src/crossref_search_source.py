@@ -202,9 +202,7 @@ class CrossrefSearchSource:
         answers = inquirer.prompt(questions)
         issn = list(answers[Fields.JOURNAL].values())[0][0]
 
-        filename = operation.get_unique_filename(
-            file_path_string=f"crossref_issn_{issn}"
-        )
+        filename = operation.get_unique_filename(f"crossref_issn_{issn}")
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.crossref",
             filename=filename,
@@ -361,7 +359,6 @@ class CrossrefSearchSource:
 
     def _run_md_search(
         self,
-        *,
         crossref_feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
 
@@ -387,7 +384,7 @@ class CrossrefSearchSource:
 
         crossref_feed.save()
 
-    def _scope_excluded(self, *, retrieved_record_dict: dict) -> bool:
+    def _scope_excluded(self, retrieved_record_dict: dict) -> bool:
         if (
             "scope" not in self.search_source.search_parameters
             or "years" not in self.search_source.search_parameters["scope"]
@@ -426,25 +423,23 @@ class CrossrefSearchSource:
         self.api.rerun = rerun
         self.api.last_updated = crossref_feed.get_last_updated()
 
-        nrecs = self.api.get_len()
+        nrecs = self.api.get_len_total()
+        self.review_manager.logger.info(f"Total: {nrecs} records")
+        if not rerun:
+            self.review_manager.logger.info(
+                f"Retrieve papers indexed since {self.api.last_updated.split('T', maxsplit=1)[0]}"
+            )
+            nrecs = self.api.get_len()
+
         self.review_manager.logger.info(f"Retrieve {nrecs} records")
-        if rerun:
-            estimated_time = nrecs * 0.5
-            estimated_time_formatted = str(datetime.timedelta(seconds=estimated_time))
-            self.review_manager.logger.info(
-                f"Estimated time: {estimated_time_formatted}"
-            )
-        else:
-            self.review_manager.logger.info(
-                "Retrieve the latest records (no estimated time)"
-            )
+        estimated_time = nrecs * 0.5
+        estimated_time_formatted = str(datetime.timedelta(seconds=estimated_time))
+        self.review_manager.logger.info(f"Estimated time: {estimated_time_formatted}")
 
         try:
             for retrieved_record in self.api.get_records():
                 try:
-                    if self._scope_excluded(
-                        retrieved_record_dict=retrieved_record.data
-                    ):
+                    if self._scope_excluded(retrieved_record.data):
                         continue
 
                     self._prep_crossref_record(
@@ -482,9 +477,7 @@ class CrossrefSearchSource:
                 rerun=rerun,
             )
         elif self.search_source.search_type == SearchType.MD:
-            self._run_md_search(
-                crossref_feed=crossref_feed,
-            )
+            self._run_md_search(crossref_feed)
         else:
             raise NotImplementedError
 
