@@ -79,7 +79,7 @@ def _add_endpoint_interactively(add: str, endpoint_type: EndpointType) -> str:
     questions = [
         inquirer.List(
             "package",
-            message=f"Select a {endpoint_type.name} package to add:",
+            message=f"Select a {endpoint_type.name} package to add using down/up/space:",
             choices=sorted([p["package_endpoint_identifier"] for p in packages]),
         )
     ]
@@ -104,7 +104,7 @@ def _select_source_interactively(
     questions = [
         inquirer.Checkbox(
             "source",
-            message="Select a search source:",
+            message="Select search source(s) using down/up/space:",
             choices=sorted(sources),
         )
     ]
