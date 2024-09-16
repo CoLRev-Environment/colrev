@@ -26,6 +26,7 @@ from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=line-too-long
 
 
 class Upgrade(colrev.process.operation.Operation):
@@ -744,7 +745,14 @@ class Upgrade(colrev.process.operation.Operation):
 
                     self.repo.index.add([".github/workflows/colrev_update.yml"])
 
-        # TODO  : replace colrev for .colrev in registry.yaml
+        # replace colrev for .colrev in registry.yaml
+        if Filepaths.REGISTRY_FILE.is_file():
+            with open(Filepaths.REGISTRY_FILE, encoding="utf-8") as file:
+                content = file.read().replace(
+                    "/colrev/curated_metadata/", "/.colrev/curated_metadata/"
+                )
+                with open(Filepaths.REGISTRY_FILE, "w", encoding="utf-8") as out:
+                    out.write(content)
 
         return self.repo.is_dirty()
 
