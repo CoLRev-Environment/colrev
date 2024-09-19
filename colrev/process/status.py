@@ -50,6 +50,7 @@ class StatusStatsOverall(BaseModel):
     pdf_not_available: int
     pdf_imported: int
     pdf_prepared: int
+    rev_screen: int
     rev_excluded: int
     rev_included: int
     rev_synthesized: int

@@ -28,7 +28,7 @@ from colrev.constants import RecordState
 
 
 # an option: https://pypi.org/project/csv-schema/
-class DataField:
+class DataField(BaseModel):
     """Field definition"""
 
     name: str
