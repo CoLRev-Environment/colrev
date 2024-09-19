@@ -112,11 +112,11 @@ class GenAIPrescreen:
 
             screening_decisions.append(
                 {
-                    "Record": record.get_data()["ID"],
-                    "Inclusion/Exclusion Decision": (
-                        "Included" if prescreen_decision.included else "Excluded"
+                    "ID": record.get_data()["ID"],
+                    "prescreen_inclusion": (
+                        "in" if prescreen_decision.included else "out"
                     ),
-                    "Explanation": prescreen_decision.explanation,
+                    "explanation": prescreen_decision.explanation,
                 }
             )
 
