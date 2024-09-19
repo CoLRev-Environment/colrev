@@ -98,20 +98,21 @@ To create a new CoLRev package, the following command sets up the necessary dire
 
     colrev package --init
 
-.. raw:: html
+..
+  .. raw:: html
 
-   <div id="demo"></div>
+    <div id="demo"></div>
 
-   <script src="_static/js/asciinema-player.min.js"></script>
-   <script>
-      window.onload = function() {
-         AsciinemaPlayer.create('_static/colrev_package_init.cast', document.getElementById('demo'),
-         {autoPlay: true,
-         rows: 30,
-         terminalFontSize: "80px",
-         theme: 'dracula',});
-      };
-   </script>
+    <script src="_static/js/asciinema-player.min.js"></script>
+    <script>
+        window.onload = function() {
+          AsciinemaPlayer.create('_static/colrev_package_init.cast', document.getElementById('demo'),
+          {autoPlay: true,
+          rows: 30,
+          terminalFontSize: "80px",
+          theme: 'dracula',});
+        };
+    </script>
 
 Develop, test, document and check
 -----------------------------------
