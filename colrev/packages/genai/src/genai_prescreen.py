@@ -94,11 +94,11 @@ class GenAIPrescreen:
                 max_tokens=1024,
                 messages=[
                     {
-                        "role": "system",
+                        "role": "user",
                         "content": f"{PreScreenDecision.SYSTEM_PROMPT}\n\n"
-                        + f"INCLUSION CRITERION:\n\n{inclusion_criterion}",
-                    },
-                    {"role": "user", "content": f"{record}"},
+                        + f"INCLUSION CRITERION:\n\n{inclusion_criterion}\n\n"
+                        + f"METADATA:\n\n{record}",
+                    }
                 ],
                 response_format=PreScreenDecision,
             )
@@ -112,11 +112,11 @@ class GenAIPrescreen:
 
             screening_decisions.append(
                 {
-                    "ID": record.get_data()["ID"],
-                    "prescreen_inclusion": (
-                        "in" if prescreen_decision.included else "out"
+                    "Record": record.get_data()["ID"],
+                    "Inclusion/Exclusion Decision": (
+                        "Included" if prescreen_decision.included else "Excluded"
                     ),
-                    "explanation": prescreen_decision.explanation,
+                    "Explanation": prescreen_decision.explanation,
                 }
             )
 
