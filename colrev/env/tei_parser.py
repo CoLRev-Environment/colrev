@@ -374,6 +374,7 @@ class TEIParser:
 
     def _get_reference_title_string(self, reference: Element) -> str:
         title_string = ""
+        title = None
         if reference.find(self.ns["tei"] + "analytic") is not None:
             analytic_node = reference.find(self.ns["tei"] + "analytic")
             if analytic_node is not None:
@@ -391,6 +392,7 @@ class TEIParser:
 
     def _get_reference_year_string(self, reference: Element) -> str:
         year_string = ""
+        year = None
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
             if monogr_node is not None:
@@ -408,6 +410,7 @@ class TEIParser:
 
     def _get_reference_page_string(self, reference: Element) -> str:
         page_string = ""
+        page_list = []
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
@@ -430,6 +433,7 @@ class TEIParser:
 
     def _get_reference_number_string(self, reference: Element) -> str:
         number_string = ""
+        number_list = []
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
@@ -448,6 +452,7 @@ class TEIParser:
 
     def _get_reference_volume_string(self, reference: Element) -> str:
         volume_string = ""
+        volume_list = []
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
