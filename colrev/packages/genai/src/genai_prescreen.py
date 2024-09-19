@@ -94,11 +94,11 @@ class GenAIPrescreen:
                 max_tokens=1024,
                 messages=[
                     {
-                        "role": "user",
+                        "role": "system",
                         "content": f"{PreScreenDecision.SYSTEM_PROMPT}\n\n"
-                        + f"INCLUSION CRITERION:\n\n{inclusion_criterion}\n\n"
-                        + f"METADATA:\n\n{record}",
-                    }
+                        + f"INCLUSION CRITERION:\n\n{inclusion_criterion}",
+                    },
+                    {"role": "user", "content": f"{record}"},
                 ],
                 response_format=PreScreenDecision,
             )
