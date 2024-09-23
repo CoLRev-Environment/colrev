@@ -221,7 +221,7 @@ def test_get_transitioned_records(  # type: ignore
     operation_in_progress = status_stats.get_operation_in_progress(
         transitioned_records=transitioned_records
     )
-    assert {OperationsType.dedupe} == operation_in_progress
+    assert {"dedupe"} == operation_in_progress
 
     records = base_repo_review_manager.dataset.load_records_dict()
 

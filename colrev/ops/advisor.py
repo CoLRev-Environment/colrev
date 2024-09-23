@@ -301,7 +301,7 @@ class Advisor:
                 rec_str = ", ".join([x["origin"] for x in transitioned_records])
                 instruction = {
                     "msg": "Detected multiple processes in progress "
-                    + f"({', '.join(in_progress_processes)}). Complete one "
+                    + f"({', '.join(list(in_progress_processes))}). Complete one "
                     + "(save and revert the other) and commit before continuing!\n"
                     + f"  Records: {rec_str}",
                     "priority": "yes",
