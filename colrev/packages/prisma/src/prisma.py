@@ -190,6 +190,7 @@ class PRISMA:
                 command=script,
                 user=user,
                 volumes=[os.getcwd() + ":/data"],
+                detach=True,
             )
         except docker.errors.ImageNotFound:
             self.review_manager.logger.error("Docker image not found")
