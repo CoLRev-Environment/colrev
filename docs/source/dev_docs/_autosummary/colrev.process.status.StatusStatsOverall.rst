@@ -29,6 +29,7 @@ colrev.process.status.StatusStatsOverall
       ~StatusStatsOverall.pdf_not_available
       ~StatusStatsOverall.pdf_imported
       ~StatusStatsOverall.pdf_prepared
+      ~StatusStatsOverall.rev_screen
       ~StatusStatsOverall.rev_excluded
       ~StatusStatsOverall.rev_included
       ~StatusStatsOverall.rev_synthesized
