@@ -132,6 +132,7 @@ class PackageManager:
         self.install(packages=packages)
 
     # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-branches
     def install(
         self,
         *,

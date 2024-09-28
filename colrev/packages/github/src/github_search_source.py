@@ -260,9 +260,9 @@ class GitHubSearchSource:
             # get API access
             token = self._get_api_key()
             auth = Auth.Token(token)
-            g = Github(auth=auth)
+            github_connection = Github(auth=auth)
 
-            repo = g.get_repo(match.group(1) + "/" + match.group(2))
+            repo = github_connection.get_repo(match.group(1) + "/" + match.group(2))
             new_record = record_transformer.repo_to_record(repo=repo)
             record.data.update(new_record.data)
 

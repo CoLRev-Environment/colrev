@@ -195,6 +195,6 @@ def main() -> None:
                 print(f" - {check}")
         else:
             print("Check passed: check_pyproject_valid_structure")
-    except Exception as e:  # pylint: disable=broad-except
-        print(f"Error reading pyproject.toml: {e}")
+    except Exception as exc:  # pylint: disable=broad-except
+        print(f"Error reading pyproject.toml: {exc}")
         sys.exit(1)
