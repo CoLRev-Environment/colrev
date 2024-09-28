@@ -668,6 +668,8 @@ class Record:
         # Apply the checkers (including field key requirements etc.)
         quality_model.run(record=self)
 
+        if not set_prepared:
+            return
         if (
             Fields.STATUS in self.data
             and self.data[Fields.STATUS] == RecordState.rev_prescreen_excluded
@@ -676,7 +678,7 @@ class Record:
 
         if self.has_quality_defects():
             self.set_status(RecordState.md_needs_manual_preparation)
-        elif set_prepared:
+        else:
             self.set_status(RecordState.md_prepared)
 
     def is_retracted(self) -> bool:
