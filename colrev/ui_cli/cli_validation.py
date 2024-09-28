@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import difflib
 import subprocess  # nosec
+import typing
 
 import inquirer
 from rapidfuzz import fuzz
@@ -117,7 +118,7 @@ def print_diff_pair(record_pair: list) -> None:
 
 def _validate_dedupe(
     *,
-    validate_operation: colrev.process.operation.Operation,
+    validate_operation: colrev.ops.validate.Validate,
     validation_details: dict,
     threshold: float,  # pylint: disable=unused-argument
 ) -> None:
@@ -147,7 +148,7 @@ def _validate_dedupe(
 
 def _validate_prep_prescreen_exclusions(
     *,
-    validate_operation: colrev.process.operation.Operation,
+    validate_operation: colrev.ops.validate.Validate,
     validation_details: dict,
 ) -> None:
 
@@ -187,17 +188,19 @@ def _validate_prep_prescreen_exclusions(
 
 def _validate_prep(
     *,
-    validate_operation: colrev.process.operation.Operation,
+    validate_operation: colrev.ops.validate.Validate,
     validation_details: dict,
     threshold: float,
 ) -> None:
 
+    # Part 1 : origin validation
+    origins_to_remove: typing.Dict[str, list] = {}
     displayed = False
     for validation_element in validation_details:
         if validation_element["change_score_max"] < threshold:
             continue
         displayed = True
-
+        print("\n\n\n\n\n")
         # Escape sequence to clear terminal output for each new comparison
         # os.system("cls" if os.name == "nt" else "clear")
 
@@ -218,22 +221,63 @@ def _validate_prep(
         colrev.record.record.Record(record_dict).print_citation_format()
         print()
 
-        user_selection = input("Validate [y,n,q for yes, no (undo), or quit]?")
+        questions = [
+            inquirer.List(
+                "user_selection",
+                message="Validate?",
+                choices=[
+                    "yes",
+                    "no (remove origin)",
+                    "quit",
+                ],
+                default="y",
+            ),
+        ]
+        answers = inquirer.prompt(questions)
+        user_selection = answers["user_selection"]
 
-        if user_selection == "n":
+        if user_selection.startswith("no (remove origin)"):
+            # remove origin
+            choices = [
+                f"{origin[Fields.ORIGIN][0]}"
+                for i, origin in enumerate(list(validation_element["origins"]))
+            ]
+            questions = [
+                inquirer.Checkbox(
+                    "selected_records",
+                    message="Select origin to remove (using space)",
+                    choices=choices,
+                ),
+            ]
+            answers = inquirer.prompt(questions)
+            for origin_to_remove in answers["selected_records"]:
+                file, identifier = origin_to_remove.split("/")
+                if file not in origins_to_remove:
+                    origins_to_remove[file] = []
+                origins_to_remove[file].append(identifier)
+
+            record_dict[Fields.ORIGIN] = [
+                origin[Fields.ORIGIN][0]
+                for origin in list(validation_element["origins"])
+                if origin[Fields.ORIGIN][0] not in answers["selected_records"]
+            ]
+
             validate_operation.review_manager.dataset.save_records_dict(
-                {
-                    validation_element["prior_record_dict"][
-                        Fields.ID
-                    ]: validation_element["prior_record_dict"]
-                },
+                {record_dict[Fields.ID]: record_dict},
                 partial=True,
             )
 
-        if user_selection == "q":
+        if user_selection == "quit":
             break
-        if user_selection == "y":
+        if user_selection == "yes":
             continue
+
+    # if there is a key in origins_to_remove that does not start with md_, print
+    # pylint: disable=use-a-generator
+    if any([key for key in origins_to_remove if not key.startswith("md_")]):
+        print("Please run colrev load again to (re)load all origin(s)")
+
+    validate_operation.remove_md_origins(origins_to_remove)
 
     if not displayed:
         validate_operation.review_manager.logger.info(
@@ -243,7 +287,7 @@ def _validate_prep(
 
 def _validate_properties(
     *,
-    validate_operation: colrev.process.operation.Operation,
+    validate_operation: colrev.ops.validate.Validate,
     validation_details: dict,
 ) -> None:
 
@@ -263,7 +307,7 @@ def _validate_properties(
 
 def _validate_contributor_commits(
     *,
-    validate_operation: colrev.process.operation.Operation,
+    validate_operation: colrev.ops.validate.Validate,
     validation_details: dict,
 ) -> None:
     validate_operation.review_manager.logger.info(
@@ -290,7 +334,7 @@ def _validate_contributor_commits(
 
 def _validate_general(
     *,
-    validate_operation: colrev.process.operation.Operation,
+    validate_operation: colrev.ops.validate.Validate,
     validation_details: dict,
 ) -> None:
     validate_operation.review_manager.logger.info("Start general validation")
@@ -319,7 +363,7 @@ def _validate_general(
 
 def validate(
     *,
-    validate_operation: colrev.process.operation.Operation,
+    validate_operation: colrev.ops.validate.Validate,
     validation_details: dict,
     threshold: float,
 ) -> None:

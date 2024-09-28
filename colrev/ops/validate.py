@@ -15,6 +15,7 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.writer.write_utils import write_file
 
 
 class Validate(colrev.process.operation.Operation):
@@ -95,6 +96,8 @@ class Validate(colrev.process.operation.Operation):
 
             origin_changes = []
             for origin in record_dict[Fields.ORIGIN]:
+                if origin not in origin_records:
+                    continue
                 origin_record = origin_records[origin]
 
                 change_score = colrev.record.record.Record.get_record_change_score(
@@ -683,6 +686,30 @@ class Validate(colrev.process.operation.Operation):
             and not re.match(r"[0-9a-f]{5,40}", scope)
             and "." != scope
         )
+
+    def remove_md_origins(self, origins_to_remove: dict) -> None:
+        """Remove origin records for md_ files"""
+
+        records = self.review_manager.dataset.load_records_dict()
+        origins_in_use = [
+            o for record in records.values() for o in record[Fields.ORIGIN]
+        ]
+
+        for file, identifiers in origins_to_remove.items():
+            if file.startswith("md_"):
+                filename = self.review_manager.paths.SEARCH_DIR / Path(file)
+                origin_records = colrev.loader.load_utils.load(
+                    filename=filename,
+                    logger=self.review_manager.logger,
+                )
+                for identifier in identifiers:
+                    if f"{file}/{identifier}" in origins_in_use:
+                        continue
+                    if identifier in origin_records:
+                        origin_records.pop(identifier)
+                write_file(records_dict=origin_records, filename=filename)
+
+            self.review_manager.dataset.add_changes(filename)
 
     @colrev.process.operation.Operation.decorate()
     def main(
