@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "colrev.ref_check"
+description = "Checks the quality of reference metadata"
+version = "0.1.0"
+license = "MIT"
+authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/"
+
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.9, <4"
+
+[tool.colrev]
+colrev_doc_description = "TODO"
+colrev_doc_link = "docs/README.md"
+search_types = []
+
+[tool.poetry.plugins.colrev]
+data = "colrev.packages.ref_check.src.ref_check:RefCheck"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

@@ -720,6 +720,22 @@ class Upgrade(colrev.process.operation.Operation):
                     out.write(bibtex_str + "\n")
                 self.repo.index.add([source["filename"]])
 
+        # Add "colrev.ref_check" to data endpoints
+        if "colrev.ref_check" not in [
+            e["endpoint"] for e in settings["data"]["data_package_endpoints"]
+        ]:
+            settings["data"]["data_package_endpoints"].append(
+                {"endpoint": "colrev.ref_check"}
+            )
+
+        # Remove "inconsistent-with-url-metadata" from settings["prep"]["defects_to_ignore"]
+        settings["prep"]["defects_to_ignore"] = [
+            d
+            for d in settings["prep"]["defects_to_ignore"]
+            if d != "inconsistent-with-url-metadata"
+        ]
+        self._save_settings(settings)
+
         # Rename LOCAL_ENVIRONMENT_DIR
         if not Filepaths.LOCAL_ENVIRONMENT_DIR.is_dir():
             shutil.move(
