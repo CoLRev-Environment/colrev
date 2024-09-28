@@ -11,21 +11,6 @@ colrev.settings.PrepRound
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-      ~PrepRound.all_json_schemas
-      ~PrepRound.field_mapping
-      ~PrepRound.from_dict
-      ~PrepRound.from_json
-      ~PrepRound.from_object
-      ~PrepRound.json_schema
-      ~PrepRound.register_field_encoders
-      ~PrepRound.to_dict
-      ~PrepRound.to_json
-
 
 
 

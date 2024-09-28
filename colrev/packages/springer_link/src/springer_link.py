@@ -5,15 +5,13 @@ from __future__ import annotations
 import re
 import typing
 import urllib.parse
-from dataclasses import dataclass
 from pathlib import Path
 
 import inquirer
 import pandas as pd
 import requests
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -35,17 +33,17 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class SpringerLinkSearchSource(JsonSchemaMixin):
+class SpringerLinkSearchSource:
     """Springer Link"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+
     endpoint = "colrev.springer_link"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
     search_types = [SearchType.DB, SearchType.API]
 
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     SETTINGS = {
@@ -57,7 +55,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         self.review_manager = source_operation.review_manager
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source = self.settings_class(**settings)
         self.quality_model = self.review_manager.get_qm()
         self.source_operation = source_operation
         self.language_service = colrev.env.language_service.LanguageService()

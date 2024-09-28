@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import zope.interface
-from dacite import from_dict
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -28,8 +27,8 @@ class CustomSearch:
         source_operation: colrev.ops.search.Search,
         settings: dict,
     ) -> None:
-        self.search_source: colrev.settings.SearchSource = from_dict(
-            data_class=self.settings_class, data=settings
+        self.search_source: colrev.settings.SearchSource = self.settings_class(
+            **settings
         )
         self.review_manager = source_operation.review_manager
 

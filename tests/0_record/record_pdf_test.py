@@ -30,7 +30,7 @@ def test_set_text_from_pdf(helpers, record_with_pdf: colrev.record.record_pdf.PD
     )
     record_with_pdf.set_text_from_pdf()
     actual = record_with_pdf.data["text_from_pdf"]
-    actual = actual[0:4209]
+    actual = actual[0:4219]
     assert expected == actual
 
 

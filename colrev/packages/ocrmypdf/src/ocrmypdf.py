@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import os
 import shutil
-from dataclasses import dataclass
 from pathlib import Path
 
 import docker
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.env.docker_manager
 import colrev.env.utils
@@ -25,12 +24,11 @@ from colrev.constants import PDFDefectCodes
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PDFPrepInterface)
-@dataclass
-class OCRMyPDF(JsonSchemaMixin):
+class OCRMyPDF:
     """Prepare PDFs by applying OCR based on OCRmyPDF"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
     OCRMYPDF_IMAGE = "jbarlow83/ocrmypdf:latest"
 
     def __init__(
@@ -39,7 +37,7 @@ class OCRMyPDF(JsonSchemaMixin):
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.review_manager = pdf_prep_operation.review_manager
 
         if not self.review_manager.in_ci_environment():
@@ -67,9 +65,11 @@ class OCRMyPDF(JsonSchemaMixin):
         #     options = options + '--deskew '
         docker_home_path = Path("/home/docker")
 
+        non_ocr_fname = docker_home_path / non_ocred_filename.name
+        docker_output_fname = docker_home_path / pdf_path.name
         args = (
-            f"--force-ocr --jobs 4 -l eng {str(docker_home_path / non_ocred_filename.name)} "
-            f"{str(docker_home_path / pdf_path.name)}"
+            f"--force-ocr --jobs 4 -l eng {non_ocr_fname.as_posix()} "
+            f"{docker_output_fname.as_posix()}"
         )
 
         client = docker.from_env(timeout=120)

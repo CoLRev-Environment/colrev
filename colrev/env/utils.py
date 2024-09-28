@@ -8,6 +8,7 @@ import unicodedata
 from enum import Enum
 from functools import reduce
 from pathlib import Path
+from pathlib import PosixPath
 
 from jinja2 import Environment
 from jinja2 import FunctionLoader
@@ -92,21 +93,22 @@ def custom_asdict_factory(data) -> dict:  # type: ignore
     """Custom asdict factory for (dataclass)object-to-dict conversion"""
 
     def convert_value(obj: object) -> object:
+        if isinstance(obj, list):
+            return [convert_value(el) for el in obj]
+        if isinstance(obj, dict):
+            return {k: convert_value(v) for k, v in obj.items()}
         if isinstance(obj, Enum):
             return obj.value
-        if isinstance(obj, Path):
+        if isinstance(obj, (Path, PosixPath)):
             return str(obj)
         if isinstance(obj, float):
             # Save 1.0 as 1 per default to avoid parsing issues
             # e.g., with the web ui
             if str(obj) == "1.0":  # pragma: no cover
                 return 1
-        if isinstance(obj, list):
-            if all(isinstance(el, Path) for el in obj):
-                return [str(el) for el in obj]
         return obj
 
-    return {k: convert_value(v) for k, v in data}
+    return {k: convert_value(v) for k, v in data.items()}
 
 
 def load_complementary_material_keywords() -> list:

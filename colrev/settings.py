@@ -2,19 +2,13 @@
 """Settings of the CoLRev project."""
 from __future__ import annotations
 
-import dataclasses
 import json
 import typing
-from dataclasses import asdict
-from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
 
-import dacite
-from dacite import from_dict
-from dacite.exceptions import MissingValueError
-from dacite.exceptions import WrongTypeError
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import model_validator
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -32,8 +26,7 @@ from colrev.constants import ShareStatReq
 # Project
 
 
-@dataclass
-class Author(JsonSchemaMixin):
+class Author(BaseModel):
     """Author of the review"""
 
     # pylint: disable=too-many-instance-attributes
@@ -42,21 +35,19 @@ class Author(JsonSchemaMixin):
     initials: str
     email: str
     orcid: typing.Optional[str] = None
-    contributions: typing.List[str] = dataclasses.field(default_factory=list)
+    contributions: typing.List[str] = Field(default_factory=list)
     affiliations: typing.Optional[str] = None
-    funding: typing.List[str] = dataclasses.field(default_factory=list)
-    identifiers: typing.List[str] = dataclasses.field(default_factory=list)
+    funding: typing.List[str] = Field(default_factory=list)
+    identifiers: typing.List[str] = Field(default_factory=list)
 
 
-@dataclass
-class Protocol(JsonSchemaMixin):
+class Protocol(BaseModel):
     """Review protocol"""
 
     url: str
 
 
-@dataclass
-class ProjectSettings(JsonSchemaMixin):
+class ProjectSettings(BaseModel):
     """Project settings"""
 
     # pylint: disable=too-many-instance-attributes
@@ -84,8 +75,7 @@ class ProjectSettings(JsonSchemaMixin):
 # Search
 
 
-@dataclass
-class SearchSource(JsonSchemaMixin):
+class SearchSource(BaseModel):
     """Search source settings"""
 
     # pylint: disable=too-many-instance-attributes
@@ -95,26 +85,29 @@ class SearchSource(JsonSchemaMixin):
     search_parameters: dict
     comment: typing.Optional[str]
 
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        *,
-        endpoint: str,
-        filename: Path,
-        search_type: SearchType,
-        search_parameters: dict,
-        comment: typing.Optional[str],
-    ) -> None:
-        self.endpoint = endpoint
+    to_import: int = 0
+    imported_origins: typing.List[str] = []
+    len_before: int = 0
+    source_records_list: typing.List[typing.Dict] = []
 
-        if not str(filename).replace("\\", "/").startswith("data/search"):
-            msg = f"Source filename does not start with data/search: {filename}"
-            raise colrev_exceptions.InvalidSettingsError(msg=msg)
+    # pylint: disable=no-self-argument
+    @model_validator(mode="before")
+    def validate_filename(cls, values):  # type: ignore
+        """Validate the filename"""
+        filename = values.get("filename")
+        if filename and not str(filename).replace("\\", "/").startswith("data/search"):
+            raise colrev_exceptions.InvalidSettingsError(
+                msg=f"Source filename does not start with data/search: {filename}"
+            )
+        return values
 
-        self.filename = filename
-        self.search_type = search_type
-        self.search_parameters = search_parameters
-        self.comment = comment
+    def model_dump(self, **kwargs) -> dict:  # type: ignore
+        exclude = set(kwargs.pop("exclude", set()))
+        exclude.add("to_import")
+        exclude.add("imported_origins")
+        exclude.add("len_before")
+        exclude.add("source_records_list")
+        return super().model_dump(exclude=exclude, **kwargs)
 
     def setup_for_load(
         self,
@@ -158,18 +151,6 @@ class SearchSource(JsonSchemaMixin):
             raise FileNotFoundError
         return Path(self.search_parameters["query_file"]).read_text(encoding="utf-8")
 
-    def get_dict(self) -> dict:
-        """Get the dict of SearchSources (for endpoint initalization)"""
-
-        exported_dict = asdict(
-            self, dict_factory=colrev.env.utils.custom_asdict_factory
-        )
-
-        exported_dict["search_type"] = SearchType[exported_dict["search_type"]]
-        exported_dict["filename"] = Path(exported_dict["filename"])
-
-        return exported_dict
-
     def get_api_feed(
         self,
         review_manager: colrev.review_manager.ReviewManager,
@@ -199,8 +180,7 @@ class SearchSource(JsonSchemaMixin):
         return formatted_str
 
 
-@dataclass
-class SearchSettings(JsonSchemaMixin):
+class SearchSettings(BaseModel):
     """Search settings"""
 
     retrieve_forthcoming: bool
@@ -212,8 +192,7 @@ class SearchSettings(JsonSchemaMixin):
 # Prep
 
 
-@dataclass
-class PrepRound(JsonSchemaMixin):
+class PrepRound(BaseModel):
     """Prep round settings"""
 
     name: str
@@ -226,8 +205,7 @@ class PrepRound(JsonSchemaMixin):
         return f"{self.name} (" + ",".join(short_list) + ")"
 
 
-@dataclass
-class PrepSettings(JsonSchemaMixin):
+class PrepSettings(BaseModel):
     """Prep settings"""
 
     fields_to_keep: typing.List[str]
@@ -248,8 +226,7 @@ class PrepSettings(JsonSchemaMixin):
 # Dedupe
 
 
-@dataclass
-class DedupeSettings(JsonSchemaMixin):
+class DedupeSettings(BaseModel):
     """Dedupe settings"""
 
     dedupe_package_endpoints: list
@@ -266,8 +243,7 @@ class DedupeSettings(JsonSchemaMixin):
 # Prescreen
 
 
-@dataclass
-class PrescreenSettings(JsonSchemaMixin):
+class PrescreenSettings(BaseModel):
     """Prescreen settings"""
 
     explanation: str
@@ -285,8 +261,7 @@ class PrescreenSettings(JsonSchemaMixin):
 # PDF get
 
 
-@dataclass
-class PDFGetSettings(JsonSchemaMixin):
+class PDFGetSettings(BaseModel):
     """PDF get settings"""
 
     pdf_path_type: PDFPathType
@@ -312,8 +287,7 @@ class PDFGetSettings(JsonSchemaMixin):
 # PDF prep
 
 
-@dataclass
-class PDFPrepSettings(JsonSchemaMixin):
+class PDFPrepSettings(BaseModel):
     """PDF prep settings"""
 
     keep_backup_of_pdfs: bool
@@ -334,8 +308,7 @@ class PDFPrepSettings(JsonSchemaMixin):
 # Screen
 
 
-@dataclass
-class ScreenCriterion(JsonSchemaMixin):
+class ScreenCriterion(BaseModel):
     """Screen criterion"""
 
     explanation: str
@@ -346,11 +319,10 @@ class ScreenCriterion(JsonSchemaMixin):
         return f"{self.explanation} ({self.criterion_type}, {self.comment})"
 
 
-@dataclass
-class ScreenSettings(JsonSchemaMixin):
+class ScreenSettings(BaseModel):
     """Screen settings"""
 
-    explanation: typing.Optional[str]
+    explanation: typing.Optional[str] = None
     criteria: typing.Dict[str, ScreenCriterion]
     screen_package_endpoints: list
 
@@ -374,8 +346,7 @@ class ScreenSettings(JsonSchemaMixin):
 # Data
 
 
-@dataclass
-class DataSettings(JsonSchemaMixin):
+class DataSettings(BaseModel):
     """Data settings"""
 
     data_package_endpoints: list
@@ -389,8 +360,7 @@ class DataSettings(JsonSchemaMixin):
         return endpoints_str
 
 
-@dataclass
-class Settings(JsonSchemaMixin):
+class Settings(BaseModel):
     """CoLRev project settings"""
 
     # pylint: disable=too-many-instance-attributes
@@ -405,6 +375,14 @@ class Settings(JsonSchemaMixin):
     pdf_prep: PDFPrepSettings
     screen: ScreenSettings
     data: DataSettings
+
+    def model_dump(self, **kwargs) -> dict:  # type: ignore
+        """Dump the settings model with recursive handling of SearchSource."""
+
+        sources_dump = [source.model_dump(**kwargs) for source in self.sources]
+        data = super().model_dump(**kwargs)
+        data["sources"] = sources_dump
+        return data
 
     def is_curated_repo(self) -> bool:
         """Check whether data is curated in this repository"""
@@ -459,6 +437,32 @@ class Settings(JsonSchemaMixin):
             + str(self.data)
         )
 
+    def get_packages(self) -> typing.List[str]:
+        """Get the list of all package names"""
+
+        def extract_endpoints(package_endpoints: list) -> list:
+            return [
+                e for pe in package_endpoints for k, e in pe.items() if k == "endpoint"
+            ]
+
+        all_packages = (
+            [self.project.review_type]
+            + [s.endpoint for s in self.sources]
+            + extract_endpoints(self.prep.prep_man_package_endpoints)
+            + extract_endpoints(self.dedupe.dedupe_package_endpoints)
+            + extract_endpoints(self.prescreen.prescreen_package_endpoints)
+            + extract_endpoints(self.pdf_get.pdf_get_package_endpoints)
+            + extract_endpoints(self.pdf_get.pdf_get_man_package_endpoints)
+            + extract_endpoints(self.pdf_prep.pdf_prep_package_endpoints)
+            + extract_endpoints(self.pdf_prep.pdf_prep_man_package_endpoints)
+            + extract_endpoints(self.screen.screen_package_endpoints)
+            + extract_endpoints(self.data.data_package_endpoints)
+        )
+        for pr in self.prep.prep_rounds:
+            all_packages.extend(extract_endpoints(pr.prep_package_endpoints))
+
+        return all_packages
+
 
 def _add_missing_attributes(loaded_dict: dict) -> None:  # pragma: no cover
     # replace dict with defaults if values are missing (to avoid exceptions)
@@ -466,27 +470,17 @@ def _add_missing_attributes(loaded_dict: dict) -> None:  # pragma: no cover
         loaded_dict["pdf_get"]["defects_to_ignore"] = []
 
 
-def _load_settings_from_dict(*, loaded_dict: dict) -> Settings:
+def _load_settings_from_dict(loaded_dict: dict) -> Settings:
     try:
-        converters = {Path: Path, Enum: Enum}
         _add_missing_attributes(loaded_dict)
-        settings = from_dict(
-            data_class=Settings,
-            data=loaded_dict,
-            config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
-        )
-
+        settings = Settings(**loaded_dict)
         filenames = [x.filename for x in settings.sources]
         if not len(filenames) == len(set(filenames)):
             non_unique = list({str(x) for x in filenames if filenames.count(x) > 1})
             msg = f"Non-unique source filename(s): {', '.join(non_unique)}"
             raise colrev_exceptions.InvalidSettingsError(msg=msg, fix_per_upgrade=False)
 
-    except (
-        ValueError,
-        MissingValueError,
-        WrongTypeError,
-    ) as exc:  # pragma: no cover
+    except (Exception,) as exc:  # pragma: no cover
         raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
 
     return settings
@@ -507,15 +501,14 @@ def load_settings(*, settings_path: Path) -> Settings:
             f"Failed to load settings: {exc}"
         ) from exc
 
-    return _load_settings_from_dict(loaded_dict=loaded_dict)
+    return _load_settings_from_dict(loaded_dict)
 
 
 def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> None:
     """Save the settings"""
 
-    exported_dict = asdict(
-        review_manager.settings, dict_factory=colrev.env.utils.custom_asdict_factory
-    )
+    exported_dict = review_manager.settings.model_dump()
+    exported_dict = colrev.env.utils.custom_asdict_factory(exported_dict)
 
     with open(review_manager.paths.settings, "w", encoding="utf-8") as outfile:
         json.dump(exported_dict, outfile, indent=4)

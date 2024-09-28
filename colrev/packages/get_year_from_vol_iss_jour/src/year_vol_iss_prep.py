@@ -2,11 +2,9 @@
 """Completion of metadata based on year-volume-issue dependency as a prep operation"""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import requests
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
@@ -24,12 +22,11 @@ from colrev.packages.crossref.src import crossref_api
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
-@dataclass
-class YearVolIssPrep(JsonSchemaMixin):
+class YearVolIssPrep:
     """Prepares records based on year-volume-issue dependency"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
 
     source_correction_hint = (
         "ask the publisher to correct the metadata"
@@ -44,7 +41,7 @@ class YearVolIssPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
         self.local_index = colrev.env.local_index.LocalIndex(

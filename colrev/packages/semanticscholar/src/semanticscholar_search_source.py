@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import typing
-from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 
 import requests
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 from semanticscholar import SemanticScholar
 from semanticscholar import SemanticScholarException
 from semanticscholar.PaginatedResults import PaginatedResults
@@ -43,21 +41,20 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class SemanticScholarSearchSource(JsonSchemaMixin):
+class SemanticScholarSearchSource:
     """Semantic Scholar API Search Source"""
 
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     # Provide objects with classes
     _s2: SemanticScholar
     _search_return: PaginatedResults
 
     endpoint = "colrev.semanticscholar"
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
 
     # SearchSourceInterface constants
     heuristic_status = SearchSourceHeuristicStatus.oni
     search_types = [SearchType.API]
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
 
     source_identifier = Fields.SEMANTIC_SCHOLAR_ID
 
@@ -82,9 +79,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         self.review_manager = source_operation.review_manager
         if settings:
             # Semantic Scholar as a search source
-            self.search_source = from_dict(
-                data_class=self.settings_class, data=settings
-            )
+            self.search_source = self.settings_class(**settings)
         else:
             self.search_source = colrev.settings.SearchSource(
                 endpoint="colrev.semanticscholar",
@@ -128,10 +123,11 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 ) from exc
 
     def _get_semantic_scholar_api(
-        self, *, params: dict, subject: str, rerun: bool
+        self, *, params: dict, rerun: bool
     ) -> PaginatedResults:
         """Get Semantic Scholar API depending on
         the search subject and look for search parameters"""
+        subject = params.pop("search_subject")
         if subject == "keyword":
             _search_return = self.keyword_search(params=params, rerun=rerun)
         elif subject == "paper":
@@ -297,12 +293,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             )
         try:
             params = self.search_source.search_parameters
-            search_subject = params.get("search_subject")
-            del params["search_subject"]
-
-            _search_return = self._get_semantic_scholar_api(
-                params=params, subject=search_subject, rerun=rerun
-            )
+            _search_return = self._get_semantic_scholar_api(params=params, rerun=rerun)
 
         except SemanticScholarException.BadQueryParametersException as exc:
             self.review_manager.logger.error(

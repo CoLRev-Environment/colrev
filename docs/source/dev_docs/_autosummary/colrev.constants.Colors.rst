@@ -11,12 +11,6 @@ colrev.constants.Colors
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-
 
 
 

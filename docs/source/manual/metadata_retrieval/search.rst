@@ -29,6 +29,8 @@ Two steps are necessary to add a SearchSource and run a search:
 ..
     For search result files, `heuristics <https://colrev.readthedocs.io/en/latest/foundations/packages.html#colrev.package_manager.interfaces.SearchSourceInterface.heuristic>`_ are used to identify the SearchSource (e.g., GoogleScholar or Web of Science) and users are asked to provide the corresponding search parameters, which are stored in the ``settings.json``.
 
+Updating the search is very easy: simply run `colrev search` again. API searches will be updated automatically, and instructions will be given to update DB searches.
+
 The following table provides an overview of the different types of SearchSources, linking to the list of SearchSources below.
 The development of additional SearchSources is tracked in the `SearchSource roadmap <https://github.com/CoLRev-Environment/colrev/issues/106>`_).
 

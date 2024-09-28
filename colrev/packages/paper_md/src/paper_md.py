@@ -8,15 +8,15 @@ import shutil
 import tempfile
 import typing
 from collections import Counter
-from dataclasses import dataclass
 from pathlib import Path
 from threading import Timer
 
 import docker
 import requests
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
+from pydantic import BaseModel
+from pydantic import Field
 
 import colrev.env.docker_manager
 import colrev.env.utils
@@ -28,13 +28,37 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.writer.write_utils import write_file
+
+
+class PaperMarkdownSettings(BaseModel):
+    """Paper settings"""
+
+    endpoint: str
+    version: str
+    word_template: Path
+    paper_path: Path = Field(
+        default=Path("paper.md"),
+        description="Path for the paper (markdown source document)",
+    )
+    paper_output: Path = Field(
+        default=Path("paper.docx"),
+        description="Path for the output (e.g., paper.docx/pdf/latex/html)",
+    )
+
+    # _details = {
+    #     "word_template": {"tooltip": "Path to the word template (for Pandoc)"},
+    #     "paper_path": {"tooltip": "Path for the paper (markdown source document)"},
+    #     "paper_output": {
+    #         "tooltip": "Path for the output (e.g., paper.docx/pdf/latex/html)"
+    #     },
+    # }
 
 
 # pylint: disable=too-many-instance-attributes
 @zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-@dataclass
-class PaperMarkdown(JsonSchemaMixin):
+class PaperMarkdown:
     """Synthesize the literature in a markdown paper
 
     The paper (paper.md) is created automatically.
@@ -58,31 +82,11 @@ class PaperMarkdown(JsonSchemaMixin):
     NON_SAMPLE_REFERENCES_RELATIVE = Path("non_sample_references.bib")
     SAMPLE_REFERENCES_RELATIVE = Path("sample_references.bib")
 
-    ci_supported: bool = False
-
-    @dataclass
-    class PaperMarkdownSettings(
-        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
-    ):
-        """Paper settings"""
-
-        endpoint: str
-        version: str
-        word_template: Path
-        paper_path: Path = Path("paper.md")
-        paper_output: Path = Path("paper.docx")
-
-        _details = {
-            "word_template": {"tooltip": "Path to the word template (for Pandoc)"},
-            "paper_path": {"tooltip": "Path for the paper (markdown source document)"},
-            "paper_output": {
-                "tooltip": "Path for the output (e.g., paper.docx/pdf/latex/html)"
-            },
-        }
-
     settings_class = PaperMarkdownSettings
 
-    _temp_path = Path.home().joinpath("colrev") / Path(".colrev_temp")
+    ci_supported: bool = Field(default=False)
+
+    _temp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".colrev_temp")
 
     def __init__(
         self,
@@ -103,7 +107,7 @@ class PaperMarkdown(JsonSchemaMixin):
         if "paper_output" not in settings:
             settings["paper_output"] = Path("paper.docx")
 
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
         self.data_dir = self.review_manager.paths.data
         self.settings.paper_path = self.data_dir / self.settings.paper_path
@@ -142,6 +146,10 @@ class PaperMarkdown(JsonSchemaMixin):
         }
 
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
+        operation.review_manager.save_settings()
+        operation.review_manager.dataset.create_commit(
+            msg=f"Add {operation.type} paper_md",
+        )
 
     def _retrieve_default_word_template(self, word_template: Path) -> bool:
 
@@ -673,12 +681,17 @@ class PaperMarkdown(JsonSchemaMixin):
             msg = f"Running docker container created from image {self.pandoc_image}"
             self.review_manager.report_logger.info(msg)
 
-            client.containers.run(
+            container = client.containers.run(
                 image=self.pandoc_image,
                 command=script,
                 user=user,
-                volumes=[str(self.review_manager.path) + ":/data"],
+                volumes=[self.review_manager.path.as_posix() + ":/data"],
+                detach=True,
             )
+            # Wait for the container to finish
+            container.wait()
+            container.stop()
+            container.remove()
 
         except docker.errors.ImageNotFound:
             self.review_manager.logger.error("Docker image not found")
@@ -731,9 +744,9 @@ class PaperMarkdown(JsonSchemaMixin):
             self.review_manager.logger.info("Build paper")
 
         script = (
-            f"{self.paper_relative_path} --filter pandoc-crossref --citeproc "
-            + f"--reference-doc {word_template.relative_to(self.review_manager.path)} "
-            + f"--output {output_relative_path}"
+            f"{self.paper_relative_path.as_posix()} --filter pandoc-crossref --citeproc "
+            + f"--reference-doc {word_template.relative_to(self.review_manager.path).as_posix()} "
+            + f"--output {output_relative_path.as_posix()}"
         )
 
         Timer(
@@ -766,7 +779,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 silent_mode=silent_mode,
             )
 
-        if not self.review_manager.in_ci_environment():
+        if not self.review_manager.in_ci_environment() and not silent_mode:
             self.build_paper()
 
     def _get_to_synthesize(self, *, paper: Path, records_for_synthesis: list) -> list:

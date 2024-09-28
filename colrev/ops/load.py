@@ -189,18 +189,20 @@ class Load(colrev.process.operation.Operation):
                     f"Values should not be empty ({source_record})"
                 )
 
-            for key in source_record.keys():
+            for key in list(source_record.keys()):
                 if "." in key:  # namespaced key
                     continue
                 if key not in FieldSet.STANDARDIZED_FIELD_KEYS:
-                    raise colrev_exceptions.ImportException(
-                        f"Non-standardized field without namespace ({key})"
+                    print(
+                        f"{Colors.RED}Drop non-standardized field without namespace "
+                        f"({key}){Colors.END}"
                     )
+                    source_record.pop(key)
 
             for key in FieldSet.PROVENANCE_KEYS + [
                 Fields.SCREENING_CRITERIA,
             ]:
-                if key == Fields.STATUS:
+                if key in [Fields.STATUS, Fields.PDF_ID]:
                     continue
                 if (
                     key == Fields.MD_PROV
@@ -316,9 +318,6 @@ class Load(colrev.process.operation.Operation):
 
         if source.search_source.to_import == 0:
             self.review_manager.logger.info("No additional records loaded")
-            if not self.review_manager.high_level_operation:
-                print()
-
             return
 
         if not keep_ids:
@@ -376,7 +375,8 @@ class Load(colrev.process.operation.Operation):
                     package_identifier=source.endpoint,
                 )
                 endpoint = search_source_class(
-                    source_operation=self, settings=source.get_dict()
+                    source_operation=self,
+                    settings=source.model_dump(),
                 )
 
                 s_type = endpoint.search_source.search_type  # type: ignore

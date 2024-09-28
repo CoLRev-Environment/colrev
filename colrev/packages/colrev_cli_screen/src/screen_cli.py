@@ -2,12 +2,10 @@
 """Screen based on CLI"""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
 from inquirer import Checkbox
 from inquirer import prompt
+from pydantic import Field
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
@@ -21,13 +19,15 @@ from colrev.constants import ScreenCriterionType
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.ScreenInterface)
-@dataclass
-class CoLRevCLIScreen(JsonSchemaMixin):
+class CoLRevCLIScreen:
     """Screen documents using a CLI"""
 
     # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-few-public-methods
+
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = False
+
+    ci_supported: bool = Field(default=False)
 
     def __init__(
         self,
@@ -37,7 +37,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
     ) -> None:
         self.review_manager = screen_operation.review_manager
         self.screen_operation = screen_operation
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
         self._i = 0
         self._pad = 0

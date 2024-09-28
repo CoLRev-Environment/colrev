@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import typing
-from dataclasses import dataclass
+
+from pydantic import BaseModel
 
 import colrev.process.operation
 from colrev.constants import Fields
@@ -11,167 +12,414 @@ from colrev.constants import RecordState
 from colrev.process.model import ProcessModel
 
 
-@dataclass
-class StatusStats:
+class StatusStatsCurrently(BaseModel):
+    """The current status statistics"""
+
+    # pylint: disable=too-many-instance-attributes
+    md_retrieved: int
+    md_imported: int
+    md_prepared: int
+    md_processed: int
+    rev_prescreen_excluded: int
+    rev_prescreen_included: int
+    pdf_not_available: int
+    pdf_imported: int
+    pdf_prepared: int
+    rev_excluded: int
+    rev_included: int
+    rev_synthesized: int
+    pdf_needs_retrieval: int
+    non_completed: int
+    exclusion: dict
+    md_needs_manual_preparation: int
+    pdf_needs_manual_retrieval: int
+    pdf_needs_manual_preparation: int
+
+
+class StatusStatsOverall(BaseModel):
+    """The overall-status statistics (records currently/previously in each state)"""
+
+    # pylint: disable=too-many-instance-attributes
+    md_retrieved: int
+    md_imported: int
+    md_prepared: int
+    md_processed: int
+    rev_prescreen_excluded: int
+    rev_prescreen_included: int
+    rev_prescreen: int
+    pdf_not_available: int
+    pdf_imported: int
+    pdf_prepared: int
+    rev_screen: int
+    rev_excluded: int
+    rev_included: int
+    rev_synthesized: int
+
+
+def _get_origin_states_dict(records: dict) -> dict:
+    current_origin_states_dict = {}
+    for record_dict in records.values():
+        for origin in record_dict[Fields.ORIGIN]:
+            current_origin_states_dict[origin] = record_dict[Fields.STATUS]
+    return current_origin_states_dict
+
+
+def _get_screening_statistics(
+    *,
+    review_manager: colrev.review_manager.ReviewManager,
+    records: dict,
+) -> dict:
+    screening_criteria = [
+        x[Fields.SCREENING_CRITERIA]
+        for x in records.values()
+        if x.get(Fields.SCREENING_CRITERIA, "") not in ["", "NA"]
+    ]
+    criteria = list(review_manager.settings.screen.criteria.keys())
+    screening_statistics = {crit: 0 for crit in criteria}
+    for screening_case in screening_criteria:
+        for criterion in screening_case.split(";"):
+            criterion_name, decision = criterion.split("=")
+            if decision == "out":
+                screening_statistics[criterion_name] += 1
+    return screening_statistics
+
+
+def _get_duplicates_removed(records: dict) -> int:
+    md_duplicates_removed = 0
+    for record_dict in records.values():
+        md_duplicates_removed += (
+            len([o for o in record_dict[Fields.ORIGIN] if not o.startswith("md_")]) - 1
+        )
+    return md_duplicates_removed
+
+
+def _get_nr_origins(records: dict) -> int:
+    origin_list = [x[Fields.ORIGIN] for x in records.values()]
+    nr_origins = 0
+    for origin in origin_list:
+        nr_origins += len([o for o in origin if not o.startswith("md_")])
+    return nr_origins
+
+
+def _get_nr_incomplete(origin_states_dict: dict) -> int:
+    """Get the number of incomplete records"""
+    return len(
+        [
+            x
+            for x in list(origin_states_dict.values())
+            if x
+            not in [
+                RecordState.rev_synthesized,
+                RecordState.rev_excluded,
+                RecordState.rev_prescreen_excluded,
+                RecordState.pdf_not_available,
+            ]
+        ]
+    )
+
+
+def _get_freq(*, status_list: list, colrev_status: RecordState) -> int:
+    return len([x for x in status_list if colrev_status == x])
+
+
+def _get_status_stats_currently(
+    status_list: list, records: dict, screening_statistics: dict, md_retrieved: int
+) -> StatusStatsCurrently:
+    precreen_included = _get_freq(
+        status_list=status_list, colrev_status=RecordState.rev_prescreen_included
+    )
+    data = {
+        "md_retrieved": md_retrieved,
+        "md_imported": _get_freq(
+            status_list=status_list, colrev_status=RecordState.md_imported
+        ),
+        "md_prepared": _get_freq(
+            status_list=status_list, colrev_status=RecordState.md_prepared
+        ),
+        "md_processed": _get_freq(
+            status_list=status_list, colrev_status=RecordState.md_processed
+        ),
+        "rev_prescreen_excluded": _get_freq(
+            status_list=status_list, colrev_status=RecordState.rev_prescreen_excluded
+        ),
+        "rev_prescreen_included": precreen_included,
+        "pdf_imported": _get_freq(
+            status_list=status_list, colrev_status=RecordState.pdf_imported
+        ),
+        "pdf_not_available": _get_freq(
+            status_list=status_list, colrev_status=RecordState.pdf_not_available
+        ),
+        "pdf_prepared": _get_freq(
+            status_list=status_list, colrev_status=RecordState.pdf_prepared
+        ),
+        "rev_excluded": _get_freq(
+            status_list=status_list, colrev_status=RecordState.rev_excluded
+        ),
+        "rev_included": _get_freq(
+            status_list=status_list, colrev_status=RecordState.rev_included
+        ),
+        "rev_synthesized": _get_freq(
+            status_list=status_list, colrev_status=RecordState.rev_synthesized
+        ),
+        "pdf_needs_retrieval": precreen_included,
+        "exclusion": screening_statistics,
+        "md_needs_manual_preparation": _get_freq(
+            status_list=status_list,
+            colrev_status=RecordState.md_needs_manual_preparation,
+        ),
+        "pdf_needs_manual_retrieval": _get_freq(
+            status_list=status_list,
+            colrev_status=RecordState.pdf_needs_manual_retrieval,
+        ),
+        "pdf_needs_manual_preparation": _get_freq(
+            status_list=status_list,
+            colrev_status=RecordState.pdf_needs_manual_preparation,
+        ),
+        "non_completed": len(
+            [
+                r
+                for r in records.values()
+                if r[Fields.STATUS]
+                not in [
+                    RecordState.rev_synthesized,
+                    RecordState.rev_prescreen_excluded,
+                    RecordState.pdf_not_available,
+                    RecordState.rev_excluded,
+                ]
+            ]
+        ),
+    }
+
+    return StatusStatsCurrently(**data)
+
+
+def _get_cumulative_freq(*, status_list: list, colrev_status: RecordState) -> int:
+    return len(
+        [
+            x
+            for x in status_list
+            if x in RecordState.get_post_x_states(state=colrev_status)
+        ]
+    )
+
+
+def _get_md_retrieved(sources: list) -> int:
+    md_retrieved = 0
+    for source in sources:
+        if not source.is_md_source():
+            nr_in_file = colrev.loader.load_utils.get_nr_records(source.filename)
+            md_retrieved += nr_in_file
+    return md_retrieved
+
+
+def _get_currently_md_retrieved(origin_states_dict: dict, md_retrieved: int) -> int:
+
+    # select records that are not md_ records
+    # (origin_states_dict only has records beyond md_retrieved)
+    non_md_records = {
+        k: v for k, v in origin_states_dict.items() if not k.startswith("md_")
+    }
+
+    return md_retrieved - len(non_md_records)
+
+
+def _get_status_stats_overall(
+    status_list: list, records: dict, md_retrieved: int
+) -> StatusStatsOverall:
+
+    data = {
+        "md_retrieved": md_retrieved,
+        "md_imported": len(records.values()),
+        "md_prepared": _get_cumulative_freq(
+            status_list=status_list, colrev_status=RecordState.md_prepared
+        ),
+        "md_processed": _get_cumulative_freq(
+            status_list=status_list, colrev_status=RecordState.md_processed
+        ),
+        "rev_prescreen": _get_cumulative_freq(
+            status_list=status_list, colrev_status=RecordState.md_processed
+        ),
+        "rev_prescreen_included": _get_cumulative_freq(
+            status_list=status_list, colrev_status=RecordState.rev_prescreen_included
+        ),
+        "pdf_imported": _get_cumulative_freq(
+            status_list=status_list, colrev_status=RecordState.pdf_imported
+        ),
+        "pdf_prepared": _get_cumulative_freq(
+            status_list=status_list, colrev_status=RecordState.pdf_prepared
+        ),
+        "rev_screen": _get_cumulative_freq(
+            status_list=status_list, colrev_status=RecordState.pdf_prepared
+        ),
+        "rev_included": _get_cumulative_freq(
+            status_list=status_list, colrev_status=RecordState.rev_included
+        ),
+        "rev_synthesized": _get_cumulative_freq(
+            status_list=status_list, colrev_status=RecordState.rev_synthesized
+        ),
+        # Note: temporary states (_man_*) should not be covered in StatusStatsOverall
+        "rev_prescreen_excluded": _get_freq(
+            status_list=status_list, colrev_status=RecordState.rev_prescreen_excluded
+        ),
+        "rev_excluded": _get_freq(
+            status_list=status_list, colrev_status=RecordState.rev_excluded
+        ),
+        "pdf_not_available": _get_freq(
+            status_list=status_list, colrev_status=RecordState.pdf_not_available
+        ),
+    }
+
+    return StatusStatsOverall(**data)
+
+
+def _get_nr_curated_records(
+    records: dict, curated: int, overall: StatusStatsOverall
+) -> int:
+    nr_curated_records = len(
+        [
+            r
+            for r in records.values()
+            if colrev.record.record.Record(r).masterdata_is_curated()
+        ]
+    )
+    if curated:  # pragma: no cover
+        nr_curated_records = overall.md_processed
+    return nr_curated_records
+
+
+def _get_perc_curated(
+    overall: StatusStatsOverall,
+    currently: StatusStatsCurrently,
+    nr_curated_records: int,
+) -> float:
+    perc_curated = 0.0
+    denominator = (
+        overall.md_processed
+        + currently.md_prepared
+        + currently.md_needs_manual_preparation
+        + currently.md_imported
+    )
+    if denominator > 0:
+        perc_curated = int((nr_curated_records / (denominator)) * 100)
+    return perc_curated
+
+
+REQUIRED_ATOMIC_STEPS = {
+    RecordState.md_retrieved: 1,
+    RecordState.md_imported: 2,
+    # note: md_needs_manual_preparation: prep-operation not yet completed successfully.
+    RecordState.md_needs_manual_preparation: 2,
+    RecordState.md_prepared: 3,
+    RecordState.md_processed: 4,
+    RecordState.rev_prescreen_included: 5,
+    RecordState.rev_prescreen_excluded: 5,
+    RecordState.pdf_needs_manual_retrieval: 5,
+    RecordState.pdf_imported: 6,
+    RecordState.pdf_needs_manual_preparation: 6,
+    RecordState.pdf_not_available: 7,
+    RecordState.pdf_prepared: 7,
+    RecordState.rev_excluded: 8,
+    RecordState.rev_included: 8,
+    RecordState.rev_synthesized: 9,
+}
+
+
+def _get_completed_atomic_steps(
+    records: dict, currently: StatusStatsCurrently, md_duplicates_removed: int
+) -> int:
+    """Get the number of completed atomic steps"""
+    completed_steps = 0
+    for record_dict in records.values():
+        completed_steps += REQUIRED_ATOMIC_STEPS[record_dict[Fields.STATUS]]
+    completed_steps += 4 * md_duplicates_removed
+    completed_steps += currently.md_retrieved  # not in records
+    return completed_steps
+
+
+def _get_atomic_steps(
+    overall: StatusStatsOverall,
+    currently: StatusStatsCurrently,
+    md_duplicates_removed: int,
+) -> int:
+    return (
+        # initially, all records have to pass 9 operations (including search)
+        9 * overall.md_retrieved
+        # for removed duplicates, 5 operations are no longer needed
+        - 5 * md_duplicates_removed
+        # for rev_prescreen_excluded, 4 operations are no longer needed
+        - 4 * currently.rev_prescreen_excluded
+        - 3 * currently.pdf_not_available
+        - currently.rev_excluded
+    )
+
+
+# pylint: disable=no-member
+def get_status_stats(
+    *,
+    review_manager: colrev.review_manager.ReviewManager,
+    records: dict,
+) -> StatusStats:
+    """Get the status statistics"""
+
+    origin_states_dict = _get_origin_states_dict(records)
+
+    screening_statistics = _get_screening_statistics(
+        review_manager=review_manager, records=records
+    )
+    status_list = [x[Fields.STATUS] for x in records.values()]
+    sources = review_manager.settings.sources
+    md_retrieved = _get_md_retrieved(sources)
+    currently = _get_status_stats_currently(
+        status_list, records, screening_statistics, md_retrieved
+    )
+    overall = _get_status_stats_overall(status_list, records, md_retrieved)
+    currently.md_retrieved = _get_currently_md_retrieved(
+        origin_states_dict, md_retrieved
+    )
+    nr_curated_records = _get_nr_curated_records(
+        records, review_manager.settings.is_curated_masterdata_repo(), overall
+    )
+    md_duplicates_removed = _get_duplicates_removed(records)
+    nr_incomplete = _get_nr_incomplete(origin_states_dict)
+
+    data = {
+        "screening_statistics": screening_statistics,
+        "md_duplicates_removed": md_duplicates_removed,
+        "nr_origins": _get_nr_origins(records),
+        "nr_incomplete": nr_incomplete,
+        "overall": overall,
+        "currently": currently,
+        "nr_curated_records": nr_curated_records,
+        "perc_curated": _get_perc_curated(overall, currently, nr_curated_records),
+        "completed_atomic_steps": _get_completed_atomic_steps(
+            records, currently, md_duplicates_removed
+        ),
+        "atomic_steps": _get_atomic_steps(overall, currently, md_duplicates_removed),
+        "completeness_condition": (nr_incomplete == 0)
+        and (currently.md_retrieved == 0),
+        "origin_states_dict": origin_states_dict,
+    }
+
+    return StatusStats(**data)
+
+
+class StatusStats(BaseModel):
     """Data class for status statistics"""
 
     # pylint: disable=too-many-instance-attributes
     atomic_steps: int
     nr_curated_records: int
+    perc_curated: float
     md_duplicates_removed: int
     currently: StatusStatsCurrently
     overall: StatusStatsOverall
     completed_atomic_steps: int
     completeness_condition: bool
+    nr_incomplete: int
+    nr_origins: int
+    screening_statistics: dict
 
-    REQUIRED_ATOMIC_STEPS = {
-        RecordState.md_retrieved: 1,
-        RecordState.md_imported: 2,
-        # note: md_needs_manual_preparation: prep-operation not yet completed successfully.
-        RecordState.md_needs_manual_preparation: 2,
-        RecordState.md_prepared: 3,
-        RecordState.md_processed: 4,
-        RecordState.rev_prescreen_included: 5,
-        RecordState.rev_prescreen_excluded: 5,
-        RecordState.pdf_needs_manual_retrieval: 5,
-        RecordState.pdf_imported: 6,
-        RecordState.pdf_needs_manual_preparation: 6,
-        RecordState.pdf_not_available: 7,
-        RecordState.pdf_prepared: 7,
-        RecordState.rev_excluded: 8,
-        RecordState.rev_included: 8,
-        RecordState.rev_synthesized: 9,
-    }
-
-    def __init__(
-        self,
-        *,
-        review_manager: colrev.review_manager.ReviewManager,
-        records: dict,
-    ) -> None:
-        self.review_manager = review_manager
-        self.records = records
-        self.origin_states_dict = self._get_origin_states_dict()
-
-        self.status_list = [x[Fields.STATUS] for x in self.records.values()]
-        self.screening_statistics = self._get_screening_statistics()
-        self.md_duplicates_removed = self._get_duplicates_removed()
-        self.nr_origins = self._get_nr_origins()
-        self.nr_incomplete = self._get_nr_incomplete()
-
-        self.overall = StatusStatsOverall(status_stats=self)
-        self.currently = StatusStatsCurrently(status_stats=self)
-
-        self.nr_curated_records = self._get_nr_curated_records()
-        self.perc_curated = self._get_perc_curated()
-
-        self.completed_atomic_steps = self._get_completed_atomic_steps()
-        self.atomic_steps = self._get_atomic_steps()
-
-        self.completeness_condition = (self.nr_incomplete == 0) and (
-            self.currently.md_retrieved == 0
-        )
-
-    def _get_atomic_steps(self) -> int:
-        return (
-            # initially, all records have to pass 9 operations (including search)
-            9 * self.overall.md_retrieved
-            # for removed duplicates, 5 operations are no longer needed
-            - 5 * self.md_duplicates_removed
-            # for rev_prescreen_excluded, 4 operations are no longer needed
-            - 4 * self.currently.rev_prescreen_excluded
-            - 3 * self.currently.pdf_not_available
-            - self.currently.rev_excluded
-        )
-
-    def _get_origin_states_dict(self) -> dict:
-        current_origin_states_dict = {}
-        for record_dict in self.records.values():
-            for origin in record_dict[Fields.ORIGIN]:
-                current_origin_states_dict[origin] = record_dict[Fields.STATUS]
-        return current_origin_states_dict
-
-    def _get_perc_curated(self) -> float:
-        perc_curated = 0.0
-        denominator = (
-            self.overall.md_processed
-            + self.currently.md_prepared
-            + self.currently.md_needs_manual_preparation
-            + self.currently.md_imported
-        )
-        if denominator > 0:
-            perc_curated = int((self.nr_curated_records / (denominator)) * 100)
-        return perc_curated
-
-    def _get_nr_curated_records(self) -> int:
-        nr_curated_records = len(
-            [
-                r
-                for r in self.records.values()
-                if colrev.record.record.Record(r).masterdata_is_curated()
-            ]
-        )
-        if (
-            self.review_manager.settings.is_curated_masterdata_repo()
-        ):  # pragma: no cover
-            nr_curated_records = self.overall.md_processed
-        return nr_curated_records
-
-    def _get_nr_origins(self) -> int:
-        origin_list = [x[Fields.ORIGIN] for x in self.records.values()]
-        nr_origins = 0
-        for origin in origin_list:
-            nr_origins += len([o for o in origin if not o.startswith("md_")])
-        return nr_origins
-
-    def _get_duplicates_removed(self) -> int:
-        md_duplicates_removed = 0
-        for record_dict in self.records.values():
-            md_duplicates_removed += (
-                len([o for o in record_dict[Fields.ORIGIN] if not o.startswith("md_")])
-                - 1
-            )
-        return md_duplicates_removed
-
-    def _get_nr_incomplete(self) -> int:
-        """Get the number of incomplete records"""
-        return len(
-            [
-                x
-                for x in list(self.origin_states_dict.values())
-                if x
-                not in [
-                    RecordState.rev_synthesized,
-                    RecordState.rev_excluded,
-                    RecordState.rev_prescreen_excluded,
-                    RecordState.pdf_not_available,
-                ]
-            ]
-        )
-
-    def _get_screening_statistics(self) -> dict:
-        screening_criteria = [
-            x[Fields.SCREENING_CRITERIA]
-            for x in self.records.values()
-            if x.get(Fields.SCREENING_CRITERIA, "") not in ["", "NA"]
-        ]
-        criteria = list(self.review_manager.settings.screen.criteria.keys())
-        screening_statistics = {crit: 0 for crit in criteria}
-        for screening_case in screening_criteria:
-            for criterion in screening_case.split(";"):
-                criterion_name, decision = criterion.split("=")
-                if decision == "out":
-                    screening_statistics[criterion_name] += 1
-        return screening_statistics
-
-    def _get_completed_atomic_steps(self) -> int:
-        """Get the number of completed atomic steps"""
-        completed_steps = 0
-        for record_dict in self.records.values():
-            completed_steps += self.REQUIRED_ATOMIC_STEPS[record_dict[Fields.STATUS]]
-        completed_steps += 4 * self.md_duplicates_removed
-        completed_steps += self.currently.md_retrieved  # not in records
-        return completed_steps
+    origin_states_dict: dict
 
     def get_active_metadata_operation_info(self) -> str:
         """Get active metadata operation info (convenience function for status printing)"""
@@ -205,11 +453,13 @@ class StatusStats:
             )
         return ", ".join(infos)
 
-    def get_transitioned_records(self) -> list[typing.Dict]:
+    def get_transitioned_records(
+        self, review_manager: colrev.review_manager.ReviewManager
+    ) -> list[typing.Dict]:
         """Get the transitioned records"""
 
         committed_origin_states_dict = (
-            self.review_manager.dataset.get_committed_origin_state_dict()
+            review_manager.dataset.get_committed_origin_state_dict()
         )
 
         transitioned_records = []
@@ -296,154 +546,4 @@ class StatusStats:
     def get_operation_in_progress(self, *, transitioned_records: list) -> set:
         """Get the operation currently in progress"""
 
-        return {x["type"] for x in transitioned_records}
-
-
-@dataclass
-class StatusStatsParent:
-    """Parent class for StatusStatsCurrently and StatusStatsOverall"""
-
-    # pylint: disable=too-many-instance-attributes
-    md_retrieved: int
-    md_imported: int
-    md_prepared: int
-    md_processed: int
-    rev_prescreen_excluded: int
-    rev_prescreen_included: int
-    pdf_not_available: int
-    pdf_imported: int
-    pdf_prepared: int
-    rev_excluded: int
-    rev_included: int
-    rev_synthesized: int
-
-    # Note : StatusStatsCurrently and StatusStatsOverall start with the same frequencies
-    def __init__(
-        self,
-        *,
-        status_stats: StatusStats,
-    ) -> None:
-        self.status_stats = status_stats
-
-    def _get_freq(self, colrev_status: RecordState) -> int:
-        return len([x for x in self.status_stats.status_list if colrev_status == x])
-
-
-@dataclass
-class StatusStatsCurrently(StatusStatsParent):
-    """The current status statistics"""
-
-    # pylint: disable=too-many-instance-attributes
-
-    pdf_needs_retrieval: int
-    non_completed: (
-        int  # for sharing (all records must bet excluded/pdf_not_available/synthesized)
-    )
-    exclusion: dict
-    md_needs_manual_preparation: int
-    pdf_needs_manual_retrieval: int
-    pdf_needs_manual_preparation: int
-
-    def __init__(
-        self,
-        *,
-        status_stats: StatusStats,
-    ) -> None:
-
-        super().__init__(status_stats=status_stats)
-        self.md_retrieved = max(
-            status_stats.overall.md_retrieved
-            - status_stats.overall.md_imported
-            - status_stats.nr_origins,
-            0,
-        )
-
-        self.md_imported = self._get_freq(RecordState.md_imported)
-        self.md_prepared = self._get_freq(RecordState.md_prepared)
-        self.md_processed = self._get_freq(RecordState.md_processed)
-        self.rev_prescreen_excluded = self._get_freq(RecordState.rev_prescreen_excluded)
-        self.rev_prescreen_included = self._get_freq(RecordState.rev_prescreen_included)
-        self.pdf_imported = self._get_freq(RecordState.pdf_imported)
-        self.pdf_not_available = self._get_freq(RecordState.pdf_not_available)
-        self.pdf_prepared = self._get_freq(RecordState.pdf_prepared)
-        self.rev_excluded = self._get_freq(RecordState.rev_excluded)
-        self.rev_included = self._get_freq(RecordState.rev_included)
-        self.rev_synthesized = self._get_freq(RecordState.rev_synthesized)
-
-        self.pdf_needs_retrieval = self.rev_prescreen_included
-        self.exclusion = status_stats.screening_statistics
-        self.pdf_needs_retrieval = self.rev_prescreen_included
-
-        self.md_needs_manual_preparation = self._get_freq(
-            RecordState.md_needs_manual_preparation
-        )
-        self.pdf_needs_manual_retrieval = self._get_freq(
-            RecordState.pdf_needs_manual_retrieval
-        )
-        self.pdf_needs_manual_preparation = self._get_freq(
-            RecordState.pdf_needs_manual_preparation
-        )
-        self.non_completed = len(
-            [
-                r
-                for r in status_stats.records.values()
-                if r[Fields.STATUS]
-                not in [
-                    RecordState.rev_synthesized,
-                    RecordState.rev_prescreen_excluded,
-                    RecordState.pdf_not_available,
-                    RecordState.rev_excluded,
-                ]
-            ]
-        )
-
-
-@dataclass
-class StatusStatsOverall(StatusStatsParent):
-    """The overall-status statistics (records currently/previously in each state)"""
-
-    # pylint: disable=too-many-instance-attributes
-
-    def __init__(
-        self,
-        *,
-        status_stats: StatusStats,
-    ) -> None:
-
-        super().__init__(status_stats=status_stats)
-
-        self.md_retrieved = self._get_md_retrieved(status_stats)
-        self.md_imported = len(status_stats.records.values())
-        self.md_prepared = self._get_cumulative_freq(RecordState.md_prepared)
-        self.md_processed = self._get_cumulative_freq(RecordState.md_processed)
-        self.rev_prescreen = self._get_cumulative_freq(RecordState.md_processed)
-        self.rev_prescreen_included = self._get_cumulative_freq(
-            RecordState.rev_prescreen_included
-        )
-        self.pdf_imported = self._get_cumulative_freq(RecordState.pdf_imported)
-        self.pdf_prepared = self._get_cumulative_freq(RecordState.pdf_prepared)
-        self.rev_screen = self._get_cumulative_freq(RecordState.pdf_prepared)
-        self.rev_included = self._get_cumulative_freq(RecordState.rev_included)
-        self.rev_synthesized = self._get_cumulative_freq(RecordState.rev_synthesized)
-
-        # Note: temporary states (_man_*) should not be covered in StatusStatsOverall
-        self.rev_prescreen_excluded = self._get_freq(RecordState.rev_prescreen_excluded)
-        self.rev_excluded = self._get_freq(RecordState.rev_excluded)
-        self.pdf_not_available = self._get_freq(RecordState.pdf_not_available)
-
-    def _get_cumulative_freq(self, colrev_status: RecordState) -> int:
-        return len(
-            [
-                x
-                for x in self.status_stats.status_list
-                if x in RecordState.get_post_x_states(state=colrev_status)
-            ]
-        )
-
-    def _get_md_retrieved(self, status_stats: StatusStats) -> int:
-        md_retrieved = 0
-        for source in status_stats.review_manager.settings.sources:
-            if not source.is_md_source():
-                nr_in_file = colrev.loader.load_utils.get_nr_records(source.filename)
-                md_retrieved += nr_in_file
-        return md_retrieved
+        return {str(x["type"]) for x in transitioned_records}

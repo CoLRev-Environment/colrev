@@ -11,22 +11,6 @@ colrev.package\_manager.package\_settings.DefaultSettings
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-      ~DefaultSettings.all_json_schemas
-      ~DefaultSettings.field_mapping
-      ~DefaultSettings.from_dict
-      ~DefaultSettings.from_json
-      ~DefaultSettings.from_object
-      ~DefaultSettings.json_schema
-      ~DefaultSettings.load_settings
-      ~DefaultSettings.register_field_encoders
-      ~DefaultSettings.to_dict
-      ~DefaultSettings.to_json
-
 
 
 

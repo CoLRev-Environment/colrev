@@ -16,6 +16,7 @@ from rapidfuzz import fuzz
 import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record_prep
+from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.packages.crossref.src import record_transformer
@@ -173,11 +174,16 @@ class Endpoint:
         request_url = str(self.request_url)
         request_params["rows"] = "0"
 
-        result = self.retrieve(
-            request_url,
-            data=request_params,
-            headers=self.headers,
-        ).json()
+        try:
+            result = self.retrieve(
+                request_url,
+                data=request_params,
+                headers=self.headers,
+            ).json()
+        except requests.exceptions.RequestException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
+            ) from exc
 
         return int(result["message"]["total-results"])
 
@@ -278,6 +284,10 @@ class CrossrefAPI:
 
     last_updated: str = ""
 
+    _availability_exception_message = (
+        f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
+    )
+
     # pylint: disable=too-many-arguments
     def __init__(
         self,
@@ -292,40 +302,87 @@ class CrossrefAPI:
         )
         self.rerun = rerun
 
+    def check_availability(self, raise_service_not_available: bool = True) -> None:
+        """Check the availability of the API"""
+
+        try:
+            # pylint: disable=duplicate-code
+            test_rec = {
+                Fields.DOI: "10.17705/1cais.04607",
+                Fields.AUTHOR: "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
+                "and Paré, Guy",
+                Fields.TITLE: "A Knowledge Development Perspective on Literature Reviews: "
+                "Validation of a new Typology in the IS Field",
+                Fields.ID: "SchryenEtAl2021",
+                Fields.JOURNAL: "Communications of the Association for Information Systems",
+                Fields.ENTRYTYPE: "article",
+            }
+
+            returned_record = self.crossref_query(
+                record_input=colrev.record.record_prep.PrepRecord(test_rec),
+                jour_vol_iss_list=False,
+            )[0]
+
+            if 0 != len(returned_record.data):
+                assert returned_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
+                assert returned_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
+            else:
+                if raise_service_not_available:
+                    raise colrev_exceptions.ServiceNotAvailableException(
+                        self._availability_exception_message
+                    )
+        except (requests.exceptions.RequestException, IndexError) as exc:
+            print(exc)
+            if raise_service_not_available:
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    self._availability_exception_message
+                ) from exc
+
+    def get_url(self) -> str:
+        """Get the url for the Crossref API"""
+
+        if "url" not in self.params:
+            raise ValueError("No url in params")
+
+        url = self.params["url"]
+        if not self.rerun and self.last_updated:
+            # see https://api.staging.crossref.org/swagger-ui/
+            # index.html#/Journals/get_journals__issn__works
+            # "Notes on incremental metadata updates"
+
+            last_updated = self.last_updated.split("T", maxsplit=1)[0]
+            url = url + f"?filter=from-index-date:{last_updated}"
+
+        return url
+
+    def get_len_total(self) -> int:
+        """Get the total number of records from Crossref based on the parameters"""
+
+        endpoint = Endpoint(self.params["url"], email=self.email)
+        return endpoint.get_nr()
+
     def get_len(self) -> int:
         """Get the number of records from Crossref based on the parameters"""
 
-        if "url" in self.params:
-            endpoint = Endpoint(self.params["url"], email=self.email)
-            return endpoint.get_nr()
-
-        return -1
+        endpoint = Endpoint(self.get_url(), email=self.email)
+        return endpoint.get_nr()
 
     def get_records(self) -> typing.Iterator[colrev.record.record.Record]:
         """Get records from Crossref based on the parameters"""
 
-        if "url" in self.params:
-            url = self.params["url"]
-            if not self.rerun:
-                # see https://api.staging.crossref.org/swagger-ui/
-                # index.html#/Journals/get_journals__issn__works
-                # "Notes on incremental metadata updates"
+        url = self.get_url()
 
-                if self.last_updated:
-                    last_updated = self.last_updated.split("T", maxsplit=1)[0]
-                    url = url + f"?filter=from-index-date:{last_updated}"
-                    print(f"Retrieve papers indexed since {last_updated}")
-
-            endpoint = Endpoint(url, email=self.email)
-
+        endpoint = Endpoint(url, email=self.email)
+        try:
             for item in endpoint:
                 try:
                     yield record_transformer.json_to_record(item=item)
                 except colrev_exceptions.RecordNotParsableException:
                     continue
-            return
-
-        raise NotImplementedError
+        except requests.exceptions.RequestException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                self._availability_exception_message
+            ) from exc
 
     def query_doi(self, *, doi: str) -> colrev.record.record_prep.PrepRecord:
         """Get records from Crossref based on a doi query"""
@@ -345,7 +402,7 @@ class CrossrefAPI:
             )
             return retrieved_record
 
-        except (requests.exceptions.RequestException,) as exc:
+        except (requests.exceptions.RequestException, StopIteration) as exc:
             raise colrev_exceptions.RecordNotFoundInPrepSourceException(
                 msg="Record not found in crossref (based on doi)"
             ) from exc
@@ -446,7 +503,16 @@ class CrossrefAPI:
         else:
             endpoint.request_params["rows"] = "15"
 
-        for item in endpoint:
+        counter = 0
+        while True:
+            try:
+                item = next(iter(endpoint), None)
+            except requests.exceptions.RequestException as exc:
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
+                ) from exc
+            if item is None:
+                break
             try:
                 retrieved_record = record_transformer.json_to_record(item=item)
                 similarity = self._get_similarity(
@@ -460,6 +526,11 @@ class CrossrefAPI:
                     most_similar_record = retrieved_record.get_data()
             except colrev_exceptions.RecordNotParsableException:
                 pass
+            counter += 1
+            if jour_vol_iss_list and counter > 200:
+                break
+            if not jour_vol_iss_list and counter > 5:
+                break
 
         if not jour_vol_iss_list:
             if most_similar_record:

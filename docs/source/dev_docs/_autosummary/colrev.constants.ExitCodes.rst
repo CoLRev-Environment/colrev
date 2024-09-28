@@ -11,12 +11,6 @@ colrev.constants.ExitCodes
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-
 
 
 

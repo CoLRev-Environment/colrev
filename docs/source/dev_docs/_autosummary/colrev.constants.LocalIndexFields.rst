@@ -11,12 +11,6 @@ colrev.constants.LocalIndexFields
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-
 
 
 

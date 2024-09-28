@@ -7,12 +7,11 @@ import platform
 import re
 import subprocess
 import textwrap
-from dataclasses import dataclass
 from pathlib import Path
 
 import inquirer
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -28,12 +27,11 @@ from colrev.constants import RecordState
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PDFPrepManInterface)
-@dataclass
-class CoLRevCLIPDFManPrep(JsonSchemaMixin):
+class CoLRevCLIPDFManPrep:
     """Manually prepare PDFs based on a CLI (not yet implemented)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
 
     _to_skip: int = 0
 
@@ -43,7 +41,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.review_manager = pdf_prep_man_operation.review_manager
         self.pdf_prep_man_operation = pdf_prep_man_operation
 

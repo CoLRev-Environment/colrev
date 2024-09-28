@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import re
 import typing
-from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 
 import requests
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import BaseModel
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -32,8 +31,7 @@ from colrev.packages.dblp.src import dblp_api
 # pylint: disable=duplicate-code
 
 
-@dataclass
-class DBLPSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
+class DBLPSearchSourceSettings(colrev.settings.SearchSource, BaseModel):
     """Settings for DBLPSearchSource"""
 
     # pylint: disable=duplicate-code
@@ -53,8 +51,7 @@ class DBLPSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class DBLPSearchSource(JsonSchemaMixin):
+class DBLPSearchSource:
     """DBLP API"""
 
     source_identifier = "dblp_key"
@@ -65,7 +62,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     ]
     endpoint = "colrev.dblp"
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     settings_class = DBLPSearchSourceSettings
@@ -90,7 +87,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         # DBLP as a search_source
         if settings:
-            return from_dict(data_class=self.settings_class, data=settings)
+            return self.settings_class(**settings)
 
         # DBLP as an md-prep source
         dblp_md_filename = Path("data/search/md_dblp.bib")

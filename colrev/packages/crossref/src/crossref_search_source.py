@@ -4,15 +4,13 @@ from __future__ import annotations
 
 import datetime
 import typing
-from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 
 import inquirer
 import requests
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
@@ -22,7 +20,6 @@ import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
-from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
@@ -39,26 +36,22 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class CrossrefSearchSource(JsonSchemaMixin):
+class CrossrefSearchSource:
     """Crossref API"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.crossref"
     source_identifier = Fields.DOI
 
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     search_types = [
         SearchType.API,
         SearchType.MD,
         SearchType.TOC,
     ]
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.oni
 
-    _availability_exception_message = (
-        f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
-    )
     _api_url = "https://api.crossref.org/"
 
     def __init__(
@@ -116,9 +109,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self.search_source.search_parameters["url"] = url
         self.search_source.search_parameters["version"] = "1.0.0"
 
-        self.search_source.filename = self.search_source.filename.relative_to(
-            self.review_manager.path
-        )
         for position, source in enumerate(self.review_manager.settings.sources):
             if str(self.search_source.filename).endswith(str(source.filename)):
                 self.review_manager.settings.sources[position] = self.search_source
@@ -126,16 +116,12 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         self.review_manager.save_settings()
 
-        self.search_source.filename = (
-            self.review_manager.path / self.search_source.filename
-        )
-
     def _get_search_source(
         self, settings: typing.Optional[dict]
     ) -> colrev.settings.SearchSource:
         if settings:
             # Crossref as a search_source
-            return from_dict(data_class=self.settings_class, data=settings)
+            return self.settings_class(**settings)
 
         # Crossref as an md-prep source
         crossref_md_filename = Path("data/search/md_crossref.bib")
@@ -216,9 +202,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         answers = inquirer.prompt(questions)
         issn = list(answers[Fields.JOURNAL].values())[0][0]
 
-        filename = operation.get_unique_filename(
-            file_path_string=f"crossref_issn_{issn}"
-        )
+        filename = operation.get_unique_filename(f"crossref_issn_{issn}")
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.crossref",
             filename=filename,
@@ -291,39 +275,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check status (availability) of the Crossref API"""
-
-        try:
-            # pylint: disable=duplicate-code
-            test_rec = {
-                Fields.DOI: "10.17705/1cais.04607",
-                Fields.AUTHOR: "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
-                "and Paré, Guy",
-                Fields.TITLE: "A Knowledge Development Perspective on Literature Reviews: "
-                "Validation of a new Typology in the IS Field",
-                Fields.ID: "SchryenEtAl2021",
-                Fields.JOURNAL: "Communications of the Association for Information Systems",
-                Fields.ENTRYTYPE: "article",
-            }
-
-            returned_record = self.api.crossref_query(
-                record_input=colrev.record.record_prep.PrepRecord(test_rec),
-                jour_vol_iss_list=False,
-            )[0]
-
-            if 0 != len(returned_record.data):
-                assert returned_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
-                assert returned_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
-            else:
-                if not self.review_manager.force_mode:
-                    raise colrev_exceptions.ServiceNotAvailableException(
-                        self._availability_exception_message
-                    )
-        except (requests.exceptions.RequestException, IndexError) as exc:
-            print(exc)
-            if not self.review_manager.force_mode:
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    self._availability_exception_message
-                ) from exc
+        self.api.check_availability(
+            raise_service_not_available=(not self.review_manager.force_mode)
+        )
 
     def _prep_crossref_record(
         self,
@@ -405,7 +359,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
     def _run_md_search(
         self,
-        *,
         crossref_feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
 
@@ -431,7 +384,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         crossref_feed.save()
 
-    def _scope_excluded(self, *, retrieved_record_dict: dict) -> bool:
+    def _scope_excluded(self, retrieved_record_dict: dict) -> bool:
         if (
             "scope" not in self.search_source.search_parameters
             or "years" not in self.search_source.search_parameters["scope"]
@@ -470,25 +423,23 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self.api.rerun = rerun
         self.api.last_updated = crossref_feed.get_last_updated()
 
-        nrecs = self.api.get_len()
+        nrecs = self.api.get_len_total()
+        self.review_manager.logger.info(f"Total: {nrecs} records")
+        if not rerun:
+            self.review_manager.logger.info(
+                f"Retrieve papers indexed since {self.api.last_updated.split('T', maxsplit=1)[0]}"
+            )
+            nrecs = self.api.get_len()
+
         self.review_manager.logger.info(f"Retrieve {nrecs} records")
-        if rerun:
-            estimated_time = nrecs * 0.5
-            estimated_time_formatted = str(datetime.timedelta(seconds=estimated_time))
-            self.review_manager.logger.info(
-                f"Estimated time: {estimated_time_formatted}"
-            )
-        else:
-            self.review_manager.logger.info(
-                "Retrieve the latest records (no estimated time)"
-            )
+        estimated_time = nrecs * 0.5
+        estimated_time_formatted = str(datetime.timedelta(seconds=estimated_time))
+        self.review_manager.logger.info(f"Estimated time: {estimated_time_formatted}")
 
         try:
             for retrieved_record in self.api.get_records():
                 try:
-                    if self._scope_excluded(
-                        retrieved_record_dict=retrieved_record.data
-                    ):
+                    if self._scope_excluded(retrieved_record.data):
                         continue
 
                     self._prep_crossref_record(
@@ -517,26 +468,18 @@ class CrossrefSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        try:
-            if self.search_source.search_type in [
-                SearchType.API,
-                SearchType.TOC,
-            ]:
-                self._run_api_search(
-                    crossref_feed=crossref_feed,
-                    rerun=rerun,
-                )
-            elif self.search_source.search_type == SearchType.MD:
-                self._run_md_search(
-                    crossref_feed=crossref_feed,
-                )
-            else:
-                raise NotImplementedError
-
-        except requests.exceptions.RequestException as exc:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                self._availability_exception_message
-            ) from exc
+        if self.search_source.search_type in [
+            SearchType.API,
+            SearchType.TOC,
+        ]:
+            self._run_api_search(
+                crossref_feed=crossref_feed,
+                rerun=rerun,
+            )
+        elif self.search_source.search_type == SearchType.MD:
+            self._run_md_search(crossref_feed)
+        else:
+            raise NotImplementedError
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
@@ -639,7 +582,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             return record
 
         except (
-            requests.exceptions.RequestException,
+            colrev_exceptions.ServiceNotAvailableException,
             OSError,
             IndexError,
             colrev_exceptions.RecordNotFoundInPrepSourceException,

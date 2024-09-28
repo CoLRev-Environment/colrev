@@ -2,7 +2,6 @@
 """Test the colrev project settings"""
 import json
 import os
-from dataclasses import asdict
 from pathlib import Path
 
 import pytest
@@ -134,7 +133,7 @@ def test_settings_load() -> None:
         },
         "data": {"data_package_endpoints": [{"endpoint": "colrev.export_data"}]},
     }
-    actual = asdict(settings)
+    actual = settings.model_dump()
 
     print(settings)
 

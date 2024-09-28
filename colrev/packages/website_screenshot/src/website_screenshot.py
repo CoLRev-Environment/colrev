@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
 import docker
 import requests
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
+from pydantic import Field
 
 import colrev.env.docker_manager
 import colrev.exceptions as colrev_exceptions
@@ -27,12 +26,11 @@ from colrev.constants import RecordState
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PDFGetInterface)
-@dataclass
-class WebsiteScreenshot(JsonSchemaMixin):
+class WebsiteScreenshot:
     """Get PDFs from website screenshot (for "online" ENTRYTYPES)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
     CHROME_BROWSERLESS_IMAGE = "browserless/chrome:latest"
 
     def __init__(
@@ -41,7 +39,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.review_manager = pdf_get_operation.review_manager
         self.pdf_get_operation = pdf_get_operation
         colrev.env.docker_manager.DockerManager.build_docker_image(

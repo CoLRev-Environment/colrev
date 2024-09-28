@@ -2,11 +2,10 @@
 """Source-specific preparation as a prep operation"""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -23,15 +22,14 @@ from colrev.constants import Fields
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
-@dataclass
-class SourceSpecificPrep(JsonSchemaMixin):
+class SourceSpecificPrep:
     """Prepares records based on the prepare scripts specified by the SearchSource"""
 
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
     source_correction_hint = "check with the developer"
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
 
     always_apply_changes = True
-    settings_class = colrev.package_manager.package_settings.DefaultSettings
 
     def __init__(
         self,
@@ -39,7 +37,7 @@ class SourceSpecificPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.review_manager = prep_operation.review_manager
 
         self.package_manager = prep_operation.review_manager.get_package_manager()
@@ -69,7 +67,7 @@ class SourceSpecificPrep(JsonSchemaMixin):
                     package_identifier=source.endpoint,
                 )
                 endpoint = search_source_class(
-                    source_operation=self, settings=source.get_dict()
+                    source_operation=self, settings=source.model_dump()
                 )
 
                 if callable(endpoint.prepare):

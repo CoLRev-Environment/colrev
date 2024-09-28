@@ -26,6 +26,7 @@ from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=line-too-long
 
 
 class Upgrade(colrev.process.operation.Operation):
@@ -202,8 +203,12 @@ class Upgrade(colrev.process.operation.Operation):
                 "released": False,
             },
         ]
-        print(f"installed_colrev_version: {installed_colrev_version}")
-        print(f"settings_version: {settings_version}")
+        self.review_manager.logger.info(
+            "Colrev version installed:           %s", installed_colrev_version
+        )
+        self.review_manager.logger.info(
+            "Colrev version in project settings: %s", settings_version
+        )
         # Note: we should always update the colrev_version in settings.json because the
         # checker._check_software requires the settings version and
         # the installed version to be identical
@@ -737,6 +742,33 @@ class Upgrade(colrev.process.operation.Operation):
                 str(Path.home().joinpath("colrev")),
                 str(Filepaths.LOCAL_ENVIRONMENT_DIR),
             )
+
+        # add colrev install . for existing .github/workflows/colrev_update.yml
+        if Path(".github/workflows/colrev_update.yml").is_file():
+            with open(".github/workflows/colrev_update.yml", encoding="utf-8") as file:
+                content = file.read()
+                if "colrev install" not in content:
+                    content = content.replace(
+                        "          poetry run --directory ${{ runner.temp }}/colrev colrev env -i",
+                        "          poetry run --directory ${{ runner.temp }}/colrev colrev install .\n"
+                        + "          poetry run --directory ${{ runner.temp }}/colrev colrev env -i",
+                    )
+
+                    with open(
+                        ".github/workflows/colrev_update.yml", "w", encoding="utf-8"
+                    ) as out:
+                        out.write(content)
+
+                    self.repo.index.add([".github/workflows/colrev_update.yml"])
+
+        # replace colrev for .colrev in registry.yaml
+        if Filepaths.REGISTRY_FILE.is_file():
+            with open(Filepaths.REGISTRY_FILE, encoding="utf-8") as file:
+                content = file.read().replace(
+                    "/colrev/curated_metadata/", "/.colrev/curated_metadata/"
+                )
+                with open(Filepaths.REGISTRY_FILE, "w", encoding="utf-8") as out:
+                    out.write(content)
 
         return self.repo.is_dirty()
 

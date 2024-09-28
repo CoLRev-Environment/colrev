@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import re
 import statistics
-from dataclasses import dataclass
 
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.env.language_service
 import colrev.package_manager.interfaces
@@ -23,18 +22,18 @@ from colrev.constants import RecordState
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
-@dataclass
-class ExcludeLanguagesPrep(JsonSchemaMixin):
+class ExcludeLanguagesPrep:
     """Prepares records by excluding ones that are not in the languages_to_include"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = True
+
+    ci_supported: bool = Field(default=True)
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
     def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
         # Note : the following objects have heavy memory footprints and should be
         # class (not object) properties to keep parallel processing as

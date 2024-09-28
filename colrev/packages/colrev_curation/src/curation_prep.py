@@ -2,10 +2,8 @@
 """Preparation of curations"""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
@@ -21,12 +19,12 @@ from colrev.constants import RecordState
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
-@dataclass
-class CurationPrep(JsonSchemaMixin):
+class CurationPrep:
     """Preparation of curations"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = True
+
+    ci_supported: bool = Field(default=True)
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
@@ -37,7 +35,7 @@ class CurationPrep(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
         self.quality_model = prep_operation.review_manager.get_qm()
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager

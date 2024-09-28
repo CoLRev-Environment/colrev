@@ -159,6 +159,7 @@ class Search(colrev.process.operation.Operation):
         choices = [x for x in search_types if x != SearchType.MD]
         if len(choices) == 1:
             return choices[0]
+        choices.sort()
         questions = [
             inquirer.List(
                 "search_type",
@@ -210,8 +211,6 @@ class Search(colrev.process.operation.Operation):
             ]
 
         assert len(sources_selected) != 0
-        for source in sources_selected:
-            source.filename = self.review_manager.path / Path(source.filename)
         return sources_selected
 
     def _remove_forthcoming(self, source: colrev.settings.SearchSource) -> None:
@@ -408,7 +407,7 @@ class Search(colrev.process.operation.Operation):
 
         self.review_manager.logger.debug("Load available search_source endpoints...")
 
-        search_sources = self.package_manager.discover_packages(
+        search_sources = self.package_manager.discover_installed_packages(
             package_type=EndpointType.search_source
         )
 
@@ -477,7 +476,7 @@ class Search(colrev.process.operation.Operation):
                     package_identifier=source.endpoint,
                 )
                 endpoint = search_source_class(
-                    source_operation=self, settings=source.get_dict()
+                    source_operation=self, settings=source.model_dump()
                 )
 
                 endpoint.search(rerun=rerun)  # type: ignore

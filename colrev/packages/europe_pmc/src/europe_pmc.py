@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import typing
-from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
@@ -13,8 +12,8 @@ from urllib.parse import urlparse
 
 import requests
 import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import BaseModel
+from pydantic import Field
 from rapidfuzz import fuzz
 
 import colrev.exceptions as colrev_exceptions
@@ -35,8 +34,7 @@ from colrev.packages.europe_pmc.src import europe_pmc_api
 # pylint: disable=unused-argument
 
 
-@dataclass
-class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
+class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, BaseModel):
     """Settings for EuropePMCSearchSource"""
 
     # pylint: disable=too-many-instance-attributes
@@ -55,11 +53,11 @@ class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixi
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-@dataclass
-class EuropePMCSearchSource(JsonSchemaMixin):
+class EuropePMCSearchSource:
     """Europe PMC"""
 
-    # settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+    #
     source_identifier = Fields.EUROPE_PMC_ID
     search_types = [
         SearchType.API,
@@ -68,7 +66,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     ]
     endpoint = "colrev.europe_pmc"
 
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     _europe_pmc_md_filename = Path("data/search/md_europe_pmc.bib")
@@ -85,9 +83,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         self.review_manager = source_operation.review_manager
         if settings:
             # EuropePMC as a search_source
-            self.search_source = from_dict(
-                data_class=self.settings_class, data=settings
-            )
+            self.search_source = self.settings_class(**settings)
         else:
             # EuropePMC as an md-prep source
             europe_pmc_md_source_l = [
@@ -153,29 +149,34 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             record = record_input.copy_prep_rec()
 
             record_list = []
-            while api.url:
-                most_similar, most_similar_record = 0.0, {}
-                for retrieved_record in api.get_records():
+            counter = 0
+            most_similar, most_similar_record = 0.0, {}
+            for retrieved_record in api.get_records():
+                counter += 1
 
-                    if Fields.TITLE not in retrieved_record.data:
-                        continue
+                if Fields.TITLE not in retrieved_record.data:
+                    continue
 
-                    similarity = self._get_similarity(
-                        record=record, retrieved_record=retrieved_record
-                    )
+                similarity = self._get_similarity(
+                    record=record, retrieved_record=retrieved_record
+                )
 
-                    source = f"{self._SOURCE_URL}{retrieved_record.data[Fields.EUROPE_PMC_ID]}"
-                    retrieved_record.set_masterdata_complete(
-                        source=source,
-                        masterdata_repository=self.review_manager.settings.is_curated_repo(),
-                    )
+                source = (
+                    f"{self._SOURCE_URL}{retrieved_record.data[Fields.EUROPE_PMC_ID]}"
+                )
+                retrieved_record.set_masterdata_complete(
+                    source=source,
+                    masterdata_repository=self.review_manager.settings.is_curated_repo(),
+                )
 
-                    if not most_similar_only:
-                        record_list.append(retrieved_record)
+                if not most_similar_only:
+                    record_list.append(retrieved_record)
 
-                    elif most_similar < similarity:
-                        most_similar = similarity
-                        most_similar_record = retrieved_record.get_data()
+                elif most_similar < similarity:
+                    most_similar = similarity
+                    most_similar_record = retrieved_record.get_data()
+                if most_similar_only and counter > 5:
+                    break
 
         except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
             return []
@@ -200,64 +201,60 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         """Retrieve masterdata from Europe PMC based on similarity with the record provided"""
 
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-return-statements
 
         # https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/23245604
+        if len(record.data.get(Fields.TITLE, "")) < 35:
+            return record
 
         try:
-            if len(record.data.get(Fields.TITLE, "")) > 35:
-                retries = 0
-                while retries < prep_operation.max_retries_on_error:
-                    retries += 1
 
-                    retrieved_records = self._europe_pmc_query(
-                        record_input=record,
-                        timeout=timeout,
-                    )
-                    if retrieved_records:
-                        retrieved_record = retrieved_records.pop()
-                        break
-
-                if not retrieved_records:
-                    return record
-                if 0 == len(retrieved_record.data):
-                    return record
-
-                if not colrev.record.record_similarity.matches(
-                    record, retrieved_record
-                ):
-                    return record
-
-                self.europe_pmc_lock.acquire(timeout=60)
-
-                # Note : need to reload file because the object is not shared between processes
-                europe_pmc_feed = self.search_source.get_api_feed(
-                    review_manager=prep_operation.review_manager,
-                    source_identifier=self.source_identifier,
-                    update_only=False,
-                    prep_mode=True,
-                )
-                try:
-                    europe_pmc_feed.add_update_record(retrieved_record=retrieved_record)
-                except colrev_exceptions.NotFeedIdentifiableException:
-                    return record
-
-                record.merge(
-                    retrieved_record,
-                    default_source=retrieved_record.data[Fields.ORIGIN][0],
-                )
-
-                record.set_masterdata_complete(
-                    source=retrieved_record.data[Fields.ORIGIN][0],
-                    masterdata_repository=self.review_manager.settings.is_curated_repo(),
-                )
-                record.set_status(RecordState.md_prepared)
-
-                europe_pmc_feed.save()
-                self.europe_pmc_lock.release()
+            retrieved_records = self._europe_pmc_query(
+                record_input=record,
+                timeout=timeout,
+            )
+            if not retrieved_records:
                 return record
 
+            retrieved_record = retrieved_records.pop()
+            if 0 == len(retrieved_record.data):
+                return record
+
+            if not colrev.record.record_similarity.matches(record, retrieved_record):
+                return record
+
+            self.europe_pmc_lock.acquire(timeout=60)
+
+            # Note : need to reload file because the object is not shared between processes
+            europe_pmc_feed = self.search_source.get_api_feed(
+                review_manager=prep_operation.review_manager,
+                source_identifier=self.source_identifier,
+                update_only=False,
+                prep_mode=True,
+            )
+            europe_pmc_feed.add_update_record(retrieved_record=retrieved_record)
+
+            record.merge(
+                retrieved_record,
+                default_source=retrieved_record.data[Fields.ORIGIN][0],
+            )
+
+            record.set_masterdata_complete(
+                source=retrieved_record.data[Fields.ORIGIN][0],
+                masterdata_repository=self.review_manager.settings.is_curated_repo(),
+            )
+            record.set_status(RecordState.md_prepared)
+            europe_pmc_feed.save()
+
         except requests.exceptions.RequestException:
-            self.europe_pmc_lock.release()
+            pass
+        except colrev_exceptions.NotFeedIdentifiableException:
+            pass
+        finally:
+            try:
+                self.europe_pmc_lock.release()
+            except ValueError:
+                pass
 
         return record
 

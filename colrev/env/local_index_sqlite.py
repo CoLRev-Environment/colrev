@@ -188,7 +188,7 @@ class SQLiteIndexRecord(SQLiteIndex):
             cur.execute(self.SELECT_KEY_QUERIES[key], (value,))
             selected_row = cur.fetchone()
             if not selected_row:
-                raise colrev_exceptions.RecordNotInIndexException()
+                raise colrev_exceptions.RecordNotInIndexException(key)
 
             retrieved_record = {}
             retrieved_record = self._get_record_from_row(selected_row)
@@ -196,10 +196,10 @@ class SQLiteIndexRecord(SQLiteIndex):
                 key not in retrieved_record or value != retrieved_record[key]
             ):
                 # Note: colrev-id collisions are handled separately
-                raise colrev_exceptions.RecordNotInIndexException()
+                raise colrev_exceptions.RecordNotInIndexException(key)
 
         except sqlite3.OperationalError as exc:  # pragma: no cover
-            raise colrev_exceptions.RecordNotInIndexException() from exc
+            raise colrev_exceptions.RecordNotInIndexException(key) from exc
 
         # Handling collisions in colrev-ids
         if key == Fields.COLREV_ID:
@@ -338,9 +338,9 @@ class SQLiteIndexTOC(SQLiteIndex):
             results = cur.fetchall()
 
         except sqlite3.OperationalError as exc:  # pragma: no cover
-            raise colrev_exceptions.RecordNotInIndexException() from exc
+            raise colrev_exceptions.RecordNotInIndexException(toc_key) from exc
         except AttributeError as exc:
-            raise colrev_exceptions.RecordNotInIndexException() from exc
+            raise colrev_exceptions.RecordNotInIndexException(toc_key) from exc
 
         # toc_items = results.get("colrev_ids", "").split(";")  # type: ignore
 

@@ -6,7 +6,6 @@ import random
 import typing
 
 import zope.interface
-from dacite import from_dict
 
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
@@ -24,16 +23,15 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 class CustomScreen:
     """Class for custom screen scripts"""
 
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
+
     def __init__(
         self,
         *,
         screen_operation: colrev.screen.Screen,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = from_dict(
-            data_class=colrev.package_manager.package_settings.DefaultSettings,
-            data=settings,
-        )
+        self.settings = self.settings_class(**settings)
 
     def run_screen(
         self, screen_operation: colrev.screen.Screen, records: dict, split: list

@@ -11,12 +11,6 @@ colrev.process.status.StatusStatsCurrently
 
 
 
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
-
-
 
 
 
@@ -25,12 +19,6 @@ colrev.process.status.StatusStatsCurrently
 
    .. autosummary::
 
-      ~StatusStatsCurrently.pdf_needs_retrieval
-      ~StatusStatsCurrently.non_completed
-      ~StatusStatsCurrently.exclusion
-      ~StatusStatsCurrently.md_needs_manual_preparation
-      ~StatusStatsCurrently.pdf_needs_manual_retrieval
-      ~StatusStatsCurrently.pdf_needs_manual_preparation
       ~StatusStatsCurrently.md_retrieved
       ~StatusStatsCurrently.md_imported
       ~StatusStatsCurrently.md_prepared
@@ -43,3 +31,9 @@ colrev.process.status.StatusStatsCurrently
       ~StatusStatsCurrently.rev_excluded
       ~StatusStatsCurrently.rev_included
       ~StatusStatsCurrently.rev_synthesized
+      ~StatusStatsCurrently.pdf_needs_retrieval
+      ~StatusStatsCurrently.non_completed
+      ~StatusStatsCurrently.exclusion
+      ~StatusStatsCurrently.md_needs_manual_preparation
+      ~StatusStatsCurrently.pdf_needs_manual_retrieval
+      ~StatusStatsCurrently.pdf_needs_manual_preparation

@@ -21,7 +21,6 @@ import pandas as pd
 from git.exc import GitCommandError
 
 import colrev.env.local_index
-import colrev.env.local_index_builder
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
 import colrev.package_manager.package_manager
@@ -80,12 +79,18 @@ def _add_endpoint_interactively(add: str, endpoint_type: EndpointType) -> str:
     questions = [
         inquirer.List(
             "package",
-            message=f"Select a {endpoint_type.name} package to add:",
-            choices=sorted(list(packages.keys())),
+            message=f"Select a {endpoint_type.name} package to add using down/up/space:",
+            choices=sorted([p["package_endpoint_identifier"] for p in packages]),
         )
     ]
     answers = inquirer.prompt(questions)
-    return answers["package"]
+    endpoint = answers["package"]
+
+    if not PACKAGE_MANAGER.is_installed(endpoint):
+        print(f"{Colors.GREEN}Install package{Colors.END}")
+        PACKAGE_MANAGER.install(packages=[endpoint])
+
+    return endpoint
 
 
 def _select_source_interactively(
@@ -99,7 +104,7 @@ def _select_source_interactively(
     questions = [
         inquirer.Checkbox(
             "source",
-            message="Select a search source:",
+            message="Select search source(s) using down/up/space:",
             choices=sorted(sources),
         )
     ]
@@ -2424,6 +2429,8 @@ def env(
 
     if index:
         print("Index rankings")
+        import colrev.env.local_index_builder
+
         local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder(
             verbose_mode=verbose
         )
@@ -3156,15 +3163,21 @@ def install(
 ) -> None:
     """Install packages"""
 
-    import colrev.ui_cli.install
+    if len(packages) == 1 and packages[0] == ".":
+        review_manager = colrev.review_manager.ReviewManager()
+        PACKAGE_MANAGER.install_project(
+            review_manager=review_manager, force_reinstall=force_reinstall
+        )
 
-    colrev.ui_cli.install.main(
-        packages=packages,
-        upgrade=upgrade,
-        editable=editable,
-        force_reinstall=force_reinstall,
-        no_cache_dir=no_cache_dir,
-    )
+    else:
+
+        PACKAGE_MANAGER.install(
+            packages=packages,
+            upgrade=upgrade,
+            editable=editable,
+            force_reinstall=force_reinstall,
+            no_cache_dir=no_cache_dir,
+        )
 
 
 @main.command(hidden=True)

@@ -290,14 +290,14 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
 def _get_init_method(interface_class: Type) -> str:
 
     # pylint: disable=line-too-long
-    init_method = """    settings_class = colrev.package_manager.package_settings.DefaultSettings
+    init_method = """
 
 """
     if interface_class is ReviewTypeInterface:
         init_method += """    def __init__(
         self, *, operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)"""
+        self.settings = colrev.package_manager.package_settings.DefaultSettings(**settings)"""
     elif interface_class is SearchSourceInterface:
         init_method += """
     def __init__(
@@ -314,12 +314,12 @@ def _get_init_method(interface_class: Type) -> str:
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)"""
+        self.settings = colrev.package_manager.package_settings.DefaultSettings(**settings)"""
     elif interface_class is PrepManInterface:
         init_method += """    def __init__(
         self, *, prep_man_operation: colrev.ops.prep_man.PrepMan, settings: dict
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)"""
+        self.settings = colrev.package_manager.package_settings.DefaultSettings(**settings)"""
     elif interface_class is DedupeInterface:
         init_method += """    def __init__(
         self,
@@ -635,24 +635,6 @@ repos:
         f.write(pre_commit_hooks)
 
 
-def _add_to_colrev_pyproject_toml(package_data: dict) -> None:
-    colrev_pyproject_toml_path = (
-        Path(__file__).resolve().parent.parent.parent / "pyproject.toml"
-    )
-    current_dir = Path.cwd()
-    with open(colrev_pyproject_toml_path, "r+", encoding="utf-8") as f:
-        toml_data = f.read()
-        package_name = package_data["name"]
-        package_path = f"./colrev/packages/{current_dir.name}"
-        toml_data = toml_data.replace(
-            "\n[tool.poetry.extras]",
-            f'"{package_name}" = {{path="{package_path}"}}\n\n[tool.poetry.extras]',
-        )
-        f.seek(0)
-        f.write(toml_data)
-        f.truncate()
-
-
 def _add_to_packages_json(package_data: dict) -> None:
     packages_json_path = (
         Path(__file__).resolve().parent.parent.parent
@@ -716,7 +698,6 @@ def main() -> None:
         _create_git_repo()
 
     if built_in:
-        _add_to_colrev_pyproject_toml(package_data)
         _add_to_packages_json(package_data)
 
     # tests

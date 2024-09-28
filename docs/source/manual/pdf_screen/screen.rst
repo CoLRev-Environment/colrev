@@ -12,7 +12,8 @@ colrev screen
    :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
 
 In the ``colrev screen`` operation, records transition from ``pdf_prepared`` to ``rev_included`` or ``rev_excluded``. Decisions on individual screening criteria (if any) are reported in the ``screening_criteria`` field.
-
+The order of screening is defined in the settings file.
+Typically, automated screening packages are applied first, followed by manual screening.
 
 The selection of screening criteria is recorded when initializing the screen.
 

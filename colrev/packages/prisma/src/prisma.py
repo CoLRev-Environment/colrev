@@ -4,15 +4,14 @@ from __future__ import annotations
 
 import os
 import typing
-from dataclasses import dataclass
-from dataclasses import field
 from pathlib import Path
 
 import docker
 import pandas as pd
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
+from pydantic import BaseModel
+from pydantic import Field
 
 import colrev.env.docker_manager
 import colrev.env.utils
@@ -23,21 +22,19 @@ import colrev.package_manager.package_settings
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-@dataclass
-class PRISMA(JsonSchemaMixin):
+class PRISMA:
     """Create a PRISMA diagram"""
 
-    ci_supported: bool = False
+    ci_supported: bool = Field(default=False)
 
-    @dataclass
     class PRISMASettings(
-        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
+        colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
         """PRISMA settings"""
 
         endpoint: str
         version: str
-        diagram_path: typing.List[Path] = field(
+        diagram_path: typing.List[Path] = Field(
             default_factory=lambda: [Path("PRISMA.png")]
         )
 
@@ -62,7 +59,7 @@ class PRISMA(JsonSchemaMixin):
         else:
             settings["diagram_path"] = [Path("PRISMA.png")]
 
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
         output_dir = self.review_manager.paths.output
         self.csv_path = output_dir / Path("PRISMA.csv")
@@ -146,13 +143,17 @@ class PRISMA(JsonSchemaMixin):
             self.review_manager.logger.info("Complete processing and use colrev data")
             return
 
-        csv_relative_path = self.csv_path.relative_to(self.review_manager.path)
+        csv_relative_path = self.csv_path.relative_to(
+            self.review_manager.path
+        ).as_posix()
 
         if not silent_mode:
             self.review_manager.logger.info("Create PRISMA diagram")
 
         for diagram_path in self.settings.diagram_path:
-            diagram_relative_path = diagram_path.relative_to(self.review_manager.path)
+            diagram_relative_path = diagram_path.relative_to(
+                self.review_manager.path
+            ).as_posix()
 
             script = (
                 "Rscript "
@@ -170,7 +171,7 @@ class PRISMA(JsonSchemaMixin):
                 )
 
             self._call_docker_build_process(script=script)
-            csv_relative_path.unlink()
+            self.csv_path.unlink()
 
     def _call_docker_build_process(self, *, script: str) -> None:
         try:
@@ -189,6 +190,7 @@ class PRISMA(JsonSchemaMixin):
                 command=script,
                 user=user,
                 volumes=[os.getcwd() + ":/data"],
+                detach=True,
             )
         except docker.errors.ImageNotFound:
             self.review_manager.logger.error("Docker image not found")

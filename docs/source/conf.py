@@ -74,6 +74,8 @@ templates_path = ["_templates"]
 
 # html_theme = "alabaster"
 
+html_baseurl = "https://colrev-environment.github.io/colrev/"
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
@@ -100,8 +102,8 @@ html_context = {
     "display_github": True,  # Integrate GitHub
     "github_user": "CoLRev-Environment",  # Username
     "github_repo": "colrev",  # Repo name
-    "github_version": "master",  # Version
-    "conf_py_path": "docs/source/",  # Path in the checkout to the docs root
+    "github_version": "main",  # Version
+    "conf_py_path": "/docs/source/",  # Path in the checkout to the docs root
     "meta_http_equiv": True,  # for asciinema
     "html5_doctype": True,  # for asciinema
 }
@@ -116,3 +118,45 @@ linkcheck_ignore = [
     + r"|https://ieeexplore.ieee.org"
     + r"|http://www.scopus.com"
 ]
+
+
+def skip_member(app, what, name, obj, skip, options):  # type: ignore
+    # Define members to skip (including private and internal Pydantic members)
+    excluded_members = [
+        "model_computed_fields",
+        "model_config",
+        "model_extra",
+        "model_fields",
+        "model_fields_set",
+        "construct",
+        "copy",
+        "dict",
+        "from_orm",
+        "json",
+        "model_construct",
+        "model_copy",
+        "model_dump",
+        "model_dump_json",
+        "model_json_schema",
+        "model_parametrized_name",
+        "model_post_init",
+        "model_rebuild",
+        "model_validate",
+        "model_validate_json",
+        "model_validate_strings",
+        "parse_file",
+        "parse_obj",
+        "parse_raw",
+        "schema",
+        "schema_json",
+        "update_forward_refs",
+        "validate",
+    ]
+
+    if name in excluded_members or name.startswith("_"):
+        return True
+    return skip
+
+
+def setup(app):  # type: ignore
+    app.connect("autodoc-skip-member", skip_member)

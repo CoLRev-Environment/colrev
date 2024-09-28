@@ -47,7 +47,9 @@ class Advisor:
         review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
         self.review_manager = review_manager
-        self.status_stats = review_manager.get_status_stats()
+        colrev.ops.check.CheckOperation(self.review_manager)
+        self.records = self.review_manager.dataset.load_records_dict()
+        self.status_stats = review_manager.get_status_stats(records=self.records)
         self.environment_manager = self.review_manager.get_environment_manager()
 
     def _append_merge_conflict_warning(
@@ -253,7 +255,9 @@ class Advisor:
         # If changes in RECORDS_FILE are staged, we need to detect the process type
         if self.review_manager.dataset.records_changed():
             # Detect and validate transitions
-            transitioned_records = self.status_stats.get_transitioned_records()
+            transitioned_records = self.status_stats.get_transitioned_records(
+                self.review_manager
+            )
 
             for transitioned_record in transitioned_records:
                 if transitioned_record["dest"] == "no_source_state":
@@ -297,7 +301,7 @@ class Advisor:
                 rec_str = ", ".join([x["origin"] for x in transitioned_records])
                 instruction = {
                     "msg": "Detected multiple processes in progress "
-                    + f"({', '.join(in_progress_processes)}). Complete one "
+                    + f"({', '.join(list(in_progress_processes))}). Complete one "
                     + "(save and revert the other) and commit before continuing!\n"
                     + f"  Records: {rec_str}",
                     "priority": "yes",
@@ -416,7 +420,7 @@ class Advisor:
     def _get_missing_files(self) -> list:
         return [
             record_dict[Fields.ID]
-            for record_dict in self.status_stats.records.values()
+            for record_dict in self.records.values()
             if (
                 record_dict[Fields.STATUS] in RecordState.get_states_requiring_file()
                 and Fields.FILE not in record_dict
@@ -441,7 +445,7 @@ class Advisor:
                 )
 
         pdfs_no_longer_available = []
-        for record_dict in self.status_stats.records.values():
+        for record_dict in self.records.values():
             if Fields.FILE in record_dict:
                 if not (
                     self.review_manager.path / Path(record_dict[Fields.FILE])

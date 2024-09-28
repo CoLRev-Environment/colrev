@@ -353,7 +353,7 @@ class Record:
         return self.get_field_provenance(key=key)["source"]
 
     def remove_field_provenance_note(self, *, key: str, note: str) -> None:
-        """Remove field provenance notes based on a key"""
+        """Remove field provenance notes based on a key (also if IGNORE:note)"""
         if key in FieldSet.MASTERDATA:
             if Fields.MD_PROV not in self.data:
                 return
@@ -363,7 +363,7 @@ class Record:
             if note not in notes:
                 return
             self.data[Fields.MD_PROV][key]["note"] = ",".join(
-                n for n in notes if n != note
+                n for n in notes if n not in [note, f"IGNORE:{note}"]
             )
 
         else:
@@ -375,7 +375,7 @@ class Record:
             if note not in notes:
                 return
             self.data[Fields.D_PROV][key]["note"] = ",".join(
-                n for n in notes if n != note
+                n for n in notes if n not in [note, f"IGNORE:{note}"]
             )
 
     def complete_provenance(self, *, source_info: str) -> bool:
@@ -695,17 +695,18 @@ class Record:
         # Apply the checkers (including field key requirements etc.)
         quality_model.run(record=self)
 
+        if not set_prepared:
+            return
         if (
             Fields.STATUS in self.data
             and self.data[Fields.STATUS] == RecordState.rev_prescreen_excluded
         ):
             return
 
-        if set_prepared:
-            if self.has_fatal_quality_defects():
-                self.set_status(RecordState.md_needs_manual_preparation)
-            else:
-                self.set_status(RecordState.md_prepared)
+        if self.has_fatal_quality_defects():
+            self.set_status(RecordState.md_needs_manual_preparation)
+        else:
+            self.set_status(RecordState.md_prepared)
 
     def is_retracted(self) -> bool:
         """Check for potential retracts"""
@@ -780,7 +781,7 @@ class Record:
                 f"No ENTRYTYPE specification ({new_entrytype})"
             )
 
-        self.run_quality_model(qm)
+        self.run_quality_model(qm, set_prepared=True)
 
     def set_status(self, target_state: RecordState, *, force: bool = False) -> None:
         """Set the record status"""

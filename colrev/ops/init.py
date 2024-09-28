@@ -22,6 +22,7 @@ import colrev.env.environment_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
+import colrev.package_manager.package_manager
 import colrev.review_manager
 import colrev.settings
 from colrev.constants import Colors
@@ -61,6 +62,10 @@ class Initializer:
             no_docker=light,
         )
 
+        # Install packages
+        p_man = colrev.package_manager.package_manager.PackageManager()
+        p_man.install_project(review_manager=self.review_manager, force_reinstall=False)
+
     def _setup_repo(
         self,
         *,
@@ -69,7 +74,10 @@ class Initializer:
         no_docker: bool,
     ) -> None:
         self.no_docker = no_docker
-        if platform.system() != "Linux":
+        # check whether docker is available
+        try:
+            colrev.env.docker_manager.DockerManager.check_docker_installed()
+        except colrev_exceptions.MissingDependencyError:
             self.no_docker = True
 
         self._reset_if_existing_repo_with_single_commit()

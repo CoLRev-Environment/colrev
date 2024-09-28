@@ -1,9 +1,7 @@
 #! /usr/bin/env python
 """Meta-analysis"""
-from dataclasses import dataclass
-
 import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import Field
 
 import colrev.ops.search
 import colrev.package_manager.interfaces
@@ -23,17 +21,16 @@ from colrev.packages.pdf_backward_search.src.pdf_backward_search import (
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
-@dataclass
-class MetaAnalysis(JsonSchemaMixin):
+class MetaAnalysis:
     """Meta-analysis"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
-    ci_supported: bool = True
+    ci_supported: bool = Field(default=True)
 
     def __init__(
         self, *, operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = self.settings_class(**settings)
 
     def __str__(self) -> str:
         return "meta-analysis"

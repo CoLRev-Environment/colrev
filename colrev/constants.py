@@ -2,8 +2,10 @@
 """Constants for CoLRev"""
 # pylint: disable=too-few-public-methods
 # pylint: disable=colrev-missed-constant-usage
+import importlib.util
 import typing
 from enum import Enum
+from enum import EnumMeta
 from pathlib import Path
 
 
@@ -23,6 +25,17 @@ class Filepaths:
 
     COVERPAGES = LOCAL_ENVIRONMENT_DIR / Path(".coverpages")
     LASTPAGES = LOCAL_ENVIRONMENT_DIR / Path(".lastpages")
+
+    colrev_spec = importlib.util.find_spec("colrev")
+    if colrev_spec is not None:  # pragma: no cover
+        if colrev_spec.origin is not None:  # pragma: no cover
+            COLREV_PATH = Path(colrev_spec.origin).parents[1]
+
+            # Contains the official list of packages for the documentation
+            PACKAGES_JSON = COLREV_PATH / Path("colrev/package_manager/packages.json")
+            PACKAGES_ENDPOINTS_JSON = COLREV_PATH / Path(
+                "colrev/package_manager/package_endpoints.json"
+            )
 
 
 class FileSets:
@@ -516,7 +529,21 @@ class IDPattern(Enum):
         return cls._member_names_
 
 
-class SearchType(Enum):
+class SortedEnumMeta(EnumMeta):
+    """SortedEnumMeta"""
+
+    def __init__(
+        cls, name: str, bases: typing.Tuple[type, ...], classdict: dict
+    ) -> None:
+        super().__init__(name, bases, classdict)
+        # Sort the members by their values
+        # pylint: disable=unsubscriptable-object
+        cls._member_names_ = sorted(
+            cls._member_names_, key=lambda name: cls[name].value  # type: ignore
+        )
+
+
+class SearchType(Enum, metaclass=SortedEnumMeta):
     """Type of search source"""
 
     API = "API"  # Keyword-searches
@@ -536,6 +563,11 @@ class SearchType(Enum):
 
     def __str__(self) -> str:
         return f"{self.name}"
+
+    def __lt__(self, other: "SearchType") -> bool:
+        if isinstance(other, SearchType):
+            return self.value < other.value
+        return NotImplemented
 
 
 class SearchSourceHeuristicStatus(Enum):
