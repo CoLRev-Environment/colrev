@@ -147,6 +147,9 @@ class PackageManager:
             colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
         )
 
+        if len(packages) == 1 and packages[0] == "all_internal_packages":
+            packages = list(internal_packages_dict.keys())
+
         # Install packages from colrev monorepository first
         colrev_packages = []
         for package in packages:
