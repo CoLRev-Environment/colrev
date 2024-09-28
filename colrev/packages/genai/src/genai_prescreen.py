@@ -84,7 +84,8 @@ class GenAIPrescreen:
             for col, value in row.items():
                 # Limit the maximum width of any column
                 col_widths[col] = min(
-                    max(col_widths[col], len(str(value).split("\n")[0])), max_width
+                    max(col_widths[col], len(str(value).split("\n", maxsplit=1)[0])),
+                    max_width,
                 )
 
         # Print header
