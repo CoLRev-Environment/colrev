@@ -167,7 +167,7 @@ def _validate_prep_prescreen_exclusions(
         questions = [
             inquirer.Checkbox(
                 "selected_records",
-                message="Select prescreen errors",
+                message="Select prescreen errors (using space)",
                 choices=choices,
             ),
         ]
