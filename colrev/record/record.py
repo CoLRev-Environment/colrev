@@ -363,7 +363,7 @@ class Record:
             if note not in notes:
                 return
             self.data[Fields.MD_PROV][key]["note"] = ",".join(
-                n for n in notes if n != note and n != f"IGNORE:{note}"
+                n for n in notes if n not in [note, f"IGNORE:{note}"]
             )
 
         else:
@@ -375,7 +375,7 @@ class Record:
             if note not in notes:
                 return
             self.data[Fields.D_PROV][key]["note"] = ",".join(
-                n for n in notes if n != note and n != f"IGNORE:{note}"
+                n for n in notes if n not in [note, f"IGNORE:{note}"]
             )
 
     def complete_provenance(self, *, source_info: str) -> bool:
