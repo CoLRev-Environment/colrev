@@ -353,7 +353,7 @@ class Record:
         return self.get_field_provenance(key=key)["source"]
 
     def remove_field_provenance_note(self, *, key: str, note: str) -> None:
-        """Remove field provenance notes based on a key"""
+        """Remove field provenance notes based on a key (also if IGNORE:note)"""
         if key in FieldSet.MASTERDATA:
             if Fields.MD_PROV not in self.data:
                 return
@@ -363,7 +363,7 @@ class Record:
             if note not in notes:
                 return
             self.data[Fields.MD_PROV][key]["note"] = ",".join(
-                n for n in notes if n != note
+                n for n in notes if n != note and n != f"IGNORE:{note}"
             )
 
         else:
@@ -375,7 +375,7 @@ class Record:
             if note not in notes:
                 return
             self.data[Fields.D_PROV][key]["note"] = ",".join(
-                n for n in notes if n != note
+                n for n in notes if n != note and n != f"IGNORE:{note}"
             )
 
     def complete_provenance(self, *, source_info: str) -> bool:
