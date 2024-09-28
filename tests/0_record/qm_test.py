@@ -811,6 +811,13 @@ def test_name_format_separators(
         f"IGNORE:{DefectCodes.NAME_FORMAT_SEPARTORS}"
     ]
 
+    # Test case 5: No name format defect for abbreviated names
+    v_t_record.data[Fields.AUTHOR] = "Doe, John and Smith, Jane and others"
+    v_t_record.data[Fields.MD_PROV][Fields.AUTHOR]["note"] = ""
+    name_format_separators_checker.run(record=v_t_record)
+    assert not v_t_record.has_quality_defects()
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == []
+
 
 def test_name_format_titles(
     v_t_record: colrev.record.record.Record,
