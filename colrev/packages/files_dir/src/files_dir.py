@@ -457,6 +457,24 @@ class FilesSearchSource:
             )
         raise NotImplementedError
 
+    def _fix_grobid_errors(self, new_record: dict) -> None:
+        # Fix common GROBID errors that would cause problems in deduplication
+
+        # drop title if it is identical with journal
+        if Fields.TITLE in new_record and Fields.JOURNAL in new_record:
+            if new_record[Fields.TITLE] == new_record[Fields.JOURNAL]:
+                new_record.pop(Fields.TITLE)
+        # drop title if it starts with "doi:"
+        if Fields.TITLE in new_record:
+            if new_record[Fields.TITLE].lower().startswith("doi:"):
+                new_record.pop(Fields.TITLE)
+        # drop title if it has more numbers than characters
+        if Fields.TITLE in new_record:
+            if sum(c.isdigit() for c in new_record[Fields.TITLE]) > sum(
+                c.isalpha() for c in new_record[Fields.TITLE]
+            ):
+                new_record.pop(Fields.TITLE)
+
     def _index_pdf(
         self,
         *,
@@ -512,6 +530,7 @@ class FilesSearchSource:
         ):
             # otherwise, get metadata from grobid (indexing)
             new_record = self._get_grobid_metadata(file_path=file_path_abs)
+            self._fix_grobid_errors(new_record)
 
         new_record[Fields.FILE] = str(file_path)
         new_record = self._add_md_string(record_dict=new_record)
