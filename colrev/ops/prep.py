@@ -388,6 +388,9 @@ class Prep(colrev.process.operation.Operation):
         item: dict,
         prior_state: RecordState,
     ) -> None:
+        if self.polish:
+            record.data[Fields.STATUS] = prior_state
+
         if self.last_round and not self.polish:
             if self._status_to_prepare(record):
                 for key in list(record.data.keys()):
