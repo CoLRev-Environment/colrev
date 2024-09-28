@@ -166,7 +166,7 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
     questions = [
         inquirer.Text(
             "name",
-            message=f"Enter the package name, e.g., colrev.genai{default_package_name_str}",
+            message=f"Enter the package name, e.g., {default_package_name_str}",
             validate=validate_name,
         ),
         inquirer.Text("description", message="Enter the package description"),
