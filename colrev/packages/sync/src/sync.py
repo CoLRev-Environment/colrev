@@ -12,10 +12,12 @@ import pybtex.errors
 import colrev.dataset
 import colrev.env.local_index
 import colrev.env.local_index_builder
+import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils_formatter
 import colrev.ops.check
 import colrev.package_manager.package_manager
 import colrev.record.record
+import colrev.record.record_similarity
 import colrev.review_manager
 import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
@@ -24,6 +26,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import RecordState
+from colrev.packages.crossref.src import crossref_api
 from colrev.writer.write_utils import write_file
 
 
@@ -32,6 +35,7 @@ class Sync:
 
     cited_papers: list
     pre_commit_config = Path(".pre-commit-config.yaml")
+    references_file = Path("references.bib")
 
     def __init__(self) -> None:
         self.records_to_import: typing.List[colrev.record.record.Record] = []
@@ -202,10 +206,10 @@ class Sync:
     def _get_ids_in_paper(self) -> typing.List:
         pybtex.errors.set_strict_mode(False)
 
-        if Path("references.bib").is_file():
+        if self.references_file.is_file():
 
             records = colrev.loader.load_utils.load(
-                filename=Path("references.bib"),
+                filename=self.references_file,
                 logger=self.logger,
             )
 
@@ -275,13 +279,12 @@ class Sync:
     def _export_to_bib(self) -> None:
         pybtex.errors.set_strict_mode(False)
 
-        references_file = Path("references.bib")
-        if not references_file.is_file():
+        if not self.references_file.is_file():
             records = []
         else:
 
             records_dict = colrev.loader.load_utils.load(
-                filename=references_file,
+                filename=self.references_file,
                 logger=self.logger,
             )
             records = list(records_dict.values())
@@ -327,13 +330,52 @@ class Sync:
 
         records_dict = {r[Fields.ID]: r for r in records}
 
-        write_file(records_dict=records_dict, filename=references_file)
+        write_file(records_dict=records_dict, filename=self.references_file)
+
+    def udpate_bib(self) -> None:
+        """Update the bibliography"""
+
+        if not self.references_file.is_file():
+            return
+
+        records = colrev.loader.load_utils.load(
+            filename=self.references_file,
+            logger=self.logger,
+        )
+
+        api = crossref_api.CrossrefAPI(params={})
+
+        for record_dict in records.values():
+            if "doi" in record_dict:
+                continue
+            record = colrev.record.record.Record(record_dict)
+            self.logger.info("Retrieve from crossref: %s", record_dict[Fields.ID])
+
+            try:
+                retrieved_records = api.crossref_query(
+                    record_input=record,
+                    jour_vol_iss_list=False,
+                )
+            except colrev_exceptions.NotEnoughDataToIdentifyException:
+                continue
+            except colrev_exceptions.ServiceNotAvailableException:
+                continue
+            if not retrieved_records:
+                continue
+            retrieved_record = retrieved_records.pop()
+
+            if colrev.record.record_similarity.matches(record, retrieved_record):
+                for key, value in retrieved_record.data.items():
+                    record.data[key] = value
+
+        write_file(records_dict=records, filename=self.references_file)
 
 
 def main() -> None:
     """Sync records from CoLRev environment to non-CoLRev repo"""
 
     sync_operation = Sync()
+    sync_operation.udpate_bib()
 
     sync_operation.get_cited_papers()
 
