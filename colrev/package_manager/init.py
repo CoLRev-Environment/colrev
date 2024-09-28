@@ -640,15 +640,15 @@ def _add_to_packages_json(package_data: dict) -> None:
         Path(__file__).resolve().parent.parent.parent
         / "colrev/package_manager/packages.json"
     )
-    with open(packages_json_path, encoding="utf-8") as f:
+    with open(packages_json_path, encoding="utf-8") as file:
 
-        data = json.load(f)
+        data = json.load(file)
 
         # Add the package with "experimental" status
         data[package_data["name"]] = {"dev_status": "experimental"}
 
-        with open(packages_json_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4)
+        with open(packages_json_path, "w", encoding="utf-8") as file_out:
+            json.dump(data, file_out, indent=4)
 
 
 def main() -> None:
