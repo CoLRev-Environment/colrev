@@ -754,7 +754,7 @@ class Record:
                 f"No ENTRYTYPE specification ({new_entrytype})"
             )
 
-        self.run_quality_model(qm)
+        self.run_quality_model(qm, set_prepared=True)
 
     def set_status(self, target_state: RecordState, *, force: bool = False) -> None:
         """Set the record status"""
