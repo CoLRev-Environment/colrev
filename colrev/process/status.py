@@ -214,7 +214,8 @@ def _get_md_retrieved(sources: list) -> int:
 
 def _get_currently_md_retrieved(origin_states_dict: dict, md_retrieved: int) -> int:
 
-    # select records that are not md_ records (origin_states_dict only has records beyond md_retrieved)
+    # select records that are not md_ records
+    # (origin_states_dict only has records beyond md_retrieved)
     non_md_records = {
         k: v for k, v in origin_states_dict.items() if not k.startswith("md_")
     }
