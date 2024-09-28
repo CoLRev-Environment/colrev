@@ -582,7 +582,7 @@ class CrossrefSearchSource:
             return record
 
         except (
-            requests.exceptions.RequestException,
+            colrev_exceptions.ServiceNotAvailableException,
             OSError,
             IndexError,
             colrev_exceptions.RecordNotFoundInPrepSourceException,

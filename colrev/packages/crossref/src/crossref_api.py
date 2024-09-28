@@ -503,7 +503,16 @@ class CrossrefAPI:
         else:
             endpoint.request_params["rows"] = "15"
 
-        for counter, item in enumerate(endpoint):
+        counter = 0
+        while True:
+            try:
+                item = next(iter(endpoint), None)
+            except requests.exceptions.RequestException as exc:
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
+                ) from exc
+            if item is None:
+                break
             try:
                 retrieved_record = record_transformer.json_to_record(item=item)
                 similarity = self._get_similarity(
@@ -517,6 +526,7 @@ class CrossrefAPI:
                     most_similar_record = retrieved_record.get_data()
             except colrev_exceptions.RecordNotParsableException:
                 pass
+            counter += 1
             if jour_vol_iss_list and counter > 200:
                 break
             if not jour_vol_iss_list and counter > 5:
