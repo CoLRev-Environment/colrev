@@ -10,6 +10,7 @@ repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/pack
 
 [[tool.poetry.packages]]
 include = "src"
+feedparser = "^6.0.10"
 
 [tool.poetry.dependencies]
 python = ">=3.8, <4"
