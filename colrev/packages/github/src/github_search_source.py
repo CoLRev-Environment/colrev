@@ -198,10 +198,10 @@ class GitHubSearchSource:
         # Getting API key
         token = self._get_api_key()
         auth = Auth.Token(token)
-        g = Github(auth=auth)
+        github_connection = Github(auth=auth)
 
         # Searching on Github
-        repositories = g.search_repositories(query=query)
+        repositories = github_connection.search_repositories(query=query)
 
         # Saving search results
         for repo in repositories:
@@ -210,7 +210,7 @@ class GitHubSearchSource:
             github_feed.add_update_record(record)
 
         github_feed.save()
-        g.close()
+        github_connection.close()
 
     def search(self, rerun: bool = False) -> None:
         """Run a search on GitHub"""

@@ -91,8 +91,8 @@ search_types = []
 requires = ["poetry-core>=1.0.0", "cython<3.0"]
 build-backend = "poetry.core.masonry.api"
 """
-    with open("pyproject.toml", "w", encoding="utf-8") as f:
-        f.write(content.strip())
+    with open("pyproject.toml", "w", encoding="utf-8") as file:
+        file.write(content.strip())
 
 
 def _create_git_repo() -> None:
@@ -467,8 +467,8 @@ def _create_module_files(package_data: dict) -> None:
         module_path = "colrev.package_manager.interfaces"
         method_signatures = _generate_method_signatures(module_path, interface)
 
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(
                 f'''#! /usr/bin/env python
 """{interface}: {data['class']}"""
 
@@ -482,13 +482,13 @@ class {data['class']}:
 '''
             )
             for signature in method_signatures:
-                f.write(signature)
+                file.write(signature)
 
 
 def _create_src_init(package_data: dict) -> None:
 
-    with open("src/__init__.py", "w", encoding="utf-8") as f:
-        f.write(
+    with open("src/__init__.py", "w", encoding="utf-8") as file:
+        file.write(
             f'''"""Package for {package_data['name']}."""
 
 __author__ = "{package_data['author']['name']}"
@@ -500,24 +500,24 @@ def _create_docs_readme() -> None:
 
     Path("docs").mkdir()
 
-    with open("docs/README.md", "w", encoding="utf-8") as f:
-        f.write("""# TODO : Docs""")
+    with open("docs/README.md", "w", encoding="utf-8") as file:
+        file.write("""# TODO : Docs""")
 
 
 def _create_readme(package_data: dict) -> None:
 
-    with open("README.md", "w", encoding="utf-8") as f:
-        f.write(f"""# {package_data['name']}""")
+    with open("README.md", "w", encoding="utf-8") as file:
+        file.write(f"""# {package_data['name']}""")
         if package_data["description"]:
-            f.write(f"\n\n{package_data['description']}")
-        f.write("\n\n## Installation")
-        f.write("\n\n```bash")
-        f.write(f"\ncolrev install {package_data['name']}")
-        f.write("\n```")
-        f.write("\n\n## Usage")
-        f.write("\n\nTODO")
-        f.write("\n\n## License")
-        f.write(
+            file.write(f"\n\n{package_data['description']}")
+        file.write("\n\n## Installation")
+        file.write("\n\n```bash")
+        file.write(f"\ncolrev install {package_data['name']}")
+        file.write("\n```")
+        file.write("\n\n## Usage")
+        file.write("\n\nTODO")
+        file.write("\n\n## License")
+        file.write(
             f"\n\nThis project is licensed under the {package_data['license']} "
             "License - see the [LICENSE](LICENSE) file for details."
         )
@@ -527,8 +527,8 @@ def _create_license_file(package_data: dict) -> None:
 
     license_file_path = "LICENSE"
     license_text = _get_license_text(package_data)
-    with open(license_file_path, "w", encoding="utf-8") as f:
-        f.write(license_text)
+    with open(license_file_path, "w", encoding="utf-8") as file:
+        file.write(license_text)
 
 
 def _get_license_text(package_data: dict) -> str:
@@ -631,8 +631,8 @@ repos:
           "-sn", # Don't display the score
         ]
 """
-    with open(".pre-commit-config.yaml", "w", encoding="utf-8") as f:
-        f.write(pre_commit_hooks)
+    with open(".pre-commit-config.yaml", "w", encoding="utf-8") as file:
+        file.write(pre_commit_hooks)
 
 
 def _add_to_packages_json(package_data: dict) -> None:
