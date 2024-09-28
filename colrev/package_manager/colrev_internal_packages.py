@@ -87,8 +87,8 @@ def get_internal_packages_dict() -> dict:
             pyproject_path = os.path.join(package_path, "pyproject.toml")
             if not os.path.exists(pyproject_path):
                 continue
-            with open(pyproject_path, encoding="utf-8") as f:
-                pyproject_data = toml.load(f)
+            with open(pyproject_path, encoding="utf-8") as file:
+                pyproject_data = toml.load(file)
             package_name = pyproject_data["tool"]["poetry"]["name"]
 
             internal_packages_dict[package_name] = package_path

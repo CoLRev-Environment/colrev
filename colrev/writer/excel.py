@@ -40,14 +40,14 @@ def to_dataframe(*, records_dict: dict) -> pd.DataFrame:
 
 def write_file(*, records_dict: dict, filename: str) -> None:
     """Write an excel file from a records dict"""
-    df = to_dataframe(records_dict=records_dict)
+    data_frame = to_dataframe(records_dict=records_dict)
     # pylint: disable=abstract-class-instantiated
     writer = pd.ExcelWriter(filename, engine="xlsxwriter")
-    df.to_excel(writer, index=False)
+    data_frame.to_excel(writer, index=False)
 
     worksheet = writer.sheets["Sheet1"]
-    for i, column in enumerate(df.columns):
-        column_width = max(df[column].astype(str).map(len).max(), len(column))
+    for i, column in enumerate(data_frame.columns):
+        column_width = max(data_frame[column].astype(str).map(len).max(), len(column))
         column_width = max(min(column_width, 130), 10)
         worksheet.set_column(i, i, column_width)
 

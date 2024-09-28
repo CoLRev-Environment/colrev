@@ -458,8 +458,8 @@ class Settings(BaseModel):
             + extract_endpoints(self.screen.screen_package_endpoints)
             + extract_endpoints(self.data.data_package_endpoints)
         )
-        for pr in self.prep.prep_rounds:
-            all_packages.extend(extract_endpoints(pr.prep_package_endpoints))
+        for p_round in self.prep.prep_rounds:
+            all_packages.extend(extract_endpoints(p_round.prep_package_endpoints))
 
         return all_packages
 
