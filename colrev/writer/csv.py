@@ -40,5 +40,5 @@ def to_dataframe(*, records_dict: dict) -> pd.DataFrame:
 
 def write_file(*, records_dict: dict, filename: str) -> None:
     """Write a csv file from a records dict"""
-    df = to_dataframe(records_dict=records_dict)
-    df.to_csv(filename, index=False)
+    data_frame = to_dataframe(records_dict=records_dict)
+    data_frame.to_csv(filename, index=False)

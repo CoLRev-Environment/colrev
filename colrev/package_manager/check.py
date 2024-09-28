@@ -91,8 +91,10 @@ def _check_tool_poetry_plugins_colrev_classes(data: dict) -> bool:
             if not package_spec.origin:
                 return False
             package_path = Path(package_spec.origin).parent
-            fp = package_path / Path(module_path.replace(".", "/") + ".py")
-            module_spec = util.spec_from_file_location(f"{package}.{module_path}", fp)
+            filepath = package_path / Path(module_path.replace(".", "/") + ".py")
+            module_spec = util.spec_from_file_location(
+                f"{package}.{module_path}", filepath
+            )
 
             module = import_module(f"{package}.{module_path}")
             module_spec.loader.exec_module(module)  # type: ignore
@@ -183,8 +185,8 @@ def main() -> None:
     file_path = "pyproject.toml"
 
     try:
-        with open(file_path, encoding="utf-8") as f:
-            data = toml.load(f)
+        with open(file_path, encoding="utf-8") as file:
+            data = toml.load(file)
 
         failed_checks = _validate_structure(data, checks)
         if failed_checks:
@@ -193,6 +195,6 @@ def main() -> None:
                 print(f" - {check}")
         else:
             print("Check passed: check_pyproject_valid_structure")
-    except Exception as e:  # pylint: disable=broad-except
-        print(f"Error reading pyproject.toml: {e}")
+    except Exception as exc:  # pylint: disable=broad-except
+        print(f"Error reading pyproject.toml: {exc}")
         sys.exit(1)

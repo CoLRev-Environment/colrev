@@ -143,9 +143,9 @@ class UnpaywallAPI:
                 )
 
             new_results = data["results"]
-            for x in new_results:
-                if x not in all_results:
-                    all_results.append(x)
+            for result in new_results:
+                if result not in all_results:
+                    all_results.append(result)
 
             if len(new_results) < results_per_page:
                 break
@@ -197,21 +197,21 @@ class UnpaywallAPI:
         splited_query = query.split(" ")
         is_in_quotes = False
         parts = []
-        for x in splited_query:
-            if not is_in_quotes and x.startswith('"'):
-                parts.append(x)
+        for query_part in splited_query:
+            if not is_in_quotes and query_part.startswith('"'):
+                parts.append(query_part)
                 is_in_quotes = True
-            elif is_in_quotes and x.endswith('"'):
-                parts.append(x)
+            elif is_in_quotes and query_part.endswith('"'):
+                parts.append(query_part)
                 is_in_quotes = False
             elif is_in_quotes:
-                parts.append(x)
+                parts.append(query_part)
             else:
-                x = x.replace("OR", "%20OR%20")
-                x = x.replace("NOT", "%20-")
-                x = x.replace("AND", "%20")
-                x = x.replace(" ", "%20")
-                parts.append(x)
+                query_part = query_part.replace("OR", "%20OR%20")
+                query_part = query_part.replace("NOT", "%20-")
+                query_part = query_part.replace("AND", "%20")
+                query_part = query_part.replace(" ", "%20")
+                parts.append(query_part)
         joined_query = "%20".join(parts)
         joined_query = re.sub(r"(%20)+", "%20", joined_query).strip()
         joined_query = joined_query.replace("-%20", "-")

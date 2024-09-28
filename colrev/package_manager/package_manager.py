@@ -132,6 +132,7 @@ class PackageManager:
         self.install(packages=packages)
 
     # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-branches
     def install(
         self,
         *,
@@ -146,6 +147,9 @@ class PackageManager:
         internal_packages_dict = (
             colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
         )
+
+        if len(packages) == 1 and packages[0] == "all_internal_packages":
+            packages = list(internal_packages_dict.keys())
 
         # Install packages from colrev monorepository first
         colrev_packages = []

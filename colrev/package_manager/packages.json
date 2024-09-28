@@ -269,9 +269,6 @@
     "colrev.github": {
         "dev_status": "maturing"
     },
-    "colrev.genai": {
-        "dev_status": "experimental"
-    },
     "colrev.ref_check": {
         "dev_status": "experimental"
     }
