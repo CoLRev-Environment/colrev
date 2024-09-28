@@ -21,6 +21,7 @@ colrev.ops.validate.Validate
       ~Validate.decorate
       ~Validate.main
       ~Validate.notify
+      ~Validate.remove_md_origins
       ~Validate.validate_merge_prescreen_screen
 
 
