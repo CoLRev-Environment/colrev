@@ -749,9 +749,9 @@ class Upgrade(colrev.process.operation.Operation):
                 content = file.read()
                 if "colrev install" not in content:
                     content = content.replace(
-                        "          poetry run --directory ${{ runner.temp }}/colrev colrev env -i",
+                        "          poetry run --directory ${{ runner.temp }}/colrev colrev search -f",
                         "          poetry run --directory ${{ runner.temp }}/colrev colrev install .\n"
-                        + "          poetry run --directory ${{ runner.temp }}/colrev colrev env -i",
+                        + "          poetry run --directory ${{ runner.temp }}/colrev colrev search -f",
                     )
 
                     with open(
