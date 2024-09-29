@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import json
+import re
 from sqlite3 import OperationalError
 from urllib.parse import unquote
 
 import requests
-from bs4 import BeautifulSoup
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_manager
@@ -107,17 +107,42 @@ class DOIConnector:
         doi_url = f"https://www.doi.org/{record.data['doi']}"
 
         def meta_redirect(*, content: bytes) -> str:
-            if "<!DOCTYPE HTML PUBLIC" not in str(content):
+            content_str = content.decode("utf-8", errors="replace")
+
+            # Ensure the content is of the expected type (contains the DOCTYPE)
+            if "<!DOCTYPE HTML PUBLIC" not in content_str:
                 raise TypeError
-            soup = BeautifulSoup(content, "lxml")
-            result = soup.find("meta", attrs={"http-equiv": "REFRESH"})
-            if result:
-                _, text = result["content"].split(";")
-                if "http" in text:
-                    url = text[text.lower().find("http") :]
-                    url = unquote(url, encoding="utf-8", errors="replace")
-                    url = url[: url.find("?")]
-                    return str(url)
+
+            # Regex to match the meta tag with http-equiv="REFRESH"
+            meta_refresh_pattern = re.search(
+                r'<meta\s+http-equiv=["\']REFRESH["\']\s+" + \
+                r"content=["\']\d+;\s*url=["\']([^"\']+)["\']',
+                content_str,
+                re.IGNORECASE,
+            )
+
+            if meta_refresh_pattern:
+                url = meta_refresh_pattern.group(1)
+
+                # First, try to find any https URL directly in the content
+                https_url_match = re.search(r'https?://[^\s"\']+', url)
+                if https_url_match:
+                    full_url = unquote(
+                        https_url_match.group(0), encoding="utf-8", errors="replace"
+                    )
+                    full_url = full_url[: full_url.find("?")]
+                    return str(full_url)
+
+                # If no https URL is found, fall back to checking for a 'Redirect=' parameter
+                redirect_url_match = re.search(r"Redirect=([^&]+)", url)
+                if redirect_url_match:
+                    # Decode and extract the full URL from the Redirect parameter
+                    full_url = unquote(
+                        redirect_url_match.group(1), encoding="utf-8", errors="replace"
+                    )
+                    full_url = full_url[: full_url.find("?")]
+                    return str(full_url)
+
             return ""
 
         try:
