@@ -528,7 +528,17 @@ class Record:
         ):
             return True
 
-        # TODO: add problematic regex (for title, author, container-title, year)
+        # title if it starts with "doi:"
+        if Fields.TITLE in self.data:
+            if self.data[Fields.TITLE].lower().startswith("doi:"):
+                return True
+
+        # title has more numbers than characters
+        if Fields.TITLE in self.data:
+            if sum(c.isdigit() for c in self.data[Fields.TITLE]) > sum(
+                c.isalpha() for c in self.data[Fields.TITLE]
+            ):
+                return True
 
         return False
 
