@@ -490,7 +490,8 @@ class FilesSearchSource:
             if new_record[Fields.TITLE].lower() in [
                 "the international journal of information systems applications",
                 "c ommunications of the a i s ssociation for nformation ystems",
-                "communications of the association for information systems communications of the association for information systems"
+                "communications of the association for information systems "
+                + "communications of the association for information systems",
             ]:
                 new_record.pop(Fields.TITLE)
 
@@ -615,6 +616,7 @@ class FilesSearchSource:
         return file_batches
 
     # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-nested-blocks
     def _run_dir_search(
         self,
         *,
@@ -649,7 +651,8 @@ class FilesSearchSource:
 
                 if self.rerun:
                     # If rerun: fix_grobid_fields: in feed and records (if only pdf-file origin)
-                    origin = f"{self.search_source.get_origin_prefix()}/{retrieved_record.data['ID']}"
+                    prefix = self.search_source.get_origin_prefix()
+                    origin = f"{prefix}/{retrieved_record.data['ID']}"
                     for record_dict in files_dir_feed.records.values():
                         if origin in record_dict[Fields.ORIGIN]:
                             if len(record_dict[Fields.ORIGIN]) == 1:
