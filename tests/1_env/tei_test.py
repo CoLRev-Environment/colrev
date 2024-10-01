@@ -65,7 +65,7 @@ def test_tei_creation(script_loc, base_repo_review_manager) -> None:  # type: ig
 
 def test_tei_version(tei_doc) -> None:  # type: ignore
     """Test the tei version"""
-    assert "0.8.0" == tei_doc.get_grobid_version()
+    assert "0.8.1" == tei_doc.get_grobid_version()
 
 
 def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
