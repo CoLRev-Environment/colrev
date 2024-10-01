@@ -106,19 +106,6 @@ class SearchAPIFeed:
             + 1
         )
 
-    def _get_prev_feed_record(
-        self, retrieved_record: colrev.record.record.Record
-    ) -> colrev.record.record.Record:
-        """Get the previous record dict version"""
-        self._set_id(retrieved_record)
-
-        prev_feed_record_dict = {}
-        if retrieved_record.data[Fields.ID] in self.feed_records:
-            prev_feed_record_dict = deepcopy(
-                self.feed_records[retrieved_record.data[Fields.ID]]
-            )
-        return colrev.record.record.Record(prev_feed_record_dict)
-
     def _set_id(self, record: colrev.record.record.Record) -> None:
         """Set incremental record ID
         If self.source_identifier is in record_dict, it is updated, otherwise added as a new record.
@@ -134,7 +121,7 @@ class SearchAPIFeed:
         else:
             record.data[Fields.ID] = str(self._next_incremental_id).rjust(6, "0")
 
-    def _add_record_to_feed(
+    def add_record_to_feed(
         self,
         record: colrev.record.record.Record,
         prev_feed_record: colrev.record.record.Record,
@@ -434,9 +421,9 @@ class SearchAPIFeed:
     def add_update_record(self, retrieved_record: colrev.record.record.Record) -> bool:
         """Add or update a record in the api_search_feed and records"""
         self._prep_retrieved_record(retrieved_record)
-        prev_feed_record = self._get_prev_feed_record(retrieved_record)
+        prev_feed_record = self.get_prev_feed_record(retrieved_record)
 
-        added = self._add_record_to_feed(retrieved_record, prev_feed_record)
+        added = self.add_record_to_feed(retrieved_record, prev_feed_record)
         updated = False
         if not self.prep_mode:
             try:
