@@ -52,6 +52,7 @@ class FilesSearchSource:
 
     _doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
     _batch_size = 20
+    rerun: bool
 
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
@@ -244,7 +245,7 @@ class FilesSearchSource:
         if record_dict.get(Fields.TITLE, "NA") in ["NA", ""]:
             if "title" in doc.metadata:
                 try:
-                    record_dict[Fields.TITLE] = doc.metadata["title"].decode("utf-8")
+                    record_dict[Fields.TITLE] = doc.metadata["title"]
                 except UnicodeDecodeError:
                     pass
         if record_dict.get(Fields.AUTHOR, "NA") in ["NA", ""]:
@@ -468,6 +469,36 @@ class FilesSearchSource:
         if Fields.TITLE in new_record:
             if new_record[Fields.TITLE].lower().startswith("doi:"):
                 new_record.pop(Fields.TITLE)
+
+        # drop title with erroneous terms
+        if Fields.TITLE in new_record:
+            if any(
+                x in new_record[Fields.TITLE].lower()
+                for x in [
+                    "papers must be in english",
+                    "please contact",
+                    "before submission",
+                    "chairman of the editorial board",
+                    "received his ph",
+                    "received her ph",
+                    "can be submitted to",
+                ]
+            ):
+                new_record.pop(Fields.TITLE)
+        # drop title based on erroneous list
+        if Fields.TITLE in new_record:
+            if new_record[Fields.TITLE].lower() in [
+                "the international journal of information systems applications",
+                "c ommunications of the a i s ssociation for nformation ystems",
+                "communications of the association for information systems communications of the association for information systems"
+            ]:
+                new_record.pop(Fields.TITLE)
+
+        # drop title if longer than 200 characters
+        if Fields.TITLE in new_record:
+            if len(new_record[Fields.TITLE]) > 200:
+                new_record.pop(Fields.TITLE)
+
         # drop title if it has more numbers than characters
         if Fields.TITLE in new_record:
             if sum(c.isdigit() for c in new_record[Fields.TITLE]) > sum(
@@ -496,6 +527,8 @@ class FilesSearchSource:
                 if file_path in linked_file_paths:
                     # Otherwise: skip linked PDFs
                     return new_record
+
+        if not self.rerun:
 
             if file_path in [
                 Path(r[Fields.FILE])
@@ -530,7 +563,8 @@ class FilesSearchSource:
         ):
             # otherwise, get metadata from grobid (indexing)
             new_record = self._get_grobid_metadata(file_path=file_path_abs)
-            self._fix_grobid_errors(new_record)
+
+        self._fix_grobid_errors(new_record)
 
         new_record[Fields.FILE] = str(file_path)
         new_record = self._add_md_string(record_dict=new_record)
@@ -608,9 +642,22 @@ class FilesSearchSource:
 
                 self._add_doi_from_pdf_if_not_available(new_record)
                 retrieved_record = colrev.record.record.Record(new_record)
-                files_dir_feed.add_update_record(
-                    retrieved_record=retrieved_record,
-                )
+
+                # Generally: add to feed but do not "update" records
+                prev_feed_record = files_dir_feed.get_prev_feed_record(retrieved_record)
+                files_dir_feed.add_record_to_feed(retrieved_record, prev_feed_record)
+
+                if self.rerun:
+                    # If rerun: fix_grobid_fields: in feed and records (if only pdf-file origin)
+                    origin = f"{self.search_source.get_origin_prefix()}/{retrieved_record.data['ID']}"
+                    for record_dict in files_dir_feed.records.values():
+                        if origin in record_dict[Fields.ORIGIN]:
+                            if len(record_dict[Fields.ORIGIN]) == 1:
+                                self._fix_grobid_errors(record_dict)
+                                if Fields.TITLE not in record_dict:
+                                    record_dict[Fields.STATUS] = (
+                                        RecordState.md_needs_manual_preparation
+                                    )
 
             for record in files_dir_feed.feed_records.values():
                 record.pop("md_string")
@@ -621,20 +668,24 @@ class FilesSearchSource:
     def _add_doi_from_pdf_if_not_available(self, record_dict: dict) -> None:
         if Path(record_dict[Fields.FILE]).suffix != ".pdf":
             return
-        record = colrev.record.record_pdf.PDFRecord(
-            record_dict, path=self.review_manager.path
-        )
-        if Fields.DOI not in record_dict:
-            record.set_text_from_pdf()
-            res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])
-            if res:
-                record.data[Fields.DOI] = res[0].upper()
-        record.data.pop(Fields.TEXT_FROM_PDF, None)
-        record.data.pop(Fields.NR_PAGES_IN_FILE, None)
+        try:
+            record = colrev.record.record_pdf.PDFRecord(
+                record_dict, path=self.review_manager.path
+            )
+            if Fields.DOI not in record_dict:
+                record.set_text_from_pdf()
+                res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])
+                if res:
+                    record.data[Fields.DOI] = res[0].upper()
+            record.data.pop(Fields.TEXT_FROM_PDF, None)
+            record.data.pop(Fields.NR_PAGES_IN_FILE, None)
+        except colrev_exceptions.InvalidPDFException:
+            pass
 
     def search(self, rerun: bool) -> None:
         """Run a search of a Files directory"""
 
+        self.rerun = rerun
         self._validate_source()
 
         # Do not run in continuous-integration environment
