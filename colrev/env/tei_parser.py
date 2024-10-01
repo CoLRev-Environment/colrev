@@ -269,13 +269,14 @@ class TEIParser:
         )
         record = self._get_dict_from_reference(reference)
 
-        record[Fields.TITLE] = (
-            record[Fields.TITLE]
-            .replace("(Completed paper)", "")
-            .replace("(Completed-paper)", "")
-            .replace("(Research-in-Progress)", "")
-            .replace("Completed Research Paper", "")
-        )
+        if Fields.TITLE in record:
+            record[Fields.TITLE] = (
+                record[Fields.TITLE]
+                .replace("(Completed paper)", "")
+                .replace("(Completed-paper)", "")
+                .replace("(Research-in-Progress)", "")
+                .replace("Completed Research Paper", "")
+            )
 
         for key, value in record.items():
             if key != Fields.FILE:
