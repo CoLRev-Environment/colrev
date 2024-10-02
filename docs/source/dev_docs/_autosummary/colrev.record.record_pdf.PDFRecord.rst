@@ -43,6 +43,7 @@ colrev.record.record\_pdf.PDFRecord
       ~PDFRecord.get_tei_filename
       ~PDFRecord.get_toc_key
       ~PDFRecord.get_value
+      ~PDFRecord.has_fatal_quality_defects
       ~PDFRecord.has_pdf_defects
       ~PDFRecord.has_quality_defects
       ~PDFRecord.ignore_defect
