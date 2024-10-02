@@ -39,6 +39,7 @@ colrev.record.record.Record
       ~Record.get_tei_filename
       ~Record.get_toc_key
       ~Record.get_value
+      ~Record.has_fatal_quality_defects
       ~Record.has_pdf_defects
       ~Record.has_quality_defects
       ~Record.ignore_defect

@@ -41,6 +41,7 @@ colrev.record.record\_prep.PrepRecord
       ~PrepRecord.get_tei_filename
       ~PrepRecord.get_toc_key
       ~PrepRecord.get_value
+      ~PrepRecord.has_fatal_quality_defects
       ~PrepRecord.has_pdf_defects
       ~PrepRecord.has_quality_defects
       ~PrepRecord.ignore_defect
