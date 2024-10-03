@@ -17,9 +17,9 @@ include = "src"
 [tool.poetry.dependencies]
 python = ">=3.8, <4"
 PyGithub = "^2.3.0"
+click = "^8.1.6"
 
 [tool.colrev]
-
 colrev_doc_description = "GitHub API"
 colrev_doc_link = "README.md"
 search_types = ["API"]

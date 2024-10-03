@@ -96,20 +96,16 @@ class GitHubSearchSource:
 
     @classmethod
     def _choice_scope(cls) -> str:
-        while True:
-            user_choice = input(
-                "Where do you want to search in (1 = Only in URL, 2 = Only in Readme, 3 = Both): "
+        questions = [
+            inquirer.Checkbox(
+                "search_in",
+                message="Where do you want to search?",
+                choices=[("URL", "url"), ("Readme", "readme"), ("Topic", "topic")],
             )
-            if user_choice in ["1", "2", "3"]:
+        ]
 
-                if user_choice == "1":
-                    return "url"
-                if user_choice == "2":
-                    return "readme"
-                if user_choice == "3":
-                    return "url,readme"
-
-            print("Invalid choice. Please try again.")
+        answers = inquirer.prompt(questions)
+        return ",".join(answers["search_in"])
 
     @classmethod
     def add_endpoint(
