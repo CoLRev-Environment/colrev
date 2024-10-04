@@ -273,7 +273,11 @@ class FilesSearchSource:
             tei = self.review_manager.get_tei(
                 pdf_path=pdf_path,
             )
-        except (FileNotFoundError, requests.exceptions.ReadTimeout):
+        except (
+            FileNotFoundError,
+            requests.exceptions.ReadTimeout,
+            colrev_exceptions.TEITimeoutException,
+        ):
             return record_dict
 
         for key, val in tei.get_metadata().items():
