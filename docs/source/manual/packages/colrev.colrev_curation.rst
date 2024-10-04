@@ -103,25 +103,3 @@ They can be set as follows:
            },
            ...
        }
-
-
-.. raw:: html
-
-   <!--
-   ## data
-
-   TODO
-
-   ## Links
-   -->
-
-
-
-dedupe
-------
-
-See
-
-
-* `colrev.curation_full_outlet_dedupe <colrev.curation_full_outlet_dedupe.html>`_
-* `colrev.curation_missing_dedupe <colrev.curation_missing_dedupe.html>`_
