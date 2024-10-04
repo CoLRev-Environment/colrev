@@ -621,6 +621,7 @@ class FilesSearchSource:
 
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-nested-blocks
+    # pylint: disable=too-many-locals
     def _run_dir_search(
         self,
         *,
