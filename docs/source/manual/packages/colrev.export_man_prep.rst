@@ -74,7 +74,7 @@ Exports the ``records_prep_man.bib`` (containing the records) and the ``records_
 #. Manually fix the errors
 
 Manually change the bib file (based on error codes in csv file)
-Error code descriptions are available `here <https://colrev-environment.github.io/colrev/resources/quality_model.html>`_.
+Error code descriptions are available `here <https://colrev-environment.github.io/colrev/manual/appendix/quality_model.html>`_.
 
 
 #. (Re) import the records
