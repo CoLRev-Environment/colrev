@@ -9,7 +9,6 @@ Additional checks for major releasese:
 For all releases:
 
 - Run `make linkcheck` in the docs, check `docs/build/linkcheck/output.txt` and fix broken links.
-- Run `pre-commit run --all` in GitHub Codespaces
 - Run [poetry update on GitHub](https://github.com/CoLRev-Environment/colrev/actions/workflows/poetry_update.yml).
 - Change released to `True` for the migration script in `ops/upgrade.py`, add a new migration script.
 - Update `settings.py - _add_missing_attributes()` to prevent exceptions.
@@ -23,6 +22,7 @@ For all releases:
 - Run `pip3 install -e .` locally (before testing upgrade in local repositories).
 - Commit the changes (`release 0.10.0`).
 - Check whether the pre-commit hooks and tests pass locally (``pre-commit run --all``).
+- Check whether the pre-commit hooks and tests pass in GitHub Codespaces (``pre-commit run --all``).
 - Push to Github. Check whether the installation, tests, and pre-commit hooks pass.
 - Run `git tag -s $VERSION` (format: "0.9.1").
 - Run `git push` and wait for the GitHub actions to complete successfully.
