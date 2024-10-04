@@ -11,6 +11,6 @@ title: "CoLRev: An open-source environment for collaborative reviews"
 version: 0.13.0
 identifiers:
   - type: doi
-    value: 10.5281/zenodo.11668338
+    value: 10.5281/zenodo.13889524
 date-released: 2024-10-04
 url: "https://github.com/CoLRev-Environment/colrev"

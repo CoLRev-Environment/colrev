@@ -37,7 +37,7 @@ For all releases:
     - The zenodo version is published automatically
     - Trigger/test the Github-action in a curated metadata repository (using ``colrev-batch-gh-api.py``)
 
-- Update the Zenodo doi in `README.md` and `CITATION.cff`
+- Update the Zenodo doi in `CITATION.cff`
 - Update [example repository](https://github.com/CoLRev-Environment/example) if necessary
 - Update the release in the devcontainer of [colrev-template](https://github.com/CoLRev-Environment/colrev-template)
 
