@@ -17,6 +17,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 ### Fixed
 -->
 
+
+## 0.13.0 - 2024-10-04
+
+- Restructure package management, moving dependencies to built-in packages (#442)
+- Relay prep requirements (#529)
+- Add GitHub SearchSource (#468), Unpaywall SearchSource (#469), SpringerLink SearchSource (#466), OSF SearchSource (#471)
+- Refactor other SearchSources
+- Replace dacite by pydantic
+- Stop Docker containers
+- CLI: option to add packages interactively
+- Testing and bugfixes in built-in packages (paper-md, files_dir, aisel)
+- Update docs (add asciinema demonstration)
+
 ## 0.12.3 - 2024-06-15
 
 - Extend documentation (package development, package summaries, asciinema demo)
