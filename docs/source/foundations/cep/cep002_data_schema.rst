@@ -40,7 +40,7 @@ It also outlines principles for mapping schemata from the feed records (retrieve
 ENTRYTYPEs
 ------------------------------------------------
 
-Each record has an ENTRYTYPE with respective required fields. Required and inconsistent fields are evaluated by the QualityModel (the `missing-field <https://colrev.readthedocs.io/en/latest/manual/appendix/quality_model.html#missing-field>_ and `inconsistent-with-entrytype <https://colrev.readthedocs.io/en/latest/manual/appendix/quality_model.html#inconsistent-with-entrytype>`_ checkers).
+Each record has an ENTRYTYPE with respective required fields. Required and inconsistent fields are evaluated by the QualityModel (the `missing-field <https://colrev-environment.github.io/colrev/manual/appendix/quality_model.html#missing-field>_ and `inconsistent-with-entrytype <https://colrev-environment.github.io/colrev/manual/appendix/quality_model.html#inconsistent-with-entrytype>`_ checkers).
 
 Note that fields (like title) can have a different meaning depending on the ENTRYTYPEs.
 
@@ -217,7 +217,7 @@ Defect codes
 
 Defect codes are stored in the field provenance. They can be ignored as false positives based on the `IGNORE:` prefix.
 
-The standardized defect codes are in the `QualityModel <https://colrev.readthedocs.io/en/latest/manual/appendix/quality_model.html>`_ and `PDFQualityModel <https://colrev.readthedocs.io/en/latest/resources/pdf_quality_model.html>`_.
+The standardized defect codes are in the `QualityModel <https://colrev-environment.github.io/colrev/manual/appendix/quality_model.html>`_ and `PDFQualityModel <https://colrev-environment.github.io/colrev/manual/appendix/pdf_quality_model.html>`_.
 
 .. _test data:
 
