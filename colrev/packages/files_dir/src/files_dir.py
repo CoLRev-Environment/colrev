@@ -276,6 +276,7 @@ class FilesSearchSource:
         except (
             FileNotFoundError,
             requests.exceptions.ReadTimeout,
+            requests.exceptions.ConnectionError,
             colrev_exceptions.TEITimeoutException,
         ):
             return record_dict
