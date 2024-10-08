@@ -49,6 +49,53 @@ For details, consult the [documentation](https://colrev-environment.github.io/co
 
 You can try a live demonstration of CoLRev via GitHub codespaces: [start demo](https://github.com//codespaces/new?hide_repo_select=true&ref=main&repo=767717822).
 
+## Related work (preview)
+
+The following shows a comparison of CoLRev with related tools.
+
+> **This is a preview. We plan to document and link the criteria, verify each cell, and invite the developers of the other tools to comment on the overview (documenting responses if the developers agree).**
+
+<!-- 
+inspiration: https://github.com/lycheeverse/lychee?tab=readme-ov-file
+TODO : link and reprint in the docs
+ -->
+
+| **Criteria**                                  | **CoLRev**                        | [**LitStudy**](https://github.com/NLeSC/litstudy)  | [**BUHOS**](https://github.com/clbustos/buhos)  | [**Covidence**](https://www.covidence.org/)   |
+|-----------------------------------------------|-----------------------------------|----------------------------------|---------------------------------|---------------------------------|
+| **Review types**                              |                                   |                                  |                                 |                                 |
+| Support of different review types             | ![yes]                            | ![no]                            | ![no]                           | ![no]                           |
+| Extensibility                                 | ![yes]                            | ![maybe]                         | ![maybe]                        | ![no]                           |
+| **Steps**                                     |                                   |                                  |                                 |                                 |
+| Extensibility                                 | ![yes]                            | ![yes]                           | ![no]                           | ![no]                           |
+| Extensions                                    | 102                               | 0                                | 0                               | 0                               |
+| Search updates                                | ![yes]                            | ![no]                            | ![maybe]                        | ![maybe]                        |
+| Search: APIs                                  | ![yes]                            | ![yes]                           | ![yes]                          | ![no]                           |
+| Metadata preparation                          | ![yes]                            | ![yes]                           | ![yes]                          | ![maybe]                        |
+| Retract checks                                | ![yes]                            | ![no]                            | ![no]                           | ![yes]                          |
+| Dedupe                                        | ![yes]                            | ![no]                            | ![maybe]                        | ![maybe]                        |
+| PDF retrieval                                 | ![yes]                            | ![no]                            | ![no]                           | ![yes]                          |
+| PDF preparation                               | ![yes]                            | ![no]                            | ![maybe]                        | ![maybe]                        |
+| Data (customized to review types)             | ![yes]                            | ![no]                            | ![yes]                          | ![no]                           |
+| Status tracking                               | ![yes]                            | ![no]                            | ![yes]                          | ![yes]                          |
+| **Collaboration**                             |                                   |                                  |                                 |                                 |
+| Large teams                                   | ![yes]                            | ![maybe]                         | ![maybe]                        | ![maybe]                        |
+| Algorithms                                    | ![yes]                            | ![yes]                           | ![maybe]                        | ![maybe]                        |
+| **Data management**                           |                                   |                                  |                                 |                                 |
+| Transparency                                  | ![yes]                            | ![no]                            | ![no]                           | ![no]                           |
+| Validation                                    | ![yes]                            | ![no]                            | ![no]                           | ![no]                           |
+| Reporting (e.g., PRISMA)                      | ![yes]                            | ![no]                            | ![yes]                          | ![yes]                          |
+| Publication of review                         | ![yes]                            | ![yes]                           | ![no]                           | ![no]                           |
+| **Platform**                                  |                                   |                                  |                                 |                                 |
+| OSI-approved license                          | ![yes]                            | ![yes]                           | ![yes]                          | ![no]                           |
+| Peer-reviewed                                 | ![no]                             | ![yes]                           | ![yes]                          | ![no]                           |
+| Technology                                    | Python                            | Python                           | Ruby                            | Proprietary                     |
+| Setup                                         | Local or cloud                    | Local or cloud                   | Server                          | Server                          |
+| Interface                                     | CLI, Programmatic, GUI (planned)  | Jupyter Notebook                 | Web-UI                          | Web-UI                          |
+| Activity: Contributors                    | ![GitHub contributors](https://img.shields.io/github/contributors-anon/CoLRev-Environment/colrev) | ![GitHub contributors](https://img.shields.io/github/contributors-anon/NLeSC/litstudy) | ![GitHub contributors](https://img.shields.io/github/contributors-anon/clbustos/buhos) | NA                                                                     |
+| Activity: Commits                         | ![GitHub total commits](https://img.shields.io/github/commit-activity/t/CoLRev-Environment/colrev) | ![GitHub total commits](https://img.shields.io/github/commit-activity/t/NLeSC/litstudy) | ![GitHub total commits](https://img.shields.io/github/commit-activity/t/clbustos/buhos) | NA                                                                     |
+| Activity: Last commit                     | ![GitHub last commit](https://img.shields.io/github/last-commit/CoLRev-Environment/colrev)  | ![GitHub last commit](https://img.shields.io/github/last-commit/NLeSC/litstudy)  | ![GitHub last commit](https://img.shields.io/github/last-commit/clbustos/buhos)  | NA                                                                     |
+| Activity: Last release                    | ![GitHub last release](https://img.shields.io/github/release-date/CoLRev-Environment/colrev)  | ![GitHub last release](https://img.shields.io/github/release-date/NLeSC/litstudy)  | ![GitHub last release](https://img.shields.io/github/release-date/clbustos/buhos)  | NA                                                                     |
+
 ## Contributing, changes, and releases
 
 Contributions, code and features are always welcome
@@ -133,3 +180,7 @@ If you contribute to the project, you agree to share your contribution following
 Please cite the project as follows:
 
 Wagner, G. and Prester, J. (2024) CoLRev - An open-source environment for Collaborative Literature Reviews. Available at https://github.com/CoLRev-Environment/colrev. doi:[10.5281/zenodo.11668338](https://dx.doi.org/10.5281/zenodo.11668338)
+
+[yes]: ./docs/figures/yes.svg
+[no]: ./docs/figures/no.svg
+[maybe]: ./docs/figures/maybe.svg
