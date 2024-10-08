@@ -55,7 +55,7 @@ The following shows a comparison of CoLRev with related tools.
 
 > **This is a preview.** We plan to document and link the criteria, verify each cell, and invite the developers of the other tools to comment on the overview (documenting responses if the developers agree).
 
-<!-- 
+<!--
 inspiration: https://github.com/lycheeverse/lychee?tab=readme-ov-file
 TODO : link and reprint in the docs
  -->
@@ -94,7 +94,10 @@ TODO : link and reprint in the docs
 | Contributors                    | ![GitHub contributors](https://img.shields.io/github/contributors-anon/CoLRev-Environment/colrev) | ![GitHub contributors](https://img.shields.io/github/contributors-anon/NLeSC/litstudy) | ![GitHub contributors](https://img.shields.io/github/contributors-anon/clbustos/buhos) | NA                                                                     |
 | Commits                         | ![GitHub total commits](https://img.shields.io/github/commit-activity/t/CoLRev-Environment/colrev) | ![GitHub total commits](https://img.shields.io/github/commit-activity/t/NLeSC/litstudy) | ![GitHub total commits](https://img.shields.io/github/commit-activity/t/clbustos/buhos) | NA                                                                     |
 | Last commit                     | ![GitHub last commit](https://img.shields.io/github/last-commit/CoLRev-Environment/colrev)  | ![GitHub last commit](https://img.shields.io/github/last-commit/NLeSC/litstudy)  | ![GitHub last commit](https://img.shields.io/github/last-commit/clbustos/buhos)  | NA                                                                     |
-| Last release                    | ![GitHub last release](https://img.shields.io/github/release-date/CoLRev-Environment/colrev)  | ![GitHub last release](https://img.shields.io/github/release-date/NLeSC/litstudy)  | NA  | NA                                                                     |
+| Pull requests         | ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr-closed/CoLRev-Environment/colrev)  | ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr-closed/NLeSC/litstudy)  | ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr-closed/clbustos/buhos)  | NA                                                                     |
+| Forks         | ![GitHub forks](https://img.shields.io/github/forks/CoLRev-Environment/colrev)  | ![GitHub forks](https://img.shields.io/github/forks/NLeSC/litstudy)  | ![GitHub forks](https://img.shields.io/github/forks/clbustos/buhos)  | NA                                                                     |
+| Last release                    | ![GitHub last release](https://img.shields.io/github/release-date/CoLRev-Environment/colrev)  | ![GitHub last release](https://img.shields.io/github/release-date/NLeSC/litstudy)  | ![GitHub last release](https://img.shields.io/github/release-date-pre/clbustos/buhos)  | NA                                                                     |
+| Current release              | ![Releases](https://img.shields.io/github/release/CoLRev-Environment/colrev?label=Releases) | ![Releases](https://img.shields.io/github/release/NLeSC/litstudy?label=Releases) | ![GitHub Release](https://img.shields.io/github/v/release/clbustos/buhos?include_prereleases)| NA |
 
 ## Contributing, changes, and releases
 
