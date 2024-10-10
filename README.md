@@ -1,5 +1,3 @@
-# Collaborative Literature Reviews (CoLRev)
-
 <p align="center">
 <img src="https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png" width="400">
 </p>
@@ -27,7 +25,7 @@
 
 </div>
 
-## Summary
+# Collaborative Literature Reviews (CoLRev)
 
 CoLRev is an open-source environment for collaborative literature reviews. It integrates with differerent synthesis tools, takes care of the data, and facilitates Git-based collaboration.
 
