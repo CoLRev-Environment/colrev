@@ -40,7 +40,7 @@ The following features stand out:
 - Offers a self-explanatory, fault-tolerant, and configurable user workflow
 - Operates a model for data quality, content curation, and reuse
 - Provides validate and undo operations
-- Enables typological and methodological pluralism throughout the process (`in-progress <https://github.com/CoLRev-Environment/colrev/issues/110>`_)
+- Enables typological and methodological pluralism throughout the process
 
 A complete example run of CoLRev can be seen below:
 
@@ -74,9 +74,6 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
 
    # Install CoLRev
    pip install colrev
-
-   # Install packages required for the CoLRev project
-   colrev install .
 
    # ... and start with the main command
    colrev status
