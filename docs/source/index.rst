@@ -12,25 +12,8 @@ Collaborative Literature Reviews
 .. image:: https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg
    :target: https://github.com/CoLRev-Environment/colrev/releases/
 
-.. image:: https://img.shields.io/pypi/v/colrev?color=blue
-   :target: https://pypi.org/project/colrev/
-
-.. image:: https://img.shields.io/pypi/pyversions/colrev
-
 .. image:: https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg
    :target: https://github.com/CoLRev-Environment/colrev/releases/
-
-.. image:: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
-   :target: https://github.com/pre-commit/pre-commit
-
-.. image:: https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/docs_deploy.yml?label=documentation
-
-.. image:: https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/tests.yml?label=tests
-
-.. image:: https://results.pre-commit.ci/badge/github/CoLRev-Ecosystem/colrev/main.svg
-   :target: https://results.pre-commit.ci/latest/github/CoLRev-Ecosystem/colrev/main
-
-.. image:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/tests/coverage.svg
 
 .. image:: https://app.codacy.com/project/badge/Grade/bd4e44c6cda646e4b9e494c4c4d9487b
    :target: https://app.codacy.com/gh/CoLRev-Environment/colrev/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
@@ -42,9 +25,6 @@ Collaborative Literature Reviews
 
 .. image:: https://bestpractices.coreinfrastructure.org/projects/7148/badge
    :target: https://bestpractices.coreinfrastructure.org/projects/7148
-
-.. image:: https://archive.softwareheritage.org/badge/origin/https://github.com/CoLRev-Environment/colrev/
-   :target: https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/CoLRev-Environment/colrev/
 
 .. image:: https://img.shields.io/badge/all_contributors-32-green.svg?style=flat-square
    :target: #contributors
