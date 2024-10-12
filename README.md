@@ -55,25 +55,33 @@ The following shows a comparison of CoLRev with related tools.
 
 <!--
 inspiration: https://github.com/lycheeverse/lychee?tab=readme-ov-file
-TODO : link and reprint in the docs
- -->
+TODO : link (maybe present a short version) and reprint in the docs
+focus on "workflow platforms", i.e., software that supports the search, selection, data extraction steps (end-to-end)
+present short version, long version in the docs
+-->
 
 | **Criteria**                                  | **CoLRev**                        | [**LitStudy**](https://github.com/NLeSC/litstudy)  | [**BUHOS**](https://github.com/clbustos/buhos)  | [**Covidence**](https://www.covidence.org/)   |
 |-----------------------------------------------|-----------------------------------|----------------------------------|---------------------------------|---------------------------------|
 | **Review types**                              |                                   |                                  |                                 |                                 |
-| Support of different review types             | ![yes]                            | ![no]                            | ![no]                           | ![no]                           |
+| Supports different genres of review methdos   | ![yes]                            | ![no]                            | ![no]                           | ![no]                           |
 | Extensibility                                 | ![yes]                            | ![maybe]                         | ![maybe]                        | ![no]                           |
-| **Steps**                                     |                                   |                                  |                                 |                                 |
+| **Process steps**                             |                                   |                                  |                                 |                                 |
+| Review objectives and protocol                | ![yes]                            | ![yes]                           | ![yes]                          | ![yes]                          |
+| Search                                        | ![yes]                            | ![yes]                           | ![yes]                          | ![yes]                          |
+| Duplicate handling                            | ![yes]                            | ![no]                            | ![maybe]                        | ![maybe]                        |
+| (Pre)Screen                                   | ![yes]                            | ![maybe]                         | ![yes]                          | ![yes]                          |
+| Data extraction                               | ![yes]                            | ![maybe]                         | ![yes]                          | ![yes]                          |
+| Data analysis and quality appraisal           | ![yes]                            | ![maybe]                         | ![yes]                          | ![yes]                          |
+| Synthesis and reporting                       | ![yes]                            | ![yes]                           | ![yes]                          | ![yes]                          |
+| **Process qualities**                         |                                   |                                  |                                 |                                 |
 | Extensibility                                 | ![yes]                            | ![yes]                           | ![no]                           | ![no]                           |
 | Extensions                                    | 102                               | 0                                | 0                               | 0                               |
 | Search updates                                | ![yes]                            | ![no]                            | ![maybe]                        | ![maybe]                        |
 | Search: APIs                                  | ![yes]                            | ![yes]                           | ![yes]                          | ![no]                           |
 | Metadata preparation                          | ![yes]                            | ![yes]                           | ![yes]                          | ![maybe]                        |
 | Retract checks                                | ![yes]                            | ![no]                            | ![no]                           | ![yes]                          |
-| Dedupe                                        | ![yes]                            | ![no]                            | ![maybe]                        | ![maybe]                        |
 | PDF retrieval                                 | ![yes]                            | ![no]                            | ![no]                           | ![yes]                          |
 | PDF preparation                               | ![yes]                            | ![no]                            | ![maybe]                        | ![maybe]                        |
-| Data (customized to review types)             | ![yes]                            | ![no]                            | ![yes]                          | ![no]                           |
 | Status tracking                               | ![yes]                            | ![no]                            | ![yes]                          | ![yes]                          |
 | **Collaboration**                             |                                   |                                  |                                 |                                 |
 | Large teams                                   | ![yes]                            | ![maybe]                         | ![maybe]                        | ![maybe]                        |
