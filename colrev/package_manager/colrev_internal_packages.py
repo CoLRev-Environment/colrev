@@ -47,8 +47,16 @@ def _get_local_editable_colrev_path() -> str:
 
 def _clone_colrev_repository() -> Path:
     temp_dir = tempfile.mkdtemp()
+    print(f"Clone to {temp_dir}")
     subprocess.run(
-        ["git", "clone", "https://github.com/CoLRev-Environment/colrev", temp_dir],
+        [
+            "git",
+            "clone",
+            "--depth",
+            "1",
+            "https://github.com/CoLRev-Environment/colrev",
+            temp_dir,
+        ],
         check=False,
     )
     return Path(temp_dir)
