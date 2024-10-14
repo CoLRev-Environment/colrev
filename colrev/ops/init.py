@@ -318,6 +318,7 @@ class Initializer:
         # Principle: adapt values provided by the default SETTINGS_FILE
         # instead of creating a new SETTINGS_FILE
         package_manager = self.review_manager.get_package_manager()
+        package_manager.install_project(packages=[self.review_type])
         review_type_class = package_manager.get_package_endpoint_class(
             package_type=EndpointType.review_type,
             package_identifier=self.review_type,
