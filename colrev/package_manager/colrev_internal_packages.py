@@ -38,6 +38,9 @@ def _get_local_editable_colrev_path() -> str:
     if "url" not in data:
         return ""
 
+    if not data["url"].startswith("file://"):
+        return ""
+
     editable_dir = data["url"].replace("file://", "")
     return editable_dir
 
