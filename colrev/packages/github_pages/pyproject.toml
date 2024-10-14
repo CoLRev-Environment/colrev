@@ -1,5 +1,5 @@
 [project]
-name = "colrev.github_pages"
+name = "colrev_github_pages"
 description = "CoLRev package for github_pages"
 version = "0.1.0"
 license = {text = "MIT"}

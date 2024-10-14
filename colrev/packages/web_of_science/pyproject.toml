@@ -1,5 +1,5 @@
 [project]
-name = "colrev.web_of_science"
+name = "colrev_web_of_science"
 description = "CoLRev package for web_of_science"
 version = "0.1.0"
 license = {text = "MIT"}

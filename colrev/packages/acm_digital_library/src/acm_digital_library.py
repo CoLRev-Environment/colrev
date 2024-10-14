@@ -22,7 +22,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """ACM digital Library"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    endpoint = "colrev.acm_digital_library"
+    endpoint = "colrev_acm_digital_library"
     # Note : the ID contains the doi
     # "https://dl.acm.org/doi/{{ID}}"
     source_identifier = "doi"

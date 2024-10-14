@@ -1,5 +1,5 @@
 [project]
-name = "colrev.export_man_prep"
+name = "colrev_export_man_prep"
 description = "CoLRev package for export_man_prep"
 version = "0.1.0"
 license = {text = "MIT"}

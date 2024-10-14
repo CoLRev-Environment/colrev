@@ -25,7 +25,7 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
 
-    endpoint = "colrev.ebsco_host"
+    endpoint = "colrev_ebsco_host"
     # https://connect.ebsco.com/s/article/
     # What-is-the-Accession-Number-AN-in-EBSCOhost-records?language=en_US
     # Note : ID is the accession number.

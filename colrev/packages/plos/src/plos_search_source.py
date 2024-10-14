@@ -32,7 +32,7 @@ from colrev.packages.plos.src import plos_api
 class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     """PLOS API"""
 
-    endpoint = "colrev.plos"
+    endpoint = "colrev_plos"
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = Fields.DOI
     search_types = [SearchType.API]
@@ -76,7 +76,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         #     return plos_md_source_l[0]
 
         # return colrev.settings.SearchSource(
-        #     endpoint="colrev.plos",
+        #     endpoint="colrev_plos",
         #     filename=plos_md_filename,
         #     search_type=SearchType.MD,
         #     search_parameters={},
@@ -144,7 +144,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
             filename = operation.get_unique_filename(file_path_string="plos")
 
             search_source = colrev.settings.SearchSource(
-                endpoint="colrev.plos",
+                endpoint="colrev_plos",
                 filename=filename,
                 search_type=SearchType.API,
                 search_parameters=query,

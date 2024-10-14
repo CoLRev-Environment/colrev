@@ -1,5 +1,5 @@
 [project]
-name = "colrev.exclude_complementary_materials"
+name = "colrev_exclude_complementary_materials"
 description = "CoLRev package for exclude_complementary_materials"
 version = "0.1.0"
 license = {text = "MIT"}

@@ -49,14 +49,14 @@ def test_checks(  # type: ignore
     if current_platform in ["Linux", "Darwin"]:
         expected = [  # type: ignore
             # {  # type: ignore
-            #     "endpoint": "colrev.files_dir",
+            #     "endpoint": "colrev_files_dir",
             #     "filename": Path("data/search/pdfs.bib"),
             #     "search_type": SearchType.PDFS,
             #     "search_parameters": {"scope": {"path": "data/pdfs"}},
             #     "comment": "",
             # },
             {  # type: ignore
-                "endpoint": "colrev.unknown_source",
+                "endpoint": "colrev_unknown_source",
                 "filename": Path("data/search/test_records.bib"),
                 "search_type": SearchType.DB,
                 "search_parameters": {

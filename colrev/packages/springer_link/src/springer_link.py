@@ -36,7 +36,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
 
-    endpoint = "colrev.springer_link"
+    endpoint = "colrev_springer_link"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
     search_types = [SearchType.DB, SearchType.API]

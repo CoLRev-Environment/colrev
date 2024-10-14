@@ -58,18 +58,18 @@ class CuratedMasterdata(base_classes.ReviewTypePackageBaseClass):
         settings.search.retrieve_forthcoming = False
 
         settings.prep.prep_rounds[0].prep_package_endpoints = [
-            {"endpoint": "colrev.source_specific_prep"},
-            {"endpoint": "colrev.exclude_complementary_materials"},
-            {"endpoint": "colrev.remove_urls_with_500_errors"},
-            {"endpoint": "colrev.remove_broken_ids"},
-            {"endpoint": "colrev.global_ids_consistency_check"},
-            {"endpoint": "colrev.get_doi_from_urls"},
-            {"endpoint": "colrev.get_year_from_vol_iss_jour"},
+            {"endpoint": "colrev_source_specific_prep"},
+            {"endpoint": "colrev_exclude_complementary_materials"},
+            {"endpoint": "colrev_remove_urls_with_500_errors"},
+            {"endpoint": "colrev_remove_broken_ids"},
+            {"endpoint": "colrev_global_ids_consistency_check"},
+            {"endpoint": "colrev_get_doi_from_urls"},
+            {"endpoint": "colrev_get_year_from_vol_iss_jour"},
         ]
 
         settings.prep.prep_man_package_endpoints = [
-            {"endpoint": "colrev.prep_man_curation_jupyter"},
-            {"endpoint": "colrev.export_man_prep"},
+            {"endpoint": "colrev_prep_man_curation_jupyter"},
+            {"endpoint": "colrev_export_man_prep"},
         ]
         settings.prescreen.explanation = (
             "All records are automatically prescreen included."
@@ -81,29 +81,29 @@ class CuratedMasterdata(base_classes.ReviewTypePackageBaseClass):
 
         settings.prescreen.prescreen_package_endpoints = [
             {
-                "endpoint": "colrev.scope_prescreen",
+                "endpoint": "colrev_scope_prescreen",
                 "ExcludeComplementaryMaterials": True,
             },
-            {"endpoint": "colrev.conditional_prescreen"},
+            {"endpoint": "colrev_conditional_prescreen"},
         ]
         settings.screen.screen_package_endpoints = []
         settings.pdf_get.pdf_get_package_endpoints = []
 
         settings.dedupe.dedupe_package_endpoints = [
             {
-                "endpoint": "colrev.curation_full_outlet_dedupe",
+                "endpoint": "colrev_curation_full_outlet_dedupe",
                 "selected_source": "data/search/CROSSREF.bib",
             },
             {
-                "endpoint": "colrev.curation_full_outlet_dedupe",
+                "endpoint": "colrev_curation_full_outlet_dedupe",
                 "selected_source": "data/search/pdfs.bib",
             },
-            {"endpoint": "colrev.curation_missing_dedupe"},
+            {"endpoint": "colrev_curation_missing_dedupe"},
         ]
 
         settings.data.data_package_endpoints = [
             {
-                "endpoint": "colrev.colrev_curation",
+                "endpoint": "colrev_curation",
                 "version": "0.1",
                 "curation_url": "TODO",
                 "curated_masterdata": True,

@@ -14,7 +14,7 @@ def get_yvip(
     prep_operation: colrev.ops.prep.Prep,
 ) -> colrev.packages.get_year_from_vol_iss_jour.src.year_vol_iss_prep.YearVolIssPrep:
     """Get the YearVolIssPrep fixture"""
-    settings = {"endpoint": "colrev.exclude_languages"}
+    settings = {"endpoint": "colrev_exclude_languages"}
     prep_operation.review_manager.notified_next_operation = OperationsType.check
     yvip = (
         colrev.packages.get_year_from_vol_iss_jour.src.year_vol_iss_prep.YearVolIssPrep(

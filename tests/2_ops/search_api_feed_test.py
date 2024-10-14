@@ -27,7 +27,7 @@ def fixture_search_feed(
     """General search feed"""
 
     source = colrev.settings.SearchSource(
-        endpoint="colrev.crossref",
+        endpoint="colrev_crossref",
         filename=Path("data/search/test.bib"),
         search_type=SearchType.DB,
         search_parameters={"query": "query"},
@@ -73,7 +73,7 @@ def test_search_feed_update(  # type: ignore
 
     # Second "iteration"
     source = colrev.settings.SearchSource(
-        endpoint="colrev.crossref",
+        endpoint="colrev_crossref",
         filename=Path("data/search/test.bib"),
         search_type=SearchType.DB,
         search_parameters={"query": "query"},

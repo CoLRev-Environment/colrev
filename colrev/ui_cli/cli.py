@@ -312,7 +312,7 @@ def exit_command(
 @click.option(
     "--type",
     "review_type",
-    default="colrev.literature_review",
+    default="colrev_literature_review",
     help="Review type for the setup.",
     is_flag=False,
     flag_value="add_interactively",
@@ -2630,7 +2630,7 @@ def settings(
         # keywords like prescreen.sripts.LAST_POSITION)
         # maybe prescreen.scripts.1.REPLACE/ADD/DELETE = ....
         # modify = 'dedupe.dedupe_package_endpoints='
-        # '[{"endpoint":"colrev.simple_dedupe"}]'
+        # '[{"endpoint":"colrev_simple_dedupe"}]'
 
         path, value_string = modify.split("=")
         value = ast.literal_eval(value_string)

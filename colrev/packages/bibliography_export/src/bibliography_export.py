@@ -114,7 +114,7 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
         """Add bibliography as an endpoint"""
 
         add_package = {
-            "endpoint": "colrev.bibliography_export",
+            "endpoint": "colrev_bibliography_export",
             "version": "0.1",
             "bib_format": "endnote",
         }

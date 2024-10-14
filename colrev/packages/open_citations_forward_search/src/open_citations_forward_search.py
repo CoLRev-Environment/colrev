@@ -30,7 +30,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     """
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    endpoint = "colrev.open_citations_forward_search"
+    endpoint = "colrev_open_citations_forward_search"
     source_identifier = "fwsearch_ref"
     search_types = [SearchType.FORWARD_SEARCH]
 
@@ -48,7 +48,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     def get_default_source(cls) -> colrev.settings.SearchSource:
         """Get the default SearchSource settings"""
         return colrev.settings.SearchSource(
-            endpoint="colrev.open_citations_forward_search",
+            endpoint="colrev_open_citations_forward_search",
             filename=Path("data/search/forward_search.bib"),
             search_type=SearchType.FORWARD_SEARCH,
             search_parameters={

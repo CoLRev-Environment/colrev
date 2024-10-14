@@ -23,7 +23,7 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Taylor and Francis"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    endpoint = "colrev.taylor_and_francis"
+    endpoint = "colrev_taylor_and_francis"
     source_identifier = "{{doi}}"
     search_types = [SearchType.DB]
     ci_supported: bool = Field(default=False)
@@ -119,12 +119,12 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Source-specific preparation for Taylor and Francis"""
 
         # remove eprint and URL fields (they only have dois...)
-        record.remove_field(key="colrev.taylor_and_francis.eprint")
-        if "colrev.taylor_and_francis.note" in record.data and re.match(
-            r"PMID: \d*", record.data["colrev.taylor_and_francis.note"]
+        record.remove_field(key="colrev_taylor_and_francis.eprint")
+        if "colrev_taylor_and_francis.note" in record.data and re.match(
+            r"PMID: \d*", record.data["colrev_taylor_and_francis.note"]
         ):
             record.rename_field(
-                key="colrev.taylor_and_francis.note", new_key=Fields.PUBMED_ID
+                key="colrev_taylor_and_francis.note", new_key=Fields.PUBMED_ID
             )
             record.data[Fields.PUBMED_ID] = record.data[Fields.PUBMED_ID][6:]
 

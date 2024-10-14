@@ -1,5 +1,5 @@
 [project]
-name = "colrev.get_year_from_vol_iss_jour"
+name = "colrev_get_year_from_vol_iss_jour"
 description = "CoLRev package for year_vol_iss_prep"
 version = "0.1.0"
 license = {text = "MIT"}

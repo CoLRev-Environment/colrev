@@ -90,7 +90,7 @@ class Search(colrev.process.operation.Operation):
             filename = Path(params["search_file"])
         else:
             filename = self.get_unique_filename(
-                file_path_string=search_source_cls.endpoint.replace("colrev.", "")
+                file_path_string=search_source_cls.endpoint.replace("colrev_", "")
             )
         self.review_manager.logger.debug(f"Add new DB source: {filename}")
 
@@ -384,7 +384,7 @@ class Search(colrev.process.operation.Operation):
                     source = [
                         x
                         for x in results_list
-                        if x["source_candidate"].endpoint == "colrev.unknown_source"
+                        if x["source_candidate"].endpoint == "colrev_unknown_source"
                     ][0]
                 else:
                     selection = str(best_candidate_pos)

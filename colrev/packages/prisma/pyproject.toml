@@ -1,5 +1,5 @@
 [project]
-name = "colrev.prisma"
+name = "colrev_prisma"
 description = "CoLRev package for prisma"
 version = "0.1.0"
 license = {text = "MIT"}

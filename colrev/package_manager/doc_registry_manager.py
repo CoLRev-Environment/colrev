@@ -103,7 +103,7 @@ class PackageDoc:
                 self.package_metadata = toml.load(file)
 
             assert str(self.package_dir).endswith(
-                package_id.replace("colrev.", "")
+                package_id.replace("colrev_", "")
             ), package_id
 
             return True

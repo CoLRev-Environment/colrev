@@ -1,5 +1,5 @@
 [project]
-name = "colrev.google_scholar"
+name = "colrev_google_scholar"
 description = "CoLRev package for google_scholar"
 version = "0.1.0"
 license = {text = "MIT"}

@@ -1,5 +1,5 @@
 [project]
-name = "colrev.springer_link"
+name = "colrev_springer_link"
 description = "CoLRev package for springer_link"
 version = "0.1.0"
 license = {text = "MIT"}

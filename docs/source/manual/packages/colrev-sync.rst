@@ -22,7 +22,11 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
+<<<<<<<< HEAD:docs/source/manual/packages/colrev-sync.rst
 colrev-sync
+========
+colrev_sync
+>>>>>>>> 7f1749f2c (update package_names):docs/source/manual/packages/colrev_sync.rst
 ===========
 
 |VERSION| Version: 0.4.0

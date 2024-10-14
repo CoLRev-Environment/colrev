@@ -156,7 +156,7 @@ def test_pdf_get_get_target_filepath(  # type: ignore
 #         notify_state_transition_operation=True
 #     )
 #     original_source = base_repo_review_manager.settings.sources[0]
-#     base_repo_review_manager.settings.sources[0].endpoint = "colrev.files_dir"
+#     base_repo_review_manager.settings.sources[0].endpoint = "colrev_files_dir"
 #     base_repo_review_manager.settings.sources[0].search_parameters = {
 #         "scope": {"path": "pdfs"}
 #     }

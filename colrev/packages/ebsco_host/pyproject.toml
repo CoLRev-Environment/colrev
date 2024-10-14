@@ -1,5 +1,5 @@
 [project]
-name = "colrev.ebsco_host"
+name = "colrev_ebsco_host"
 description = "CoLRev package for ebsco_host"
 version = "0.1.0"
 license = {text = "MIT"}

@@ -170,21 +170,6 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
             print(f"  {Colors.RED}The package name is already installed.{Colors.END}")
             return False
 
-        if built_in:
-            if not name.startswith("colrev."):
-                print(
-                    f"  {Colors.RED}The built-in package name must start with 'colrev.'{Colors.END}"
-                )
-                return False
-            if not re.match(r"^[a-zA-Z_]*\.[a-zA-Z0-9_]*$", name):
-                print(
-                    f"  {Colors.RED}"
-                    "The package name is not a valid python package name."
-                    f"{Colors.END}"
-                )
-                return False
-            return True
-
         # Check if the name is a valid python package name
         if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
             print(
@@ -192,6 +177,11 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
             )
             return False
 
+        if built_in and not name.startswith("colrev_"):
+            print(
+                f"  {Colors.RED}The built-in package name must start with 'colrev_'{Colors.END}"
+            )
+            return False
         return True
 
     questions = [
@@ -283,7 +273,7 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
     # Example: package_data["plugins"] = ["data", "screen"]
     plugin_data = {}
     for plugin in package_data["plugins"]:
-        p_name = package_data["name"].replace("colrev.", "")
+        p_name = package_data["name"].replace("colrev_", "")
         default_module_name = f"{p_name}_{plugin}"
         default_class_name = to_camel_case(
             f"{p_name.capitalize()}_{plugin.capitalize()}"
@@ -601,10 +591,10 @@ def main() -> None:
                 f"\n{colrev_packages_dir}/{Colors.ORANGE}<your-package_name>{Colors.END}"
             )
             return
-        if current_dir.name.startswith("colrev."):
-            print("The built-in package dir should not start with 'colrev.'")
+        if current_dir.name.startswith("colrev_"):
+            print("The built-in package dir should not start with 'colrev_'")
             return
-        default_package_name = f"colrev.{current_dir.name}"
+        default_package_name = f"colrev_{current_dir.name}"
 
     else:
         if str(current_dir).startswith(str(colrev_packages_dir)):

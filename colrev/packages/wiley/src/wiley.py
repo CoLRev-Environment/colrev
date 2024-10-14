@@ -22,7 +22,7 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """Wiley"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    endpoint = "colrev.wiley"
+    endpoint = "colrev_wiley"
     source_identifier = "url"
     search_types = [SearchType.DB]
 

@@ -1,5 +1,5 @@
 [project]
-name = "colrev.remove_broken_ids"
+name = "colrev_remove_broken_ids"
 description = "CoLRev package for remove_broken_ids"
 version = "0.1.0"
 license = {text = "MIT"}

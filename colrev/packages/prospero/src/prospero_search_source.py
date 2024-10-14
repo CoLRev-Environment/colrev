@@ -30,7 +30,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Prospero Search Source for retrieving protocol data"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    endpoint = "colrev.prospero"
+    endpoint = "colrev_prospero"
     source_identifier = Fields.PROSPERO_ID
 
     search_types = [SearchType.API]
@@ -60,7 +60,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         fallback_filename = Path("data/search/prospero.bib")
         return SearchSource(
-            endpoint="colrev.prospero",
+            endpoint="colrev_prospero",
             filename=fallback_filename,
             search_type=SearchType.API,
             search_parameters={},

@@ -36,7 +36,7 @@ class LiteratureReview(base_classes.ReviewTypePackageBaseClass):
 
         settings.data.data_package_endpoints = [
             {
-                "endpoint": "colrev.paper_md",
+                "endpoint": "colrev_paper_md",
                 "version": "1.0",
                 "word_template": "APA-7.docx",
             }

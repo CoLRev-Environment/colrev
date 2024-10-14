@@ -1,5 +1,5 @@
 [project]
-name = "colrev.exclude_collections"
+name = "colrev_exclude_collections"
 description = "CoLRev package for exclude_collections"
 version = "0.1.0"
 license = {text = "MIT"}

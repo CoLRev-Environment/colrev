@@ -20,7 +20,7 @@ def fixture_unpaywall(
 
     return colrev.packages.unpaywall.src.unpaywall.Unpaywall(
         pdf_get_operation=base_repo_review_manager.get_pdf_get_operation(),
-        settings={"endpoint": "colrev.unpaywall"},
+        settings={"endpoint": "colrev_unpaywall"},
     )
 
 

@@ -1,5 +1,5 @@
 [project]
-name = "colrev.open_citations_forward_search"
+name = "colrev_open_citations_forward_search"
 description = "CoLRev package for open_citations_forward_search"
 version = "0.1.0"
 license = {text = "MIT"}

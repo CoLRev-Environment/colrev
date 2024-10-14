@@ -43,7 +43,7 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
         self.dblp_prefixes = [
             s.get_origin_prefix()
             for s in prep_operation.review_manager.settings.sources
-            if s.endpoint == "colrev.dblp"
+            if s.endpoint == "colrev_dblp"
         ]
 
     def check_availability(

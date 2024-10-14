@@ -161,7 +161,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
             dedupe_sources = [
                 s["selected_source"]
                 for s in self.review_manager.settings.dedupe.dedupe_package_endpoints
-                if "colrev.curation_full_outlet_dedupe" == s["endpoint"]
+                if "colrev_curation_full_outlet_dedupe" == s["endpoint"]
             ]
             sources_missing_in_dedupe = [
                 x for x in available_sources if x not in dedupe_sources
@@ -179,7 +179,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
                         )
                         penultimate_position = len(dedupe_package_endpoints) - 1
                         dedupe_script_to_add = {
-                            "endpoint": "colrev.curation_full_outlet_dedupe",
+                            "endpoint": "colrev_curation_full_outlet_dedupe",
                             "selected_source": source_missing_in_dedupe,
                         }
                         dedupe_package_endpoints.insert(
@@ -508,7 +508,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
             if str(s.filename) == self.settings.selected_source
         ]
         if len(relevant_source) > 0:
-            pdf_source = "colrev.files_dir" == relevant_source[0].endpoint
+            pdf_source = "colrev_files_dir" == relevant_source[0].endpoint
         return pdf_source
 
     def _first_source_selected(self) -> bool:
@@ -564,7 +564,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         preferred_masterdata_sources = [
             s
             for s in self.review_manager.settings.sources
-            if s.endpoint != "colrev.files_dir"
+            if s.endpoint != "colrev_files_dir"
         ]
         self.dedupe_operation.apply_merges(
             id_sets=decision_list,

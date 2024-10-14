@@ -38,7 +38,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     search_types = [SearchType.API]
-    endpoint = "colrev.github"
+    endpoint = "colrev_github"
     source_identifier = Fields.URL
     ci_supported: bool = Field(default=True)
 
@@ -127,7 +127,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
                     print("Invalid search parameter format")
 
         if len(params_dict) == 0:
-            search_source = operation.create_api_source(endpoint="colrev.github")
+            search_source = operation.create_api_source(endpoint="colrev_github")
 
             # Checking where to search
             search_source.search_parameters["scope"] = cls._choice_scope()
@@ -148,7 +148,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             filename = operation.get_unique_filename(file_path_string="github")
             search_source = colrev.settings.SearchSource(
-                endpoint="colrev.github",
+                endpoint="colrev_github",
                 filename=filename,
                 search_type=SearchType.API,
                 search_parameters=query,

@@ -48,7 +48,7 @@ def test_search_add_source(  # type: ignore
 
     search_operation = base_repo_review_manager.get_search_operation()
     add_source = colrev.settings.SearchSource(
-        endpoint="colrev.crossref",
+        endpoint="colrev_crossref",
         filename=Path("data/search/crossref_search.bib"),
         search_type=SearchType.DB,
         search_parameters={
@@ -112,11 +112,11 @@ def test_search_get_unique_filename(
 
 #     search_source = package_manager.load_packages(
 #         package_type=EndpointType.search_source,
-#         selected_packages=[{"endpoint": "colrev.crossref"}],
+#         selected_packages=[{"endpoint": "colrev_crossref"}],
 #         operation=search_operation,
 #         instantiate_objects=False,
 #     )
-#     s_obj = search_source["colrev.crossref"]
+#     s_obj = search_source["colrev_crossref"]
 #     query = "issn=1234-5678"
 #     source = s_obj.add_endpoint(search_operation, query, None)  # type: ignore
 #     search_operation.review_manager.settings.sources.append(source)

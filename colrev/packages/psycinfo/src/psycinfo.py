@@ -23,7 +23,7 @@ class PsycINFOSearchSource(base_classes.SearchSourcePackageBaseClass):
     """PsycINFO"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    endpoint = "colrev.psycinfo"
+    endpoint = "colrev_psycinfo"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
     search_types = [SearchType.DB]

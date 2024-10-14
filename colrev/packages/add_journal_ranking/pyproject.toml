@@ -1,5 +1,5 @@
 [project]
-name = "colrev.add_journal_ranking"
+name = "colrev_add_journal_ranking"
 description = "CoLRev package for add_journal_ranking"
 version = "0.1.0"
 license = {text = "MIT"}

@@ -187,7 +187,7 @@ class PDFPrep(colrev.process.operation.Operation):
 
             if failed:
                 msg_str = f"{endpoint.settings.endpoint}"  # type: ignore
-                msg_str = msg_str.replace("colrev.", "")
+                msg_str = msg_str.replace("colrev_", "")
                 detailed_msgs.append(f"{Colors.ORANGE}{msg_str}{Colors.END}")
 
             # Note: if we break, the teis will not be generated.
@@ -366,7 +366,7 @@ class PDFPrep(colrev.process.operation.Operation):
 
         self.review_manager.logger.info("Generate TEI documents")
         endpoint = colrev.packages.grobid_tei.src.grobid_tei.GROBIDTEI(
-            pdf_prep_operation=self, settings={"endpoint": "colrev.grobid_tei"}
+            pdf_prep_operation=self, settings={"endpoint": "colrev_grobid_tei"}
         )
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
@@ -457,7 +457,7 @@ class PDFPrep(colrev.process.operation.Operation):
                 s["endpoint"]
                 for s in self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints
             ]
-            if "colrev.grobid_tei" in endpoint_names:  # type: ignore
+            if "colrev_grobid_tei" in endpoint_names:  # type: ignore
                 pool = Pool(mp.cpu_count() // 2)
             else:
                 pool = Pool(self.cpus)

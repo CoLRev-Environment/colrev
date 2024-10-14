@@ -1,5 +1,5 @@
 [project]
-name = "colrev.get_masterdata_from_citeas"
+name = "colrev_get_masterdata_from_citeas"
 description = "CoLRev package for citeas"
 version = "0.1.0"
 license = {text = "MIT"}

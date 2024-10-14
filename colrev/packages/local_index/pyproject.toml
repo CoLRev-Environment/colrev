@@ -1,5 +1,5 @@
 [project]
-name = "colrev.local_index"
+name = "colrev_local_index"
 description = "CoLRev package for local_index"
 version = "0.1.0"
 license = {text = "MIT"}

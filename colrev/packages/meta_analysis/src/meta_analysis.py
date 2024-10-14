@@ -42,14 +42,14 @@ class MetaAnalysis(base_classes.ReviewTypePackageBaseClass):
         settings.sources.append(BackwardSearchSource.get_default_source())
 
         settings.data.data_package_endpoints = [
-            {"endpoint": "colrev.prisma", "version": "1.0"},
+            {"endpoint": "colrev_prisma", "version": "1.0"},
             {
-                "endpoint": "colrev.structured",
+                "endpoint": "colrev_structured",
                 "version": "1.0",
                 "fields": [],
             },
             {
-                "endpoint": "colrev.paper_md",
+                "endpoint": "colrev_paper_md",
                 "version": "1.0",
                 "word_template": "APA-7.docx",
             },

@@ -14,7 +14,7 @@ def elp(
     prep_operation: colrev.ops.prep.Prep,
 ) -> colrev.packages.exclude_languages.src.exclude_languages.ExcludeLanguagesPrep:
     """Fixture returning an ExcludeLanguagesPrep instance"""
-    settings = {"endpoint": "colrev.exclude_languages"}
+    settings = {"endpoint": "colrev_exclude_languages"}
     elp_instance = (
         colrev.packages.exclude_languages.src.exclude_languages.ExcludeLanguagesPrep(
             prep_operation=prep_operation, settings=settings

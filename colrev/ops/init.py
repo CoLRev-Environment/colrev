@@ -138,8 +138,8 @@ class Initializer:
 
     def _format_review_type(self, review_type: str) -> str:
         formatted_review_type = review_type.replace("-", "_").lower().replace(" ", "_")
-        if "." not in formatted_review_type:
-            formatted_review_type = "colrev." + formatted_review_type
+        if not formatted_review_type.startswith("colrev_"):
+            formatted_review_type = "colrev_" + formatted_review_type
 
         return formatted_review_type
 
@@ -384,10 +384,10 @@ class Initializer:
             settings.data.data_package_endpoints = [
                 x
                 for x in settings.data.data_package_endpoints
-                if x["endpoint"] not in ["colrev.paper_md"]
+                if x["endpoint"] not in ["colrev_paper_md"]
             ]
             settings.sources = [
-                x for x in settings.sources if x.endpoint not in ["colrev.files_dir"]
+                x for x in settings.sources if x.endpoint not in ["colrev_files_dir"]
             ]
 
             settings.pdf_prep.pdf_prep_package_endpoints = [
@@ -395,10 +395,10 @@ class Initializer:
                 for x in settings.pdf_prep.pdf_prep_package_endpoints
                 if x["endpoint"]
                 not in [
-                    "colrev.ocrmypdf",
-                    "colrev.remove_coverpage",
-                    "colrev.remove_last_page",
-                    "colrev.grobid_tei",
+                    "colrev_ocrmypdf",
+                    "colrev_remove_coverpage",
+                    "colrev_remove_last_page",
+                    "colrev_grobid_tei",
                 ]
             ]
 
@@ -411,13 +411,13 @@ class Initializer:
 
         for source in settings.sources:
             self.review_manager.logger.info(
-                " add search %s", source.endpoint.replace("colrev.", "")
+                " add search %s", source.endpoint.replace("colrev_", "")
             )
 
         for data_package_endpoint in settings.data.data_package_endpoints:
             self.review_manager.logger.info(
                 " add data   %s",
-                data_package_endpoint["endpoint"].replace("colrev.", ""),
+                data_package_endpoint["endpoint"].replace("colrev_", ""),
             )
 
         with open(
@@ -440,7 +440,7 @@ class Initializer:
         )
 
     def _post_commit_edits(self) -> None:
-        if self.review_type != "colrev.curated_masterdata":
+        if self.review_type != "colrev_curated_masterdata":
             return
 
         self.review_manager.logger.info("Post-commit edits")
@@ -495,10 +495,10 @@ class Initializer:
         with open(self.review_manager.paths.settings, encoding="utf-8") as file:
             settings = json.load(file)
 
-        settings["dedupe"]["dedupe_package_endpoints"] = [{"endpoint": "colrev.dedupe"}]
+        settings["dedupe"]["dedupe_package_endpoints"] = [{"endpoint": "colrev_dedupe"}]
         settings["sources"] = [
             {
-                "endpoint": "colrev.unknown_source",
+                "endpoint": "colrev_unknown_source",
                 "filename": str(Path("data/search/30_example_records.bib")),
                 "search_type": "DB",
                 "search_parameters": {
