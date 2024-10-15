@@ -2,13 +2,11 @@
 """CoLRev init operation: Create a project and specify settings."""
 from __future__ import annotations
 
-import importlib
 import json
 import logging
 import os
 import platform
 import shutil
-import sys
 from importlib.metadata import version
 from pathlib import Path
 from subprocess import CalledProcessError  # nosec
@@ -64,6 +62,13 @@ class Initializer:
         self.review_manager = colrev.review_manager.ReviewManager(
             path_str=str(self.target_path), force_mode=True, navigate_to_home_dir=False
         )
+        # self.review_type = self._format_review_type(review_type)
+        # p_man = colrev.package_manager.package_manager.PackageManager()
+        # if not p_man.is_installed(self.review_type):
+        #     print(
+        #         f"Run {Colors.ORANGE}colrev install {review_type}{Colors.END} before colrev init"
+        #     )
+        #     return
         self.title = str(self.target_path.name)
         self._setup_repo(
             example=example,
@@ -353,12 +358,6 @@ class Initializer:
         package_manager = self.review_manager.get_package_manager()
         if not package_manager.is_installed(self.review_type):
             package_manager.install(packages=[self.review_type])
-
-        # Dynamically reload sys.modules or import the package
-        if self.review_type in sys.modules:
-            importlib.reload(sys.modules[self.review_type])
-        else:
-            importlib.import_module(self.review_type)
 
         review_type_class = package_manager.get_package_endpoint_class(
             package_type=EndpointType.review_type,
