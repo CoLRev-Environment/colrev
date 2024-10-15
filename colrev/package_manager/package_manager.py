@@ -238,11 +238,24 @@ class PackageManager:
             f"Installing ColRev packages: {colrev_packages + packages} using {package_manager}"
         )
 
-        install_args = package_manager + ["install"]
+
+        colrev_package_paths = [
+            p_path
+            for p_name, p_path in internal_packages_dict.items()
+            if p_name in colrev_packages
+        ]
+        print(colrev_package_paths)
+        args = [sys.executable, "-m", "pip", "install"]
+        args += colrev_package_paths
         if upgrade:
-            install_args.append("--upgrade")
+            args += ["--upgrade"]
         if editable:
-            install_args.append("--editable")
+            args += ["--editable", editable]
+
+        # sys.argv = args
+        # run_module("pip", run_name="__main__")
+        # use subprocess because run_module does not return control
+        subprocess.run(args, check=False)
 
         # Install both internal and external packages in a single command
         all_packages = [
