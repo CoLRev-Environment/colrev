@@ -380,7 +380,6 @@ class Initializer:
                 new_string=project_title.rstrip(" ").capitalize(),
             )
         else:
-            package_manager = self.review_manager.get_package_manager()
             r_type_suffix = str(review_type_object)
 
             colrev.env.utils.inplace_change(
