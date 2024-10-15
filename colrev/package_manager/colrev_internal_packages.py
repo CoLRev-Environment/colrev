@@ -53,6 +53,8 @@ def _clone_colrev_repository() -> Path:
             "clone",
             "--depth",
             "1",
+            "--branch",  # TODO : temp
+            "package_rename",  # Specify the branch you want to clone
             "https://github.com/CoLRev-Environment/colrev",
             temp_dir,
         ],
