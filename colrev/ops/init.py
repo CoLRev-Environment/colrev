@@ -68,7 +68,8 @@ class Initializer:
         #     print(
         #         f"Run {Colors.ORANGE}colrev install {review_type}{Colors.END} before colrev init"
         #     )
-        #     return
+        #     raise colrev.exceptions.MissingDependencyError(review_type)
+
         self.title = str(self.target_path.name)
         self._setup_repo(
             example=example,
