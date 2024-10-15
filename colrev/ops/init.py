@@ -416,6 +416,11 @@ class Initializer:
     def _finalize(self) -> None:
         settings = self.review_manager.settings
 
+        # Note : to avoid file setup at colrev status (calls data_operation.main)
+        data_operation = self.review_manager.get_data_operation(
+            notify_state_transition_operation=False
+        )
+        data_operation.main(silent_mode=True)
         self.review_manager.logger.info("Set up %s", self.review_type)
 
         for source in settings.sources:

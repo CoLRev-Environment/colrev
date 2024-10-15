@@ -160,6 +160,46 @@ class PackageManager:
 
         self.install(packages=packages, uv=uv)
 
+    # def _add_dependencies(self, packages: typing.List[str]) -> None:
+    #     packages = list(packages)
+    #     if len(packages) == 1 and packages[0] == "colrev_literature_review":
+    #         packages.extend(
+    #             [
+    #                 "colrev_paper_md",
+    #                 "colrev_files_dir",
+    #                 "colrev_source_specific_prep",
+    #                 "colrev_exclude_non_latin_alphabets",
+    #                 "colrev_exclude_collections",
+    #                 "colrev_exclude_complementary_materials",
+    #                 "colrev_local_index",
+    #                 "colrev_exclude_languages",
+    #                 "colrev_remove_urls_with_500_errors",
+    #                 "colrev_remove_broken_ids",
+    #                 "colrev_get_doi_from_urls",
+    #                 "colrev_get_year_from_vol_iss_jour",
+    #                 "colrev_crossref",
+    #                 "colrev_pubmed",
+    #                 "colrev_europe_pmc",
+    #                 "colrev_dblp",
+    #                 "colrev_open_library",
+    #                 "colrev_export_man_prep",
+    #                 "colrev_dedupe",
+    #                 "colrev_cli_prescreen",
+    #                 "colrev_unpaywall",
+    #                 "colrev_download_from_website",
+    #                 "colrev_cli_pdf_get_man",
+    #                 "colrev_ocrmypdf",
+    #                 "colrev_remove_coverpage",
+    #                 "colrev_remove_last_page",
+    #                 "colrev_grobid_tei",
+    #                 "colrev_cli_pdf_prep_man",
+    #                 "colrev_cli_screen",
+    #                 "colrev_rev_check",
+    #             ]
+    #         )
+
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-branches
     def install(
         self,
         *,
@@ -184,7 +224,10 @@ class PackageManager:
         if len(packages) == 1 and packages[0] == "all_internal_packages":
             packages = list(internal_packages_dict.keys())
 
-        # Install internal colrev packages first
+        # TODO : this is a temporary method
+        # self._add_dependencies(packages)
+
+        # Install packages from colrev monorepository first
         colrev_packages = []
         for package in packages:
             if package in internal_packages_dict:
