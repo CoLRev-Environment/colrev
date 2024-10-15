@@ -240,7 +240,6 @@ class PackageManager:
             f"Installing ColRev packages: {colrev_packages + packages} using {package_manager}"
         )
 
-
         colrev_package_paths = [
             p_path
             for p_name, p_path in internal_packages_dict.items()
