@@ -2,13 +2,13 @@
 """Discovering and using packages."""
 from __future__ import annotations
 
+import importlib.metadata
 import importlib.util
 import json
+import platform
 import subprocess
 import sys
 import typing
-from importlib.metadata import distribution
-from importlib.metadata import PackageNotFoundError
 from typing import Any
 
 import colrev.exceptions as colrev_exceptions
@@ -80,11 +80,38 @@ class PackageManager:
     def is_installed(self, package_name: str) -> bool:
         """Check if a package is installed"""
 
-        try:
-            p_dist = distribution(package_name.replace("-", "_"))
-        except PackageNotFoundError:
-            return False
-        return p_dist is not None
+        # Notes:
+        # Cannot import directly and check whether it fails because the package format is non-standard (".")
+        # We deactivate the is_installed() temporarily
+        # until internal colrev packages comply with naming conventions.
+        if platform.system() in ["Darwin", "Windows", "Linux"]:
+            return True  # Return True for macOS, Linux, and Windows
+
+        # try:
+        #     if sys.version_info >= (3, 10):
+        #         # Use packages_distributions in Python 3.10+
+        #         from importlib.metadata import packages_distributions
+
+        #         installed_packages = packages_distributions()
+
+        #         if package_name.replace("-", "_") in installed_packages:
+        #             return True
+        #         if (
+        #             "src" in installed_packages
+        #             and package_name.replace("-", "_") in installed_packages["src"]
+        #         ):
+        #             return True
+
+        #         return False
+        #     else:
+        #         # Fallback for Python < 3.10 using the distribution method
+        #         importlib.metadata.distribution(package_name.replace("-", "_"))
+        #         return True
+        # except PackageNotFoundError:
+        #     return False
+        # except importlib.metadata.PackageNotFoundError:
+        #     return False
+        return True
 
     def _get_packages_to_install(
         self,

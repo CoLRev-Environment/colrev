@@ -48,14 +48,14 @@ class Initializer:
         light: bool = False,
         exact_call: str = "",
     ) -> None:
-        self.review_type = self._format_review_type(review_type)
         p_man = colrev.package_manager.package_manager.PackageManager()
+        self.review_type = self._format_review_type(review_type)
         if not p_man.is_installed(self.review_type):
             print(
                 f"Run {Colors.ORANGE}colrev install all_internal_packages{Colors.END} "
                 "before colrev init"
             )
-            raise colrev.exceptions.MissingDependencyError(review_type)
+            raise colrev.exceptions.MissingDependencyError(self.review_type)
         self.force_mode = force_mode
         self.target_path = target_path
         os.chdir(target_path)
