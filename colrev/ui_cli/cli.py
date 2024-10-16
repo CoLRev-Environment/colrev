@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import subprocess  # nosec
 import sys
 import time
@@ -14,7 +13,6 @@ from functools import wraps
 from pathlib import Path
 
 import click
-import click_completion.core
 import click_repl
 import inquirer
 import pandas as pd
@@ -47,6 +45,7 @@ from colrev.constants import ScreenCriterionType
 # pylint: disable=too-many-locals
 # pylint: disable=import-outside-toplevel
 # pylint: disable=too-many-return-statements
+# pylint: disable=too-many-positional-arguments
 
 # Note: autocompletion needs bash/... activation:
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
@@ -57,18 +56,6 @@ PACKAGE_MANAGER = colrev.package_manager.package_manager.PackageManager()
 # TYPE_IDENTIFIER_ENDPOINT_DICT = PACKAGE_MANAGER.load_type_identifier_endpoint_dict()
 
 SHELL_MODE = False
-
-
-def _custom_startswith(string: str, incomplete: str) -> bool:
-    """A custom completion matching that supports case insensitive matching"""
-    if os.environ.get("_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE"):
-        string = string.lower()
-        incomplete = incomplete.lower()
-    return string.startswith(incomplete)
-
-
-click_completion.core.startswith = _custom_startswith
-click_completion.init()
 
 
 def _add_endpoint_interactively(add: str, endpoint_type: EndpointType) -> str:
@@ -3178,48 +3165,3 @@ def install(
             force_reinstall=force_reinstall,
             no_cache_dir=no_cache_dir,
         )
-
-
-@main.command(hidden=True)
-@click.option(
-    "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"
-)
-@click.argument(
-    "shell",
-    required=False,
-    type=click_completion.DocumentedChoice(click_completion.core.shells),
-)
-def show_click(shell, case_insensitive) -> None:  # type: ignore
-    """Show the click-completion-command completion code"""
-    extra_env = (
-        {"_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE": "ON"}
-        if case_insensitive
-        else {}
-    )
-    click.echo(click_completion.core.get_code(shell, extra_env=extra_env))
-
-
-@main.command(hidden=True)
-@click.option(
-    "--append/--overwrite", help="Append the completion code to the file", default=None
-)
-@click.option(
-    "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"
-)
-@click.argument(
-    "shell",
-    required=False,
-    type=click_completion.DocumentedChoice(click_completion.core.shells),
-)
-@click.argument("path", required=False)
-def install_click(append, case_insensitive, shell, path) -> None:  # type: ignore
-    """Install the click-completion-command completion"""
-    extra_env = (
-        {"_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE": "ON"}
-        if case_insensitive
-        else {}
-    )
-    shell, path = click_completion.core.install(  # nosec
-        shell=shell, path=path, append=append, extra_env=extra_env
-    )
-    click.echo(f"{shell} completion installed in {path}")
