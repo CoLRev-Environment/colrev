@@ -629,6 +629,11 @@
             "short_description": "Profile of the Sample (:doc:`instructions </manual/packages/colrev.profile>`)"
         },
         {
+            "package_endpoint_identifier": "colrev.ref_check",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "TODO (:doc:`instructions </manual/packages/colrev.ref_check>`)"
+        },
+        {
             "package_endpoint_identifier": "colrev.structured",
             "status": "|EXPERIMENTAL|",
             "short_description": "Structured Data Extraction (:doc:`instructions </manual/packages/colrev.structured>`)"

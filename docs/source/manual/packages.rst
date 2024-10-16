@@ -165,6 +165,7 @@ Packages
    packages/colrev.paper_md.rst
    packages/colrev.prisma.rst
    packages/colrev.profile.rst
+   packages/colrev.ref_check.rst
    packages/colrev.structured.rst
 
 
