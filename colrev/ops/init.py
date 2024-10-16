@@ -48,13 +48,20 @@ class Initializer:
         light: bool = False,
         exact_call: str = "",
     ) -> None:
+        self.review_type = self._format_review_type(review_type)
+        p_man = colrev.package_manager.package_manager.PackageManager()
+        if not p_man.is_installed(self.review_type):
+            print(
+                f"Run {Colors.ORANGE}colrev install all_internal_packages{Colors.END} "
+                "before colrev init"
+            )
+            raise colrev.exceptions.MissingDependencyError(review_type)
         self.force_mode = force_mode
         self.target_path = target_path
         os.chdir(target_path)
         self.review_manager = colrev.review_manager.ReviewManager(
             path_str=str(self.target_path), force_mode=True, navigate_to_home_dir=False
         )
-        self.review_type = self._format_review_type(review_type)
         self.title = str(self.target_path.name)
         self._setup_repo(
             example=example,
@@ -63,7 +70,6 @@ class Initializer:
         )
 
         # Install packages
-        p_man = colrev.package_manager.package_manager.PackageManager()
         p_man.install_project(review_manager=self.review_manager, force_reinstall=False)
 
     def _setup_repo(

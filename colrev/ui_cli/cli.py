@@ -3148,7 +3148,10 @@ def install(
     force_reinstall: bool,
     no_cache_dir: bool,
 ) -> None:
-    """Install packages"""
+    """Install packages
+
+    To install all internal packages, run\n
+        colrev install all_internal_packages"""
 
     if len(packages) == 1 and packages[0] == ".":
         review_manager = colrev.review_manager.ReviewManager()
