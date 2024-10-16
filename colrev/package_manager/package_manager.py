@@ -81,11 +81,13 @@ class PackageManager:
         """Check if a package is installed"""
 
         # Notes:
-        # Cannot import directly and check whether it fails because the package format is non-standard (".")
+        # Cannot import directly and check whether it fails
+        # because the package format is non-standard (".")
         # We deactivate the is_installed() temporarily
         # until internal colrev packages comply with naming conventions.
         if platform.system() in ["Darwin", "Windows", "Linux"]:
             return True  # Return True for macOS, Linux, and Windows
+        print(package_name)
 
         # try:
         #     if sys.version_info >= (3, 10):
