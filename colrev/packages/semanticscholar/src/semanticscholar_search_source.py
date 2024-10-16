@@ -136,6 +136,7 @@ class SemanticScholarSearchSource:
             _search_return = self.author_search(params=params, rerun=rerun)
         else:
             self.review_manager.logger.info("No search parameters were found.")
+            raise NotImplementedError
 
         return _search_return
 

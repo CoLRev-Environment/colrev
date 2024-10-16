@@ -120,9 +120,10 @@ class Distribute(colrev.process.operation.Operation):
                     self.review_manager.settings.sources.append(new_source)
                     self.review_manager.save_settings()
 
-                if 0 != len(import_records):
-                    record_id = int(self.get_next_id(bib_file=target_bib_file))
+                if 0 == len(import_records):
+                    return
 
+                record_id = int(self.get_next_id(bib_file=target_bib_file))
                 record[Fields.ID] = f"{record_id}".rjust(10, "0")
                 record.update(file=str(target_pdf_path))
                 import_records.append(record)

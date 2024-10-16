@@ -422,6 +422,8 @@ class Dataset:
             path_changed = path_str in diff_head
         elif change_type == "unstaged":
             path_changed = path_str in unstaged_changes
+        else:
+            return False
         return path_changed
 
     def _sleep_util_git_unlocked(self) -> None:
@@ -509,7 +511,8 @@ class Dataset:
         assert commit_nr == 0  # extension : implement other cases
         if commit_nr == 0:
             cmsg = master.commit.message
-        return cmsg
+            return cmsg
+        return ""
 
     def _add_record_changes(self) -> None:
         """Add changes in records to git"""
@@ -597,8 +600,8 @@ class Dataset:
                     _,
                     nr_commits_ahead,
                 ) = self._get_remote_commit_differences()
-        if nr_commits_ahead > 0:
-            return True
+                if nr_commits_ahead > 0:
+                    return True
         return False
 
     def pull_if_repo_clean(self) -> None:  # pragma: no cover

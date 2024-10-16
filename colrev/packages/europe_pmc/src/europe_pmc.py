@@ -400,6 +400,8 @@ class EuropePMCSearchSource:
                     search_parameters={"query": query},
                     comment="",
                 )
+            else:
+                raise NotImplementedError
         else:
             raise NotImplementedError
 
