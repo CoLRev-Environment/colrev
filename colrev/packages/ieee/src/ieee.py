@@ -136,6 +136,8 @@ class IEEEXploreSearchSource:
                     search_parameters=search_parameters,
                     comment="",
                 )
+            else:
+                raise NotImplementedError
 
         elif search_type == SearchType.DB:
             search_source = operation.create_db_source(

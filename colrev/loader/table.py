@@ -45,6 +45,8 @@ class TableLoader(colrev.loader.loader.Loader):
             data = pd.read_csv(filename)
         elif filename.name.endswith((".xls", ".xlsx")):
             data = pd.read_excel(filename, dtype=str)
+        else:
+            raise NotImplementedError
         count = len(data)
         return count
 
@@ -56,6 +58,8 @@ class TableLoader(colrev.loader.loader.Loader):
                 data = pd.read_excel(
                     self.filename, dtype=str
                 )  # dtype=str to avoid type casting
+            else:
+                raise NotImplementedError
 
         except pd.errors.ParserError as exc:  # pragma: no cover
             raise colrev_exceptions.ImportException(

@@ -157,6 +157,8 @@ class PubMedSearchSource:
                         search_parameters=query,
                         comment="",
                     )
+                else:
+                    raise NotImplementedError
             else:
                 raise NotImplementedError
 

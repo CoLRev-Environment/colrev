@@ -347,6 +347,8 @@ class TEIParser:
             authors_node = reference.find(self.ns["tei"] + "analytic")
         elif reference.find(self.ns["tei"] + "monogr") is not None:
             authors_node = reference.find(self.ns["tei"] + "monogr")
+        else:
+            return ""
 
         if authors_node is not None:
             for author_node in authors_node.iterfind(self.ns["tei"] + "author"):
@@ -555,9 +557,9 @@ class TEIParser:
                 Fields.ENTRYTYPE: entrytype,
                 Fields.BOOKTITLE: self._get_reference_monograph_string(reference),
             }
-        elif entrytype == ENTRYTYPES.MISC:
+        else:
             ref_rec = {
-                Fields.ENTRYTYPE: entrytype,
+                Fields.ENTRYTYPE: ENTRYTYPES.MISC,
             }
         ref_rec = {**ground_dict, **ref_rec}
 

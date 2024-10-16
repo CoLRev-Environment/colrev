@@ -101,6 +101,8 @@ class BibliographyExport:
 
         elif self.settings.bib_format is BibFormats.EXCEL:
             export_filepath = self.endpoint_path / Path("references.xlsx")
+        else:
+            raise NotImplementedError
 
         write_file(records_dict=selected_records, filename=export_filepath)
 

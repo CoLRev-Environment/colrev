@@ -105,6 +105,9 @@ class PDFGet(colrev.process.operation.Operation):
     def get_target_filepath(self, record: colrev.record.record.Record) -> Path:
         """Get the target filepath for a PDF"""
 
+        target_filepath = self.review_manager.paths.PDF_DIR / Path(
+            f"{record.data['ID']}.pdf"
+        )
         if self.filepath_directory_pattern == Fields.YEAR:
             target_filepath = self.review_manager.paths.PDF_DIR / Path(
                 f"{record.data.get('year', 'no_year')}/{record.data['ID']}.pdf"
@@ -120,10 +123,6 @@ class PDFGet(colrev.process.operation.Operation):
                 target_filepath = self.review_manager.paths.PDF_DIR / Path(
                     f"{record.data['volume']}/{record.data['ID']}.pdf"
                 )
-        else:
-            target_filepath = self.review_manager.paths.PDF_DIR / Path(
-                f"{record.data['ID']}.pdf"
-            )
 
         return target_filepath
 
