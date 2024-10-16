@@ -75,8 +75,8 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
    # Create and activate a python virtual environment
    python -m venv ~/venv-colrev && source ~/venv-colrev/bin/activate
 
-   # Install CoLRev and all CoLRev related packages
-   pip install colrev && colrev install all-packages
+   # Install CoLRev and all CoLRev related packages ...
+   pip install colrev && colrev install all_internal_packages
 
    # ... and start with the main command
    colrev status
