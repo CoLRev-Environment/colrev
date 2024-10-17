@@ -92,6 +92,27 @@ files = [
 dev = ["freezegun (>=1.0,<2.0)", "pytest (>=6.0)", "pytest-cov"]
 
 [[package]]
+name = "beautifulsoup4"
+version = "4.12.3"
+description = "Screen-scraping library"
+optional = true
+python-versions = ">=3.6.0"
+files = [
+    {file = "beautifulsoup4-4.12.3-py3-none-any.whl", hash = "sha256:b80878c9f40111313e55da8ba20bdba06d8fa3969fc68304167741bbf9e082ed"},
+    {file = "beautifulsoup4-4.12.3.tar.gz", hash = "sha256:74e3d1928edc070d21748185c46e3fb33490f22f52a3addee9aee0f4f7781051"},
+]
+
+[package.dependencies]
+soupsieve = ">1.2"
+
+[package.extras]
+cchardet = ["cchardet"]
+chardet = ["chardet"]
+charset-normalizer = ["charset-normalizer"]
+html5lib = ["html5lib"]
+lxml = ["lxml"]
+
+[[package]]
 name = "bib-dedupe"
 version = "0.7.6"
 description = "Identify and merge duplicates in bibliographic records"
@@ -479,24 +500,25 @@ files = [
 
 [[package]]
 name = "docker"
-version = "6.0.0"
+version = "7.1.0"
 description = "A Python library for the Docker Engine API."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "docker-6.0.0-py3-none-any.whl", hash = "sha256:6e06ee8eca46cd88733df09b6b80c24a1a556bc5cb1e1ae54b2c239886d245cf"},
-    {file = "docker-6.0.0.tar.gz", hash = "sha256:19e330470af40167d293b0352578c1fa22d74b34d3edf5d4ff90ebc203bbb2f1"},
+    {file = "docker-7.1.0-py3-none-any.whl", hash = "sha256:c96b93b7f0a746f9e77d325bcfb87422a3d8bd4f03136ae8a85b37f1898d5fc0"},
+    {file = "docker-7.1.0.tar.gz", hash = "sha256:ad8c70e6e3f8926cb8a92619b832b4ea5299e2831c14284663184e200546fa6c"},
 ]
 
 [package.dependencies]
-packaging = ">=14.0"
 pywin32 = {version = ">=304", markers = "sys_platform == \"win32\""}
 requests = ">=2.26.0"
 urllib3 = ">=1.26.0"
-websocket-client = ">=0.32.0"
 
 [package.extras]
+dev = ["coverage (==7.2.7)", "pytest (==7.4.2)", "pytest-cov (==4.1.0)", "pytest-timeout (==2.1.0)", "ruff (==0.1.8)"]
+docs = ["myst-parser (==0.18.0)", "sphinx (==5.1.1)"]
 ssh = ["paramiko (>=2.4.3)"]
+websockets = ["websocket-client (>=1.3.0)"]
 
 [[package]]
 name = "docutils"
@@ -804,6 +826,9 @@ files = [
     {file = "lingua_language_detector-2.0.2-cp310-cp310-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:51adc3ac5c39a1d245394e6f02a197896e380b908642f4a19bef7554029f6437"},
     {file = "lingua_language_detector-2.0.2-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:013a57405ce9b5d03250fc50cd09b10122f21398851c4ecce98647fe7585b5f4"},
     {file = "lingua_language_detector-2.0.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d24190b5e75c466fe3117310aeae2d11e30e62dfb531c288a85b9b6ab11c94e2"},
+    {file = "lingua_language_detector-2.0.2-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:4e162f9aa34c4f78bc48a69b557b58f783e1ee1dd369e99ab7d2b14bdac3447f"},
+    {file = "lingua_language_detector-2.0.2-cp310-cp310-musllinux_1_2_i686.whl", hash = "sha256:a8092529499ab8bb1beece1a9f4c241b1d0c3ab6c36b181833c4107b81ae5d1d"},
+    {file = "lingua_language_detector-2.0.2-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:ce3233f1c05c623eafdbfb751bd8ac47e20c4bfd744ba6dda5d5c47db7149425"},
     {file = "lingua_language_detector-2.0.2-cp310-none-win32.whl", hash = "sha256:ffa8eff2bbfbf80469a6c4ee3864ccfd4dc7150717e9a1abcf4580b354ccea10"},
     {file = "lingua_language_detector-2.0.2-cp310-none-win_amd64.whl", hash = "sha256:745befc3a1e4c9510d00ad34cac206b678944257fc8b5c1cd7b512310cd7fdbd"},
     {file = "lingua_language_detector-2.0.2-cp311-cp311-macosx_10_7_x86_64.whl", hash = "sha256:14216ee3aeb0c9ab6a5665d71a1399653fe635ed66f208165ed67346feeb2a5c"},
@@ -811,6 +836,9 @@ files = [
     {file = "lingua_language_detector-2.0.2-cp311-cp311-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:a7ae33db037acb47c6517a938885dab4b8bf14e6d6b27a9fa7e237e8680babbc"},
     {file = "lingua_language_detector-2.0.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d6b22ad7d05db4ae6ef8ff127ccee2afb456941ddd781dc8675f110f77de8337"},
     {file = "lingua_language_detector-2.0.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5d39aa5ca1b2d51aee46c7c96fa7ad0463dd2471a1b9827019b71fa367c918be"},
+    {file = "lingua_language_detector-2.0.2-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:d1502bb5e33a9f535b735cb8a898d96b81a63d19a1d2143f76e3b1ae7b7651ae"},
+    {file = "lingua_language_detector-2.0.2-cp311-cp311-musllinux_1_2_i686.whl", hash = "sha256:d72a650be1c44e69dacac26aa7ab354790f95191bc830b3d43ab32ec71388a25"},
+    {file = "lingua_language_detector-2.0.2-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:2c9588ed7e1dfbe06190d6946cd0a9c0f4f22018f09dc37bb6ac686bcfd67907"},
     {file = "lingua_language_detector-2.0.2-cp311-none-win32.whl", hash = "sha256:c0a9fcaaf3a05b7b0b199414bfcdfc06a90b6779bfc37f784fafd45a0dad3201"},
     {file = "lingua_language_detector-2.0.2-cp311-none-win_amd64.whl", hash = "sha256:7ca5e4643cbb229c4eaae198458a5fafdeb812576edb3a160a5c2e4951d3cd1c"},
     {file = "lingua_language_detector-2.0.2-cp312-cp312-macosx_10_7_x86_64.whl", hash = "sha256:f5abfba01b9d1d4e23c647871203692f6e14cbd41a5d99a19ae3504e987a175c"},
@@ -818,6 +846,9 @@ files = [
     {file = "lingua_language_detector-2.0.2-cp312-cp312-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:3a9395f4030cf6eaaa7e432cb167fbaa577109c38114ab1dbdfdd75693b3048b"},
     {file = "lingua_language_detector-2.0.2-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ed54511cc9e4bb721c7f0530870494918985fabf3a30c1fe9a26649416ed83c7"},
     {file = "lingua_language_detector-2.0.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f1571a68601a60b3eaf246ce9c2ad7b9d515609116f3a01c7536f20e2f9e7437"},
+    {file = "lingua_language_detector-2.0.2-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:652936f5e109784528f643062c704ad02572994cf05cfb7c609f96f0ae6259ed"},
+    {file = "lingua_language_detector-2.0.2-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:5fcc06b49c65cf6083afc7b6bd6ea26a43da8107d849842e4647a19c0ce68f66"},
+    {file = "lingua_language_detector-2.0.2-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:9012c74eea7d07c63c47fceaa3a6bc1e216954107b08beb421b64c717912be0d"},
     {file = "lingua_language_detector-2.0.2-cp312-none-win32.whl", hash = "sha256:9a256aadabf76a915910dd430724592f417942a443dc980a325a154c3f93f547"},
     {file = "lingua_language_detector-2.0.2-cp312-none-win_amd64.whl", hash = "sha256:72866175ff3d78b3d9244932ffbbb731471bca3758a2a825c60331ecdfb10851"},
     {file = "lingua_language_detector-2.0.2-cp38-cp38-macosx_10_7_x86_64.whl", hash = "sha256:99e59214d7f9a7f11f812b416cabfccfcdb6bc52a0cf67aa59f4d984d5e1296f"},
@@ -825,6 +856,9 @@ files = [
     {file = "lingua_language_detector-2.0.2-cp38-cp38-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:b30bd3e63d8f0df6527b626c6eaf3836427ebf67dbdd527affbcedad0aa62cc4"},
     {file = "lingua_language_detector-2.0.2-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1bc34b9331fc2ded8a78610ac406fa0cb4772a43d6280ee7830cb507ff78a9d5"},
     {file = "lingua_language_detector-2.0.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:06b75e2669df01fc49429a586aada9b316d0142aa5e1fcb692efe679c0beaef4"},
+    {file = "lingua_language_detector-2.0.2-cp38-cp38-musllinux_1_2_aarch64.whl", hash = "sha256:acc85b33c2f5faa46c1f49d184b990c8e6ef9b8d9aabcc720a2f018c2392de44"},
+    {file = "lingua_language_detector-2.0.2-cp38-cp38-musllinux_1_2_i686.whl", hash = "sha256:f1fd7d870148dcc73f871f05ad321884efb08d26325ffb5d2a12b03ab9d25043"},
+    {file = "lingua_language_detector-2.0.2-cp38-cp38-musllinux_1_2_x86_64.whl", hash = "sha256:bd4ee12cb7e8e6b6a201617d2a45b5ca6bbae0c29396326ab247f574997f556b"},
     {file = "lingua_language_detector-2.0.2-cp38-none-win32.whl", hash = "sha256:d9cf3b724c422c9902c8370c20725e321df5d6a53f98cba7210c02cd5d0fcb30"},
     {file = "lingua_language_detector-2.0.2-cp38-none-win_amd64.whl", hash = "sha256:278fa16dcb6b595daae796606dade38f80bcbf630f4816489a3ce0d719a71214"},
     {file = "lingua_language_detector-2.0.2-cp39-cp39-macosx_10_7_x86_64.whl", hash = "sha256:c568d1bc24ccf61a76d3b181139dbc519180f14e2eca437ba1e10a62efaf9e4a"},
@@ -832,6 +866,9 @@ files = [
     {file = "lingua_language_detector-2.0.2-cp39-cp39-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:815f3290ab251907e142b82969a1d251c1c03d9ec2c71c8fbe5dc87f46152590"},
     {file = "lingua_language_detector-2.0.2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:01b69fc794474611978bbc922cbff154ef390287df47c1a48699c589a78587a2"},
     {file = "lingua_language_detector-2.0.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:40629aeac21a3cbc6ea45b925c6adab66badd6c9fc1885285f2aa27658b86157"},
+    {file = "lingua_language_detector-2.0.2-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:15beab4230e16c38cc88e50548076943e960476b2681e9873d764770173c1d3d"},
+    {file = "lingua_language_detector-2.0.2-cp39-cp39-musllinux_1_2_i686.whl", hash = "sha256:c2f788707484686e584e947bbc526fae13759c2bcfe57d8076e3b20c2278d0e0"},
+    {file = "lingua_language_detector-2.0.2-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:daf792f938601d161e93ab8c46b0aee2facc187c2bb9e87a4ee314d7fc7471a1"},
     {file = "lingua_language_detector-2.0.2-cp39-none-win32.whl", hash = "sha256:183c335b8f73286bb67a8a1a780145335af7fd03cc4e4de926da792d1ed120fe"},
     {file = "lingua_language_detector-2.0.2-cp39-none-win_amd64.whl", hash = "sha256:48203ec1fbd6be0b6af3888b9494d543b86f3cf8de6f9b1cd08867fa12cd673c"},
     {file = "lingua_language_detector-2.0.2-pp310-pypy310_pp73-macosx_10_7_x86_64.whl", hash = "sha256:fc6f2548fe6aa94ac0a0868cd67b468dc6b03982ecb9d6d04aeb6716d45995c2"},
@@ -839,16 +876,25 @@ files = [
     {file = "lingua_language_detector-2.0.2-pp310-pypy310_pp73-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:aa499e82d66e12a242f51de51517d86e4cf0969c29379a9bae16a12853519c80"},
     {file = "lingua_language_detector-2.0.2-pp310-pypy310_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:9eb520f8de3906db10df68c4dcd48c5ed9a3c6eb593d3d94a9875627eead010a"},
     {file = "lingua_language_detector-2.0.2-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ccb2aa354d659abddcaa067bc403fc32549d1f531ce99b5d4d336b7c796ed111"},
+    {file = "lingua_language_detector-2.0.2-pp310-pypy310_pp73-musllinux_1_2_aarch64.whl", hash = "sha256:1eeb4390c7b2b570013bbcbfb2292beda4b60e6c22631b27937160814fa38f8d"},
+    {file = "lingua_language_detector-2.0.2-pp310-pypy310_pp73-musllinux_1_2_i686.whl", hash = "sha256:8286b031302e32ac7a81d4f4f0a379b8ce1031422424eba3b1c8d721b956c4cb"},
+    {file = "lingua_language_detector-2.0.2-pp310-pypy310_pp73-musllinux_1_2_x86_64.whl", hash = "sha256:3d2e8a34e4d9830714f1de6728eec182a36d243f038d1b7b71a29cc63408ad2d"},
     {file = "lingua_language_detector-2.0.2-pp38-pypy38_pp73-macosx_10_7_x86_64.whl", hash = "sha256:d012d95f863c627d4a57a69084ec768a7add7d8ca5f87eb0b51b05d7f4b17232"},
     {file = "lingua_language_detector-2.0.2-pp38-pypy38_pp73-macosx_11_0_arm64.whl", hash = "sha256:9d26936378cf2d8c081be332f60d5b1b7e6ead66986cff85df00105f146f8aa2"},
     {file = "lingua_language_detector-2.0.2-pp38-pypy38_pp73-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:d4115466f8dc4e63b6dc71fdd17ac39bc5ab334a0f2567237cff5a9f7515655c"},
     {file = "lingua_language_detector-2.0.2-pp38-pypy38_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ade311c8f7f419e4ad79065b5d757a49550131fc3b18fccb76cb949c562e0705"},
     {file = "lingua_language_detector-2.0.2-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b4e861e49e75d37d26eb5c62c384b473d0641390b5f5f52c5ca30667b6573425"},
+    {file = "lingua_language_detector-2.0.2-pp38-pypy38_pp73-musllinux_1_2_aarch64.whl", hash = "sha256:9fd26d458356942db1d92b2951f9f6fa3aca0ef843a939c2cdcd8779a5148912"},
+    {file = "lingua_language_detector-2.0.2-pp38-pypy38_pp73-musllinux_1_2_i686.whl", hash = "sha256:80eaaf6db600303665ab13c582c7818894e28270fee1e1d6af2a36ccc4d5095a"},
+    {file = "lingua_language_detector-2.0.2-pp38-pypy38_pp73-musllinux_1_2_x86_64.whl", hash = "sha256:eb5dc7f0f867e52cc66b2fee861f7442f95a6be7fdca84fc375b8d57b2cae008"},
     {file = "lingua_language_detector-2.0.2-pp39-pypy39_pp73-macosx_10_7_x86_64.whl", hash = "sha256:0b5415d527be8e8ef9216c8d5aab8cc8e5271361342777a39133ca7e0e5e9944"},
     {file = "lingua_language_detector-2.0.2-pp39-pypy39_pp73-macosx_11_0_arm64.whl", hash = "sha256:796ba624c026ef978819d124d0d47685f2aeeec5b92315827187126347e7f406"},
     {file = "lingua_language_detector-2.0.2-pp39-pypy39_pp73-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:b4c164c7c9e0a151a986ab52668f57e3de265f0b04fb804a8ff2a5cb8a2fd83d"},
     {file = "lingua_language_detector-2.0.2-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ac1ca58c8b273ac3ea1a0aa5dccb613c4539b1e4eaf236b565836898a70bd03d"},
     {file = "lingua_language_detector-2.0.2-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ae33435d749478623466aa6315917432de9114226ad0faa7dc02b5bf42faae77"},
+    {file = "lingua_language_detector-2.0.2-pp39-pypy39_pp73-musllinux_1_2_aarch64.whl", hash = "sha256:177fd7d5073a96b885daa2059c55d19a306550fed7aadafcfd3037cd8ce44ae1"},
+    {file = "lingua_language_detector-2.0.2-pp39-pypy39_pp73-musllinux_1_2_i686.whl", hash = "sha256:c7d1ea36a200f5d7e72eca06a3f1648dcd15fa482bf3b075ec3ef90ed57120a0"},
+    {file = "lingua_language_detector-2.0.2-pp39-pypy39_pp73-musllinux_1_2_x86_64.whl", hash = "sha256:436de99680cbe4418295f961d82958bed76c029ab10696a4c46ce0b8d33e369c"},
 ]
 
 [package.extras]
@@ -1167,7 +1213,7 @@ et-xmlfile = "*"
 name = "packaging"
 version = "24.1"
 description = "Core utilities for Python packages"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "packaging-24.1-py3-none-any.whl", hash = "sha256:5b8f2217dbdbd2f7f384c41c628544e6d52f2d0f53c6d0c3ea61aa5d1d7ff124"},
@@ -1990,13 +2036,13 @@ test = ["zope.testrunner"]
 
 [[package]]
 name = "requests"
-version = "2.31.0"
+version = "2.32.3"
 description = "Python HTTP for Humans."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "requests-2.31.0-py3-none-any.whl", hash = "sha256:58cd2187c01e70e6e26505bca751777aa9f2ee0b7f4300988b709f44e013003f"},
-    {file = "requests-2.31.0.tar.gz", hash = "sha256:942c5a758f98d790eaed1a29cb6eefc7ffb0d1cf7af05c3d2791656dbd6ad1e1"},
+    {file = "requests-2.32.3-py3-none-any.whl", hash = "sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6"},
+    {file = "requests-2.32.3.tar.gz", hash = "sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760"},
 ]
 
 [package.dependencies]
@@ -2159,6 +2205,17 @@ python-versions = "*"
 files = [
     {file = "snowballstemmer-2.2.0-py2.py3-none-any.whl", hash = "sha256:c8e1716e83cc398ae16824e5572ae04e0d9fc2c6b985fb0f900f5f0c96ecba1a"},
     {file = "snowballstemmer-2.2.0.tar.gz", hash = "sha256:09b16deb8547d3412ad7b590689584cd0fe25ec8db3be37788be3810cbf19cb1"},
+]
+
+[[package]]
+name = "soupsieve"
+version = "2.6"
+description = "A modern CSS selector implementation for Beautiful Soup."
+optional = true
+python-versions = ">=3.8"
+files = [
+    {file = "soupsieve-2.6-py3-none-any.whl", hash = "sha256:e72c4ff06e4fb6e4b5a9f0f55fe6e81514581fca1515028625d0f299c602ccc9"},
+    {file = "soupsieve-2.6.tar.gz", hash = "sha256:e2e68417777af359ec65daac1057404a3c8a5455bb8abc36f1a9866ab1a51abb"},
 ]
 
 [[package]]
@@ -2604,22 +2661,6 @@ files = [
 ]
 
 [[package]]
-name = "websocket-client"
-version = "1.8.0"
-description = "WebSocket client for Python with low level API options"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "websocket_client-1.8.0-py3-none-any.whl", hash = "sha256:17b44cc997f5c498e809b22cdf2d9c7a9e71c02c8cc2b6c56e7c2d1239bfa526"},
-    {file = "websocket_client-1.8.0.tar.gz", hash = "sha256:3239df9f44da632f96012472805d40a23281a991027ce11d2f45a6f24ac4c3da"},
-]
-
-[package.extras]
-docs = ["Sphinx (>=6.0)", "myst-parser (>=2.0.0)", "sphinx-rtd-theme (>=1.1.0)"]
-optional = ["python-socks", "wsaccel"]
-test = ["websockets"]
-
-[[package]]
 name = "xmod"
 version = "1.8.1"
 description = "🌱 Turn any object into a module 🌱"
@@ -2705,9 +2746,9 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 
 [extras]
 dev = ["coverage", "m2r", "pylint", "pytest", "pytest-mock", "pytest-skip-slow", "requests-mock", "types-click"]
-docs = ["Sphinx", "docutils", "m2r", "repoze-sphinx-autointerface", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-copybutton", "sphinx-design", "sphinx-rtd-theme", "sphinx_collapse", "sphinxcontrib.datatemplates"]
+docs = ["Sphinx", "beautifulsoup4", "docutils", "m2r", "repoze-sphinx-autointerface", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-copybutton", "sphinx-design", "sphinx-rtd-theme", "sphinx_collapse", "sphinxcontrib.datatemplates"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <4"
-content-hash = "fb2db3267de90521234a2f330a45dc726df309bda4dccdf7e773fce790cb7fa9"
+content-hash = "9bbdb82e52d9047d0a9a79e06bcb6657057fc45530bf2945f5eb75666fe3a72c"
