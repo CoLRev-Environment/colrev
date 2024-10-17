@@ -65,6 +65,7 @@ nameparser = "^1.1.2"
 number-parser = "^0.3.2"
 pymupdf = "^1.24.3"
 toml = "^0.10.2"
+beautifulsoup4 = {version = "^4.11.1", optional = true }
 m2r = {version = "^0.3.1", optional = true }
 Sphinx = {version = "^5.2.3", optional = true }
 sphinx-autodoc-typehints = {version = "^1.19.4", optional = true }
@@ -86,7 +87,7 @@ types-click = {version = "^7.1.8", optional = true }
 docutils = {version = "!=0.21.post1", optional = true }
 
 [tool.poetry.extras]
-docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinxcontrib.datatemplates", "sphinx_collapse", "repoze-sphinx-autointerface", "sphinx-design", "sphinx-copybutton", "docutils", "m2r"]
+docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinxcontrib.datatemplates", "sphinx_collapse", "repoze-sphinx-autointerface", "sphinx-design", "sphinx-copybutton", "docutils", "m2r", "beautifulsoup4"]
 dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock", "pytest-skip-slow", "m2r"]
 
 [tool.mypy]
