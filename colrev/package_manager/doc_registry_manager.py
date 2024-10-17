@@ -373,12 +373,12 @@ class DocRegistryManager:
     packages_data: typing.Dict[str, dict] = {}
 
     def __init__(self) -> None:
+        self.packages: typing.List[PackageDoc] = []
 
         with open(Filepaths.PACKAGES_JSON, encoding="utf-8") as file:
             self.packages_data = json.load(file)
 
     def _load_packages(self) -> None:
-        self.packages = []
         for package_id, package_data in self.packages_data.items():
             try:
                 package_doc = PackageDoc(package_id)
@@ -507,32 +507,29 @@ class DocRegistryManager:
             answer = inquirer.prompt(questions)
             return answer["action"]
 
-        response = requests.get("https://pypi.org/search/?q=colrev")
+        response = requests.get("https://pypi.org/search/?q=colrev", timeout=30)
 
         # read self.pypi_ignored_packages_file
         with open(self.pypi_ignored_packages_file, encoding="utf-8") as file:
             pypi_ignored_packages = json.load(file)
 
-        if response.status_code == requests.codes.ok:
+        if response.status_code == 200:
 
             soup = BeautifulSoup(response.text, "html.parser")
             package_snippets = soup.find_all("a", class_="package-snippet")
-            search_results = list()
+            search_results = []
             for package_snippet in package_snippets:
                 span_elems = package_snippet.find_all("span")
                 name = span_elems[0].text.strip()
-                version = span_elems[1].text.strip()
-                release_date = span_elems[2].text.strip()
-                desc = package_snippet.p.text.strip()
                 if "colrev" not in name:
                     continue
                 search_results.append(
-                    dict(
-                        name=name,
-                        version=version,
-                        release_date=release_date,
-                        description=desc,
-                    )
+                    {
+                        "name": name,
+                        "version": span_elems[1].text.strip(),
+                        "release_date": span_elems[2].text.strip(),
+                        "description": package_snippet.p.text.strip(),
+                    }
                 )
             for search_result in search_results:
                 package_name = search_result["name"]
