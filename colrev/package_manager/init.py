@@ -130,6 +130,7 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
         + f"<{DEFAULT_AUTHOR['email']}>{Colors.END}]"
     )
 
+    # pylint: disable=too-many-statements
     def validate_name(answers: list, name: str) -> bool:
         if name == "":  # Accept default package name
             return True
@@ -140,6 +141,21 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
             print(f"  {Colors.RED}The package name is already installed.{Colors.END}")
             return False
 
+        if built_in:
+            if not name.startswith("colrev."):
+                print(
+                    f"  {Colors.RED}The built-in package name must start with 'colrev.'{Colors.END}"
+                )
+                return False
+            if not re.match(r"^[a-zA-Z_]*\.[a-zA-Z0-9_]*$", name):
+                print(
+                    f"  {Colors.RED}"
+                    "The package name is not a valid python package name."
+                    f"{Colors.END}"
+                )
+                return False
+            return True
+
         # Check if the name is a valid python package name
         if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
             print(
@@ -147,11 +163,6 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
             )
             return False
 
-        if built_in and not name.startswith("colrev."):
-            print(
-                f"  {Colors.RED}The built-in package name must start with 'colrev.'{Colors.END}"
-            )
-            return False
         return True
 
     def validate_version(answers: list, version: str) -> bool:
