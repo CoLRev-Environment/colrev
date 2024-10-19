@@ -84,10 +84,11 @@ coverage = {extras = ["toml"], version = "^7.3.2", optional = true }
 types-click = {version = "^7.1.8", optional = true }
 # Can't do 0.21 with poetry because of https://github.com/python-poetry/poetry/issues/9293
 docutils = {version = "!=0.21.post1", optional = true }
+mypy = {version = "1.12.0", optional = true }
 
 [tool.poetry.extras]
 docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinxcontrib.datatemplates", "sphinx_collapse", "repoze-sphinx-autointerface", "sphinx-design", "sphinx-copybutton", "docutils", "m2r", "beautifulsoup4"]
-dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock", "pytest-skip-slow", "m2r"]
+dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock", "pytest-skip-slow", "m2r", "mypy"]
 
 [tool.mypy]
 python_version = 3.8
