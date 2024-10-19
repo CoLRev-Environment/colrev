@@ -114,10 +114,37 @@ def _create_built_in_package() -> bool:
     return data["package_type"] == "Built-in"
 
 
+# pylint: disable=unused-argument
+def validate_version(answers: list, version: str) -> bool:
+    """Validate the version"""
+    # return false if the version is not a valid version number
+    if version == "":
+        return True
+    if not re.match(r"^\d+\.\d+\.\d+$", version):
+        print(f"  {Colors.RED}The version number is not valid.{Colors.END}")
+        return False
+    return True
+
+
+# pylint: disable=unused-argument
+def validate_module_name(answers: list, name: str) -> bool:
+    """Validate the module name"""
+    if name == "":  # Accept default module name
+        return True
+    # return false if the name is not a valid python module name
+    if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
+        print(
+            f"  {Colors.RED}The module name is not a valid python module name.{Colors.END}"
+        )
+        return False
+    return True
+
+
+# pylint: disable=too-many-statements
+# pylint: disable=unused-argument
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-return-statements
 def _get_package_data(default_package_name: str, built_in: bool) -> dict:
-    # pylint: disable=unused-argument
-    # pylint: disable=too-many-statements
-    # pylint: disable=too-many-locals
 
     default_package_name_str = ""
     if default_package_name:
@@ -165,15 +192,6 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
 
         return True
 
-    def validate_version(answers: list, version: str) -> bool:
-        # return false if the version is not a valid version number
-        if version == "":
-            return True
-        if not re.match(r"^\d+\.\d+\.\d+$", version):
-            print(f"  {Colors.RED}The version number is not valid.{Colors.END}")
-            return False
-        return True
-
     questions = [
         inquirer.Text(
             "name",
@@ -213,17 +231,6 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
     )
 
     package_data = inquirer.prompt(questions)
-
-    def validate_module_name(answers: list, name: str) -> bool:
-        if name == "":  # Accept default module name
-            return True
-        # return false if the name is not a valid python module name
-        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
-            print(
-                f"  {Colors.RED}The module name is not a valid python module name.{Colors.END}"
-            )
-            return False
-        return True
 
     def validate_class_name(answers: list, name: str) -> bool:
         if name == "":  # Accept default class name
