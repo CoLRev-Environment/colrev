@@ -57,7 +57,7 @@ def test_get_analytics(  # type: ignore
             "atomic_steps": 0,
             "completed_atomic_steps": 0,
             "commit_author": "Tester Name",
-            "commit_message": "Init: create repository for the review project",
+            "commit_message": "Init: Create CoLRev repository",
             "search": 0,
             "included": 0,
         },
