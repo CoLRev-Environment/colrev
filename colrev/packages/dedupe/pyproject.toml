@@ -12,7 +12,7 @@ repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/pack
 include = "src"
 
 [tool.poetry.dependencies]
-python = ">=3.8, <4"
+python = ">=3.10, <4"
 
 [tool.colrev]
 colrev_doc_description = "Dedupe (BibDedupe)"
