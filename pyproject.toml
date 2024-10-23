@@ -34,7 +34,7 @@ colrev-hooks-share = "colrev.hooks.share:main"
 colrev-hooks-update = "colrev.hooks.update:main"
 
 [tool.poetry.dependencies]
-python = ">=3.9, <4"
+python = ">=3.10, <3.13" # lingua-language-detector does not yet support python3.13
 click = "^8.1.6"
 click-repl = "^0.3.0"
 inquirer = "^3.1.3"
@@ -49,17 +49,16 @@ pydantic = "^2.9.1"
 dictdiffer = "^0.9.0"
 imagehash = "^4.3.1"
 rapidfuzz = "^3.5.2"
-bib-dedupe = "^0.7.6" # required in record_similarity
-lxml = "^4.9.1"
+bib-dedupe = "^0.9.0" # required in record_similarity
+lxml = "^5.2.0"
 pandas = "^2.2"
-numpy = "<2.0"  # https://github.com/pandas-dev/pandas/issues/55519
 openpyxl = "^3.1.2"                             # required by pandas for Excel
 PyYAML = "^6.0.0"
 pybtex = "^0.24.0"                              # internally?
 requests = "^2.32.0"
 requests-cache = "^0.9.6"
 lingua-language-detector = "^2.0.2"
-pycountry = "^22.3.5"
+pycountry = "^24.6.1"
 nameparser = "^1.1.2"
 number-parser = "^0.3.2"
 pymupdf = "^1.24.3"
