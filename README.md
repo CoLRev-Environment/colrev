@@ -5,11 +5,9 @@
 <div align="center">
 
 [![DOI](https://zenodo.org/badge/363073613.svg)](https://zenodo.org/badge/latestdoi/363073613)
-[![GitHub release](https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Environment/colrev/releases/)
 [![PyPI - Version](https://img.shields.io/pypi/v/colrev?color=blue)](https://pypi.org/project/colrev/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/colrev)
 [![License](https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Environment/colrev/releases/)
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 ![Documentation Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/docs_deploy.yml?label=documentation)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/tests.yml?label=tests)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/CoLRev-Ecosystem/colrev/main.svg)](https://results.pre-commit.ci/latest/github/CoLRev-Ecosystem/colrev/main)
