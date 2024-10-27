@@ -32,6 +32,7 @@ classifiers = [
 ]
 requires-python = ">=3.10, <3.13"  # lingua-language-detector does not yet support python3.13
 dependencies = [
+    "bibtexparser>=1.4.2",
     "click>=8.1.6",
     "click-repl>=0.3.0",
     "inquirer>=3.1.3",
