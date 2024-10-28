@@ -74,6 +74,7 @@ Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt
    # Install CoLRev
    cd ~/Desktop/colrev
    pip install -e .[dev,docs]
+   colrev install all_internal_packages
    pre-commit install
 
 ::
