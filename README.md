@@ -1,3 +1,4 @@
+
 <p align="center">
 <img src="https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png" width="400">
 </p>
@@ -49,6 +50,7 @@ You can try a live demonstration of CoLRev via GitHub codespaces: [start demo](h
 
 The following shows a comparison of CoLRev with related tools.
 
+> [!Note]
 > **This is a preview.** We plan to document and link the criteria, verify each cell, and invite the developers of the other tools to comment on the overview (documenting responses if the developers agree).
 
 <!--
