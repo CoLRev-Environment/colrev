@@ -10,11 +10,6 @@
   ],
   "postCreateCommand": "pip install -e .[dev] && colrev install all_internal_packages && pre-commit run --all-files",
   "customizations": {
-    "codespaces": {
-      "openFiles": [
-        ".devcontainer/setup.md"
-      ]
-    },
     "vscode": {
       "extensions": [
         "streetsidesoftware.code-spell-checker",
