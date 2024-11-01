@@ -63,7 +63,7 @@ present short version, long version in the docs
 | **Criteria**                                  | **CoLRev**                        | [**LitStudy**](https://github.com/NLeSC/litstudy)  | [**BUHOS**](https://github.com/clbustos/buhos)  | [**Covidence**](https://www.covidence.org/)   |
 |-----------------------------------------------|-----------------------------------|----------------------------------|---------------------------------|---------------------------------|
 | **Review types**                              |                                   |                                  |                                 |                                 |
-| Supports different genres of review methdos   | ![yes]                            | ![no]                            | ![no]                           | ![no]                           |
+| Supports different genres of review methods   | ![yes]                            | ![no]                            | ![no]                           | ![no]                           |
 | Extensibility                                 | ![yes]                            | ![maybe]                         | ![maybe]                        | ![no]                           |
 | **Process steps**                             |                                   |                                  |                                 |                                 |
 | Review objectives and protocol                | ![yes]                            | ![yes]                           | ![yes]                          | ![yes]                          |
