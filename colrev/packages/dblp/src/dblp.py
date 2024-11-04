@@ -242,7 +242,7 @@ class DBLPSearchSource:
         )
 
         total = api.total
-        self.review_manager.logger.info(f"Total: {total}")
+        self.review_manager.logger.info(f"Total: {total:,}")
         if not rerun and len(dblp_feed.feed_records) > 0:
             self.review_manager.logger.info(
                 "Retrieving latest results (no estimate available)"
