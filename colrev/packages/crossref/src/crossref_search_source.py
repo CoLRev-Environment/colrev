@@ -424,16 +424,16 @@ class CrossrefSearchSource:
         self.api.last_updated = crossref_feed.get_last_updated()
 
         nrecs = self.api.get_len_total()
-        self.review_manager.logger.info(f"Total: {nrecs} records")
+        self.review_manager.logger.info(f"Total: {nrecs:,} records")
         if not rerun:
             self.review_manager.logger.info(
                 f"Retrieve papers indexed since {self.api.last_updated.split('T', maxsplit=1)[0]}"
             )
             nrecs = self.api.get_len()
 
-        self.review_manager.logger.info(f"Retrieve {nrecs} records")
+        self.review_manager.logger.info(f"Retrieve {nrecs:,} records")
         estimated_time = nrecs * 0.5
-        estimated_time_formatted = str(datetime.timedelta(seconds=estimated_time))
+        estimated_time_formatted = str(datetime.timedelta(seconds=int(estimated_time)))
         self.review_manager.logger.info(f"Estimated time: {estimated_time_formatted}")
 
         try:
