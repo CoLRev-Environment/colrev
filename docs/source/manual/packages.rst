@@ -136,6 +136,7 @@ Packages
    packages/colrev.scope_prescreen.rst
 
 
+   packages/colrev-scidb.rst
    packages/colrev.download_from_website.rst
    packages/colrev.local_index.rst
    packages/colrev.unpaywall.rst
