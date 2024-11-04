@@ -271,5 +271,8 @@
     },
     "colrev.ref_check": {
         "dev_status": "experimental"
+    },
+    "colrev-scidb": {
+        "dev_status": "experimental"
     }
 }

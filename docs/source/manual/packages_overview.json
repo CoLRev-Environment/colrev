@@ -590,6 +590,12 @@
         "endpoint_type": "prescreen"
     },
     {
+        "package_endpoint_identifier": "colrev-scidb",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "TODO (:doc:`instructions </manual/packages/colrev-scidb>`)",
+        "endpoint_type": "pdf_get"
+    },
+    {
         "package_endpoint_identifier": "colrev.download_from_website",
         "status": "|MATURING|",
         "short_description": "Download PDF from website (:doc:`instructions </manual/packages/colrev.download_from_website>`)",

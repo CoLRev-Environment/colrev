@@ -22,16 +22,16 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-colrev.ref_check
-================
+colrev-scidb
+============
 
 |VERSION| Version: 0.1.0
 
-|MAINTAINER| Maintainer: Gerit Wagner
+|MAINTAINER| Maintainer: Julian Prester
 
 |LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/>`_
+|GIT_REPO| Repository: `julianprester/scidb <https://github.com/julianprester/scidb>`_
 
 .. list-table::
    :header-rows: 1
@@ -40,12 +40,12 @@ colrev.ref_check
    * - Endpoint
      - Status
      - Add
-   * - data
+   * - pdf_get
      - |EXPERIMENTAL|
      - .. code-block::
 
 
-         colrev data --add colrev.ref_check
+         colrev pdf-get --add colrev-scidb
 
 
 Summary
@@ -56,9 +56,14 @@ Installation
 
 .. code-block:: bash
 
-   colrev install colrev.ref_check
+   colrev install scidb
 
 Usage
 -----
 
-``colrev.ref_check`` can be added as a data endpoint. It ensures that records are only set to ``rev_synthesized`` if there are no remaining defects in the record metadata.
+TODO
+
+License
+-------
+
+This project is licensed under the MIT License - see the `LICENSE <../LICENSE>`_ file for details.

@@ -2,5 +2,6 @@
     "colrev-core": {},
     "colrev": {},
     "colrev-endpoint": {},
-    "colrev-cml-assistant": {}
+    "colrev-cml-assistant": {},
+    "colrev-asreview": {}
 }
