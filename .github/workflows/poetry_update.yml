@@ -2,8 +2,6 @@ name: Poetry update
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '10 2 * * 3'
 
 jobs:
   poetry-update:
