@@ -56,14 +56,14 @@ Installation
 
 .. code-block:: bash
 
-   colrev install scidb
+   colrev install colrev-scidb
 
 Usage
 -----
 
-TODO
+colrev pdf-get --add colrev-scidb
 
 License
 -------
 
-This project is licensed under the MIT License - see the `LICENSE <../LICENSE>`_ file for details.
+This project is licensed under the MIT License - see the `LICENSE <https://github.com/julianprester/scidb/blob/main/LICENSE>`_ file for details.
