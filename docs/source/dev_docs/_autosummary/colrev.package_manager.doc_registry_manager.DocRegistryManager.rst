@@ -32,3 +32,5 @@ colrev.package\_manager.doc\_registry\_manager.DocRegistryManager
       ~DocRegistryManager.docs_packages_overview_json_file
       ~DocRegistryManager.docs_search_source_types_json_file
       ~DocRegistryManager.package_endpoints_json
+      ~DocRegistryManager.packages_data
+      ~DocRegistryManager.pypi_ignored_packages_file

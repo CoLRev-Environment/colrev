@@ -36,6 +36,7 @@ colrev.package\_manager.doc\_registry\_manager.PackageDoc
       ~PackageDoc.authors
       ~PackageDoc.documentation
       ~PackageDoc.package_dir
+      ~PackageDoc.monorepo
       ~PackageDoc.package_metadata
       ~PackageDoc.description
       ~PackageDoc.dev_status
