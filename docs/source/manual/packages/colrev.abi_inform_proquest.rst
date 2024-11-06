@@ -29,9 +29,9 @@ colrev.abi_inform_proquest
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/abi_inform_proquest>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/abi_inform_proquest>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.abi_inform_proquest
      - Add
    * - search_source
      - |EXPERIMENTAL|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev search --add colrev.abi_inform_proquest

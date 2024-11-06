@@ -3,21 +3,21 @@ colrev.process
 
 .. automodule:: colrev.process
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -29,4 +29,3 @@ colrev.process
    colrev.process.model
    colrev.process.operation
    colrev.process.status
-

@@ -29,9 +29,9 @@ colrev.dedupe
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/dedupe>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/dedupe>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.dedupe
      - Add
    * - dedupe
      - |STABLE|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev dedupe --add colrev.dedupe

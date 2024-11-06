@@ -9,13 +9,13 @@ colrev.ops.upgrade.Upgrade
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~Upgrade.check_precondition
       ~Upgrade.conclude
       ~Upgrade.decorate
@@ -23,16 +23,14 @@ colrev.ops.upgrade.Upgrade
       ~Upgrade.main
       ~Upgrade.notify
       ~Upgrade.save_records_dict
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~Upgrade.type
       ~Upgrade.repo
-   
-   

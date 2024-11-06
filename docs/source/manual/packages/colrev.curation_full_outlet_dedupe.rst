@@ -29,9 +29,9 @@ colrev.curation_full_outlet_dedupe
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/curation_full_outlet_dedupe>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/curation_full_outlet_dedupe>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.curation_full_outlet_dedupe
      - Add
    * - dedupe
      - |EXPERIMENTAL|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev dedupe --add colrev.curation_full_outlet_dedupe
