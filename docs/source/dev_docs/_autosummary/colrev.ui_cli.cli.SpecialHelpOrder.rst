@@ -26,8 +26,6 @@ colrev.ui\_cli.cli.SpecialHelpOrder
       ~SpecialHelpOrder.format_options
       ~SpecialHelpOrder.format_usage
       ~SpecialHelpOrder.get_command
-      ~SpecialHelpOrder.get_command_hidden
-      ~SpecialHelpOrder.get_command_short_help
       ~SpecialHelpOrder.get_help
       ~SpecialHelpOrder.get_help_option
       ~SpecialHelpOrder.get_help_option_names

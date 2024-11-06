@@ -16,3 +16,5 @@ colrev.package\_manager.init
       :nosignatures:
 
       main
+      validate_module_name
+      validate_version
