@@ -29,9 +29,9 @@ colrev.export_man_prep
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/export_man_prep>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/export_man_prep>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.export_man_prep
      - Add
    * - prep_man
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev prep-man --add colrev.export_man_prep

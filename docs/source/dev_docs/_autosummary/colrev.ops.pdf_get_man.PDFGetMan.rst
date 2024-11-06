@@ -9,13 +9,13 @@ colrev.ops.pdf\_get\_man.PDFGetMan
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~PDFGetMan.check_precondition
       ~PDFGetMan.conclude
       ~PDFGetMan.decorate
@@ -27,15 +27,17 @@ colrev.ops.pdf\_get\_man.PDFGetMan
       ~PDFGetMan.notify
       ~PDFGetMan.pdf_get_man_record
       ~PDFGetMan.pdfs_retrieved_manually
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~PDFGetMan.MISSING_PDF_FILES_RELATIVE
       ~PDFGetMan.type
       ~PDFGetMan.pdf_get_man_package_endpoints
+   
+   

@@ -9,13 +9,13 @@ colrev.ui\_cli.cli.SpecialHelpOrder
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~SpecialHelpOrder.add_command
       ~SpecialHelpOrder.collect_usage_pieces
       ~SpecialHelpOrder.command
@@ -26,8 +26,6 @@ colrev.ui\_cli.cli.SpecialHelpOrder
       ~SpecialHelpOrder.format_options
       ~SpecialHelpOrder.format_usage
       ~SpecialHelpOrder.get_command
-      ~SpecialHelpOrder.get_command_hidden
-      ~SpecialHelpOrder.get_command_short_help
       ~SpecialHelpOrder.get_help
       ~SpecialHelpOrder.get_help_option
       ~SpecialHelpOrder.get_help_option_names
@@ -46,15 +44,15 @@ colrev.ui\_cli.cli.SpecialHelpOrder
       ~SpecialHelpOrder.result_callback
       ~SpecialHelpOrder.shell_complete
       ~SpecialHelpOrder.to_info_dict
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~SpecialHelpOrder.allow_extra_args
       ~SpecialHelpOrder.allow_interspersed_args
       ~SpecialHelpOrder.command_class
@@ -65,3 +63,5 @@ colrev.ui\_cli.cli.SpecialHelpOrder
       ~SpecialHelpOrder.params
       ~SpecialHelpOrder.name
       ~SpecialHelpOrder.context_settings
+   
+   

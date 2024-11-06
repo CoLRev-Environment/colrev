@@ -29,9 +29,9 @@ colrev.exclude_non_latin_alphabets
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/exclude_non_latin_alphabets>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/exclude_non_latin_alphabets>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.exclude_non_latin_alphabets
      - Add
    * - prep
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev prep --add colrev.exclude_non_latin_alphabets
