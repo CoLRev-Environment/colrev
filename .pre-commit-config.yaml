@@ -57,7 +57,7 @@ repos:
         args: [--disallow-untyped-defs, --disallow-incomplete-defs, --disallow-untyped-calls]
         additional_dependencies: [types-toml]
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.7.1
+  rev: v0.7.3
   hooks:
     - id: ruff # runs faster than pylint
       args: [--fix, --exit-non-zero-on-fix]
