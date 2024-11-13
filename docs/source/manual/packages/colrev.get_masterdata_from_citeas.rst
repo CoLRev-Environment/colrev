@@ -29,9 +29,9 @@ colrev.get_masterdata_from_citeas
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/get_masterdata_from_citeas>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/get_masterdata_from_citeas>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.get_masterdata_from_citeas
      - Add
    * - prep
      - |EXPERIMENTAL|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev prep --add colrev.get_masterdata_from_citeas

@@ -9,23 +9,23 @@ colrev.constants.OperationsType
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~OperationsType.get_manual_extra_operations
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~OperationsType.search
       ~OperationsType.load
       ~OperationsType.prep
@@ -40,3 +40,5 @@ colrev.constants.OperationsType
       ~OperationsType.data
       ~OperationsType.format
       ~OperationsType.check
+   
+   

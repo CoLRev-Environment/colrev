@@ -9,16 +9,16 @@ colrev.constants.EndpointType
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
+   
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~EndpointType.review_type
       ~EndpointType.search_source
       ~EndpointType.prep
@@ -32,3 +32,5 @@ colrev.constants.EndpointType
       ~EndpointType.screen
       ~EndpointType.data
       ~EndpointType.na
+   
+   
