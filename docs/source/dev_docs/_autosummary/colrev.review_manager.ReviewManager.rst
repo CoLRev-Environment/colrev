@@ -9,13 +9,13 @@ colrev.review\_manager.ReviewManager
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~ReviewManager.check_repo
       ~ReviewManager.check_repository_setup
       ~ReviewManager.get_advisor
@@ -66,15 +66,15 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.sharing
       ~ReviewManager.update_config
       ~ReviewManager.update_status_yaml
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ReviewManager.notified_next_operation
       ~ReviewManager.shell_mode
       ~ReviewManager.dataset
@@ -82,5 +82,3 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.force_mode
       ~ReviewManager.verbose_mode
       ~ReviewManager.high_level_operation
-   
-   

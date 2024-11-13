@@ -3,21 +3,21 @@ colrev.writer
 
 .. automodule:: colrev.writer
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -31,4 +31,3 @@ colrev.writer
    colrev.writer.excel
    colrev.writer.ris
    colrev.writer.write_utils
-

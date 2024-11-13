@@ -3,21 +3,21 @@ colrev.package\_manager
 
 .. automodule:: colrev.package_manager
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -34,4 +34,3 @@ colrev.package\_manager
    colrev.package_manager.package
    colrev.package_manager.package_manager
    colrev.package_manager.package_settings
-

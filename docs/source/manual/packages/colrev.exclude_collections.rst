@@ -29,9 +29,9 @@ colrev.exclude_collections
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/exclude_collections>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/exclude_collections>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.exclude_collections
      - Add
    * - prep
      - |MATURING|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev prep --add colrev.exclude_collections
@@ -64,4 +64,3 @@ Note: This document is currently under development. It will contain the followin
 .. raw:: html
 
    <!-- ## Links -->
-

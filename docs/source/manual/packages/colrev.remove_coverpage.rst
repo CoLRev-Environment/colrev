@@ -29,9 +29,9 @@ colrev.remove_coverpage
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/remove_coverpage>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/remove_coverpage>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.remove_coverpage
      - Add
    * - pdf_prep
      - |MATURING|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev pdf-prep --add colrev.remove_coverpage

@@ -29,9 +29,9 @@ colrev.general_polish
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/general_polish>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/general_polish>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.general_polish
      - Add
    * - prep
      - |EXPERIMENTAL|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev prep --add colrev.general_polish

@@ -9,23 +9,21 @@ colrev.record.qm.checkers.pubmedid\_not\_matching\_pattern.PubmedIDPatternChecke
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~PubmedIDPatternChecker.run
-   
-   
 
-   
-   
+      ~PubmedIDPatternChecker.run
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PubmedIDPatternChecker.msg
-   
-   

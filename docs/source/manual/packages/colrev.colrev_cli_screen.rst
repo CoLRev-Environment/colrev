@@ -29,9 +29,9 @@ colrev.colrev_cli_screen
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_screen>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_screen>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.colrev_cli_screen
      - Add
    * - screen
      - |MATURING|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev screen --add colrev.colrev_cli_screen
@@ -62,4 +62,3 @@ The cli screen asks for user input, indicating for each paper whether it should 
    <!--
    ## Links
    -->
-
