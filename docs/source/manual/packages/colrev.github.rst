@@ -29,9 +29,9 @@ colrev.github
 
 |MAINTAINER| Maintainer: Kolja Rinne, Philipp Kasimir, Chris Vierath, Karl Schnickmann
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/github>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/github>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,14 +42,14 @@ colrev.github
      - Add
    * - search_source
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev search --add colrev.github
 
    * - prep
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev prep --add colrev.github

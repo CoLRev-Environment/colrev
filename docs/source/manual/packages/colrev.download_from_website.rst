@@ -29,9 +29,9 @@ colrev.download_from_website
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/download_from_website>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/download_from_website>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.download_from_website
      - Add
    * - pdf_get
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev pdf-get --add colrev.download_from_website

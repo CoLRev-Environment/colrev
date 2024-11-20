@@ -29,9 +29,9 @@ colrev.grobid_tei
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/grobid_tei>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/grobid_tei>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.grobid_tei
      - Add
    * - pdf_prep
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev pdf-prep --add colrev.grobid_tei
