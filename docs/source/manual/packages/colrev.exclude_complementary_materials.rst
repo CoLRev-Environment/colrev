@@ -29,9 +29,9 @@ colrev.exclude_complementary_materials
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/exclude_complementary_materials>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/exclude_complementary_materials>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.exclude_complementary_materials
      - Add
    * - prep
      - |MATURING|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev prep --add colrev.exclude_complementary_materials

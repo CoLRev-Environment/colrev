@@ -9,16 +9,14 @@ colrev.settings.DedupeSettings
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~DedupeSettings.dedupe_package_endpoints
-   
-   

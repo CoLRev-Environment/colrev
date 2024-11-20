@@ -29,9 +29,9 @@ colrev.scientometric
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/scientometric>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/scientometric>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.scientometric
      - Add
    * - review_type
      - |EXPERIMENTAL|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev init --type colrev.scientometric
@@ -89,4 +89,3 @@ For the analysis of citation data, established software packages like `VosViewer
 
    ## References
    -->
-

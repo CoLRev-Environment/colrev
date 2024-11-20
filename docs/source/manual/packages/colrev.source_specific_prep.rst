@@ -29,9 +29,9 @@ colrev.source_specific_prep
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/source_specific_prep>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/source_specific_prep>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.source_specific_prep
      - Add
    * - prep
      - |MATURING|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev prep --add colrev.source_specific_prep

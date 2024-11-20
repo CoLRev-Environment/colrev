@@ -9,17 +9,11 @@ colrev.env.resources.Resources
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~Resources.install_curated_resource
-   
-   
 
-   
-   
-   
+      ~Resources.install_curated_resource

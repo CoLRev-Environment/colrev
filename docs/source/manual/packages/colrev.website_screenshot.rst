@@ -29,9 +29,9 @@ colrev.website_screenshot
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/website_screenshot>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/website_screenshot>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.website_screenshot
      - Add
    * - pdf_get
      - |EXPERIMENTAL|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev pdf-get --add colrev.website_screenshot

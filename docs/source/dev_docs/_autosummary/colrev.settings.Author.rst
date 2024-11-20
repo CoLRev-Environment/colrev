@@ -9,16 +9,16 @@ colrev.settings.Author
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~Author.name
       ~Author.initials
       ~Author.email
@@ -27,5 +27,3 @@ colrev.settings.Author
       ~Author.affiliations
       ~Author.funding
       ~Author.identifiers
-   
-   
