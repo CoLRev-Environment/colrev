@@ -52,6 +52,8 @@ def _get_default_author() -> dict:
 
 DEFAULT_AUTHOR = _get_default_author()
 
+AUTHOR_PATTERN = r"([a-zA-Z ]+)<([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>"
+
 
 # Function to create the pyproject.toml file
 def _create_pyproject_toml(data: dict) -> None:
@@ -140,10 +142,11 @@ def validate_module_name(answers: list, name: str) -> bool:
     return True
 
 
-# pylint: disable=too-many-statements
 # pylint: disable=unused-argument
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-return-statements
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-statements
 def _get_package_data(default_package_name: str, built_in: bool) -> dict:
 
     default_package_name_str = ""
@@ -157,7 +160,18 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
         + f"<{DEFAULT_AUTHOR['email']}>{Colors.END}]"
     )
 
-    # pylint: disable=too-many-statements
+    def validate_author(answers: list, name: str) -> bool:
+        if name == "":
+            return True
+        if not re.match(AUTHOR_PATTERN, name):
+            print(
+                f"\n  {Colors.RED}The format of the author name and e-mail is not valid."
+                "\n It should be like `Max Mustermann <max.mustermann@uni-bamberg.de>`."
+                f"{Colors.END}"
+            )
+            return False
+        return True
+
     def validate_name(answers: list, name: str) -> bool:
         if name == "":  # Accept default package name
             return True
@@ -214,7 +228,8 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
         ),
         inquirer.Text(
             "author",
-            message=f"Enter the author name {default_author_str}",
+            message=f"Enter the author name and e-mail {default_author_str}",
+            validate=validate_author,
         ),
     ]
     if not built_in:
@@ -260,9 +275,18 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
         package_data["version"] = "0.1.0"
     if not package_data["license"]:
         package_data["license"] = "MIT"
+    # pylint: disable=colrev-missed-constant-usage
     if not package_data["author"]:
-        # pylint: disable=colrev-missed-constant-usage
         package_data["author"] = DEFAULT_AUTHOR
+    else:
+        match = re.match(AUTHOR_PATTERN, package_data.pop("author"))
+        if not match or len(match.groups()) != 2:
+            raise ValueError(
+                "Author name and e-mail must be in the format 'Name <email>'"
+            )
+        package_data["author"] = {}
+        package_data["author"]["name"] = match.group(1).strip()
+        package_data["author"]["email"] = match.group(2)
     if not package_data["repository"]:
         package_data["repository"] = "TODO"
 
