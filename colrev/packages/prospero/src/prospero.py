@@ -18,7 +18,8 @@ class ProsperoSearchSource:
     source_identifier = "url"
     #search_types = [SearchType.DB]
 
-    #ci_supported: bool = Field(default=False)
+    ci_supported: bool = Field(default=False)
+
     #heuristic_status = SearchSourceHeuristicStatus.supported
     #heuristic status likely supported, how to confirm?
 
