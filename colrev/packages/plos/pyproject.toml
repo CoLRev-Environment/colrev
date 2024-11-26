@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "colrev.plos"
+description = ""
+version = "0.14.0"
+license = "MIT"
+authors = ["Olga Girona <olga.girona-cutillas@stud.uni-bamberg.fe>"]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/plos"
+
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.9, <4"
+
+[tool.colrev]
+colrev_doc_description = "TODO"
+colrev_doc_link = "docs/README.md"
+search_types = []
+
+[tool.poetry.plugins.colrev]
+
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"
