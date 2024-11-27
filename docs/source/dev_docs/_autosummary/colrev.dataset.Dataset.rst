@@ -9,13 +9,13 @@ colrev.dataset.Dataset
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~Dataset.add_changes
       ~Dataset.add_setting_changes
       ~Dataset.behind_remote
@@ -48,3 +48,9 @@ colrev.dataset.Dataset
       ~Dataset.set_ids
       ~Dataset.stash_unstaged_changes
       ~Dataset.update_gitignore
+   
+   
+
+   
+   
+   

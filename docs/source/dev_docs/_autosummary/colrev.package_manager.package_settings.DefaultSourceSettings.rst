@@ -9,13 +9,13 @@ colrev.package\_manager.package\_settings.DefaultSourceSettings
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~DefaultSourceSettings.get_api_feed
       ~DefaultSourceSettings.get_origin_prefix
       ~DefaultSourceSettings.get_query
@@ -23,15 +23,15 @@ colrev.package\_manager.package\_settings.DefaultSourceSettings
       ~DefaultSourceSettings.is_md_source
       ~DefaultSourceSettings.setup_for_load
       ~DefaultSourceSettings.validate_filename
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~DefaultSourceSettings.endpoint
       ~DefaultSourceSettings.filename
       ~DefaultSourceSettings.search_type
@@ -41,3 +41,5 @@ colrev.package\_manager.package\_settings.DefaultSourceSettings
       ~DefaultSourceSettings.imported_origins
       ~DefaultSourceSettings.len_before
       ~DefaultSourceSettings.source_records_list
+   
+   

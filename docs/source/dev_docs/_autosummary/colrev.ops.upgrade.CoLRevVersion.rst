@@ -8,3 +8,11 @@ colrev.ops.upgrade.CoLRevVersion
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
+
+   
+   
+   
+
+   
+   
+   

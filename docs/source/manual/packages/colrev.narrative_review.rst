@@ -29,9 +29,9 @@ colrev.narrative_review
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/narrative_review>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/narrative_review>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.narrative_review
      - Add
    * - review_type
      - |STABLE|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev init --type colrev.narrative_review

@@ -3,21 +3,21 @@ colrev.packages
 
 .. automodule:: colrev.packages
 
+   
+   
+   
 
+   
+   
+   
 
+   
+   
+   
 
-
-
-
-
-
-
-
-
-
-
-
-
+   
+   
+   
 
 
 
@@ -27,3 +27,4 @@ colrev.packages
    :recursive:
 
    colrev.packages.screen_utils
+

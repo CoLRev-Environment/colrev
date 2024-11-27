@@ -9,26 +9,26 @@ colrev.package\_manager.doc\_registry\_manager.PackageDoc
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~PackageDoc.get_docs_item
       ~PackageDoc.get_endpoint_item
       ~PackageDoc.has_endpoint
       ~PackageDoc.import_package_docs
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~PackageDoc.repository
       ~PackageDoc.package_id
       ~PackageDoc.version
@@ -44,3 +44,5 @@ colrev.package\_manager.doc\_registry\_manager.PackageDoc
       ~PackageDoc.search_types
       ~PackageDoc.docs_package_readme_path
       ~PackageDoc.docs_rst_path
+   
+   

@@ -29,9 +29,9 @@ colrev.local_index
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/local_index>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/local_index>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,21 +42,21 @@ colrev.local_index
      - Add
    * - search_source
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev search --add colrev.local_index
 
    * - prep
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev prep --add colrev.local_index
 
    * - pdf_get
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev pdf-get --add colrev.local_index
@@ -92,3 +92,4 @@ Retrieves PDF documents from other local CoLRev repositories, given that they ar
 .. raw:: html
 
    <!-- ## Links -->
+
