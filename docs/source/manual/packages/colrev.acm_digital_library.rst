@@ -29,9 +29,9 @@ colrev.acm_digital_library
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/acm_digital_library>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/acm_digital_library>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.acm_digital_library
      - Add
    * - search_source
      - |EXPERIMENTAL|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev search --add colrev.acm_digital_library
