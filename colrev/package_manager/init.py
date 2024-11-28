@@ -240,7 +240,7 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
     questions.append(
         inquirer.Checkbox(
             "plugins",
-            message="Select the plugin types",
+            message="Select the plugin types (use SPACE to select)",
             choices=list(INTERFACE_MAP.keys()),
         )
     )
