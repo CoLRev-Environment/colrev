@@ -1,10 +1,10 @@
 [tool.poetry]
 name = "colrev.plos"
 description = ""
-version = "0.14.0"
+version = "0.1.0"
 license = "MIT"
-authors = ["Olga Girona <olga.girona-cutillas@stud.uni-bamberg.fe>"]
-repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/plos"
+authors = ["olgagirona <olga.girona-cutillas@stud.uni-bamberg.de>"]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/"
 
 [[tool.poetry.packages]]
 include = "src"
@@ -18,7 +18,7 @@ colrev_doc_link = "docs/README.md"
 search_types = []
 
 [tool.poetry.plugins.colrev]
-
+search_source = "colrev.plos.plos_search_source:PlosSearchSource"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "cython<3.0"]
