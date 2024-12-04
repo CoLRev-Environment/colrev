@@ -7,6 +7,10 @@ from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import OperationsType
 
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
+
 
 def _get_endpoint_with_type(operation: colrev.process.operation.Operation) -> tuple:
     settings = operation.review_manager.settings
