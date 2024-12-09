@@ -18,7 +18,7 @@ colrev_doc_link = "docs/README.md"
 search_types = []
 
 [tool.poetry.plugins.colrev]
-search_source = "colrev.plos.plos_search_source:PlosSearchSource"
+search_source = "colrev.packages.plos.src.plos_search_source:PlosSearchSource"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "cython<3.0"]

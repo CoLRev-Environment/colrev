@@ -3,7 +3,7 @@
 import colrev.ops
 import colrev.ops.search
 import colrev.ops.search_api_feed
-from future import annotations
+#from future import annotations
 
 import datetime
 import typing
@@ -141,6 +141,10 @@ class PlosSearchSource:
                     search_parameters=query,
                     comment="",
                 )
+            
+            operation.add_source_and_search(search_source)
+      
+            return search_source
 
       else:
         raise NotImplementedError   
@@ -204,7 +208,7 @@ class PlosSearchSource:
     def _validate_api_params(self):
         source = self.search_source
 
-       #lkasndalskdasd
+       
 
     def search(self, rerun: bool) -> None:
         """Run a search of the SearchSource"""
