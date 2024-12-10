@@ -195,7 +195,6 @@ class PlosSearchSource:
         self.review_manager.logger.info(f"Estimated time: {estimated_time_formatted}")
 
         try:
-            logging.info()
             i = 0 
             for record in self.api.get_records():
                 logging.debug("for of run_api_search")
