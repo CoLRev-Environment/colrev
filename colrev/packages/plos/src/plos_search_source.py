@@ -32,6 +32,8 @@ from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.plos.src import plos_api
+import logging
+
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
@@ -40,12 +42,16 @@ class PlosSearchSource:
     endpoint = "colrev.plos"
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = Fields.DOI
-    search_types = [ SearchType.API, SearchType.MD]
+    search_types = [ SearchType.API, SearchType.TOC, SearchType.MD]
     heuristic_status = SearchSourceHeuristicStatus.oni
 
     _api_url = "http://api.plos.org/"
 
 
+
+    # Configuración básica del logger
+    logging.basicConfig(level=logging.DEBUG,  # Nivel de logging
+                    format='%(asctime)s - %(levelname)s - %(message)s')  # Formato del log
 
     def __init__(
         self,
@@ -106,6 +112,7 @@ class PlosSearchSource:
                 search_types=self.search_types, params=params_dict
             )
 
+
         return search_type
 
 
@@ -121,11 +128,20 @@ class PlosSearchSource:
         """
       
       search_type = self._select_search_type(operation, params)
-      
       if search_type == SearchType.API:
          if len(params) == 0:
-            pass
-         
+            search_source = operation.create_api_source(endpoint=self.endpoint)
+
+            search_source.search_parameters["url"] = (
+               self._api_url + "search?" +
+               "q="
+               + search_source.search_parameters.pop("query", "").replace(" ", "+")
+               )
+            search_source.search_parameters["version"] = "0.1.0"
+
+            operation.add_source_and_search(search_source)
+      
+            return search_source
          else:
             if Fields.URL in params:
                query = {"url": params[Fields.URL]}
@@ -149,9 +165,7 @@ class PlosSearchSource:
       else:
         raise NotImplementedError   
        
-      operation.add_source_and_search(search_source)
       
-      return search_source
 
 
     def _run_api_search( 
@@ -160,36 +174,44 @@ class PlosSearchSource:
           plos_feed: colrev.ops.search_api_feed.SearchAPIFeed,
           rerun: bool,
     ) -> None:
-      self.api.rerun = rerun
-      self.api.last_updated = plos_feed.get_last_updated()
+        self.api.rerun = rerun
+        self.api.last_updated = plos_feed.get_last_updated()
 
-      num_records = self.api.get_len_total()
-      self.review_manager.logger.info(f"Total: {num_records:,} records")
+        num_records = self.api.get_len_total()
+        self.review_manager.logger.info(f"Total: {num_records:,} records")
 
         #It retrieves only new records added since the last sync, avoiding a full download       if not rerun:
           #REPASR POR EL FORMATO DE LA FECHA
-      self.review_manager.logger.info(
-            f"Retrieve papers indexed since {self.api.last_updated.split('T', maxsplit=1)[0]}"
-      )
-      num_records = self.api.get_len()
-      
-      self.review_manager.logger.info(f"Retrieve {num_records:,} records")
+        if not rerun:
+            self.review_manager.logger.info(
+                  f"Retrieve papers indexed since {self.api.last_updated.split('T', maxsplit=1)[0]}"
+            )
+            num_records = self.api.get_len()
+        
+        self.review_manager.logger.info(f"Retrieve {num_records:,} records")
 
-      try: 
-        for record in self.api.get_records():
-          try:
-             if self._scope_excluded(record.data):
-                continue
-             
-             self._prep_plos_record(
-                record = record, prep_main_record = False
-             )
-               
-          
-          except colrev_exceptions.NotFeedIdentifiableException:
-            pass
-      except RuntimeError as e:
-         print(e)
+        estimated_time = num_records * 0.5
+        estimated_time_formatted = str(datetime.timedelta(seconds=int(estimated_time)))
+        self.review_manager.logger.info(f"Estimated time: {estimated_time_formatted}")
+
+        try:
+            i = 0 
+            for record in self.api.get_records():
+                logging.debug("for of run_api_search")
+                try:
+                    if self._scope_excluded(record.data):
+                        continue
+                   
+                    
+                    self._prep_plos_record(
+                        record = record, prep_main_record = False
+                    )
+                  
+              
+                except colrev_exceptions.NotFeedIdentifiableException:
+                  pass
+        except RuntimeError as e:
+          print(e)
 
     def _validate_source(self) -> None:
         source = self.search_source
@@ -212,15 +234,34 @@ class PlosSearchSource:
 
     def search(self, rerun: bool) -> None:
         """Run a search of the SearchSource"""
-
         self._validate_source()
         #Create the Object SearchAPIFeed which mange the search on the API
-
+    
         plos_feed = self.search_source.get_api_feed(
               review_manager=self.review_manager,
               source_identifier=self.source_identifier,
               update_only=(not rerun),
         )
+
+        
+        if self.search_source.search_type in [
+            SearchType.API,
+            SearchType.TOC,
+        ]:
+            
+            self._run_api_search(
+                plos_feed=plos_feed,
+                rerun=rerun,
+            )
+
+        if self.search_source.search_type in [
+            SearchType.API,
+            SearchType.TOC,
+        ]:
+            self._run_api_search(
+                plos_feed=plos_feed,
+                rerun=rerun,
+            )
 
         if self.search_source.search_type == SearchType.API:
           pass
