@@ -29,9 +29,9 @@ colrev.prep_man_curation_jupyter
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/prep_man_curation_jupyter>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/prep_man_curation_jupyter>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.prep_man_curation_jupyter
      - Add
    * - prep_man
      - |EXPERIMENTAL|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev prep-man --add colrev.prep_man_curation_jupyter

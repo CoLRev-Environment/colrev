@@ -29,9 +29,9 @@ colrev.ebsco_host
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/ebsco_host>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/ebsco_host>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.ebsco_host
      - Add
    * - search_source
      - |EXPERIMENTAL|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev search --add colrev.ebsco_host

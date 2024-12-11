@@ -9,20 +9,18 @@ colrev.constants.FieldValues
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~FieldValues.ANONYMOUS
       ~FieldValues.CURATED
       ~FieldValues.FORTHCOMING
       ~FieldValues.RETRACTED
       ~FieldValues.UNKNOWN
-   
-   

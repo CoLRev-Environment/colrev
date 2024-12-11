@@ -9,16 +9,16 @@ colrev.settings.ProjectSettings
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ProjectSettings.title
       ~ProjectSettings.authors
       ~ProjectSettings.keywords
@@ -29,5 +29,3 @@ colrev.settings.ProjectSettings
       ~ProjectSettings.delay_automated_processing
       ~ProjectSettings.colrev_version
       ~ProjectSettings.auto_upgrade
-   
-   

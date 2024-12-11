@@ -29,9 +29,9 @@ colrev.get_masterdata_from_doi
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/get_masterdata_from_doi>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/get_masterdata_from_doi>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.get_masterdata_from_doi
      - Add
    * - prep
      - |EXPERIMENTAL|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev prep --add colrev.get_masterdata_from_doi
@@ -62,4 +62,3 @@ This package retrieves meta data from doi.org.
    <!--
    ## Links
    -->
-
