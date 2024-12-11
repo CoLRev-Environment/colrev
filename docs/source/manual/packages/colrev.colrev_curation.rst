@@ -29,9 +29,9 @@ colrev.colrev_curation
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_curation>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_curation>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,14 +42,14 @@ colrev.colrev_curation
      - Add
    * - prep
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev prep --add colrev.colrev_curation
 
    * - data
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev data --add colrev.colrev_curation

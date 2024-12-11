@@ -9,22 +9,24 @@ colrev.env.local\_index\_sqlite.SQLiteIndex
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~SQLiteIndex.commit
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~SQLiteIndex.connection
       ~SQLiteIndex.CREATE_TABLE_QUERY
+   
+   

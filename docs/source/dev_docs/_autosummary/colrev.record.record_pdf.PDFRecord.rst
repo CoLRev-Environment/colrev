@@ -9,13 +9,13 @@ colrev.record.record\_pdf.PDFRecord
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~PDFRecord.add_field_provenance
       ~PDFRecord.add_field_provenance_note
       ~PDFRecord.add_provenance_all
@@ -68,15 +68,17 @@ colrev.record.record\_pdf.PDFRecord
       ~PDFRecord.set_text_from_pdf
       ~PDFRecord.update_by_record
       ~PDFRecord.update_field
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~PDFRecord.pp
       ~PDFRecord.data
       ~PDFRecord.path
+   
+   

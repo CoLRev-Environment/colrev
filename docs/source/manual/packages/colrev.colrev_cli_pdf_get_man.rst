@@ -29,9 +29,9 @@ colrev.colrev_cli_pdf_get_man
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_pdf_get_man>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_pdf_get_man>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.colrev_cli_pdf_get_man
      - Add
    * - pdf_get_man
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev pdf-get-man --add colrev.colrev_cli_pdf_get_man
@@ -64,3 +64,4 @@ Note: This document is currently under development. It will contain the followin
 .. raw:: html
 
    <!-- ## Links -->
+

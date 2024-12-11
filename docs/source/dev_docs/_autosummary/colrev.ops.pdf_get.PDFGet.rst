@@ -9,13 +9,13 @@ colrev.ops.pdf\_get.PDFGet
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~PDFGet.check_existing_unlinked_pdfs
       ~PDFGet.check_precondition
       ~PDFGet.conclude
@@ -30,16 +30,18 @@ colrev.ops.pdf\_get.PDFGet
       ~PDFGet.relink_pdfs
       ~PDFGet.rename_pdfs
       ~PDFGet.setup_custom_script
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~PDFGet.type
       ~PDFGet.to_retrieve
       ~PDFGet.retrieved
       ~PDFGet.not_retrieved
+   
+   
