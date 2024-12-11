@@ -21,7 +21,7 @@ import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
-from colrev.packages.crossref.src import record_transformer
+from colrev.packages.plos.src import plos_record_transformer
 
 import logging
 
@@ -516,7 +516,7 @@ class PlosAPI:
                 break
                 
             try:
-                retrieved_record = record_transformer.json_to_record(item=item)
+                retrieved_record = plos_record_transformer.json_to_record(item=item)
                 similarity = self._get_similarity(
                     record=record, retrieved_record_dict=retrieved_record.data
                 )
@@ -562,10 +562,12 @@ class PlosAPI:
         logging.info(endpoint)
         try:
             for item in endpoint:
+                logging.info("ENTRO EN EL BUCLE FOR")
                 input(item)
                 try:
-                    yield record_transformer.json_to_record(item=item)
+                    yield plos_record_transformer.json_to_record(item=item)
                 except colrev_exceptions.RecordNotParsableException:
+                    logging.info("ENTRO EN LA EXCEPCION")
                     continue
         except requests.exceptions.RequestException as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
