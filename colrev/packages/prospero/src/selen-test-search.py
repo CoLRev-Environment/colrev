@@ -3,6 +3,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import StaleElementReferenceException
@@ -85,7 +86,7 @@ class ProsperoSearchSource:
         search_bar = driver.find_element(By.ID, "txtSearch")
         search_bar.clear()
         
-        search_bar.send_keys("cancer12")
+        search_bar.send_keys("cancer1")
         search_bar.send_keys(Keys.RETURN)
         print(driver.current_url) #browser navigated to search results web page successfully
 
@@ -93,14 +94,7 @@ class ProsperoSearchSource:
         matches1 = matches.find_elements(By.XPATH, "//tr[@class='myDataTableRow']")
         matches1.pop(0)
         print(matches1)
-        """for match in matches1:
-            article = match.find_element(By.XPATH, "//td[@valign='top']")
-            article.click()
-            print(article)
-            article_page = driver.find_elements(By.XPATH, "//div[@class='content-details']")
-            print(article_page)
-            print(f"Found {len(article_page)} elements")"""
-
+        
         if not matches1:  # This evaluates to True if the list is empty
             print("No elements found")
         else:
@@ -125,11 +119,45 @@ class ProsperoSearchSource:
         registered_date_elem = None
         title_elem = None
         review_status_elem = None
+        registered_dates_array = []
+        titles_array = []
+        review_status_array = []
 
+        matches1 = WebDriverWait(driver, 10).until(
+    EC.presence_of_all_elements_located((By.XPATH, "//table[@id='myDataTable']//tr[@class='myDataTableRow']"))
+)
+        for row in matches1:
+            try:
+                registered_date = row.find_element(By.XPATH, "./td[2]").text
+                registered_dates_array.append(registered_date)
+                title = row.find_element(By.XPATH, "./td[3]").text
+                titles_array.append(title)
+                review_status = row.find_element(By.XPATH, "./td[5]").text
+                registered_dates_array.append(review_status)
+            except Exception as e:
+                print(f"Error extracting content for a row: {e}")
+
+
+        print("Registered Dates:")
+        for date in registered_dates_array:
+            print(date)
+
+        print("Titles: ")
+        for titles in titles_array:
+            print(titles)
+
+        print("Review status: ")
+        for review in review_status_array:
+            print(review)
+
+        
+        
+        """
         #extract register date, title and review status of each paper from result list
         for match in matches1:
             if retry_find_elem(match, "./td[2]"):
-                registered_date.append(match.find_element(By.TAG_NAME, "./td[2]").text)
+                registered_date = match.find_element(By.TAG_NAME, "./td[2]").text
+                registered_date.append(registered_date)
             else:
                 registered_date_elem = match.find_element(By.XPATH, './td[2]')
                 registered_date.append(registered_date_elem.text)
@@ -147,7 +175,7 @@ class ProsperoSearchSource:
         print(registered_date)
         print(title)
         print(review_status)
-
+        """
         #assert "No results found." not in driver.page_source
         driver.close()
     search(self=1,rerun=bool)
