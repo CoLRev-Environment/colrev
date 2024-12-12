@@ -14,10 +14,17 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver import ActionChains
+
 from pydantic import Field
 import json
 from pathlib import Path
 from colrev.ops.search import Search
+chrome_options = Options()
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--headless')
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
@@ -70,17 +77,15 @@ class ProsperoSearchSource:
         # Register the search source
         operation.add_source_and_search(search_source)
         return search_source
-
-    def load(self, filename: Path) -> dict:
-        """
-        Load search results from a Prospero result file.
+    
+    """def load(self, filename: Path) -> dict:
+        """""" Load search results from a Prospero result file.
 
         Args:
             filename (Path): The path to the results JSON file.
 
         Returns:
-            dict: A dictionary containing the loaded search results.
-        """
+            dict: A dictionary containing the loaded search results.""""""
         try:
             # Ensure the file exists before attempting to load it
             if not filename.is_file():
@@ -99,10 +104,114 @@ class ProsperoSearchSource:
         except (FileNotFoundError, ValueError, json.JSONDecodeError) as e:
             # Log and handle errors gracefully
             print(f"Error loading file {filename}: {e}")
-            return {}
+            return {}"""
+    
+
+    def search(self, rerun: bool) -> None:
+
+        """Run a search on Prospero"""
+
+        driver = webdriver.Chrome(options = chrome_options)
+        driver.get("https://www.crd.york.ac.uk/prospero/")
+        driver.implicitly_wait(5)
+        print(driver.title) #browser opened properly
+        assert "PROSPERO" in driver.title
+
+        search_bar = driver.find_element(By.ID, "txtSearch")
+        search_bar.clear()
+        search_bar.send_keys("inverted-T") #TODO: keyword input from user
+        search_bar.send_keys(Keys.RETURN)
+        print(driver.current_url) #browser navigated to search results web page successfully
+
+        matches = driver.find_element(By.XPATH, "//table[@id='myDataTable']")
+        matches1 = matches.find_elements(By.XPATH, "//tr[@class='myDataTableRow']")
+        matches1.pop(0)
+        print(matches1)
+
+        #validate that matches are not empty
+        if not matches1:  # This evaluates to True if the list is empty
+            print("No elements found")
+        else:
+            print(f"Found {len(matches1)} elements")
+
+        #TODO: handle stale element exception
+        def retry_find_elem(web_elem: WebElement, byXpath: str) -> bool:
+            result = False
+            attempts = 0
+            while(attempts < 3):
+                try:
+                    web_elem.find_element(By.XPATH, byXpath)
+                    result = True
+                except StaleElementReferenceException:
+                    attempts += 1
+            return result 
+
+        #create empty array for articles' data
+        registered_date = []
+        title =[]
+        review_status = []
+        registered_dates_array = []
+        titles_array = []
+        review_status_array = []
+
+        registered_date_elem = None
+        title_elem = None
+        review_status_elem = None
+        
+        matches1 = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//table[@id='myDataTable']//tr[@class='myDataTableRow']")))
+
+        for row in matches1:
+            try:
+                registered_date = row.find_element(By.XPATH, "./td[2]").text
+                registered_dates_array.append(registered_date)
+                title = row.find_element(By.XPATH, "./td[3]").text
+                titles_array.append(title)
+                review_status = row.find_element(By.XPATH, "./td[5]").text
+                registered_dates_array.append(review_status)
+            except Exception as e:
+                print(f"Error extracting content for a row: {e}")
+
+        print("Registered Dates:")
+        for date in registered_dates_array:
+            print(date)
+
+        print("Titles: ")
+        for titles in titles_array:
+            print(titles)
+
+        print("Review status: ")
+        for review in review_status_array:
+            print(review)
+
+        """#extract register date, title and review status of each paper into arrays
+        for match in matches:
+            if retry_find_elem(match,'./td[2]'):
+                registered_date.append(match.find_element(By.XPATH, './td[2]').text)
+            else:
+                registered_date_elem = match.find_element(By.XPATH, './td[2]')
+                registered_date.append(registered_date_elem.text)
+            if retry_find_elem(match,'./td[3]'):
+                title.append(match.find_element(By.XPATH, './td[3]').text)    
+            else:
+                title_elem = match.find_element(By.XPATH, './td[3]')
+                title.append(title_elem.text)
+            if retry_find_elem(match, '.td[5]'):
+                review_status.append(match.find_element(By.XPATH, './td[5]').text)
+            else:
+                review_status_elem = match.find_element(By.XPATH, './td[5]')
+                review_status.append(review_status_elem.text)
+    
+        print(registered_date)
+        print(title)
+        print(review_status)"""
+
+        #assert "No results found." not in driver.page_source
+        driver.close()
+    search(self=1,rerun=bool)
 
 
-if __name__ == "__main__":
+"""if __name__ == "__main__":
+    
     # Mock a Search operation
     class MockSearchOperation:
         def get_unique_filename(self, file_path_string: str) -> str:
@@ -128,77 +237,4 @@ if __name__ == "__main__":
         loaded_data = prospero_source.load(filename)
         print(f"Loaded Data: {loaded_data}")
     except Exception as e:
-        print(f"Error in load: {e}")
-
-    
-    def search(self, rerun: bool) -> None:
-
-        """Run a search on Prospero"""
-
-        service = Service(executable_path=r'/workspaces/colrev/colrev/packages/prospero/bin/chromedriver')
-        driver = webdriver.Chrome(options = chrome_options, service=service)
-        driver.get("https://www.crd.york.ac.uk/prospero/")
-        driver.implicitly_wait(5)
-        print(driver.title) #browser opened properly
-        assert "PROSPERO" in driver.title
-
-        search_bar = driver.find_element(By.ID, "txtSearch")
-        search_bar.clear()
-        search_bar.send_keys("inverted-T") #TODO: keyword input from user
-        search_bar.send_keys(Keys.RETURN)
-        print(driver.current_url) #browser navigated to search results web page successfully
-
-        matches = driver.find_elements(By.XPATH, "//tr[@class='myDataTableRow']")
-
-        #validate that matches are not empty
-        if not matches:  # This evaluates to True if the list is empty
-            print("No elements found")
-        else:
-            print(f"Found {len(matches)} elements")
-
-        #TODO: handle stale element exception
-        def retry_find_elem(web_elem: WebElement, byXpath: str) -> bool:
-            result = False
-            attempts = 0
-            while(attempts < 3):
-                try:
-                    web_elem.find_element(By.XPATH, byXpath)
-                    result = True
-                except StaleElementReferenceException:
-                    attempts += 1
-            return result 
-
-        #create empty array for articles' data
-        registered_date = []
-        title =[]
-        review_status = []
-
-
-        registered_date_elem = None
-        title_elem = None
-        review_status_elem = None
-
-        #extract register date, title and review status of each paper into arrays
-        for match in matches:
-            if retry_find_elem(match,'./td[2]'):
-                registered_date.append(match.find_element(By.XPATH, './td[2]').text)
-            else:
-                registered_date_elem = match.find_element(By.XPATH, './td[2]')
-                registered_date.append(registered_date_elem.text)
-            if retry_find_elem(match,'./td[3]'):
-                title.append(match.find_element(By.XPATH, './td[3]').text)    
-            else:
-                title_elem = match.find_element(By.XPATH, './td[3]')
-                title.append(title_elem.text)
-            if retry_find_elem(match, '.td[5]'):
-                review_status.append(match.find_element(By.XPATH, './td[5]').text)
-            else:
-                review_status_elem = match.find_element(By.XPATH, './td[5]')
-                review_status.append(review_status_elem.text)
-    
-        print(registered_date)
-        print(title)
-        print(review_status)
-
-        #assert "No results found." not in driver.page_source
-        driver.close()
+        print(f"Error in load: {e}")"""
