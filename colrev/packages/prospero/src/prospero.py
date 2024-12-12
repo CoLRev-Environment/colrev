@@ -201,6 +201,7 @@ class ProsperoSearchSource:
                 review_status_elem = match.find_element(By.XPATH, './td[5]')
                 review_status.append(review_status_elem.text)
     
+                
         print(registered_date)
         print(title)
         print(review_status)"""
