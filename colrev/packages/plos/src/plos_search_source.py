@@ -201,6 +201,7 @@ class PlosSearchSource:
                 try:
                     if self._scope_excluded(record.data):
                         continue
+                      
                    
                     
                     self._prep_plos_record(
