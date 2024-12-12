@@ -173,16 +173,20 @@ class PlosSearchSource:
           prep_main_record: bool = True, 
           plos_source: str = "", 
     ) -> None:
+        
         if Fields.LANGUAGE in record.data:
           try:
               self.language_service.unify_to_iso_639_3_language_codes(record=record)
           except colrev_exceptions.InvalidLanguageCodeException:
               del record.data[Fields.LANGUAGE]   
-
+        input("after language")
+        input(record)
         doi_connector.DOIConnector.get_link_from_doi(
             review_manager=self.review_manager,
             record=record,
         )        
+        input("after get link")
+        input(record)
 
         #REFERENCES?
         if (
@@ -190,11 +194,14 @@ class PlosSearchSource:
         ) and Fields.CITED_BY in record.data:
             del record.data[Fields.CITED_BY] 
 
+        input("after cited_by")
+        input(record)
+
         if not prep_main_record:
            return
         
         #retracted??
-        #TO DO
+        
 
 
     def _run_api_search( 
@@ -226,22 +233,49 @@ class PlosSearchSource:
         try:
             i = 0 
             for record in self.api.get_records():
-                logging.debug("for of run_api_search")
+                input("item in _run_api_search after processing it")
+                input(record)
                 try:
                     if self._scope_excluded(record.data):
                         continue
                       
-                   
-                    
+                    input("after de exclude the item in run_api")
+                    input(record)
+
                     self._prep_plos_record(
                         record = record, prep_main_record = False
                     )
+                    input("after de prepare the item in run_api")
+                    input(record)
                   
               
                 except colrev_exceptions.NotFeedIdentifiableException:
                   pass
         except RuntimeError as e:
           print(e)
+
+    def _scope_excluded(self, retrieved_record_dict: dict) -> bool:
+
+      if (
+          "scope" not in self.search_source.search_parameters
+          or "years" not in self.search_source.search_parameters["scope"]
+      ):
+          return False
+
+      year_from, year_to = self.search_source.search_parameters["scope"][
+          "years"
+      ].split("-")
+      
+      if not retrieved_record_dict.get(Fields.YEAR, -1000).isdigit():
+          return True
+
+      if (
+          int(year_from)
+          < int(retrieved_record_dict.get(Fields.YEAR, -1000))
+          < int(year_to)
+      ):
+          return False
+      return True
 
     def _validate_source(self) -> None:
         source = self.search_source
@@ -279,15 +313,6 @@ class PlosSearchSource:
             SearchType.TOC,
         ]:
             
-            self._run_api_search(
-                plos_feed=plos_feed,
-                rerun=rerun,
-            )
-
-        if self.search_source.search_type in [
-            SearchType.API,
-            SearchType.TOC,
-        ]:
             self._run_api_search(
                 plos_feed=plos_feed,
                 rerun=rerun,

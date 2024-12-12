@@ -13,6 +13,7 @@ import colrev.record.record
 import colrev.record.record_prep
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+import logging
 
 
 TAG_RE = re.compile(r"<[a-z/][^<>]{0,12}>")
@@ -130,7 +131,7 @@ def _item_to_record(*, item: dict) -> dict:
     assert isinstance(item.get("container-title", ""), str)
 
     #Equivalent to "type" in Crossref
-    item[Fields.TITLE] = "misc"
+    item[Fields.ENTRYTYPE] = "misc"
     if item.get("article_type", "NA") == "Research Article":
         item[Fields.ENTRYTYPE] = "article"
         item[Fields.JOURNAL] = item.get("journal", "")
@@ -222,6 +223,8 @@ def _format_fields(*, record_dict: dict) -> dict:
 
 def json_to_record(*, item: dict) -> colrev.record.record_prep.PrepRecord:
     "Coonvert a PLOS item to a record dict"
+    input("Before processing in json_to_record")
+    input(item)
 
     try:
         record_dict = _item_to_record(item=deepcopy(item))
@@ -233,5 +236,5 @@ def json_to_record(*, item: dict) -> colrev.record.record_prep.PrepRecord:
         raise colrev.exceptions.RecordNotParsableException(
             f"RecordNotParseableExcception: {exc}"
         ) from exc
-    print(record_dict)
+
     return colrev.record.record_prep.PrepRecord(record_dict)

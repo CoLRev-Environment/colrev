@@ -92,11 +92,9 @@ class HTTPRequest:
         if only_headers is True:
             return requests.head(endpoint, timeout=2)
         
-        logging.debug("Retrieve method, before SESSION.get")
         result = SESSION.get(
             endpoint, params=data, timeout=10, headers=headers
         )
-        logging.debug("Retrieve method, after SESSION.get")
 
 
       
@@ -555,18 +553,14 @@ class PlosAPI:
         "Get records from PLOS based on the parameters"
         url = self.get_url()
 
-        logging.info("The url is:" + url)
 
 
         endpoint = Endpoint(url, email=self.email)
-        logging.info(endpoint)
         try:
             for item in endpoint:
-                logging.info("ENTRO EN EL BUCLE FOR")
                 try:
                     yield plos_record_transformer.json_to_record(item=item)
                 except colrev_exceptions.RecordNotParsableException:
-                    logging.info("ENTRO EN LA EXCEPCION")
                     continue
         except requests.exceptions.RequestException as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
