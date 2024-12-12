@@ -76,7 +76,7 @@ def _set_forthcoming(*, record_dict: dict) -> dict:
     ):
         record_dict.update(year="forthcoming")
 
-        #CHECK THIS FOR COLREV
+        #CHECK THIS FOR PLOS
         if Fields.YEAR in record_dict:
             record_dict.update(published_online=record_dict[Fields.YEAR])
     return record_dict
@@ -223,8 +223,7 @@ def _format_fields(*, record_dict: dict) -> dict:
 
 def json_to_record(*, item: dict) -> colrev.record.record_prep.PrepRecord:
     "Coonvert a PLOS item to a record dict"
-    input("Before processing in json_to_record")
-    input(item)
+
 
     try:
         record_dict = _item_to_record(item=deepcopy(item))

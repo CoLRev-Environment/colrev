@@ -25,7 +25,7 @@ from colrev.packages.plos.src import plos_record_transformer
 
 import logging
 
-LIMIT = 10 #Number max of elements returned
+LIMIT = 100 #Number max of elements returned
 MAXOFFSET = 1000
 
 #Creates a session with cache
@@ -217,6 +217,8 @@ class Endpoint:
             "get", self.request_url, params=sorted_request_params
         ).prepare()
 
+        input(req.url)
+
         return req.url
 
 
@@ -245,6 +247,8 @@ class Endpoint:
             request_params["cursor"] = "*"
             request_params["rows"] = str(LIMIT)
             while True:
+                input(request_params)
+                input(request_url)
 
                 result = self.retrieve(
                     request_url,
@@ -270,9 +274,11 @@ class Endpoint:
         else:
             #Adapt to PLOS
             request_params = dict(self.request_params)
-            request_params["offset"] = "0"
+            request_params["start"] = "0"
             request_params["rows"] = str(LIMIT)
             while True:
+                input(request_params)
+                input(request_url)
                 result = self.retrieve(
                     request_url,
                     data=request_params,
@@ -290,9 +296,9 @@ class Endpoint:
 
                 yield from result["response"]["docs"]
 
-                request_params["offset"] = str(int(request_params["offset"]) + LIMIT)
+                request_params["start"] = str(int(request_params["start"]) + LIMIT)
 
-                if int(request_params["offset"]) >= MAXOFFSET:
+                if int(request_params["start"]) >= MAXOFFSET:
                     msg = "Offset exceded the max offset of %d"
                     raise MaxOffsetError(msg, MAXOFFSET)
 
