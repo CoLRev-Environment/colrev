@@ -202,7 +202,20 @@ class PlosSearchSource:
         
         #retracted??
         
+    def _restore_url(
+            self, 
+            *,
+            record: colrev.record.record.Record,
+            feed: colrev.ops.search_api_feed.SearchAPIFeed
+        ) -> None:
+        "Restore the url from the feed if it exist"
 
+        prev_record = feed.get_prev_feed_record(record)
+        prev_url = prev_record.data.get(Fields.URL, None)
+
+        if prev_url is None:
+            return
+        record.data[Fields.URL] = prev_url
 
     def _run_api_search( 
           self, 
@@ -247,7 +260,18 @@ class PlosSearchSource:
                     )
                     input("after de prepare the item in run_api")
                     input(record)
-                  
+
+                    input("Before the restore and update")
+                    input(self)
+                    input(plos_feed)
+                    self._restore_url(record=record, feed=plos_feed)
+
+                    plos_feed.add_update_record(retrieved_record=record)
+
+                    input("After restore and update")
+                    input(self)
+                    input(plos_feed)
+
               
                 except colrev_exceptions.NotFeedIdentifiableException:
                   pass
