@@ -164,8 +164,37 @@ class PlosSearchSource:
 
       else:
         raise NotImplementedError   
-       
-      
+     
+    
+    def _prep_plos_record(
+          self, 
+          *, 
+          record: colrev.record.record.Record, 
+          prep_main_record: bool = True, 
+          plos_source: str = "", 
+    ) -> None:
+        if Fields.LANGUAGE in record.data:
+          try:
+              self.language_service.unify_to_iso_639_3_language_codes(record=record)
+          except colrev_exceptions.InvalidLanguageCodeException:
+              del record.data[Fields.LANGUAGE]   
+
+        doi_connector.DOIConnector.get_link_from_doi(
+            review_manager=self.review_manager,
+            record=record,
+        )        
+
+        #REFERENCES?
+        if (
+            self.review_manager.settings.is_curated_masterdata_repo()
+        ) and Fields.CITED_BY in record.data:
+            del record.data[Fields.CITED_BY] 
+
+        if not prep_main_record:
+           return
+        
+        #retracted??
+        #TO DO
 
 
     def _run_api_search( 

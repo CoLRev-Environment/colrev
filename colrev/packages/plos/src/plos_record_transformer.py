@@ -62,9 +62,10 @@ def _item_to_record(*, item: dict) -> dict:
     item[Fields.AUTHOR] = _get_authors(item=item) #To do
     item[Fields.YEAR] = _get_year(item=item) #To do
     item[Fields.VOLUME] = str(item.get[Fields.VOLUME], "")
-    item[Fields.NUMBER] = _get_number(item=item) #To do
+    item[Fields.CITED_BY] = str(item.get("References", ""))
+    item[Fields.NUMBER] = str(item.get("eissn", ""))
     item[Fields.DOI] = item.get("id", "").upper()
-    item[Fields.FULLTEXT] = _get_fulltext(item=item) #To do
+    #item[Fields.FULLTEXT] = _get_fulltext(item=item) #To do
 
     return item
 
@@ -232,5 +233,5 @@ def json_to_record(*, item: dict) -> colrev.record.record_prep.PrepRecord:
         raise colrev.exceptions.RecordNotParsableException(
             f"RecordNotParseableExcception: {exc}"
         ) from exc
-
+    print(record_dict)
     return colrev.record.record_prep.PrepRecord(record_dict)
