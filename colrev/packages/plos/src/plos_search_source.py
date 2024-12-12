@@ -202,7 +202,7 @@ class PlosSearchSource:
                     if self._scope_excluded(record.data):
                         continue
                       
-                   
+                    logging.info(self._scope_excluded(record.data))
                     
                     self._prep_plos_record(
                         record = record, prep_main_record = False
@@ -213,6 +213,33 @@ class PlosSearchSource:
                   pass
         except RuntimeError as e:
           print(e)
+
+    def _scope_excluded(self, retrieved_record_dict: dict) -> bool:
+
+      logging.info("ENTRO EN EL SCOPE EXCLUDED")
+      logging.info(retrieved_record_dict)
+
+      if (
+          "scope" not in self.search_source.search_parameters
+          or "years" not in self.search_source.search_parameters["scope"]
+      ):
+          return False
+
+      year_from, year_to = self.search_source.search_parameters["scope"][
+          "years"
+      ].split("-")
+      logging.info(year_from)
+      logging.info(year_to)
+      if not retrieved_record_dict.get(Fields.YEAR, -1000).isdigit():
+          return True
+
+      if (
+          int(year_from)
+          < int(retrieved_record_dict.get(Fields.YEAR, -1000))
+          < int(year_to)
+      ):
+          return False
+      return True
 
     def _validate_source(self) -> None:
         source = self.search_source
