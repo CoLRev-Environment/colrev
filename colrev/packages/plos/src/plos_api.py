@@ -563,7 +563,6 @@ class PlosAPI:
         try:
             for item in endpoint:
                 logging.info("ENTRO EN EL BUCLE FOR")
-                input(item)
                 try:
                     yield plos_record_transformer.json_to_record(item=item)
                 except colrev_exceptions.RecordNotParsableException:
