@@ -85,8 +85,9 @@ class ProsperoSearchSource:
 
         search_bar = driver.find_element(By.ID, "txtSearch")
         search_bar.clear()
-        
-        search_bar.send_keys("cancer1")
+        print("Enter search string:")
+        search_string_input = input()
+        search_bar.send_keys(search_string_input)
         search_bar.send_keys(Keys.RETURN)
         print(driver.current_url) #browser navigated to search results web page successfully
 
@@ -111,14 +112,10 @@ class ProsperoSearchSource:
                     attempts += 1
             return result
 
-        registered_date = []
-        title =[]
-        review_status = []
+        registered_date = None
+        title = None
+        review_status = None
 
-
-        registered_date_elem = None
-        title_elem = None
-        review_status_elem = None
         registered_dates_array = []
         titles_array = []
         review_status_array = []
@@ -133,7 +130,7 @@ class ProsperoSearchSource:
                 title = row.find_element(By.XPATH, "./td[3]").text
                 titles_array.append(title)
                 review_status = row.find_element(By.XPATH, "./td[5]").text
-                registered_dates_array.append(review_status)
+                review_status_array.append(review_status)
             except Exception as e:
                 print(f"Error extracting content for a row: {e}")
 
@@ -150,32 +147,6 @@ class ProsperoSearchSource:
         for review in review_status_array:
             print(review)
 
-        
-        
-        """
-        #extract register date, title and review status of each paper from result list
-        for match in matches1:
-            if retry_find_elem(match, "./td[2]"):
-                registered_date = match.find_element(By.TAG_NAME, "./td[2]").text
-                registered_date.append(registered_date)
-            else:
-                registered_date_elem = match.find_element(By.XPATH, './td[2]')
-                registered_date.append(registered_date_elem.text)
-            if retry_find_elem(match,'./td[3]'):
-                title.append(match.find_element(By.XPATH, './td[3]').text)    
-            else:
-                title_elem = match.find_element(By.XPATH, './td[3]')
-                title.append(title_elem.text)
-            if retry_find_elem(match, '.td[5]'):
-                review_status.append(match.find_element(By.XPATH, './td[5]').text)
-            else:
-                review_status_elem = match.find_element(By.XPATH, './td[5]')
-                review_status.append(review_status_elem.text)
-            
-        print(registered_date)
-        print(title)
-        print(review_status)
-        """
         #assert "No results found." not in driver.page_source
         driver.close()
     search(self=1,rerun=bool)
