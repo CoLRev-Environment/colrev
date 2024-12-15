@@ -1,4 +1,5 @@
 from pathlib import Path
+import bibtexparser
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
@@ -9,12 +10,14 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bwriter import BibTexWriter
 import zope.interface
+import colrev.ops.load
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
-from colrev.constants import SearchType
+from colrev.constants import Fields, SearchType
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.settings import SearchSource
 from colrev.ops.search import Search
+
 from pydantic import Field
 
 
@@ -201,6 +204,26 @@ class ProsperoSearchSource:
             print("Authors:")
             for a in authors_array:
                 print(a)
+            
+            max_len= max(len(registered_dates_array),len(authors_array),len(titles_array),len(review_status_array),len(language_array))
+            records_bib = []
+            for record in range(max_len): 
+                test_rec = {
+                    Fields.TITLE: titles_array[record],
+                    Fields.AUTHOR: authors_array[record],
+                    Fields.DOI: registered_dates_array[record],
+                    Fields.JOURNAL: "PROSPERO",
+                    Fields.LANGUAGE: language_array[record],
+                    Fields.STATUS: review_status_array[record],
+                    Fields.ID: "ID"+record_ids[record],                  
+                    Fields.ENTRYTYPE: "article",
+                }
+                records_bib=[*records_bib,test_rec]
+        
+            bib_database = bibtexparser.bibdatabase.BibDatabase()
+            bib_database.entries = records_bib
+            with open("prospero.bib", 'w') as bibfile:
+                bibtexparser.dump(bib_database, bibfile)
 
             print("Done.", flush=True)
 
@@ -272,7 +295,22 @@ class ProsperoSearchSource:
                 record[standard_field] = record.pop(original_field)
 
     # def load(self, load_operation) -> 
+    def _load_bib(self) -> dict: 
+        records = colrev.loader.load_utils.load(
+            filename = self.search_source.filename,
+            logger = self.review_manager.logger,
+            unique_id_field = "ID",
+        )
+        return records
+    
+    @classmethod
+    def load(self,load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
+        if self.search_source.filename.suffix == ".bib":
+            return self._load_bib()
+        
+        raise NotImplementedError
 
     @property
     def heuristic_status(self) -> SearchSourceHeuristicStatus:
