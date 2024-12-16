@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+from __future__ import annotations
+import typing
+
 from pathlib import Path
 import bibtexparser
 from selenium import webdriver
@@ -13,7 +17,7 @@ import zope.interface
 import colrev.ops.load
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
-from colrev.constants import Fields, SearchType
+from colrev.constants import Fields, SearchType, SearchSourceHeuristicStatus
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.settings import SearchSource
 from colrev.ops.search import Search
@@ -33,7 +37,23 @@ class ProsperoSearchSource:
     ci_supported: bool = Field(default=True)
     db_url = "https://www.crd.york.ac.uk/prospero/"
 
-    # def __init__(self):
+    def __init__(
+        self,
+        *,
+        source_operation: typing.Optional[colrev.process.operation.Operation] = None,
+        settings: typing.Optional[dict] = None,
+    ):
+        """Initialize the ProsperoSearchSource plugin."""
+        if source_operation and settings:
+            self.search_source = self.settings_class(**settings)
+            self.review_manager = source_operation.review_manager
+            self.operation = source_operation
+            self.logger = self.review_manager.logger
+        else:
+            self.search_source = None
+            self.review_manager = None
+            self.logger = None
+        self.search_word = None
 
     @classmethod
     def add_endpoint(cls, operation: Search, params: str) -> SearchSource:
@@ -63,18 +83,30 @@ class ProsperoSearchSource:
     # @classmethod
     # def heuristic
 
-    def get_search_word(self):
-        if hasattr(self, 'search_word') and self.search_word is not None:
+    def get_search_word(self) -> str:
+        """Get the search query from settings or prompt the user."""
+        if self.search_word is not None:
             return self.search_word
-        try:
-            self.search_word = self.settings.search_parameters.get("query", "cancer1")
-        except AttributeError:
+
+        if self.search_source and hasattr(self.search_source, "search_parameters"):
+            self.search_word = self.search_source.search_parameters.get("query", "cancer1")
+            if self.logger:
+                self.logger.debug(f"Using query from search_parameters: {self.search_word}")
+        else:
+            # fallback to standalone
             user_input = input("Enter your search query (default: cancer1): ").strip()
             self.search_word = user_input if user_input else "cancer1"
+            if self.logger:
+                self.logger.debug(f"Using fallback user-input query: {self.search_word}")
+
         return self.search_word
 
     def search(self, rerun: bool) -> None:
-        print("Starting search method...", flush=True)
+        """Scrape Prospero using Selenium, save .bib file with results."""
+        if self.logger:
+            self.logger.info("Starting ProsperoSearchSource search method...")
+        print("Starting search method...")
+
         chrome_options = Options()
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--headless')
@@ -85,24 +117,28 @@ class ProsperoSearchSource:
         driver = webdriver.Chrome(options=chrome_options)
 
         try:
-            # Navigate to Prospero homepage and search
             driver.get("https://www.crd.york.ac.uk/prospero/")
             driver.implicitly_wait(5)
             assert "PROSPERO" in driver.title
 
             search_word = self.get_search_word()
+            print(f"Using query: {search_word}")
+            if self.logger:
+                self.logger.info(f"Prospero search with query: {search_word}")
+
             search_bar = driver.find_element(By.ID, "txtSearch")
             search_bar.clear()
             search_bar.send_keys(search_word)
             search_bar.send_keys(Keys.RETURN)
 
-            # Wait for results or no results
             try:
                 WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.XPATH, "//table[@id='myDataTable']"))
                 )
             except TimeoutException:
                 print("No results found for this query.")
+                if self.logger:
+                    self.logger.warning("No results found for query.")
                 return
 
             matches = driver.find_element(By.XPATH, "//table[@id='myDataTable']")
@@ -114,11 +150,15 @@ class ProsperoSearchSource:
             total_rows = len(rows)
             if total_rows == 0:
                 print("No results found for this query.")
+                if self.logger:
+                    self.logger.info("No rows found.")
                 return
 
             print(f"Found {total_rows} element(s)")
+            if self.logger:
+                self.logger.info(f"Found {total_rows} elements in Prospero results.")
 
-            # collect record IDs and basic info
+            # 1) Collect record IDs and metadata
             record_ids = []
             registered_dates_array = []
             titles_array = []
@@ -142,16 +182,17 @@ class ProsperoSearchSource:
                 titles_array.append(title)
                 review_status_array.append(review_status)
 
+                # Attempt to retrieve the record ID
                 checkbox = tds[0].find_element(By.XPATH, ".//input[@type='checkbox']")
-                record_id = checkbox.get_attribute("data-checkid")
+                record_id = checkbox.get_attribute("data-checkid")  # data-checkid
                 record_ids.append(record_id)
 
-            # for each record, load detail page and extract authors/language
+            # extract authors & language
             language_array = []
             authors_array = []
+
             for i, record_id in enumerate(record_ids):
-                if record_id is None:
-                    # Already handled these as N/A
+                if not record_id:
                     language_array.append("N/A")
                     authors_array.append("N/A")
                     continue
@@ -163,7 +204,6 @@ class ProsperoSearchSource:
                     WebDriverWait(driver, 15).until(
                         EC.presence_of_element_located((By.XPATH, "//div[@id='documentfields']"))
                     )
-                    # Extract language
                     try:
                         WebDriverWait(driver, 5).until(
                             EC.presence_of_element_located((By.XPATH, "//h1[text()='Language']"))
@@ -173,22 +213,26 @@ class ProsperoSearchSource:
                     except (TimeoutException, NoSuchElementException):
                         language_details = "N/A"
 
-                    # Extract authors
                     try:
                         authors_div = driver.find_element(By.ID, "documenttitlesauthor")
                         authors_text = authors_div.text.strip()
                         authors_details = authors_text if authors_text else "N/A"
                     except NoSuchElementException:
                         authors_details = "N/A"
+
                 except TimeoutException:
                     language_details = "N/A"
                     authors_details = "N/A"
 
                 language_array.append(language_details)
                 authors_array.append(authors_details)
-                print(f"Row {i}: {titles_array[i]}, Language: {language_details}, Authors: {authors_details}", flush=True)
 
-            # Print summary
+                print(f"Row {i}: {titles_array[i]}, Language: {language_details}, Authors: {authors_details}")
+                if self.logger:
+                    self.logger.info(
+                        f"Prospero record row {i}: Title={titles_array[i]}, Language={language_details}, Authors={authors_details}"
+                    )
+
             print("Registered Dates:")
             for d in registered_dates_array:
                 print(d)
@@ -204,6 +248,7 @@ class ProsperoSearchSource:
             print("Authors:")
             for a in authors_array:
                 print(a)
+
             
             max_len= max(len(registered_dates_array),len(authors_array),len(titles_array),len(review_status_array),len(language_array))
             records_bib = []
@@ -222,19 +267,31 @@ class ProsperoSearchSource:
         
             bib_database = bibtexparser.bibdatabase.BibDatabase()
             bib_database.entries = records_bib
-            with open("prospero.bib", 'w') as bibfile:
+            output_path = Path("data/search/prospero.bib")
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            with open(output_path, 'w', encoding='utf8') as bibfile:
                 bibtexparser.dump(bib_database, bibfile)
 
-            print("Done.", flush=True)
+            if output_path.exists():
+                 print(f"Results saved to {output_path}")
+            else:
+                print("Failed to save the BibTeX file.")
+
+            if self.logger:
+                self.logger.info(f"Prospero results saved to {output_path}")
+
 
         finally:
             driver.quit()
 
     def prep_link_md(self, prep_operation, record, save_feed=True, timeout=10):
-        """Given a record with ID, fetch authors and language from Prospero."""
+        """Record-level metadata enrichment from Prospero, given a record ID."""
         record_id = record.get('ID')
         if not record_id:
             print("No ID provided in record, cannot link masterdata.")
+            if self.logger:
+                self.logger.warning("No ID in record for prep_link_md.")
             return record
 
         chrome_options = Options()
@@ -252,7 +309,6 @@ class ProsperoSearchSource:
                 EC.presence_of_element_located((By.XPATH, "//div[@id='documentfields']"))
             )
 
-            # Extract language
             try:
                 WebDriverWait(driver, 5).until(
                     EC.presence_of_element_located((By.XPATH, "//h1[text()='Language']"))
@@ -262,7 +318,6 @@ class ProsperoSearchSource:
             except (TimeoutException, NoSuchElementException):
                 record['language'] = "N/A"
 
-            # Extract authors
             try:
                 authors_div = driver.find_element(By.ID, "documenttitlesauthor")
                 authors_text = authors_div.text.strip()
@@ -271,11 +326,21 @@ class ProsperoSearchSource:
                 record['authors'] = "N/A"
 
             print(f"Masterdata linked for ID {record_id}: Language={record['language']}, Authors={record['authors']}")
+            if self.logger:
+                self.logger.info(
+                    f"Prospero masterdata linked for record {record_id}: "
+                    f"Lang={record['language']}, Authors={record['authors']}"
+                )
 
             if save_feed:
-                print("Record updated and would be saved to feed.")
+                print("Record updated. Would be saved to feed or further data structure.")
+                if self.logger:
+                    self.logger.debug("Record updated, feed saving not implemented here.")
+
         except TimeoutException:
             print(f"Timeout while linking masterdata for ID {record_id}")
+            if self.logger:
+                self.logger.warning(f"Timeout for prep_link_md ID {record_id}")
         finally:
             driver.quit()
 
