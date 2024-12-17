@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 from pathlib import Path
 import bibtexparser
+import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -42,6 +43,7 @@ class ProsperoSearchSource:
         source_operation: typing.Optional[colrev.process.operation.Operation] = None,
         settings: typing.Optional[dict] = None,
     ):
+        print(settings)
         """Initialize the ProsperoSearchSource plugin."""
         if source_operation and settings:
             self.search_source = self.settings_class(**settings)
@@ -68,10 +70,10 @@ class ProsperoSearchSource:
                         params_dict[key] = value
                     else:
                         raise ValueError(f"Invalid parameter format: {item}")
-
+ 
         # Generate a unique .bib filename (like other CoLRev endpoints do)
         filename = operation.get_unique_filename(file_path_string="prospero_results")
-
+ 
         search_source = SearchSource(
             endpoint=cls.endpoint,
             filename=filename,
@@ -146,6 +148,13 @@ class ProsperoSearchSource:
 
     def search(self, rerun: bool) -> None:
         """Scrape Prospero using Selenium, save .bib file with results."""
+
+        """prospero_feed = self.search_source.get_api_feed(
+            review_manager = self.review_manager,
+            source_identifier = self.source_identifier,
+            update_only =(not rerun)
+        )"""
+
         if self.logger:
             self.logger.info("Starting ProsperoSearchSource search method...")
         print("Starting ProsperoSearchSource search method...")  # Debug statement
@@ -351,9 +360,23 @@ class ProsperoSearchSource:
         finally:
             driver.quit()
 
-    def run_api_search(self, *, prospero_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool,) -> None:
+    """def run_api_search(self, *, prospero_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool,) -> None:
         if rerun:
-            self.review_manager.logger.info()
+            self.review_manager.logger.info(
+                "Performing a search of the full history (may take time)"
+            )
+        for records in self.new_records:
+            try: 
+                if "" == records.get(
+                    Fields.AUTHOR, ""
+                ) and "" == records.get(Fields.TITLE, ""):
+                    continue
+                prep_record = colrev.record.record_prep.PrepRecord(records)
+                prospero_feed.add_update_record(prep_record)
+                
+            except colrev_exceptions.NotFeedIdentifiableException:
+                continue
+        prospero_feed.save()"""
         
 
     def prep_link_md(self, prep_operation, record, save_feed=True, timeout=10):
