@@ -53,7 +53,7 @@ def test_get_colrev_versions(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     colrev_versions = base_repo_review_manager.get_colrev_versions()
-    assert ["0.13.0", "0.13.0"] == colrev_versions, print(
+    assert ["0.13.1", "0.13.1"] == colrev_versions, print(
         f"To install the current version, run {Colors.ORANGE}pip install -e .{Colors.END}"
     )
 
