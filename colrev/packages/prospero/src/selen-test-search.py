@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, NoSuchElementException,StaleElementReferenceException
 import logging
 import time
-from colrev.packages.prospero.src.extract_from_each_article import record_info
+from colrev.packages.prospero.src.extract_from_each_article import get_record_info
 #from bibtexparser.bibdatabase import BibDatabase
 #from bibtexparser.bwriter import BibTexWriter
 import zope.interface
@@ -71,15 +71,15 @@ class ProsperoSearchSource:
         try:
             self.search_word = self.settings.search_parameters.get("query", "cancer1")
         except AttributeError:
-            user_input = input("Enter your search query (default: cancer1): ").strip()
+            user_input = input("Enter search term (default: cancer1): ").strip()
             self.search_word = user_input if user_input else "cancer1"
         return self.search_word
 
     def search(self, rerun: bool) -> None:
 
-        record_ids_array = []
-        registered_dates_array = []
-        titles_array = []
+        record_id_array = []
+        registered_date_array = []
+        title_array = []
         review_status_array = []
 
         logger = logging.getLogger()
@@ -117,30 +117,28 @@ class ProsperoSearchSource:
                 print("No results found for this query.")
                 return
 
-            matches = driver.find_element(By.XPATH, "//table[@id='myDataTable']")
-            rows = matches.find_elements(By.XPATH, ".//tr[@class='myDataTableRow']")
-            # Remove header row if present
-            if rows and rows[0].find_elements(By.XPATH, ".//th"):
-                rows.pop(0)
-
             # Determine number of results found 
-            total_rows = int(driver.find_element(By.XPATH, "//div[@id='hitcountleft']/span[1]").text)
-            print(f"Found {total_rows} element(s)")
+            hit_count = int(driver.find_element(By.XPATH, "//div[@id='hitcountleft']/span[1]").text)
+            print(f"Found {hit_count} element(s) for {search_word}")
             
-            # Calculate number of result pages manually to loop through since no indication of last page in HTML
-            nr_pages = None
-            if total_rows == 0:
+            # Calculate number of result pages manually to loop through since no indicator for last page 
+            page_count = None
+            if hit_count == 0:
                 print("No results found for this query.")
                 return
-            elif total_rows < 51:
-                nr_pages = 1
+            elif hit_count < 51:
+                page_count = 1
             else:
-                nr_pages = total_rows // 50
+                page_count = hit_count // 50
 
             start_index = 1
-            while start_index <= nr_pages:
+            while start_index <= page_count:
 
-                print(start_index)
+                table_of_matches = driver.find_element(By.XPATH, "//table[@id='myDataTable']")
+                records = table_of_matches.find_elements(By.XPATH, ".//tr[@class='myDataTableRow']")
+                # Remove header row if present
+                if records and records[0].find_elements(By.XPATH, ".//th"):
+                    records.pop(0)
                 
                 try:
                     page_index = driver.find_element(By.XPATH, "//td[@id='pagescount']").text
@@ -150,22 +148,30 @@ class ProsperoSearchSource:
 
                 # collect record IDs and basic info
                 try: 
-                    record_info(driver,rows,record_ids_array,registered_dates_array,titles_array,review_status_array,original_search_window)
+                    get_record_info(driver,
+                                    records,
+                                    record_id_array,
+                                    registered_date_array,
+                                    title_array,
+                                    review_status_array,
+                                    original_search_window)
                 except StaleElementReferenceException:
                     logger.error("Failed loading results: StaleElementReferenceException")
                 print(f"Current window handle: {driver.window_handles}")
+
+                #click to next page
                 try:
                     WebDriverWait(driver,3).until(
                     EC.element_to_be_clickable((By.XPATH, "//td[@title='Next page']"))
                 ).click()
-                    time.sleep(5)
+                    time.sleep(3)
                 except:
                     print("I cannot do this anymore omg the driver is not clicking on the next fucking button.")
                 finally:
                     start_index+= 1
-                    print(f"Finished retrieving data from current result page. Moving on to page: {start_index}")
+                    print(f"Finished retrieving data from current result page. Moving on to next page...")
             
-            print("Done.", flush=True)
+            print("All records displayed and retrieved.", flush=True)
         
         finally:
             driver.quit()

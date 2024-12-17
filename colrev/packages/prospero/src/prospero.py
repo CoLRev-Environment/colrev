@@ -5,7 +5,10 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
+import time
+import logging
+from colrev.packages.prospero.src.extract_from_each_article import get_record_info
 #from bibtexparser.bibdatabase import BibDatabase
 #from bibtexparser.bwriter import BibTexWriter
 import zope.interface
@@ -71,7 +74,15 @@ class ProsperoSearchSource:
         return self.search_word
 
     def search(self, rerun: bool) -> None:
-        print("Starting search operation...", flush=True)
+
+        record_id_array = []
+        registered_date_array = []
+        title_array = []
+        review_status_array = []
+
+        logger = logging.getLogger()
+
+        print("Starting search method...", flush=True)
         chrome_options = Options()
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--headless')
@@ -93,6 +104,8 @@ class ProsperoSearchSource:
             search_bar.send_keys(search_word)
             search_bar.send_keys(Keys.RETURN)
 
+            original_search_window = driver.current_window_handle
+            
             # Wait for results or no results
             try:
                 WebDriverWait(driver, 10).until(
@@ -102,110 +115,65 @@ class ProsperoSearchSource:
                 print("No results found for this query.")
                 return
 
-            table_of_matches = driver.find_element(By.XPATH, "//table[@id='myDataTable']")
-            matches = table_of_matches.find_elements(By.XPATH, ".//tr[@class='myDataTableRow']")
-            # Remove header record if present
-            if matches and matches[0].find_elements(By.XPATH, ".//th"):
-                matches.pop(0)
-
-            nr_matches = len(matches)
-            if nr_matches == 0:
+            # Retrieve number of records found 
+            hit_count = int(driver.find_element(By.XPATH, "//div[@id='hitcountleft']/span[1]").text)
+            print(f"Found {hit_count} element(s) for {search_word}")
+            
+            # Calculate number of result pages manually to loop through since no indicator for last page 
+            page_count = None
+            if hit_count == 0:
                 print("No results found for this query.")
                 return
+            elif hit_count < 51:
+                page_count = 1
+            else:
+                page_count = hit_count // 50
 
-            print(f"{nr_matches} record(s) found.")
-
-            # collect record IDs and basic info
-            record_ids_array = []
-            registered_dates_array = []
-            titles_array = []
-            review_status_array = []
-
-            for i, record in enumerate(matches):
-                tds = record.find_elements(By.XPATH, "./td")
-                if len(tds) < 5:
-                    print(f"Record {i} does not have enough information.")
-                    registered_dates_array.append("N/A")
-                    titles_array.append("N/A")
-                    review_status_array.append("N/A")
-                    record_ids_array.append(None)
-                    continue
-
-                registered_date = tds[1].text.strip()
-                title = tds[2].text.strip()
-                review_status = tds[4].text.strip()
-
-                registered_dates_array.append(registered_date)
-                titles_array.append(title)
-                review_status_array.append(review_status)
-
-                checkbox = tds[0].find_element(By.XPATH, ".//input[@type='checkbox']")
-                record_id = checkbox.get_attribute("data-checkid")
-                record_ids_array.append(record_id)
-
-            # for each record, load detail page and extract authors/language
-            language_array = []
-            authors_array = []
-            for i, record_id in enumerate(record_ids_array):
-                if record_id is None:
-                    # Already handled these as N/A
-                    language_array.append("N/A")
-                    authors_array.append("N/A")
-                    continue
-
-                detailed_url = f"https://www.crd.york.ac.uk/prospero/display_record.php?RecordID={record_id}"
-                driver.get(detailed_url)
-
+            start_index = 1
+            while start_index <= page_count:
+                
+                table_of_matches = driver.find_element(By.XPATH, "//table[@id='myDataTable']")
+                records = table_of_matches.find_elements(By.XPATH, ".//tr[@class='myDataTableRow']")
+                # Remove header row if present
+                if records and records[0].find_elements(By.XPATH, ".//th"):
+                    records.pop(0)
+                
                 try:
-                    WebDriverWait(driver, 15).until(
-                        EC.presence_of_element_located((By.XPATH, "//div[@id='documentfields']"))
-                    )
-                    # Extract language
-                    try:
-                        WebDriverWait(driver, 5).until(
-                            EC.presence_of_element_located((By.XPATH, "//h1[text()='Language']"))
-                        )
-                        language_paragraph = driver.find_element(By.XPATH, "//h1[text()='Language']/following-sibling::p[1]")
-                        language_details = language_paragraph.text.strip()
-                    except (TimeoutException, NoSuchElementException):
-                        language_details = "N/A"
+                    page_index = driver.find_element(By.XPATH, "//td[@id='pagescount']").text
+                finally: 
+                    page_index = driver.find_element(By.XPATH, "//td[@id='pagescount']").text
+                print(f"Displaying records on {page_index}")
 
-                    # Extract authors
-                    try:
-                        authors_div = driver.find_element(By.ID, "documenttitlesauthor")
-                        authors_text = authors_div.text.strip()
-                        authors_details = authors_text if authors_text else "N/A"
-                    except NoSuchElementException:
-                        authors_details = "N/A"
-                except TimeoutException:
-                    language_details = "N/A"
-                    authors_details = "N/A"
+                # collect record IDs and basic info
+                try: 
+                    get_record_info(driver,
+                                    records,
+                                    record_id_array,
+                                    registered_date_array,
+                                    title_array,
+                                    review_status_array,
+                                    original_search_window)
+                except StaleElementReferenceException:
+                    logger.error("Failed loading results: StaleElementReferenceException")
+                print(f"Current window handle: {driver.window_handles}")
 
-                language_array.append(language_details)
-                authors_array.append(authors_details)
-                print(f"Record {i+1}: {titles_array[i]}, Language: {language_details}, Authors: {authors_details}", flush=True)
-
-            # Print summary
-            """print("Registered Dates:")
-            for d in registered_dates_array:
-                print(d)
-            print("Titles:")
-            for t in titles_array:
-                print(t)
-            print("Review status:")
-            for r in review_status_array:
-                print(r)
-            print("Language Details:")
-            for l in language_array:
-                print(l)
-            print("Authors:")
-            for a in authors_array:
-                print(a)
-            """
-            print("Search operation finished.", flush=True)
-
+                #click to next page
+                try:
+                    WebDriverWait(driver,3).until(
+                    EC.element_to_be_clickable((By.XPATH, "//td[@title='Next page']"))
+                ).click()
+                    time.sleep(3)
+                except:
+                    logger.error("Failed to navigate to next page.")
+                finally:
+                    start_index+= 1
+                    print(f"Finished retrieving data from current result page.")
+            
+            print("All records displayed and retrieved.", flush=True)
+        
         finally:
             driver.quit()
+
 
     def prep_link_md(self, prep_operation, record, save_feed=True, timeout=10):
         """Given a record with ID, fetch authors and language from Prospero."""
