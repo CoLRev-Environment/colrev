@@ -11,9 +11,12 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.bwriter import BibTexWriter
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
+import time
+import logging
+from colrev.packages.prospero.src.extract_from_each_article import get_record_info
+#from bibtexparser.bibdatabase import BibDatabase
+#from bibtexparser.bwriter import BibTexWriter
 import zope.interface
 import colrev.ops.load
 import colrev.package_manager.interfaces
@@ -148,6 +151,13 @@ class ProsperoSearchSource:
 
     def search(self, rerun: bool) -> None:
         """Scrape Prospero using Selenium, save .bib file with results."""
+        
+        record_id_array = []
+        registered_date_array = []
+        title_array = []
+        review_status_array = []
+
+        logger = logging.getLogger()
 
         """prospero_feed = self.search_source.get_api_feed(
             review_manager = self.review_manager,
@@ -156,8 +166,8 @@ class ProsperoSearchSource:
         )"""
 
         if self.logger:
-            self.logger.info("Starting ProsperoSearchSource search method...")
-        print("Starting ProsperoSearchSource search method...")  # Debug statement
+            self.logger.info("Starting ProsperoSearchSource search...")
+        print("Starting ProsperoSearchSource search...")  # Debug statement
 
         chrome_options = Options()
         chrome_options.add_argument('--no-sandbox')
@@ -189,6 +199,9 @@ class ProsperoSearchSource:
             search_bar.send_keys(search_word)
             search_bar.send_keys(Keys.RETURN)
 
+            original_search_window = driver.current_window_handle
+            
+            # Wait for results or no results
             try:
                 WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.XPATH, "//table[@id='myDataTable']"))
@@ -199,164 +212,66 @@ class ProsperoSearchSource:
                     self.logger.warning("No results found for query.")
                 return
 
-            matches = driver.find_element(By.XPATH, "//table[@id='myDataTable']")
-            rows = matches.find_elements(By.XPATH, ".//tr[@class='myDataTableRow']")
-            # Remove header row if present
-            if rows and rows[0].find_elements(By.XPATH, ".//th"):
-                rows.pop(0)
+            # Retrieve number of records found 
+            hit_count = int(driver.find_element(By.XPATH, "//div[@id='hitcountleft']/span[1]").text)
+            print(f"Found {hit_count} record(s) for {search_word}")
+            if self.logger:
+                    self.logger.info(f"Found {hit_count} record(s) for '{search_word}'.")
 
-            total_rows = len(rows)
-            if total_rows == 0:
+            # Calculate number of result pages manually to loop through since no indicator for last page 
+            page_count = None
+            if hit_count == 0:
                 print("No results found for this query.")
                 if self.logger:
                     self.logger.info("No rows found.")
                 return
-
-            print(f"Found {total_rows} element(s)")  # Debug statement
-            if self.logger:
-                self.logger.info(f"Found {total_rows} elements in Prospero results.")
-
-            # 1) Collect record IDs and metadata
-            record_ids = []
-            registered_dates_array = []
-            titles_array = []
-            review_status_array = []
-
-            for i, row in enumerate(rows):
-                tds = row.find_elements(By.XPATH, "./td")
-                if len(tds) < 5:
-                    print(f"Row {i} does not have enough columns.")
-                    registered_dates_array.append("N/A")
-                    titles_array.append("N/A")
-                    review_status_array.append("N/A")
-                    record_ids.append(None)
-                    continue
-
-                registered_date = tds[1].text.strip()
-                title = tds[2].text.strip()
-                review_status = tds[4].text.strip()
-
-                registered_dates_array.append(registered_date)
-                titles_array.append(title)
-                review_status_array.append(review_status)
-
-                # Attempt to retrieve the record ID
-                try:
-                    checkbox = tds[0].find_element(By.XPATH, ".//input[@type='checkbox']")
-                    record_id = checkbox.get_attribute("data-checkid")  # data-checkid
-                except NoSuchElementException:
-                    record_id = None
-                record_ids.append(record_id)
-
-            # Extract authors & language
-            language_array = []
-            authors_array = []
-
-            for i, record_id in enumerate(record_ids):
-                if not record_id:
-                    language_array.append("N/A")
-                    authors_array.append("N/A")
-                    continue
-
-                detail_url = f"https://www.crd.york.ac.uk/prospero/display_record.php?RecordID={record_id}"
-                driver.get(detail_url)
-
-                try:
-                    WebDriverWait(driver, 15).until(
-                        EC.presence_of_element_located((By.XPATH, "//div[@id='documentfields']"))
-                    )
-                    try:
-                        WebDriverWait(driver, 5).until(
-                            EC.presence_of_element_located((By.XPATH, "//h1[text()='Language']"))
-                        )
-                        language_paragraph = driver.find_element(By.XPATH, "//h1[text()='Language']/following-sibling::p[1]")
-                        language_details = language_paragraph.text.strip()
-                    except (TimeoutException, NoSuchElementException):
-                        language_details = "N/A"
-
-                    try:
-                        authors_div = driver.find_element(By.ID, "documenttitlesauthor")
-                        authors_text = authors_div.text.strip()
-                        authors_details = authors_text if authors_text else "N/A"
-                    except NoSuchElementException:
-                        authors_details = "N/A"
-
-                except TimeoutException:
-                    language_details = "N/A"
-                    authors_details = "N/A"
-
-                language_array.append(language_details)
-                authors_array.append(authors_details)
-
-                print(f"Row {i}: {titles_array[i]}, Language: {language_details}, Authors: {authors_details}")  # Debug
-                if self.logger:
-                    self.logger.info(
-                        f"Prospero record row {i}: Title={titles_array[i]}, Language={language_details}, Authors={authors_details}"
-                    )
-
-            # Print collected data
-            print("Registered Dates:")
-            for d in registered_dates_array:
-                print(d)
-            print("Titles:")
-            for t in titles_array:
-                print(t)
-            print("Review status:")
-            for r in review_status_array:
-                print(r)
-            print("Language Details:")
-            for l in language_array:
-                print(l)
-            print("Authors:")
-            for a in authors_array:
-                print(a)
-
-            # Merge new records
-            max_len = max(
-                len(registered_dates_array),
-                len(authors_array),
-                len(titles_array),
-                len(review_status_array),
-                len(language_array),
-            )
-            new_records = []
-            for idx in range(max_len):
-                rec_id = record_ids[idx] if record_ids[idx] else f"no_id_{idx}"
-                bib_entry = {
-                    Fields.ENTRYTYPE: "article",
-                    Fields.ID: "ID" + str(rec_id),
-                    Fields.TITLE: titles_array[idx],
-                    Fields.AUTHOR: authors_array[idx],
-                    Fields.DOI: registered_dates_array[idx],
-                    Fields.JOURNAL: "PROSPERO",
-                    Fields.LANGUAGE: language_array[idx],
-                    Fields.STATUS: review_status_array[idx],
-                }
-                new_records.append(bib_entry)
-
-            # Save to Bib
-            output_path = Path("data/search/records.bib")
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            existing_records = self._load_existing_records(output_path)
-
-            self._merge_new_results(existing_records, new_records)
-
-            bib_db = BibDatabase()
-            bib_db.entries = list(existing_records.values())
-
-            with open(output_path, 'w', encoding='utf8') as bibfile:
-                writer = BibTexWriter()
-                bibfile.write(writer.write(bib_db))
-
-            if output_path.exists():
-                print(f"Results saved/updated to {output_path}")  # Debug statement
-                if self.logger:
-                    self.logger.info(f"Prospero results saved/updated to {output_path}")
+            elif hit_count < 51:
+                page_count = 1
             else:
-                print("Failed to save the BibTeX file.")
-                if self.logger:
-                    self.logger.warning("Failed to save the BibTeX file to disk.")
+                page_count = hit_count // 50
 
+            start_index = 1
+            while start_index <= page_count:
+                
+                table_of_matches = driver.find_element(By.XPATH, "//table[@id='myDataTable']")
+                records = table_of_matches.find_elements(By.XPATH, ".//tr[@class='myDataTableRow']")
+                # Remove header row if present
+                if records and records[0].find_elements(By.XPATH, ".//th"):
+                    records.pop(0)
+                
+                try:
+                    page_index = driver.find_element(By.XPATH, "//td[@id='pagescount']").text
+                finally: 
+                    page_index = driver.find_element(By.XPATH, "//td[@id='pagescount']").text
+                print(f"Displaying records on {page_index}")
+
+                # collect record IDs and basic info
+                try: 
+                    get_record_info(driver,
+                                    records,
+                                    record_id_array,
+                                    registered_date_array,
+                                    title_array,
+                                    review_status_array,
+                                    original_search_window)
+                except StaleElementReferenceException:
+                    logger.error("Failed loading results: StaleElementReferenceException")
+                print(f"Current window handle: {driver.window_handles}")
+
+                #click to next page
+                try:
+                    WebDriverWait(driver,3).until(
+                    EC.element_to_be_clickable((By.XPATH, "//td[@title='Next page']"))
+                ).click()
+                    time.sleep(3)
+                except:
+                    logger.error("Failed to navigate to next page.")
+                finally:
+                    start_index+= 1
+                    print(f"Finished retrieving data from current result page.")
+            
+            print("All records displayed and retrieved.", flush=True)
+        
         finally:
             driver.quit()
 
@@ -405,7 +320,7 @@ class ProsperoSearchSource:
 
         detail_url = f"https://www.crd.york.ac.uk/prospero/display_record.php?RecordID={record_id}"
         try:
-            driver.get(detail_url)
+            driver.get(detailed_url)
             WebDriverWait(driver, timeout).until(
                 EC.presence_of_element_located((By.XPATH, "//div[@id='documentfields']"))
             )
