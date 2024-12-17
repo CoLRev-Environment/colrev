@@ -29,9 +29,9 @@ colrev.prospero
 
 |MAINTAINER| Maintainer: Phuc Tran
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.prospero
      - Add
    * - search_source
      - |EXPERIMENTAL|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev search --add colrev.prospero

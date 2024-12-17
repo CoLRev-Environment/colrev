@@ -1,7 +1,6 @@
-import os  # Add this import
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
 
 # Use the path to ChromeDriver in $HOME/bin
 service = Service("/workspaces/colrev/colrev/packages/prospero/bin/chromedriver")
@@ -16,4 +15,3 @@ driver.get("https://www.google.com")
 print(driver.title)
 
 driver.quit()
-

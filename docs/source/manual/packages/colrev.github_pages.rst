@@ -29,9 +29,9 @@ colrev.github_pages
 
 |MAINTAINER| Maintainer: Julian Prester, Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/github_pages>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/github_pages>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.github_pages
      - Add
    * - data
      - |MATURING|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev data --add colrev.github_pages
