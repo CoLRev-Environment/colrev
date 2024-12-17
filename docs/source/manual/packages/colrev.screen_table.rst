@@ -29,9 +29,9 @@ colrev.screen_table
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/screen_table>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/screen_table>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.screen_table
      - Add
    * - screen
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev screen --add colrev.screen_table

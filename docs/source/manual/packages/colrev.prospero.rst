@@ -22,16 +22,16 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-colrev.abi_inform_proquest
-==========================
+colrev.prospero
+===============
 
 |VERSION| Version: 0.1.0
 
-|MAINTAINER| Maintainer: Gerit Wagner
+|MAINTAINER| Maintainer: Phuc Tran
 
 |LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/abi_inform_proquest>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -45,23 +45,11 @@ colrev.abi_inform_proquest
      - .. code-block:: 
 
 
-         colrev search --add colrev.abi_inform_proquest
+         colrev search --add colrev.prospero
 
 
 Summary
 -------
 
-search
-------
-
-DB search
-^^^^^^^^^
-
-`ABI/INFORM ProQuest <https://about.proquest.com/en/products-services/abi_inform_complete/>`_
-
-Links
------
-
-
-* `ProQuest <https://www.proquest.com/>`_
-* `Coverage <https://tls.search.proquest.com/titlelist/jsp/list/tlsSingle.jsp?productId=10000008&_ga=2.251511554.52407821.1697371383-820984782.1697371383>`_
+TODO : Docs
+===========

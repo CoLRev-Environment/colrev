@@ -29,9 +29,9 @@ colrev-scidb
 
 |MAINTAINER| Maintainer: Julian Prester
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `julianprester/scidb <https://github.com/julianprester/scidb>`_
+|GIT_REPO| Repository: `julianprester/scidb <https://github.com/julianprester/scidb>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev-scidb
      - Add
    * - pdf_get
      - |EXPERIMENTAL|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev pdf-get --add colrev-scidb

@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 from pathlib import Path
 import bibtexparser
+import colrev.ops.search_api_feed
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
@@ -79,8 +80,9 @@ class ProsperoSearchSource:
         operation.add_source_and_search(search_source)
         return search_source
     
-    #@classmethod
-    #def heuristic
+    @classmethod
+    def heuristic(cls, filename: Path, data:str) -> dict:
+        return {}
 
     def get_search_word(self) -> str:
         """Get the search query from settings or prompt the user."""
@@ -345,6 +347,11 @@ class ProsperoSearchSource:
 
         finally:
             driver.quit()
+
+    def run_api_search(self, *, prospero_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool,) -> None:
+        if rerun:
+            self.review_manager.logger.info()
+        
 
     def prep_link_md(self, prep_operation, record, save_feed=True, timeout=10):
         """Record-level metadata enrichment from Prospero, given a record ID."""

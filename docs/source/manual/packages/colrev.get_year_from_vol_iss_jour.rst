@@ -29,9 +29,9 @@ colrev.get_year_from_vol_iss_jour
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/get_year_from_vol_iss_jour>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/get_year_from_vol_iss_jour>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.get_year_from_vol_iss_jour
      - Add
    * - prep
      - |EXPERIMENTAL|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev prep --add colrev.get_year_from_vol_iss_jour
@@ -60,3 +60,4 @@ This package adds missing ``year`` fields if the ``journal``\ , ``volume``\ , an
 .. raw:: html
 
    <!-- ## Links -->
+

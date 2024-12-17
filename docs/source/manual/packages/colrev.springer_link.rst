@@ -29,9 +29,9 @@ colrev.springer_link
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/springer_link>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/springer_link>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.springer_link
      - Add
    * - search_source
      - |EXPERIMENTAL|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev search --add colrev.springer_link

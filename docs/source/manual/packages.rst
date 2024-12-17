@@ -82,6 +82,7 @@ Packages
    packages/colrev.open_library.rst
    packages/colrev.osf.rst
    packages/colrev.pdf_backward_search.rst
+   packages/colrev.prospero.rst
    packages/colrev.psycinfo.rst
    packages/colrev.pubmed.rst
    packages/colrev.scopus.rst

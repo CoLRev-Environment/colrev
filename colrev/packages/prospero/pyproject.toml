@@ -15,9 +15,10 @@ python = ">=3.9, <4"
 [tool.colrev]
 colrev_doc_description = "TODO"
 colrev_doc_link = "docs/README.md"
-search_types = []
+search_types = ["API"]
 
 [tool.poetry.plugins.colrev]
+search_source ="colrev.packages.prospero.src.prospero:ProsperoSearchSource"
 
 
 [build-system]
