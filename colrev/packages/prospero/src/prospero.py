@@ -6,8 +6,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.bwriter import BibTexWriter
+#from bibtexparser.bibdatabase import BibDatabase
+#from bibtexparser.bwriter import BibTexWriter
 import zope.interface
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
@@ -71,7 +71,7 @@ class ProsperoSearchSource:
         return self.search_word
 
     def search(self, rerun: bool) -> None:
-        print("Starting search method...", flush=True)
+        print("Starting search operation...", flush=True)
         chrome_options = Options()
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--headless')
@@ -102,33 +102,33 @@ class ProsperoSearchSource:
                 print("No results found for this query.")
                 return
 
-            matches = driver.find_element(By.XPATH, "//table[@id='myDataTable']")
-            rows = matches.find_elements(By.XPATH, ".//tr[@class='myDataTableRow']")
-            # Remove header row if present
-            if rows and rows[0].find_elements(By.XPATH, ".//th"):
-                rows.pop(0)
+            table_of_matches = driver.find_element(By.XPATH, "//table[@id='myDataTable']")
+            matches = table_of_matches.find_elements(By.XPATH, ".//tr[@class='myDataTableRow']")
+            # Remove header record if present
+            if matches and matches[0].find_elements(By.XPATH, ".//th"):
+                matches.pop(0)
 
-            total_rows = len(rows)
-            if total_rows == 0:
+            nr_matches = len(matches)
+            if nr_matches == 0:
                 print("No results found for this query.")
                 return
 
-            print(f"Found {total_rows} element(s)")
+            print(f"{nr_matches} record(s) found.")
 
             # collect record IDs and basic info
-            record_ids = []
+            record_ids_array = []
             registered_dates_array = []
             titles_array = []
             review_status_array = []
 
-            for i, row in enumerate(rows):
-                tds = row.find_elements(By.XPATH, "./td")
+            for i, record in enumerate(matches):
+                tds = record.find_elements(By.XPATH, "./td")
                 if len(tds) < 5:
-                    print(f"Row {i} does not have enough columns.")
+                    print(f"Record {i} does not have enough information.")
                     registered_dates_array.append("N/A")
                     titles_array.append("N/A")
                     review_status_array.append("N/A")
-                    record_ids.append(None)
+                    record_ids_array.append(None)
                     continue
 
                 registered_date = tds[1].text.strip()
@@ -141,20 +141,20 @@ class ProsperoSearchSource:
 
                 checkbox = tds[0].find_element(By.XPATH, ".//input[@type='checkbox']")
                 record_id = checkbox.get_attribute("data-checkid")
-                record_ids.append(record_id)
+                record_ids_array.append(record_id)
 
             # for each record, load detail page and extract authors/language
             language_array = []
             authors_array = []
-            for i, record_id in enumerate(record_ids):
+            for i, record_id in enumerate(record_ids_array):
                 if record_id is None:
                     # Already handled these as N/A
                     language_array.append("N/A")
                     authors_array.append("N/A")
                     continue
 
-                detail_url = f"https://www.crd.york.ac.uk/prospero/display_record.php?RecordID={record_id}"
-                driver.get(detail_url)
+                detailed_url = f"https://www.crd.york.ac.uk/prospero/display_record.php?RecordID={record_id}"
+                driver.get(detailed_url)
 
                 try:
                     WebDriverWait(driver, 15).until(
@@ -183,10 +183,10 @@ class ProsperoSearchSource:
 
                 language_array.append(language_details)
                 authors_array.append(authors_details)
-                print(f"Row {i}: {titles_array[i]}, Language: {language_details}, Authors: {authors_details}", flush=True)
+                print(f"Record {i+1}: {titles_array[i]}, Language: {language_details}, Authors: {authors_details}", flush=True)
 
             # Print summary
-            print("Registered Dates:")
+            """print("Registered Dates:")
             for d in registered_dates_array:
                 print(d)
             print("Titles:")
@@ -201,8 +201,8 @@ class ProsperoSearchSource:
             print("Authors:")
             for a in authors_array:
                 print(a)
-
-            print("Done.", flush=True)
+            """
+            print("Search operation finished.", flush=True)
 
         finally:
             driver.quit()
@@ -222,9 +222,9 @@ class ProsperoSearchSource:
         chrome_options.add_argument('--remote-debugging-port=9222')
 
         driver = webdriver.Chrome(options=chrome_options)
-        detail_url = f"https://www.crd.york.ac.uk/prospero/display_record.php?RecordID={record_id}"
+        detailed_url = f"https://www.crd.york.ac.uk/prospero/display_record.php?RecordID={record_id}"
         try:
-            driver.get(detail_url)
+            driver.get(detailed_url)
             WebDriverWait(driver, timeout).until(
                 EC.presence_of_element_located((By.XPATH, "//div[@id='documentfields']"))
             )
