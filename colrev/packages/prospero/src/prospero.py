@@ -90,8 +90,34 @@ class ProsperoSearchSource:
 
     
     @classmethod
-    def heuristic(cls, filename: Path, data:str) -> dict:
-        return {}
+    def heuristic(cls, filename: Path)-> dict:
+        """Source heuristic for Prospero"""
+        
+        data = None
+
+        try: 
+            reader = open(filename, "r")
+        except:
+            print("Unable to open file. Please make sure the file path is correct!")    
+        try: 
+            data = reader.read()
+        except:
+            print("Unable to read exported data!")
+        
+        #TODO: reformat corresponding to BibTex file
+        #assuming Prospero exports a .txt file
+        result = { "confidence_level" : 0.1 }
+        link_occurrences = data.count("http://www.crd.york.ac.uk/PROSPERO/display_record.asp?")
+        entries = data.count("Record #")
+        prospero_occurrences = data.count("DBN:   PROSPERO")
+        
+        if link_occurrences == entries: #counts if number of entries match the number of times website was linked 
+            return result.update({'confidence_level' : 1.0})
+        
+        if prospero_occurrences == entries:
+            return result.update({'confidence_level' : 1.0})
+    
+        return result
 
     def get_search_word(self) -> str:
         """Get the search query from settings or prompt the user."""
@@ -224,7 +250,7 @@ class ProsperoSearchSource:
             if hit_count == 0:
                 print("No results found for this query.")
                 if self.logger:
-                    self.logger.info("No rows found.")
+                    self.logger.info("No records found.")
                 return
             elif hit_count < 51:
                 page_count = 1
@@ -272,7 +298,7 @@ class ProsperoSearchSource:
                     print(f"Finished retrieving data from current result page.")
             
             print("All records displayed and retrieved.", flush=True)
-        
+        #TODO: recheck data structure and loops because records are printed out incrementally
         finally:
             driver.quit()
 
@@ -319,7 +345,7 @@ class ProsperoSearchSource:
                 self.logger.error(f"WebDriver initialization failed: {e}")
             return record
 
-        detail_url = f"https://www.crd.york.ac.uk/prospero/display_record.php?RecordID={record_id}"
+        detailed_url = f"https://www.crd.york.ac.uk/prospero/display_record.php?RecordID={record_id}"
         try:
             driver.get(detailed_url)
             WebDriverWait(driver, timeout).until(

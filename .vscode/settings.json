@@ -7,6 +7,7 @@
         "hitcountleft",
         "pagescount",
         "prospero",
-        "webelement"
+        "webelement",
+        "zope"
     ]
 }
