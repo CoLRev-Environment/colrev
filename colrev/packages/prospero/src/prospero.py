@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from __future__ import annotations
 import typing
-
 from pathlib import Path
 import bibtexparser
 from selenium import webdriver
@@ -18,12 +17,11 @@ import colrev.ops.load
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
 from colrev.constants import Fields, SearchType, SearchSourceHeuristicStatus
-from colrev.constants import SearchSourceHeuristicStatus
 from colrev.settings import SearchSource
 from colrev.ops.search import Search
-
+import colrev.loader.load_utils
+from colrev.review_manager import ReviewManager
 from pydantic import Field
-
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 class ProsperoSearchSource:
@@ -57,6 +55,7 @@ class ProsperoSearchSource:
 
     @classmethod
     def add_endpoint(cls, operation: Search, params: str) -> SearchSource:
+        """Adds Prospero as a search source endpoint based on user-provided parameters."""
         params_dict = {}
         if params:
             if params.startswith("http"):
@@ -69,7 +68,7 @@ class ProsperoSearchSource:
                     else:
                         raise ValueError(f"Invalid parameter format: {item}")
 
-        filename = f"data/search/{operation.get_unique_filename(file_path_string='prospero_results')}"
+        filename = f"data/search/records.bib"  # Changed from prospero.bib to records.bib
         search_source = SearchSource(
             endpoint=cls.endpoint,
             filename=filename,
@@ -79,9 +78,9 @@ class ProsperoSearchSource:
         )
         operation.add_source_and_search(search_source)
         return search_source
-
-    # @classmethod
-    # def heuristic
+    
+    #@classmethod
+    #def heuristic
 
     def get_search_word(self) -> str:
         """Get the search query from settings or prompt the user."""
@@ -101,11 +100,50 @@ class ProsperoSearchSource:
 
         return self.search_word
 
+    def _load_existing_records(self, bib_path: Path) -> dict[str, dict]:
+        """Load existing Prospero .bib records into a dictionary: ID -> record fields."""
+        existing_records = {}
+        if bib_path.is_file():
+            with open(bib_path, "r", encoding="utf8") as bib_file:
+                bib_database = bibtexparser.load(bib_file)
+            for entry in bib_database.entries:
+                if Fields.ID in entry:
+                    existing_records[entry[Fields.ID]] = entry
+        return existing_records
+
+    def _merge_new_results(
+        self,
+        existing_records: dict[str, dict],
+        new_records: list[dict],
+    ) -> None:
+        """Compare new results with existing records; only update changed data."""
+        for new_rec in new_records:
+            record_id = new_rec.get(Fields.ID, None)
+            if not record_id:
+                continue
+            if record_id in existing_records:
+                # Compare and update existing record only if fields changed
+                existing_rec = existing_records[record_id]
+                changed = False
+                for k, v in new_rec.items():
+                    if k == Fields.ID:
+                        continue
+                    if existing_rec.get(k, "") != v:
+                        existing_rec[k] = v
+                        changed = True
+                if changed and self.logger:
+                    self.logger.info(f"Updated record: {record_id}")
+            else:
+                # Add new record
+                existing_records[record_id] = new_rec
+                if self.logger:
+                    self.logger.info(f"Added new record: {record_id}")
+
     def search(self, rerun: bool) -> None:
         """Scrape Prospero using Selenium, save .bib file with results."""
         if self.logger:
             self.logger.info("Starting ProsperoSearchSource search method...")
-        print("Starting search method...")
+        print("Starting ProsperoSearchSource search method...")  # Debug statement
 
         chrome_options = Options()
         chrome_options.add_argument('--no-sandbox')
@@ -114,7 +152,13 @@ class ProsperoSearchSource:
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--remote-debugging-port=9222')
 
-        driver = webdriver.Chrome(options=chrome_options)
+        try:
+            driver = webdriver.Chrome(options=chrome_options)
+        except Exception as e:
+            print(f"Error initializing WebDriver: {e}")
+            if self.logger:
+                self.logger.error(f"WebDriver initialization failed: {e}")
+            return
 
         try:
             driver.get("https://www.crd.york.ac.uk/prospero/")
@@ -122,7 +166,7 @@ class ProsperoSearchSource:
             assert "PROSPERO" in driver.title
 
             search_word = self.get_search_word()
-            print(f"Using query: {search_word}")
+            print(f"Using query: {search_word}")  # Debug statement
             if self.logger:
                 self.logger.info(f"Prospero search with query: {search_word}")
 
@@ -154,7 +198,7 @@ class ProsperoSearchSource:
                     self.logger.info("No rows found.")
                 return
 
-            print(f"Found {total_rows} element(s)")
+            print(f"Found {total_rows} element(s)")  # Debug statement
             if self.logger:
                 self.logger.info(f"Found {total_rows} elements in Prospero results.")
 
@@ -183,11 +227,14 @@ class ProsperoSearchSource:
                 review_status_array.append(review_status)
 
                 # Attempt to retrieve the record ID
-                checkbox = tds[0].find_element(By.XPATH, ".//input[@type='checkbox']")
-                record_id = checkbox.get_attribute("data-checkid")  # data-checkid
+                try:
+                    checkbox = tds[0].find_element(By.XPATH, ".//input[@type='checkbox']")
+                    record_id = checkbox.get_attribute("data-checkid")  # data-checkid
+                except NoSuchElementException:
+                    record_id = None
                 record_ids.append(record_id)
 
-            # extract authors & language
+            # Extract authors & language
             language_array = []
             authors_array = []
 
@@ -227,12 +274,13 @@ class ProsperoSearchSource:
                 language_array.append(language_details)
                 authors_array.append(authors_details)
 
-                print(f"Row {i}: {titles_array[i]}, Language: {language_details}, Authors: {authors_details}")
+                print(f"Row {i}: {titles_array[i]}, Language: {language_details}, Authors: {authors_details}")  # Debug
                 if self.logger:
                     self.logger.info(
                         f"Prospero record row {i}: Title={titles_array[i]}, Language={language_details}, Authors={authors_details}"
                     )
 
+            # Print collected data
             print("Registered Dates:")
             for d in registered_dates_array:
                 print(d)
@@ -249,38 +297,51 @@ class ProsperoSearchSource:
             for a in authors_array:
                 print(a)
 
-            
-            max_len= max(len(registered_dates_array),len(authors_array),len(titles_array),len(review_status_array),len(language_array))
-            records_bib = []
-            for record in range(max_len): 
-                test_rec = {
-                    Fields.TITLE: titles_array[record],
-                    Fields.AUTHOR: authors_array[record],
-                    Fields.DOI: registered_dates_array[record],
-                    Fields.JOURNAL: "PROSPERO",
-                    Fields.LANGUAGE: language_array[record],
-                    Fields.STATUS: review_status_array[record],
-                    Fields.ID: "ID"+record_ids[record],                  
+            # Merge new records
+            max_len = max(
+                len(registered_dates_array),
+                len(authors_array),
+                len(titles_array),
+                len(review_status_array),
+                len(language_array),
+            )
+            new_records = []
+            for idx in range(max_len):
+                rec_id = record_ids[idx] if record_ids[idx] else f"no_id_{idx}"
+                bib_entry = {
                     Fields.ENTRYTYPE: "article",
+                    Fields.ID: "ID" + str(rec_id),
+                    Fields.TITLE: titles_array[idx],
+                    Fields.AUTHOR: authors_array[idx],
+                    Fields.DOI: registered_dates_array[idx],
+                    Fields.JOURNAL: "PROSPERO",
+                    Fields.LANGUAGE: language_array[idx],
+                    Fields.STATUS: review_status_array[idx],
                 }
-                records_bib=[*records_bib,test_rec]
-        
-            bib_database = bibtexparser.bibdatabase.BibDatabase()
-            bib_database.entries = records_bib
-            output_path = Path("data/search/prospero.bib")
+                new_records.append(bib_entry)
+
+            # Save to Bib
+            output_path = Path("data/search/records.bib")
             output_path.parent.mkdir(parents=True, exist_ok=True)
+            existing_records = self._load_existing_records(output_path)
+
+            self._merge_new_results(existing_records, new_records)
+
+            bib_db = BibDatabase()
+            bib_db.entries = list(existing_records.values())
 
             with open(output_path, 'w', encoding='utf8') as bibfile:
-                bibtexparser.dump(bib_database, bibfile)
+                writer = BibTexWriter()
+                bibfile.write(writer.write(bib_db))
 
             if output_path.exists():
-                 print(f"Results saved to {output_path}")
+                print(f"Results saved/updated to {output_path}")  # Debug statement
+                if self.logger:
+                    self.logger.info(f"Prospero results saved/updated to {output_path}")
             else:
                 print("Failed to save the BibTeX file.")
-
-            if self.logger:
-                self.logger.info(f"Prospero results saved to {output_path}")
-
+                if self.logger:
+                    self.logger.warning("Failed to save the BibTeX file to disk.")
 
         finally:
             driver.quit()
@@ -301,7 +362,14 @@ class ProsperoSearchSource:
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--remote-debugging-port=9222')
 
-        driver = webdriver.Chrome(options=chrome_options)
+        try:
+            driver = webdriver.Chrome(options=chrome_options)
+        except Exception as e:
+            print(f"Error initializing WebDriver: {e}")
+            if self.logger:
+                self.logger.error(f"WebDriver initialization failed: {e}")
+            return record
+
         detail_url = f"https://www.crd.york.ac.uk/prospero/display_record.php?RecordID={record_id}"
         try:
             driver.get(detail_url)
@@ -325,7 +393,7 @@ class ProsperoSearchSource:
             except NoSuchElementException:
                 record['authors'] = "N/A"
 
-            print(f"Masterdata linked for ID {record_id}: Language={record['language']}, Authors={record['authors']}")
+            print(f"Masterdata linked for ID {record_id}: Language={record['language']}, Authors={record['authors']}")  # Debug
             if self.logger:
                 self.logger.info(
                     f"Prospero masterdata linked for record {record_id}: "
@@ -359,7 +427,6 @@ class ProsperoSearchSource:
             if original_field in record:
                 record[standard_field] = record.pop(original_field)
 
-    # def load(self, load_operation) -> 
     def _load_bib(self) -> dict: 
         records = colrev.loader.load_utils.load(
             filename = self.search_source.filename,
@@ -367,15 +434,13 @@ class ProsperoSearchSource:
             unique_id_field = "ID",
         )
         return records
-    
-    @classmethod
+
     def load(self,load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
             return self._load_bib()
-        
-        raise NotImplementedError
+        raise NotImplementedError("Only .bib loading is implemented for ProsperoSearchSource.")
 
     @property
     def heuristic_status(self) -> SearchSourceHeuristicStatus:
@@ -393,6 +458,39 @@ class ProsperoSearchSource:
     def source_identifier(self):
         return self.__class__.source_identifier
 
+
 if __name__ == "__main__":
-    prospero_source = ProsperoSearchSource()
+    print("Running ProsperoSearchSource in standalone mode...")
+
+    # Minimal mock usage
+    import sys
+    import logging
+    from unittest.mock import MagicMock
+    from colrev.review_manager import ReviewManager
+    from colrev.exceptions import RepoSetupError
+
+    class MockOperation(colrev.process.operation.Operation):
+        def __init__(self):
+            try:
+                self.review_manager = MagicMock(spec=ReviewManager)
+                self.review_manager.logger = logging.getLogger("ProsperoSearchSourceMock")
+                self.review_manager.logger.setLevel(logging.DEBUG)
+                handler = logging.StreamHandler(sys.stdout)
+                formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+                handler.setFormatter(formatter)
+                self.review_manager.logger.addHandler(handler)
+                self.logger = self.review_manager.logger
+                self.review_manager.logger.info("Initialized mock operation for ProsperoSearchSource demo.")
+            except RepoSetupError as exc:
+                print("RepoSetupError caught: ", exc)
+
+                self.review_manager = None
+                self.logger = None
+
+    source_op = MockOperation()
+    
+    settings_dict = {}
+    
+    prospero_source = ProsperoSearchSource(source_operation=source_op, settings=settings_dict)
+    
     prospero_source.search(rerun=False)
