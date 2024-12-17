@@ -1,10 +1,15 @@
 #!/usr/bin/env python
-from __future__ import annotations
 import typing
-from pathlib import Path
+import time
+import logging
 import bibtexparser
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
+import zope.interface
+import colrev.ops.load
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_settings
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
@@ -12,15 +17,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
-import time
-import logging
+from pathlib import Path
+from __future__ import annotations
 from colrev.packages.prospero.src.extract_from_each_article import get_record_info
-#from bibtexparser.bibdatabase import BibDatabase
-#from bibtexparser.bwriter import BibTexWriter
-import zope.interface
-import colrev.ops.load
-import colrev.package_manager.interfaces
-import colrev.package_manager.package_settings
+from bibtexparser.bibdatabase import BibDatabase
+from bibtexparser.bwriter import BibTexWriter
 from colrev.constants import Fields, SearchType, SearchSourceHeuristicStatus
 from colrev.settings import SearchSource
 from colrev.ops.search import Search
@@ -245,7 +246,7 @@ class ProsperoSearchSource:
                     page_index = driver.find_element(By.XPATH, "//td[@id='pagescount']").text
                 print(f"Displaying records on {page_index}")
 
-                # collect record IDs and basic info
+                # Collect record IDs, authors and language
                 try: 
                     get_record_info(driver,
                                     records,
@@ -258,7 +259,7 @@ class ProsperoSearchSource:
                     logger.error("Failed loading results: StaleElementReferenceException")
                 print(f"Current window handle: {driver.window_handles}")
 
-                #click to next page
+                # Clicking on "next" element to go to next page
                 try:
                     WebDriverWait(driver,3).until(
                     EC.element_to_be_clickable((By.XPATH, "//td[@title='Next page']"))
