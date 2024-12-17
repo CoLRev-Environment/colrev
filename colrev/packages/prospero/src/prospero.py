@@ -69,7 +69,9 @@ class ProsperoSearchSource:
                     else:
                         raise ValueError(f"Invalid parameter format: {item}")
 
-        filename = f"data/search/records.bib"  # Changed from prospero.bib to records.bib
+        # Generate a unique .bib filename (like other CoLRev endpoints do)
+        filename = operation.get_unique_filename(file_path_string="prospero_results")
+
         search_source = SearchSource(
             endpoint=cls.endpoint,
             filename=filename,
@@ -79,6 +81,7 @@ class ProsperoSearchSource:
         )
         operation.add_source_and_search(search_source)
         return search_source
+
     
     @classmethod
     def heuristic(cls, filename: Path, data:str) -> dict:
