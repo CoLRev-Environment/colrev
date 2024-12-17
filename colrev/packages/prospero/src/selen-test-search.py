@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, NoSuchElementException,StaleElementReferenceException
 import logging
 import time
-from colrev.packages.prospero.src.extract_from_each_article import get_record_info
+from colrev.packages.prospero.src.get_record_info import get_record_info
 #from bibtexparser.bibdatabase import BibDatabase
 #from bibtexparser.bwriter import BibTexWriter
 import zope.interface

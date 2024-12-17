@@ -19,7 +19,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
 from pathlib import Path
 from __future__ import annotations
-from colrev.packages.prospero.src.extract_from_each_article import get_record_info
+from colrev.packages.prospero.src.get_record_info import get_record_info
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bwriter import BibTexWriter
 from colrev.constants import Fields, SearchType, SearchSourceHeuristicStatus
