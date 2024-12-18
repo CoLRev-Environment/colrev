@@ -274,5 +274,8 @@
     },
     "colrev-scidb": {
         "dev_status": "experimental"
+    },
+    "colrev.prospero": {
+        "dev_status": "experimental"
     }
 }
