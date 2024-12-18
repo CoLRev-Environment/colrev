@@ -9,13 +9,13 @@ colrev.ops.pdf\_prep\_man.PDFPrepMan
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~PDFPrepMan.apply_pdf_prep_man
       ~PDFPrepMan.check_precondition
       ~PDFPrepMan.conclude
@@ -31,13 +31,15 @@ colrev.ops.pdf\_prep\_man.PDFPrepMan
       ~PDFPrepMan.pdf_prep_man_stats
       ~PDFPrepMan.pdfs_prepared_manually
       ~PDFPrepMan.set_pdf_man_prepared
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~PDFPrepMan.type
+   
+   

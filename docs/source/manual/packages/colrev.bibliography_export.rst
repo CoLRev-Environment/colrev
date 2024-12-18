@@ -29,9 +29,9 @@ colrev.bibliography_export
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/bibliography_export>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/bibliography_export>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.bibliography_export
      - Add
    * - data
      - |EXPERIMENTAL|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev data --add colrev.bibliography_export
@@ -72,3 +72,4 @@ To add an endpoint, run any of the following:
 .. raw:: html
 
    <!-- ## Links -->
+

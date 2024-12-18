@@ -9,24 +9,26 @@ colrev.process.operation.Operation
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~Operation.check_precondition
       ~Operation.conclude
       ~Operation.decorate
       ~Operation.notify
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~Operation.type
+   
+   
