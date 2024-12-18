@@ -5,7 +5,7 @@ import logging
 import time
 import typing
 from pathlib import Path
-
+import os
 import bibtexparser
 import zope.interface
 from pydantic import Field
@@ -73,7 +73,7 @@ class ProsperoSearchSource:
                 params_dict = {"url": params}
             else:
                 for item in params.split(";"):
-                    if "=" in item:
+                    if "=" in itecm:
                         key, value = item.split("=", 1)
                         params_dict[key] = value
                     else:
@@ -91,10 +91,34 @@ class ProsperoSearchSource:
         )
         operation.add_source_and_search(search_source)
         return search_source
+    
 
     @classmethod
-    def heuristic(cls, filename: Path) -> dict:
+    def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Prospero"""
+
+        result = {"confidence_level": 0.1}
+
+        link_occurrences = data.count(
+            "http://www.crd.york.ac.uk/PROSPERO/display_record.asp?"
+        )
+        entries = data.count("Record #")
+        prospero_occurrences = data.count("DBN:   PROSPERO")
+
+        if link_occurrences == entries:
+            result["confidence_level"] = 1.0
+            return result
+
+        if prospero_occurrences == entries:
+            result["confidence_level"] = 1.0
+            return result
+
+        return result
+
+    """"
+    @classmethod
+    def heuristic(cls, filename: Path) -> dict:
+        ""\"Source heuristic for Prospero""/"
 
         data = None
 
@@ -124,7 +148,7 @@ class ProsperoSearchSource:
         if prospero_occurrences == entries:
             return result.update({"confidence_level": 1.0})
 
-        return result
+        return result """
 
     def get_search_word(self) -> str:
         """Get the search query from settings or prompt the user."""
@@ -329,7 +353,30 @@ class ProsperoSearchSource:
                     print("Finished retrieving data from current result page.")
 
             print("All records displayed and retrieved.", flush=True)
-        # TODO: recheck data structure and loops because records are printed out incrementally
+
+        
+            #  Start saving to BibTeX file
+            bib_entries = []
+            for record_id, registered_date, title, status in zip(
+                record_id_array, registered_date_array, title_array, review_status_array
+            ):
+                entry = {
+                    'ENTRYTYPE': 'misc',
+                    'ID': record_id,
+                    'title': title,
+                    'published': f"Prospero Registration ID {record_id}",
+                    'year': registered_date,
+                    'note': f"Status: {status}"
+                }
+                bib_entries.append(entry)
+            bib_database = bibtexparser.bibdatabase.BibDatabase()
+            bib_database.entries = bib_entries
+            os.makedirs("data/search/", exist_ok=True) 
+            with open("data/search/prospero_results.bib", "w", encoding="utf8") as bibfile:
+                bibtexparser.dump(bib_database, bibfile)
+            if self.logger:
+                self.logger.info("Saved Prospero search results to data/search/prospero_results.bib")
+            print("BibTeX file saved to data/search/prospero_results.bib")  
         finally:
             driver.quit()
 
@@ -469,9 +516,12 @@ class ProsperoSearchSource:
     def search_types(self):
         return self.__class__.search_types
 
+    """
     @property
     def settings_class(self):
-        return self.__class__.settings_class
+        ####return self.__class__.settings_class
+        
+        """
 
     @property
     def source_identifier(self):
