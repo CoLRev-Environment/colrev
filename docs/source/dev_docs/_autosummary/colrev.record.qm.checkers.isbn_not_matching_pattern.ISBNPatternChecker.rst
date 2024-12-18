@@ -9,23 +9,21 @@ colrev.record.qm.checkers.isbn\_not\_matching\_pattern.ISBNPatternChecker
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~ISBNPatternChecker.run
-   
-   
 
-   
-   
+      ~ISBNPatternChecker.run
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ISBNPatternChecker.msg
-   
-   

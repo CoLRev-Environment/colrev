@@ -3,18 +3,18 @@ colrev.env.utils
 
 .. automodule:: colrev.env.utils
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Functions
 
    .. autosummary::
       :toctree:
       :nosignatures:
-   
+
       custom_asdict_factory
       dict_set_nested
       get_by_path
@@ -27,16 +27,3 @@ colrev.env.utils
       percent_upper_chars
       remove_accents
       retrieve_package_file
-   
-   
-
-   
-   
-   
-
-   
-   
-   
-
-
-

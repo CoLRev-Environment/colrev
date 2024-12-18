@@ -29,9 +29,9 @@ colrev.osf
 
 |MAINTAINER| Maintainer: Gerit Wagner, Peiyao Mao, Mingxin Jiang, Johannes Maximilian Diel
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/osf>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/osf>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.osf
      - Add
    * - search_source
      - |EXPERIMENTAL|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev search --add colrev.osf

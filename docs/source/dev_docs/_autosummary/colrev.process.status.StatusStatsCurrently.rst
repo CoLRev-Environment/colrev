@@ -9,16 +9,16 @@ colrev.process.status.StatusStatsCurrently
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~StatusStatsCurrently.md_retrieved
       ~StatusStatsCurrently.md_imported
       ~StatusStatsCurrently.md_prepared
@@ -37,5 +37,3 @@ colrev.process.status.StatusStatsCurrently
       ~StatusStatsCurrently.md_needs_manual_preparation
       ~StatusStatsCurrently.pdf_needs_manual_retrieval
       ~StatusStatsCurrently.pdf_needs_manual_preparation
-   
-   

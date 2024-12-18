@@ -9,24 +9,22 @@ colrev.record.qm.checkers.name\_particles.NameParticlesChecker
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~NameParticlesChecker.run
-   
-   
 
-   
-   
+      ~NameParticlesChecker.run
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~NameParticlesChecker.fields_to_check
       ~NameParticlesChecker.msg
-   
-   

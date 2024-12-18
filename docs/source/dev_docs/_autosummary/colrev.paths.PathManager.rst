@@ -9,16 +9,16 @@ colrev.paths.PathManager
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PathManager.CORRECTIONS_DIR
       ~PathManager.DATA_DIR
       ~PathManager.DEDUPE_DIR
@@ -36,5 +36,3 @@ colrev.paths.PathManager
       ~PathManager.SEARCH_DIR
       ~PathManager.SETTINGS_FILE
       ~PathManager.STATUS_FILE
-   
-   
