@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
 import typing
 from pathlib import Path
-import os
+
 import bibtexparser
 import zope.interface
 from pydantic import Field
@@ -91,7 +92,6 @@ class ProsperoSearchSource:
         )
         operation.add_source_and_search(search_source)
         return search_source
-    
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -354,29 +354,32 @@ class ProsperoSearchSource:
 
             print("All records displayed and retrieved.", flush=True)
 
-        
             #  Start saving to BibTeX file
             bib_entries = []
             for record_id, registered_date, title, status in zip(
                 record_id_array, registered_date_array, title_array, review_status_array
             ):
                 entry = {
-                    'ENTRYTYPE': 'misc',
-                    'ID': record_id,
-                    'title': title,
-                    'published': f"Prospero Registration ID {record_id}",
-                    'year': registered_date,
-                    'note': f"Status: {status}"
+                    "ENTRYTYPE": "misc",
+                    "ID": record_id,
+                    "title": title,
+                    "published": f"Prospero Registration ID {record_id}",
+                    "year": registered_date,
+                    "note": f"Status: {status}",
                 }
                 bib_entries.append(entry)
             bib_database = bibtexparser.bibdatabase.BibDatabase()
             bib_database.entries = bib_entries
-            os.makedirs("data/search/", exist_ok=True) 
-            with open("data/search/prospero_results.bib", "w", encoding="utf8") as bibfile:
+            os.makedirs("data/search/", exist_ok=True)
+            with open(
+                "data/search/prospero_results.bib", "w", encoding="utf8"
+            ) as bibfile:
                 bibtexparser.dump(bib_database, bibfile)
             if self.logger:
-                self.logger.info("Saved Prospero search results to data/search/prospero_results.bib")
-            print("BibTeX file saved to data/search/prospero_results.bib")  
+                self.logger.info(
+                    "Saved Prospero search results to data/search/prospero_results.bib"
+                )
+            print("BibTeX file saved to data/search/prospero_results.bib")
         finally:
             driver.quit()
 
@@ -520,7 +523,7 @@ class ProsperoSearchSource:
     @property
     def settings_class(self):
         ####return self.__class__.settings_class
-        
+
         """
 
     @property

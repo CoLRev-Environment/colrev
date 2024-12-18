@@ -20,6 +20,7 @@ from colrev.constants import SearchType
 from colrev.ops.search import Search
 from colrev.packages.prospero.src.get_record_info import get_record_info
 from colrev.settings import SearchSource
+
 # from bibtexparser.bibdatabase import BibDatabase
 # from bibtexparser.bwriter import BibTexWriter
 
