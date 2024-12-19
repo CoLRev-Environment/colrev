@@ -29,17 +29,42 @@ def _get_year(*, item: dict) -> str:
     else:
         return ""
 
+def format_author(author: str) -> str:
+
+        particles = {"de", "del", "la", "van", "von", "der", "di", "da", "le"}
+
+        if author.startswith("{{") and author.endswith("}}"):
+            return author
+        
+        parts = author.split()
+        if len(parts) < 2:
+            return author  
+        
+        last_name = parts[-1]
+
+
+        first_names = " ".join(parts[:-1])
+
+
+        if len(parts) > 2 and parts[-2].lower() in particles:
+            last_name = f"{{{' '.join(parts[-2:])}}}"
+            first_names = " ".join(parts[:-2])
+        
+        
+        return f"{last_name}, {first_names}"
+
 
 def _get_authors(*, item: dict) -> str:
     authors_display_list = item.get("author_display", [])
     
     if not authors_display_list:
         return ""
+    
+    
+    formatted_authors = [format_author(author) for author in authors_display_list]
+    
+    return " and ".join(formatted_authors)
 
-    if len(authors_display_list) == 1:
-        return authors_display_list[0]
-
-    return ", ".join(authors_display_list[:-1]) + " and " + authors_display_list[-1]
 
 def _item_to_record(*, item: dict) -> dict:
     #Equivalent to "title" in Crossref
@@ -64,7 +89,7 @@ def _item_to_record(*, item: dict) -> dict:
     item[Fields.YEAR] = _get_year(item=item) #To do
     item[Fields.VOLUME] = str(item.get[Fields.VOLUME], "")
     item[Fields.CITED_BY] = str(item.get("References", ""))
-    item[Fields.NUMBER] = str(item.get("eissn", ""))
+    item[Fields.NUMBER] = str(item.get("issue", ""))
     item[Fields.DOI] = item.get("id", "").upper()
     #item[Fields.FULLTEXT] = _get_fulltext(item=item) #To do
 
@@ -76,7 +101,6 @@ def _set_forthcoming(*, record_dict: dict) -> dict:
     ):
         record_dict.update(year="forthcoming")
 
-        #CHECK THIS FOR PLOS
         if Fields.YEAR in record_dict:
             record_dict.update(published_online=record_dict[Fields.YEAR])
     return record_dict
@@ -139,7 +163,7 @@ def _item_to_record(*, item: dict) -> dict:
     item[Fields.AUTHOR] = _get_authors(item=item) #To do
     item[Fields.YEAR] = _get_year(item=item) #To do
     #item[Fields.VOLUME] = str(item.get[Fields.VOLUME], "")
-    item[Fields.NUMBER] = item.get("eissn","")
+    item[Fields.NUMBER] = item.get("issue","")
     item[Fields.DOI] = item.get("id", "").upper()
     #item[Fields.FULLTEXT] = _get_fulltext(item=item) #To do
 
@@ -214,15 +238,24 @@ def _format_fields(*, record_dict: dict) -> dict:
         value = re.sub(TAG_RE, " ", value)
         value = value.replace("\n", " ")
         value = re.sub(r"\s+", " ", value).rstrip().lstrip("▪ ")
+
         if key == Fields.ABSTRACT:
+          
             if value.startswith("Abstract "):
                 value = value[8:]
+        
+            inut("paso el value \n")
+            value = value.replace("\\", "").replace("\n", " ")
+        
+            value = value[0]
+           
         record_dict[key] = value.lstrip().rstrip()
+
 
     return record_dict
 
 def json_to_record(*, item: dict) -> colrev.record.record_prep.PrepRecord:
-    "Coonvert a PLOS item to a record dict"
+    "Convert a PLOS item to a record dict"
 
 
     try:
@@ -235,5 +268,6 @@ def json_to_record(*, item: dict) -> colrev.record.record_prep.PrepRecord:
         raise colrev.exceptions.RecordNotParsableException(
             f"RecordNotParseableExcception: {exc}"
         ) from exc
+    
 
     return colrev.record.record_prep.PrepRecord(record_dict)
