@@ -120,7 +120,7 @@ import colrev.record.record_prep
 )
 def test_plos_query(
     doi: str,
-    expected_dic: dict
+    expected_dict: dict
 ) -> None:
     api = plos_api.PlosAPI(params={})
 
@@ -136,6 +136,6 @@ def test_plos_query(
         )
 
         actual = api.query_doi(doi=doi)
-        expected = colrev.record.record_prep.PrepRecord(expected_dic)
+        expected = colrev.record.record_prep.PrepRecord(expected_dict)
 
         assert actual.data == expected.data

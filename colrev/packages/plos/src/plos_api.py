@@ -217,7 +217,6 @@ class Endpoint:
             "get", self.request_url, params=sorted_request_params
         ).prepare()
 
-        input(req.url)
 
         return req.url
 
@@ -247,8 +246,6 @@ class Endpoint:
             request_params["cursor"] = "*"
             request_params["rows"] = str(LIMIT)
             while True:
-                input(request_params)
-                input(request_url)
 
                 result = self.retrieve(
                     request_url,
@@ -277,8 +274,6 @@ class Endpoint:
             request_params["start"] = "0"
             request_params["rows"] = str(LIMIT)
             while True:
-                input(request_params)
-                input(request_url)
                 result = self.retrieve(
                     request_url,
                     data=request_params,
@@ -577,7 +572,7 @@ class PlosAPI:
         "Get records from PLOS based on a doi query"
 
         try:
-            endpoint = Endpoint(self._api_url + "search?" + doi, email=self.email)
+            endpoint = Endpoint(self._api_url + "search?q=doi:" + doi, email=self.email)
 
             plos_query_return = next(iter(endpoint))
 
