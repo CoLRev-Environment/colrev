@@ -1,4 +1,21 @@
-(
+#!/usr/bin/env python
+"""Test the PLOS SearchSource"""
+from pathlib import Path
+
+import pytest
+import requests_mock
+
+import colrev.ops.prep
+import colrev.packages.plos.src.plos_search_source
+from colrev.packages.plos.src import plos_api
+import colrev.record
+import colrev.record.record
+import colrev.record.record_prep
+
+@pytest.mark.parametrize(
+    "doi, expected_dict",
+    [
+        (
             "10.2196/22081",
             {
                 "doi": "10.2196/22081",
@@ -99,3 +116,26 @@
                 "year": "2022",
             },
         ),
+    ],
+)
+def test_plos_query(
+    doi: str,
+    expected_dic: dict
+) -> None:
+    api = plos_api.PlosAPI(params={})
+
+    filename = Path(__file__).parent / f"data/{doi.replace('/', '_')}.json"
+
+    with open(filename, encoding="utf-8") as file:
+        json_str = file.read()
+
+    with requests_mock.Mocker() as req_mock:
+        # https://api.plos.org/solr/examples/
+        req_mock.get(
+            f"http://api.plos.org/search?q=doi:{doi}", content=json_str.encode("utf-8")
+        )
+
+        actual = api.query_doi(doi=doi)
+        expected = colrev.record.record_prep.PrepRecord(expected_dic)
+
+        assert actual.data == expected.data
