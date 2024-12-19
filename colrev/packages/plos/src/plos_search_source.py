@@ -279,6 +279,8 @@ class PlosSearchSource:
         except RuntimeError as e:
           print(e)
 
+        plos_feed.save()
+
     def _scope_excluded(self, retrieved_record_dict: dict) -> bool:
 
       if (
