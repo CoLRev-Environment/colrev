@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 """SearchSource: plos"""
+import colrev.loader
+import colrev.loader.load_utils
 import colrev.ops
+import colrev.ops.prep
 import colrev.ops.search
 import colrev.ops.search_api_feed
 #from future import annotations
@@ -354,6 +357,84 @@ class PlosSearchSource:
           raise NotImplementedError
 
 
+    def _get_masterdata_record(
+          self,
+          prep_operation: colrev.ops.prep.Prep,
+          record: colrev.record.record.Record,
+          save_feed: bool
+    ) -> colrev.record.record.Record:
+        try:
+            try:
+                retrieved_record = self.api.query_doi(doi=record.data[Field.DOI])
+            except (colrev_exceptions.RecordNotFoundInPrepSourceException, KeyError):
+                
+                retrieved_records = self.api.plos_query(
+                record_input=record,
+                jour_vol_iss_list=False
+                )
+                retrieved_record = retrieved_records.pop()
+
+                retries = 0
+                while(
+                   not retrieved_record
+                   and retries < prep_operation.max_retries_on_error
+                ):
+                   retries += 1
+
+                   retrieved_records = self.api.plos_query(
+                      record_input=record,
+                      jour_vol_iss_list=False
+                   )
+                   retrieved_record = retrieved_records.pop()
+            
+            if not colrev.record.record_similarity.matches(record, retrieved_record):
+               return record
+            
+            try: 
+               self.plos_lock.acquire(timeout=120) #Check in PLOS
+
+               plos_feed = self.search_source.get_api_feed(
+                  review_manager=self.review_manager,
+                  source_identifier=self.source_identifier,
+                  update_only=False,
+                  prep_mode=True
+               )
+
+               plos_feed.add_update_record(retrieved_record)
+
+               record.merge(
+                  retrieved_record,
+                  default_source=retrieved_record.data[Fields.ORIGIN][0]
+               )
+
+               self._prep_plos_record(
+                  record=record,
+                  default_source=retrieved_record.data[Fields.ORIGIN[0]]
+               )
+
+               if save_feed:
+                  plos_feed.save()
+
+            except colrev_exceptions.NotFeedIdentifiableException:
+               pass
+            finally:
+                try:
+                  self.plos_lock.release()
+                except ValueError:
+                  pass
+               
+            return record
+        except(
+           colrev_exceptions.ServiceNotAvailableException,
+           OSError,
+           IndexError,
+           colrev_exceptions.RecordNotFoundInPrepSourceException,
+           colrev_exceptions.RecordNotParsableException
+        ) as exc:
+           if prep_operation.review_manager.verbose_mode:
+              print(exc)
+
+        return record
 
 
     def prep_link_md(self, prep_operation, record, save_feed=True, timeout=10):
@@ -362,7 +443,20 @@ class PlosSearchSource:
 
     def load(self, load_operation):
       """Load records from the SearchSource (and convert to .bib)"""
-      # TODO
+      input("entro en el load")
+      
+      if self.search_source.filename.suffix == ".bib":
+         input("Entro en el if")
+         records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            logger=self.review_manager.logger,
+            unique_id_field="ID"
+         )
+         print(records)
+         return records
+      
+      input("Fuera del if")
+      raise NotImplementedError
 
     def prepare(self, record, source):
       """Run the custom source-prep operation"""
