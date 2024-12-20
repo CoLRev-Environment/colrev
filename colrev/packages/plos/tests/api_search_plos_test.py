@@ -7,10 +7,10 @@ import requests_mock
 
 import colrev.ops.prep
 import colrev.packages.plos.src.plos_search_source
-from colrev.packages.plos.src import plos_api
-import colrev.record
 import colrev.record.record
 import colrev.record.record_prep
+from colrev.packages.plos.src import plos_api
+
 
 @pytest.mark.parametrize(
     "doi, expected_dict",
@@ -118,10 +118,7 @@ import colrev.record.record_prep
         ),
     ],
 )
-def test_plos_query(
-    doi: str,
-    expected_dict: dict
-) -> None:
+def test_plos_query(doi: str, expected_dict: dict) -> None:
     api = plos_api.PlosAPI(params={})
 
     filename = Path(__file__).parent / f"data/{doi.replace('/', '_')}.json"

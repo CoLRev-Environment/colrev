@@ -9,11 +9,10 @@ import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.plos.src.plos_search_source as plos_connector
-import colrev.process
 import colrev.process.operation
 import colrev.record.record
-from colrev.constants import Fields
 import colrev.record.record_prep
+from colrev.constants import Fields
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
@@ -24,18 +23,13 @@ class PlosMetadataPrep:
 
     ci_supported: bool = Field(default=True)
 
-    #source_correction_hint = (
-#
-    #)
+    # source_correction_hint = (
+    #
+    # )
 
     always_apply_changes = False
 
-    def __init__(
-            self, 
-            *, 
-            prep_operation: colrev.ops.prep.Prep, 
-            settings: dict
-    ) -> None:
+    def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
         print("Initializing PlosMetadataPrep...")
 
         self.settings = self.settings_class(**settings)
@@ -51,27 +45,24 @@ class PlosMetadataPrep:
         ]
 
     def check_availability(
-            self, *, source_operation: colrev.process.operation.Operation
+        self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check status (availability) of the Plos API"""
 
         self.plos_source.check_availability(source_operation=source_operation)
 
-    
     def prepare(
-            self, record: colrev.record.record_prep.PrepRecord
+        self, record: colrev.record.record_prep.PrepRecord
     ) -> colrev.record.record.Record:
         "Prepare a record based on PLOS metadata"
-        
+
         if any(
-            plos_prefix in o 
+            plos_prefix in o
             for plos_prefix in self.plos_prefixes
             for o in record.data[Fields.ORIGIN]
         ):
             return record
-        
-        self.plos_source.prep_link_md(
-            prep_operation=self.prep_operation, record=record
-        )
+
+        self.plos_source.prep_link_md(prep_operation=self.prep_operation, record=record)
 
         return record

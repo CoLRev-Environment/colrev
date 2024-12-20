@@ -22,7 +22,7 @@ On the menu displayed, select the option API:
 
 ```
 2024-12-20 16:22:31 [INFO] Add search package: colrev.plos
-[?] Select SearchType:: 
+[?] Select SearchType::
  > API
    TOC
 ```
