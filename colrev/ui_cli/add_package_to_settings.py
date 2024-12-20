@@ -2,6 +2,9 @@
 """Discovering and using packages."""
 from __future__ import annotations
 
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.process.operation
 from colrev.constants import Colors
 from colrev.constants import EndpointType
