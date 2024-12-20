@@ -329,7 +329,7 @@ class PlosAPI:
         self.rerun = rerun
 
     def check_availability(self, raise_service_not_available: bool = True) -> None:
-
+        input("entro a check_avaibility en la api")
         try:
             test_rec = {
                 Fields.DOI: "10.17705/1cais.04607",
@@ -356,7 +356,6 @@ class PlosAPI:
                         self._availability_exception_message
                     )
         except(requests.exceptions.RequestException, IndexError) as exc:
-            print(exc)
             if raise_service_not_available:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message
@@ -455,7 +454,6 @@ class PlosAPI:
             # params["rows"] = "15"
 
         url = self._api_url + "search?" + urllib.parse.urlencode(params)
-        print(url)
         return url
     
     def _get_similarity(
