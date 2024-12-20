@@ -35,6 +35,8 @@ from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.plos.src import plos_api
+from colrev.package_manager.interfaces import PrepInterface
+
 import logging
 
 
@@ -262,19 +264,12 @@ class PlosSearchSource:
                     self._prep_plos_record(
                         record = record, prep_main_record = False
                     )
-                    #input("after de prepare the item in run_api")
-                    #input(record)
-
-                    #input("Before the restore and update")
-                    #input(self)
-                    #input(plos_feed)
+                
                     self._restore_url(record=record, feed=plos_feed)
 
                     plos_feed.add_update_record(retrieved_record=record)
 
-                    #input("After restore and update")
-                    #input(self)
-                    #input(plos_feed)
+                
 
               
                 except colrev_exceptions.NotFeedIdentifiableException:
@@ -356,6 +351,25 @@ class PlosSearchSource:
         else:
           raise NotImplementedError
 
+    
+    def _check_doi_masterdata(
+        self, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
+        try:
+            retrieved_record = self.api.query_doi(doi=record.data[Fields.DOI])
+            if not colrev.record.record_similarity.matches(record, retrieved_record):
+                record.remove_field(key=Fields.DOI)
+
+        except (
+            requests.exceptions.RequestException,
+            OSError,
+            IndexError,
+            colrev_exceptions.RecordNotFoundInPrepSourceException,
+            colrev_exceptions.RecordNotParsableException,
+        ):
+            pass
+
+        return record
 
     def _get_masterdata_record(
           self,
@@ -437,9 +451,34 @@ class PlosSearchSource:
         return record
 
 
-    def prep_link_md(self, prep_operation, record, save_feed=True, timeout=10):
-      """Retrieve masterdata from the SearchSource"""
-      # TODO
+    def prep_link_md(self, prep_operation: colrev.ops.prep.Prep, record : colrev.record.record.Record, save_feed=True, timeout=10):
+        """Retrieve masterdata from the SearchSource"""
+
+        # To test the metadata provided for a particular DOI use:
+        # https://api.plos.org/search?q=DOI
+        
+        if  len(record.data.get(Fields.TITLE)) < 5 and Fields.DOI not in record.data :
+            return record
+
+        if Fields.DOI in record.data:
+           record = self._check_doi_masterdata(record=record)
+
+        record = self._get_masterdata_record(
+            prep_operation=prep_operation,
+            record=record,
+            save_feed=save_feed,
+        )
+
+        return record
+    
+    def check_availability(
+        self, *, source_operation: colrev.process.operation.Operation
+    ) -> None:
+        """Check status (availability) of the Plos API"""
+        self.api.check_availability(
+            raise_service_not_available=(not self.review_manager.force_mode)
+        )
+      
 
     def load(self, load_operation):
       """Load records from the SearchSource (and convert to .bib)"""
@@ -454,7 +493,21 @@ class PlosSearchSource:
       
       raise NotImplementedError
 
-    def prepare(self, record, source):
-      """Run the custom source-prep operation"""
-      # TODO
+    def prepare(self,
+                 record: colrev.record.record_prep.PrepRecord, 
+                 source: colrev.settings.SearchSource) -> colrev.record.record.Record:
+        """Run the custom source-prep operation"""
+        source_item = [
+           x 
+           for x in record.data[Fields.ORIGIN]
+           if str(source.filename).replace("data/search/", "") in x
+        ]
+
+        if source_item: 
+           record.set_masterdata_complete(
+              source=source_item[0],
+              masterdata_repository=self.review_manager.settings.is_curated_masterdata_repo(),
+           )
+        return record
+      
 
