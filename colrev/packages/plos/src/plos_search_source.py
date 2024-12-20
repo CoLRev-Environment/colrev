@@ -443,19 +443,15 @@ class PlosSearchSource:
 
     def load(self, load_operation):
       """Load records from the SearchSource (and convert to .bib)"""
-      input("entro en el load")
       
       if self.search_source.filename.suffix == ".bib":
-         input("Entro en el if")
          records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             logger=self.review_manager.logger,
             unique_id_field="ID"
          )
-         print(records)
          return records
       
-      input("Fuera del if")
       raise NotImplementedError
 
     def prepare(self, record, source):
