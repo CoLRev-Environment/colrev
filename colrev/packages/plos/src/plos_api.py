@@ -578,10 +578,10 @@ class PlosAPI:
 
             if plos_query_return is None:
                 raise colrev_exceptions.RecordNotFoundInPrepSourceException(
-                    msg="Reocord not found in plos (based on doi)"
+                    msg="Record not found in plos (based on doi)"
                 )
 
-            retrieved_record = record_transformer.json_to_record(
+            retrieved_record = plos_record_transformer.json_to_record(
                 item=plos_query_return
             )
 

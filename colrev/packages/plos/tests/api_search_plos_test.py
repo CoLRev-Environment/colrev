@@ -132,7 +132,7 @@ def test_plos_query(
     with requests_mock.Mocker() as req_mock:
         # https://api.plos.org/solr/examples/
         req_mock.get(
-            f"http://api.plos.org/search?q=doi:{doi}", content=json_str.encode("utf-8")
+            f"https://api.plos.org/search?q=doi:{doi}", content=json_str.encode("utf-8")
         )
 
         actual = api.query_doi(doi=doi)

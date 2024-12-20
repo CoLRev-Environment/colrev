@@ -20,12 +20,8 @@ TAG_RE = re.compile(r"<[a-z/][^<>]{0,12}>")
 
 
 def _get_year(*, item: dict) -> str:
-    year = "-1"
-
     if "publication_date" in "item":
-        date = ([item]["publication_date"]).split("-")[0]
-
-    
+        return (item["publication_date"]).split("-")[0]
     else:
         return ""
 
@@ -143,6 +139,7 @@ def _remove_fields(*, record_dict: dict) -> dict:
     return record_dict
 def _item_to_record(*, item: dict) -> dict:
     #Equivalent to "title" in Crossref
+
     if "title_display" in item:
         item[Fields.TITLE] = str(item["title_display"])
     assert isinstance(item[Fields.TITLE], str)
