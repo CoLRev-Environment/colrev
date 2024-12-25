@@ -9,16 +9,14 @@ colrev.settings.DataSettings
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~DataSettings.data_package_endpoints
-   
-   
