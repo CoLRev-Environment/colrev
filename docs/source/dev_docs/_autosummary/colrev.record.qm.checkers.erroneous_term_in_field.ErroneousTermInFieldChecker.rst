@@ -9,22 +9,24 @@ colrev.record.qm.checkers.erroneous\_term\_in\_field.ErroneousTermInFieldChecker
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~ErroneousTermInFieldChecker.run
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~ErroneousTermInFieldChecker.erroneous_terms
       ~ErroneousTermInFieldChecker.msg
+   
+   

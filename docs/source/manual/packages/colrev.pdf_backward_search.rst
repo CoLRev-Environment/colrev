@@ -29,9 +29,9 @@ colrev.pdf_backward_search
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/pdf_backward_search>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/pdf_backward_search>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.pdf_backward_search
      - Add
    * - search_source
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev search --add colrev.pdf_backward_search
@@ -83,3 +83,4 @@ References can be selected interactively for import.
 .. raw:: html
 
    <!-- ## Links -->
+

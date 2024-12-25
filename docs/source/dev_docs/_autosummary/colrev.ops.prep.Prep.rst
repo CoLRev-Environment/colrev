@@ -9,13 +9,13 @@ colrev.ops.prep.Prep
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~Prep.check_precondition
       ~Prep.conclude
       ~Prep.decorate
@@ -24,15 +24,15 @@ colrev.ops.prep.Prep
       ~Prep.prepare
       ~Prep.set_ids
       ~Prep.setup_custom_script
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~Prep.max_retries_on_error
       ~Prep.pad
       ~Prep.polish
@@ -41,3 +41,5 @@ colrev.ops.prep.Prep
       ~Prep.first_round
       ~Prep.last_round
       ~Prep.prep_package_endpoints
+   
+   

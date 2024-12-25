@@ -9,15 +9,21 @@ colrev.env.local\_index\_builder.LocalIndexBuilder
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~LocalIndexBuilder.index
       ~LocalIndexBuilder.index_colrev_project
       ~LocalIndexBuilder.index_journal_rankings
       ~LocalIndexBuilder.index_records
       ~LocalIndexBuilder.reinitialize_sqlite_db
+   
+   
+
+   
+   
+   

@@ -9,13 +9,13 @@ colrev.record.record\_prep.PrepRecord
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~PrepRecord.add_field_provenance
       ~PrepRecord.add_field_provenance_note
       ~PrepRecord.add_provenance_all
@@ -65,14 +65,16 @@ colrev.record.record\_prep.PrepRecord
       ~PrepRecord.unify_pages_field
       ~PrepRecord.update_by_record
       ~PrepRecord.update_field
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~PrepRecord.pp
       ~PrepRecord.data
+   
+   

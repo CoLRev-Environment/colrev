@@ -3,21 +3,21 @@
 
 .. automodule:: colrev
 
+   
+   
+   
 
+   
+   
+   
 
+   
+   
+   
 
-
-
-
-
-
-
-
-
-
-
-
-
+   
+   
+   
 
 
 
@@ -43,3 +43,4 @@
    colrev.settings
    colrev.ui_cli
    colrev.writer
+
