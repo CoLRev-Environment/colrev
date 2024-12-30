@@ -74,7 +74,7 @@ class ProsperoSearchSource:
                 params_dict = {"url": params}
             else:
                 for item in params.split(";"):
-                    if "=" in itecm:
+                    if "=" in item:
                         key, value = item.split("=", 1)
                         params_dict[key] = value
                     else:
@@ -216,10 +216,13 @@ class ProsperoSearchSource:
     def search(self, rerun: bool) -> None:
         """Scrape Prospero using Selenium, save .bib file with results."""
 
+        # Array declaration for all necessary information on found records
         record_id_array = []
         registered_date_array = []
         title_array = []
         review_status_array = []
+        authors_array = []
+        language_array =[]
 
         logger = logging.getLogger()
 
@@ -286,7 +289,7 @@ class ProsperoSearchSource:
             if self.logger:
                 self.logger.info(f"Found {hit_count} record(s) for '{search_word}'.")
 
-            # Calculate number of result pages manually to loop through since no indicator for last page
+            # Calculate number of result pages manually to loop through 
             page_count = None
             if hit_count == 0:
                 print("No results found for this query.")
@@ -330,7 +333,10 @@ class ProsperoSearchSource:
                         registered_date_array,
                         title_array,
                         review_status_array,
+                        language_array,
+                        authors_array,
                         original_search_window,
+                        page_increment= start_index-1
                     )
                 except StaleElementReferenceException:
                     logger.error(
@@ -356,15 +362,17 @@ class ProsperoSearchSource:
 
             #  Start saving to BibTeX file
             bib_entries = []
-            for record_id, registered_date, title, status in zip(
-                record_id_array, registered_date_array, title_array, review_status_array
+            for record_id, registered_date, title, language, authors, status in zip(
+                record_id_array, registered_date_array, title_array, language_array, authors_array, review_status_array
             ):
                 entry = {
                     "ENTRYTYPE": "misc",
                     "ID": record_id,
                     "title": title,
+                    "author": authors,
                     "published": f"Prospero Registration ID {record_id}",
                     "year": registered_date,
+                    "language": language,
                     "note": f"Status: {status}",
                 }
                 bib_entries.append(entry)
