@@ -3,21 +3,21 @@ colrev.loader
 
 .. automodule:: colrev.loader
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -36,4 +36,3 @@ colrev.loader
    colrev.loader.nbib
    colrev.loader.ris
    colrev.loader.table
-

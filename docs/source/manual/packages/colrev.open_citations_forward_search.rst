@@ -29,9 +29,9 @@ colrev.open_citations_forward_search
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/open_citations_forward_search>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/open_citations_forward_search>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.open_citations_forward_search
      - Add
    * - search_source
      - |MATURING|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev search --add colrev.open_citations_forward_search

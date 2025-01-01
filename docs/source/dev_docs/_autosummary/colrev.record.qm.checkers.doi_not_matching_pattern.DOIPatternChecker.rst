@@ -9,23 +9,21 @@ colrev.record.qm.checkers.doi\_not\_matching\_pattern.DOIPatternChecker
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~DOIPatternChecker.run
-   
-   
 
-   
-   
+      ~DOIPatternChecker.run
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~DOIPatternChecker.msg
-   
-   

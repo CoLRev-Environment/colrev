@@ -9,23 +9,21 @@ colrev.record.qm.checkers.language\_format\_error.LanguageFormatChecker
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~LanguageFormatChecker.run
-   
-   
 
-   
-   
+      ~LanguageFormatChecker.run
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~LanguageFormatChecker.msg
-   
-   

@@ -29,9 +29,9 @@ colrev.conceptual_review
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/conceptual_review>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/conceptual_review>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.conceptual_review
      - Add
    * - review_type
      - |EXPERIMENTAL|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev init --type colrev.conceptual_review
@@ -86,4 +86,3 @@ Short summary
 
    ## References
    -->
-

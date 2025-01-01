@@ -3,21 +3,21 @@ colrev.ui\_cli
 
 .. automodule:: colrev.ui_cli
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -35,4 +35,3 @@ colrev.ui\_cli
    colrev.ui_cli.search_backward_selective
    colrev.ui_cli.setup_custom_scripts
    colrev.ui_cli.show_printer
-

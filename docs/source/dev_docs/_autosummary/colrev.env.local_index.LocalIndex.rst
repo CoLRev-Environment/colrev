@@ -9,13 +9,13 @@ colrev.env.local\_index.LocalIndex
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~LocalIndex.get_fields_to_remove
       ~LocalIndex.get_journal_rankings
       ~LocalIndex.get_year_from_toc
@@ -23,9 +23,3 @@ colrev.env.local\_index.LocalIndex
       ~LocalIndex.retrieve_based_on_colrev_pdf_id
       ~LocalIndex.retrieve_from_toc
       ~LocalIndex.search
-   
-   
-
-   
-   
-   

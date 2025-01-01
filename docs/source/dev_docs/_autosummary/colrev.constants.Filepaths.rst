@@ -9,16 +9,16 @@ colrev.constants.Filepaths
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~Filepaths.COLREV_PATH
       ~Filepaths.COVERPAGES
       ~Filepaths.CURATIONS_PATH
@@ -31,5 +31,3 @@ colrev.constants.Filepaths
       ~Filepaths.REGISTRY_FILE
       ~Filepaths.TEI_INDEX_DIR
       ~Filepaths.colrev_spec
-   
-   

@@ -29,9 +29,9 @@ colrev.colrev_cli_pdf_prep_man
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT  
+|LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_pdf_prep_man>`_ 
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_pdf_prep_man>`_
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.colrev_cli_pdf_prep_man
      - Add
    * - pdf_prep_man
      - |MATURING|
-     - .. code-block:: 
+     - .. code-block::
 
 
          colrev pdf-prep-man --add colrev.colrev_cli_pdf_prep_man
