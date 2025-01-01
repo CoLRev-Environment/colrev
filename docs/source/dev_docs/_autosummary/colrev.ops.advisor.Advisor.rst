@@ -9,13 +9,19 @@ colrev.ops.advisor.Advisor
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~Advisor.get_instructions
       ~Advisor.get_review_instructions
       ~Advisor.get_sharing_instructions
+   
+   
+
+   
+   
+   

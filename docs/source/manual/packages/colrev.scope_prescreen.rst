@@ -29,9 +29,9 @@ colrev.scope_prescreen
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/scope_prescreen>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/scope_prescreen>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +42,7 @@ colrev.scope_prescreen
      - Add
    * - prescreen
      - |MATURING|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev prescreen --add colrev.scope_prescreen

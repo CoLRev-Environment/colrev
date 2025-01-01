@@ -29,9 +29,9 @@ colrev.semanticscholar
 
 |MAINTAINER| Maintainer: Gerit Wagner, Louis Langenhan, Peter Eckhardt, Amadou-Choumoussidine Kouotou-Ngapout, Robert Theis
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/semanticscholar>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/semanticscholar>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,14 +42,14 @@ colrev.semanticscholar
      - Add
    * - search_source
      - |EXPERIMENTAL|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev search --add colrev.semanticscholar
 
    * - prep
      - |EXPERIMENTAL|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev prep --add colrev.semanticscholar

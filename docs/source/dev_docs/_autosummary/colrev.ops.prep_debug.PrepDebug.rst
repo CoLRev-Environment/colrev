@@ -9,13 +9,13 @@ colrev.ops.prep\_debug.PrepDebug
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~PrepDebug.check_precondition
       ~PrepDebug.conclude
       ~PrepDebug.decorate
@@ -25,15 +25,15 @@ colrev.ops.prep\_debug.PrepDebug
       ~PrepDebug.run_debug
       ~PrepDebug.set_ids
       ~PrepDebug.setup_custom_script
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~PrepDebug.max_retries_on_error
       ~PrepDebug.pad
       ~PrepDebug.polish
@@ -44,3 +44,5 @@ colrev.ops.prep\_debug.PrepDebug
       ~PrepDebug.first_round
       ~PrepDebug.last_round
       ~PrepDebug.prep_package_endpoints
+   
+   
