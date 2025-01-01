@@ -172,29 +172,21 @@ class PlosSearchSource:
                 self.language_service.unify_to_iso_639_3_language_codes(record=record)
             except colrev_exceptions.InvalidLanguageCodeException:
                 del record.data[Fields.LANGUAGE]
-        # input("after language")
-        # input(record)
+
         doi_connector.DOIConnector.get_link_from_doi(
             review_manager=self.review_manager,
             record=record,
         )
-        # input("after get link")
-        # input(record)
 
-        # REFERENCES?
         if (
             self.review_manager.settings.is_curated_masterdata_repo()
         ) and Fields.CITED_BY in record.data:
             del record.data[Fields.CITED_BY]
 
-        # input("after cited_by")
-        #
-        # input(record)
 
         if not prep_main_record:
             return
 
-        # retracted??
 
     def _restore_url(
         self,
@@ -223,8 +215,7 @@ class PlosSearchSource:
         num_records = self.api.get_len_total()
         self.review_manager.logger.info(f"Total: {num_records:,} records")
 
-        # It retrieves only new records added since the last sync, avoiding a full download       if not rerun:
-        # REPASR POR EL FORMATO DE LA FECHA
+        # It retrieves only new records added since the last sync, avoiding a full download.
         if not rerun:
             self.review_manager.logger.info(
                 f"Retrieve papers indexed since {self.api.last_updated.split('T', maxsplit=1)[0]}"
@@ -239,19 +230,13 @@ class PlosSearchSource:
 
         try:
             for record in self.api.get_records():
-                # input("item in _run_api_search after processing it")
-                # input(record)
                 try:
                     if self._scope_excluded(record.data):
                         continue
 
-                    # input("after de exclude the item in run_api")
-                    # input(record)
-
                     self._prep_plos_record(record=record, prep_main_record=False)
 
                     self._restore_url(record=record, feed=plos_feed)
-
                     plos_feed.add_update_record(retrieved_record=record)
 
                 except colrev_exceptions.NotFeedIdentifiableException:
@@ -433,7 +418,6 @@ class PlosSearchSource:
         timeout=10,
     ):
         """Retrieve masterdata from the SearchSource"""
-
         # To test the metadata provided for a particular DOI use:
         # https://api.plos.org/search?q=DOI
 

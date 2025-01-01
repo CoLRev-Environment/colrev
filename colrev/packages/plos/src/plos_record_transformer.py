@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 import re
 from copy import deepcopy
+from datetime import datetime
 
 import colrev.record.record
 import colrev.record.record_prep
@@ -16,7 +17,8 @@ TAG_RE = re.compile(r"<[a-z/][^<>]{0,12}>")
 
 
 def _get_year(*, item: dict) -> str:
-    if "publication_date" in "item":
+
+    if "publication_date" in item:
         return (item["publication_date"]).split("-")[0]
     else:
         return ""
@@ -55,45 +57,6 @@ def _get_authors(*, item: dict) -> str:
     return " and ".join(formatted_authors)
 
 
-def _item_to_record(*, item: dict) -> dict:
-    # Equivalent to "title" in Crossref
-    if "title_display" in item:
-        item[Fields.TITLE] = str(item["title_display"])
-    assert isinstance(item[Fields.TITLE], str)
-
-    # Equivalent to "container-title" in Crossref
-    # As in PLOS we do not have list for this field, we only
-    # check if the field exists
-    if "journal" not in item:
-        item["journal"] = ""
-    assert isinstance(item.get("container-title", ""), str)
-
-    # Equivalent to "type" in Crossref
-    item[Fields.TITLE] = "misc"
-    if item.get("article_type", "NA") == "Research Article":
-        item[Fields.ENTRYTYPE] = "article"
-        item[Fields.JOURNAL] = item.get("journal", "")
-
-    item[Fields.AUTHOR] = _get_authors(item=item)  # To do
-    item[Fields.YEAR] = _get_year(item=item)  # To do
-    item[Fields.VOLUME] = str(item.get[Fields.VOLUME], "")
-    item[Fields.CITED_BY] = str(item.get("References", ""))
-    item[Fields.NUMBER] = str(item.get("issue", ""))
-    item[Fields.DOI] = item.get("id", "").upper()
-    # item[Fields.FULLTEXT] = _get_fulltext(item=item) #To do
-
-    return item
-
-
-def _set_forthcoming(*, record_dict: dict) -> dict:
-    if "publication_date" not in record_dict or not any(
-        x in record_dict for x in [Fields.VOLUME, Fields.NUMBER]
-    ):
-        record_dict.update(year="forthcoming")
-
-        if Fields.YEAR in record_dict:
-            record_dict.update(published_online=record_dict[Fields.YEAR])
-    return record_dict
 
 
 def _flag_retracts(*, record_dict: dict) -> dict:
@@ -135,24 +98,34 @@ def _remove_fields(*, record_dict: dict) -> dict:
     ):
         del record_dict[Fields.ABSTRACT]
 
+    if ( 
+        record_dict.get(Fields.VOLUME, "")
+    ): 
+        del record_dict[Fields.VOLUME]
+
+    if ( 
+        record_dict.get(Fields.NUMBER, "")
+    ): 
+        del record_dict[Fields.NUMBER]
+
     return record_dict
 
-
+#REVISAR
 def _item_to_record(*, item: dict) -> dict:
-    # Equivalent to "title" in Crossref
-
-    if "title_display" in item:
+   
+    assert isinstance(item, dict), "The received objet is not a dictionary"
+    
+    if (isinstance(item["title_display"], str)):
         item[Fields.TITLE] = str(item["title_display"])
-    assert isinstance(item[Fields.TITLE], str)
+    assert isinstance(item.get("title_display"), str)
 
-    # Equivalent to "container-title" in Crossref
-    # As in PLOS we do not have list for this field, we only
-    # check if the field exists
+
     if "journal" not in item:
         item["journal"] = ""
-    assert isinstance(item.get("container-title", ""), str)
+        assert isinstance(item.get("container-title"), str)
 
     # Equivalent to "type" in Crossref
+
     item[Fields.ENTRYTYPE] = "misc"
     if item.get("article_type", "NA") == "Research Article":
         item[Fields.ENTRYTYPE] = "article"
@@ -160,25 +133,35 @@ def _item_to_record(*, item: dict) -> dict:
 
     item[Fields.AUTHOR] = _get_authors(item=item)  # To do
     item[Fields.YEAR] = _get_year(item=item)  # To do
-    # item[Fields.VOLUME] = str(item.get[Fields.VOLUME], "")
+    item[Fields.VOLUME] = str(item.get(Fields.VOLUME, ""))
     item[Fields.NUMBER] = item.get("issue", "")
     item[Fields.DOI] = item.get("id", "").upper()
+    item[Fields.JOURNAL] = item.get("journal", "")
+    item[Fields.ABSTRACT]  = item.get("abstract", "")[0]
     # item[Fields.FULLTEXT] = _get_fulltext(item=item) #To do
 
+   
     return item
 
 
+
 def _set_forthcoming(*, record_dict: dict) -> dict:
-    if "publication_date" not in record_dict or not any(
-        x in record_dict for x in [Fields.VOLUME, Fields.NUMBER]
-    ):
+    current_date = datetime.now().year
+    if not any (date_key in record_dict for date_key in ["publication_date", "received_date", "accepted_date"]):
+        record_dict.update(year="unknown")
+        return record_dict
+
+    
+    year_value = int(record_dict.get("year", -1))
+
+    if year_value > current_date:
         record_dict.update(year="forthcoming")
+    
+    if "publication_date" not in record_dict and "accepted_date" in record_dict:
+        record_dict.update(year="forthcoming")
+        return record_dict
 
-        # CHECK THIS FOR COLREV
-        if Fields.YEAR in record_dict:
-            record_dict.update(published_online=record_dict[Fields.YEAR])
     return record_dict
-
 
 def _flag_retracts(*, record_dict: dict) -> dict:
     if "update-to" in record_dict:
@@ -233,7 +216,7 @@ def _format_fields(*, record_dict: dict) -> dict:
             Fields.ABSTRACT,
         ]:
             continue
-        if not isinstance(value, str):
+        if (not isinstance(value, str)):
             continue
         value = value.replace("<scp>", "{")
         value = value.replace("</scp>", "}")
@@ -246,11 +229,9 @@ def _format_fields(*, record_dict: dict) -> dict:
 
             if value.startswith("Abstract "):
                 value = value[8:]
+            value = value.replace("\\", "").replace("\n", "")
 
-            inut("paso el value \n")
-            value = value.replace("\\", "").replace("\n", " ")
-
-            value = value[0]
+            value = value
 
         record_dict[key] = value.lstrip().rstrip()
 
@@ -259,7 +240,6 @@ def _format_fields(*, record_dict: dict) -> dict:
 
 def json_to_record(*, item: dict) -> colrev.record.record_prep.PrepRecord:
     "Convert a PLOS item to a record dict"
-
     try:
         record_dict = _item_to_record(item=deepcopy(item))
         record_dict = _set_forthcoming(record_dict=record_dict)
@@ -270,5 +250,4 @@ def json_to_record(*, item: dict) -> colrev.record.record_prep.PrepRecord:
         raise colrev.exceptions.RecordNotParsableException(
             f"RecordNotParseableExcception: {exc}"
         ) from exc
-
     return colrev.record.record_prep.PrepRecord(record_dict)

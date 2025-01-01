@@ -209,14 +209,13 @@ class Endpoint:
         request_url = str(self.request_url)
         if request_url.startswith("https://api.plos.org/search?q=doi:10"):
             result = self.retrieve(request_url, headers=self.headers)
-
+      
             if result.status_code == 404:
                 return
 
             result = result.json()
-
             # Adapt to PLOS
-            yield result["response"]
+            yield result["response"]["docs"]
 
             return
 
@@ -230,6 +229,7 @@ class Endpoint:
                 result = self.retrieve(
                     request_url, data=request_params, headers=self.headers
                 )
+
 
                 if result.status_code == 404:
                     return
@@ -249,22 +249,23 @@ class Endpoint:
             request_params = dict(self.request_params)
             request_params["start"] = "0"
             request_params["rows"] = str(LIMIT)
+
             while True:
                 result = self.retrieve(
                     request_url,
                     data=request_params,
                     headers=self.headers,
                 )
+          
 
                 if result.status_code == 404:
                     return
 
                 # Adapt to PLOS
                 result = result.json()
-
                 if len(result["response"]["docs"]) == 0:
                     return
-
+        
                 yield from result["response"]["docs"]
 
                 request_params["start"] = str(int(request_params["start"]) + LIMIT)
@@ -303,7 +304,6 @@ class PlosAPI:
         self.rerun = rerun
 
     def check_availability(self, raise_service_not_available: bool = True) -> None:
-        input("entro a check_avaibility en la api")
         try:
             test_rec = {
                 Fields.DOI: "10.17705/1cais.04607",
@@ -396,8 +396,6 @@ class PlosAPI:
             if not isinstance(record.data.get(Fields.YEAR, ""), str) or not isinstance(
                 record.data.get(Fields.TITLE, ""), str
             ):
-                print("year or title field not a string")
-                print(record.data)
                 raise AssertionError
 
             bibl = (
@@ -494,9 +492,6 @@ class PlosAPI:
 
             counter += 1
 
-            # Quiza es el número de docuemnto que puede devolver
-            # 10 documentos, pero con parametros rows and start
-            # podemos devolver mas NO, NO ES ESO
 
             # https://api.plos.org/solr/faq/
             # PLOS search API quest
@@ -514,7 +509,6 @@ class PlosAPI:
         return record_list
 
     def get_records(self) -> typing.Iterator[colrev.record.record.Record]:
-
         "Get records from PLOS based on the parameters"
         url = self.get_url()
 
@@ -531,21 +525,22 @@ class PlosAPI:
             ) from exc
 
     def query_doi(self, *, doi: str) -> colrev.record.record_prep.PrepRecord:
-        "Get records from PLOS based on a doi query"
+        "Get records from PLOS based on a id query"
 
         try:
-            endpoint = Endpoint(self._api_url + "search?q=doi:" + doi, email=self.email)
-
+            endpoint = Endpoint(self._api_url + "search?q=id:" + doi, email=self.email)
             plos_query_return = next(iter(endpoint))
-
             if plos_query_return is None:
                 raise colrev_exceptions.RecordNotFoundInPrepSourceException(
-                    msg="Record not found in plos (based on doi)"
+                    msg="Record not found in plos (based on id)"
                 )
-
+            
             retrieved_record = plos_record_transformer.json_to_record(
                 item=plos_query_return
             )
+
+
+          
 
             return retrieved_record
 
