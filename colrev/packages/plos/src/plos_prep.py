@@ -23,10 +23,6 @@ class PlosMetadataPrep:
 
     ci_supported: bool = Field(default=True)
 
-    # source_correction_hint = (
-    #
-    # )
-
     always_apply_changes = False
 
     def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:

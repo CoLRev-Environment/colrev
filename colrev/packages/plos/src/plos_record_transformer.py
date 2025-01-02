@@ -110,7 +110,6 @@ def _remove_fields(*, record_dict: dict) -> dict:
 
     return record_dict
 
-#REVISAR
 def _item_to_record(*, item: dict) -> dict:
    
     assert isinstance(item, dict), "The received objet is not a dictionary"
@@ -120,25 +119,23 @@ def _item_to_record(*, item: dict) -> dict:
     assert isinstance(item.get("title_display"), str)
 
 
-    if "journal" not in item:
-        item["journal"] = ""
-        assert isinstance(item.get("container-title"), str)
+    item["journal"] = item.get("journal", "")
+    assert isinstance(item["journal"], str)
 
-    # Equivalent to "type" in Crossref
 
     item[Fields.ENTRYTYPE] = "misc"
     if item.get("article_type", "NA") == "Research Article":
         item[Fields.ENTRYTYPE] = "article"
         item[Fields.JOURNAL] = item.get("journal", "")
 
-    item[Fields.AUTHOR] = _get_authors(item=item)  # To do
-    item[Fields.YEAR] = _get_year(item=item)  # To do
+    item[Fields.AUTHOR] = _get_authors(item=item) 
+    item[Fields.YEAR] = _get_year(item=item) 
     item[Fields.VOLUME] = str(item.get(Fields.VOLUME, ""))
     item[Fields.NUMBER] = item.get("issue", "")
     item[Fields.DOI] = item.get("id", "").upper()
     item[Fields.JOURNAL] = item.get("journal", "")
     item[Fields.ABSTRACT]  = item.get("abstract", "")[0]
-    # item[Fields.FULLTEXT] = _get_fulltext(item=item) #To do
+    # item[Fields.FULLTEXT] = _get_fulltext(item=item)
 
    
     return item
@@ -244,7 +241,7 @@ def json_to_record(*, item: dict) -> colrev.record.record_prep.PrepRecord:
         record_dict = _item_to_record(item=deepcopy(item))
         record_dict = _set_forthcoming(record_dict=record_dict)
         record_dict = _flag_retracts(record_dict=record_dict)
-        record_dict = _format_fields(record_dict=record_dict)  # To do OLGA
+        record_dict = _format_fields(record_dict=record_dict) 
         record_dict = _remove_fields(record_dict=record_dict)
     except (IndexError, KeyError) as exc:
         raise colrev.exceptions.RecordNotParsableException(

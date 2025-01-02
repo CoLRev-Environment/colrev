@@ -22,7 +22,7 @@ from colrev.constants import Filepaths
 from colrev.packages.plos.src import plos_record_transformer
 
 
-LIMIT = 100  # Number max of elements returned
+LIMIT = 100  # Number max of request
 MAXOFFSET = 1000
 
 # Creates a session with cache
@@ -63,7 +63,6 @@ class HTTPRequest:
 
         interval_scope = headers.get("x-rate-limit-interval", "60s")[-1]
 
-        # Check this with PLOS rate limtis
         if interval_scope == "m":
             interval_value = interval_value * 60
 
@@ -92,11 +91,6 @@ class HTTPRequest:
 
         result = SESSION.get(endpoint, params=data, timeout=10, headers=headers)
 
-        # if not skip_throttle:
-        # In case we want rate limits
-        # self._update_rate_limits(result.headers) #To implement
-        # sleep(self._get_throttling_time()) #To implement
-
         return result
 
 
@@ -114,7 +108,6 @@ class Endpoint:
     ) -> None:
 
         self.retrieve = HTTPRequest(timeout=60).retrieve
-        # To do in class HttpRequest
 
         # List of http headers
         self.headers = {
@@ -124,7 +117,7 @@ class Endpoint:
 
         self.plos_plus_token = plos_plus_token
         if plos_plus_token:
-            self.headers["Plos-Plus-API-Token"] = self.plos_plus_token  # ???
+            self.headers["Plos-Plus-API-Token"] = self.plos_plus_token  
         self.request_url = request_url
         self.request_params: typing.Dict[str, str] = {}
         self.timeout = 60
@@ -137,7 +130,6 @@ class Endpoint:
             request_url, only_headers=True, headers=self.headers, skip_throttle=True
         )
 
-        # Adapt to PLOS
         return {
             "x-rate-limit-limit": result.headers.get("x-rate-limit-limit", "undefined"),
             "x-rate-limit-interval": result.headers.get(
@@ -147,7 +139,6 @@ class Endpoint:
 
     def _escaped_pagging(self) -> dict:
         # Deletes params of pagination
-        # Adapt to PLOS
         escape_pagging = ["offset", "rows"]
         request_params = dict(self.request_params)
 
@@ -168,14 +159,12 @@ class Endpoint:
             request_url, data=request_params, headers=self.headers
         ).json
 
-        # Adapt to PLOS
         return result["message-version"]
 
     def get_nr(self) -> int:
         """Retrieve the total number of records resulting from a query."""
         request_params = dict(self.request_params)
         request_url = str(self.request_url)
-        # Adapt to PLOS
         request_params["rows"] = "0"
 
         try:
@@ -188,8 +177,7 @@ class Endpoint:
                 f"PLOS ({Colors.ORANGE}not available{Colors.END})"  # Same situation in API
             ) from exc
 
-        return int(result["response"]["numFound"])  # To do
-        # Check how is in PLOS
+        return int(result["response"]["numFound"])
 
     @property
     def url(self) -> str:
@@ -198,7 +186,6 @@ class Endpoint:
         request_params = self._escaped_pagging()
         sorted_request_params = sorted(request_params.items())
 
-        # Adapt to PLOS
         req = requests.Request(
             "get", self.request_url, params=sorted_request_params
         ).prepare()
@@ -214,13 +201,11 @@ class Endpoint:
                 return
 
             result = result.json()
-            # Adapt to PLOS
             yield result["response"]["docs"]
 
             return
 
         if self.CURSOR_AS_ITER_METHOD is True:
-            # Adapt to PLOS
             request_params = dict(self.request_params)
             request_params["cursor"] = "*"
             request_params["rows"] = str(LIMIT)
@@ -236,7 +221,6 @@ class Endpoint:
 
                 result = result.json()
 
-                # Adapt to PLOS
                 if len(result["response"]["docs"]) == 0:
                     return
 
@@ -245,7 +229,6 @@ class Endpoint:
                 request_params["cursor"] = result["response"]["next-cursor"]
 
         else:
-            # Adapt to PLOS
             request_params = dict(self.request_params)
             request_params["start"] = "0"
             request_params["rows"] = str(LIMIT)
@@ -261,7 +244,6 @@ class Endpoint:
                 if result.status_code == 404:
                     return
 
-                # Adapt to PLOS
                 result = result.json()
                 if len(result["response"]["docs"]) == 0:
                     return
@@ -286,8 +268,6 @@ class PlosAPI:
 
     last_updated: str = ""
 
-    # En Crossref devulve un link con el stauts,
-    # pero no encuentro algo similar para PLOS
     _availability_exception_message = f"PLOS ({Colors.ORANGE} not avilable{Colors.END})"
 
     def __init__(
@@ -419,7 +399,6 @@ class PlosAPI:
             author_string = " ".join(author_last_names)
             author_string = re.sub(r"[\W]+", "", author_string.replace(" ", "_"))
             params["query.author"] = author_string.replace("_", " ")
-            # params["rows"] = "15"
 
         url = self._api_url + "search?" + urllib.parse.urlencode(params)
         return url
@@ -427,8 +406,6 @@ class PlosAPI:
     def _get_similarity(
         self, *, record: colrev.record.record.Record, retrieved_record_dict: dict
     ) -> float:
-        # partial_ratio devuelve la similitud entre el dado y el base
-        # pero no se cual es cual
         title_similarity = fuzz.partial_ratio(
             retrieved_record_dict.get(Fields.TITLE, "NA").lower(),
             record.data.get(Fields.TITLE, "").lower(),
@@ -441,7 +418,7 @@ class PlosAPI:
             record.get_container_title().lower(),
         )
 
-        weights = [0.6, 0.4]  # Adaptar a plos
+        weights = [0.6, 0.4]  
         similarities = [title_similarity, container_similarity]
 
         similarity = sum(similarities[g] * weights[g] for g in range(len(similarities)))
@@ -494,7 +471,7 @@ class PlosAPI:
 
 
             # https://api.plos.org/solr/faq/
-            # PLOS search API quest
+            # PLOS search API request
             if jour_vol_iss_list and counter > 100:
                 break
             if not jour_vol_iss_list and counter > 5:

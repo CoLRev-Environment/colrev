@@ -42,11 +42,10 @@ class PlosSearchSource:
 
     _api_url = "http://api.plos.org/"
 
-    # Configuración básica del logger
     logging.basicConfig(
-        level=logging.DEBUG,  # Nivel de logging
+        level=logging.DEBUG, 
         format="%(asctime)s - %(levelname)s - %(message)s",
-    )  # Formato del log
+    ) 
 
     def __init__(
         self,
@@ -92,7 +91,6 @@ class PlosSearchSource:
 
     def heuristic(self, filename, data):
         """Heuristic to identify to which SearchSource a search file belongs (for DB searches)"""
-        # TODO
 
     @classmethod
     def _select_search_type(
@@ -365,7 +363,7 @@ class PlosSearchSource:
                 return record
 
             try:
-                self.plos_lock.acquire(timeout=120)  # Check in PLOS
+                self.plos_lock.acquire(timeout=120) 
 
                 plos_feed = self.search_source.get_api_feed(
                     review_manager=self.review_manager,
