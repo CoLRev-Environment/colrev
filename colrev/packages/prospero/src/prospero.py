@@ -20,21 +20,20 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.ops.load
 import colrev.ops.search_api_feed
 import colrev.package_manager.interfaces
-import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_settings
+import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search import Search
 from colrev.packages.prospero.src.get_record_info import get_record_info
 from colrev.review_manager import ReviewManager
-from colrev.settings import SearchSource 
 from colrev.settings import SearchType
-import colrev.settings
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
@@ -117,13 +116,13 @@ class ProsperoSearchSource:
             return result
 
         return result
-    
-    def _get_search_source (
+
+    def _get_search_source(
         self, settings: typing.Optional[dict]
     ) -> colrev.settings.SearchSource:
-        if settings: 
+        if settings:
             return self.settings_class(**settings)
-        
+
         prospero_filename = Path("data/search/prospero.bib")
         prospero_source = [
             s
@@ -237,7 +236,6 @@ class ProsperoSearchSource:
                 existing_records[record_id] = new_rec
                 if self.logger:
                     self.logger.info(f"Added new record: {record_id}")
-        
 
     """def _validate_source (self) -> None:
         source = self.search_source
@@ -249,16 +247,21 @@ class ProsperoSearchSource:
 
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")"""
 
-    def run_api_search(self, *, prospero_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool,) -> None:
+    def run_api_search(
+        self,
+        *,
+        prospero_feed: colrev.ops.search_api_feed.SearchAPIFeed,
+        rerun: bool,
+    ) -> None:
         if rerun:
             self.review_manager.logger.info(
                 "Performing a search of the full history (may take time)"
             )
         for records in self.new_records:
             try:
-                if "" == records.get(
-                    Fields.AUTHOR, ""
-                ) and "" == records.get(Fields.TITLE, ""):
+                if "" == records.get(Fields.AUTHOR, "") and "" == records.get(
+                    Fields.TITLE, ""
+                ):
                     continue
                 prep_record = colrev.record.record_prep.PrepRecord(records)
                 prospero_feed.add_update_record(prep_record)
@@ -278,15 +281,12 @@ class ProsperoSearchSource:
         logger = logging.getLogger()
         """self._validate_source()"""
         prospero_feed = self.search_source.get_api_feed(
-            review_manager = self.review_manager,
-            source_identifier = self.source_identifier,
-            update_only =False,
-            prep_mode=True
+            review_manager=self.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=False,
+            prep_mode=True,
         )
-        self.run_api_search(
-            prospero_feed=prospero_feed,
-            rerun=rerun
-        )
+        self.run_api_search(prospero_feed=prospero_feed, rerun=rerun)
 
         if self.logger:
             self.logger.info("Starting ProsperoSearchSource search...")
@@ -441,8 +441,6 @@ class ProsperoSearchSource:
             print("BibTeX file saved to data/search/prospero_results.bib")
         finally:
             driver.quit()
-
-    
 
     def prep_link_md(self, prep_operation, record, save_feed=True, timeout=10):
         """Record-level metadata enrichment from Prospero, given a record ID."""
