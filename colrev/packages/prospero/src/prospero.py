@@ -9,6 +9,8 @@ from pathlib import Path
 
 import bibtexparser
 import zope.interface
+import math
+from bibtexparser.bibdatabase import BibDatabase
 from pydantic import Field
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -296,11 +298,10 @@ class ProsperoSearchSource:
                 if self.logger:
                     self.logger.info("No records found.")
                 return
-            elif hit_count < 51:
-                page_count = 1
             else:
-                page_count = hit_count // 50
+                page_count = math.ceil(hit_count / 50)
 
+            #starts the retrieving process: iterating through all pages    
             start_index = 1
             while start_index <= page_count:
 
@@ -343,7 +344,7 @@ class ProsperoSearchSource:
                         "Failed loading results: StaleElementReferenceException"
                     )
                 print(f"Current window handle: {driver.window_handles}")
-
+                
                 # Clicking on "next" element to go to next page
                 try:
                     WebDriverWait(driver, 3).until(

@@ -36,8 +36,8 @@ def get_record_info(
         checkbox = tds[0].find_element(By.XPATH, ".//input[@type='checkbox']")
         record_id = checkbox.get_attribute("data-checkid")
         record_id_array_pro_page.append(record_id)
-        record_id_array.extend(record_id_array_pro_page)
-
+    record_id_array.extend(record_id_array_pro_page)    
+    print(record_id_array)
     # for each record, load detail page and extract authors/language
     """language_array = []
     authors_array = []
@@ -79,14 +79,15 @@ def get_record_info(
         except TimeoutException:
             language_details = "N/A"
             authors_details = "N/A"
+        #make sure pop-up window is closed and switch to original result page
         finally:
             assert len(driver.window_handles) > 1
             driver.close()
             driver.switch_to.window(original_search_window)
-            print(driver.window_handles)
+            #print(driver.window_handles)
         language_array.append(language_details)
         authors_array.append(authors_details)
         print(
-            f"Record {x+1+page_increment*50}: {title_array[x]}, Language: {language_details}, Authors: {authors_details}",
+            f"Record {x+1+page_increment*50}: [ID: {record_id}] {title_array[x]}, Language: {language_details}, Authors: {authors_details}",
             flush=True,
         )
