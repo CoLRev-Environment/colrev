@@ -14,8 +14,13 @@ def get_record_info(
     registered_date_array: [],  # type: ignore
     title_array: [],  # type: ignore
     review_status_array: [],  # type: ignore
+    language_array: [], # type: ignore
+    authors_array: [], # type: ignore
     original_search_window: str,
+    page_increment: int
 ) -> None:
+
+    record_id_array_pro_page = []
 
     for i, record in enumerate(records):
         tds = record.find_elements(By.XPATH, "./td")
@@ -30,13 +35,15 @@ def get_record_info(
 
         checkbox = tds[0].find_element(By.XPATH, ".//input[@type='checkbox']")
         record_id = checkbox.get_attribute("data-checkid")
-        record_id_array.append(record_id)
-
+        record_id_array_pro_page.append(record_id)
+    record_id_array.extend(record_id_array_pro_page)    
+    print(record_id_array)
     # for each record, load detail page and extract authors/language
-    language_array = []
+    """language_array = []
     authors_array = []
-
-    for x, record_id in enumerate(record_id_array):
+    """
+    
+    for x, record_id in enumerate(record_id_array_pro_page):
 
         detail_url = f"https://www.crd.york.ac.uk/prospero/display_record.php?RecordID={record_id}"
         driver.switch_to.new_window("tab")
@@ -72,14 +79,15 @@ def get_record_info(
         except TimeoutException:
             language_details = "N/A"
             authors_details = "N/A"
+        #make sure pop-up window is closed and switch to original result page
         finally:
             assert len(driver.window_handles) > 1
             driver.close()
             driver.switch_to.window(original_search_window)
-            print(driver.window_handles)
+            #print(driver.window_handles)
         language_array.append(language_details)
         authors_array.append(authors_details)
         print(
-            f"Record {x+1}: {title_array[x]}, Language: {language_details}, Authors: {authors_details}",
+            f"Record {x+1+page_increment*50}: [ID: {record_id}] {title_array[x]}, Language: {language_details}, Authors: {authors_details}",
             flush=True,
         )

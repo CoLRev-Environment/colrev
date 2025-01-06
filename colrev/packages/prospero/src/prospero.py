@@ -9,6 +9,7 @@ from pathlib import Path
 
 import bibtexparser
 import zope.interface
+import math
 from pydantic import Field
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -273,10 +274,13 @@ class ProsperoSearchSource:
     def search(self, rerun: bool) -> None:
         """Scrape Prospero using Selenium, save .bib file with results."""
 
+        # Array declaration for all necessary information on found records
         record_id_array = []
         registered_date_array = []
         title_array = []
         review_status_array = []
+        authors_array = []
+        language_array =[]
 
         logger = logging.getLogger()
         """self._validate_source()"""
@@ -345,18 +349,17 @@ class ProsperoSearchSource:
             if self.logger:
                 self.logger.info(f"Found {hit_count} record(s) for '{search_word}'.")
 
-            # Calculate number of result pages manually to loop through since no indicator for last page
+            # Calculate number of result pages manually to loop through 
             page_count = None
             if hit_count == 0:
                 print("No results found for this query.")
                 if self.logger:
                     self.logger.info("No records found.")
                 return
-            elif hit_count < 51:
-                page_count = 1
             else:
-                page_count = hit_count // 50
+                page_count = math.ceil(hit_count / 50)
 
+            #starts the retrieving process: iterating through all pages    
             start_index = 1
             while start_index <= page_count:
 
@@ -389,14 +392,17 @@ class ProsperoSearchSource:
                         registered_date_array,
                         title_array,
                         review_status_array,
+                        language_array,
+                        authors_array,
                         original_search_window,
+                        page_increment= start_index-1
                     )
                 except StaleElementReferenceException:
                     logger.error(
                         "Failed loading results: StaleElementReferenceException"
                     )
                 print(f"Current window handle: {driver.window_handles}")
-
+                
                 # Clicking on "next" element to go to next page
                 try:
                     WebDriverWait(driver, 3).until(
@@ -415,15 +421,17 @@ class ProsperoSearchSource:
 
             #  Start saving to BibTeX file
             bib_entries = []
-            for record_id, registered_date, title, status in zip(
-                record_id_array, registered_date_array, title_array, review_status_array
+            for record_id, registered_date, title, language, authors, status in zip(
+                record_id_array, registered_date_array, title_array, language_array, authors_array, review_status_array
             ):
                 entry = {
                     "ENTRYTYPE": "misc",
                     "ID": record_id,
                     "title": title,
+                    "author": authors,
                     "published": f"Prospero Registration ID {record_id}",
                     "year": registered_date,
+                    "language": language,
                     "note": f"Status: {status}",
                 }
                 bib_entries.append(entry)
