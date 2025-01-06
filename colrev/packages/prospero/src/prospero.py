@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import os
 import time
 import typing
@@ -9,7 +10,6 @@ from pathlib import Path
 
 import bibtexparser
 import zope.interface
-import math
 from pydantic import Field
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -280,7 +280,7 @@ class ProsperoSearchSource:
         title_array = []
         review_status_array = []
         authors_array = []
-        language_array =[]
+        language_array = []
 
         logger = logging.getLogger()
         """self._validate_source()"""
@@ -349,7 +349,7 @@ class ProsperoSearchSource:
             if self.logger:
                 self.logger.info(f"Found {hit_count} record(s) for '{search_word}'.")
 
-            # Calculate number of result pages manually to loop through 
+            # Calculate number of result pages manually to loop through
             page_count = None
             if hit_count == 0:
                 print("No results found for this query.")
@@ -359,7 +359,7 @@ class ProsperoSearchSource:
             else:
                 page_count = math.ceil(hit_count / 50)
 
-            #starts the retrieving process: iterating through all pages    
+            # starts the retrieving process: iterating through all pages
             start_index = 1
             while start_index <= page_count:
 
@@ -395,14 +395,14 @@ class ProsperoSearchSource:
                         language_array,
                         authors_array,
                         original_search_window,
-                        page_increment= start_index-1
+                        page_increment=start_index - 1,
                     )
                 except StaleElementReferenceException:
                     logger.error(
                         "Failed loading results: StaleElementReferenceException"
                     )
                 print(f"Current window handle: {driver.window_handles}")
-                
+
                 # Clicking on "next" element to go to next page
                 try:
                     WebDriverWait(driver, 3).until(
@@ -422,7 +422,12 @@ class ProsperoSearchSource:
             #  Start saving to BibTeX file
             bib_entries = []
             for record_id, registered_date, title, language, authors, status in zip(
-                record_id_array, registered_date_array, title_array, language_array, authors_array, review_status_array
+                record_id_array,
+                registered_date_array,
+                title_array,
+                language_array,
+                authors_array,
+                review_status_array,
             ):
                 entry = {
                     "ENTRYTYPE": "misc",
