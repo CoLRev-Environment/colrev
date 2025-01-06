@@ -10,7 +10,6 @@ from pathlib import Path
 import bibtexparser
 import zope.interface
 import math
-from bibtexparser.bibdatabase import BibDatabase
 from pydantic import Field
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
