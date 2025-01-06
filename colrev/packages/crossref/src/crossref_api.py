@@ -194,7 +194,6 @@ class Endpoint:
 
         return int(result["message"]["total-results"])
 
-
     def get_dois(self) -> typing.List[str]:
         """Retrieve the dois resulting from a query."""
         request_params = dict(self.request_params)
@@ -212,7 +211,6 @@ class Endpoint:
             ) from exc
 
         return [item["DOI"] for item in result["message"]["items"]]
-
 
     @property
     def url(self) -> str:
