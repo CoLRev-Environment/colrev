@@ -194,6 +194,24 @@ class Endpoint:
 
         return int(result["message"]["total-results"])
 
+    def get_dois(self) -> typing.List[str]:
+        """Retrieve the dois resulting from a query."""
+        request_params = dict(self.request_params)
+        request_url = str(self.request_url)
+
+        try:
+            result = self.retrieve(
+                request_url,
+                data=request_params,
+                headers=self.headers,
+            ).json()
+        except requests.exceptions.RequestException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
+            ) from exc
+
+        return [item["DOI"] for item in result["message"]["items"]]
+
     @property
     def url(self) -> str:
         """Retrieve the url that will be used as a HTTP request."""

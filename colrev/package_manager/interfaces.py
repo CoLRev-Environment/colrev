@@ -86,7 +86,7 @@ class SearchSourceInterface(
         save_feed: bool = True,
         timeout: int = 10,
     ):
-        """Retrieve masterdata from the SearchSource"""
+        """Retrieve masterdata from the SearchSource (only required when implementing an MD SerchSource)"""
 
     # pylint: disable=no-self-argument
     def load(  # type: ignore
