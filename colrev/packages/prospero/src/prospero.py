@@ -35,6 +35,7 @@ from colrev.ops.search import Search
 from colrev.packages.prospero.src.get_record_info import get_record_info
 from colrev.review_manager import ReviewManager
 from colrev.settings import SearchType
+
 # Minimal fallback imports for a standalone run if no operation is passed
 
 
