@@ -429,10 +429,6 @@ class ProsperoSearchSource:
     def heuristic_status(self) -> SearchSourceHeuristicStatus:
         return self.__class__.heuristic_status
 
-    @property
-    def source_identifier(self):
-        return self.__class__.source_identifier
-
 
 if __name__ == "__main__":
     print("Running ProsperoSearchSource in standalone mode...")
