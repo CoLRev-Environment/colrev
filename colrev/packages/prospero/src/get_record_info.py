@@ -25,7 +25,8 @@ def get_record_info(
     for i, record in enumerate(records):
         tds = record.find_elements(By.XPATH, "./td")
 
-        registered_date = tds[1].text.strip()
+        registered_date = tds[1].text.strip().split("/")
+        registered_date = registered_date[-1]
         title = tds[2].text.strip()
         review_status = tds[4].text.strip()
 
