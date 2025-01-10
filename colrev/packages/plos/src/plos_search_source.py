@@ -28,6 +28,7 @@ from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.plos.src import plos_api
+
 # from future import annotations
 
 
@@ -43,9 +44,9 @@ class PlosSearchSource:
     _api_url = "http://api.plos.org/"
 
     logging.basicConfig(
-        level=logging.DEBUG, 
+        level=logging.DEBUG,
         format="%(asctime)s - %(levelname)s - %(message)s",
-    ) 
+    )
 
     def __init__(
         self,
@@ -181,10 +182,8 @@ class PlosSearchSource:
         ) and Fields.CITED_BY in record.data:
             del record.data[Fields.CITED_BY]
 
-
         if not prep_main_record:
             return
-
 
     def _restore_url(
         self,
@@ -363,7 +362,7 @@ class PlosSearchSource:
                 return record
 
             try:
-                self.plos_lock.acquire(timeout=120) 
+                self.plos_lock.acquire(timeout=120)
 
                 plos_feed = self.search_source.get_api_feed(
                     review_manager=self.review_manager,

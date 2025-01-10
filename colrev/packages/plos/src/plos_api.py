@@ -117,7 +117,7 @@ class Endpoint:
 
         self.plos_plus_token = plos_plus_token
         if plos_plus_token:
-            self.headers["Plos-Plus-API-Token"] = self.plos_plus_token  
+            self.headers["Plos-Plus-API-Token"] = self.plos_plus_token
         self.request_url = request_url
         self.request_params: typing.Dict[str, str] = {}
         self.timeout = 60
@@ -196,7 +196,7 @@ class Endpoint:
         request_url = str(self.request_url)
         if request_url.startswith("https://api.plos.org/search?q=doi:10"):
             result = self.retrieve(request_url, headers=self.headers)
-      
+
             if result.status_code == 404:
                 return
 
@@ -214,7 +214,6 @@ class Endpoint:
                 result = self.retrieve(
                     request_url, data=request_params, headers=self.headers
                 )
-
 
                 if result.status_code == 404:
                     return
@@ -239,7 +238,6 @@ class Endpoint:
                     data=request_params,
                     headers=self.headers,
                 )
-          
 
                 if result.status_code == 404:
                     return
@@ -247,7 +245,7 @@ class Endpoint:
                 result = result.json()
                 if len(result["response"]["docs"]) == 0:
                     return
-        
+
                 yield from result["response"]["docs"]
 
                 request_params["start"] = str(int(request_params["start"]) + LIMIT)
@@ -418,7 +416,7 @@ class PlosAPI:
             record.get_container_title().lower(),
         )
 
-        weights = [0.6, 0.4]  
+        weights = [0.6, 0.4]
         similarities = [title_similarity, container_similarity]
 
         similarity = sum(similarities[g] * weights[g] for g in range(len(similarities)))
@@ -469,7 +467,6 @@ class PlosAPI:
 
             counter += 1
 
-
             # https://api.plos.org/solr/faq/
             # PLOS search API request
             if jour_vol_iss_list and counter > 100:
@@ -511,13 +508,10 @@ class PlosAPI:
                 raise colrev_exceptions.RecordNotFoundInPrepSourceException(
                     msg="Record not found in plos (based on id)"
                 )
-            
+
             retrieved_record = plos_record_transformer.json_to_record(
                 item=plos_query_return
             )
-
-
-          
 
             return retrieved_record
 
