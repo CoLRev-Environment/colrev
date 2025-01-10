@@ -369,7 +369,7 @@ class ProsperoSearchSource:
                     "colrev.prospero_id": f"Prospero Registration {record_id}",
                     "year": registered_date,
                     "language": language,
-                    "colrev.status": f"{status}",
+                    "colrev.prospero_status": f"{status}",
                 }
                 bib_entries.append(entry)
 
