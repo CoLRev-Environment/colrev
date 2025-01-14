@@ -7,6 +7,7 @@ import tempfile
 import typing
 from pathlib import Path
 
+import inquirer
 import pandas as pd
 import zope.interface
 from git import Repo
@@ -101,13 +102,28 @@ class SYNERGYDatasetsSearchSource:
             )
             data_path = temp_path / Path("datasets")
             files = data_path.glob("**/*_ids.csv")
+
             print("https://github.com/asreview/synergy-dataset")
-            print(
-                "\n- "
-                + "\n- ".join([str(f.parent.name) + "/" + str(f.name) for f in files])
-            )
-            dataset = input("Enter dataset:")
+
+            choices = [f"{f.parent.name}/{f.name}" for f in files]
+            if not choices:
+                print("No datasets found.")
+                raise ValueError
+            questions = [
+                inquirer.List(
+                    "dataset",
+                    message="Select a dataset:",
+                    choices=choices,
+                )
+            ]
+            answers = inquirer.prompt(questions)
+            dataset = answers.get("dataset", None)
+
+            if not dataset:
+                print("No dataset selected.")
+                raise ValueError
             params_dict = {"dataset": dataset}
+            print(f"Selected dataset: {params_dict}")
 
         assert "dataset" in params_dict
         dataset = params_dict["dataset"]
@@ -156,7 +172,7 @@ class SYNERGYDatasetsSearchSource:
             )
         return dataset_df
 
-    def _validate_decisions(self, *, decisions: dict, record: dict) -> None:
+    def _update_decisions(self, *, decisions: dict, record: dict) -> None:
         if "doi" in record:
             doi = record["doi"].lower()
             if doi in decisions["doi"]:
@@ -208,6 +224,7 @@ class SYNERGYDatasetsSearchSource:
             if self.review_manager.force_mode:
                 print(msg)
             else:
+                print("Exiting. Use force-mode to retrieve anyway.")
                 raise colrev_exceptions.SearchSourceException(msg)
 
     def _prep_record(self, *, record: dict, ind: int) -> None:
@@ -271,7 +288,7 @@ class SYNERGYDatasetsSearchSource:
         empty_records, duplicates = 0, 0
         for ind, record in enumerate(dataset_df.to_dict(orient="records")):
             self._prep_record(record=record, ind=ind)
-            self._validate_decisions(decisions=decisions, record=record)
+            self._update_decisions(decisions=decisions, record=record)
             # Skip records without metadata
             if {Fields.ID, Fields.ENTRYTYPE, "label_included"} == set(record.keys()):
                 empty_records += 1
