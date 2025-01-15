@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "colrev"
-version = "0.13.1"
+version = "0.13.2"
 description = "CoLRev: An open-source environment for collaborative reviews"
 authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>", "Julian Prester <julian.prester@sydney.edu.au>"]
 license = "MIT"
