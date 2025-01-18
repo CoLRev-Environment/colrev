@@ -117,9 +117,9 @@ class ProsperoSearchSource:
         else:
             if Fields.URL in params:
                 query = {"url": params[Fields.URL]}
-            else: 
+            else:
                 query = params
-            
+
         # Generate a unique .bib filename
         filename = operation.get_unique_filename(file_path_string="prospero_results")
 
