@@ -11,6 +11,7 @@ include = "src"
 
 [tool.poetry.dependencies]
 python = ">=3.9, <4"
+selenium = "^4.27.1"
 
 [tool.colrev]
 colrev_doc_description = "TODO"
