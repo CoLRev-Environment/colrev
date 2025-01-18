@@ -105,9 +105,7 @@ class ProsperoSearchSource:
         if len(params) == 0:
             search_source = operation.create_api_source(endpoint=cls.endpoint)
             search_source.search_parameters["url"] = (
-                cls.db_url
-                + "search?"
-                + "#searchadvanced"
+                cls.db_url + "search?" + "#searchadvanced"
             )
             search_source.search_parameters["version"] = "0.1.0"
             operation.add_source_and_search(search_source)
