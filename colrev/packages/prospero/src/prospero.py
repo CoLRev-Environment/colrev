@@ -108,7 +108,6 @@ class ProsperoSearchSource:
                 cls.db_url
                 + "search?"
                 + "#searchadvanced"
-                + search_source.search_parameters.pop("query", "").replace(" ", "+")
             )
             search_source.search_parameters["version"] = "0.1.0"
             operation.add_source_and_search(search_source)
@@ -120,18 +119,29 @@ class ProsperoSearchSource:
             else:
                 query = params
 
+        """params_dict = {}
+        if params:
+            if params.startswith("http"):
+                params_dict = {"url": params}
+            else:
+                for item in params.split(";"):
+                    if "=" in item:
+                        key, value = item.split("=", 1)
+                        params_dict[key] = value
+                    else:
+                        raise ValueError(f"Invalid parameter format: {item}")"""
         # Generate a unique .bib filename
         filename = operation.get_unique_filename(file_path_string="prospero_results")
 
-        search_source = colrev.settings.SearchSource(
+        new_search_source = colrev.settings.SearchSource(
             endpoint=cls.endpoint,
             filename=filename,
             search_type=SearchType.API,
             search_parameters=query,
             comment="Search source for Prospero protocols",
         )
-        operation.add_source_and_search(search_source)
-        return search_source
+        operation.add_source_and_search(new_search_source)
+        return new_search_source
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
