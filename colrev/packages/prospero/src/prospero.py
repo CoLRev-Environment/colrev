@@ -3,13 +3,11 @@ from __future__ import annotations
 
 import logging
 import math
-import os
 import time
 import typing
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import bibtexparser
 import zope.interface
 from pydantic import Field
 from selenium import webdriver
@@ -384,23 +382,11 @@ class ProsperoSearchSource:
                     "year": registered_date,
                     "language": language,
                     "colrev.prospero_status": f"{status}",
+                    "url": f"https://www.crd.york.ac.uk/prospero/display_record.asp?RecordID={record_id}",
                 }
                 bib_entries.append(entry)
 
             self.new_records = bib_entries
-
-            bib_database = bibtexparser.bibdatabase.BibDatabase()
-            bib_database.entries = bib_entries
-            os.makedirs("data/search/", exist_ok=True)
-            with open(
-                "data/search/prospero_results.bib", "w", encoding="utf8"
-            ) as bibfile:
-                bibtexparser.dump(bib_database, bibfile)
-            if self.logger:
-                self.logger.info(
-                    "Saved Prospero search results to data/search/prospero_results.bib"
-                )
-            print("BibTeX file saved to data/search/prospero_results.bib")
 
         finally:
             driver.quit()
