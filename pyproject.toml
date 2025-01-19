@@ -91,7 +91,7 @@ docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme"
 dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock", "pytest-skip-slow", "m2r", "mypy", "importlib_metadata"]
 
 [tool.mypy]
-python_version = 3.8
+python_version = 3.13
 warn_unused_configs = true
 ignore_missing_imports = true
 
