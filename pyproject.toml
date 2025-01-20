@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "colrev"
-version = "0.13.1"
+version = "0.13.2"
 description = "CoLRev: An open-source environment for collaborative reviews"
 authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>", "Julian Prester <julian.prester@sydney.edu.au>"]
 license = "MIT"
@@ -92,7 +92,7 @@ docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme"
 dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock", "pytest-skip-slow", "m2r", "mypy", "importlib_metadata"]
 
 [tool.mypy]
-python_version = 3.8
+python_version = 3.13
 warn_unused_configs = true
 ignore_missing_imports = true
 

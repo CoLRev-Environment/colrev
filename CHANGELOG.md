@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 ### Fixed
 -->
 
+## 0.13.2 - 2025-01-15
+
+- Minor release to install with updated pre-commit
+
 ## 0.13.1 - 2024-12-17
 
 - Minor release to install with updated dependencies
