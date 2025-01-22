@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Plos API"""
 import contextlib
+import datetime
 import re
 import typing
 import urllib.parse
@@ -328,8 +329,10 @@ class PlosAPI:
             #   [2009-12-07T00:00:00Z TO 2013-02-20T23:59:59Z]
 
             last_updated = self.last_updated.split(" ", maxsplit=1)[0]
-            date_filter = f"fq=publication_date:[{last_updated} TO NOW]"
-            url = f"{url}?{date_filter}"
+            last_updated = last_updated.split('+')[0] + "Z"
+            now = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+            date_filter = f"fq=publication_date:[{last_updated} TO {now}]"
+            url = f"{url}&{date_filter}"
 
         return url
 
