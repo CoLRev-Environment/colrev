@@ -108,7 +108,7 @@ class HTTPRequest:
 class Endpoint:
     """Endpoint"""
 
-    CURSOR_AS_ITER_METHOD = False
+    cursor_as_iter_method = False
 
     def __init__(
         self,
@@ -245,7 +245,7 @@ class Endpoint:
 
             return
 
-        if self.CURSOR_AS_ITER_METHOD is True:
+        if self.cursor_as_iter_method is True:
             request_params = dict(self.request_params)
             request_params["cursor"] = "*"
             request_params["rows"] = str(LIMIT)
@@ -399,7 +399,7 @@ class CrossrefAPI:
 
         endpoint = Endpoint(url, email=self.email)
         if self.get_len() > 10000:
-            endpoint.CURSOR_AS_ITER_METHOD = True
+            endpoint.cursor_as_iter_method = True
 
         try:
             for item in endpoint:
