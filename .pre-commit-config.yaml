@@ -15,7 +15,7 @@ repos:
     rev: v5.0.0
     hooks:
     -   id: trailing-whitespace
-        exclude: status.txt|commit_report_details.txt|commit_report_header.txt|pdf_get_man_mail.txt|bib$|txt$|ris$|enl$|xml$|extensions_index/
+        exclude: bib$|txt$|ris$|enl$|xml$|extensions_index/
     -   id: end-of-file-fixer
         exclude: bib$|txt$|ris$|enl$|xml$|corrections/SrivastavaShainesh2015.json
     -   id: check-docstring-first
@@ -69,11 +69,7 @@ repos:
       language: system
       types: [python]
       files: colrev
-      args:
-        [
-          "-rn", # Only display messages
-          "-sn", # Don't display the score
-        ]
+      args: ["-rn","-sn"]
 - repo: local
   hooks:
   - id: pytest-check
