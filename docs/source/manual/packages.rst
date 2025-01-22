@@ -170,6 +170,6 @@ Packages
    packages/colrev.structured.rst
 
 
+   packages/colrev-sync.rst
    packages/colrev.doi_org.rst
-   packages/colrev.sync.rst
    packages/colrev.ui_web.rst
