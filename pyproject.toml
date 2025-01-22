@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "colrev"
-version = "0.13.0"
+version = "0.13.2"
 description = "CoLRev: An open-source environment for collaborative reviews"
 authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>", "Julian Prester <julian.prester@sydney.edu.au>"]
 license = "MIT"
@@ -42,14 +42,14 @@ glom = "^22.1.0"
 Jinja2 = "^3.1.2"
 tqdm = "^4.64.1"
 GitPython= "^3.1.29"
-pre-commit = "^2.20.0"
+pre-commit = "^3.2.0"
 docker = "7.1.0" # required in init to determine whether Docker is available
 "zope.interface" = "7.1.0"
 pydantic = "^2.9.1"
 dictdiffer = "^0.9.0"
 imagehash = "^4.3.1"
 rapidfuzz = "^3.5.2"
-bib-dedupe = "^0.9.0" # required in record_similarity
+bib-dedupe = "^0.10.0" # required in record_similarity
 lxml = "^5.2.0"
 pandas = "^2.2"
 openpyxl = "^3.1.2"                             # required by pandas for Excel
@@ -91,7 +91,7 @@ docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme"
 dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock", "pytest-skip-slow", "m2r", "mypy", "importlib_metadata"]
 
 [tool.mypy]
-python_version = 3.8
+python_version = 3.13
 warn_unused_configs = true
 ignore_missing_imports = true
 

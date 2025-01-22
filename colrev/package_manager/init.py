@@ -59,9 +59,12 @@ AUTHOR_PATTERN = r"([a-zA-Z ]+)<([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})
 def _create_pyproject_toml(data: dict) -> None:
 
     plugins = []
+    package_location = data["name"]
+    if data["built_in"]:
+        package_location = data["name"].replace("colrev.", "colrev.packages.")
     for key, value in data["plugins"].items():
         formatted_string = (
-            f"{key} = \"{data['name']}.{value['module']}:{value['class']}\""
+            f"{key} = \"{package_location}.src.{value['module']}:{value['class']}\""
         )
         plugins.append(formatted_string)
     plugins_string = "\n".join(plugins)
@@ -240,7 +243,7 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
     questions.append(
         inquirer.Checkbox(
             "plugins",
-            message="Select the plugin types",
+            message="Select the plugin types (use SPACE to select)",
             choices=list(INTERFACE_MAP.keys()),
         )
     )
@@ -324,6 +327,7 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
         plugin_data[plugin] = data
 
     package_data["plugins"] = plugin_data
+    package_data["built_in"] = built_in
 
     return package_data
 
@@ -514,6 +518,7 @@ def _create_module_files(package_data: dict) -> None:
                 f'''#! /usr/bin/env python
 """{interface}: {data['class']}"""
 
+import typing
 from zope.interface import implementer
 from colrev.package_manager.interfaces import {interface}
 import colrev.package_manager.package_settings

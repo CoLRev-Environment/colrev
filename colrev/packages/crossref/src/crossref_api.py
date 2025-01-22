@@ -21,7 +21,7 @@ from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.packages.crossref.src import record_transformer
 
-LIMIT = 100
+LIMIT = 1000
 MAXOFFSET = 10000
 
 SESSION = requests_cache.CachedSession(
@@ -83,15 +83,21 @@ class HTTPRequest:
         data: typing.Optional[dict] = None,
         only_headers: bool = False,
         skip_throttle: bool = False,
+        cache: bool = True,
     ) -> requests.Response:
         """Retrieve data from a given endpoint."""
 
         if only_headers is True:
             return requests.head(endpoint, timeout=2)
 
-        result = SESSION.get(
-            endpoint, params=data, timeout=self.timeout, headers=headers
-        )
+        if cache:
+            result = SESSION.get(
+                endpoint, params=data, timeout=self.timeout, headers=headers
+            )
+        else:
+            result = requests.get(
+                endpoint, params=data, timeout=self.timeout, headers=headers
+            )
 
         if not skip_throttle:
             self._update_rate_limits(result.headers)
@@ -188,6 +194,24 @@ class Endpoint:
 
         return int(result["message"]["total-results"])
 
+    def get_dois(self) -> typing.List[str]:
+        """Retrieve the dois resulting from a query."""
+        request_params = dict(self.request_params)
+        request_url = str(self.request_url)
+
+        try:
+            result = self.retrieve(
+                request_url,
+                data=request_params,
+                headers=self.headers,
+            ).json()
+        except requests.exceptions.RequestException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
+            ) from exc
+
+        return [item["DOI"] for item in result["message"]["items"]]
+
     @property
     def url(self) -> str:
         """Retrieve the url that will be used as a HTTP request."""
@@ -232,6 +256,7 @@ class Endpoint:
                     request_url,
                     data=request_params,
                     headers=self.headers,
+                    cache=False,
                 )
 
                 if result.status_code == 404:
@@ -374,6 +399,9 @@ class CrossrefAPI:
         url = self.get_url()
 
         endpoint = Endpoint(url, email=self.email)
+        if self.get_len() > 10000:
+            endpoint.CURSOR_AS_ITER_METHOD = True
+
         try:
             for item in endpoint:
                 try:

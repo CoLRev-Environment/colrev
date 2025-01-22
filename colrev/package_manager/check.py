@@ -14,6 +14,7 @@ import toml
 from zope.interface.verify import verifyClass
 
 import colrev.package_manager.interfaces
+from colrev.constants import Colors
 from colrev.package_manager.interfaces import INTERFACE_MAP
 
 
@@ -22,7 +23,9 @@ def _check_package_installed(data: dict) -> bool:
     try:
         subprocess.check_output(["pip", "show", package_name])
     except subprocess.CalledProcessError:
-        print(f"Warning: Package '{package_name}' is not installed.")
+        print(
+            f"Navigate to {Path.cwd()} and run: {Colors.GREEN} pip install -e .{Colors.END}"
+        )
 
     return True
 

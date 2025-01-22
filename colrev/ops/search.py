@@ -298,15 +298,15 @@ class Search(colrev.process.operation.Operation):
     ) -> list:
         results_list = []
         for endpoint in search_sources:
-            search_source_class = self.package_manager.get_package_endpoint_class(
-                package_type=EndpointType.search_source,
-                package_identifier=endpoint,
-            )
-            res = search_source_class.heuristic(filepath, data)  # type: ignore
-            self.review_manager.logger.debug(f"- {endpoint}: {res['confidence']}")
-            if res["confidence"] == 0.0:
-                continue
             try:
+                search_source_class = self.package_manager.get_package_endpoint_class(
+                    package_type=EndpointType.search_source,
+                    package_identifier=endpoint,
+                )
+                res = search_source_class.heuristic(filepath, data)  # type: ignore
+                self.review_manager.logger.debug(f"- {endpoint}: {res['confidence']}")
+                if res["confidence"] == 0.0:
+                    continue
                 result_item = {}
 
                 res["endpoint"] = endpoint
@@ -327,7 +327,10 @@ class Search(colrev.process.operation.Operation):
                 result_item["confidence"] = res["confidence"]
 
                 results_list.append(result_item)
-            except colrev_exceptions.UnsupportedImportFormatError:
+            except (
+                colrev_exceptions.UnsupportedImportFormatError,
+                ModuleNotFoundError,
+            ):
                 continue
         return results_list
 
@@ -495,6 +498,8 @@ class Search(colrev.process.operation.Operation):
             except colrev_exceptions.SearchNotAutomated as exc:
                 self.review_manager.logger.warning(exc)
             except colrev_exceptions.MissingDependencyError as exc:
+                self.review_manager.logger.warning(exc)
+            except ModuleNotFoundError as exc:
                 self.review_manager.logger.warning(exc)
 
         if self.review_manager.in_ci_environment():

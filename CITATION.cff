@@ -8,9 +8,9 @@ authors:
   given-names: "Julian"
   orcid: "https://orcid.org/0000-0003-2682-8036"
 title: "CoLRev: An open-source environment for collaborative reviews"
-version: 0.13.0
+version: 0.13.2
 identifiers:
   - type: doi
     value: 10.5281/zenodo.13889524
-date-released: 2024-10-04
+date-released: 2025-01-15
 url: "https://github.com/CoLRev-Environment/colrev"
