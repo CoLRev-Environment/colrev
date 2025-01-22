@@ -22,16 +22,16 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-colrev.sync
+colrev-sync
 ===========
 
-|VERSION| Version: 0.1.0
+|VERSION| Version: 0.2.0
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
 |LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/sync>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev-sync>`_
 
 .. list-table::
    :header-rows: 1
