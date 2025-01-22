@@ -43,11 +43,6 @@ class PlosSearchSource:
 
     _api_url = "http://api.plos.org/"
 
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-    )
-
     def __init__(
         self,
         *,
