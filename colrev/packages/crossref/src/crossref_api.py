@@ -75,7 +75,6 @@ class HTTPRequest:
         )
 
     # pylint: disable=too-many-arguments
-    # pylint: disable=too-many-positional-arguments
     def retrieve(
         self,
         endpoint: str,
