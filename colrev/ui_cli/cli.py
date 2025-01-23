@@ -3108,7 +3108,57 @@ def undo(
         git_repo.git.reset("--hard", "HEAD~1")
 
 
+def select_format() -> str:
+    questions = [
+        inquirer.List(
+            "format",
+            message="Select the format",
+            choices=["bib", "csv"],
+        )
+    ]
+
+    answers = inquirer.prompt(questions)
+    selected_format = answers.get("format")
+    print(f"You selected: {selected_format}")
+    return selected_format
+
+
 @main.command(help_priority=33)
+@click.argument(
+    "input",
+    type=click.Path(exists=True, readable=True),
+)
+@click.option(
+    "-o",
+    "--format",
+    type=click.Choice(["bib", "csv", "xlsx"], case_sensitive=False),
+    default=None,
+    help="Optional output format (bib, csv, xlsx)",
+)
+@click.pass_context
+def convert(
+    ctx: click.core.Context,
+    input: str,
+    format: str,
+) -> None:
+    """
+    Convert a file to the specified format.
+    """
+    # Example placeholder logic
+    click.echo(f"Converting file: {input}")
+    if format:
+        click.echo(f"Output format: {format}")
+    else:
+        format = select_format()
+
+    import colrev.loader.load_utils
+    from colrev.writer.write_utils import write_file
+
+    records = colrev.loader.load_utils.load(Path(input))
+    write_file(records_dict=records, filename=Path(input).with_suffix(f".{format}"))
+
+
+@main.command(help_priority=34)
 @click.pass_context
 def version(
     ctx: click.core.Context,
