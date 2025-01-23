@@ -345,7 +345,8 @@ class ProsperoSearchSource:
                         "Failed loading results: StaleElementReferenceException"
                     )
 
-                print(f"Current window handle: {driver.window_handles}")
+                if self.logger:
+                    self.logger.info(f"Current window handle: {driver.window_handles}")
 
                 try:
                     WebDriverWait(driver, 3).until(

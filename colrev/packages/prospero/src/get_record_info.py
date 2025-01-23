@@ -27,23 +27,23 @@ def get_record_info(
 
         registered_date = tds[1].text.strip().split("/")
         registered_date = registered_date[-1]
-        title = tds[2].text.strip()
+        """title = tds[2].text.strip()"""
         review_status = tds[4].text.strip()
 
         registered_date_array.append(registered_date)
-        title_array.append(title)
+        """title_array.append(title)"""
         review_status_array.append(review_status)
 
         checkbox = tds[0].find_element(By.XPATH, ".//input[@type='checkbox']")
         record_id = checkbox.get_attribute("data-checkid")
         record_id_array_pro_page.append(record_id)
     record_id_array.extend(record_id_array_pro_page)
-    print(record_id_array)
-    # for each record, load detail page and extract authors/language
+    """print(record_id_array)"""
+    
     """language_array = []
     authors_array = []
     """
-
+    # for each record, load detail page and extract authors/language
     for x, record_id in enumerate(record_id_array_pro_page):
 
         detail_url = f"https://www.crd.york.ac.uk/prospero/display_record.php?RecordID={record_id}"
@@ -77,18 +77,29 @@ def get_record_info(
                 authors_details = authors_text if authors_text else "N/A"
             except NoSuchElementException:
                 authors_details = "N/A"
+
+            # Extract title without ID number attached at the end
+            try:
+                title_div = driver.find_element(By.ID, "documenttitlestitle")
+                title_text = title_div.text.strip()
+                title_details = title_text if title_text else "N/A"
+            except NoSuchElementException:
+                title_details = "N/A"
         except TimeoutException:
             language_details = "N/A"
             authors_details = "N/A"
-        # make sure pop-up window is closed and switch to original result page
+            title_details = "N/A"
+        # Make sure pop-up window is closed and switch to original result page
         finally:
             assert len(driver.window_handles) > 1
             driver.close()
             driver.switch_to.window(original_search_window)
-            # print(driver.window_handles)
+            """print(driver.window_handles)"""
         language_array.append(language_details)
         authors_array.append(authors_details)
+        title_array.append(title_details)
+        
         print(
-            f"Record {x+1+page_increment*50}: [ID: {record_id}] {title_array[x]}, Language: {language_details}, Authors: {authors_details}",
+            f"Record {x+1+page_increment*50}: [ID: {record_id}] {title_array[x]}",
             flush=True,
         )
