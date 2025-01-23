@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -44,7 +44,7 @@ jobs:
         echo "Documentation built successfully"
 
     - name: Upload Pages Artifact
-      uses: actions/upload-pages-artifact@v1
+      uses: actions/upload-pages-artifact@v3
       with:
         path: ./_build/html
 
