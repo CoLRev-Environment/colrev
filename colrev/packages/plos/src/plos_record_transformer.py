@@ -9,6 +9,7 @@ from datetime import datetime
 
 import colrev.record.record
 import colrev.record.record_prep
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
@@ -20,12 +21,12 @@ def _get_year(*, item: dict) -> str:
 
     if "publication_date" in item:
         return (item["publication_date"]).split("-")[0]
-    else:
-        return ""
+
+    return ""
 
 
 def format_author(author: str) -> str:
-
+    """Convert authors to colrev format"""
     particles = {"de", "del", "la", "van", "von", "der", "di", "da", "le"}
 
     if author.startswith("{{") and author.endswith("}}"):
@@ -85,7 +86,6 @@ def _remove_fields(*, record_dict: dict) -> dict:
         "warning",
         Fields.LANGUAGE,
     ]
-
     record_dict = {
         k: v for k, v in record_dict.items() if k in supported_fields and v != ""
     }
@@ -96,10 +96,11 @@ def _remove_fields(*, record_dict: dict) -> dict:
     ):
         del record_dict[Fields.ABSTRACT]
 
-    if record_dict.get(Fields.VOLUME, ""):
+    if not record_dict.get(Fields.VOLUME, ""):
         del record_dict[Fields.VOLUME]
 
-    if record_dict.get(Fields.NUMBER, ""):
+    if not record_dict.get(Fields.NUMBER, ""):
+
         del record_dict[Fields.NUMBER]
 
     return record_dict
@@ -113,12 +114,12 @@ def _item_to_record(*, item: dict) -> dict:
         item[Fields.TITLE] = str(item["title_display"])
     assert isinstance(item.get("title_display"), str)
 
-    item["journal"] = item.get("journal", "")
+    item[Fields.JOURNAL] = item.get("journal", "")
     assert isinstance(item["journal"], str)
 
-    item[Fields.ENTRYTYPE] = "misc"
+    item[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
     if item.get("article_type", "NA") == "Research Article":
-        item[Fields.ENTRYTYPE] = "article"
+        item[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
         item[Fields.JOURNAL] = item.get("journal", "")
 
     item[Fields.AUTHOR] = _get_authors(item=item)
@@ -154,48 +155,6 @@ def _set_forthcoming(*, record_dict: dict) -> dict:
     return record_dict
 
 
-def _flag_retracts(*, record_dict: dict) -> dict:
-    if "update-to" in record_dict:
-        for update_item in record_dict["update-to"]:
-            if update_item["type"] == "retraction":
-                record_dict[Fields.RETRACTED] = FieldValues.RETRACTED
-    if "(retracted)" in record_dict.get(Fields.TITLE, "").lower():
-        record_dict[Fields.RETRACTED] = FieldValues.RETRACTED
-    return record_dict
-
-
-def _remove_fields(*, record_dict: dict) -> dict:
-    supported_fields = [
-        Fields.ENTRYTYPE,
-        Fields.ID,
-        Fields.TITLE,
-        Fields.AUTHOR,
-        Fields.YEAR,
-        Fields.JOURNAL,
-        Fields.BOOKTITLE,
-        Fields.VOLUME,
-        Fields.NUMBER,
-        Fields.PAGES,
-        Fields.DOI,
-        Fields.FULLTEXT,
-        Fields.ABSTRACT,
-        "warning",
-        Fields.LANGUAGE,
-    ]
-
-    record_dict = {
-        k: v for k, v in record_dict.items() if k in supported_fields and v != ""
-    }
-
-    if (
-        record_dict.get(Fields.ABSTRACT, "")
-        == "No abstract is available for this articled."
-    ):
-        del record_dict[Fields.ABSTRACT]
-
-    return record_dict
-
-
 def _format_fields(*, record_dict: dict) -> dict:
     for key, value in record_dict.items():
         record_dict[key] = str(value).replace("{", "").replace("}", "")
@@ -221,8 +180,6 @@ def _format_fields(*, record_dict: dict) -> dict:
             if value.startswith("Abstract "):
                 value = value[8:]
             value = value.replace("\\", "").replace("\n", "")
-
-            value = value
 
         record_dict[key] = value.lstrip().rstrip()
 

@@ -8,6 +8,7 @@ import urllib.parse
 from datetime import timedelta
 from importlib.metadata import version
 from pathlib import Path
+from time import sleep
 
 import requests
 import requests_cache
@@ -21,6 +22,12 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.packages.plos.src import plos_record_transformer
+
+# pylint: disable=too-many-positional-arguments
+# pylint: disable=too-many-arguments
+
+# pylint: disable=pointless-statement
+# pylint: disable=too-few-public-methods
 
 
 LIMIT = 100  # Number max of request
@@ -91,6 +98,10 @@ class HTTPRequest:
             return requests.head(endpoint, timeout=2)
 
         result = SESSION.get(endpoint, params=data, timeout=10, headers=headers)
+
+        if not skip_throttle:
+            self._update_rate_limits(result.headers)
+            sleep(self._get_throttling_time())
 
         return result
 
@@ -283,6 +294,7 @@ class PlosAPI:
         self.rerun = rerun
 
     def check_availability(self, raise_service_not_available: bool = True) -> None:
+        """Check the availability of the API"""
         try:
             test_rec = {
                 Fields.DOI: "10.17705/1cais.04607",
@@ -505,7 +517,14 @@ class PlosAPI:
         "Get records from PLOS based on a id query"
 
         try:
-            endpoint = Endpoint(self._api_url + "search?q=id:" + doi, email=self.email)
+            endpoint = Endpoint(
+                self._api_url
+                + "search?q=id:"
+                + doi
+                + "&fl=id,abstract,author_display,title_display,"
+                + "journal,publication_date,volume,issue,article_type",
+                email=self.email,
+            )
             plos_query_return = next(iter(endpoint))
             if plos_query_return is None:
                 raise colrev_exceptions.RecordNotFoundInPrepSourceException(

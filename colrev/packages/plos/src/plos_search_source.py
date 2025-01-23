@@ -7,11 +7,11 @@ from pathlib import Path
 
 import requests
 import zope.interface
-from pydantic import Field
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
+import colrev.ops.load
 import colrev.ops.prep
 import colrev.ops.search
 import colrev.ops.search_api_feed
@@ -24,15 +24,17 @@ import colrev.record.record_prep
 import colrev.record.record_similarity
 import colrev.settings
 from colrev.constants import Fields
+from colrev.constants import FieldValues
+from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.plos.src import plos_api
 
-# from future import annotations
 
-
+# pylint: disable=unused-argument
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
 class PlosSearchSource:
+    """PLOS API"""
 
     endpoint = "colrev.plos"
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -84,12 +86,16 @@ class PlosSearchSource:
             comment="",
         )
 
-    def heuristic(self, filename, data):
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
         """Heuristic to identify to which SearchSource a search file belongs (for DB searches)"""
+
+        result = {"confidence": 0.0}
+        return result
 
     @classmethod
     def _select_search_type(
-        self, operation: colrev.ops.search.Search, params_dict: dict
+        cls, operation: colrev.ops.search.Search, params_dict: dict
     ) -> SearchType:
         if "query" in params_dict:
             search_type = SearchType.API
@@ -97,14 +103,14 @@ class PlosSearchSource:
             search_type = SearchType.API
         else:
             search_type = operation.select_search_type(
-                search_types=self.search_types, params=params_dict
+                search_types=cls.search_types, params=params_dict
             )
 
         return search_type
 
     @classmethod
     def add_endpoint(
-        self,
+        cls,
         operation: colrev.ops.search.Search,
         params: str,
     ) -> colrev.settings.SearchSource:
@@ -112,45 +118,47 @@ class PlosSearchSource:
         params:
         - search_file="..." to add a DB search
         """
-
-        search_type = self._select_search_type(operation, params)
+        params_dict: dict = {}
+        search_type = cls._select_search_type(operation, params_dict)
         if search_type == SearchType.API:
             if len(params) == 0:
-                search_source = operation.create_api_source(endpoint=self.endpoint)
+                search_source = operation.create_api_source(endpoint=cls.endpoint)
 
-                search_source.search_parameters["url"] = (
-                    self._api_url
+                search_source.search_parameters[Fields.URL] = (
+                    cls._api_url
                     + "search?"
                     + "q="
                     + search_source.search_parameters.pop("query", "").replace(" ", "+")
+                    + "&fl=id,abstract,author_display,title_display,"
+                    + "journal,publication_date,volume,issue"
                 )
+
                 search_source.search_parameters["version"] = "0.1.0"
 
                 operation.add_source_and_search(search_source)
 
                 return search_source
+
+            if Fields.URL in params_dict:
+                query = {"url": params_dict[Fields.URL]}
             else:
-                if Fields.URL in params:
-                    query = {"url": params[Fields.URL]}
-                else:
-                    query = params
+                query = params_dict
 
-                filename = operation.get_unique_filename(file_path_string="plos")
+            filename = operation.get_unique_filename(file_path_string="plos")
 
-                search_source = colrev.settings.SearchSource(
-                    endpoint="colrev.plos",
-                    filename=filename,
-                    search_type=SearchType.API,
-                    search_parameters=query,
-                    comment="",
-                )
+            search_source = colrev.settings.SearchSource(
+                endpoint="colrev.plos",
+                filename=filename,
+                search_type=SearchType.API,
+                search_parameters=query,
+                comment="",
+            )
 
-                operation.add_source_and_search(search_source)
+            operation.add_source_and_search(search_source)
 
-                return search_source
+            return search_source
 
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
 
     def _prep_plos_record(
         self,
@@ -177,7 +185,21 @@ class PlosSearchSource:
             del record.data[Fields.CITED_BY]
 
         if not prep_main_record:
+            # Skip steps for feed records
             return
+
+        if FieldValues.RETRACTED in record.data.get(
+            "warning", ""
+        ) or FieldValues.RETRACTED in record.data.get(Fields.PRESCREEN_EXCLUSION, ""):
+            record.prescreen_exclude(reason=FieldValues.RETRACTED)
+            record.remove_field(key="warning")
+        else:
+            assert "" != plos_source
+            record.set_masterdata_complete(
+                source=plos_source,
+                masterdata_repository=self.review_manager.settings.is_curated_repo(),
+            )
+            record.set_status(RecordState.md_prepared)
 
     def _restore_url(
         self,
@@ -273,7 +295,8 @@ class PlosSearchSource:
 
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
-    def _validate_api_params(self):
+    # pylint: disable=pointless-statement
+    def _validate_api_params(self) -> None:
         self.search_source
 
     def search(self, rerun: bool) -> None:
@@ -332,7 +355,7 @@ class PlosSearchSource:
     ) -> colrev.record.record.Record:
         try:
             try:
-                retrieved_record = self.api.query_doi(doi=record.data[Field.DOI])
+                retrieved_record = self.api.query_doi(doi=record.data[Fields.DOI])
             except (colrev_exceptions.RecordNotFoundInPrepSourceException, KeyError):
 
                 retrieved_records = self.api.plos_query(
@@ -374,7 +397,7 @@ class PlosSearchSource:
 
                 self._prep_plos_record(
                     record=record,
-                    default_source=retrieved_record.data[Fields.ORIGIN[0]],
+                    plos_source=retrieved_record.data[Fields.ORIGIN][0],
                 )
 
                 if save_feed:
@@ -405,14 +428,14 @@ class PlosSearchSource:
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.record.Record,
-        save_feed=True,
-        timeout=10,
-    ):
+        save_feed: bool = True,
+        timeout: int = 10,
+    ) -> colrev.record.record.Record:
         """Retrieve masterdata from the SearchSource"""
         # To test the metadata provided for a particular DOI use:
         # https://api.plos.org/search?q=DOI
 
-        if len(record.data.get(Fields.TITLE)) < 5 and Fields.DOI not in record.data:
+        if len(record.data.get(Fields.TITLE, "")) < 5 and Fields.DOI not in record.data:
             return record
 
         if Fields.DOI in record.data:
@@ -434,7 +457,7 @@ class PlosSearchSource:
             raise_service_not_available=(not self.review_manager.force_mode)
         )
 
-    def load(self, load_operation):
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load records from the SearchSource (and convert to .bib)"""
 
         if self.search_source.filename.suffix == ".bib":
