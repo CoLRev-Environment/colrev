@@ -32,6 +32,7 @@ from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import IDPattern
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
 
@@ -3155,6 +3156,16 @@ def convert(
     from colrev.writer.write_utils import write_file
 
     records = colrev.loader.load_utils.load(Path(input))
+    if Path(input).suffix == ".md":  # or generate_ids flag
+        print("Generating IDs")
+        id_setter = colrev.record.record_id_setter.IDSetter(
+            id_pattern=IDPattern.three_authors_year,
+            skip_local_index=True,
+        )
+        records = id_setter.set_ids(
+            records=records,
+        )
+
     write_file(records_dict=records, filename=Path(input).with_suffix(f".{format}"))
 
 
