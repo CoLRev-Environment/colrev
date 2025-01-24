@@ -344,8 +344,10 @@ class ProsperoSearchSource:
                 except Exception:  # do not use bare except
                     logger.error("Failed to navigate to next page.")
                 finally:
-                    start_index += 1
+                    if self.review_manager:
+                        self.review_manager.logger.info(f"Data from page {page_index} retrieved.")
                     print("Finished retrieving data from current result page.")
+                    start_index += 1
 
             print("All records displayed and retrieved.", flush=True)
 
