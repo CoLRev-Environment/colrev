@@ -1,3 +1,4 @@
+"""Module providing a function that gets individual information of records"""
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -19,7 +20,7 @@ def get_record_info(
     original_search_window: str,
     page_increment: int,
 ) -> None:
-
+    """Retrieves the ID, registered date, title, review status, language and authors of a record"""
     record_id_array_pro_page = []
 
     for i, record in enumerate(records):
@@ -27,22 +28,15 @@ def get_record_info(
 
         registered_date = tds[1].text.strip().split("/")
         registered_date = registered_date[-1]
-        """title = tds[2].text.strip()"""
         review_status = tds[4].text.strip()
 
         registered_date_array.append(registered_date)
-        """title_array.append(title)"""
         review_status_array.append(review_status)
 
         checkbox = tds[0].find_element(By.XPATH, ".//input[@type='checkbox']")
         record_id = checkbox.get_attribute("data-checkid")
         record_id_array_pro_page.append(record_id)
     record_id_array.extend(record_id_array_pro_page)
-    """print(record_id_array)"""
-    
-    """language_array = []
-    authors_array = []
-    """
     # for each record, load detail page and extract authors/language
     for x, record_id in enumerate(record_id_array_pro_page):
 
@@ -94,11 +88,10 @@ def get_record_info(
             assert len(driver.window_handles) > 1
             driver.close()
             driver.switch_to.window(original_search_window)
-            """print(driver.window_handles)"""
         language_array.append(language_details)
         authors_array.append(authors_details)
         title_array.append(title_details)
-        
+
         print(
             f"Record {x+1+page_increment*50}: [ID: {record_id}] {title_array[x]}",
             flush=True,

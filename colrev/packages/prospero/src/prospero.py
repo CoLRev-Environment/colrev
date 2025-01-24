@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""SearchSource: PROSPERO"""
 from __future__ import annotations
 
 import logging
@@ -13,6 +14,7 @@ from pydantic import Field
 from selenium import webdriver
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -32,6 +34,7 @@ from colrev.constants import SearchType
 from colrev.ops.search import Search
 from colrev.packages.prospero.src.get_record_info import get_record_info
 from colrev.review_manager import ReviewManager
+from colrev.settings import SearchSource
 
 # We keep only one "SearchType" import to avoid redefinition:
 # from colrev.settings import SearchType  # <-- REMOVED to avoid flake8 F811 redefinition
@@ -58,8 +61,8 @@ class ProsperoSearchSource:
         source_operation: typing.Optional[colrev.process.operation.Operation] = None,
         settings: typing.Optional[dict] = None,
     ) -> None:
-        print(settings)  # Debug print (shows what's passed in)
         """Initialize the ProsperoSearchSource plugin."""
+        print(settings)  # Debug print (shows what's passed in)
 
         # We ensure self.operation can be None
         self.operation: typing.Optional[colrev.process.operation.Operation] = None
@@ -85,17 +88,15 @@ class ProsperoSearchSource:
         """Retrieve and configure the search source based on provided settings."""
         if settings:
             return self.settings_class(**settings)
-        else:
-            from colrev.settings import SearchSource
 
-            fallback_filename = Path("data/search/prospero.bib")
-            return SearchSource(
-                endpoint="colrev.prospero",
-                filename=fallback_filename,
-                search_type=SearchType.API,
-                search_parameters={},
-                comment="fallback search_source",
-            )
+        fallback_filename = Path("data/search/prospero.bib")
+        return SearchSource(
+            endpoint="colrev.prospero",
+            filename=fallback_filename,
+            search_type=SearchType.API,
+            search_parameters={},
+            comment="fallback search_source",
+        )
 
     @classmethod
     def add_endpoint(
@@ -110,10 +111,9 @@ class ProsperoSearchSource:
             search_source.search_parameters["version"] = "0.1.0"
             operation.add_source_and_search(search_source)
             return search_source
-        else:
-            # "params" is a str, so we cannot do params[Fields.URL].
-            # Instead, we interpret it as "query".
-            query = {"query": params}
+        # "params" is a str, so we cannot do params[Fields.URL].
+        # Instead, we interpret it as "query".
+        query = {"query": params}
 
         filename = operation.get_unique_filename(file_path_string="prospero_results")
 
@@ -128,7 +128,7 @@ class ProsperoSearchSource:
         return new_search_source
 
     @classmethod
-    def heuristic(cls, filename: Path, data: str) -> dict:
+    def heuristic(cls, data: str) -> dict:
         """Source heuristic for Prospero"""
         result = {"confidence_level": 0.1}
         link_occurrences = data.count(
@@ -157,7 +157,7 @@ class ProsperoSearchSource:
                 f"not {self.search_source.search_type}"
             )
         if self.logger:
-            self.logger.debug(f"Validate SearchSource {self.search_source.filename}")
+            self.logger.debug("Validate SearchSource %s", self.search_source.filename)
 
     def get_search_word(self) -> str:
         """
@@ -171,13 +171,13 @@ class ProsperoSearchSource:
             self.search_word = self.search_source.search_parameters["query"]
             if self.logger:
                 self.logger.debug(
-                    f"Using query from search_parameters: {self.search_word}"
+                    "Using query from search_parameters: %s", self.search_word
                 )
         else:
             user_input = input("Enter your search query (default: cancer1): ").strip()
             self.search_word = user_input if user_input else "cancer1"
             if self.logger:
-                self.logger.debug(f"Using user-input query: {self.search_word}")
+                self.logger.debug("Using user-input query: %s", self.search_word)
 
         # Make sure we return a string
         if self.search_word is None:
@@ -232,10 +232,10 @@ class ProsperoSearchSource:
 
         try:
             driver = webdriver.Chrome(options=chrome_options)
-        except Exception as e:
+        except WebDriverException as e:
             print(f"Error initializing WebDriver: {e}")
             if self.logger:
-                self.logger.error(f"WebDriver initialization failed: {e}")
+                self.logger.error("WebDriver initialization failed: %s", e)
             return
 
         record_id_array: list[str] = []
@@ -253,7 +253,7 @@ class ProsperoSearchSource:
             search_word = self.get_search_word()
             print(f"Using query: {search_word}")
             if self.logger:
-                self.logger.info(f"Prospero search with query: {search_word}")
+                self.logger.info("Prospero search with query: %s", search_word)
 
             search_bar = driver.find_element(By.ID, "txtSearch")
             search_bar.clear()
@@ -280,7 +280,7 @@ class ProsperoSearchSource:
             )
             print(f"Found {hit_count} record(s) for {search_word}")
             if self.logger:
-                self.logger.info(f"Found {hit_count} record(s) for '{search_word}'.")
+                self.logger.info("Found %s record(s) for %s.", hit_count, search_word)
 
             if hit_count == 0:
                 print("No results found for this query.")
@@ -288,8 +288,7 @@ class ProsperoSearchSource:
                     self.logger.info("No records found.")
                 driver.quit()
                 return
-            else:
-                page_count = math.ceil(hit_count / 50)
+            page_count = math.ceil(hit_count / 50)
 
             start_index = 1
             while start_index <= page_count:
@@ -332,7 +331,7 @@ class ProsperoSearchSource:
                     )
 
                 if self.logger:
-                    self.logger.info(f"Current window handle: {driver.window_handles}")
+                    self.logger.info("Current window handle: %s", driver.window_handles)
 
                 try:
                     WebDriverWait(driver, 3).until(
@@ -341,11 +340,13 @@ class ProsperoSearchSource:
                         )
                     ).click()
                     time.sleep(3)
-                except Exception:  # do not use bare except
-                    logger.error("Failed to navigate to next page.")
+                except WebDriverException as e:
+                    logger.error("Failed to navigate to next page. %s", e)
                 finally:
                     if self.review_manager:
-                        self.review_manager.logger.info(f"Data from page {page_index} retrieved.")
+                        self.review_manager.logger.info(
+                            "Data from page %s retrieved.", page_index
+                        )
                     print("Finished retrieving data from current result page.")
                     start_index += 1
 
@@ -389,7 +390,7 @@ class ProsperoSearchSource:
     ) -> None:
         """Empty method as requested."""
 
-    def prepare(self, record: dict, source: dict) -> None:
+    def prepare(self, record: dict) -> None:
         """Map fields to standardized fields."""
         field_mapping = {
             "title": "article_title",
@@ -431,6 +432,8 @@ if __name__ == "__main__":
     from colrev.exceptions import RepoSetupError
 
     class MockOperation(colrev.process.operation.Operation):
+        "Mock Operation"
+
         def __init__(self) -> None:
             try:
                 self.review_manager: typing.Any = MagicMock(spec=ReviewManager)
