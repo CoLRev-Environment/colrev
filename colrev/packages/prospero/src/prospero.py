@@ -447,6 +447,8 @@ if __name__ == "__main__":
                 )
                 handler.setFormatter(formatter)
                 self.review_manager.logger.addHandler(handler)
+                self.logger: typing.Optional[logging.Logger] = None
+
                 self.logger = self.review_manager.logger
                 self.review_manager.logger.info(
                     "Initialized mock operation for ProsperoSearchSource demo."
