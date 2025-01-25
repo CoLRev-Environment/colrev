@@ -251,6 +251,12 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.plos",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "TODO (:doc:`instructions </manual/packages/colrev.plos>`)",
+            "search_types": []
+        },
+        {
             "package_endpoint_identifier": "colrev.psycinfo",
             "status": "|EXPERIMENTAL|",
             "short_description": "PsycINFO (:doc:`instructions </manual/packages/colrev.psycinfo>`)",

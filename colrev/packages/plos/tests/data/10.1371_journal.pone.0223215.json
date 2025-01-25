@@ -1,0 +1,24 @@
+{
+    "response":{"numFound":1,"start":0,"maxScore":14.571443,"docs":[
+        {
+          "id":"10.1371/journal.pone.0223215",
+          "journal":"PLOS ONE",
+          "eissn":"1932-6203",
+          "publication_date":"2019-10-16T00:00:00Z",
+          "volume":"14",
+          "issue":"10",
+          "article_type":"Research Article",
+          "author_display":["Masaki Kodaira",
+            "Mitsuaki Sawano",
+            "Toshiki Kuno",
+            "Yohei Numasawa",
+            "Shigetaka Noma",
+            "Masahiro Suzuki",
+            "Shohei Imaeda",
+            "Ikuko Ueda",
+            "Keiichi Fukuda",
+            "Shun Kohsaka"],
+          "abstract":["Background: Extra-cardiac vascular diseases (ECVDs), such as cerebrovascular disease (CVD) or peripheral arterial disease (PAD), are frequently observed among patients with acute coronary syndrome (ACS). However, it is not clear how these conditions affect patient outcomes in the era of transradial coronary intervention (TRI). Methods and results: Among 7,980 patients with ACS whose data were extracted from the multicenter Japanese percutaneous coronary intervention (PCI) registry between August 2008 and March 2017, 888 (11.1%) had one concurrent ECVD (either PAD [345 patients: 4.3%] or CVD [543 patients; 6.8%]), while 87 patients (1.1%) had both PAD and CVD. Overall, the presence of ECVD was associated with a higher risk of mortality (odds ratio [OR]: 1.728; 95% confidence interval [CI]: 1.183–2.524) and bleeding complications (OR: 1.430; 95% CI: 1.028–2.004). There was evidence of interaction between ECVD severity and procedural access site on bleeding complication on the additive scale (relative excess risk due to interaction: 0.669, 95% CI: -0.563–1.900) and on the multiplicative scale (OR: 2.105; 95% CI: 1.075–4.122). While the incidence of death among patients with ECVD remained constant during the study period, bleeding complications among patients with ECVD rapidly decreased from 2015 to 2017, in association with the increasing number of TRI. Conclusions: Overall, the presence of ECVD was a risk factor for adverse outcomes after PCI for ACS, both mortality and bleeding complications. In the most recent years, the incidence of bleeding complications among patients with ECVD decreased significantly coinciding with the rapid increase of TRI. "],
+          "title_display":"Outcomes of acute coronary syndrome patients with concurrent extra-cardiac vascular disease in the era of transradial coronary intervention: A retrospective multicenter cohort study",
+          "score":14.571443}]
+    }}
