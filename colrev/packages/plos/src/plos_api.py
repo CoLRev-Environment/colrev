@@ -522,7 +522,7 @@ class PlosAPI:
                 + "search?q=id:"
                 + doi
                 + "&fl=id,abstract,author_display,title_display,"
-                + "journal,publication_date,volume,issue,article_type",
+                + "journal,publication_date,volume,issue",
                 email=self.email,
             )
             plos_query_return = next(iter(endpoint))
