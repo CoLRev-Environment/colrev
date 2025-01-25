@@ -290,27 +290,36 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/167312265?v=4",
       "profile": "https://github.com/pmao0907",
       "contributions": [
-            "code"
-          ]
-      },
-      {
+        "code"
+      ]
+    },
+    {
       "login": "MingxinJiang",
       "name": "MingxinJiang",
       "avatar_url": "https://avatars.githubusercontent.com/u/132772605?v=4",
       "profile": "https://github.com/MingxinJiang",
       "contributions": [
-            "code"
-          ]
-      },
-      {
+        "code"
+      ]
+    },
+    {
       "login": "JohannesDiel",
       "name": "JohannesDiel",
       "avatar_url": "https://avatars.githubusercontent.com/u/167763043?v=4",
       "profile": "https://github.com/JohannesDiel",
       "contributions": [
-            "code"
-          ]
-      }
+        "code"
+      ]
+    },
+    {
+      "login": "julialopezmarti",
+      "name": "julialopezmarti",
+      "avatar_url": "https://avatars.githubusercontent.com/u/185966942?v=4",
+      "profile": "https://github.com/julialopezmarti",
+      "contributions": [
+        "code"
+      ]
+    }
   ],
   "contributorsPerLine": 7,
   "skipCi": true,
