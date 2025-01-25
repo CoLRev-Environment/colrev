@@ -102,7 +102,7 @@ class ProsperoSearchSource:
         """Retrieve and configure the search source based on provided settings."""
         if settings:
             return self.settings_class(**settings)
-
+        # pylint: disable=colrev-missed-constant-usage
         fallback_filename = Path("data/search/prospero.bib")
         return SearchSource(
             endpoint="colrev.prospero",
@@ -128,7 +128,7 @@ class ProsperoSearchSource:
 
         query = {"query": params}
         filename = operation.get_unique_filename(file_path_string="prospero_results")
-
+        # pylint: disable=unused-argument
         new_search_source = SearchSource(
             endpoint=cls.endpoint,
             filename=filename,
