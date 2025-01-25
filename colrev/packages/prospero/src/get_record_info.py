@@ -22,7 +22,7 @@ def get_record_info(
 ) -> None:
     """Retrieves the ID, registered date, title, review status, language and authors of a record"""
     record_id_array_pro_page = []
-
+    # pylint: disable=unused-variable
     for i, record in enumerate(records):
         tds = record.find_elements(By.XPATH, "./td")
 
