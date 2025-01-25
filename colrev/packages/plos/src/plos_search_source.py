@@ -39,7 +39,7 @@ class PlosSearchSource:
     endpoint = "colrev.plos"
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = Fields.DOI
-    search_types = [SearchType.API, SearchType.TOC, SearchType.MD]
+    search_types = [SearchType.API, SearchType.MD]
     heuristic_status = SearchSourceHeuristicStatus.oni
 
     _api_url = "http://api.plos.org/"
