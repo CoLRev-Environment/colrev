@@ -150,6 +150,7 @@ class Search(colrev.process.operation.Operation):
 
     def select_search_type(self, *, search_types: list, params: dict) -> SearchType:
         """Select the SearchType (interactively if neccessary)"""
+
         if Fields.URL in params:
             return SearchType.API
         if "search_file" in params:
