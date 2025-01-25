@@ -128,7 +128,7 @@ class ProsperoSearchSource:
         return new_search_source
 
     @classmethod
-    def heuristic(cls, data: str) -> dict:
+    def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Prospero"""
         result = {"confidence_level": 0.1}
         link_occurrences = data.count(
@@ -390,7 +390,7 @@ class ProsperoSearchSource:
     ) -> None:
         """Empty method as requested."""
 
-    def prepare(self, record: dict) -> None:
+    def prepare(self, record: dict, source: dict) -> None:
         """Map fields to standardized fields."""
         field_mapping = {
             "title": "article_title",
