@@ -2,9 +2,7 @@
 """Plos API"""
 import contextlib
 import datetime
-import re
 import typing
-import urllib.parse
 from datetime import timedelta
 from importlib.metadata import version
 from pathlib import Path
@@ -26,7 +24,6 @@ from colrev.packages.plos.src import plos_record_transformer
 # pylint: disable=too-many-positional-arguments
 # pylint: disable=too-many-arguments
 
-# pylint: disable=pointless-statement
 # pylint: disable=too-few-public-methods
 
 
@@ -293,39 +290,6 @@ class PlosAPI:
         )
         self.rerun = rerun
 
-    def check_availability(self, raise_service_not_available: bool = True) -> None:
-        """Check the availability of the API"""
-        try:
-            test_rec = {
-                Fields.DOI: "10.17705/1cais.04607",
-                Fields.AUTHOR: "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
-                "and Paré, Guy",
-                Fields.TITLE: "A Knowledge Development Perspective on Literature Reviews: "
-                "Validation of a new Typology in the IS Field",
-                Fields.ID: "SchryenEtAl2021",
-                Fields.JOURNAL: "Communications of the Association for Information Systems",
-                Fields.ENTRYTYPE: "article",
-            }
-
-            returned_record = self.plos_query(
-                record_input=colrev.record.record_prep.PrepRecord(test_rec),
-                jour_vol_iss_list=False,
-            )[0]
-
-            if 0 != len(returned_record.data):
-                assert returned_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
-                assert returned_record[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
-            else:
-                if raise_service_not_available:
-                    raise colrev_exceptions.ServiceNotAvailableException(
-                        self._availability_exception_message
-                    )
-        except (requests.exceptions.RequestException, IndexError) as exc:
-            if raise_service_not_available:
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    self._availability_exception_message
-                ) from exc
-
     def get_url(self) -> str:
         "Get the url from the Plos API"
 
@@ -361,61 +325,6 @@ class PlosAPI:
         endpoint = Endpoint(self.get_url(), email=self.email)
         return endpoint.get_nr()
 
-    def _create_query_url(
-        self, *, record: colrev.record.record.Record, jour_vol_iss_list: bool
-    ) -> str:
-        if jour_vol_iss_list:
-            if not all(
-                x in record.data for x in [Fields.JOURNAL, Fields.VOLUME, Fields.NUMBER]
-            ):
-                raise colrev_exceptions.NotEnoughDataToIdentifyException
-
-            params = {}
-            container_title = re.sub(r"[\W]+", " ", record.data[Fields.JOURNAL])
-            params["query.cointainer-title"] = container_title.replace("_", " ")
-
-            query_field = ""
-            if Fields.VOLUME in record.data:
-                query_field = record.data[Fields.VOLUME]
-            if Fields.NUMBER in record.data:
-                query_field = query_field + "+" + record.data[Fields.NUMBER]
-            params["query"] = query_field
-
-        else:
-            if Fields.TITLE not in record.data:
-                raise colrev_exceptions.NotEnoughDataToIdentifyException()
-
-            params = {}
-            if not isinstance(record.data.get(Fields.YEAR, ""), str) or not isinstance(
-                record.data.get(Fields.TITLE, ""), str
-            ):
-                raise AssertionError
-
-            bibl = (
-                record.data[Fields.TITLE].replace("-", "_")
-                + " "
-                + record.data.get(Fields.YEAR, "")
-            )
-            bibl = re.sub(r"[\W]+", "", bibl.replace(" ", "_"))
-            params["query.bibliographic"] = bibl.replace("_", " ").rstrip("+")
-
-            container_title = record.get_container_title()
-            if "." not in container_title:
-                container_title = container_title.replace(" ", "_")
-                container_title = re.sub(r"[\W]+", "", container_title)
-                params["query.container-title"] = container_title.replace("_", " ")
-
-            author_last_names = [
-                x.split(",")[0]
-                for x in record.data.get(Fields.AUTHOR, "").split(" and ")
-            ]
-            author_string = " ".join(author_last_names)
-            author_string = re.sub(r"[\W]+", "", author_string.replace(" ", "_"))
-            params["query.author"] = author_string.replace("_", " ")
-
-        url = self._api_url + "search?" + urllib.parse.urlencode(params)
-        return url
-
     def _get_similarity(
         self, *, record: colrev.record.record.Record, retrieved_record_dict: dict
     ) -> float:
@@ -436,66 +345,6 @@ class PlosAPI:
 
         similarity = sum(similarities[g] * weights[g] for g in range(len(similarities)))
         return similarity
-
-    def plos_query(
-        self,
-        *,
-        record_input: colrev.record.record.Record,
-        jour_vol_iss_list: bool = False,
-    ) -> list:
-        "Retrieve records from PLOS based on a query"
-
-        record = record_input.copy_prep_rec()
-        record_list, most_similar, most_similar_record = [], 0.0, {}
-
-        url = self._create_query_url(record=record, jour_vol_iss_list=jour_vol_iss_list)
-        endpoint = Endpoint(url, email=self.email)
-
-        if jour_vol_iss_list:
-            endpoint.request_params["rows"] = "50"
-        else:
-            endpoint.request_params["rows"] = "15"
-
-        counter = 0
-        while True:
-            try:
-                item = next(iter(endpoint), None)
-            except requests.exceptions.RequestException as exc:
-                raise colrev_exceptions.ServiceNotAvailableException("*****") from exc
-
-            if item is None:
-                break
-
-            try:
-                retrieved_record = plos_record_transformer.json_to_record(item=item)
-                similarity = self._get_similarity(
-                    record=record, retrieved_record_dict=retrieved_record.data
-                )
-
-                if jour_vol_iss_list:
-                    record_list.append(retrieved_record)
-                elif most_similar < similarity:
-                    most_similar = similarity
-                    most_similar_record = retrieved_record.get_data()
-            except colrev_exceptions.RecordNotParsableException:
-                pass
-
-            counter += 1
-
-            # https://api.plos.org/solr/faq/
-            # PLOS search API request
-            if jour_vol_iss_list and counter > 100:
-                break
-            if not jour_vol_iss_list and counter > 5:
-                break
-
-        if not jour_vol_iss_list:
-            if most_similar_record:
-                record_list = [
-                    colrev.record.record_prep.PrepRecord(most_similar_record)
-                ]
-
-        return record_list
 
     def get_records(self) -> typing.Iterator[colrev.record.record.Record]:
         "Get records from PLOS based on the parameters"

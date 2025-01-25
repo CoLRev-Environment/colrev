@@ -5,7 +5,6 @@ import typing
 from multiprocessing import Lock
 from pathlib import Path
 
-import requests
 import zope.interface
 
 import colrev.env.language_service
@@ -39,7 +38,7 @@ class PlosSearchSource:
     endpoint = "colrev.plos"
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = Fields.DOI
-    search_types = [SearchType.API, SearchType.MD]
+    search_types = [SearchType.API]
     heuristic_status = SearchSourceHeuristicStatus.oni
 
     _api_url = "http://api.plos.org/"
@@ -68,23 +67,24 @@ class PlosSearchSource:
             # plos as a search_source
             return self.settings_class(**settings)
 
-        # plos as an md-prep source
-        plos_md_filename = Path("data/search/md_plos.bib")
-        plos_md_source_l = [
-            s
-            for s in self.review_manager.settings.sources
-            if s.filename == plos_md_filename
-        ]
-        if plos_md_source_l:
-            return plos_md_source_l[0]
+        raise NotImplementedError
+        # # plos as an .-prep source
+        # plos_md_filename = Path("data/search/md_plos.bib")
+        # plos_md_source_l = [
+        #     s
+        #     for s in self.review_manager.settings.sources
+        #     if s.filename == plos_md_filename
+        # ]
+        # if plos_md_source_l:
+        #     return plos_md_source_l[0]
 
-        return colrev.settings.SearchSource(
-            endpoint="colrev.plos",
-            filename=plos_md_filename,
-            search_type=SearchType.MD,
-            search_parameters={},
-            comment="",
-        )
+        # return colrev.settings.SearchSource(
+        #     endpoint="colrev.plos",
+        #     filename=plos_md_filename,
+        #     search_type=SearchType.MD,
+        #     search_parameters={},
+        #     comment="",
+        # )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -310,152 +310,13 @@ class PlosSearchSource:
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type in [
-            SearchType.API,
-            SearchType.TOC,
-        ]:
-
+        if self.search_source.search_type == SearchType.API:
             self._run_api_search(
                 plos_feed=plos_feed,
                 rerun=rerun,
             )
-
-        if self.search_source.search_type == SearchType.API:
-            pass
-
-        elif self.search_source.search_type == SearchType.MD:
-            pass
         else:
             raise NotImplementedError
-
-    def _check_doi_masterdata(
-        self, record: colrev.record.record.Record
-    ) -> colrev.record.record.Record:
-        try:
-            retrieved_record = self.api.query_doi(doi=record.data[Fields.DOI])
-            if not colrev.record.record_similarity.matches(record, retrieved_record):
-                record.remove_field(key=Fields.DOI)
-
-        except (
-            requests.exceptions.RequestException,
-            OSError,
-            IndexError,
-            colrev_exceptions.RecordNotFoundInPrepSourceException,
-            colrev_exceptions.RecordNotParsableException,
-        ):
-            pass
-
-        return record
-
-    def _get_masterdata_record(
-        self,
-        prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.record.Record,
-        save_feed: bool,
-    ) -> colrev.record.record.Record:
-        try:
-            try:
-                retrieved_record = self.api.query_doi(doi=record.data[Fields.DOI])
-            except (colrev_exceptions.RecordNotFoundInPrepSourceException, KeyError):
-
-                retrieved_records = self.api.plos_query(
-                    record_input=record, jour_vol_iss_list=False
-                )
-                retrieved_record = retrieved_records.pop()
-
-                retries = 0
-                while (
-                    not retrieved_record
-                    and retries < prep_operation.max_retries_on_error
-                ):
-                    retries += 1
-
-                    retrieved_records = self.api.plos_query(
-                        record_input=record, jour_vol_iss_list=False
-                    )
-                    retrieved_record = retrieved_records.pop()
-
-            if not colrev.record.record_similarity.matches(record, retrieved_record):
-                return record
-
-            try:
-                self.plos_lock.acquire(timeout=120)
-
-                plos_feed = self.search_source.get_api_feed(
-                    review_manager=self.review_manager,
-                    source_identifier=self.source_identifier,
-                    update_only=False,
-                    prep_mode=True,
-                )
-
-                plos_feed.add_update_record(retrieved_record)
-
-                record.merge(
-                    retrieved_record,
-                    default_source=retrieved_record.data[Fields.ORIGIN][0],
-                )
-
-                self._prep_plos_record(
-                    record=record,
-                    plos_source=retrieved_record.data[Fields.ORIGIN][0],
-                )
-
-                if save_feed:
-                    plos_feed.save()
-
-            except colrev_exceptions.NotFeedIdentifiableException:
-                pass
-            finally:
-                try:
-                    self.plos_lock.release()
-                except ValueError:
-                    pass
-
-            return record
-        except (
-            colrev_exceptions.ServiceNotAvailableException,
-            OSError,
-            IndexError,
-            colrev_exceptions.RecordNotFoundInPrepSourceException,
-            colrev_exceptions.RecordNotParsableException,
-        ) as exc:
-            if prep_operation.review_manager.verbose_mode:
-                print(exc)
-
-        return record
-
-    def prep_link_md(
-        self,
-        prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.record.Record,
-        save_feed: bool = True,
-        timeout: int = 10,
-    ) -> colrev.record.record.Record:
-        """Retrieve masterdata from the SearchSource"""
-        # To test the metadata provided for a particular DOI use:
-        # https://api.plos.org/search?q=DOI
-
-        if len(record.data.get(Fields.TITLE, "")) < 5 and Fields.DOI not in record.data:
-            return record
-
-        if Fields.DOI in record.data:
-            record = self._check_doi_masterdata(record=record)
-
-        record = self._get_masterdata_record(
-            prep_operation=prep_operation,
-            record=record,
-            save_feed=save_feed,
-        )
-
-        return record
-
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
-        """Check status (availability) of the Plos API"""
-        self.api.check_availability(
-            raise_service_not_available=(not self.review_manager.force_mode)
-        )
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load records from the SearchSource (and convert to .bib)"""
@@ -487,4 +348,15 @@ class PlosSearchSource:
                 source=source_item[0],
                 masterdata_repository=self.review_manager.settings.is_curated_masterdata_repo(),
             )
+        return record
+
+    def prep_link_md(
+        self,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.record.Record,
+        save_feed: bool = True,
+        timeout: int = 30,
+    ) -> colrev.record.record.Record:
+        """Retrieve masterdata from Plos based on similarity with the record provided"""
+
         return record
