@@ -2,26 +2,13 @@
 """SearchSource: PROSPERO
 
 A CoLRev SearchSource plugin to scrape and import records from PROSPERO.
-
-Pre-commit fixes:
-1) # type: cast(...) to provide Mypy with the correct type for fallback managers.
-2) We define review_manager once at the end (Mypy doesn't see multiple re-definitions).
-3) # pylint: disable=unused-argument for load() because it's part of the interface.
-4) Black auto-formats on commit (line length, etc.).
-5) reorder-python-imports automatically sorts imports.
-6) autoflake removes unused imports if they appear.
-7) We pass a fallback typed manager if no source_operation is provided to satisfy Mypy.
-8) We do not assign None to review_manager in normal flow to avoid Mypy conflicts.
-
 """
 from __future__ import annotations
 
-import logging
 import math
 import time
 import typing
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import zope.interface
 from pydantic import Field
@@ -48,12 +35,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search import Search
 from colrev.packages.prospero.src.get_record_info import get_record_info
-from colrev.review_manager import ReviewManager
 from colrev.settings import SearchSource
-
-# We disable some Pylint warnings about CoLRev-specific constants and line length
-# and complexity in the big search method:
-# pylint: disable=colrev-missed-constant-usage,line-too-long
 
 
 @zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
@@ -63,7 +45,7 @@ class ProsperoSearchSource:
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.prospero"
     source_identifier = "url"
-    # Instead of using a @property, we define search_types directly in a list
+
     search_types = [SearchType.API]
     heuristic_status = SearchSourceHeuristicStatus.supported
     ci_supported: bool = Field(default=True)
@@ -72,27 +54,16 @@ class ProsperoSearchSource:
     def __init__(
         self,
         *,
-        source_operation: typing.Optional[colrev.process.operation.Operation] = None,
+        source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
     ) -> None:
         """Initialize the ProsperoSearchSource plugin."""
-        print(settings)  # Debug print (shows what's passed in)
 
-        # We ensure self.operation can be None
-        self.operation: typing.Optional[colrev.process.operation.Operation] = None
+        self.search_source = self._get_search_source(settings)
+        self.review_manager = source_operation.review_manager
+        self.operation = source_operation
 
-        if source_operation and settings:
-            self.search_source = self._get_search_source(settings)
-            self.review_manager = source_operation.review_manager
-            self.operation = source_operation
-            self.logger = self.review_manager.logger
-        else:
-            self.search_source = self._get_search_source(settings)
-            fallback_review_manager = MagicMock()
-            fallback_review_manager.logger = logging.getLogger("ProsperoSourceFallback")
-            self.review_manager = fallback_review_manager
-            self.logger = fallback_review_manager.logger
-
+        # TODO: check the following:
         self.search_word: typing.Optional[str] = None
         self.new_records: list[dict] = []
 
@@ -102,7 +73,7 @@ class ProsperoSearchSource:
         """Retrieve and configure the search source based on provided settings."""
         if settings:
             return self.settings_class(**settings)
-        # pylint: disable=colrev-missed-constant-usage
+
         fallback_filename = Path("data/search/prospero.bib")
         return SearchSource(
             endpoint="colrev.prospero",
@@ -128,7 +99,7 @@ class ProsperoSearchSource:
 
         query = {"query": params}
         filename = operation.get_unique_filename(file_path_string="prospero_results")
-        # pylint: disable=unused-argument
+
         new_search_source = SearchSource(
             endpoint=cls.endpoint,
             filename=filename,
@@ -139,12 +110,10 @@ class ProsperoSearchSource:
         operation.add_source_and_search(new_search_source)
         return new_search_source
 
-    # We must accept (filename: Path, data: str) to match the interface EXACTLY.
-    # If we don't need filename, we do "_ = filename".
+    # pylint: disable=unused-argument
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Prospero."""
-        _ = filename  # Unused argument
         result = {"confidence_level": 0.1}
         link_occurrences = data.count(
             "http://www.crd.york.ac.uk/PROSPERO/display_record.asp?"
@@ -171,8 +140,10 @@ class ProsperoSearchSource:
                 f"Prospero search_type must be one of {self.search_types}, "
                 f"not {self.search_source.search_type}"
             )
-        if self.logger:
-            self.logger.debug("Validate SearchSource %s", self.search_source.filename)
+        if self.review_manager.logger:
+            self.review_manager.logger.debug(
+                "Validate SearchSource %s", self.search_source.filename
+            )
 
     def get_search_word(self) -> str:
         """
@@ -184,15 +155,15 @@ class ProsperoSearchSource:
 
         if "query" in (self.search_source.search_parameters or {}):
             self.search_word = self.search_source.search_parameters["query"]
-            if self.logger:
-                self.logger.debug(
-                    "Using query from search_parameters: %s", self.search_word
-                )
+            self.review_manager.logger.debug(
+                "Using query from search_parameters: %s", self.search_word
+            )
         else:
             user_input = input("Enter your search query (default: cancer1): ").strip()
             self.search_word = user_input if user_input else "cancer1"
-            if self.logger:
-                self.logger.debug("Using user-input query: %s", self.search_word)
+            self.review_manager.logger.debug(
+                "Using user-input query: %s", self.search_word
+            )
 
         if self.search_word is None:
             return "cancer1"
@@ -224,7 +195,6 @@ class ProsperoSearchSource:
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     def search(self, rerun: bool) -> None:
         """Scrape Prospero using Selenium, save .bib file with results."""
-        logger = logging.getLogger()
 
         self._validate_source()
 
@@ -235,9 +205,7 @@ class ProsperoSearchSource:
             prep_mode=True,
         )
 
-        if self.logger:
-            self.logger.info("Starting ProsperoSearchSource search...")
-        print("Starting ProsperoSearchSource search...")
+        self.review_manager.logger.info("Starting ProsperoSearchSource search...")
 
         chrome_options = Options()
         chrome_options.add_argument("--no-sandbox")
@@ -249,9 +217,7 @@ class ProsperoSearchSource:
         try:
             driver = webdriver.Chrome(options=chrome_options)
         except WebDriverException as exc:
-            print(f"Error initializing WebDriver: {exc}")
-            if self.logger:
-                self.logger.error("WebDriver initialization failed: %s", exc)
+            self.review_manager.logger.error(f"Error initializing WebDriver: {exc}")
             return
 
         record_id_array: list[str] = []
@@ -267,9 +233,9 @@ class ProsperoSearchSource:
             assert "PROSPERO" in driver.title
 
             search_word = self.get_search_word()
-            print(f"Using query: {search_word}")
-            if self.logger:
-                self.logger.info("Prospero search with query: %s", search_word)
+            self.review_manager.logger.info(
+                "Prospero search with query: %s", search_word
+            )
 
             search_bar = driver.find_element(By.ID, "txtSearch")
             search_bar.clear()
@@ -285,23 +251,19 @@ class ProsperoSearchSource:
                     )
                 )
             except TimeoutException:
-                print("No results found for this query.")
-                if self.logger:
-                    self.logger.warning("No results found for query.")
+                self.review_manager.logger.info("No results found for this query.")
                 driver.quit()
                 return
 
             hit_count = int(
                 driver.find_element(By.XPATH, "//div[@id='hitcountleft']/span[1]").text
             )
-            print(f"Found {hit_count} record(s) for {search_word}")
-            if self.logger:
-                self.logger.info("Found %s record(s) for %s.", hit_count, search_word)
+            self.review_manager.logger.info(
+                f"Found {hit_count} record(s) for {search_word}"
+            )
 
             if hit_count == 0:
-                print("No results found for this query.")
-                if self.logger:
-                    self.logger.info("No records found.")
+                self.review_manager.logger.info("No results found for this query.")
                 driver.quit()
                 return
             page_count = math.ceil(hit_count / 50)
@@ -326,7 +288,7 @@ class ProsperoSearchSource:
                     page_index = driver.find_element(
                         By.XPATH, "//td[@id='pagescount']"
                     ).text
-                print(f"Displaying records on {page_index}")
+                self.review_manager.logger.info(f"Displaying records on {page_index}")
 
                 try:
                     get_record_info(
@@ -342,12 +304,13 @@ class ProsperoSearchSource:
                         page_increment=start_index - 1,
                     )
                 except StaleElementReferenceException:
-                    logger.error(
+                    self.review_manager.logger.error(
                         "Failed loading results: StaleElementReferenceException"
                     )
 
-                if self.logger:
-                    self.logger.info("Current window handle: %s", driver.window_handles)
+                self.review_manager.logger.debug(
+                    "Current window handle: %s", driver.window_handles
+                )
 
                 try:
                     WebDriverWait(driver, 3).until(
@@ -357,16 +320,19 @@ class ProsperoSearchSource:
                     ).click()
                     time.sleep(3)
                 except WebDriverException as e:
-                    logger.error("Failed to navigate to next page. %s", e)
+                    self.review_manager.logger.error(
+                        "Failed to navigate to next page. %s", e
+                    )
                 finally:
-                    if self.review_manager:
-                        self.review_manager.logger.info(
-                            "Data from page %s retrieved.", page_index
-                        )
-                    print("Finished retrieving data from current result page.")
+                    self.review_manager.logger.debug(
+                        "Data from page %s retrieved.", page_index
+                    )
+                    self.review_manager.logger.info(
+                        "Finished retrieving data from current result page."
+                    )
                     start_index += 1
 
-            print("All records displayed and retrieved.", flush=True)
+            self.review_manager.logger.info("All records displayed and retrieved.")
 
             bib_entries: list[dict] = []
             for (
@@ -407,8 +373,6 @@ class ProsperoSearchSource:
 
         self.run_api_search(prospero_feed=prospero_feed, rerun=rerun)
 
-    # 7) The load methods are part of the CoLRev interface;
-    # we do not use load_operation, so we disable Pylint's unused argument warning:
     # pylint: disable=unused-argument
     def prep_link_md(
         self,
@@ -440,11 +404,10 @@ class ProsperoSearchSource:
             "Only .bib loading is implemented for ProsperoSearchSource."
         )
 
-    # We must accept (record: dict, source: dict) to match the interface EXACTLY
+    # pylint: disable=unused-argument
     def prepare(self, record: dict, source: dict) -> None:
         """Map fields to standardized fields for CoLRev (matching interface signature)."""
-        # If we don't need 'source', just ignore it:
-        _ = source
+
         field_mapping = {
             "title": "article_title",
             "registered_date": "registration_date",
@@ -455,44 +418,3 @@ class ProsperoSearchSource:
         for original_field, standard_field in field_mapping.items():
             if original_field in record:
                 record[standard_field] = record.pop(original_field)
-
-
-if __name__ == "__main__":
-    # 8) We keep a simple main for testing:
-    print("Running ProsperoSearchSource in standalone mode...")
-    from colrev.exceptions import RepoSetupError
-
-    # We disable super-init-not-called because we do minimal changes:
-    # pylint: disable=super-init-not-called
-    class MockOperation(colrev.process.operation.Operation):
-        """Mock Operation for standalone usage."""
-
-        def __init__(self) -> None:
-            # Provide a typed fallback manager
-            dummy_manager: ReviewManager = typing.cast(
-                ReviewManager,
-                MagicMock(spec=ReviewManager),
-            )
-            super().__init__(review_manager=dummy_manager, operations_type=None)  # type: ignore
-
-            try:
-                self.review_manager: ReviewManager = dummy_manager  # type: ignore
-                self.logger: typing.Optional[logging.Logger] = typing.cast(
-                    logging.Logger, dummy_manager.logger
-                )
-                if self.logger:
-                    self.logger.info(
-                        "Initialized mock operation for ProsperoSearchSource demo."
-                    )
-            except RepoSetupError as exc:
-                print("RepoSetupError caught:", exc)
-                self.review_manager = typing.cast(ReviewManager, None)
-                self.logger = None
-
-    # 9) We run a quick test in standalone mode:
-    settings_dict: dict[str, typing.Any] = {}
-    source_op = MockOperation()
-    prospero_source = ProsperoSearchSource(
-        source_operation=source_op, settings=settings_dict
-    )
-    prospero_source.search(rerun=False)

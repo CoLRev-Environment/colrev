@@ -10,6 +10,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
+# TODO : must be rewritten
+
+
 # Disable rules for too-many-args/locals/positional-args/statements
 # since we want minimal changes here
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,too-many-statements
