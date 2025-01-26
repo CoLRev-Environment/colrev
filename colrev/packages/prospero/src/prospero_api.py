@@ -24,6 +24,8 @@ from colrev.constants import Fields
 class PROSPEROAPI:
     """PROSPERO API class to extract records from Prospero."""
 
+    URL_PREFIX = "https://www.crd.york.ac.uk/prospero/display_record.php?RecordID="
+
     def __init__(self, search_word: str, logger: logging.Logger) -> None:
 
         self.search_word = search_word
@@ -152,6 +154,7 @@ class PROSPEROAPI:
         registered_date = tds[1].text.strip().split("/")[-1]
         review_status = tds[4].text.strip()
 
+        detail_url = f"{self.URL_PREFIX}{record_id}"
         record_dict = {
             Fields.ENTRYTYPE: "misc",
             Fields.ID: record_id,
@@ -160,15 +163,11 @@ class PROSPEROAPI:
             Fields.TITLE: "N/A",
             "colrev.prospero.registered_date": registered_date,
             "colrev.prospero.status": f"{review_status}",
-            Fields.URL: (
-                "https://www.crd.york.ac.uk/prospero/"
-                f"display_record.php?RecordID={record_id}"
-            ),
+            Fields.URL: detail_url,
             "note": f"PROSPERO registration number: {record_id}",
-            "howpublished": f"\\url{{https://www.crd.york.ac.uk/prospero/display_record.php?RecordID={record_id}}}",
+            "howpublished": f"\\url{{{detail_url}}}",
         }
 
-        detail_url = f"https://www.crd.york.ac.uk/prospero/display_record.php?RecordID={record_id}"
         self.driver.switch_to.new_window("tab")
         self.driver.get(detail_url)
 
