@@ -44,7 +44,8 @@ class ProsperoSearchSource:
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.prospero"
-    source_identifier = "url"
+    # TODO : check
+    source_identifier = Fields.PROSPERO_ID
 
     search_types = [SearchType.API]
     heuristic_status = SearchSourceHeuristicStatus.supported
@@ -114,21 +115,8 @@ class ProsperoSearchSource:
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Prospero."""
-        result = {"confidence_level": 0.1}
-        link_occurrences = data.count(
-            "http://www.crd.york.ac.uk/PROSPERO/display_record.asp?"
-        )
-        entries = data.count("Record #")
-        prospero_occurrences = data.count("DBN:   PROSPERO")
 
-        if link_occurrences == entries:
-            result["confidence_level"] = 1.0
-            return result
-
-        if prospero_occurrences == entries:
-            result["confidence_level"] = 1.0
-            return result
-
+        result = {"confidence": 0.0}
         return result
 
     def _validate_source(self) -> None:
@@ -159,14 +147,13 @@ class ProsperoSearchSource:
                 "Using query from search_parameters: %s", self.search_word
             )
         else:
-            user_input = input("Enter your search query (default: cancer1): ").strip()
-            self.search_word = user_input if user_input else "cancer1"
+            self.search_word = input(
+                "Enter your search query (default: cancer1): "
+            ).strip()
             self.review_manager.logger.debug(
                 "Using user-input query: %s", self.search_word
             )
 
-        if self.search_word is None:
-            return "cancer1"
         return self.search_word
 
     def run_api_search(
@@ -355,7 +342,7 @@ class ProsperoSearchSource:
                     "ID": record_id,
                     "title": title,
                     "author": authors,
-                    "colrev.prospero_id": f"Prospero Registration {record_id}",
+                    Fields.PROSPERO_ID: record_id,
                     "year": registered_date,
                     "language": language,
                     "colrev.prospero_status": f"{status}",
