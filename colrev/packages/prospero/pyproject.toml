@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "colrev.prospero"
+description = "ColRev package for Prospero"
+version = "0.1.0"
+license = "MIT"
+authors = [
+"Ammar Al-Balkhi <ammar.al-balkhi@stud.uni-bamberg.de>",
+"Phuc Tran <tra-thien-phuc.tran@stud.uni-bamberg.de>",
+"Olha Komashevska <olha.komashevska@stud.uni-bamberg.de>"
+]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/"
+
+[[tool.poetry.packages]]
+include = "src"
+
+[tool.poetry.dependencies]
+python = ">=3.9, <4"
+selenium = "^4.27.1"
+
+[tool.colrev]
+colrev_doc_description = "TODO"
+colrev_doc_link = "docs/README.md"
+search_types = ["API"]
+
+[tool.poetry.plugins.colrev]
+search_source ="colrev.packages.prospero.src.prospero_search_source:ProsperoSearchSource"
+
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "cython<3.0"]
+build-backend = "poetry.core.masonry.api"

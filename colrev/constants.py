@@ -190,6 +190,7 @@ class Fields:
     PMCID = "colrev.pubmed.pmcid"
     # https://www.nlm.nih.gov/bsd/mms/medlineelements.html#pmc
     EUROPE_PMC_ID = "colrev.europe_pmc.europe_pmc_id"
+    PROSPERO_ID = "colrev.prospero.id"
 
     GITHUB_VERSION = "colrev.github.version"
     GITHUB_LICENSE = "colrev.github.license"
