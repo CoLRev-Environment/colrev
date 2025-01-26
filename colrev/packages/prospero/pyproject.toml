@@ -23,7 +23,7 @@ colrev_doc_link = "docs/README.md"
 search_types = ["API"]
 
 [tool.poetry.plugins.colrev]
-search_source ="colrev.packages.prospero.src.prospero:ProsperoSearchSource"
+search_source ="colrev.packages.prospero.src.prospero_search_source:ProsperoSearchSource"
 
 
 [build-system]
