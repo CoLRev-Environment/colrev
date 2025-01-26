@@ -79,6 +79,40 @@ class SYNERGYDatasetsSearchSource:
         return result
 
     @classmethod
+    def __select_datset_interactively(cls) -> dict:
+        date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        temp_path = tempfile.gettempdir() / Path(f"{date_now_string}-synergy")
+        temp_path.mkdir()
+        Repo.clone_from(
+            "https://github.com/asreview/synergy-dataset", temp_path, depth=1
+        )
+        data_path = temp_path / Path("datasets")
+        files = data_path.glob("**/*_ids.csv")
+
+        print("https://github.com/asreview/synergy-dataset")
+
+        choices = [f"{f.parent.name}/{f.name}" for f in files]
+        if not choices:
+            print("No datasets found.")
+            raise ValueError
+        questions = [
+            inquirer.List(
+                "dataset",
+                message="Select a dataset:",
+                choices=choices,
+            )
+        ]
+        answers = inquirer.prompt(questions)
+        dataset = answers.get("dataset", None)
+
+        if not dataset:
+            print("No dataset selected.")
+            raise ValueError
+        params_dict = {"dataset": dataset}
+        print(f"Selected dataset: {params_dict}")
+        return params_dict
+
+    @classmethod
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
@@ -94,36 +128,7 @@ class SYNERGYDatasetsSearchSource:
 
         if len(params_dict) == 0:
             operation.review_manager.logger.info("Retrieving available datasets")
-            date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            temp_path = tempfile.gettempdir() / Path(f"{date_now_string}-synergy")
-            temp_path.mkdir()
-            Repo.clone_from(
-                "https://github.com/asreview/synergy-dataset", temp_path, depth=1
-            )
-            data_path = temp_path / Path("datasets")
-            files = data_path.glob("**/*_ids.csv")
-
-            print("https://github.com/asreview/synergy-dataset")
-
-            choices = [f"{f.parent.name}/{f.name}" for f in files]
-            if not choices:
-                print("No datasets found.")
-                raise ValueError
-            questions = [
-                inquirer.List(
-                    "dataset",
-                    message="Select a dataset:",
-                    choices=choices,
-                )
-            ]
-            answers = inquirer.prompt(questions)
-            dataset = answers.get("dataset", None)
-
-            if not dataset:
-                print("No dataset selected.")
-                raise ValueError
-            params_dict = {"dataset": dataset}
-            print(f"Selected dataset: {params_dict}")
+            params_dict = cls.__select_datset_interactively()
 
         assert "dataset" in params_dict
         dataset = params_dict["dataset"]

@@ -1,0 +1,29 @@
+{
+    "response": {
+        "numFound": 1,
+        "start": 0,
+        "maxScore": 14.571443,
+        "docs": [
+            {
+                "id": "10.1371/journal.pone.0252279",
+                "journal": "PLOS ONE",
+                "eissn": "1932-6203",
+                "publication_date": "2021-06-08T00:00:00Z",
+                "article_type": "Research Article",
+                "author_display": [
+                    "John A. Doe",
+                    "Jane B. Smith",
+                    "Alan R. Johnson",
+                    "Sarah T. Clark"
+                ],
+                "abstract": [
+                    "This study investigates the influence of socioeconomic status (SES) on health outcomes in rural populations in the United States. The data collected over a five-year period was analyzed to understand the correlation between SES and common health issues like hypertension, diabetes, and cardiovascular diseases. Our results indicate that lower SES is significantly correlated with poorer health outcomes, with a particular emphasis on the lack of access to healthcare in rural areas."
+                ],
+                "title_display": "The Impact of Socioeconomic Status on Health Outcomes in a Rural Population in the United States",
+                "volume": "16",
+                "issue": "6",
+                "score": 14.571443
+            }
+        ]
+    }
+}

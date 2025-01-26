@@ -83,6 +83,7 @@ Packages
    packages/colrev.osf.rst
    packages/colrev.pdf_backward_search.rst
    packages/colrev.prospero.rst
+   packages/colrev.plos.rst
    packages/colrev.psycinfo.rst
    packages/colrev.pubmed.rst
    packages/colrev.scopus.rst
@@ -171,6 +172,6 @@ Packages
    packages/colrev.structured.rst
 
 
+   packages/colrev-sync.rst
    packages/colrev.doi_org.rst
-   packages/colrev.sync.rst
    packages/colrev.ui_web.rst

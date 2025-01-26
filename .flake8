@@ -8,4 +8,5 @@ per-file-ignores =
     tests/3_built_in/exclude_languages_prep_test.py:E501
     tests/3_built_in/source_specific_load_prep_test.py:E501
     tests/1_env/local_index_test.py:E501
+    colrev/packages/plos/tests/api_search_plos_test.py:E501
 min_python_version = 3.6.2

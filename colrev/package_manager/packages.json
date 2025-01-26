@@ -38,7 +38,7 @@
     "colrev.ocrmypdf": {
         "dev_status": "maturing"
     },
-    "colrev.sync": {
+    "colrev-sync": {
         "dev_status": "experimental"
     },
     "colrev.web_of_science": {
@@ -276,6 +276,9 @@
         "dev_status": "experimental"
     },
     "colrev.prospero": {
+        "dev_status": "experimental"
+    },
+    "colrev.plos": {
         "dev_status": "experimental"
     }
 }

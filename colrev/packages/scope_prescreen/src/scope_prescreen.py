@@ -34,15 +34,15 @@ class ScopePrescreenSettings(
     # pylint: disable=too-many-instance-attributes
 
     endpoint: str
-    ExcludePredatoryJournals: bool
-    TimeScopeFrom: typing.Optional[int]
-    TimeScopeTo: typing.Optional[int]
-    LanguageScope: typing.Optional[list]
-    ExcludeComplementaryMaterials: typing.Optional[bool]
-    OutletInclusionScope: typing.Optional[dict]
-    OutletExclusionScope: typing.Optional[dict]
-    ENTRYTYPEScope: typing.Optional[list]
-    RequireRankedJournals: typing.Optional[list]
+    ExcludePredatoryJournals: typing.Optional[bool] = True
+    TimeScopeFrom: typing.Optional[int] = None
+    TimeScopeTo: typing.Optional[int] = None
+    LanguageScope: typing.Optional[list] = None
+    ExcludeComplementaryMaterials: typing.Optional[bool] = None
+    OutletInclusionScope: typing.Optional[dict] = None
+    OutletExclusionScope: typing.Optional[dict] = None
+    ENTRYTYPEScope: typing.Optional[list] = None
+    RequireRankedJournals: typing.Optional[list] = None
 
     _details = {
         "TimeScopeFrom": {

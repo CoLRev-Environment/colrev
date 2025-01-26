@@ -32,6 +32,7 @@ from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import IDPattern
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
 
@@ -45,7 +46,6 @@ from colrev.constants import ScreenCriterionType
 # pylint: disable=too-many-locals
 # pylint: disable=import-outside-toplevel
 # pylint: disable=too-many-return-statements
-# pylint: disable=too-many-positional-arguments
 
 # Note: autocompletion needs bash/... activation:
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
@@ -3109,7 +3109,67 @@ def undo(
         git_repo.git.reset("--hard", "HEAD~1")
 
 
+def select_format() -> str:
+    questions = [
+        inquirer.List(
+            "format",
+            message="Select the format",
+            choices=["bib", "csv"],
+        )
+    ]
+
+    answers = inquirer.prompt(questions)
+    selected_format = answers.get("format")
+    print(f"You selected: {selected_format}")
+    return selected_format
+
+
 @main.command(help_priority=33)
+@click.argument(
+    "input",
+    type=click.Path(exists=True, readable=True),
+)
+@click.option(
+    "-o",
+    "--format",
+    type=click.Choice(["bib", "csv", "xlsx"], case_sensitive=False),
+    default=None,
+    help="Optional output format (bib, csv, xlsx)",
+)
+@click.pass_context
+def convert(
+    ctx: click.core.Context,
+    input: str,
+    format: str,
+) -> None:
+    """
+    Convert a file to the specified format.
+    """
+    # Example placeholder logic
+    click.echo(f"Converting file: {input}")
+    if format:
+        click.echo(f"Output format: {format}")
+    else:
+        format = select_format()
+
+    import colrev.loader.load_utils
+    from colrev.writer.write_utils import write_file
+
+    records = colrev.loader.load_utils.load(Path(input))
+    if Path(input).suffix == ".md":  # or generate_ids flag
+        print("Generating IDs")
+        id_setter = colrev.record.record_id_setter.IDSetter(
+            id_pattern=IDPattern.three_authors_year,
+            skip_local_index=True,
+        )
+        records = id_setter.set_ids(
+            records=records,
+        )
+
+    write_file(records_dict=records, filename=Path(input).with_suffix(f".{format}"))
+
+
+@main.command(help_priority=34)
 @click.pass_context
 def version(
     ctx: click.core.Context,

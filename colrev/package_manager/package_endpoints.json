@@ -259,6 +259,12 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.plos",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "TODO (:doc:`instructions </manual/packages/colrev.plos>`)",
+            "search_types": []
+        },
+        {
             "package_endpoint_identifier": "colrev.psycinfo",
             "status": "|EXPERIMENTAL|",
             "short_description": "PsycINFO (:doc:`instructions </manual/packages/colrev.psycinfo>`)",
@@ -654,14 +660,14 @@
     ],
     "na": [
         {
+            "package_endpoint_identifier": "colrev-sync",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "Sync (:doc:`instructions </manual/packages/colrev-sync>`)"
+        },
+        {
             "package_endpoint_identifier": "colrev.doi_org",
             "status": "|MATURING|",
             "short_description": "Doi.org (:doc:`instructions </manual/packages/colrev.doi_org>`)"
-        },
-        {
-            "package_endpoint_identifier": "colrev.sync",
-            "status": "|EXPERIMENTAL|",
-            "short_description": "Sync (:doc:`instructions </manual/packages/colrev.sync>`)"
         },
         {
             "package_endpoint_identifier": "colrev.ui_web",
