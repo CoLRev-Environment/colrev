@@ -107,6 +107,14 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.prospero",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "TODO (:doc:`instructions </manual/packages/colrev.prospero>`)",
+            "search_types": [
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.pubmed",
             "status": "|MATURING|",
             "short_description": "Pubmed (:doc:`instructions </manual/packages/colrev.pubmed>`)",

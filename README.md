@@ -18,7 +18,7 @@
 [![Downloads](https://static.pepy.tech/badge/colrev/month)](https://pepy.tech/project/colrev)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7148/badge)](https://bestpractices.coreinfrastructure.org/projects/7148)
 [![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/CoLRev-Environment/colrev/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/CoLRev-Environment/colrev/)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-32-green.svg?style=flat-square)](#contributors)
+[![All Contributors](https://img.shields.io/badge/all_contributors-37-green.svg?style=flat-square)](#contributors)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
 
@@ -165,6 +165,11 @@ For further information, see [tests](tests/readme.md), [changes](CHANGELOG.md), 
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/JohannesDiel"><img src="https://avatars.githubusercontent.com/u/167763043?v=4?s=100" width="100px;" alt="JohannesDiel"/><br /><sub><b>JohannesDiel</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=JohannesDiel" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/julialopezmarti"><img src="https://avatars.githubusercontent.com/u/185966942?v=4?s=100" width="100px;" alt="julialopezmarti"/><br /><sub><b>julialopezmarti</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=julialopezmarti" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/olgagirona"><img src="https://avatars.githubusercontent.com/u/185909829?v=4?s=100" width="100px;" alt="olgagirona"/><br /><sub><b>olgagirona</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=olgagirona" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/komashevska"><img src="https://avatars.githubusercontent.com/u/191916936?v=4?s=100" width="100px;" alt="komashevska"/><br /><sub><b>komashevska</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=komashevska" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/trathienphuc-tran"><img src="https://avatars.githubusercontent.com/u/185779015?v=4?s=100" width="100px;" alt="trathienphuc-tran"/><br /><sub><b>trathienphuc-tran</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=trathienphuc-tran" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ammar-uni"><img src="https://avatars.githubusercontent.com/u/185945385?v=4?s=100" width="100px;" alt="ammar-uni"/><br /><sub><b>ammar-uni</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=ammar-uni" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
