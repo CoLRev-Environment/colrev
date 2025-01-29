@@ -62,6 +62,7 @@ colrev.constants.Fields
       ~Fields.PDF_ID
       ~Fields.PMCID
       ~Fields.PRESCREEN_EXCLUSION
+      ~Fields.PROSPERO_ID
       ~Fields.PUBLISHER
       ~Fields.PUBMED_ID
       ~Fields.REFERENCES
