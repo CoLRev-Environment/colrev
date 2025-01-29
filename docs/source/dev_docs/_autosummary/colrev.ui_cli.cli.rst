@@ -18,6 +18,7 @@ colrev.ui\_cli.cli
       catch_exception
       get_review_manager
       get_search_files
+      select_format
 
 
 
