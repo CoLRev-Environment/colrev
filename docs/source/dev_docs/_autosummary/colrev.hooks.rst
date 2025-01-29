@@ -30,4 +30,3 @@ colrev.hooks
    colrev.hooks.format
    colrev.hooks.report
    colrev.hooks.share
-   colrev.hooks.update
