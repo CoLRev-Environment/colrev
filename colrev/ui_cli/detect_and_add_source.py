@@ -61,13 +61,16 @@ class CLISourceAdder:
                 f"Selected {heuristic_source_dict['source_candidate'].endpoint}"
             )
 
+        candidate: colrev.settings.SearchSource = heuristic_source_dict[
+            "source_candidate"
+        ]
         search_source_class = self.package_manager.get_package_endpoint_class(
             package_type=EndpointType.search_source,
-            package_identifier=heuristic_source_dict["source_candidate"].endpoint,
+            package_identifier=candidate.endpoint,
         )
         endpoint = search_source_class(
             source_operation=self,
-            settings=heuristic_source_dict["source_candidate"].get_dict(),
+            settings=candidate.model_dump(),
         )
 
         params = f"search_file={filename}"
