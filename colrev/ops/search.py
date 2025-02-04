@@ -187,8 +187,11 @@ class Search(colrev.process.operation.Operation):
             "and run the following query:"
         )
         print()
-        print(f"{Colors.ORANGE}{source.get_query()}{Colors.END}")
-        print()
+        try:
+            print(f"{Colors.ORANGE}{source.get_query()}{Colors.END}")
+            print()
+        except KeyError:
+            pass
         print(
             f"- Replace search results in {Colors.ORANGE}"
             + str(source.filename)
