@@ -31,7 +31,7 @@ colrev-sync
 
 |LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev-sync>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev-sync <https://github.com/CoLRev-Environment/colrev-sync>`_
 
 .. list-table::
    :header-rows: 1

@@ -218,7 +218,7 @@ class PackageDoc:
         header_info += f"|LICENSE| License: {self.license}  \n\n"
         if self.repository != "":
             repo_name = self.repository.replace("https://github.com/", "")
-            if "CoLRev-Environment/colrev" in repo_name:
+            if "CoLRev-Environment/colrev/tree" in repo_name:
                 repo_name = "CoLRev-Environment/colrev"
             header_info += (
                 f"|GIT_REPO| Repository: `{repo_name} <{self.repository}>`_ \n\n"
