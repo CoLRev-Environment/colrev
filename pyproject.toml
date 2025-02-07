@@ -54,7 +54,6 @@ lxml = "^5.2.0"                         # required by tei_parser
 pandas = "^2.2"
 openpyxl = "^3.1.2"                     # required by pandas for Excel
 PyYAML = "^6.0.0"
-pybtex = "^0.24.0"                      # internally?
 requests = "^2.32.0"
 requests-cache = "^0.9.6"
 lingua-language-detector = "^2.0.2"

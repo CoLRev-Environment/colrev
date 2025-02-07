@@ -2,7 +2,6 @@
 """Convenience functions to load bib files"""
 from __future__ import annotations
 
-import io
 import itertools
 import logging
 import os
@@ -11,20 +10,22 @@ import string
 import typing
 from pathlib import Path
 
-import pybtex.errors
-from pybtex.database import Person
-from pybtex.database.input import bibtex
-
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.loader
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
+from colrev.loader.load_utils_name_formatter import parse_names
 
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-arguments
+
+
+def extract_content(text):
+    match = re.match(r"^\s*\{(.+)\},?\s*$", text)
+    return match.group(1) if match else text
 
 
 class BIBLoader(colrev.loader.loader.Loader):
@@ -189,83 +190,82 @@ class BIBLoader(colrev.loader.loader.Loader):
                     seekpos = file.tell()
                     line = file.readline()
 
-    def _parse_records_dict(self, *, records_dict: dict) -> dict:
-        """Parse a records_dict from pybtex to colrev standard"""
+    # pylint: disable=too-many-branches
+    def _read_record_header_items(
+        self, *, file_object: typing.Optional[typing.TextIO] = None
+    ) -> list:
+        # Note : more than 10x faster than the pybtex part of load_records_dict()
 
-        def format_name(person: Person) -> str:
-            def join(name_list: list) -> str:
-                return " ".join([name for name in name_list if name])
+        if file_object is None:
+            assert self.filename is not None
+            # pylint: disable=consider-using-with
+            file_object = open(self.filename, encoding="utf-8")
 
-            first = person.get_part_as_text("first")
-            middle = person.get_part_as_text("middle")
-            prelast = person.get_part_as_text("prelast")
-            last = person.get_part_as_text("last")
-            lineage = person.get_part_as_text("lineage")
-            name_string = ""
-            if last:
-                name_string += join([prelast, last])
-            if lineage:
-                name_string += f", {lineage}"
-            if first or middle:
-                name_string += ", "
-                name_string += join([first, middle])
-            return name_string
-
-        # Need to concatenate fields and persons dicts
-        # but pybtex is still the most efficient solution.
-        records_dict = {
-            k: {
-                **{Fields.ID: k},
-                **{Fields.ENTRYTYPE: v.type},
-                **dict(
-                    {
-                        # Cast status to Enum
-                        k: (
-                            RecordState[v]
-                            if (Fields.STATUS == k)
-                            # DOIs are case insensitive -> use upper case.
-                            else (
-                                v.upper()
-                                if (Fields.DOI == k)
-                                # Note : the following two lines are a temporary fix
-                                # to converg colrev_origins to list items
-                                else (
-                                    [
-                                        el.rstrip().lstrip()
-                                        for el in v.split(";")
-                                        if "" != el
-                                    ]
-                                    if k == Fields.ORIGIN
-                                    else (
-                                        [
-                                            el.rstrip()
-                                            for el in (v + " ").split("; ")
-                                            if "" != el
-                                        ]
-                                        if k in FieldSet.LIST_FIELDS
-                                        else (
-                                            self._load_field_dict(value=v, field=k)
-                                            if k in [Fields.MD_PROV, Fields.D_PROV]
-                                            else v
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                        for k, v in v.fields.items()
-                    }
-                ),
-                **dict(
-                    {
-                        k: " and ".join(format_name(person) for person in persons)
-                        for k, persons in v.persons.items()
-                    }
-                ),
-            }
-            for k, v in records_dict.items()
+        # Fields required
+        default = {
+            Fields.ID: "NA",
+            Fields.ORIGIN: "NA",
+            Fields.STATUS: "NA",
+            Fields.FILE: "NA",
+            Fields.SCREENING_CRITERIA: "NA",
+            Fields.MD_PROV: "NA",
         }
+        # number_required_header_items = len(default)
 
-        return records_dict
+        record_header_item = default.copy()
+        item_count, item_string, record_header_items = (
+            0,
+            "",
+            [],
+        )
+        while True:
+            line = file_object.readline()
+            if not line:
+                break
+
+            if line[:1] == "%" or line == "\n":
+                continue
+
+            # if item_count > number_required_header_items or "}" == line:
+            #     record_header_items.append(record_header_item)
+            #     record_header_item = default.copy()
+            #     item_count = 0
+            #     continue
+
+            if "@" in line[:2] and record_header_item[Fields.ID] != "NA":
+                record_header_items.append(record_header_item)
+                record_header_item = default.copy()
+                item_count = 0
+
+            item_string += line
+            if "}," in line or "@" in line[:2]:
+                key, value = self._parse_k_v(item_string)
+                # if key == Fields.MD_PROV:
+                #     if value == "NA":
+                #         value = {}
+                # if value == "NA":
+                #     item_string = ""
+                #     continue
+                item_string = ""
+                if key in record_header_item:
+                    item_count += 1
+                    record_header_item[key] = value
+
+        if record_header_item[Fields.ORIGIN] != "NA":
+            record_header_items.append(record_header_item)
+
+        return [
+            {k: v for k, v in record_header_item.items() if "NA" != v}
+            for record_header_item in record_header_items
+        ]
+
+    def get_record_header_items(self) -> dict:
+        """Get the record header items"""
+        record_header_list = []
+        record_header_list = self._read_record_header_items()
+
+        record_header_dict = {r[Fields.ID]: r for r in record_header_list}
+        return record_header_dict
 
     def _load_field_dict(self, *, value: str, field: str) -> dict:
         # pylint: disable=too-many-branches
@@ -346,84 +346,8 @@ class BIBLoader(colrev.loader.loader.Loader):
 
         return key, value
 
-    # pylint: disable=too-many-branches
-    def _read_record_header_items(
-        self, *, file_object: typing.Optional[typing.TextIO] = None
-    ) -> list:
-        # Note : more than 10x faster than the pybtex part of load_records_dict()
-
-        if file_object is None:
-            assert self.filename is not None
-            # pylint: disable=consider-using-with
-            file_object = open(self.filename, encoding="utf-8")
-
-        # Fields required
-        default = {
-            Fields.ID: "NA",
-            Fields.ORIGIN: "NA",
-            Fields.STATUS: "NA",
-            Fields.FILE: "NA",
-            Fields.SCREENING_CRITERIA: "NA",
-            Fields.MD_PROV: "NA",
-        }
-        # number_required_header_items = len(default)
-
-        record_header_item = default.copy()
-        item_count, item_string, record_header_items = (
-            0,
-            "",
-            [],
-        )
-        while True:
-            line = file_object.readline()
-            if not line:
-                break
-
-            if line[:1] == "%" or line == "\n":
-                continue
-
-            # if item_count > number_required_header_items or "}" == line:
-            #     record_header_items.append(record_header_item)
-            #     record_header_item = default.copy()
-            #     item_count = 0
-            #     continue
-
-            if "@" in line[:2] and record_header_item[Fields.ID] != "NA":
-                record_header_items.append(record_header_item)
-                record_header_item = default.copy()
-                item_count = 0
-
-            item_string += line
-            if "}," in line or "@" in line[:2]:
-                key, value = self._parse_k_v(item_string)
-                # if key == Fields.MD_PROV:
-                #     if value == "NA":
-                #         value = {}
-                # if value == "NA":
-                #     item_string = ""
-                #     continue
-                item_string = ""
-                if key in record_header_item:
-                    item_count += 1
-                    record_header_item[key] = value
-
-        if record_header_item[Fields.ORIGIN] != "NA":
-            record_header_items.append(record_header_item)
-
-        return [
-            {k: v for k, v in record_header_item.items() if "NA" != v}
-            for record_header_item in record_header_items
-        ]
-
-    def get_record_header_items(self) -> dict:
-        """Get the record header items"""
-        record_header_list = []
-        record_header_list = self._read_record_header_items()
-
-        record_header_dict = {r[Fields.ID]: r for r in record_header_list}
-        return record_header_dict
-
     def load_records_list(self) -> list:
+        """Load records from a BibTeX file without using pybtex's parse_file()"""
 
         def drop_empty_fields(*, records: dict) -> None:
             for record_id in records:
@@ -434,12 +358,13 @@ class BIBLoader(colrev.loader.loader.Loader):
                 }
 
         def resolve_crossref(*, records: dict) -> None:
-            # https://bibtex.eu/fields/crossref/
+            # Handle cross-references between records
             crossref_ids = []
             for record_dict in records.values():
                 if "crossref" not in record_dict:
                     continue
 
+                # print(record_dict["crossref"])
                 crossref_record = records.get(record_dict["crossref"], None)
 
                 if not crossref_record:
@@ -456,17 +381,157 @@ class BIBLoader(colrev.loader.loader.Loader):
             for crossref_id in crossref_ids:
                 del records[crossref_id]
 
-        self._apply_file_fixes()
+        def parse_provenance(value: str) -> dict:
+            parsed_dict = {}
+            print(value)
+            items = [x.strip() for x in value.split("; ") if x.strip()]
+            print(items)
+            for item in items:
+                if ":" in item:
+                    key, source = item.split(":", 1)
+                    source_parts = source.split(";")
+                    parsed_dict[key.strip()] = {
+                        "source": source_parts[0].strip(),
+                        "note": (
+                            source_parts[1].strip() if len(source_parts) > 1 else ""
+                        ),
+                    }
+            print(parsed_dict)
+            return parsed_dict
 
-        temp_f = io.StringIO()
-        pybtex.io.stderr = temp_f
-        pybtex.errors.set_strict_mode(False)
-        parser = bibtex.Parser()
-        bib_data = parser.parse_file(str(self.filename))
-        records = self._parse_records_dict(records_dict=bib_data.entries)
+        def format_names(records: dict):
+            for record in records.values():
+                if Fields.AUTHOR in record:
+                    record[Fields.AUTHOR] = parse_names(record[Fields.AUTHOR])
+                if Fields.EDITOR in record:
+                    record[Fields.EDITOR] = parse_names(record[Fields.EDITOR])
+
+        self._apply_file_fixes()
+        records = {}
+
+        print(Path(self.filename).read_text(encoding="utf-8"))
+        with open(self.filename, encoding="utf-8") as file:
+            current_entry = None
+            current_key = None
+            current_value = ""
+            inside_entry = False
+
+            def store_current_key_value():
+                """Helper function to store the last key-value pair in the current entry."""
+                if current_entry is not None and current_key:
+                    if current_key in [Fields.MD_PROV, Fields.D_PROV]:
+                        current_entry[current_key] = parse_provenance(
+                            current_value.strip(", {}")
+                        )
+                    elif current_key == Fields.STATUS:
+                        current_entry[current_key] = RecordState[
+                            current_value.strip(", {}")
+                        ]
+                    elif current_key == Fields.DOI:
+                        current_entry[current_key] = current_value.strip(
+                            ", {} "
+                        ).upper()
+                    elif current_key in [Fields.ORIGIN] + list(FieldSet.LIST_FIELDS):
+                        current_entry[current_key] = [
+                            el.strip(";")
+                            for el in current_value.strip(", {} ").split("; ")
+                            if el.strip()
+                        ]
+                    else:
+                        print(current_value)
+                        print(extract_content(current_value))
+                        current_entry[current_key] = extract_content(
+                            current_value
+                        )  # current_value.strip(", {}")
+
+            for line in file:
+                line = line.strip()
+                # print(line)
+                if not line or line.startswith("%"):
+                    continue
+
+                if line.startswith("@"):  # New record begins
+                    if current_entry:
+                        records[current_entry[Fields.ID]] = current_entry
+                    match = re.match(r"@([a-zA-Z]+)\s*\{([^,]+),", line)
+                    if match:
+                        entry_type, entry_id = match.groups()
+                        current_entry = {
+                            Fields.ID: entry_id.strip(),
+                            Fields.ENTRYTYPE: entry_type.strip(),
+                        }
+                        inside_entry = True
+                        current_key = None
+                        current_value = ""
+                    continue
+
+                # TODO : the last key/value pair is missing...
+                if inside_entry:
+                    if "=" in line:  # New key-value pair
+                        if current_key:
+                            if current_key in [Fields.MD_PROV, Fields.D_PROV]:
+                                current_entry[current_key] = parse_provenance(
+                                    current_value.strip(", {}")
+                                )
+                            elif current_key == Fields.STATUS:
+                                current_entry[current_key] = RecordState[
+                                    current_value.strip(", {}")
+                                ]
+                            elif current_key == Fields.DOI:
+                                current_entry[current_key] = current_value.strip(
+                                    ", {} "
+                                ).upper()
+                            elif current_key in [Fields.ORIGIN] + list(
+                                FieldSet.LIST_FIELDS
+                            ):
+                                current_entry[current_key] = [
+                                    el.strip(";")
+                                    for el in current_value.strip(", {} ").split("; ")
+                                    if el.strip()
+                                ]
+                            else:
+                                print(current_value)
+                                print(extract_content(current_value))
+                                current_entry[current_key] = extract_content(
+                                    current_value
+                                )  # current_value.strip(", {}")
+                        key, value = map(str.strip, line.split("=", 1))
+                        current_key = key
+                        current_value = value
+                    else:
+                        current_value += " " + line.strip(", {}")
+                # if line.strip().endswith("}"):
+                if line.strip() == "}":
+                    store_current_key_value()
+
+            if current_entry and current_key:
+                if current_key in [Fields.MD_PROV, Fields.D_PROV]:
+                    current_entry[current_key] = parse_provenance(
+                        current_value.strip(", {}")
+                    )
+                elif current_key == Fields.STATUS:
+                    current_entry[current_key] = RecordState[
+                        current_value.strip(", {}")
+                    ]
+                elif current_key == Fields.DOI:
+                    current_entry[current_key] = current_value.strip(", {} ").upper()
+                elif current_key in [Fields.ORIGIN] + list(FieldSet.LIST_FIELDS):
+                    current_entry[current_key] = [
+                        el.strip()
+                        for el in current_value.strip(", {} ").split("; ")
+                        if el.strip()
+                    ]
+                else:
+                    current_entry[current_key] = current_value.strip(", {}")
+                records[current_entry[Fields.ID]] = current_entry
+
+        # Parse names (optional/flag to switch off - off per default, on only for initial load)
+        # TODO : if self.parse_names:
+        format_names(records=records)
 
         drop_empty_fields(records=records)
         resolve_crossref(records=records)
+
         records = dict(sorted(records.items()))
 
         return list(records.values())
