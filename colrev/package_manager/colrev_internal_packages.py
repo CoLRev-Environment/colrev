@@ -26,7 +26,7 @@ def _get_local_editable_colrev_path() -> str:
         f"{dist.metadata['Name'].replace('-', '_')}-{dist.version}.dist-info"
     )
 
-    if not dist.locate_file:
+    if not dist.locate_file(""):
         raise ValueError("Distribution location not found")
 
     dist_info_folder = os.path.join(str(dist.locate_file("")), dist_info_folder)
