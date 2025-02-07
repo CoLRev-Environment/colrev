@@ -9,12 +9,12 @@ import re
 import subprocess
 from datetime import datetime
 from importlib import import_module
+from importlib.metadata import distributions
 from pathlib import Path
 from typing import Type
 
 import git
 import inquirer
-import pkg_resources
 import zope.interface.interface
 
 from colrev.constants import Colors
@@ -179,7 +179,7 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
         if name == "":  # Accept default package name
             return True
 
-        installed_packages = list(pkg_resources.working_set)
+        installed_packages = {dist.metadata["Name"].lower() for dist in distributions()}
         # Check if the name corresponds to a currently installed python package
         if name in installed_packages:
             print(f"  {Colors.RED}The package name is already installed.{Colors.END}")

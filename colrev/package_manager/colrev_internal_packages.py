@@ -6,27 +6,30 @@ import json
 import os
 import subprocess
 import tempfile
+from importlib.metadata import distribution
+from importlib.metadata import PackageNotFoundError
 from pathlib import Path
 
-import pkg_resources
 import toml
 
 
 # pylint: disable=too-many-return-statements
 def _get_local_editable_colrev_path() -> str:
-
     try:
-        dist = pkg_resources.get_distribution("colrev")
-    except pkg_resources.DistributionNotFound:
+        dist = distribution("colrev")
+    except PackageNotFoundError:
         print("CoLRev not installed")
         return ""
 
     # Construct the .dist-info directory name
-    dist_info_folder = f"{dist.project_name.replace('-', '_')}"
-    dist_info_folder += f"-{dist.version}.dist-info"
-    if not dist.location:
-        raise ValueError
-    dist_info_folder = os.path.join(dist.location, dist_info_folder)
+    dist_info_folder = (
+        f"{dist.metadata['Name'].replace('-', '_')}-{dist.version}.dist-info"
+    )
+
+    if not dist.locate_file(""):
+        raise ValueError("Distribution location not found")
+
+    dist_info_folder = os.path.join(str(dist.locate_file("")), dist_info_folder)
 
     direct_url_path = os.path.join(dist_info_folder, "direct_url.json")
     if not os.path.exists(direct_url_path):
