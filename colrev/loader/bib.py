@@ -28,7 +28,7 @@ def extract_content(text: str) -> str:
     return match.group(1).strip() if match else text
 
 
-def fix_bib_file(filename: Path, logger: logging.Logger) -> None:
+def run_fix_bib_file(filename: Path, logger: logging.Logger) -> None:
     # pylint: disable=too-many-statements
 
     def fix_key(
@@ -168,7 +168,11 @@ class BIBLoader(colrev.loader.loader.Loader):
         field_mapper: typing.Callable = lambda x: x,
         id_labeler: typing.Callable = lambda x: x,
         logger: logging.Logger = logging.getLogger(__name__),
+        format_names: bool = False,
+        fix_bib_file: bool = False,
     ):
+        self.format_names = format_names
+        self.fix_bib_file = fix_bib_file
         super().__init__(
             filename=filename,
             id_labeler=id_labeler,
@@ -393,7 +397,7 @@ class BIBLoader(colrev.loader.loader.Loader):
                     }
             return parsed_dict
 
-        def format_names(records: dict) -> None:
+        def run_format_names(records: dict) -> None:
             for record in records.values():
                 if Fields.AUTHOR in record:
                     record[Fields.AUTHOR] = parse_names(record[Fields.AUTHOR])
@@ -401,7 +405,8 @@ class BIBLoader(colrev.loader.loader.Loader):
                     record[Fields.EDITOR] = parse_names(record[Fields.EDITOR])
 
         # TODO : add flag to switch off
-        fix_bib_file(self.filename, self.logger)
+        if self.fix_bib_file:
+            run_fix_bib_file(self.filename, self.logger)
 
         records = {}
 
@@ -518,7 +523,8 @@ class BIBLoader(colrev.loader.loader.Loader):
 
         # Parse names (optional/flag to switch off - off per default, on only for initial load)
         # TODO : if self.parse_names:
-        format_names(records=records)
+        if self.format_names:
+            run_format_names(records=records)
 
         drop_empty_fields(records=records)
         resolve_crossref(records=records)
