@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import re
+import typing
 
 whitespace_re = re.compile(r"(\s)")
 
 
-def split_tex_string(string, sep=None, strip=True, filter_empty=False):
-    if sep is None:
+def split_tex_string(
+    string: str, sep: str = "", strip: bool = True, filter_empty: bool = False
+) -> list:
+    if sep == "":
         sep = r"[\s~]+"
         filter_empty = True
     sep_re = re.compile(sep)
@@ -39,15 +42,15 @@ def split_tex_string(string, sep=None, strip=True, filter_empty=False):
 
 
 class NameParser:
-    def __init__(self, name: str):
-        self._first = []
-        self._middle = []
-        self._prelast = []
-        self._last = []
-        self._lineage = []
+    def __init__(self, name: str) -> None:
+        self._first: list[str] = []
+        self._middle: list[str] = []
+        self._prelast: list[str] = []
+        self._last: list[str] = []
+        self._lineage: list[str] = []
         self.parse_string(name)
 
-    def parse_string(self, name: str):
+    def parse_string(self, name: str) -> None:
         name = name.strip()
         parts = split_tex_string(name, ",")
 
@@ -69,23 +72,23 @@ class NameParser:
         else:
             raise ValueError(f"Invalid name format: {name}")
 
-    def _parse_first_middle(self, parts):
+    def _parse_first_middle(self, parts: list) -> None:
         if parts:
             self._first.append(parts[0])
             self._middle.extend(parts[1:])
 
-    def _parse_von_last(self, parts):
+    def _parse_von_last(self, parts: list) -> None:
         von, last = self._rsplit_at(parts, lambda part: part.islower())
         if von and not last:
             last.append(von.pop())
         self._prelast.extend(von)
         self._last.extend(last)
 
-    def _split_at(self, lst, pred):
+    def _split_at(self, lst: list, pred: typing.Callable) -> tuple:
         pos = next((i for i, item in enumerate(lst) if pred(item)), len(lst))
         return lst[:pos], lst[pos:]
 
-    def _rsplit_at(self, lst, pred):
+    def _rsplit_at(self, lst: list, pred: typing.Callable) -> tuple:
         rpos = next((i for i, item in enumerate(reversed(lst)) if pred(item)), len(lst))
         pos = len(lst) - rpos
         return lst[:pos], lst[pos:]
@@ -94,7 +97,7 @@ class NameParser:
         return " ".join(getattr(self, f"_{part_type}", []))
 
     def format_name(self) -> str:
-        def join(name_list):
+        def join(name_list: list) -> str:
             return " ".join([name for name in name_list if name])
 
         first = self.get_part_as_text("first")

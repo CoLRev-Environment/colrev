@@ -23,9 +23,136 @@ from colrev.loader.load_utils_name_formatter import parse_names
 # pylint: disable=too-many-arguments
 
 
-def extract_content(text):
+def extract_content(text: str) -> str:
     match = re.match(r"^\s*\{(.+)\},?\s*$", text)
-    return match.group(1) if match else text
+    return match.group(1).strip() if match else text
+
+
+def fix_bib_file(filename: Path, logger: logging.Logger) -> None:
+    # pylint: disable=too-many-statements
+
+    def fix_key(
+        file: typing.IO, line: bytes, replacement_line: bytes, seekpos: int
+    ) -> int:
+        logger.info(
+            f"Fix invalid key: \n{line.decode('utf-8')}"
+            f"{replacement_line.decode('utf-8')}"
+        )
+        line = file.readline()
+        remaining = line + file.read()
+        file.seek(seekpos)
+        file.write(replacement_line)
+        seekpos = file.tell()
+        file.flush()
+        os.fsync(file)
+        file.write(remaining)
+        file.truncate()  # if the replacement is shorter...
+        file.seek(seekpos)
+        return seekpos
+
+    def generate_next_unique_id(
+        *,
+        temp_id: str,
+        existing_ids: list,
+    ) -> str:
+        """Get the next unique ID"""
+
+        order = 0
+        letters = list(string.ascii_lowercase)
+        next_unique_id = temp_id
+        appends: list = []
+        while next_unique_id.lower() in [i.lower() for i in existing_ids]:
+            if len(appends) == 0:
+                order += 1
+                appends = list(itertools.product(letters, repeat=order))
+            next_unique_id = temp_id + "".join(list(appends.pop(0)))
+        temp_id = next_unique_id
+        return temp_id
+
+    if filename is not None:
+
+        with open(filename, encoding="utf8") as bibtex_file:
+            contents = bibtex_file.read()
+            if len(contents) < 10:
+                return
+            bib_r = re.compile(r"@.*{.*,", re.M)
+            if len(re.findall(bib_r, contents)) == 0:
+                logger.error(f"Not a bib file? {filename.name}")
+                raise colrev_exceptions.UnsupportedImportFormatError(filename)
+
+        # Errors to fix before pybtex loading:
+        # - set_incremental_ids (otherwise, not all records will be loaded)
+        # - fix_keys (keys containing white spaces)
+        record_ids: typing.List[str] = []
+        with open(filename, "r+b") as file:
+            seekpos = file.tell()
+            line = file.readline()
+            while line:
+                if b"@" in line[:3]:
+                    current_id = line[line.find(b"{") + 1 : line.rfind(b",")]
+                    current_id_str = current_id.decode("utf-8").lstrip().rstrip()
+
+                    if any(x in current_id_str for x in [";"]):
+                        replacement_line = re.sub(
+                            r";",
+                            r"_",
+                            line.decode("utf-8"),
+                        ).encode("utf-8")
+                        seekpos = fix_key(file, line, replacement_line, seekpos)
+
+                    if current_id_str in record_ids:
+                        next_id = generate_next_unique_id(
+                            temp_id=current_id_str, existing_ids=record_ids
+                        )
+                        logger.info(f"Fix duplicate ID: {current_id_str} >> {next_id}")
+
+                        replacement_line = (
+                            line.decode("utf-8")
+                            .replace(current_id.decode("utf-8"), next_id)
+                            .encode("utf-8")
+                        )
+
+                        line = file.readline()
+                        remaining = line + file.read()
+                        file.seek(seekpos)
+                        file.write(replacement_line)
+                        seekpos = file.tell()
+                        file.flush()
+                        os.fsync(file)
+                        file.write(remaining)
+                        file.truncate()  # if the replacement is shorter...
+                        file.seek(seekpos)
+
+                        record_ids.append(next_id)
+
+                    else:
+                        record_ids.append(current_id_str)
+
+                # Fix keys
+                if re.match(
+                    r"^\s*[a-zA-Z0-9]+\s+[a-zA-Z0-9]+\s*\=", line.decode("utf-8")
+                ):
+                    replacement_line = re.sub(
+                        r"(^\s*)([a-zA-Z0-9]+)\s+([a-zA-Z0-9]+)(\s*\=)",
+                        r"\1\2_\3\4",
+                        line.decode("utf-8"),
+                    ).encode("utf-8")
+                    seekpos = fix_key(file, line, replacement_line, seekpos)
+
+                # Fix IDs
+                if re.match(
+                    r"^@[a-zA-Z0-9]+\{[a-zA-Z0-9]+\s[a-zA-Z0-9]+,",
+                    line.decode("utf-8"),
+                ):
+                    replacement_line = re.sub(
+                        r"^(@[a-zA-Z0-9]+\{[a-zA-Z0-9]+)\s([a-zA-Z0-9]+,)",
+                        r"\1_\2",
+                        line.decode("utf-8"),
+                    ).encode("utf-8")
+                    seekpos = fix_key(file, line, replacement_line, seekpos)
+
+                seekpos = file.tell()
+                line = file.readline()
 
 
 class BIBLoader(colrev.loader.loader.Loader):
@@ -60,135 +187,6 @@ class BIBLoader(colrev.loader.loader.Loader):
                 if line.startswith("@") and "@comment" not in line[:10].lower():
                     count += 1
         return count
-
-    def _generate_next_unique_id(
-        self,
-        *,
-        temp_id: str,
-        existing_ids: list,
-    ) -> str:
-        """Get the next unique ID"""
-
-        order = 0
-        letters = list(string.ascii_lowercase)
-        next_unique_id = temp_id
-        appends: list = []
-        while next_unique_id.lower() in [i.lower() for i in existing_ids]:
-            if len(appends) == 0:
-                order += 1
-                appends = list(itertools.product(letters, repeat=order))
-            next_unique_id = temp_id + "".join(list(appends.pop(0)))
-        temp_id = next_unique_id
-        return temp_id
-
-    def _apply_file_fixes(self) -> None:
-        # pylint: disable=too-many-statements
-
-        def fix_key(
-            file: typing.IO, line: bytes, replacement_line: bytes, seekpos: int
-        ) -> int:
-            self.logger.info(
-                f"Fix invalid key: \n{line.decode('utf-8')}"
-                f"{replacement_line.decode('utf-8')}"
-            )
-            line = file.readline()
-            remaining = line + file.read()
-            file.seek(seekpos)
-            file.write(replacement_line)
-            seekpos = file.tell()
-            file.flush()
-            os.fsync(file)
-            file.write(remaining)
-            file.truncate()  # if the replacement is shorter...
-            file.seek(seekpos)
-            return seekpos
-
-        if self.filename is not None:
-
-            with open(self.filename, encoding="utf8") as bibtex_file:
-                contents = bibtex_file.read()
-                if len(contents) < 10:
-                    return
-                bib_r = re.compile(r"@.*{.*,", re.M)
-                if len(re.findall(bib_r, contents)) == 0:
-                    self.logger.error(f"Not a bib file? {self.filename.name}")
-                    raise colrev_exceptions.UnsupportedImportFormatError(self.filename)
-
-            # Errors to fix before pybtex loading:
-            # - set_incremental_ids (otherwise, not all records will be loaded)
-            # - fix_keys (keys containing white spaces)
-            record_ids: typing.List[str] = []
-            with open(self.filename, "r+b") as file:
-                seekpos = file.tell()
-                line = file.readline()
-                while line:
-                    if b"@" in line[:3]:
-                        current_id = line[line.find(b"{") + 1 : line.rfind(b",")]
-                        current_id_str = current_id.decode("utf-8").lstrip().rstrip()
-
-                        if any(x in current_id_str for x in [";"]):
-                            replacement_line = re.sub(
-                                r";",
-                                r"_",
-                                line.decode("utf-8"),
-                            ).encode("utf-8")
-                            seekpos = fix_key(file, line, replacement_line, seekpos)
-
-                        if current_id_str in record_ids:
-                            next_id = self._generate_next_unique_id(
-                                temp_id=current_id_str, existing_ids=record_ids
-                            )
-                            self.logger.info(
-                                f"Fix duplicate ID: {current_id_str} >> {next_id}"
-                            )
-
-                            replacement_line = (
-                                line.decode("utf-8")
-                                .replace(current_id.decode("utf-8"), next_id)
-                                .encode("utf-8")
-                            )
-
-                            line = file.readline()
-                            remaining = line + file.read()
-                            file.seek(seekpos)
-                            file.write(replacement_line)
-                            seekpos = file.tell()
-                            file.flush()
-                            os.fsync(file)
-                            file.write(remaining)
-                            file.truncate()  # if the replacement is shorter...
-                            file.seek(seekpos)
-
-                            record_ids.append(next_id)
-
-                        else:
-                            record_ids.append(current_id_str)
-
-                    # Fix keys
-                    if re.match(
-                        r"^\s*[a-zA-Z0-9]+\s+[a-zA-Z0-9]+\s*\=", line.decode("utf-8")
-                    ):
-                        replacement_line = re.sub(
-                            r"(^\s*)([a-zA-Z0-9]+)\s+([a-zA-Z0-9]+)(\s*\=)",
-                            r"\1\2_\3\4",
-                            line.decode("utf-8"),
-                        ).encode("utf-8")
-                        seekpos = fix_key(file, line, replacement_line, seekpos)
-
-                    # Fix IDs
-                    if re.match(
-                        r"^@[a-zA-Z0-9]+\{[a-zA-Z0-9]+\s[a-zA-Z0-9]+,",
-                        line.decode("utf-8"),
-                    ):
-                        replacement_line = re.sub(
-                            r"^(@[a-zA-Z0-9]+\{[a-zA-Z0-9]+)\s([a-zA-Z0-9]+,)",
-                            r"\1_\2",
-                            line.decode("utf-8"),
-                        ).encode("utf-8")
-                        seekpos = fix_key(file, line, replacement_line, seekpos)
-
-                    seekpos = file.tell()
-                    line = file.readline()
 
     # pylint: disable=too-many-branches
     def _read_record_header_items(
@@ -364,7 +362,6 @@ class BIBLoader(colrev.loader.loader.Loader):
                 if "crossref" not in record_dict:
                     continue
 
-                # print(record_dict["crossref"])
                 crossref_record = records.get(record_dict["crossref"], None)
 
                 if not crossref_record:
@@ -383,9 +380,7 @@ class BIBLoader(colrev.loader.loader.Loader):
 
         def parse_provenance(value: str) -> dict:
             parsed_dict = {}
-            print(value)
             items = [x.strip() for x in value.split("; ") if x.strip()]
-            print(items)
             for item in items:
                 if ":" in item:
                     key, source = item.split(":", 1)
@@ -396,27 +391,27 @@ class BIBLoader(colrev.loader.loader.Loader):
                             source_parts[1].strip() if len(source_parts) > 1 else ""
                         ),
                     }
-            print(parsed_dict)
             return parsed_dict
 
-        def format_names(records: dict):
+        def format_names(records: dict) -> None:
             for record in records.values():
                 if Fields.AUTHOR in record:
                     record[Fields.AUTHOR] = parse_names(record[Fields.AUTHOR])
                 if Fields.EDITOR in record:
                     record[Fields.EDITOR] = parse_names(record[Fields.EDITOR])
 
-        self._apply_file_fixes()
+        # TODO : add flag to switch off
+        fix_bib_file(self.filename, self.logger)
+
         records = {}
 
-        print(Path(self.filename).read_text(encoding="utf-8"))
         with open(self.filename, encoding="utf-8") as file:
             current_entry = None
             current_key = None
             current_value = ""
             inside_entry = False
 
-            def store_current_key_value():
+            def store_current_key_value() -> None:
                 """Helper function to store the last key-value pair in the current entry."""
                 if current_entry is not None and current_key:
                     if current_key in [Fields.MD_PROV, Fields.D_PROV]:
@@ -438,15 +433,11 @@ class BIBLoader(colrev.loader.loader.Loader):
                             if el.strip()
                         ]
                     else:
-                        print(current_value)
-                        print(extract_content(current_value))
-                        current_entry[current_key] = extract_content(
-                            current_value
-                        )  # current_value.strip(", {}")
+                        current_entry[current_key] = extract_content(current_value)
 
             for line in file:
                 line = line.strip()
-                # print(line)
+
                 if not line or line.startswith("%"):
                     continue
 
@@ -465,7 +456,6 @@ class BIBLoader(colrev.loader.loader.Loader):
                         current_value = ""
                     continue
 
-                # TODO : the last key/value pair is missing...
                 if inside_entry:
                     if "=" in line:  # New key-value pair
                         if current_key:
@@ -490,18 +480,19 @@ class BIBLoader(colrev.loader.loader.Loader):
                                     if el.strip()
                                 ]
                             else:
-                                print(current_value)
-                                print(extract_content(current_value))
                                 current_entry[current_key] = extract_content(
                                     current_value
-                                )  # current_value.strip(", {}")
+                                )
                         key, value = map(str.strip, line.split("=", 1))
                         current_key = key
                         current_value = value
+
                     else:
-                        current_value += " " + line.strip(", {}")
-                # if line.strip().endswith("}"):
+                        current_value += " " + line.strip()  # .strip(", {}")
+
                 if line.strip() == "}":
+                    # Remove the closing bracket of the entry
+                    current_value = current_value.rstrip("}")
                     store_current_key_value()
 
             if current_entry and current_key:
