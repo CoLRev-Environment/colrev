@@ -38,14 +38,10 @@ def _get_local_editable_colrev_path() -> str:
     with open(direct_url_path, encoding="utf-8") as file:
         data = json.load(file)
 
-    if "url" not in data:
+    if "url" not in data or not data["url"].startswith("file://"):
         return ""
 
-    if not data["url"].startswith("file://"):
-        return ""
-
-    editable_dir = data["url"].replace("file://", "")
-    return editable_dir
+    return data["url"].replace("file://", "")
 
 
 def _clone_colrev_repository() -> Path:
