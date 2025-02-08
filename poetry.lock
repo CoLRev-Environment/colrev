@@ -787,17 +787,6 @@ files = [
 ansicon = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
-name = "latexcodec"
-version = "3.0.0"
-description = "A lexer and codec to work with LaTeX code in Python."
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "latexcodec-3.0.0-py3-none-any.whl", hash = "sha256:6f3477ad5e61a0a99bd31a6a370c34e88733a6bad9c921a3ffcfacada12f41a7"},
-    {file = "latexcodec-3.0.0.tar.gz", hash = "sha256:917dc5fe242762cc19d963e6548b42d63a118028cdd3361d62397e3b638b6bc5"},
-]
-
-[[package]]
 name = "lingua-language-detector"
 version = "2.0.2"
 description = "An accurate natural language detection library, suitable for short text and mixed-language text"
@@ -1581,25 +1570,6 @@ files = [
 
 [package.dependencies]
 wcwidth = "*"
-
-[[package]]
-name = "pybtex"
-version = "0.24.0"
-description = "A BibTeX-compatible bibliography processor in Python"
-optional = false
-python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*"
-files = [
-    {file = "pybtex-0.24.0-py2.py3-none-any.whl", hash = "sha256:e1e0c8c69998452fea90e9179aa2a98ab103f3eed894405b7264e517cc2fcc0f"},
-    {file = "pybtex-0.24.0.tar.gz", hash = "sha256:818eae35b61733e5c007c3fcd2cfb75ed1bc8b4173c1f70b56cc4c0802d34755"},
-]
-
-[package.dependencies]
-latexcodec = ">=1.0.4"
-PyYAML = ">=3.01"
-six = "*"
-
-[package.extras]
-test = ["pytest"]
 
 [[package]]
 name = "pycountry"
@@ -2924,4 +2894,4 @@ docs = ["Sphinx", "beautifulsoup4", "docutils", "m2r", "repoze-sphinx-autointerf
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.13"
-content-hash = "d249366f10c33bf4124d5ae753d1b3212646e833b756acdaa4821a01e7f4c8fc"
+content-hash = "7bb2367e7b1aad7287f753d24c0e9de30b8917db9a1111fb34eab90a67e1d1cc"

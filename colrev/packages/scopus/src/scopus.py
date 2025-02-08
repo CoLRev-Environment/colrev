@@ -7,6 +7,7 @@ from pathlib import Path
 import zope.interface
 from pydantic import Field
 
+import colrev.loader.bib
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
@@ -151,6 +152,9 @@ class ScopusSearchSource:
                     del record_dict["Start_Page"]
                     del record_dict["End_Page"]
 
+        colrev.loader.bib.run_fix_bib_file(
+            self.search_source.filename, logger=self.review_manager.logger
+        )
         records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             unique_id_field="ID",

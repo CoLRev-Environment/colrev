@@ -106,6 +106,7 @@ class EbscoHostSearchSource:
             logger=self.review_manager.logger,
             unique_id_field="ID",
             field_mapper=field_mapper,
+            format_names=True,
         )
         return records
 

@@ -436,6 +436,7 @@ class SpringerLinkSearchSource:
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
             logger=self.review_manager.logger,
+            format_names=True,
         )
         return records
 
@@ -520,6 +521,7 @@ class SpringerLinkSearchSource:
             filename=self.search_source.filename,
             logger=self.review_manager.logger,
             unique_id_field="ID",
+            format_names=True,
         )
         return records
 

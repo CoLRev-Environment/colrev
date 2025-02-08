@@ -156,6 +156,7 @@ def load(  # type: ignore
     unique_id_field: str = "",
     logger: logging.Logger = logging.getLogger(__name__),
     empty_if_file_not_exists: bool = True,
+    format_names: bool = False,
 ) -> dict:
     """Load a file and return records as a dictionary"""
 
@@ -179,7 +180,7 @@ def load(  # type: ignore
     elif filename.suffix == ".json":
         parser = colrev.loader.json.JSONLoader  # type: ignore
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Unsupported file type: {filename.suffix}")
 
     return parser(
         filename=filename,
@@ -188,6 +189,7 @@ def load(  # type: ignore
         id_labeler=id_labeler,
         unique_id_field=unique_id_field,
         logger=logger,
+        format_names=format_names,
     ).load()
 
 
@@ -255,6 +257,6 @@ def get_nr_records(  # type: ignore
     elif filename.suffix == ".json":
         parser = colrev.loader.json.JSONLoader  # type: ignore
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Unsupported file type: {filename.suffix}")
 
     return parser.get_nr_records(filename)
