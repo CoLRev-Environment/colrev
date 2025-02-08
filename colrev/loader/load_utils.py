@@ -179,7 +179,7 @@ def load(  # type: ignore
     elif filename.suffix == ".json":
         parser = colrev.loader.json.JSONLoader  # type: ignore
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Unsupported file type: {filename.suffix}")
 
     return parser(
         filename=filename,
@@ -255,6 +255,6 @@ def get_nr_records(  # type: ignore
     elif filename.suffix == ".json":
         parser = colrev.loader.json.JSONLoader  # type: ignore
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Unsupported file type: {filename.suffix}")
 
     return parser.get_nr_records(filename)
