@@ -471,9 +471,6 @@ class PDFPrep(colrev.process.operation.Operation):
 
             self._print_stats(pdf_prep_record_list=pdf_prep_record_list)
 
-        # Note: for formatting...
-        records = self.review_manager.dataset.load_records_dict()
-        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(msg="PDFs: prepare")
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed pdf-prep operation{Colors.END}"

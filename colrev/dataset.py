@@ -280,7 +280,8 @@ class Dataset:
 
     def save_records_dict(self, records: dict, *, partial: bool = False) -> None:
         """Save the records dict in RECORDS_FILE"""
-
+        if not records:
+            return
         if partial:
             self._save_record_list_by_id(records)
             return

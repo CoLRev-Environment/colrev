@@ -23,12 +23,14 @@ class TableLoader(colrev.loader.loader.Loader):
         self,
         *,
         filename: Path,
-        entrytype_setter: typing.Callable,
-        field_mapper: typing.Callable,
-        id_labeler: typing.Callable,
+        entrytype_setter: typing.Callable = lambda x: x,
+        field_mapper: typing.Callable = lambda x: x,
+        id_labeler: typing.Callable = lambda x: x,
         unique_id_field: str = "",
         logger: logging.Logger = logging.getLogger(__name__),
+        format_names: bool = False,
     ):
+
         super().__init__(
             filename=filename,
             id_labeler=id_labeler,
@@ -36,6 +38,7 @@ class TableLoader(colrev.loader.loader.Loader):
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
             logger=logger,
+            format_names=format_names,
         )
 
     @classmethod
