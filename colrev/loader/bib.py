@@ -17,7 +17,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.loader
 from colrev.constants import Fields
 from colrev.constants import FieldSet
-from colrev.constants import FieldValues
 from colrev.constants import RecordState
 
 # pylint: disable=too-few-public-methods
@@ -183,11 +182,11 @@ def extract_content(text: str) -> str:
 
 
 def handle_new_entry(
-    records: List[Dict[str, Any]], current_entry: Dict[str, Any], line: str
+    records: List[Dict[str, Any]], current_record: Dict[str, Any], line: str
 ) -> Dict[str, Any]:
     """Handles a new record entry."""
-    if current_entry:
-        records.append(current_entry)
+    if current_record:
+        records.append(current_record)
 
     match = re.match(r"@([a-zA-Z]+)\s*\{([^,]+),", line)
     if match:
@@ -201,72 +200,105 @@ def handle_new_entry(
 
 
 def process_key_value(
-    current_entry: Dict[str, Any], current_key: str, current_value: str, line: str
+    current_record: Dict[str, Any], current_key: str, current_value: str, line: str
 ) -> tuple[str, str]:
     """Processes a key-value pair inside an entry."""
     if "=" in line:  # New key-value pair
         if current_key:
-            store_current_key_value(current_entry, current_key, current_value)
+            store_current_key_value(current_record, current_key, current_value)
         key, value = map(str.strip, line.split("=", 1))
         return key, value
     return current_key, current_value + " " + line.strip()
 
 
 def store_current_key_value(
-    current_entry: Dict[str, Any], current_key: str, current_value: str
+    current_record: Dict[str, Any], current_key: str, current_value: str
 ) -> None:
     """Stores the processed key-value pair into the current entry."""
-    if not current_key or not current_entry:
+    if not current_key or not current_record:
         return
 
     if current_key in [Fields.MD_PROV, Fields.D_PROV]:
-        current_entry[current_key] = parse_provenance(current_value.strip(", {}"))
+        current_record[current_key] = parse_provenance(current_value.strip(", {}"))
     elif current_key == Fields.STATUS:
-        current_entry[current_key] = RecordState[current_value.strip(", {}")]
+        current_record[current_key] = RecordState[current_value.strip(", {}")]
     elif current_key == Fields.DOI:
-        current_entry[current_key] = current_value.strip(", {} ").upper()
+        current_record[current_key] = current_value.strip(", {} ").upper()
     elif current_key in [Fields.ORIGIN] + list(FieldSet.LIST_FIELDS):
-        current_entry[current_key] = [
+        current_record[current_key] = [
             el.strip(";")
             for el in current_value.strip(", {} ").split("; ")
             if el.strip()
         ]
     else:
-        current_entry[current_key] = extract_content(current_value)
+        current_record[current_key] = extract_content(current_value)
 
 
-def process_lines(file: typing.TextIO) -> List[Dict[str, Any]]:
-    """Processes each line of the file and constructs records."""
-    records: list[dict] = []
-    current_entry: dict[str, str] = {}
+def process_lines(
+    file: typing.TextIO, header_only: bool = False
+) -> List[Dict[str, Any]]:
+    """Processes each line of the file and constructs records.
+
+    Args:
+        file (TextIO): The file object to read from.
+        header_only (bool): If True, only extract required header fields.
+
+    Returns:
+        List[Dict[str, Any]]: Parsed records.
+    """
+
+    records: List[Dict[str, Any]] = []
+    current_record: Dict[str, Any] = {}
     current_key = ""
     current_value = ""
-    inside_entry = False
+    inside_record = False
+    skip_remaining_non_header_fields = False
+
+    header_fields = {
+        Fields.ID,
+        Fields.ORIGIN,
+        Fields.STATUS,
+        Fields.FILE,
+        Fields.SCREENING_CRITERIA,
+        Fields.MD_PROV,
+    }
 
     for line in file:
         line = line.strip()
+        if skip_remaining_non_header_fields and not line.startswith("@"):
+            continue
         if not line or line.startswith("%"):
             continue
 
         if line.startswith("@"):
-            current_entry = handle_new_entry(records, current_entry, line)
-            inside_entry = True
+            if header_only and current_record:
+                records.append(current_record)
+            current_record = handle_new_entry(records, current_record, line)
+            inside_record = True
             current_key = ""
             current_value = ""
+            skip_remaining_non_header_fields = False
             continue
 
-        if inside_entry:
+        if inside_record:
             current_key, current_value = process_key_value(
-                current_entry, current_key, current_value, line
+                current_record, current_key, current_value, line
             )
+
+            # If header_only is enabled, stop processing after collecting required headers
+            if header_only and current_key in header_fields:
+                store_current_key_value(current_record, current_key, current_value)
+                # Given that the header fields are ordered, we can stop parsing further fields
+                if current_key == Fields.MD_PROV:
+                    skip_remaining_non_header_fields = True
 
         if line.strip() == "}":
             current_value = current_value.rstrip("}")
-            store_current_key_value(current_entry, current_key, current_value)
+            store_current_key_value(current_record, current_key, current_value)
 
-    if current_entry:
-        store_current_key_value(current_entry, current_key, current_value)
-        records.append(current_entry)
+    if current_record:
+        store_current_key_value(current_record, current_key, current_value)
+        records.append(current_record)
 
     return records
 
@@ -332,169 +364,18 @@ class BIBLoader(colrev.loader.loader.Loader):
                     count += 1
         return count
 
-    # pylint: disable=too-many-branches
-    def _read_record_header_items(
-        self, *, file_object: typing.Optional[typing.TextIO] = None
-    ) -> list:
-        # Note : more than 10x faster than the pybtex part of load_records_dict()
-
-        if file_object is None:
-            assert self.filename is not None
-            # pylint: disable=consider-using-with
-            file_object = open(self.filename, encoding="utf-8")
-
-        # Fields required
-        default = {
-            Fields.ID: "NA",
-            Fields.ORIGIN: "NA",
-            Fields.STATUS: "NA",
-            Fields.FILE: "NA",
-            Fields.SCREENING_CRITERIA: "NA",
-            Fields.MD_PROV: "NA",
-        }
-        # number_required_header_items = len(default)
-
-        record_header_item = default.copy()
-        item_count, item_string, record_header_items = (
-            0,
-            "",
-            [],
-        )
-        while True:
-            line = file_object.readline()
-            if not line:
-                break
-
-            if line[:1] == "%" or line == "\n":
-                continue
-
-            # if item_count > number_required_header_items or "}" == line:
-            #     record_header_items.append(record_header_item)
-            #     record_header_item = default.copy()
-            #     item_count = 0
-            #     continue
-
-            if "@" in line[:2] and record_header_item[Fields.ID] != "NA":
-                record_header_items.append(record_header_item)
-                record_header_item = default.copy()
-                item_count = 0
-
-            item_string += line
-            if "}," in line or "@" in line[:2]:
-                key, value = self._parse_k_v(item_string)
-                # if key == Fields.MD_PROV:
-                #     if value == "NA":
-                #         value = {}
-                # if value == "NA":
-                #     item_string = ""
-                #     continue
-                item_string = ""
-                if key in record_header_item:
-                    item_count += 1
-                    record_header_item[key] = value
-
-        if record_header_item[Fields.ORIGIN] != "NA":
-            record_header_items.append(record_header_item)
-
-        return [
-            {k: v for k, v in record_header_item.items() if "NA" != v}
-            for record_header_item in record_header_items
-        ]
-
     def get_record_header_items(self) -> dict:
-        """Get the record header items"""
-        record_header_list = []
-        record_header_list = self._read_record_header_items()
+        """Get the record header items efficiently using load_records_list()."""
+        record_header_list = self.load_records_list(header_only=True)
+        return {r[Fields.ID]: r for r in record_header_list}
 
-        record_header_dict = {r[Fields.ID]: r for r in record_header_list}
-        return record_header_dict
-
-    def _load_field_dict(self, *, value: str, field: str) -> dict:
-        # pylint: disable=too-many-branches
-
-        assert field in [
-            Fields.MD_PROV,
-            Fields.D_PROV,
-        ], f"error loading dict_field: {field}"
-
-        return_dict: typing.Dict[str, typing.Any] = {}
-        if value == "":  # pragma: no cover
-            return return_dict
-
-        if field == Fields.MD_PROV:
-            if value[:7] == FieldValues.CURATED:
-                source = value[value.find(":") + 1 : value[:-1].rfind(";")]
-                return_dict[FieldValues.CURATED] = {
-                    "source": source,
-                    "note": "",
-                }
-
-            else:
-                # Pybtex automatically replaces \n in fields.
-                # For consistency, we also do that for header_only mode:
-                if "\n" in value:  # pragma: no cover
-                    value = value.replace("\n", " ")
-                items = [x.lstrip() + ";" for x in (value + " ").split("; ") if x != ""]
-
-                for item in items:
-                    key_source = item[: item[:-1].rfind(";")]
-                    assert (
-                        ":" in key_source
-                    ), f"problem with masterdata_provenance_item {item}"
-                    note = item[item[:-1].rfind(";") + 1 : -1]
-                    key, source = key_source.split(":", 1)
-                    # key = key.rstrip().lstrip()
-                    return_dict[key] = {
-                        "source": source,
-                        "note": note,
-                    }
-
-        elif field == Fields.D_PROV:
-            # Note : pybtex replaces \n upon load
-            for item in (value + " ").split("; "):
-                if item == "":
-                    continue
-                item += ";"  # removed by split
-                key_source = item[: item[:-1].rfind(";")]
-                note = item[item[:-1].rfind(";") + 1 : -1]
-                assert ":" in key_source, f"problem with data_provenance_item {item}"
-                key, source = key_source.split(":", 1)
-                return_dict[key] = {
-                    "source": source,
-                    "note": note,
-                }
-
-        return return_dict
-
-    def _parse_k_v(self, item_string: str) -> tuple:
-        if " = " in item_string:
-            key, value = item_string.split(" = ", 1)
-        else:
-            key = Fields.ID
-            value = item_string.split("{")[1]
-
-        key = key.lstrip().rstrip()
-        value = value.lstrip().rstrip().lstrip("{").rstrip("},")
-        if key == Fields.ORIGIN:
-            value_list = value.replace("\n", "").split(";")
-            value_list = [x.lstrip(" ").rstrip(" ") for x in value_list if x]
-            return key, value_list
-        if key == Fields.STATUS:
-            return key, RecordState[value]
-        if key == Fields.MD_PROV:
-            return key, self._load_field_dict(value=value, field=key)
-        if key == Fields.FILE:
-            return key, Path(value)
-
-        return key, value
-
-    def load_records_list(self) -> List[Dict[str, Any]]:
-        """Main function to parse the file and return records."""
+    def load_records_list(self, header_only: bool = False) -> List[Dict[str, Any]]:
+        """Parses the file and returns either full records or just header fields."""
         records = []
         check_valid_bib(self.filename, self.logger)
 
         with open(self.filename, encoding="utf-8") as file:
-            records = process_lines(file)
+            records = process_lines(file, header_only=header_only)
 
         records.sort(key=lambda x: x[Fields.ID])
         return records
