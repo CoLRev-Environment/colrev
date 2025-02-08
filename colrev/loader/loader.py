@@ -50,7 +50,12 @@ class Loader:
             Fields.ID in record_dict for record_dict in records_list
         ), "ID not set in all records"
         unique_ids = {record_dict[Fields.ID] for record_dict in records_list}
-        assert len(unique_ids) == len(records_list), "ID is not unique in records"
+        non_unique_ids = [
+            id
+            for id in unique_ids
+            if sum(1 for r in records_list if r[Fields.ID] == id) > 1
+        ]
+        assert not non_unique_ids, f"ID is not unique in records: {non_unique_ids}"
 
     def _set_entrytypes(self, records_dict: dict) -> None:
         for r_dict_val in records_dict.values():
