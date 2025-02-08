@@ -5,12 +5,14 @@ from __future__ import annotations
 import re
 import typing
 
-whitespace_re = re.compile(r"(\s)")
+from colrev.constants import Fields
 
 
 def split_tex_string(
     string: str, sep: str = "", strip: bool = True, filter_empty: bool = False
 ) -> list:
+    """Split a string by a separator"""
+
     if sep == "":
         sep = r"[\s~]+"
         filter_empty = True
@@ -42,6 +44,8 @@ def split_tex_string(
 
 
 class NameParser:
+    """Parse a name string"""
+
     def __init__(self, name: str) -> None:
         self._first: list[str] = []
         self._middle: list[str] = []
@@ -116,8 +120,23 @@ class NameParser:
 
 
 def parse_names(names: str) -> str:
+    """Parse names"""
     if "," in names:
         return names
     name_list = re.split(r"\s+and\s+|;", names)
     formatted_names = [NameParser(name.strip()).format_name() for name in name_list]
     return " and ".join(formatted_names)
+
+
+def parse_names_in_records(records_dict: dict) -> None:
+    """Parse names in records
+
+    Note: requires fields to be Fields.AUTHOR/Fields.EDITOR
+
+    """
+
+    for record in records_dict.values():
+        if Fields.AUTHOR in record:
+            record[Fields.AUTHOR] = parse_names(record[Fields.AUTHOR])
+        if Fields.EDITOR in record:
+            record[Fields.EDITOR] = parse_names(record[Fields.EDITOR])

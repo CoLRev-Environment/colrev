@@ -16,19 +16,14 @@ from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
-from colrev.loader.load_utils_name_formatter import parse_names
 
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-arguments
 
 
-def extract_content(text: str) -> str:
-    match = re.match(r"^\s*\{(.+)\},?\s*$", text)
-    return match.group(1).strip() if match else text
-
-
-def run_fix_bib_file(filename: Path, logger: logging.Logger) -> None:
+def run_fix_bib_file(filename: Path, *, logger: logging.Logger) -> None:
+    """Fix a BibTeX file"""
     # pylint: disable=too-many-statements
 
     def fix_key(
@@ -75,10 +70,6 @@ def run_fix_bib_file(filename: Path, logger: logging.Logger) -> None:
             contents = bibtex_file.read()
             if len(contents) < 10:
                 return
-            bib_r = re.compile(r"@.*{.*,", re.M)
-            if len(re.findall(bib_r, contents)) == 0:
-                logger.error(f"Not a bib file? {filename.name}")
-                raise colrev_exceptions.UnsupportedImportFormatError(filename)
 
         # Errors to fix before pybtex loading:
         # - set_incremental_ids (otherwise, not all records will be loaded)
@@ -155,6 +146,29 @@ def run_fix_bib_file(filename: Path, logger: logging.Logger) -> None:
                 line = file.readline()
 
 
+def run_resolve_crossref(records: dict, *, logger: logging.Logger) -> None:
+    """Resolve cross-references between records"""
+    # Handle cross-references between records
+    crossref_ids = []
+    for record_dict in records.values():
+        if "crossref" not in record_dict:
+            continue
+
+        crossref_record = records.get(record_dict["crossref"], None)
+
+        if not crossref_record:
+            logger.error(f"crossref record (ID={record_dict['crossref']}) not found")
+            continue
+        crossref_ids.append(crossref_record["ID"])
+        for key, value in crossref_record.items():
+            if key not in record_dict:
+                record_dict[key] = value
+        del record_dict["crossref"]
+
+    for crossref_id in crossref_ids:
+        del records[crossref_id]
+
+
 class BIBLoader(colrev.loader.loader.Loader):
     """Loads BibTeX files"""
 
@@ -169,10 +183,10 @@ class BIBLoader(colrev.loader.loader.Loader):
         id_labeler: typing.Callable = lambda x: x,
         logger: logging.Logger = logging.getLogger(__name__),
         format_names: bool = False,
-        fix_bib_file: bool = False,
+        resolve_crossref: bool = False,
     ):
-        self.format_names = format_names
-        self.fix_bib_file = fix_bib_file
+        self.resolve_crossref = resolve_crossref
+
         super().__init__(
             filename=filename,
             id_labeler=id_labeler,
@@ -180,6 +194,7 @@ class BIBLoader(colrev.loader.loader.Loader):
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
             logger=logger,
+            format_names=format_names,
         )
 
     @classmethod
@@ -351,37 +366,6 @@ class BIBLoader(colrev.loader.loader.Loader):
     def load_records_list(self) -> list:
         """Load records from a BibTeX file without using pybtex's parse_file()"""
 
-        def drop_empty_fields(*, records: dict) -> None:
-            for record_id in records:
-                records[record_id] = {
-                    k: v
-                    for k, v in records[record_id].items()
-                    if v is not None and v != "nan"
-                }
-
-        def resolve_crossref(*, records: dict) -> None:
-            # Handle cross-references between records
-            crossref_ids = []
-            for record_dict in records.values():
-                if "crossref" not in record_dict:
-                    continue
-
-                crossref_record = records.get(record_dict["crossref"], None)
-
-                if not crossref_record:
-                    self.logger.error(
-                        f"crossref record (ID={record_dict['crossref']}) not found"
-                    )
-                    continue
-                crossref_ids.append(crossref_record["ID"])
-                for key, value in crossref_record.items():
-                    if key not in record_dict:
-                        record_dict[key] = value
-                del record_dict["crossref"]
-
-            for crossref_id in crossref_ids:
-                del records[crossref_id]
-
         def parse_provenance(value: str) -> dict:
             parsed_dict = {}
             items = [x.strip() for x in value.split("; ") if x.strip()]
@@ -397,48 +381,53 @@ class BIBLoader(colrev.loader.loader.Loader):
                     }
             return parsed_dict
 
-        def run_format_names(records: dict) -> None:
-            for record in records.values():
-                if Fields.AUTHOR in record:
-                    record[Fields.AUTHOR] = parse_names(record[Fields.AUTHOR])
-                if Fields.EDITOR in record:
-                    record[Fields.EDITOR] = parse_names(record[Fields.EDITOR])
+        def extract_content(text: str) -> str:
+            match = re.match(r"^\s*\{(.+)\},?\s*$", text)
+            return match.group(1).strip() if match else text
 
-        # TODO : add flag to switch off
-        if self.fix_bib_file:
-            run_fix_bib_file(self.filename, self.logger)
+        def check_valid_bib() -> None:
 
-        records = {}
+            with open(self.filename, encoding="utf8") as file:
+                contents = "".join(line for _, line in zip(range(20), file))
 
+                bib_r = re.compile(r"@.*{.*,", re.M)
+                if len(contents.strip()) > 0:
+                    if len(re.findall(bib_r, contents)) == 0:
+                        self.logger.error(f"Not a bib file? {self.filename.name}")
+                        raise colrev_exceptions.UnsupportedImportFormatError(
+                            self.filename
+                        )
+
+        def store_current_key_value() -> None:
+            """Helper function to store the last key-value pair in the current entry."""
+            if current_entry is not None and current_key:
+                if current_key in [Fields.MD_PROV, Fields.D_PROV]:
+                    current_entry[current_key] = parse_provenance(
+                        current_value.strip(", {}")
+                    )
+                elif current_key == Fields.STATUS:
+                    current_entry[current_key] = RecordState[
+                        current_value.strip(", {}")
+                    ]
+                elif current_key == Fields.DOI:
+                    current_entry[current_key] = current_value.strip(", {} ").upper()
+                elif current_key in [Fields.ORIGIN] + list(FieldSet.LIST_FIELDS):
+                    current_entry[current_key] = [
+                        el.strip(";")
+                        for el in current_value.strip(", {} ").split("; ")
+                        if el.strip()
+                    ]
+                else:
+                    current_entry[current_key] = extract_content(current_value)
+
+        check_valid_bib()
+
+        records = []
         with open(self.filename, encoding="utf-8") as file:
             current_entry = None
             current_key = None
             current_value = ""
             inside_entry = False
-
-            def store_current_key_value() -> None:
-                """Helper function to store the last key-value pair in the current entry."""
-                if current_entry is not None and current_key:
-                    if current_key in [Fields.MD_PROV, Fields.D_PROV]:
-                        current_entry[current_key] = parse_provenance(
-                            current_value.strip(", {}")
-                        )
-                    elif current_key == Fields.STATUS:
-                        current_entry[current_key] = RecordState[
-                            current_value.strip(", {}")
-                        ]
-                    elif current_key == Fields.DOI:
-                        current_entry[current_key] = current_value.strip(
-                            ", {} "
-                        ).upper()
-                    elif current_key in [Fields.ORIGIN] + list(FieldSet.LIST_FIELDS):
-                        current_entry[current_key] = [
-                            el.strip(";")
-                            for el in current_value.strip(", {} ").split("; ")
-                            if el.strip()
-                        ]
-                    else:
-                        current_entry[current_key] = extract_content(current_value)
 
             for line in file:
                 line = line.strip()
@@ -448,7 +437,7 @@ class BIBLoader(colrev.loader.loader.Loader):
 
                 if line.startswith("@"):  # New record begins
                     if current_entry:
-                        records[current_entry[Fields.ID]] = current_entry
+                        records.append(current_entry)
                     match = re.match(r"@([a-zA-Z]+)\s*\{([^,]+),", line)
                     if match:
                         entry_type, entry_id = match.groups()
@@ -474,14 +463,14 @@ class BIBLoader(colrev.loader.loader.Loader):
                                 ]
                             elif current_key == Fields.DOI:
                                 current_entry[current_key] = current_value.strip(
-                                    ", {} "
+                                    ", {}"
                                 ).upper()
                             elif current_key in [Fields.ORIGIN] + list(
                                 FieldSet.LIST_FIELDS
                             ):
                                 current_entry[current_key] = [
                                     el.strip(";")
-                                    for el in current_value.strip(", {} ").split("; ")
+                                    for el in current_value.strip(", {}").split("; ")
                                     if el.strip()
                                 ]
                             else:
@@ -519,16 +508,8 @@ class BIBLoader(colrev.loader.loader.Loader):
                     ]
                 else:
                     current_entry[current_key] = current_value.strip(", {}")
-                records[current_entry[Fields.ID]] = current_entry
+                records.append(current_entry)
 
-        # Parse names (optional/flag to switch off - off per default, on only for initial load)
-        # TODO : if self.parse_names:
-        if self.format_names:
-            run_format_names(records=records)
+        records.sort(key=lambda x: x[Fields.ID])
 
-        drop_empty_fields(records=records)
-        resolve_crossref(records=records)
-
-        records = dict(sorted(records.items()))
-
-        return list(records.values())
+        return records
