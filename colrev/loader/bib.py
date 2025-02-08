@@ -9,6 +9,9 @@ import re
 import string
 import typing
 from pathlib import Path
+from typing import Any
+from typing import Dict
+from typing import List
 
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.loader
@@ -16,7 +19,6 @@ from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
-
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-arguments
@@ -144,6 +146,129 @@ def run_fix_bib_file(filename: Path, *, logger: logging.Logger) -> None:
 
                 seekpos = file.tell()
                 line = file.readline()
+
+
+def check_valid_bib(filename: Path, logger: logging.Logger) -> None:
+    """Check if the file is a valid bib file."""
+
+    with open(filename, encoding="utf8") as file:
+        contents = "".join(line for _, line in zip(range(20), file))
+
+        bib_r = re.compile(r"@.*{.*,", re.M)
+        if len(contents.strip()) > 0:
+            if len(re.findall(bib_r, contents)) == 0:
+                logger.error(f"Not a bib file? {filename.name}")
+                raise colrev_exceptions.UnsupportedImportFormatError(filename)
+
+
+def parse_provenance(value: str) -> dict:
+    """Parses the provenance field."""
+    parsed_dict = {}
+    items = [x.strip() for x in value.split("; ") if x.strip()]
+    for item in items:
+        if ":" in item:
+            key, source = item.split(":", 1)
+            source_parts = source.split(";")
+            parsed_dict[key.strip()] = {
+                "source": source_parts[0].strip(),
+                "note": (source_parts[1].strip() if len(source_parts) > 1 else ""),
+            }
+    return parsed_dict
+
+
+def extract_content(text: str) -> str:
+    """Extracts the content of a field."""
+    match = re.match(r"^\s*\{(.+)\},?\s*$", text)
+    return match.group(1).strip() if match else text
+
+
+def handle_new_entry(
+    records: List[Dict[str, Any]], current_entry: Dict[str, Any], line: str
+) -> Dict[str, Any]:
+    """Handles a new record entry."""
+    if current_entry:
+        records.append(current_entry)
+
+    match = re.match(r"@([a-zA-Z]+)\s*\{([^,]+),", line)
+    if match:
+        entry_type, entry_id = match.groups()
+        return {
+            Fields.ID: entry_id.strip(),
+            Fields.ENTRYTYPE: entry_type.strip(),
+        }
+
+    return {}
+
+
+def process_key_value(
+    current_entry: Dict[str, Any], current_key: str, current_value: str, line: str
+) -> tuple[str, str]:
+    """Processes a key-value pair inside an entry."""
+    if "=" in line:  # New key-value pair
+        if current_key:
+            store_current_key_value(current_entry, current_key, current_value)
+        key, value = map(str.strip, line.split("=", 1))
+        return key, value
+    return current_key, current_value + " " + line.strip()
+
+
+def store_current_key_value(
+    current_entry: Dict[str, Any], current_key: str, current_value: str
+) -> None:
+    """Stores the processed key-value pair into the current entry."""
+    if not current_key or not current_entry:
+        return
+
+    if current_key in [Fields.MD_PROV, Fields.D_PROV]:
+        current_entry[current_key] = parse_provenance(current_value.strip(", {}"))
+    elif current_key == Fields.STATUS:
+        current_entry[current_key] = RecordState[current_value.strip(", {}")]
+    elif current_key == Fields.DOI:
+        current_entry[current_key] = current_value.strip(", {} ").upper()
+    elif current_key in [Fields.ORIGIN] + list(FieldSet.LIST_FIELDS):
+        current_entry[current_key] = [
+            el.strip(";")
+            for el in current_value.strip(", {} ").split("; ")
+            if el.strip()
+        ]
+    else:
+        current_entry[current_key] = extract_content(current_value)
+
+
+def process_lines(file: typing.TextIO) -> List[Dict[str, Any]]:
+    """Processes each line of the file and constructs records."""
+    records: list[dict] = []
+    current_entry: dict[str, str] = {}
+    current_key = ""
+    current_value = ""
+    inside_entry = False
+
+    for line in file:
+        line = line.strip()
+        if not line or line.startswith("%"):
+            continue
+
+        if line.startswith("@"):
+            current_entry = handle_new_entry(records, current_entry, line)
+            inside_entry = True
+            current_key = ""
+            current_value = ""
+            continue
+
+        if inside_entry:
+            current_key, current_value = process_key_value(
+                current_entry, current_key, current_value, line
+            )
+
+        if line.strip() == "}":
+            current_value = current_value.rstrip("}")
+            store_current_key_value(current_entry, current_key, current_value)
+
+    if current_entry:
+        store_current_key_value(current_entry, current_key, current_value)
+        records.append(current_entry)
+
+    return records
 
 
 def run_resolve_crossref(records: dict, *, logger: logging.Logger) -> None:
@@ -363,153 +488,13 @@ class BIBLoader(colrev.loader.loader.Loader):
 
         return key, value
 
-    def load_records_list(self) -> list:
-        """Load records from a BibTeX file without using pybtex's parse_file()"""
-
-        def parse_provenance(value: str) -> dict:
-            parsed_dict = {}
-            items = [x.strip() for x in value.split("; ") if x.strip()]
-            for item in items:
-                if ":" in item:
-                    key, source = item.split(":", 1)
-                    source_parts = source.split(";")
-                    parsed_dict[key.strip()] = {
-                        "source": source_parts[0].strip(),
-                        "note": (
-                            source_parts[1].strip() if len(source_parts) > 1 else ""
-                        ),
-                    }
-            return parsed_dict
-
-        def extract_content(text: str) -> str:
-            match = re.match(r"^\s*\{(.+)\},?\s*$", text)
-            return match.group(1).strip() if match else text
-
-        def check_valid_bib() -> None:
-
-            with open(self.filename, encoding="utf8") as file:
-                contents = "".join(line for _, line in zip(range(20), file))
-
-                bib_r = re.compile(r"@.*{.*,", re.M)
-                if len(contents.strip()) > 0:
-                    if len(re.findall(bib_r, contents)) == 0:
-                        self.logger.error(f"Not a bib file? {self.filename.name}")
-                        raise colrev_exceptions.UnsupportedImportFormatError(
-                            self.filename
-                        )
-
-        def store_current_key_value() -> None:
-            """Helper function to store the last key-value pair in the current entry."""
-            if current_entry is not None and current_key:
-                if current_key in [Fields.MD_PROV, Fields.D_PROV]:
-                    current_entry[current_key] = parse_provenance(
-                        current_value.strip(", {}")
-                    )
-                elif current_key == Fields.STATUS:
-                    current_entry[current_key] = RecordState[
-                        current_value.strip(", {}")
-                    ]
-                elif current_key == Fields.DOI:
-                    current_entry[current_key] = current_value.strip(", {} ").upper()
-                elif current_key in [Fields.ORIGIN] + list(FieldSet.LIST_FIELDS):
-                    current_entry[current_key] = [
-                        el.strip(";")
-                        for el in current_value.strip(", {} ").split("; ")
-                        if el.strip()
-                    ]
-                else:
-                    current_entry[current_key] = extract_content(current_value)
-
-        check_valid_bib()
-
+    def load_records_list(self) -> List[Dict[str, Any]]:
+        """Main function to parse the file and return records."""
         records = []
+        check_valid_bib(self.filename, self.logger)
+
         with open(self.filename, encoding="utf-8") as file:
-            current_entry = None
-            current_key = None
-            current_value = ""
-            inside_entry = False
-
-            for line in file:
-                line = line.strip()
-
-                if not line or line.startswith("%"):
-                    continue
-
-                if line.startswith("@"):  # New record begins
-                    if current_entry:
-                        records.append(current_entry)
-                    match = re.match(r"@([a-zA-Z]+)\s*\{([^,]+),", line)
-                    if match:
-                        entry_type, entry_id = match.groups()
-                        current_entry = {
-                            Fields.ID: entry_id.strip(),
-                            Fields.ENTRYTYPE: entry_type.strip(),
-                        }
-                        inside_entry = True
-                        current_key = None
-                        current_value = ""
-                    continue
-
-                if inside_entry:
-                    if "=" in line:  # New key-value pair
-                        if current_key:
-                            if current_key in [Fields.MD_PROV, Fields.D_PROV]:
-                                current_entry[current_key] = parse_provenance(
-                                    current_value.strip(", {}")
-                                )
-                            elif current_key == Fields.STATUS:
-                                current_entry[current_key] = RecordState[
-                                    current_value.strip(", {}")
-                                ]
-                            elif current_key == Fields.DOI:
-                                current_entry[current_key] = current_value.strip(
-                                    ", {}"
-                                ).upper()
-                            elif current_key in [Fields.ORIGIN] + list(
-                                FieldSet.LIST_FIELDS
-                            ):
-                                current_entry[current_key] = [
-                                    el.strip(";")
-                                    for el in current_value.strip(", {}").split("; ")
-                                    if el.strip()
-                                ]
-                            else:
-                                current_entry[current_key] = extract_content(
-                                    current_value
-                                )
-                        key, value = map(str.strip, line.split("=", 1))
-                        current_key = key
-                        current_value = value
-
-                    else:
-                        current_value += " " + line.strip()  # .strip(", {}")
-
-                if line.strip() == "}":
-                    # Remove the closing bracket of the entry
-                    current_value = current_value.rstrip("}")
-                    store_current_key_value()
-
-            if current_entry and current_key:
-                if current_key in [Fields.MD_PROV, Fields.D_PROV]:
-                    current_entry[current_key] = parse_provenance(
-                        current_value.strip(", {}")
-                    )
-                elif current_key == Fields.STATUS:
-                    current_entry[current_key] = RecordState[
-                        current_value.strip(", {}")
-                    ]
-                elif current_key == Fields.DOI:
-                    current_entry[current_key] = current_value.strip(", {} ").upper()
-                elif current_key in [Fields.ORIGIN] + list(FieldSet.LIST_FIELDS):
-                    current_entry[current_key] = [
-                        el.strip()
-                        for el in current_value.strip(", {} ").split("; ")
-                        if el.strip()
-                    ]
-                else:
-                    current_entry[current_key] = current_value.strip(", {}")
-                records.append(current_entry)
+            records = process_lines(file)
 
         records.sort(key=lambda x: x[Fields.ID])
-
         return records
