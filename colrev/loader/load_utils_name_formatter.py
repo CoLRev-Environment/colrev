@@ -55,6 +55,7 @@ class NameParser:
         self.parse_string(name)
 
     def parse_string(self, name: str) -> None:
+        """Parse the name string"""
         name = name.strip()
         parts = split_tex_string(name, ",")
 
@@ -97,18 +98,20 @@ class NameParser:
         pos = len(lst) - rpos
         return lst[:pos], lst[pos:]
 
-    def get_part_as_text(self, part_type: str) -> str:
+    def _get_part_as_text(self, part_type: str) -> str:
         return " ".join(getattr(self, f"_{part_type}", []))
 
     def format_name(self) -> str:
+        """Format the name"""
+
         def join(name_list: list) -> str:
             return " ".join([name for name in name_list if name])
 
-        first = self.get_part_as_text("first")
-        middle = self.get_part_as_text("middle")
-        prelast = self.get_part_as_text("prelast")
-        last = self.get_part_as_text("last")
-        lineage = self.get_part_as_text("lineage")
+        first = self._get_part_as_text("first")
+        middle = self._get_part_as_text("middle")
+        prelast = self._get_part_as_text("prelast")
+        last = self._get_part_as_text("last")
+        lineage = self._get_part_as_text("lineage")
         name_string = ""
         if last:
             name_string += join([prelast, last])
