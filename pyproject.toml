@@ -79,6 +79,7 @@ pytest-mock = {version = "^3.10.0", optional = true }
 pytest-skip-slow = {version = "^0.0.5", optional = true }
 requests-mock = {version = "^1.10.0", optional = true }
 coverage = {extras = ["toml"], version = "^7.3.2", optional = true }
+coverage-badge = {version = "^1.1.0", optional = true }
 types-click = {version = "^7.1.8", optional = true }
 # Can't do 0.21 with poetry because of https://github.com/python-poetry/poetry/issues/9293
 docutils = {version = "!=0.21.post1", optional = true }
@@ -87,7 +88,7 @@ mypy = {version = "1.12.0", optional = true }
 
 [tool.poetry.extras]
 docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinxcontrib.datatemplates", "sphinx_collapse", "repoze-sphinx-autointerface", "sphinx-design", "sphinx-copybutton", "docutils", "m2r", "beautifulsoup4"]
-dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock", "pytest-skip-slow", "m2r", "mypy", "importlib_metadata"]
+dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock", "pytest-skip-slow", "m2r", "mypy", "importlib_metadata", "coverage-badge"]
 
 [tool.mypy]
 python_version = 3.13
