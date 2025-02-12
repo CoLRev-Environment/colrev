@@ -87,10 +87,6 @@ class PRISMA:
         operation.review_manager.settings.data.data_package_endpoints.append(
             add_package
         )
-        operation.review_manager.save_settings()
-        operation.review_manager.dataset.create_commit(
-            msg=f"Add {operation.type} prisma",
-        )
 
     def _export_csv(self, silent_mode: bool) -> None:
         csv_resource_path = Path("packages/prisma/prisma/PRISMA.csv")

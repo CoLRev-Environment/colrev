@@ -78,10 +78,6 @@ class GithubPages:
         }
 
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
-        operation.review_manager.save_settings()
-        operation.review_manager.dataset.create_commit(
-            msg=f"Add {operation.type} github_pages",
-        )
 
     def _setup_github_pages_branch(self) -> None:
         # if branch does not exist: create and add index.html
