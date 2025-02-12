@@ -122,6 +122,7 @@ class ScopePrescreen:
     def _conditional_prescreen_entrytypes(
         self, record: colrev.record.record.Record
     ) -> None:
+        # pylint: disable=unsupported-membership-test
         if self.settings.ENTRYTYPEScope:
             if record.data[Fields.ENTRYTYPE] not in self.settings.ENTRYTYPEScope:
                 record.prescreen_exclude(reason="not in ENTRYTYPEScope")
@@ -141,9 +142,11 @@ class ScopePrescreen:
     ) -> None:
         if not self.settings.OutletExclusionScope:
             return
+        # pylint: disable=unsupported-membership-test
         if "values" not in self.settings.OutletExclusionScope:
             return
 
+        # pylint: disable=unsubscriptable-object
         for resource in self.settings.OutletExclusionScope["values"]:
             for key, value in resource.items():
                 if key in record.data and record.data.get(key, "") == value:
@@ -156,11 +159,14 @@ class ScopePrescreen:
             return
 
         in_outlet_scope = False
-        if "values" in self.settings.OutletInclusionScope:
-            for outlet in self.settings.OutletInclusionScope["values"]:
-                for key, value in outlet.items():
-                    if key in record.data and record.data.get(key, "") == value:
-                        in_outlet_scope = True
+        # pylint: disable=unsubscriptable-object
+        # pylint: disable=unsupported-membership-test
+        if self.settings.OutletInclusionScope:
+            if "values" in self.settings.OutletInclusionScope:
+                for outlet in self.settings.OutletInclusionScope["values"]:
+                    for key, value in outlet.items():
+                        if key in record.data and record.data.get(key, "") == value:
+                            in_outlet_scope = True
         if not in_outlet_scope:
             record.prescreen_exclude(reason="not in OutletInclusionScope")
 
@@ -201,6 +207,19 @@ class ScopePrescreen:
         if record.data["journal_ranking"] == "not included in a ranking":
             record.set_status(RecordState.rev_prescreen_excluded)
 
+    def _conditional_presecreen_languages(
+        self, record: colrev.record.record.Record
+    ) -> None:
+        if not self.settings.LanguageScope:
+            return
+
+        if Fields.LANGUAGE not in record.data:
+            return
+
+        # pylint: disable=unsupported-membership-test
+        if record.data[Fields.LANGUAGE] not in self.settings.LanguageScope:
+            record.prescreen_exclude(reason="not in LanguageScope")
+
     def _conditional_prescreen(
         self,
         *,
@@ -220,6 +239,7 @@ class ScopePrescreen:
         self._conditional_prescreen_timescope(record=record)
         self._conditional_prescreen_complementary_materials(record=record)
         self._conditional_presecreen_not_in_ranking(record=record)
+        self._conditional_presecreen_languages(record=record)
 
         if record.data[Fields.STATUS] == RecordState.rev_prescreen_excluded:
             self.review_manager.report_logger.info(
@@ -239,10 +259,37 @@ class ScopePrescreen:
     def add_endpoint(cls, *, operation: colrev.ops.search.Search, params: str) -> None:
         """Add  the scope_prescreen as an endpoint"""
 
-        params_dict = {}
+        if not params:
+            print("Interactive mode not yet implemented.")
+            return
+
+        def parse_value(
+            key: str, value: str
+        ) -> typing.Union[str, int, bool, list, dict]:
+            if key == "ExcludePredatoryJournals":
+                return_value = value == "True"
+            elif key in ["TimeScopeTo", "TimeScopeFrom"]:
+                return_value = int(value)  # type: ignore
+            elif key == "LanguageScope":
+                return_value = value.split(",")  # type: ignore
+            elif key == "ExcludeComplementaryMaterials":
+                return_value = value == "True"
+            elif key == "OutletInclusionScope" or key == "OutletExclusionScope":
+                return_value = {  # type: ignore
+                    x.split(":")[0]: x.split(":")[1] for x in value.split(",")
+                }
+            elif key == "ENTRYTYPEScope":
+                return_value = value.split(",")  # type: ignore
+            elif key == "RequireRankedJournals":
+                return_value = value.split(",")  # type: ignore
+            else:
+                return_value = value  # type: ignore
+            return return_value
+
+        params_dict: dict[str, typing.Any] = {}
         for p_el in params.split(";"):
             key, value = p_el.split("=")
-            params_dict[key] = value
+            params_dict[key] = parse_value(key, value)
 
         for (
             existing_scope_prescreen
@@ -260,7 +307,8 @@ class ScopePrescreen:
                     operation.review_manager.logger.info(
                         f"Replacing {key} ({existing_scope_prescreen[key]} -> {value})"
                     )
-                existing_scope_prescreen[key] = value
+
+                existing_scope_prescreen[key] = parse_value(key, value)
             return
 
         # Insert (if not added before)
