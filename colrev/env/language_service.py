@@ -50,23 +50,23 @@ class LanguageService:
         nr_arabic_characters = 0
         nr_chinese_characters = 0
         for character in str_to_check:
-            if "\u0370" <= character <= "\u03FF" or "\u1F00" <= character <= "\u1FFF":
+            if "\u0370" <= character <= "\u03ff" or "\u1f00" <= character <= "\u1fff":
                 nr_greek_letters += 1
-            elif "\uAC00" <= character <= "\uD7A3":
+            elif "\uac00" <= character <= "\ud7a3":
                 nr_hangul_characters += 1
-            elif "\u0400" <= character <= "\u04FF" or "\u0500" <= character <= "\u052F":
+            elif "\u0400" <= character <= "\u04ff" or "\u0500" <= character <= "\u052f":
                 nr_cyrillic_characters += 1
-            elif "\u0590" <= character <= "\u05FF" or "\uFB1D" <= character <= "\uFB4F":
+            elif "\u0590" <= character <= "\u05ff" or "\ufb1d" <= character <= "\ufb4f":
                 nr_hebrew_characters += 1
             elif (
-                "\u0600" <= character <= "\u06FF"
-                or "\u0750" <= character <= "\u077F"
-                or "\u08A0" <= character <= "\u08FF"
-                or "\uFB50" <= character <= "\uFDFF"
-                or "\uFE70" <= character <= "\uFEFF"
+                "\u0600" <= character <= "\u06ff"
+                or "\u0750" <= character <= "\u077f"
+                or "\u08a0" <= character <= "\u08ff"
+                or "\ufb50" <= character <= "\ufdff"
+                or "\ufe70" <= character <= "\ufeff"
             ):
                 nr_arabic_characters += 1
-            elif "\u4E00" <= character <= "\u9FFF" or "\u3400" <= character <= "\u4DBF":
+            elif "\u4e00" <= character <= "\u9fff" or "\u3400" <= character <= "\u4dbf":
                 nr_chinese_characters += 1
         if nr_greek_letters / len(str_to_check) > 0.75:
             return "ell"
