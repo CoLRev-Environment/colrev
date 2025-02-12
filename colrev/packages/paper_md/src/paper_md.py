@@ -146,10 +146,6 @@ class PaperMarkdown:
         }
 
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
-        operation.review_manager.save_settings()
-        operation.review_manager.dataset.create_commit(
-            msg=f"Add {operation.type} paper_md",
-        )
 
     def _retrieve_default_word_template(self, word_template: Path) -> bool:
 

@@ -64,10 +64,6 @@ class Profile:
         operation.review_manager.settings.data.data_package_endpoints.append(
             add_package
         )
-        operation.review_manager.save_settings()
-        operation.review_manager.dataset.create_commit(
-            msg=f"Add {operation.type} profile",
-        )
 
     def _update_profile(self, silent_mode: bool) -> None:
         """Create a profile of the sample"""
