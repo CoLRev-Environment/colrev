@@ -45,7 +45,24 @@ class ReviewTypeInterface(
 class SearchSourceInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
-    """The PackageEndpoint interface for SearchSources"""
+    """The PackageEndpoint interface for SearchSources
+
+    How the CLI-commands call the methods:
+
+    `colrev search -a ...`: calls `add_endpoint()` and `search()`
+
+    `colrev search`: calls `search()` again to update the search,
+    using the saved search-parameters.
+
+    `colrev load`: calls the `load()` method
+
+    `colrev prep`: calls the `prepare()` method and the
+    `prep_link_md()` method (depending on the settings).
+
+    To implement a new SearchSource, it is recommended to start with
+    the `add_endpoint()`, and then proceed with the `search()`, `load()`,
+    and `prepare()` methods.
+    """
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
     source_identifier = zope.interface.Attribute(
@@ -54,7 +71,7 @@ class SearchSourceInterface(
         when they are added to/updated in the SearchAPIFeed"""
     )
     search_types = zope.interface.Attribute(
-        """SearchTypes associated with the SearchSource"""
+        """SearchTypes attribute associated with the SearchSource"""
     )
 
     heuristic_status: SearchSourceHeuristicStatus = zope.interface.Attribute(
@@ -63,16 +80,23 @@ class SearchSourceInterface(
 
     # pylint: disable=no-self-argument
     def heuristic(filename: Path, data: str):  # type: ignore
-        """Heuristic to identify to which SearchSource a search file belongs (for DB searches)"""
+        """Heuristic to identify to which SearchSource a search file belongs (needed for DB searches only).
+
+        When users save a search results file from a database in the `data/search/` directory,
+        they can run `colrev search` (without specifying where the search results file comes from).
+        The search operation will use the `heuristic()` method of all available SearchSources
+        to identify the database and thereby make it more convenient for users to enter the details.
+        """
 
     # pylint: disable=no-self-argument
     def add_endpoint(  # type: ignore
         operation: colrev.process.operation.Operation,
         params: str,
     ) -> colrev.settings.SearchSource:
-        """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)
-        params:
-        - search_file="..." to add a DB search
+        """Add the SearchSource as an endpoint.
+
+        The parameters (`params`) can either be provided with the command (`colrev search -a ...`)
+        or they can be entered interactively.
         """
 
     # pylint: disable=no-self-argument
