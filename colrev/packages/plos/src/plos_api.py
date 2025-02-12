@@ -21,9 +21,7 @@ from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.packages.plos.src import plos_record_transformer
 
-# pylint: disable=too-many-positional-arguments
 # pylint: disable=too-many-arguments
-
 # pylint: disable=too-few-public-methods
 
 
