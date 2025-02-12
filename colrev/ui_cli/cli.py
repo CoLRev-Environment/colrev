@@ -3110,6 +3110,7 @@ def undo(
 
 
 def select_format() -> str:
+    """Select the format"""
     questions = [
         inquirer.List(
             "format",
@@ -3126,12 +3127,13 @@ def select_format() -> str:
 
 @main.command(help_priority=33)
 @click.argument(
-    "input",
+    "input_file",
     type=click.Path(exists=True, readable=True),
 )
 @click.option(
     "-o",
     "--format",
+    "output_format",
     type=click.Choice(["bib", "csv", "xlsx"], case_sensitive=False),
     default=None,
     help="Optional output format (bib, csv, xlsx)",
@@ -3139,24 +3141,24 @@ def select_format() -> str:
 @click.pass_context
 def convert(
     ctx: click.core.Context,
-    input: str,
-    format: str,
+    input_file: str,
+    output_format: str,
 ) -> None:
     """
     Convert a file to the specified format.
     """
     # Example placeholder logic
-    click.echo(f"Converting file: {input}")
-    if format:
-        click.echo(f"Output format: {format}")
+    click.echo(f"Converting file: {input_file}")
+    if output_format:
+        click.echo(f"Output format: {output_format}")
     else:
-        format = select_format()
+        output_format = select_format()
 
     import colrev.loader.load_utils
     from colrev.writer.write_utils import write_file
 
-    records = colrev.loader.load_utils.load(Path(input))
-    if Path(input).suffix == ".md":  # or generate_ids flag
+    records = colrev.loader.load_utils.load(Path(input_file))
+    if Path(input_file).suffix == ".md":  # or generate_ids flag
         print("Generating IDs")
         id_setter = colrev.record.record_id_setter.IDSetter(
             id_pattern=IDPattern.three_authors_year,
@@ -3166,7 +3168,9 @@ def convert(
             records=records,
         )
 
-    write_file(records_dict=records, filename=Path(input).with_suffix(f".{format}"))
+    write_file(
+        records_dict=records, filename=Path(input_file).with_suffix(f".{output_format}")
+    )
 
 
 @main.command(help_priority=34)
