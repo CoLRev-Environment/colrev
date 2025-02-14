@@ -14,7 +14,7 @@ import colrev.record.record
 
 
 # @zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
-class MethodologicalReview(colrev.package_manager.interfaces.ReviewType):
+class MethodologicalReview(colrev.package_manager.interfaces.ReviewTypeInterface):
     """Methodological review"""
 
     ci_supported: bool = Field(default=True)

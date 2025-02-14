@@ -14,7 +14,7 @@ import colrev.record.record
 
 
 # @zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
-class ScientometricReview(colrev.package_manager.interfaces.ReviewType):
+class ScientometricReview(colrev.package_manager.interfaces.ReviewTypeInterface):
     """Scientometric study"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

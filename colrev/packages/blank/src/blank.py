@@ -14,7 +14,7 @@ import colrev.record.record
 
 
 # @zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
-class BlankReview(colrev.package_manager.interfaces.ReviewType):
+class BlankReview(colrev.package_manager.interfaces.ReviewTypeInterface):
     """Blank review"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

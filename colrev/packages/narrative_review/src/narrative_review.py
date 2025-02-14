@@ -14,7 +14,7 @@ import colrev.record.record
 
 
 # @zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
-class NarrativeReview(colrev.package_manager.interfaces.ReviewType):
+class NarrativeReview(colrev.package_manager.interfaces.ReviewTypeInterface):
     """Narrative review"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

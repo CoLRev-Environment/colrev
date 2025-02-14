@@ -23,15 +23,15 @@ class CustomPDFGet(colrev.package_manager.interfaces.PDFGetInterface):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class(**settings)
+        self.pdf_get_operation = pdf_get_operation
 
     def get_pdf(
         self,
-        pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
         record: colrev.record.record.Record,
     ) -> colrev.record.record.Record:
         """Get the PDF"""
 
         record.data[Fields.FILE] = "filepath"
-        pdf_get_operation.import_pdf(record)
+        self.pdf_get_operation.import_pdf(record)
 
         return record

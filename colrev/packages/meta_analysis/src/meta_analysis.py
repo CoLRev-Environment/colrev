@@ -20,7 +20,7 @@ from colrev.packages.pdf_backward_search.src.pdf_backward_search import (
 
 
 # @zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
-class MetaAnalysis(colrev.package_manager.interfaces.ReviewType):
+class MetaAnalysis(colrev.package_manager.interfaces.ReviewTypeInterface):
     """Meta-analysis"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

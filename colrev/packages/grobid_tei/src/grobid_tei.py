@@ -44,11 +44,11 @@ class GROBIDTEI(colrev.package_manager.interfaces.PDFPrepInterface):
         self,
         record: colrev.record.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
-    ) -> dict:
+    ) -> colrev.record.record_pdf.PDFRecord:
         """Prepare the analysis of PDFs by creating a TEI (based on GROBID)"""
 
         if not record.data.get(Fields.FILE, "NA").endswith(".pdf"):
-            return record.data
+            return record
 
         if not record.get_tei_filename().is_file():
             self.review_manager.logger.debug(f" creating tei: {record.data['ID']}")
@@ -57,4 +57,4 @@ class GROBIDTEI(colrev.package_manager.interfaces.PDFPrepInterface):
                 tei_path=record.get_tei_filename(),
             )
 
-        return record.data
+        return record

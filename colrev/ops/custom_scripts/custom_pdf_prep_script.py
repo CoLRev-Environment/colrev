@@ -23,14 +23,14 @@ class CustomPDFPrep(colrev.package_manager.interfaces.PDFPrepInterface):
     def __init__(
         self,
         *,
-        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
+        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         settings: dict,
     ) -> None:
         self.settings = self.settings_class(**settings)
+        self.pdf_prep_operation = pdf_prep_operation
 
     def prep_pdf(
         self,
-        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
         record: colrev.record.record.Record,
         pad: int,  # pylint: disable=unused-argument
     ) -> colrev.record.record.Record:

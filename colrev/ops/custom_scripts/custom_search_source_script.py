@@ -64,8 +64,9 @@ class CustomSearch(colrev.package_manager.interfaces.SearchSourceInterface):
                 "CROSSREF queries require a journal_issn field in the SCOPE section"
             )
 
+    @classmethod
     def heuristic(
-        self, filename: Path, data: str  # pylint: disable=unused-argument
+        cls, filename: Path, data: str  # pylint: disable=unused-argument
     ) -> dict:
         """Heuristic to identify the custom source"""
 
@@ -83,7 +84,9 @@ class CustomSearch(colrev.package_manager.interfaces.SearchSourceInterface):
         return records
 
     def prepare(
-        self, record: colrev.record.record.Record
+        self,
+        record: colrev.record.record.Record,
+        source: colrev.settings.SearchSource,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for the custom source"""
 

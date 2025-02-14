@@ -8,6 +8,8 @@ from importlib.metadata import distributions
 from importlib.metadata import PackageNotFoundError
 from pathlib import Path
 from typing import Any
+from typing import cast
+from typing import Type
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -79,10 +81,15 @@ class Package:
         endpoint_type: EndpointType,
         identifier: str,
     ) -> None:
-        baseclass_definition = BASECLASS_OVERVIEW[endpoint_type]["import_name"]
+        # baseclass_definition = BASECLASS_OVERVIEW[endpoint_type]["import_name"]
+
+        baseclass_definition = cast(
+            Type, BASECLASS_OVERVIEW[endpoint_type]["import_name"]
+        )
         if not issubclass(endpoint_class, baseclass_definition):
             raise TypeError(
-                f"{identifier}({endpoint_class}) must implement all abstract methods of {baseclass_definition}!"
+                f"{identifier}({endpoint_class}) must implement "
+                f"all abstract methods of {baseclass_definition}!"
             )
 
     def get_endpoint_class(self, package_type: EndpointType) -> Any:

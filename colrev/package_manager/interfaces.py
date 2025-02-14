@@ -7,9 +7,12 @@ import typing
 from abc import ABC
 from abc import abstractmethod
 from pathlib import Path
+from typing import Type
 
-import colrev
+import colrev.package_manager.package_settings
 from colrev.constants import EndpointType
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.process.operation
@@ -31,8 +34,8 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 #     )
 
 
-class ReviewType(abc.ABC):
-    """The ReviewType interface for ReviewTypes"""
+class ReviewTypeInterface(abc.ABC):
+    """The ReviewTypeInterface interface for ReviewTypes"""
 
     @abc.abstractmethod
     def __init__(self, ci_supported: bool):
@@ -48,6 +51,7 @@ class ReviewType(abc.ABC):
 
 
 class APISearchInterface(abc.ABC):  # pylint: disable=inherit-non-class
+    """The PackageEndpoint abstract base class for API-search operations"""
 
     query = ""
     # TODO : depends on "last_updated" in crossref. -> maybe use a "run_since ..." field?
@@ -62,18 +66,21 @@ class APISearchInterface(abc.ABC):  # pylint: disable=inherit-non-class
 class SearchSourceInterface(ABC):
     """The PackageEndpoint abstract base class for SearchSources"""
 
-    settings_class = None
-    source_identifier = None
-    search_types = None
-    heuristic_status = None  # TODO : colrev.SearchSourceHeuristicStatus
+    settings_class: Type[colrev.package_manager.package_settings.DefaultSourceSettings]
+    source_identifier: str
+    search_types: list[SearchType]
+    heuristic_status: SearchSourceHeuristicStatus
+    search_source: colrev.package_manager.package_settings.DefaultSourceSettings
 
+    @classmethod
     @abstractmethod
-    def heuristic(self, filename: Path, data: str):
+    def heuristic(cls, filename: Path, data: str) -> dict:
         """Heuristic to identify which SearchSource a search file belongs to."""
 
+    @classmethod
     @abstractmethod
     def add_endpoint(
-        self, operation: colrev.process.operation.Operation, params: str
+        cls, operation: colrev.ops.search.Search, params: str
     ) -> colrev.settings.SearchSource:
         """Add the SearchSource as an endpoint."""
 
@@ -88,7 +95,7 @@ class SearchSourceInterface(ABC):
         record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ):
+    ) -> colrev.record.record.Record:
         """Retrieve masterdata from the SearchSource."""
 
     @abstractmethod
@@ -96,26 +103,32 @@ class SearchSourceInterface(ABC):
         """Load records from the SearchSource."""
 
     @abstractmethod
-    def prepare(self, record: dict, source: colrev.settings.SearchSource) -> None:
+    def prepare(
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
+    ) -> colrev.record.record.Record:
         """Run the custom source-prep operation."""
 
 
 class PrepInterface(ABC):
     """The PackageEndpoint abstract base class for prep operations."""
 
-    settings_class = None
-    source_correction_hint = None
-    always_apply_changes = None
+    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+    source_correction_hint: str
+    always_apply_changes: bool
 
     @abstractmethod
-    def prepare(self, prep_record: dict) -> dict:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Run the prep operation."""
 
 
 class PrepManInterface(ABC):
     """The PackageEndpoint abstract base class for prep-man operations."""
 
-    settings_class = None
+    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def prepare_manual(self, records: dict) -> dict:
@@ -125,7 +138,7 @@ class PrepManInterface(ABC):
 class DedupeInterface(ABC):
     """The PackageEndpoint abstract base class for dedupe operations."""
 
-    settings_class = None
+    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def run_dedupe(self) -> None:
@@ -135,7 +148,8 @@ class DedupeInterface(ABC):
 class PrescreenInterface(ABC):
     """The PackageEndpoint abstract base class for prescreen operations."""
 
-    settings_class = None
+    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings: colrev.package_manager.package_settings.DefaultSettings
 
     @abstractmethod
     def run_prescreen(self, records: dict, split: list) -> dict:
@@ -145,17 +159,19 @@ class PrescreenInterface(ABC):
 class PDFGetInterface(ABC):
     """The PackageEndpoint abstract base class for pdf-get operations."""
 
-    settings_class = None
+    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
-    def get_pdf(self, record: dict) -> dict:
+    def get_pdf(
+        self, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         """Run the pdf-get operation."""
 
 
 class PDFGetManInterface(ABC):
     """The PackageEndpoint abstract base class for pdf-get-man operations."""
 
-    settings_class = None
+    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def pdf_get_man(self, records: dict) -> dict:
@@ -165,17 +181,19 @@ class PDFGetManInterface(ABC):
 class PDFPrepInterface(ABC):
     """The PackageEndpoint abstract base class for pdf-prep operations."""
 
-    settings_class = None
+    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
-    def prep_pdf(self, record: colrev.record.record_pdf.PDFRecord, pad: int) -> dict:
+    def prep_pdf(
+        self, record: colrev.record.record_pdf.PDFRecord, pad: int
+    ) -> colrev.record.record.Record:
         """Run the prep-pdf operation."""
 
 
 class PDFPrepManInterface(ABC):
     """The PackageEndpoint abstract base class for pdf-prep-man operations."""
 
-    settings_class = None
+    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def pdf_prep_man(self, records: dict) -> dict:
@@ -185,7 +203,7 @@ class PDFPrepManInterface(ABC):
 class ScreenInterface(ABC):
     """The PackageEndpoint abstract base class for screen operations."""
 
-    settings_class = None
+    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def run_screen(self, records: dict, split: list) -> dict:
@@ -195,7 +213,7 @@ class ScreenInterface(ABC):
 class DataInterface(ABC):
     """The PackageEndpoint abstract base class for data operations."""
 
-    settings_class = None
+    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def update_data(
@@ -216,7 +234,7 @@ class DataInterface(ABC):
 
 BASECLASS_OVERVIEW = {
     EndpointType.review_type: {
-        "import_name": ReviewType,
+        "import_name": ReviewTypeInterface,
         "custom_class": "CustomReviewType",
         "operation_name": "operation",
     },

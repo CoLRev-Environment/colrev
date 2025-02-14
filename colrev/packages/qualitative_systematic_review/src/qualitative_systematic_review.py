@@ -20,7 +20,9 @@ from colrev.packages.pdf_backward_search.src.pdf_backward_search import (
 
 
 # @zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
-class QualitativeSystematicReview(colrev.package_manager.interfaces.ReviewType):
+class QualitativeSystematicReview(
+    colrev.package_manager.interfaces.ReviewTypeInterface
+):
     """Qualitative systematic review"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

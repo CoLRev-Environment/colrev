@@ -28,7 +28,6 @@ class CustomPrep(colrev.package_manager.interfaces.PrepInterface):
 
     def prepare(
         self,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         record: colrev.record.record.Record,
     ) -> colrev.record.record.Record:
         """Update record (metadata)"""

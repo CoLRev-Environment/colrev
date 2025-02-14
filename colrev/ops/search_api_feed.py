@@ -78,7 +78,8 @@ class SearchAPIFeed:
 
     # TODO : check where to use validation (all colrev classes?
     # just those that are used by external/new packages!?)
-    # Note: the problem was caused by a package directly setting the source_identifier to a non-supported type/value
+    # Note: the problem was caused by a package directly setting
+    # the source_identifier to a non-supported type/value
     @source_identifier.setter
     def source_identifier(self, value: str) -> None:
         if not isinstance(value, str):

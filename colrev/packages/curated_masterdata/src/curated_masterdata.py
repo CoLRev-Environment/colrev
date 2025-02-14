@@ -17,7 +17,7 @@ from colrev.constants import Fields
 
 
 # @zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
-class CuratedMasterdata(colrev.package_manager.interfaces.ReviewType):
+class CuratedMasterdata(colrev.package_manager.interfaces.ReviewTypeInterface):
     """Curated masterdata"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

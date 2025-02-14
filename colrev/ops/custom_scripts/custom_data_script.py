@@ -19,6 +19,7 @@ class CustomData(colrev.package_manager.interfaces.DataInterface):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class(**settings)
+        self.data_operation = data_operation
 
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
@@ -26,15 +27,14 @@ class CustomData(colrev.package_manager.interfaces.DataInterface):
 
     def update_data(
         self,
-        data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         records: dict,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
+        silent_mode: bool,
     ) -> None:
         """Update the data"""
 
     def update_record_status_matrix(
         self,
-        data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:

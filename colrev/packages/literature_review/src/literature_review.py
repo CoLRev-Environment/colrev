@@ -14,7 +14,7 @@ import colrev.record.record
 
 
 # # @zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
-class LiteratureReview(colrev.package_manager.interfaces.ReviewType):
+class LiteratureReview(colrev.package_manager.interfaces.ReviewTypeInterface):
     """Literature review (simple)"""
 
     ci_supported: bool = Field(default=True)

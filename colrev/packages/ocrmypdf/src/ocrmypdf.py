@@ -89,7 +89,7 @@ class OCRMyPDF(colrev.package_manager.interfaces.PDFPrepInterface):
         self,
         record: colrev.record.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
-    ) -> dict:
+    ) -> colrev.record.record_pdf.PDFRecord:
         """Prepare the PDF by applying OCR"""
 
         if (
@@ -97,9 +97,9 @@ class OCRMyPDF(colrev.package_manager.interfaces.PDFPrepInterface):
             or not record.data[Fields.FILE].endswith(".pdf")
             or PDFDefectCodes.NO_TEXT_IN_PDF not in record.defects("file")
         ):
-            return record.data
+            return record
 
         self.review_manager.report_logger.info(f"apply_ocr({record.data[Fields.ID]})")
         record = self._apply_ocr(record=record)
 
-        return record.data
+        return record

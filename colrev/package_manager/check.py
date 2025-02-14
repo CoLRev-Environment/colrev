@@ -14,7 +14,7 @@ import toml
 
 import colrev.package_manager.interfaces
 from colrev.constants import Colors
-from colrev.package_manager.interfaces import INTERFACE_MAP
+from colrev.package_manager.interfaces import BASECLASS_MAP
 
 
 def _check_package_installed(data: dict) -> bool:
@@ -71,7 +71,7 @@ def _check_tool_poetry_plugins_colrev_keys(data: dict) -> bool:
     colrev_data = (
         data.get("tool", {}).get("poetry", {}).get("plugins", {}).get("colrev", {})
     )
-    return all(key in list(INTERFACE_MAP) for key in list(colrev_data))
+    return all(key in list(BASECLASS_MAP) for key in list(colrev_data))
 
 
 # pylint: disable=too-many-locals
@@ -101,15 +101,13 @@ def _check_tool_poetry_plugins_colrev_classes(data: dict) -> bool:
             module = import_module(f"{package}.{module_path}")
             module_spec.loader.exec_module(module)  # type: ignore
             cls = getattr(module, class_name)  # type: ignore
-            interface: str = INTERFACE_MAP.get(interface_identifier)  # type: ignore
+            baseclass: str = BASECLASS_MAP.get(interface_identifier)  # type: ignore
 
-            interface_class = getattr(colrev.package_manager.interfaces, interface)
-            if not issubclass(cls, interface_class):
+            baseclass_class = getattr(colrev.package_manager.interfaces, baseclass)
+            if not issubclass(cls, baseclass_class):
                 raise TypeError(
-                    f"{cls} must implement all abstract methods of {interface_class}!"
+                    f"{cls} must implement all abstract methods of {baseclass_class}!"
                 )
-            # if not interface or not verifyClass(interface_class, cls):
-            #     return False
         except (ImportError, AttributeError) as exc:
             print(exc)
             return False

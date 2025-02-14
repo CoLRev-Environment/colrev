@@ -161,18 +161,18 @@ class PDFCoverPage(colrev.package_manager.interfaces.PDFPrepInterface):
         self,
         record: colrev.record.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
-    ) -> dict:
+    ) -> colrev.record.record_pdf.PDFRecord:
         """Prepare the PDF by removing coverpages (if any)"""
 
         if not record.data[Fields.FILE].endswith(".pdf"):
-            return record.data
+            return record
 
         cp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
         coverpages = self._get_coverpages(record)
         if not coverpages:
-            return record.data
+            return record
         if coverpages:
             original = self.review_manager.path / Path(record.data[Fields.FILE])
             file_copy = self.review_manager.path / Path(
@@ -186,4 +186,4 @@ class PDFCoverPage(colrev.package_manager.interfaces.PDFPrepInterface):
             self.review_manager.report_logger.info(
                 f"removed cover page for ({record.data[Fields.ID]})"
             )
-        return record.data
+        return record

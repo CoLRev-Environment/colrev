@@ -62,7 +62,9 @@ class UnpaywallSearchSource(colrev.package_manager.interfaces.SearchSourceInterf
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls, operation: colrev.ops.search.Search, params: str
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         params_dict = {}
@@ -113,6 +115,7 @@ class UnpaywallSearchSource(colrev.package_manager.interfaces.SearchSourceInterf
             )
 
         operation.add_source_and_search(search_source)
+        return search_source
 
     def _run_api_search(
         self, *, unpaywall_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool

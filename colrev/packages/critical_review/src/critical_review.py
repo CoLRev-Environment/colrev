@@ -14,7 +14,7 @@ import colrev.record.record
 
 
 # @zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
-class CriticalReview(colrev.package_manager.interfaces.ReviewType):
+class CriticalReview(colrev.package_manager.interfaces.ReviewTypeInterface):
     """Critical review"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
