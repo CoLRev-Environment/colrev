@@ -7,7 +7,6 @@ import subprocess  # nosec
 import sys
 import time
 import typing
-import webbrowser
 from functools import partial
 from functools import wraps
 from pathlib import Path
@@ -191,6 +190,8 @@ def catch_exception(func=None, *, handle) -> typing.Any:  # type: ignore
     """Catch typical cli exceptions (e.g., CoLRevException)"""
     if not func:
         return partial(catch_exception, handle=handle)
+
+    # func.__name__
 
     # pylint: disable=inconsistent-return-statements
     @wraps(func)
@@ -390,32 +391,6 @@ def status(
         print(exc)
 
 
-@main.command(help_priority=100)
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    default=False,
-    help="Verbose: printing more infos",
-)
-@click.pass_context
-def dashboard(
-    ctx: click.core.Context,
-    verbose: bool,
-) -> None:
-    """Allows to track project progress through dashboard"""
-    import colrev.packages.ui_web.src.dashboard
-
-    try:
-        colrev.packages.ui_web.src.dashboard.main()
-    except colrev_exceptions.NoRecordsError:
-        print("No records imported yet.")
-    except colrev_exceptions.CoLRevException as exc:
-        if verbose:
-            raise exc
-        print(exc)
-
-
 @main.command(help_priority=3)
 @click.option(
     "-v",
@@ -468,7 +443,7 @@ def retrieve(
             " - add an API-based search, as described in the documentation:\n"
             "https://colrev-environment.github.io/colrev/manual/metadata_retrieval/search.html"
         )
-        return
+        ctx.exit(1)
 
     review_manager.logger.info("Retrieve")
     review_manager.logger.info(
@@ -827,7 +802,7 @@ def prep(
         print(exc)
         print("You can use the force mode to override")
         print(f"  {Colors.ORANGE}colrev prep -f{Colors.END}")
-        return
+        ctx.exit(1)
 
 
 @main.command(help_priority=7)
@@ -1047,7 +1022,7 @@ def dedupe(
             or dedupe_operation.non_dupe_file_txt.is_file()
         ):
             review_manager.logger.error("No file with potential errors found.")
-            return
+            ctx.exit(1)
 
         false_positives = colrev.ui_cli.dedupe_errors.load_dedupe_false_positives(
             dedupe_operation=dedupe_operation
@@ -1472,6 +1447,7 @@ def pdfs(
     if open_dir:
         # pylint: disable=consider-using-with
         # pylint: disable=no-member
+        import webbrowser
 
         path = review_manager.path / Path("data/pdfs")
         webbrowser.open(str(path))
@@ -2405,6 +2381,17 @@ def env(
 
     # pylint: disable=too-many-branches
 
+    options_set = any(
+        [index, install, pull, status, register, unregister, update_package_list]
+    )
+    if not options_set:
+        click.echo(
+            "Error: No option provided. Please specify at least one of the following options:",
+            err=True,
+        )
+        click.echo(ctx.get_help())
+        ctx.exit(1)
+
     if update_package_list:
         import colrev.package_manager.doc_registry_manager
 
@@ -2514,6 +2501,17 @@ def package(
 ) -> None:
     """Manage CoLRev packages"""
 
+    # Collect all options
+    options_set = any([init, check])
+
+    if not options_set:
+        click.echo(
+            "Error: No option provided. Please specify at least one of the following options:",
+            err=True,
+        )
+        click.echo(ctx.get_help())
+        ctx.exit(1)
+
     if init:
         import colrev.package_manager.init
 
@@ -2559,6 +2557,7 @@ def package(
     default=False,
     help="Force mode",
 )
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
 @click.pass_context
 def settings(
     ctx: click.core.Context,
@@ -2571,6 +2570,17 @@ def settings(
     """Settings of the CoLRev project"""
 
     # pylint: disable=reimported
+
+    # Collect all options
+    options_set = any([update_hooks, modify, update_global])
+
+    if not options_set:
+        click.echo(
+            "Error: No option provided. Please specify at least one of the following options:",
+            err=True,
+        )
+        click.echo(ctx.get_help())
+        ctx.exit(1)
 
     from subprocess import check_call  # nosec
     from subprocess import DEVNULL  # nosec
@@ -2588,7 +2598,7 @@ def settings(
 
         if review_manager.dataset.has_record_changes():
             print("Clean repo required. Commit or stash changes.")
-            return
+            ctx.exit(1)
 
         scripts_to_call = [
             [
@@ -2777,6 +2787,7 @@ def _validate_show(ctx: click.core.Context, param: str, value: str) -> None:
     default=False,
     help="Force mode",
 )
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
 @click.pass_context
 def show(  # type: ignore
     ctx: click.core.Context,
@@ -2849,41 +2860,6 @@ def show(  # type: ignore
                 f"{cmd['date']} ({cmd['committer']}, {cmd['commit_id']}):    "
                 f"{Colors.ORANGE}{cmd['cmd']}{Colors.END}"
             )
-
-
-# @main.command(help_priority=28)
-# @click.option(
-#     "-v",
-#     "--verbose",
-#     is_flag=True,
-#     default=False,
-#     help="Verbose: printing more infos",
-# )
-# @click.option(
-#     "-f",
-#     "--force",
-#     is_flag=True,
-#     default=False,
-#     help="Force mode",
-# )
-# @click.pass_context
-# def web(
-#     ctx: click.core.Context,
-#     verbose: bool,
-#     force: bool,
-# ) -> None:
-#     """CoLRev web interface."""
-
-#
-#     import colrev.packages.ui_web.src.settings_editor
-
-#     review_manager = colrev.review_manager.ReviewManager(
-#         force_mode=force, verbose_mode=verbose
-#     )
-#     se_instance = colrev.packages.ui_web.src.settings_editor.SettingsEditor(
-#         review_manager=review_manager
-#     )
-#     se_instance.open_settings_editor()
 
 
 @main.command(hidden=True, help_priority=27)
@@ -2967,7 +2943,7 @@ def repare(
 @click.option(
     "--ids",
     help="Remove records and their origins from the repository (ID1,ID2,...).",
-    required=False,
+    required=True,
 )
 @click.option(
     "-v",
@@ -2983,6 +2959,7 @@ def repare(
     default=False,
     help="Force mode",
 )
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
 @click.pass_context
 def remove(
     ctx: click.core.Context,
@@ -3025,6 +3002,7 @@ def docs(
     force: bool,
 ) -> None:
     """Show the CoLRev documentation."""
+    import webbrowser
 
     webbrowser.open("https://colrev-environment.github.io/colrev/")
 
@@ -3049,6 +3027,7 @@ def docs(
     default=False,
     help="Force mode",
 )
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
 @click.pass_context
 def merge(
     ctx: click.core.Context,
@@ -3089,6 +3068,7 @@ def merge(
     default=False,
     help="Force mode",
 )
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
 @click.pass_context
 def undo(
     ctx: click.core.Context,
@@ -3186,7 +3166,7 @@ def version(
 
 
 @main.command(help_priority=34)
-@click.argument("packages", nargs=-1, required=False)
+@click.argument("packages", nargs=-1, required=True)
 @click.option(
     "-U", "--upgrade", is_flag=True, help="Upgrade packages to latest version"
 )

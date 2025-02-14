@@ -12,6 +12,9 @@ authors = [
 ]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/ui_web"
 
+[tool.poetry.scripts]
+colrev-ui-web = "colrev.packages.ui_web.src.dashboard:main"
+
 [[tool.poetry.packages]]
 include = "src"
 
