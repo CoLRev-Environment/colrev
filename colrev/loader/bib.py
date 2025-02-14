@@ -177,7 +177,7 @@ def parse_provenance(value: str) -> dict:
 
 def extract_content(text: str) -> str:
     """Extracts the content of a field."""
-    match = re.match(r"^\s*\{(.+)\},?\s*$", text)
+    match = re.match(r"^\s*\{(.*)\},?\s*$", text)
     return match.group(1).strip() if match else text
 
 
