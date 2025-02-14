@@ -332,6 +332,7 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
     return package_data
 
 
+# TODO : this would need to be revised
 # pylint: disable=too-many-branches
 def _get_init_method(interface_class: Type) -> str:
 

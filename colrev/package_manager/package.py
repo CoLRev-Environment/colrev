@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Any
 
 import zope.interface.exceptions
-from zope.interface.verify import verifyClass
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -81,7 +80,11 @@ class Package:
     ) -> bool:
         interface_definition = ENDPOINT_OVERVIEW[endpoint_type]["import_name"]
         try:
-            verifyClass(interface_definition, endpoint_class)  # type: ignore
+            _ = interface_definition
+            # import inspect
+            # if not inspect.isabstract(MySearchSource):
+            #    raise TypeError("MySearchSource must implement all abstract methods!")
+            # verifyClass(interface_definition, endpoint_class)  # type: ignore
             return True
         except zope.interface.exceptions.BrokenImplementation as exc:
             print(f"Error registering endpoint {identifier}: {exc}")

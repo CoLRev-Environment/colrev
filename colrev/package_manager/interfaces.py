@@ -2,6 +2,7 @@
 """Package interfaces."""
 from __future__ import annotations
 
+import abc
 import typing
 from pathlib import Path
 
@@ -30,6 +31,18 @@ class GeneralInterface(zope.interface.Interface):  # pylint: disable=inherit-non
     )
 
 
+class ReviewType(abc.ABC):
+    """The ReviewType interface for ReviewTypes"""
+
+    @abc.abstractmethod
+    def __init__(self, ci_supported: bool):
+        """Initialize the review type"""
+
+    @abc.abstractmethod
+    def initialize(self, settings: colrev.settings.Settings) -> dict:
+        """Initialize the review type"""
+
+
 # pylint: disable=too-few-public-methods
 class ReviewTypeInterface(
     GeneralInterface, zope.interface.Interface
@@ -40,6 +53,23 @@ class ReviewTypeInterface(
     def initialize(settings: dict) -> dict:  # type: ignore
         """Initialize the review type"""
         return settings  # pragma: no cover
+
+
+# TODO: query-parsing interface?
+# class... .parse(query_str) -> Query ; serialize(query) -> str;
+
+
+class APISearchInterface(
+    GeneralInterface, zope.interface.Interface
+):  # pylint: disable=inherit-non-class
+
+    query = zope.interface.Attribute("""Query to be executed""")
+    # TODO : depends on "last_updated" in crossref. -> maybe use a "run_since ..." field?
+    rerun = zope.interface.Attribute("""Flag indicating whether to rerun the query""")
+
+    # pylint: disable=no-self-argument
+    def search() -> dict:  # type: ignore
+        """Run the API-search"""
 
 
 class SearchSourceInterface(
@@ -298,6 +328,7 @@ class DataInterface(
 ENDPOINT_OVERVIEW = {
     EndpointType.review_type: {
         "import_name": ReviewTypeInterface,
+        # "import_name": ReviewType,
         "custom_class": "CustomReviewType",
         "operation_name": "operation",
     },
