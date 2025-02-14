@@ -2,8 +2,6 @@
 """Template for a custom Prep PackageEndpoint"""
 from __future__ import annotations
 
-import zope.interface
-
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
 import colrev.process.operation
@@ -13,8 +11,7 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
-class CustomPrep:
+class CustomPrep(colrev.package_manager.interfaces.PrepInterface):
     """Class for custom prep scripts"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

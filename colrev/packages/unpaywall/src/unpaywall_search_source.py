@@ -5,7 +5,6 @@ from __future__ import annotations
 import typing
 from pathlib import Path
 
-import zope.interface
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
@@ -21,8 +20,7 @@ from colrev.packages.unpaywall.src.api import UnpaywallAPI
 # pylint: disable=unused-argument
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class UnpaywallSearchSource:
+class UnpaywallSearchSource(colrev.package_manager.interfaces.SearchSourceInterface):
     """Unpaywall Search Source"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings

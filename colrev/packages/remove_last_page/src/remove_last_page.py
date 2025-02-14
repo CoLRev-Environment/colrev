@@ -7,7 +7,6 @@ import typing
 from pathlib import Path
 
 import pymupdf
-import zope.interface
 from pydantic import Field
 
 import colrev.package_manager.interfaces
@@ -22,8 +21,7 @@ from colrev.constants import Filepaths
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PDFPrepInterface)
-class PDFLastPage:
+class PDFLastPage(colrev.package_manager.interfaces.PDFPrepInterface):
     """Prepare PDFs by removing unnecessary last pages (e.g. copyright notices, cited-by infos)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

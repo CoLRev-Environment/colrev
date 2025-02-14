@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import zope.interface
-
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
@@ -14,8 +12,7 @@ import colrev.record.record
 from colrev.constants import Fields
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class CustomSearch:
+class CustomSearch(colrev.package_manager.interfaces.SearchSourceInterface):
     """Class for custom search scripts"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import random
 
-import zope.interface
-
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
 import colrev.process.operation
@@ -17,8 +15,7 @@ from colrev.constants import RecordState
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PDFPrepInterface)
-class CustomPDFPrep:
+class CustomPDFPrep(colrev.package_manager.interfaces.PDFPrepInterface):
     """Class for custom pdf-prep scripts"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

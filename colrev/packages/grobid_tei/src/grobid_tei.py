@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import zope.interface
 from pydantic import Field
 
 import colrev.env.utils
@@ -18,8 +17,7 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PDFPrepInterface)
-class GROBIDTEI:
+class GROBIDTEI(colrev.package_manager.interfaces.PDFPrepInterface):
     """Prepare PDFs by creating an annotated TEI document"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

@@ -5,7 +5,6 @@ from __future__ import annotations
 import typing
 from pathlib import Path
 
-import zope.interface
 from pydantic import Field
 
 import colrev.env.environment_manager
@@ -32,8 +31,7 @@ from colrev.packages.osf.src.osf_api import OSFApiQuery
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class OSFSearchSource:
+class OSFSearchSource(colrev.package_manager.interfaces.SearchSourceInterface):
     """OSF"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings

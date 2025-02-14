@@ -8,7 +8,6 @@ from __future__ import annotations
 import typing
 from pathlib import Path
 
-import zope.interface
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
@@ -27,8 +26,7 @@ from colrev.ops.search import Search
 from colrev.settings import SearchSource
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class ProsperoSearchSource:
+class ProsperoSearchSource(colrev.package_manager.interfaces.SearchSourceInterface):
     """Prospero Search Source for retrieving protocol data"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings

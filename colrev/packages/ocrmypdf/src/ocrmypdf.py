@@ -7,7 +7,6 @@ import shutil
 from pathlib import Path
 
 import docker
-import zope.interface
 from pydantic import Field
 
 import colrev.env.docker_manager
@@ -23,8 +22,7 @@ from colrev.constants import PDFDefectCodes
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PDFPrepInterface)
-class OCRMyPDF:
+class OCRMyPDF(colrev.package_manager.interfaces.PDFPrepInterface):
     """Prepare PDFs by applying OCR based on OCRmyPDF"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

@@ -5,8 +5,6 @@ from __future__ import annotations
 import random
 import typing
 
-import zope.interface
-
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
 import colrev.process.operation
@@ -19,8 +17,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.ScreenInterface)
-class CustomScreen:
+class CustomScreen(colrev.package_manager.interfaces.ScreenInterface):
     """Class for custom screen scripts"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

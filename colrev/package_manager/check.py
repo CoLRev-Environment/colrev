@@ -11,7 +11,6 @@ from typing import Any
 from typing import Dict
 
 import toml
-from zope.interface.verify import verifyClass
 
 import colrev.package_manager.interfaces
 from colrev.constants import Colors
@@ -105,8 +104,12 @@ def _check_tool_poetry_plugins_colrev_classes(data: dict) -> bool:
             interface: str = INTERFACE_MAP.get(interface_identifier)  # type: ignore
 
             interface_class = getattr(colrev.package_manager.interfaces, interface)
-            if not interface or not verifyClass(interface_class, cls):
-                return False
+            if not issubclass(cls, interface_class):
+                raise TypeError(
+                    f"{cls} must implement all abstract methods of {interface_class}!"
+                )
+            # if not interface or not verifyClass(interface_class, cls):
+            #     return False
         except (ImportError, AttributeError) as exc:
             print(exc)
             return False

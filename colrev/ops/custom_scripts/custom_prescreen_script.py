@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import random
 
-import zope.interface
-
 import colrev.package_manager.interfaces
 import colrev.package_manager.package_settings
 import colrev.process.operation
@@ -15,8 +13,7 @@ import colrev.record.record
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
-class CustomPrescreen:
+class CustomPrescreen(colrev.package_manager.interfaces.PrescreenInterface):
     """Class for custom prescreen scripts"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
