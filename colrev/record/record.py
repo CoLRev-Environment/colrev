@@ -620,7 +620,9 @@ class Record:
     ) -> str:  # pragma: no cover
         """Generate the colrev_pdf_id"""
 
-        return colrev.record.record_identifier.get_colrev_pdf_id(pdf_path, custom_page=custom_page)
+        return colrev.record.record_identifier.get_colrev_pdf_id(
+            pdf_path, custom_page=custom_page
+        )
 
     def get_toc_key(self) -> str:
         """Get the record's toc-key"""

@@ -215,7 +215,9 @@ def _get_colrev_pdf_id_cpid2(pdf_path: Path, custom_page: int) -> str:
             raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
 
 
-def get_colrev_pdf_id(pdf_path: Path, *, cpid_version: str = "cpid2", custom_page: int) -> str:
+def get_colrev_pdf_id(
+    pdf_path: Path, *, cpid_version: str = "cpid2", custom_page: int
+) -> str:
     """Get the PDF hash"""
 
     pdf_path = pdf_path.resolve()
