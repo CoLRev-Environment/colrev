@@ -31,10 +31,7 @@ class RepoSetupError(CoLRevException):
         if msg:
             self.message = f" {msg}"
         elif any(Path(Path.cwd()).iterdir()):
-            self.message = (
-                "Not an empty directory. "
-                + "To create a CoLRev repository, navigate to an empty directory."
-            )
+            self.message = "Not a CoLRev repository containing the required files (settings.json, etc.)."
 
         else:
             self.message = (
