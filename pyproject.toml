@@ -3,8 +3,8 @@ name = "colrev"
 version = "0.13.2"
 description = "CoLRev: An open-source environment for collaborative reviews"
 authors = [
-    "Gerit Wagner <gerit.wagner@uni-bamberg.de>",
-    "Julian Prester <julian.prester@sydney.edu.au>"
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
+    { name = "Julian Prester", email = "julian.prester@sydney.edu.au" }
 ]
 license = {text = "MIT"}
 readme = "README.md"
