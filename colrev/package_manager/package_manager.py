@@ -7,7 +7,6 @@ import importlib.util
 import json
 import platform
 import subprocess
-import sys
 import typing
 from typing import Any
 
@@ -162,6 +161,8 @@ class PackageManager:
 
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-branches
+
+
 def install(
     *,
     packages: typing.List[str],
