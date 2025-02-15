@@ -59,7 +59,7 @@ class APISearchInterface(abc.ABC):  # pylint: disable=inherit-non-class
     rerun = False
 
     # pylint: disable=no-self-argument
-    def search() -> dict:  # type: ignore
+    def search(self) -> dict:  # type: ignore
         """Run the API-search"""
 
 
