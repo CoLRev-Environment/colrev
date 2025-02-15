@@ -186,7 +186,9 @@ class PackageManager:
                 colrev_packages.append(package)
         packages = [p for p in packages if p not in colrev_packages]
 
-        print(f"Installing ColRev packages: {colrev_packages + packages} using {package_manager}")
+        print(
+            f"Installing ColRev packages: {colrev_packages + packages} using {package_manager}"
+        )
 
         install_args = [package_manager, "pip", "install"]
         if upgrade:
