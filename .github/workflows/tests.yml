@@ -68,21 +68,19 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install poetry
-        run: pipx install poetry
-      - name: Update setuptools
-        run: python -m pip install --upgrade pip setuptools --break-system-packages
-      - name: Install poetry dependencies
+      - name: Install uv
+        run: pip install uv
+      - name: Install dependencies with uv
         run: |
-          poetry install -E dev --verbose --no-cache
-          poetry run colrev install ${{ env.COLREV_PACKAGES }}
+          uv pip install -e . --all-extras
+          colrev install ${{ env.COLREV_PACKAGES }}
       - name: Setup git
         run: |
           git config --global user.name "CoLRev update"
           git config --global user.email "actions@users.noreply.github.com"
           git config --global url.https://github.com/.insteadOf git://github.com/
-      - name: Run poetry tests (minimal-deps)
-        run: poetry run pytest tests/0_core/ -vv
+      - name: Run tests (minimal-deps)
+        run: pytest tests/0_core/ -vv
 
   test-full-deps:
     needs: test-minimal-deps
@@ -97,62 +95,25 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install poetry
+      - name: Install uv
+        run: pip install uv
+      - name: Install dependencies with uv
         run: |
-          pipx uninstall-all
-          rm -rf ~/.local/pipx/venvs/poetry
-          pipx install poetry --python $(python -c "import sys; print(sys.executable)")
-          poetry cache clear --all pypi
-      - name: Install poetry dependencies
-        run: |
-          poetry env remove python || true
-          poetry install -E dev --verbose --no-cache
-          poetry run colrev install ${{ env.COLREV_PACKAGES }}
+          uv pip install -e . --all-extras
+          colrev install ${{ env.COLREV_PACKAGES }}
       - name: Setup git
         run: |
           git config --global user.name "CoLRev update"
           git config --global user.email "actions@users.noreply.github.com"
           git config --global url.https://github.com/.insteadOf git://github.com/
-      - name: Run poetry tests
-        run: poetry run pytest --slow -vv
-
-  test-full-deps-windows: # Separate due to poetry installation concurrency issue: https://github.com/python-poetry/poetry/issues/7370
-    needs: test-minimal-deps
-    strategy:
-      matrix:
-        platform: [windows-latest]
-        python-version: ['3.12']
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install poetry
-        run: |
-          pipx install poetry --python $(python -c "import sys; print(sys.executable)")
-          poetry cache clear --all pypi
-      - name: Set POETRY_CACHE_DIR
-        run: echo "POETRY_CACHE_DIR=${{runner.temp}}/poetry_cache" >> $GITHUB_ENV
-      - name: Install poetry dependencies
-        run: |
-          poetry env remove python || true
-          poetry install -E dev --verbose --no-cache
-          poetry run colrev install ${{ env.COLREV_PACKAGES }}
-      - name: Setup git
-        run: |
-          git config --global user.name "CoLRev update"
-          git config --global user.email "actions@users.noreply.github.com"
-          git config --global url.https://github.com/.insteadOf git://github.com/
-      - name: Run poetry tests
-        run: poetry run pytest --slow -vv
+      - name: Run tests
+        run: pytest --slow -vv
 
   test-pip-install:
     needs: test-minimal-deps
     strategy:
       matrix:
-        platform: [ubuntu-latest,  macos-latest, windows-latest]
+        platform: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ['3.10', '3.11', '3.12']
     runs-on: ${{ matrix.platform }}
     steps:
@@ -161,9 +122,9 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install via pip
+      - name: Install dependencies via pip (as fallback)
         run: |
-          pip install -e .[dev,tests]
+          pip install -e . --all-extras
           colrev install ${{ env.COLREV_PACKAGES }}
       - name: Setup git
         run: |
@@ -171,4 +132,4 @@ jobs:
           git config --global user.email "actions@users.noreply.github.com"
           git config --global url.https://github.com/.insteadOf git://github.com/
       - name: Run tests
-        run: pytest tests --slow -vv
+        run: pytest --slow -vv
