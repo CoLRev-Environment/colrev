@@ -6,6 +6,7 @@ import importlib.metadata
 import importlib.util
 import json
 import platform
+import shutil
 import subprocess
 import typing
 from typing import Any
@@ -166,7 +167,10 @@ class PackageManager:
         upgrade: bool = True,
         editable: bool = False,
     ) -> None:
-        """Install packages using uv instead of pip"""
+        """Install packages using uv if available, otherwise fallback to pip"""
+
+        # Check if `uv` is installed, fallback to `pip` if not
+        package_manager = "uv" if shutil.which("uv") else "pip"
 
         internal_packages_dict = (
             colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
@@ -182,9 +186,9 @@ class PackageManager:
                 colrev_packages.append(package)
         packages = [p for p in packages if p not in colrev_packages]
 
-        print(f"Installing ColRev packages: {colrev_packages + packages}")
+        print(f"Installing ColRev packages: {colrev_packages + packages} using {package_manager}")
 
-        install_args = ["uv", "pip", "install"]
+        install_args = [package_manager, "pip", "install"]
         if upgrade:
             install_args.append("--upgrade")
         if editable:
