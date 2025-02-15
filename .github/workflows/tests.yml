@@ -129,28 +129,19 @@ jobs:
     needs: test-minimal-deps
     strategy:
       matrix:
-        platform: [ubuntu-latest, macos-latest, windows-latest]
+        platform: [ubuntu-latest,  macos-latest, windows-latest]
         python-version: ['3.10', '3.11', '3.12']
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-          enable-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: "pyproject.toml"
-
-      - name: Install dependencies via pip (as fallback)
+      - name: Install via pip
         run: |
-          pip install -e ".[docs,dev]"
+          pip install -e .[dev,tests]
           colrev install ${{ env.COLREV_PACKAGES }}
-
       - name: Setup git
         run: |
           git config --global user.name "CoLRev update"
