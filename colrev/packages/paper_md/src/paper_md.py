@@ -328,9 +328,10 @@ class PaperMarkdown:
         _, temp_filepath = tempfile.mkstemp(dir=self._temp_path)
         Path(temp_filepath).unlink(missing_ok=True)
         shutil.move(str(paper_path), str(temp_filepath))
-        with open(temp_filepath, encoding="utf-8") as reader, open(
-            paper_path, "w", encoding="utf-8"
-        ) as writer:
+        with (
+            open(temp_filepath, encoding="utf-8") as reader,
+            open(paper_path, "w", encoding="utf-8") as writer,
+        ):
             appended, completed = False, False
             line = reader.readline()
             while line:
@@ -450,9 +451,10 @@ class PaperMarkdown:
             notify_state_transition_operation=False
         )
 
-        with open(temp.name, encoding="utf-8") as reader, open(
-            paper_path, "w", encoding="utf-8"
-        ) as writer:
+        with (
+            open(temp.name, encoding="utf-8") as reader,
+            open(paper_path, "w", encoding="utf-8") as writer,
+        ):
             line = reader.readline()
             while line:
                 if not line.startswith("EXCLUDE "):
@@ -591,9 +593,10 @@ class PaperMarkdown:
                 paper_path = self.settings.paper_path
                 Path(temp.name).unlink(missing_ok=True)
                 shutil.move(str(paper_path), str(temp.name))
-                with open(temp.name, encoding="utf-8") as reader, open(
-                    paper_path, "w", encoding="utf-8"
-                ) as writer:
+                with (
+                    open(temp.name, encoding="utf-8") as reader,
+                    open(paper_path, "w", encoding="utf-8") as writer,
+                ):
                     line = reader.readline()
                     while line:
                         if "# Method" not in line:
