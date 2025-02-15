@@ -159,7 +159,6 @@ class PackageManager:
 
         self.install(packages=packages)
 
-
     def install(
         self,
         *,
@@ -193,7 +192,8 @@ class PackageManager:
 
         # Install both internal and external packages in a single command
         all_packages = [
-            internal_packages_dict[p] if p in internal_packages_dict else p for p in colrev_packages
+            internal_packages_dict[p] if p in internal_packages_dict else p
+            for p in colrev_packages
         ] + packages
 
         install_args += all_packages
