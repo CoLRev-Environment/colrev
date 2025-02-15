@@ -30,6 +30,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Typing :: Typed"
 ]
+requires-python = ">=3.10, <3.13"  # lingua-language-detector does not yet support python3.13
 dependencies = [
     "click>=8.1.6",
     "click-repl>=0.3.0",
