@@ -163,7 +163,7 @@ class PackageManager:
         """Install packages using uv if available, otherwise fallback to pip"""
 
         # Check if `uv` is installed, fallback to `pip` if not
-        package_manager = "uv pip" if shutil.which("uv") else "pip"
+        package_manager = ["uv", "pip"] if shutil.which("uv") else ["pip"]
 
         internal_packages_dict = (
             colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
@@ -183,7 +183,7 @@ class PackageManager:
             f"Installing ColRev packages: {colrev_packages + packages} using {package_manager}"
         )
 
-        install_args = [package_manager, "install"]
+        install_args = package_manager + ["install"]
         if upgrade:
             install_args.append("--upgrade")
         if editable:
