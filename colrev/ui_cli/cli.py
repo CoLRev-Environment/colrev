@@ -3174,11 +3174,13 @@ def version(
     "-e",
     "--editable",
     help="Install a project in editable mode from this path",
+    is_flag=True,
+    default=False,
 )
 def install(
     packages: typing.List[str],
     upgrade: bool,
-    editable: str,
+    editable: bool,
 ) -> None:
     """Install packages
 

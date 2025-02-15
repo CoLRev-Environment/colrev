@@ -119,7 +119,6 @@ class PackageManager:
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        force_reinstall: bool,
     ) -> typing.List[str]:
 
         review_manager.logger.info("Packages:")
@@ -137,23 +136,17 @@ class PackageManager:
                     f" {Colors.ORANGE}{package}: not installed{Colors.END}"
                 )
 
-        if not force_reinstall:
-            packages = [p for p in packages if p not in installed_packages]
-
         return packages
 
     def install_project(
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        force_reinstall: bool,
     ) -> None:
         """Install all packages required for the CoLRev project"""
 
         review_manager.logger.info("Install project")
-        packages = self._get_packages_to_install(
-            review_manager=review_manager, force_reinstall=force_reinstall
-        )
+        packages = self._get_packages_to_install(review_manager=review_manager)
         if len(packages) == 0:
             review_manager.logger.info("All packages are already installed")
             return
@@ -170,7 +163,7 @@ class PackageManager:
         """Install packages using uv if available, otherwise fallback to pip"""
 
         # Check if `uv` is installed, fallback to `pip` if not
-        package_manager = "uv" if shutil.which("uv") else "pip"
+        package_manager = "uv pip" if shutil.which("uv") else "pip"
 
         internal_packages_dict = (
             colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
@@ -190,7 +183,7 @@ class PackageManager:
             f"Installing ColRev packages: {colrev_packages + packages} using {package_manager}"
         )
 
-        install_args = [package_manager, "pip", "install"]
+        install_args = [package_manager, "install"]
         if upgrade:
             install_args.append("--upgrade")
         if editable:
