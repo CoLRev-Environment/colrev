@@ -161,53 +161,50 @@ class PackageManager:
 
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-branches
+    def install(
+        self,
+        *,
+        packages: typing.List[str],
+        upgrade: bool = True,
+        editable: str = "",
+    ) -> None:
+        """Install packages using uv instead of pip"""
 
+        internal_packages_dict = (
+            colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
+        )
 
-def install(
-    *,
-    packages: typing.List[str],
-    upgrade: bool = True,
-    editable: str = "",
-    force_reinstall: bool = True,  # Not directly supported in uv
-    no_cache_dir: bool = True,  # Not directly supported in uv
-) -> None:
-    """Install packages using uv instead of pip"""
+        if len(packages) == 1 and packages[0] == "all_internal_packages":
+            packages = list(internal_packages_dict.keys())
 
-    internal_packages_dict = (
-        colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
-    )
+        # Install internal colrev packages first
+        colrev_packages = []
+        for package in packages:
+            if package in internal_packages_dict:
+                colrev_packages.append(package)
+        packages = [p for p in packages if p not in colrev_packages]
 
-    if len(packages) == 1 and packages[0] == "all_internal_packages":
-        packages = list(internal_packages_dict.keys())
+        print(f"ColRev packages: {colrev_packages}")
+        if colrev_packages:
+            colrev_package_paths = [
+                p_path
+                for p_name, p_path in internal_packages_dict.items()
+                if p_name in colrev_packages
+            ]
+            args = ["uv", "pip", "install"]
+            if upgrade:
+                args += ["--upgrade"]
+            if editable:
+                args += ["--editable", editable]
+            args += colrev_package_paths
+            subprocess.run(args, check=True)
 
-    # Install internal colrev packages first
-    colrev_packages = []
-    for package in packages:
-        if package in internal_packages_dict:
-            colrev_packages.append(package)
-    packages = [p for p in packages if p not in colrev_packages]
-
-    print(f"ColRev packages: {colrev_packages}")
-    if colrev_packages:
-        colrev_package_paths = [
-            p_path
-            for p_name, p_path in internal_packages_dict.items()
-            if p_name in colrev_packages
-        ]
-        args = ["uv", "pip", "install"]
-        if upgrade:
-            args += ["--upgrade"]
-        if editable:
-            args += ["--editable", editable]
-        args += colrev_package_paths
-        subprocess.run(args, check=True)
-
-    print(f"Other packages: {packages}")
-    if packages:
-        args = ["uv", "pip", "install"]
-        if upgrade:
-            args += ["--upgrade"]
-        if editable:
-            args += ["--editable", editable]
-        args += list(packages)
-        subprocess.run(args, check=True)
+        print(f"Other packages: {packages}")
+        if packages:
+            args = ["uv", "pip", "install"]
+            if upgrade:
+                args += ["--upgrade"]
+            if editable:
+                args += ["--editable", editable]
+            args += list(packages)
+            subprocess.run(args, check=True)
