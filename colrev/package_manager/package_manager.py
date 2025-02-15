@@ -162,67 +162,51 @@ class PackageManager:
 
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-branches
-    def install(
-        self,
-        *,
-        packages: typing.List[str],
-        upgrade: bool = True,
-        editable: str = "",
-        force_reinstall: bool = True,
-        no_cache_dir: bool = True,
-    ) -> None:
-        """Install packages"""
+def install(
+    *,
+    packages: typing.List[str],
+    upgrade: bool = True,
+    editable: str = "",
+    force_reinstall: bool = True,  # Not directly supported in uv
+    no_cache_dir: bool = True,  # Not directly supported in uv
+) -> None:
+    """Install packages using uv instead of pip"""
 
-        internal_packages_dict = (
-            colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
-        )
+    internal_packages_dict = (
+        colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
+    )
 
-        if len(packages) == 1 and packages[0] == "all_internal_packages":
-            packages = list(internal_packages_dict.keys())
+    if len(packages) == 1 and packages[0] == "all_internal_packages":
+        packages = list(internal_packages_dict.keys())
 
-        # Install packages from colrev monorepository first
-        colrev_packages = []
-        for package in packages:
-            if package in internal_packages_dict:
-                colrev_packages.append(package)
-        packages = [p for p in packages if p not in colrev_packages]
+    # Install internal colrev packages first
+    colrev_packages = []
+    for package in packages:
+        if package in internal_packages_dict:
+            colrev_packages.append(package)
+    packages = [p for p in packages if p not in colrev_packages]
 
-        print(f"ColRev packages: {colrev_packages}")
-        if colrev_packages:
+    print(f"ColRev packages: {colrev_packages}")
+    if colrev_packages:
+        colrev_package_paths = [
+            p_path
+            for p_name, p_path in internal_packages_dict.items()
+            if p_name in colrev_packages
+        ]
+        args = ["uv", "pip", "install"]
+        if upgrade:
+            args += ["--upgrade"]
+        if editable:
+            args += ["--editable", editable]
+        args += colrev_package_paths
+        subprocess.run(args, check=True)
 
-            colrev_package_paths = [
-                p_path
-                for p_name, p_path in internal_packages_dict.items()
-                if p_name in colrev_packages
-            ]
-            args = [sys.executable, "-m", "pip", "install"]
-            args += colrev_package_paths
-            if upgrade:
-                args += ["--upgrade"]
-            if editable:
-                args += ["--editable", editable]
-            if force_reinstall:
-                args += ["--force-reinstall"]
-            if no_cache_dir:
-                args += ["--no-cache-dir"]
-            # sys.argv = args
-            # run_module("pip", run_name="__main__")
-            # use subprocess because run_module does not return control
-            subprocess.run(args, check=False)
-
-        print(f"Other packages: {packages}")
-        if packages:
-            args = [sys.executable, "-m", "pip", "install"]
-            if upgrade:
-                args += ["--upgrade"]
-            if editable:
-                args += ["--editable", editable]
-            if force_reinstall:
-                args += ["--force-reinstall"]
-            if no_cache_dir:
-                args += ["--no-cache-dir"]
-            args += list(packages)
-            # sys.argv = args
-            # run_module("pip", run_name="__main__")
-            # use subprocess because run_module does not return control
-            subprocess.run(args, check=False)
+    print(f"Other packages: {packages}")
+    if packages:
+        args = ["uv", "pip", "install"]
+        if upgrade:
+            args += ["--upgrade"]
+        if editable:
+            args += ["--editable", editable]
+        args += list(packages)
+        subprocess.run(args, check=True)
