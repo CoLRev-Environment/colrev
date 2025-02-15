@@ -70,10 +70,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install uv
         run: pip install uv
-      - name: Create and activate uv virtual environment
+      - name: Create and Activate Virtual Environment
         run: |
-          uv venv create
-          uv venv use
+          uv venv create .venv
+          echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
+          echo "$PWD/.venv/bin" >> $GITHUB_PATH
       - name: Install dependencies with uv
         run: |
           uv pip install -e ".[docs,dev]"
@@ -101,10 +102,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install uv
         run: pip install uv
-      - name: Create and activate uv virtual environment
+      - name: Create and Activate Virtual Environment
         run: |
-          uv venv create
-          uv venv use
+          uv venv create .venv
+          echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
+          echo "$PWD/.venv/bin" >> $GITHUB_PATH
       - name: Install dependencies with uv
         run: |
           uv pip install -e ".[docs,dev]"
@@ -130,10 +132,11 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Create and activate uv virtual environment
+      - name: Create and Activate Virtual Environment
         run: |
-          uv venv create
-          uv venv use
+          uv venv create .venv
+          echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
+          echo "$PWD/.venv/bin" >> $GITHUB_PATH
       - name: Install dependencies via pip (as fallback)
         run: |
           pip install -e ".[docs,dev]"
