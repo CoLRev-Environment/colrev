@@ -159,14 +159,13 @@ class PackageManager:
 
         self.install(packages=packages)
 
-    # pylint: disable=too-many-arguments
-    # pylint: disable=too-many-branches
+
     def install(
         self,
         *,
         packages: typing.List[str],
         upgrade: bool = True,
-        editable: str = "",
+        editable: bool = False,
     ) -> None:
         """Install packages using uv instead of pip"""
 
@@ -184,27 +183,18 @@ class PackageManager:
                 colrev_packages.append(package)
         packages = [p for p in packages if p not in colrev_packages]
 
-        print(f"ColRev packages: {colrev_packages}")
-        if colrev_packages:
-            colrev_package_paths = [
-                p_path
-                for p_name, p_path in internal_packages_dict.items()
-                if p_name in colrev_packages
-            ]
-            args = ["uv", "pip", "install"]
-            if upgrade:
-                args += ["--upgrade"]
-            if editable:
-                args += ["--editable", editable]
-            args += colrev_package_paths
-            subprocess.run(args, check=True)
+        print(f"Installing ColRev packages: {colrev_packages + packages}")
 
-        print(f"Other packages: {packages}")
-        if packages:
-            args = ["uv", "pip", "install"]
-            if upgrade:
-                args += ["--upgrade"]
-            if editable:
-                args += ["--editable", editable]
-            args += list(packages)
-            subprocess.run(args, check=True)
+        install_args = ["uv", "pip", "install"]
+        if upgrade:
+            install_args.append("--upgrade")
+        if editable:
+            install_args.append("--editable")
+
+        # Install both internal and external packages in a single command
+        all_packages = [
+            internal_packages_dict[p] if p in internal_packages_dict else p for p in colrev_packages
+        ] + packages
+
+        install_args += all_packages
+        subprocess.run(install_args, check=True)
