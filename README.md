@@ -18,7 +18,7 @@
 [![Downloads](https://static.pepy.tech/badge/colrev/month)](https://pepy.tech/project/colrev)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7148/badge)](https://bestpractices.coreinfrastructure.org/projects/7148)
 [![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/CoLRev-Environment/colrev/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/CoLRev-Environment/colrev/)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-37-green.svg?style=flat-square)](#contributors)
+![GitHub contributors](https://img.shields.io/github/contributors-anon/CoLRev-Environment/colrev)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
 
