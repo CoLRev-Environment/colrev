@@ -15,6 +15,7 @@ from rapidfuzz import fuzz
 
 import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
 import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -298,7 +299,7 @@ class Endpoint:
                     raise MaxOffsetError(msg, MAXOFFSET)
 
 
-class CrossrefAPI:
+class CrossrefAPI(colrev.package_manager.interfaces.APISearchInterface):
     """Crossref API"""
 
     ISSN_REGEX = r"^\d{4}-?\d{3}[\dxX]$"
@@ -386,7 +387,7 @@ class CrossrefAPI:
         endpoint = Endpoint(self.params["url"], email=self.email)
         return endpoint.get_nr()
 
-    def get_len(self) -> int:
+    def get_number_of_records(self) -> int:
         """Get the number of records from Crossref based on the parameters"""
 
         endpoint = Endpoint(self.get_url(), email=self.email)
@@ -398,7 +399,7 @@ class CrossrefAPI:
         url = self.get_url()
 
         endpoint = Endpoint(url, email=self.email)
-        if self.get_len() > 10000:
+        if self.get_number_of_records() > 10000:
             endpoint.cursor_as_iter_method = True
 
         try:

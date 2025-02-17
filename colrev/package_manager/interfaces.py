@@ -21,6 +21,9 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 # pylint: disable=too-many-ancestors
 
+
+# TODO : suggested: colrev.base_classes, ReviewTypeABC / SearchSourceABC
+
 # TODO: ci_supported
 # # pylint: disable=too-few-public-methods
 # class GeneralInterface(zope.interface.Interface):  # pylint: disable=inherit-non-class
@@ -58,9 +61,13 @@ class APISearchInterface(abc.ABC):  # pylint: disable=inherit-non-class
     # Flag indicating whether to rerun the query
     rerun = False
 
-    # pylint: disable=no-self-argument
-    def search(self) -> dict:  # type: ignore
+    @abstractmethod
+    def get_records(self) -> dict:  # type: ignore
         """Run the API-search"""
+
+    @abstractmethod
+    def get_number_of_records(self) -> int:
+        """Get the number of results from the API-search"""
 
 
 class SearchSourceInterface(ABC):
