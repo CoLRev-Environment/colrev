@@ -62,7 +62,7 @@ class APISearchInterface(abc.ABC):  # pylint: disable=inherit-non-class
     rerun = False
 
     @abstractmethod
-    def get_records(self) -> dict:  # type: ignore
+    def get_records(self) -> typing.Iterator[colrev.record.record.Record]:
         """Run the API-search"""
 
     @abstractmethod

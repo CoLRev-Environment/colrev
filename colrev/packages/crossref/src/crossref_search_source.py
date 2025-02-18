@@ -427,7 +427,7 @@ class CrossrefSearchSource(colrev.package_manager.interfaces.SearchSourceInterfa
             self.review_manager.logger.info(
                 f"Retrieve papers indexed since {self.api.last_updated.split('T', maxsplit=1)[0]}"
             )
-            nrecs = self.api.get_len()
+            nrecs = self.api.get_number_of_records()
 
         self.review_manager.logger.info(f"Retrieve {nrecs:,} records")
         estimated_time = nrecs * 0.5
