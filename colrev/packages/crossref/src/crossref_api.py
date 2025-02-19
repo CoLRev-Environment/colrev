@@ -299,7 +299,7 @@ class Endpoint:
                     raise MaxOffsetError(msg, MAXOFFSET)
 
 
-class CrossrefAPI(colrev.package_manager.interfaces.APISearchInterface):
+class CrossrefAPI:
     """Crossref API"""
 
     ISSN_REGEX = r"^\d{4}-?\d{3}[\dxX]$"

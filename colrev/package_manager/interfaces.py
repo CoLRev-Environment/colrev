@@ -15,30 +15,19 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 if typing.TYPE_CHECKING:  # pragma: no cover
-    import colrev.process.operation
     import colrev.record.record
     import colrev.settings
 
-# pylint: disable=too-many-ancestors
 
+# pylint: disable=too-few-public-methods
 
 # TODO : suggested: colrev.base_classes, ReviewTypeABC / SearchSourceABC
-
-# TODO: ci_supported
-# # pylint: disable=too-few-public-methods
-# class GeneralInterface(zope.interface.Interface):  # pylint: disable=inherit-non-class
-#     """The General Interface for all package endpoints
-
-#     Each package endpoint must implement the following attributes (methods)"""
-
-#     ci_supported = zope.interface.Attribute(
-#         """Flag indicating whether the package can be run in
-#         continuous integration environments (e.g. GitHub Actions)"""
-#     )
 
 
 class ReviewTypeInterface(abc.ABC):
     """The ReviewTypeInterface interface for ReviewTypes"""
+
+    ci_supported: bool
 
     @abc.abstractmethod
     def __init__(self, ci_supported: bool):
@@ -49,30 +38,10 @@ class ReviewTypeInterface(abc.ABC):
         """Initialize the review type"""
 
 
-# TODO: query-parsing interface?
-# class... .parse(query_str) -> Query ; serialize(query) -> str;
-
-
-class APISearchInterface(abc.ABC):  # pylint: disable=inherit-non-class
-    """The PackageEndpoint abstract base class for API-search operations"""
-
-    query = ""
-    # TODO : depends on "last_updated" in crossref. -> maybe use a "run_since ..." field?
-    # Flag indicating whether to rerun the query
-    rerun = False
-
-    @abstractmethod
-    def get_records(self) -> typing.Iterator[colrev.record.record.Record]:
-        """Run the API-search"""
-
-    @abstractmethod
-    def get_number_of_records(self) -> int:
-        """Get the number of results from the API-search"""
-
-
 class SearchSourceInterface(ABC):
     """The PackageEndpoint abstract base class for SearchSources"""
 
+    ci_supported: bool
     settings_class: Type[colrev.package_manager.package_settings.DefaultSourceSettings]
     source_identifier: str
     search_types: list[SearchType]
@@ -121,6 +90,8 @@ class SearchSourceInterface(ABC):
 class PrepInterface(ABC):
     """The PackageEndpoint abstract base class for prep operations."""
 
+    ci_supported: bool
+
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
     source_correction_hint: str
     always_apply_changes: bool
@@ -135,6 +106,8 @@ class PrepInterface(ABC):
 class PrepManInterface(ABC):
     """The PackageEndpoint abstract base class for prep-man operations."""
 
+    ci_supported: bool
+
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
@@ -144,6 +117,8 @@ class PrepManInterface(ABC):
 
 class DedupeInterface(ABC):
     """The PackageEndpoint abstract base class for dedupe operations."""
+
+    ci_supported: bool
 
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
@@ -155,6 +130,8 @@ class DedupeInterface(ABC):
 class PrescreenInterface(ABC):
     """The PackageEndpoint abstract base class for prescreen operations."""
 
+    ci_supported: bool
+
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
     settings: colrev.package_manager.package_settings.DefaultSettings
 
@@ -165,6 +142,8 @@ class PrescreenInterface(ABC):
 
 class PDFGetInterface(ABC):
     """The PackageEndpoint abstract base class for pdf-get operations."""
+
+    ci_supported: bool
 
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
@@ -178,6 +157,8 @@ class PDFGetInterface(ABC):
 class PDFGetManInterface(ABC):
     """The PackageEndpoint abstract base class for pdf-get-man operations."""
 
+    ci_supported: bool
+
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
@@ -187,6 +168,8 @@ class PDFGetManInterface(ABC):
 
 class PDFPrepInterface(ABC):
     """The PackageEndpoint abstract base class for pdf-prep operations."""
+
+    ci_supported: bool
 
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
@@ -200,6 +183,8 @@ class PDFPrepInterface(ABC):
 class PDFPrepManInterface(ABC):
     """The PackageEndpoint abstract base class for pdf-prep-man operations."""
 
+    ci_supported: bool
+
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
@@ -210,6 +195,8 @@ class PDFPrepManInterface(ABC):
 class ScreenInterface(ABC):
     """The PackageEndpoint abstract base class for screen operations."""
 
+    ci_supported: bool
+
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
@@ -219,6 +206,8 @@ class ScreenInterface(ABC):
 
 class DataInterface(ABC):
     """The PackageEndpoint abstract base class for data operations."""
+
+    ci_supported: bool
 
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
