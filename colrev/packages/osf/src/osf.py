@@ -13,7 +13,7 @@ import colrev.ops.load
 import colrev.ops.prep
 import colrev.ops.search
 import colrev.ops.search_api_feed
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.osf.src.osf_api
@@ -31,7 +31,7 @@ from colrev.packages.osf.src.osf_api import OSFApiQuery
 # pylint: disable=duplicate-code
 
 
-class OSFSearchSource(colrev.package_manager.interfaces.SearchSourceInterface):
+class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     """OSF"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings

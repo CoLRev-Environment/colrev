@@ -10,7 +10,7 @@ import pymupdf
 import requests
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -21,7 +21,7 @@ from colrev.packages.unpaywall.src import utils
 # pylint: disable=too-few-public-methods
 
 
-class Unpaywall(colrev.package_manager.interfaces.PDFGetInterface):
+class Unpaywall(base_classes.PDFGetPackageBaseClass):
     """Get PDFs from unpaywall.org"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

@@ -5,14 +5,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Fields
 
 
-class CustomSearch(colrev.package_manager.interfaces.SearchSourceInterface):
+class CustomSearch(base_classes.SearchSourcePackageBaseClass):
     """Class for custom search scripts"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings

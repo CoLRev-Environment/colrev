@@ -7,7 +7,7 @@ from pathlib import Path
 from pydantic import Field
 
 import colrev.env.utils
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -15,9 +15,7 @@ import colrev.record.record
 # pylint: disable=too-few-public-methods
 
 
-class CurationJupyterNotebookManPrep(
-    colrev.package_manager.interfaces.PrepManInterface
-):
+class CurationJupyterNotebookManPrep(base_classes.PrepManPackageBaseClass):
     """Manual preparation based on a Jupyter Notebook"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

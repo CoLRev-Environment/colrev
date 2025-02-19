@@ -14,7 +14,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.ops.load
 import colrev.ops.search_api_feed
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.packages.prospero.src.prospero_api
 import colrev.process
@@ -26,7 +26,7 @@ from colrev.ops.search import Search
 from colrev.settings import SearchSource
 
 
-class ProsperoSearchSource(colrev.package_manager.interfaces.SearchSourceInterface):
+class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Prospero Search Source for retrieving protocol data"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings

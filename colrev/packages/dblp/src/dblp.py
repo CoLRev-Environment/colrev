@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -49,7 +49,7 @@ class DBLPSearchSourceSettings(colrev.settings.SearchSource, BaseModel):
     }
 
 
-class DBLPSearchSource(colrev.package_manager.interfaces.SearchSourceInterface):
+class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     """DBLP API"""
 
     source_identifier = "dblp_key"

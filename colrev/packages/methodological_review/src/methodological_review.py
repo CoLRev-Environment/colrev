@@ -3,7 +3,7 @@
 from pydantic import Field
 
 import colrev.ops.search
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -13,8 +13,8 @@ import colrev.record.record
 # pylint: disable=too-few-public-methods
 
 
-# @zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
-class MethodologicalReview(colrev.package_manager.interfaces.ReviewTypeInterface):
+# @zope.interface.implementer(base_classes.ReviewTypePackageBaseClass)
+class MethodologicalReview(base_classes.ReviewTypePackageBaseClass):
     """Methodological review"""
 
     ci_supported: bool = Field(default=True)

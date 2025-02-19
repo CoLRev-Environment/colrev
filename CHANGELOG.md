@@ -76,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Implemented loaders as a separate package, created a standard interface. SearchSources now create the specific mapping of IDs, entrytypes and fields.
 - Moved field standardization from `load` to SearchSources.
 - Extended use of constants
-- SearchSourceInterface: renamed `run_search` to `search`, prefer `prep_link_md` over `get_masterdata`
+- SearchSourcePackageBaseClass: renamed `run_search` to `search`, prefer `prep_link_md` over `get_masterdata`
 - Renamed and refactored `GeneralOriginFeed` to `SearchAPIFeed`
 - Pass record objects instead of dicts (in `local_index` in particular)
 - Replaced unnecessary keyword arguments by positional arguments

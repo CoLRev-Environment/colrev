@@ -7,7 +7,7 @@ from pathlib import Path
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -20,7 +20,7 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-class SourceSpecificPrep(colrev.package_manager.interfaces.PrepInterface):
+class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
     """Prepares records based on the prepare scripts specified by the SearchSource"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

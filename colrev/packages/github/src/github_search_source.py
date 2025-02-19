@@ -14,7 +14,7 @@ from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 from colrev.constants import Fields
@@ -33,7 +33,7 @@ def is_github_api_key(previous: dict, answer: str) -> bool:
     raise inquirer.errors.ValidationError("", reason="Invalid GitHub API key format.")
 
 
-class GitHubSearchSource(colrev.package_manager.interfaces.SearchSourceInterface):
+class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
     """GitHub API"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -46,7 +46,7 @@ class GitHubSearchSource(colrev.package_manager.interfaces.SearchSourceInterface
 
     docs_link = (
         "https://colrev-environment.github.io/colrev/dev_docs/packages/"
-        + "package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface"
+        + "package_interfaces.html#base_classes.SearchSourcePackageBaseClass"
         + "https://docs.github.com/en/rest?apiVersion=2022-11-28"
     )
     db_url = "https://github.com/"

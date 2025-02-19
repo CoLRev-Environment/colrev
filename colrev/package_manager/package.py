@@ -11,12 +11,8 @@ from typing import Any
 from typing import cast
 from typing import Type
 
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
-import colrev.process.operation
-import colrev.record.record
-import colrev.settings
+import colrev.package_manager.package_base_classes as base_classes
 from colrev.constants import EndpointType
 
 # Inspiration for package descriptions:
@@ -24,7 +20,7 @@ from colrev.constants import EndpointType
 # 9ebca7ecc028549dadb3d51d2184f9850f6f9f9d/DESCRIPTION
 
 
-BASECLASS_OVERVIEW = colrev.package_manager.interfaces.BASECLASS_OVERVIEW
+BASECLASS_OVERVIEW = base_classes.BASECLASS_OVERVIEW
 
 
 class Package:

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -19,7 +19,7 @@ from colrev.constants import SearchType
 # pylint: disable=duplicate-code
 
 
-class PsycINFOSearchSource(colrev.package_manager.interfaces.SearchSourceInterface):
+class PsycINFOSearchSource(base_classes.SearchSourcePackageBaseClass):
     """PsycINFO"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings

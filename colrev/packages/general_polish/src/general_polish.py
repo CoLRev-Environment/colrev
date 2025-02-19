@@ -6,7 +6,7 @@ import re
 
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -17,7 +17,7 @@ from colrev.constants import Fields
 # pylint: disable=duplicate-code
 
 
-class GeneralPolishPrep(colrev.package_manager.interfaces.PrepInterface):
+class GeneralPolishPrep(base_classes.PrepPackageBaseClass):
     """Prepares records by applying polishing rules"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

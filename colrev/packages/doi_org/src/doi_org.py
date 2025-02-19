@@ -19,7 +19,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.packages.crossref.src import record_transformer
 
 # Note: not (yet) implemented as a full search_source
-# (including SearchSourceInterface, packages_endpoints.json)
+# (including SearchSourcePackageBaseClass, packages_endpoints.json)
 
 # pylint: disable=too-few-public-methods
 

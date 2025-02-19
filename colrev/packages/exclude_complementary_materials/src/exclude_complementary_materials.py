@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -16,9 +16,7 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-class ExcludeComplementaryMaterialsPrep(
-    colrev.package_manager.interfaces.PrepInterface
-):
+class ExcludeComplementaryMaterialsPrep(base_classes.PrepPackageBaseClass):
     """Prepares records by excluding complementary materials
     (tables of contents, editorial boards, about our authors)"""
 

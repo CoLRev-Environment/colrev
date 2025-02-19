@@ -8,6 +8,7 @@ from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils_formatter
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.process.operation
 import colrev.record.record
 import colrev.settings
@@ -160,7 +161,7 @@ class Load(colrev.process.operation.Operation):
         self,
         source_records_list: list,
         *,
-        source: colrev.package_manager.interfaces.SearchSourceInterface,
+        source: base_classes.SearchSourcePackageBaseClass,
     ) -> None:
         # pylint: disable=too-many-branches
         if len(source_records_list) == 0:
@@ -219,7 +220,7 @@ class Load(colrev.process.operation.Operation):
 
     def setup_source_for_load(
         self,
-        source: colrev.package_manager.interfaces.SearchSourceInterface,
+        source: base_classes.SearchSourcePackageBaseClass,
         *,
         select_new_records: bool = True,
     ) -> None:
@@ -261,7 +262,7 @@ class Load(colrev.process.operation.Operation):
 
     def load_source_records(
         self,
-        source: colrev.package_manager.interfaces.SearchSourceInterface,
+        source: base_classes.SearchSourcePackageBaseClass,
         *,
         keep_ids: bool,
     ) -> None:
@@ -334,7 +335,7 @@ class Load(colrev.process.operation.Operation):
 
     def _add_source_to_settings(
         self,
-        source: colrev.package_manager.interfaces.SearchSourceInterface,
+        source: base_classes.SearchSourcePackageBaseClass,
     ) -> None:
 
         # Add to settings (if new filename)
@@ -396,7 +397,7 @@ class Load(colrev.process.operation.Operation):
     def _validate_load(
         self,
         *,
-        source: colrev.package_manager.interfaces.SearchSourceInterface,
+        source: base_classes.SearchSourcePackageBaseClass,
     ) -> None:
         imported_origins = self._get_currently_imported_origin_list()
         imported = len(imported_origins) - source.search_source.len_before

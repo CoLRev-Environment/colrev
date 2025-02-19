@@ -10,7 +10,7 @@ from pydantic import Field
 
 import colrev.env.docker_manager
 import colrev.env.utils
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 from colrev.constants import Fields
@@ -18,7 +18,7 @@ from colrev.constants import FieldValues
 from colrev.constants import RecordState
 
 
-class Profile(colrev.package_manager.interfaces.DataInterface):
+class Profile(base_classes.DataPackageBaseClass):
     """Create a profile"""
 
     ci_supported: bool = Field(default=False)

@@ -14,7 +14,7 @@ from pydantic import Field
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -48,7 +48,7 @@ class StructuredDataSettings(BaseModel):
     }
 
 
-class StructuredData(colrev.package_manager.interfaces.DataInterface):
+class StructuredData(base_classes.DataPackageBaseClass):
     """Summarize the literature in a structured data extraction (a table)"""
 
     settings: StructuredDataSettings

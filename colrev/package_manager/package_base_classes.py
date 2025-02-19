@@ -21,11 +21,9 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 # pylint: disable=too-few-public-methods
 
-# TODO : suggested: colrev.base_classes, ReviewTypeABC / SearchSourceABC
 
-
-class ReviewTypeInterface(abc.ABC):
-    """The ReviewTypeInterface interface for ReviewTypes"""
+class ReviewTypePackageBaseClass(abc.ABC):
+    """The base class for ReviewType packages"""
 
     ci_supported: bool
 
@@ -38,8 +36,8 @@ class ReviewTypeInterface(abc.ABC):
         """Initialize the review type"""
 
 
-class SearchSourceInterface(ABC):
-    """The PackageEndpoint abstract base class for SearchSources"""
+class SearchSourcePackageBaseClass(ABC):
+    """The base class for SearchSource packages"""
 
     ci_supported: bool
     settings_class: Type[colrev.package_manager.package_settings.DefaultSourceSettings]
@@ -87,8 +85,8 @@ class SearchSourceInterface(ABC):
         """Run the custom source-prep operation."""
 
 
-class PrepInterface(ABC):
-    """The PackageEndpoint abstract base class for prep operations."""
+class PrepPackageBaseClass(ABC):
+    """The base class for Prep packages."""
 
     ci_supported: bool
 
@@ -103,8 +101,8 @@ class PrepInterface(ABC):
         """Run the prep operation."""
 
 
-class PrepManInterface(ABC):
-    """The PackageEndpoint abstract base class for prep-man operations."""
+class PrepManPackageBaseClass(ABC):
+    """The base class for PrepMan packages."""
 
     ci_supported: bool
 
@@ -115,8 +113,8 @@ class PrepManInterface(ABC):
         """Run the prep-man operation."""
 
 
-class DedupeInterface(ABC):
-    """The PackageEndpoint abstract base class for dedupe operations."""
+class DedupePackageBaseClass(ABC):
+    """The base class for Dedupe packages."""
 
     ci_supported: bool
 
@@ -127,8 +125,8 @@ class DedupeInterface(ABC):
         """Run the dedupe operation."""
 
 
-class PrescreenInterface(ABC):
-    """The PackageEndpoint abstract base class for prescreen operations."""
+class PrescreenPackageBaseClass(ABC):
+    """The base class for Prescreen packages."""
 
     ci_supported: bool
 
@@ -140,8 +138,8 @@ class PrescreenInterface(ABC):
         """Run the prescreen operation."""
 
 
-class PDFGetInterface(ABC):
-    """The PackageEndpoint abstract base class for pdf-get operations."""
+class PDFGetPackageBaseClass(ABC):
+    """The base class for PDFGet packages."""
 
     ci_supported: bool
 
@@ -154,8 +152,8 @@ class PDFGetInterface(ABC):
         """Run the pdf-get operation."""
 
 
-class PDFGetManInterface(ABC):
-    """The PackageEndpoint abstract base class for pdf-get-man operations."""
+class PDFGetManPackageBaseClass(ABC):
+    """The base class for PDFGetMan packages."""
 
     ci_supported: bool
 
@@ -166,8 +164,8 @@ class PDFGetManInterface(ABC):
         """Run the pdf-get-man operation."""
 
 
-class PDFPrepInterface(ABC):
-    """The PackageEndpoint abstract base class for pdf-prep operations."""
+class PDFPrepPackageBaseClass(ABC):
+    """The base class for PDFPrep packages."""
 
     ci_supported: bool
 
@@ -180,8 +178,8 @@ class PDFPrepInterface(ABC):
         """Run the prep-pdf operation."""
 
 
-class PDFPrepManInterface(ABC):
-    """The PackageEndpoint abstract base class for pdf-prep-man operations."""
+class PDFPrepManPackageBaseClass(ABC):
+    """The base class for PDFPrepMan packages."""
 
     ci_supported: bool
 
@@ -192,8 +190,8 @@ class PDFPrepManInterface(ABC):
         """Run the pdf-prep-man operation."""
 
 
-class ScreenInterface(ABC):
-    """The PackageEndpoint abstract base class for screen operations."""
+class ScreenPackageBaseClass(ABC):
+    """The base class for Screen packages."""
 
     ci_supported: bool
 
@@ -204,8 +202,8 @@ class ScreenInterface(ABC):
         """Run the screen operation."""
 
 
-class DataInterface(ABC):
-    """The PackageEndpoint abstract base class for data operations."""
+class DataPackageBaseClass(ABC):
+    """The base class for Data packages."""
 
     ci_supported: bool
 
@@ -230,62 +228,62 @@ class DataInterface(ABC):
 
 BASECLASS_OVERVIEW = {
     EndpointType.review_type: {
-        "import_name": ReviewTypeInterface,
+        "import_name": ReviewTypePackageBaseClass,
         "custom_class": "CustomReviewType",
         "operation_name": "operation",
     },
     EndpointType.search_source: {
-        "import_name": SearchSourceInterface,
+        "import_name": SearchSourcePackageBaseClass,
         "custom_class": "CustomSearchSource",
         "operation_name": "source_operation",
     },
     EndpointType.prep: {
-        "import_name": PrepInterface,
+        "import_name": PrepPackageBaseClass,
         "custom_class": "CustomPrep",
         "operation_name": "prep_operation",
     },
     EndpointType.prep_man: {
-        "import_name": PrepManInterface,
+        "import_name": PrepManPackageBaseClass,
         "custom_class": "CustomPrepMan",
         "operation_name": "prep_man_operation",
     },
     EndpointType.dedupe: {
-        "import_name": DedupeInterface,
+        "import_name": DedupePackageBaseClass,
         "custom_class": "CustomDedupe",
         "operation_name": "dedupe_operation",
     },
     EndpointType.prescreen: {
-        "import_name": PrescreenInterface,
+        "import_name": PrescreenPackageBaseClass,
         "custom_class": "CustomPrescreen",
         "operation_name": "prescreen_operation",
     },
     EndpointType.pdf_get: {
-        "import_name": PDFGetInterface,
+        "import_name": PDFGetPackageBaseClass,
         "custom_class": "CustomPDFGet",
         "operation_name": "pdf_get_operation",
     },
     EndpointType.pdf_get_man: {
-        "import_name": PDFGetManInterface,
+        "import_name": PDFGetManPackageBaseClass,
         "custom_class": "CustomPDFGetMan",
         "operation_name": "pdf_get_man_operation",
     },
     EndpointType.pdf_prep: {
-        "import_name": PDFPrepInterface,
+        "import_name": PDFPrepPackageBaseClass,
         "custom_class": "CustomPDFPrep",
         "operation_name": "pdf_prep_operation",
     },
     EndpointType.pdf_prep_man: {
-        "import_name": PDFPrepManInterface,
+        "import_name": PDFPrepManPackageBaseClass,
         "custom_class": "CustomPDFPrepMan",
         "operation_name": "pdf_prep_man_operation",
     },
     EndpointType.screen: {
-        "import_name": ScreenInterface,
+        "import_name": ScreenPackageBaseClass,
         "custom_class": "CustomScreen",
         "operation_name": "screen_operation",
     },
     EndpointType.data: {
-        "import_name": DataInterface,
+        "import_name": DataPackageBaseClass,
         "custom_class": "CustomData",
         "operation_name": "data_operation",
     },

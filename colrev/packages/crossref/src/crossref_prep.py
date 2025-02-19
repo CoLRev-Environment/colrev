@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.crossref.src.crossref_search_source as crossref_connector
@@ -16,7 +16,7 @@ from colrev.constants import Fields
 # pylint: disable=duplicate-code
 
 
-class CrossrefMetadataPrep(colrev.package_manager.interfaces.PrepInterface):
+class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
     """Prepares records based on crossref.org metadata"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

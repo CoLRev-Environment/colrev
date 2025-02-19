@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import random
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.process.operation
 import colrev.record.record
@@ -15,7 +15,7 @@ from colrev.constants import RecordState
 # pylint: disable=too-few-public-methods
 
 
-class CustomPDFPrep(colrev.package_manager.interfaces.PDFPrepInterface):
+class CustomPDFPrep(base_classes.PDFPrepPackageBaseClass):
     """Class for custom pdf-prep scripts"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

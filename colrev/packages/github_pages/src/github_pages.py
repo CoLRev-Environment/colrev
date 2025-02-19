@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 import colrev.env.utils
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -36,7 +36,7 @@ class GHPagesSettings(
     }
 
 
-class GithubPages(colrev.package_manager.interfaces.DataInterface):
+class GithubPages(base_classes.DataPackageBaseClass):
     """Export the literature review into a Github Page"""
 
     settings: GHPagesSettings

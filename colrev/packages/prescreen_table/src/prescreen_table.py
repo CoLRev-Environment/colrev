@@ -8,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -21,7 +21,7 @@ from colrev.constants import RecordState
 # pylint: disable=duplicate-code
 
 
-class TablePrescreen(colrev.package_manager.interfaces.PrescreenInterface):
+class TablePrescreen(base_classes.PrescreenPackageBaseClass):
     """Table-based prescreen (exported and imported)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

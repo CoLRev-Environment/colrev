@@ -13,7 +13,7 @@ from pydantic import Field
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.record.record
@@ -34,7 +34,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 # pylint: disable=duplicate-code
 
 
-class CrossrefSearchSource(colrev.package_manager.interfaces.SearchSourceInterface):
+class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Crossref API"""
 
     endpoint = "colrev.crossref"

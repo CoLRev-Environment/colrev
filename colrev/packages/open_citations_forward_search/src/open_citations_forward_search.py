@@ -10,7 +10,7 @@ import requests
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -24,9 +24,7 @@ from colrev.packages.crossref.src import crossref_api
 # pylint: disable=duplicate-code
 
 
-class OpenCitationsSearchSource(
-    colrev.package_manager.interfaces.SearchSourceInterface
-):
+class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Forward search based on OpenCitations
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """

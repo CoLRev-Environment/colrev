@@ -12,7 +12,7 @@ import requests
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -26,7 +26,7 @@ from colrev.packages.arxiv.src import record_transformer
 # pylint: disable=duplicate-code
 
 
-class ArXivSource(colrev.package_manager.interfaces.SearchSourceInterface):
+class ArXivSource(base_classes.SearchSourcePackageBaseClass):
     """arXiv"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings

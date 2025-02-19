@@ -17,19 +17,19 @@ import git
 import inquirer
 
 from colrev.constants import Colors
-from colrev.package_manager.interfaces import BASECLASS_MAP
-from colrev.package_manager.interfaces import DataInterface
-from colrev.package_manager.interfaces import DedupeInterface
-from colrev.package_manager.interfaces import PDFGetInterface
-from colrev.package_manager.interfaces import PDFGetManInterface
-from colrev.package_manager.interfaces import PDFPrepInterface
-from colrev.package_manager.interfaces import PDFPrepManInterface
-from colrev.package_manager.interfaces import PrepInterface
-from colrev.package_manager.interfaces import PrepManInterface
-from colrev.package_manager.interfaces import PrescreenInterface
-from colrev.package_manager.interfaces import ReviewTypeInterface
-from colrev.package_manager.interfaces import ScreenInterface
-from colrev.package_manager.interfaces import SearchSourceInterface
+from colrev.package_manager.package_base_classes import BASECLASS_MAP
+from colrev.package_manager.package_base_classes import DataPackageBaseClass
+from colrev.package_manager.package_base_classes import DedupePackageBaseClass
+from colrev.package_manager.package_base_classes import PDFGetManPackageBaseClass
+from colrev.package_manager.package_base_classes import PDFGetPackageBaseClass
+from colrev.package_manager.package_base_classes import PDFPrepManPackageBaseClass
+from colrev.package_manager.package_base_classes import PDFPrepPackageBaseClass
+from colrev.package_manager.package_base_classes import PrepManPackageBaseClass
+from colrev.package_manager.package_base_classes import PrepPackageBaseClass
+from colrev.package_manager.package_base_classes import PrescreenPackageBaseClass
+from colrev.package_manager.package_base_classes import ReviewTypePackageBaseClass
+from colrev.package_manager.package_base_classes import ScreenPackageBaseClass
+from colrev.package_manager.package_base_classes import SearchSourcePackageBaseClass
 
 
 def _get_default_author() -> dict:
@@ -339,12 +339,12 @@ def _get_init_method(interface_class: Type) -> str:
     init_method = """
 
 """
-    if interface_class is ReviewTypeInterface:
+    if interface_class is ReviewTypePackageBaseClass:
         init_method += """    def __init__(
         self, *, operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         self.settings = colrev.package_manager.package_settings.DefaultSettings(**settings)"""
-    elif interface_class is SearchSourceInterface:
+    elif interface_class is SearchSourcePackageBaseClass:
         init_method += """
     def __init__(
         self,
@@ -353,7 +353,7 @@ def _get_init_method(interface_class: Type) -> str:
         settings: typing.Optional[dict] = None,
     ) -> None:
       pass # TODO"""
-    elif interface_class is PrepInterface:
+    elif interface_class is PrepPackageBaseClass:
         init_method += """    def __init__(
         self,
         *,
@@ -361,12 +361,12 @@ def _get_init_method(interface_class: Type) -> str:
         settings: dict,
     ) -> None:
         self.settings = colrev.package_manager.package_settings.DefaultSettings(**settings)"""
-    elif interface_class is PrepManInterface:
+    elif interface_class is PrepManPackageBaseClass:
         init_method += """    def __init__(
         self, *, prep_man_operation: colrev.ops.prep_man.PrepMan, settings: dict
     ) -> None:
         self.settings = colrev.package_manager.package_settings.DefaultSettings(**settings)"""
-    elif interface_class is DedupeInterface:
+    elif interface_class is DedupePackageBaseClass:
         init_method += """    def __init__(
         self,
         *,
@@ -374,7 +374,7 @@ def _get_init_method(interface_class: Type) -> str:
         settings: dict,
     ) -> None:
       pass # TODO"""
-    elif interface_class is PrescreenInterface:
+    elif interface_class is PrescreenPackageBaseClass:
         init_method += """    def __init__(
         self,
         *,
@@ -382,7 +382,7 @@ def _get_init_method(interface_class: Type) -> str:
         settings: dict,
     ) -> None:
       pass # TODO"""
-    elif interface_class is PDFGetInterface:
+    elif interface_class is PDFGetPackageBaseClass:
         init_method += """    def __init__(
         self,
         *,
@@ -390,7 +390,7 @@ def _get_init_method(interface_class: Type) -> str:
         settings: dict,
     ) -> None:
       pass # TODO"""
-    elif interface_class is PDFGetManInterface:
+    elif interface_class is PDFGetManPackageBaseClass:
         init_method += """    def __init__(
         self,
         *,
@@ -398,7 +398,7 @@ def _get_init_method(interface_class: Type) -> str:
         settings: dict,
     ) -> None:
       pass # TODO"""
-    elif interface_class is PDFPrepInterface:
+    elif interface_class is PDFPrepPackageBaseClass:
         init_method += """    def __init__(
         self,
         *,
@@ -406,7 +406,7 @@ def _get_init_method(interface_class: Type) -> str:
         settings: dict,
     ) -> None:
       pass # TODO"""
-    elif interface_class is PDFPrepManInterface:
+    elif interface_class is PDFPrepManPackageBaseClass:
         init_method += """    def __init__(
         self,
         *,
@@ -414,7 +414,7 @@ def _get_init_method(interface_class: Type) -> str:
         settings: dict,
     ) ->: None:
       pass # TODO"""
-    elif interface_class is ScreenInterface:
+    elif interface_class is ScreenPackageBaseClass:
         init_method += """    def __init__(
         self,
         *,
@@ -422,7 +422,7 @@ def _get_init_method(interface_class: Type) -> str:
         settings: dict,
     ) -> None:
       pass # TODO"""
-    elif interface_class is DataInterface:
+    elif interface_class is DataPackageBaseClass:
         init_method += """    def __init__(
         self,
         *,
@@ -512,7 +512,7 @@ def _create_module_files(package_data: dict) -> None:
         file_path = os.path.join("src", f"{data['module']}.py")
         baseclass = BASECLASS_MAP[plugin]
 
-        module_path = "colrev.package_manager.interfaces"
+        module_path = "colrev.package_manager.package_base_classes"
         method_signatures = _generate_method_signatures(module_path, baseclass)
 
         with open(file_path, "w", encoding="utf-8") as file:
@@ -521,7 +521,7 @@ def _create_module_files(package_data: dict) -> None:
 """{baseclass}: {data['class']}"""
 
 import typing
-from colrev.package_manager.interfaces import {baseclass}
+from colrev.package_manager.package_base_classes import {baseclass}
 import colrev.package_manager.package_settings
 {_get_package_imports(plugin)}
 

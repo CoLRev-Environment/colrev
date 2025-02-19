@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.local_index.src.local_index as local_index_connector
@@ -17,7 +17,7 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-class LocalIndexPrep(colrev.package_manager.interfaces.PrepInterface):
+class LocalIndexPrep(base_classes.PrepPackageBaseClass):
     """Prepares records based on LocalIndex metadata"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

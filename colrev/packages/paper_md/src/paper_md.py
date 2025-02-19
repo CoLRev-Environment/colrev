@@ -21,7 +21,7 @@ import colrev.env.docker_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -56,7 +56,7 @@ class PaperMarkdownSettings(BaseModel):
 
 
 # pylint: disable=too-many-instance-attributes
-class PaperMarkdown(colrev.package_manager.interfaces.DataInterface):
+class PaperMarkdown(base_classes.DataPackageBaseClass):
     """Synthesize the literature in a markdown paper
 
     The paper (paper.md) is created automatically.

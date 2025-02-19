@@ -11,7 +11,7 @@ from pydantic import Field
 
 import colrev.env.docker_manager
 import colrev.env.utils
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -22,7 +22,7 @@ from colrev.constants import PDFDefectCodes
 # pylint: disable=duplicate-code
 
 
-class OCRMyPDF(colrev.package_manager.interfaces.PDFPrepInterface):
+class OCRMyPDF(base_classes.PDFPrepPackageBaseClass):
     """Prepare PDFs by applying OCR based on OCRmyPDF"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

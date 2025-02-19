@@ -12,9 +12,9 @@ from typing import Dict
 
 import toml
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 from colrev.constants import Colors
-from colrev.package_manager.interfaces import BASECLASS_MAP
+from colrev.package_manager.package_base_classes import BASECLASS_MAP
 
 
 def _check_package_installed(data: dict) -> bool:
@@ -103,7 +103,7 @@ def _check_tool_poetry_plugins_colrev_classes(data: dict) -> bool:
             cls = getattr(module, class_name)  # type: ignore
             baseclass: str = BASECLASS_MAP.get(interface_identifier)  # type: ignore
 
-            baseclass_class = getattr(colrev.package_manager.interfaces, baseclass)
+            baseclass_class = getattr(base_classes, baseclass)
             if not issubclass(cls, baseclass_class):
                 raise TypeError(
                     f"{cls} must implement all abstract methods of {baseclass_class}!"

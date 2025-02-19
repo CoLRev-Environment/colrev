@@ -2,12 +2,12 @@
 """Template for a custom data PackageEndpoint"""
 from __future__ import annotations
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.process.operation
 
 
-class CustomData(colrev.package_manager.interfaces.DataInterface):
+class CustomData(base_classes.DataPackageBaseClass):
     """Class for custom data scripts"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

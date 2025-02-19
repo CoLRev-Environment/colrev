@@ -17,7 +17,7 @@ import colrev.env.environment_manager
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.load
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.process.operation
@@ -39,9 +39,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 # pylint: disable=duplicate-code
 
 
-class SemanticScholarSearchSource(
-    colrev.package_manager.interfaces.SearchSourceInterface
-):
+class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Semantic Scholar API Search Source"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -52,7 +50,7 @@ class SemanticScholarSearchSource(
     endpoint = "colrev.semanticscholar"
     ci_supported: bool = Field(default=True)
 
-    # SearchSourceInterface constants
+    # SearchSourcePackageBaseClass constants
     heuristic_status = SearchSourceHeuristicStatus.oni
     search_types = [SearchType.API]
 

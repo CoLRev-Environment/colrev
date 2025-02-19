@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -19,7 +19,7 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-class WebsiteDownload(colrev.package_manager.interfaces.PDFGetInterface):
+class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
     """Get PDFs from the website"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

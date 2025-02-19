@@ -9,7 +9,7 @@ from pathlib import Path
 import pymupdf
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 from colrev.constants import Fields
@@ -21,7 +21,7 @@ from colrev.constants import Filepaths
 # pylint: disable=too-few-public-methods
 
 
-class PDFCoverPage(colrev.package_manager.interfaces.PDFPrepInterface):
+class PDFCoverPage(base_classes.PDFPrepPackageBaseClass):
     """Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

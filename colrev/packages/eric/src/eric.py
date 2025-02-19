@@ -9,7 +9,7 @@ from pathlib import Path
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -23,7 +23,7 @@ from colrev.packages.eric.src import eric_api
 # pylint: disable=duplicate-code
 
 
-class ERICSearchSource(colrev.package_manager.interfaces.SearchSourceInterface):
+class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
     """ERIC API"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings

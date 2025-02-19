@@ -1,41 +1,41 @@
 Package interfaces
 ========================================
 
-.. autointerface:: colrev.package_manager.interfaces.GeneralInterface
+.. autointerface:: base_classes.GeneralInterface
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.ReviewTypeInterface
+.. autointerface:: base_classes.ReviewTypePackageBaseClass
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.SearchSourceInterface
+.. autointerface:: base_classes.SearchSourcePackageBaseClass
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.PrepInterface
+.. autointerface:: base_classes.PrepPackageBaseClass
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.PrepManInterface
+.. autointerface:: base_classes.PrepManPackageBaseClass
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.DedupeInterface
+.. autointerface:: base_classes.DedupePackageBaseClass
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.PrescreenInterface
+.. autointerface:: base_classes.PrescreenPackageBaseClass
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.PDFGetInterface
+.. autointerface:: base_classes.PDFGetPackageBaseClass
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.PDFGetManInterface
+.. autointerface:: base_classes.PDFGetManPackageBaseClass
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.PDFPrepInterface
+.. autointerface:: base_classes.PDFPrepPackageBaseClass
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.PDFPrepManInterface
+.. autointerface:: base_classes.PDFPrepManPackageBaseClass
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.ScreenInterface
+.. autointerface:: base_classes.ScreenPackageBaseClass
    :members:
 
-.. autointerface:: colrev.package_manager.interfaces.DataInterface
+.. autointerface:: base_classes.DataPackageBaseClass
    :members:

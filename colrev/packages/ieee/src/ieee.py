@@ -9,7 +9,7 @@ import pandas as pd
 from pydantic import Field
 
 import colrev.ops.prep
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.ieee.src.ieee_api
@@ -24,7 +24,7 @@ from colrev.constants import SearchType
 # pylint: disable=duplicate-code
 
 
-class IEEEXploreSearchSource(colrev.package_manager.interfaces.SearchSourceInterface):
+class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
     """IEEEXplore"""
 
     flag = True

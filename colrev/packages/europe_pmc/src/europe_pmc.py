@@ -16,7 +16,7 @@ from pydantic import Field
 from rapidfuzz import fuzz
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -51,7 +51,7 @@ class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, BaseModel):
     }
 
 
-class EuropePMCSearchSource(colrev.package_manager.interfaces.SearchSourceInterface):
+class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Europe PMC"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings

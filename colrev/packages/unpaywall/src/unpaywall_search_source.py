@@ -8,7 +8,7 @@ from pathlib import Path
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -20,7 +20,7 @@ from colrev.packages.unpaywall.src.api import UnpaywallAPI
 # pylint: disable=unused-argument
 
 
-class UnpaywallSearchSource(colrev.package_manager.interfaces.SearchSourceInterface):
+class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Unpaywall Search Source"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings

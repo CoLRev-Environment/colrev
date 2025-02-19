@@ -19,7 +19,7 @@ from rapidfuzz import fuzz
 from tqdm import tqdm
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -35,7 +35,7 @@ from colrev.packages.crossref.src import crossref_api
 # pylint: disable=duplicate-code
 
 
-class BackwardSearchSource(colrev.package_manager.interfaces.SearchSourceInterface):
+class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Backward search extracting references from PDFs using GROBID
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """

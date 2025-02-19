@@ -13,7 +13,7 @@ from git import Repo
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -27,9 +27,7 @@ from colrev.constants import SearchType
 # pylint: disable=duplicate-code
 
 
-class SYNERGYDatasetsSearchSource(
-    colrev.package_manager.interfaces.SearchSourceInterface
-):
+class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
     """SYNERGY-datasets
 
     https://github.com/asreview/synergy-dataset

@@ -7,7 +7,7 @@ from pydantic import Field
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -20,7 +20,7 @@ from colrev.packages.crossref.src import crossref_api
 # pylint: disable=too-many-instance-attributes
 
 
-class YearVolIssPrep(colrev.package_manager.interfaces.PrepInterface):
+class YearVolIssPrep(base_classes.PrepPackageBaseClass):
     """Prepares records based on year-volume-issue dependency"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

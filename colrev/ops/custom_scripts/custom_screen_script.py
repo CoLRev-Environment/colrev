@@ -5,7 +5,7 @@ from __future__ import annotations
 import random
 import typing
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.process.operation
 import colrev.record.record
@@ -17,7 +17,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 # pylint: disable=too-few-public-methods
 
 
-class CustomScreen(colrev.package_manager.interfaces.ScreenInterface):
+class CustomScreen(base_classes.ScreenPackageBaseClass):
     """Class for custom screen scripts"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

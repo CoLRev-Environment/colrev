@@ -15,7 +15,6 @@ from rapidfuzz import fuzz
 
 import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
 import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import Fields

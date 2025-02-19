@@ -7,7 +7,7 @@ import json
 import requests
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -20,7 +20,7 @@ from colrev.packages.semanticscholar.src import record_transformer
 # pylint: disable=duplicate-code
 
 
-class SemanticScholarPrep(colrev.package_manager.interfaces.PrepInterface):
+class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
     """Prepares records based on SemanticScholar metadata"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
