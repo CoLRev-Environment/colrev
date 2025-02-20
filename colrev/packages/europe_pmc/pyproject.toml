@@ -1,4 +1,4 @@
-[tool.poetry]
+[project]
 name = "colrev.europe_pmc"
 description = "CoLRev package for europe_pmc"
 version = "0.1.0"
@@ -6,23 +6,18 @@ license = "MIT"
 authors = [
     "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
+requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/europe_pmc"
-
-[[tool.poetry.packages]]
-include = "src"
-
-[tool.poetry.dependencies]
-python = ">=3.8, <4"
 
 [tool.colrev]
 colrev_doc_description = "Europe PMC"
 colrev_doc_link = "README.md"
 search_types = ["API", "DB", "MD"]
 
-[tool.poetry.plugins.colrev]
+[project.entry-points."colrev"]
 search_source = "colrev.packages.europe_pmc.src.europe_pmc:EuropePMCSearchSource"
 prep = "colrev.packages.europe_pmc.src.europe_pmc_prep:EuropePMCMetadataPrep"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "cython<3.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

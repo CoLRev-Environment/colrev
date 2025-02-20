@@ -1,4 +1,4 @@
-[tool.poetry]
+[project]
 name = "colrev.download_from_website"
 description = "CoLRev package for download_from_website"
 version = "0.1.0"
@@ -6,13 +6,8 @@ license = "MIT"
 authors = [
     "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
+requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/download_from_website"
-
-[[tool.poetry.packages]]
-include = "src"
-
-[tool.poetry.dependencies]
-python = ">=3.8, <4"
 beautifulsoup4 = "^4.11.1"
 
 [tool.colrev]
@@ -20,9 +15,9 @@ colrev_doc_description = "Download PDF from website"
 colrev_doc_link = "README.md"
 search_types = []
 
-[tool.poetry.plugins.colrev]
+[project.entry-points."colrev"]
 pdf_get = "colrev.packages.download_from_website.src.download_from_website:WebsiteDownload"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "cython<3.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

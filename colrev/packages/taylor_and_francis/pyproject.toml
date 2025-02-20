@@ -1,4 +1,4 @@
-[tool.poetry]
+[project]
 name = "colrev.taylor_and_francis"
 description = "CoLRev package for taylor_and_francis"
 version = "0.1.0"
@@ -6,22 +6,17 @@ license = "MIT"
 authors = [
     "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
+requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/taylor_and_francis"
-
-[[tool.poetry.packages]]
-include = "src"
-
-[tool.poetry.dependencies]
-python = ">=3.8, <4"
 
 [tool.colrev]
 colrev_doc_description = "Taylor and Francis"
 colrev_doc_link = "README.md"
 search_types = ["DB"]
 
-[tool.poetry.plugins.colrev]
+[project.entry-points."colrev"]
 search_source = "colrev.packages.taylor_and_francis.src.taylor_and_francis:TaylorAndFrancisSearchSource"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "cython<3.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

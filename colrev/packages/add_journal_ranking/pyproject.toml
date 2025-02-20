@@ -1,4 +1,4 @@
-[tool.poetry]
+[project]
 name = "colrev.add_journal_ranking"
 description = "CoLRev package for add_journal_ranking"
 version = "0.1.0"
@@ -10,22 +10,17 @@ authors = [
     "Thomas Fleischmann",
     "Anton Liam Frisch"
 ]
+requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/add_journal_ranking"
-
-[[tool.poetry.packages]]
-include = "src"
-
-[tool.poetry.dependencies]
-python = ">=3.8, <4"
 
 [tool.colrev]
 colrev_doc_description = "Add Journal ranking information"
 colrev_doc_link = "README.md"
 search_types = []
 
-[tool.poetry.plugins.colrev]
+[project.entry-points."colrev"]
 prep = "colrev.packages.add_journal_ranking.src.add_journal_ranking:AddJournalRanking"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "cython<3.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

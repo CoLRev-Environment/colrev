@@ -1,4 +1,4 @@
-[tool.poetry]
+[project]
 name = "colrev.ui_web"
 description = "Web-UI package for CoLRev"
 version = "0.1.0"
@@ -10,16 +10,11 @@ authors = [
     "Simon Mühlbauer",
     "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
 ]
+requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/ui_web"
 
 [tool.poetry.scripts]
 colrev-ui-web = "colrev.packages.ui_web.src.dashboard:main"
-
-[[tool.poetry.packages]]
-include = "src"
-
-[tool.poetry.dependencies]
-python = ">=3.8, <4"
 dash = "^2.11.1"
 
 [tool.colrev]
@@ -28,5 +23,5 @@ colrev_doc_link = "README.md"
 search_types = []
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "cython<3.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

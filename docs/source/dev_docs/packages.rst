@@ -148,13 +148,14 @@ The package metadata is stored in the ``pyproject.toml`` file. The metadata is u
 
    ::
 
-    [tool.poetry]
+    [project]
     name = "colrev.abi_inform_proquest"
     description = "CoLRev package for abi_inform_proquest"
     version = "0.1.0"
     authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
     license = "MIT"
-    repository = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/sync"
+    requires-python = ">=3.8, <4"
+repository = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/sync"
 
 
     [tool.colrev]
@@ -162,7 +163,7 @@ The package metadata is stored in the ``pyproject.toml`` file. The metadata is u
     colrev_doc_link = "README.md"
     search_types = ["API", "TOC", "MD"]
 
-    [tool.poetry.plugins.colrev]
+    [project.entry-points."colrev"]
     search_source = "colrev.packages.abi_inform_proquest.src.package_functionality:ABIInformProQuestSearchSource"
 
 In the `tool.poetry.plugins.colrev` section, the endpoints can be specified. The endpoint class is a string that contains the module path and the class name of the endpoint. The module path is relative to the package directory.
