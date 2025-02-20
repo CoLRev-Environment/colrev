@@ -8,12 +8,11 @@ from pathlib import Path
 
 import pymupdf
 import requests
-import zope.interface
 from pydantic import Field
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.pdf_backward_search.src.pdf_backward_search as bws
@@ -35,8 +34,7 @@ from colrev.writer.write_utils import write_file
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class FilesSearchSource:
+class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Files directories (PDFs based on GROBID)"""
 
     # pylint: disable=too-many-instance-attributes

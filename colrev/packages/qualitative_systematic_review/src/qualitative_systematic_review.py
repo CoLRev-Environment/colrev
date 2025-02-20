@@ -1,10 +1,9 @@
 #! /usr/bin/env python
 """Qualitative systematic review"""
-import zope.interface
 from pydantic import Field
 
 import colrev.ops.search
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -20,8 +19,8 @@ from colrev.packages.pdf_backward_search.src.pdf_backward_search import (
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.ReviewTypeInterface)
-class QualitativeSystematicReview:
+# @zope.interface.implementer(base_classes.ReviewTypePackageBaseClass)
+class QualitativeSystematicReview(base_classes.ReviewTypePackageBaseClass):
     """Qualitative systematic review"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

@@ -8,11 +8,10 @@ from multiprocessing import Lock
 from pathlib import Path
 
 import requests
-import zope.interface
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
@@ -21,15 +20,14 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 # Note: not (yet) implemented as a full search_source
-# (including SearchSourceInterface, packages_endpoints.json)
+# (including SearchSourcePackageBaseClass, packages_endpoints.json)
 
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=unused-argument
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class OpenLibrarySearchSource:
+class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """OpenLibrary API"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings

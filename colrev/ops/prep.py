@@ -35,7 +35,7 @@ from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
 
 if typing.TYPE_CHECKING:  # pragma: no cover
-    import colrev.package_manager.interfaces
+    import colrev.package_manager.package_base_classes as base_classes
     import colrev.review_manager
     import colrev.settings
 
@@ -162,7 +162,7 @@ class Prep(colrev.process.operation.Operation):
         *,
         prior: colrev.record.record_prep.PrepRecord,
         preparation_record: colrev.record.record_prep.PrepRecord,
-        prep_package_endpoint: colrev.package_manager.interfaces.PrepInterface,
+        prep_package_endpoint: base_classes.PrepPackageBaseClass,
     ) -> None:
         pass  # this method can be replaced by inheriting class (for debugging)
 

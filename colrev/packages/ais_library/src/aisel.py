@@ -8,11 +8,10 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
-import zope.interface
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -27,8 +26,7 @@ from colrev.packages.ais_library.src import ais_load_utils
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class AISeLibrarySearchSource:
+class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """AIS electronic Library (AISeL)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
