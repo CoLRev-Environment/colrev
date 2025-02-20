@@ -1,7 +1,5 @@
 #! /usr/bin/env python
 """DataPackageBaseClass: RefCheck"""
-from zope.interface import implementer
-
 import colrev.ops.data
 import colrev.package_manager.package_settings
 from colrev.package_manager.package_base_classes import DataPackageBaseClass
@@ -9,8 +7,7 @@ from colrev.package_manager.package_base_classes import DataPackageBaseClass
 # pylint: disable=unused-argument
 
 
-@implementer(DataPackageBaseClass)
-class RefCheck:
+class RefCheck(DataPackageBaseClass):
     """RefCheck Class"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings

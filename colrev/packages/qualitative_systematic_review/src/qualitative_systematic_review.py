@@ -19,7 +19,6 @@ from colrev.packages.pdf_backward_search.src.pdf_backward_search import (
 # pylint: disable=too-few-public-methods
 
 
-# @zope.interface.implementer(base_classes.ReviewTypePackageBaseClass)
 class QualitativeSystematicReview(base_classes.ReviewTypePackageBaseClass):
     """Qualitative systematic review"""
 

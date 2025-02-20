@@ -16,7 +16,6 @@ from colrev.constants import Fields
 # pylint: disable=duplicate-code
 
 
-# @zope.interface.implementer(base_classes.ReviewTypePackageBaseClass)
 class CuratedMasterdata(base_classes.ReviewTypePackageBaseClass):
     """Curated masterdata"""
 
