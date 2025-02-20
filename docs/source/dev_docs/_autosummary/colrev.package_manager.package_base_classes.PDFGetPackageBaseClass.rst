@@ -9,24 +9,22 @@ colrev.package\_manager.package\_base\_classes.PDFGetPackageBaseClass
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~PDFGetPackageBaseClass.get_pdf
-   
-   
 
-   
-   
+      ~PDFGetPackageBaseClass.get_pdf
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PDFGetPackageBaseClass.ci_supported
       ~PDFGetPackageBaseClass.settings_class
-   
-   

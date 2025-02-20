@@ -9,24 +9,22 @@ colrev.package\_manager.package\_base\_classes.PDFPrepPackageBaseClass
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~PDFPrepPackageBaseClass.prep_pdf
-   
-   
 
-   
-   
+      ~PDFPrepPackageBaseClass.prep_pdf
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PDFPrepPackageBaseClass.ci_supported
       ~PDFPrepPackageBaseClass.settings_class
-   
-   

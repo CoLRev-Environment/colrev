@@ -9,23 +9,21 @@ colrev.package\_manager.package\_base\_classes.ReviewTypePackageBaseClass
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~ReviewTypePackageBaseClass.initialize
-   
-   
 
-   
-   
+      ~ReviewTypePackageBaseClass.initialize
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ReviewTypePackageBaseClass.ci_supported
-   
-   

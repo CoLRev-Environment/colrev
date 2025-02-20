@@ -9,24 +9,22 @@ colrev.package\_manager.package\_base\_classes.PrepManPackageBaseClass
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~PrepManPackageBaseClass.prepare_manual
-   
-   
 
-   
-   
+      ~PrepManPackageBaseClass.prepare_manual
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PrepManPackageBaseClass.ci_supported
       ~PrepManPackageBaseClass.settings_class
-   
-   

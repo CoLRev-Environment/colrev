@@ -9,24 +9,22 @@ colrev.package\_manager.package\_base\_classes.ScreenPackageBaseClass
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~ScreenPackageBaseClass.run_screen
-   
-   
 
-   
-   
+      ~ScreenPackageBaseClass.run_screen
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ScreenPackageBaseClass.ci_supported
       ~ScreenPackageBaseClass.settings_class
-   
-   
