@@ -13,7 +13,6 @@ import colrev.record.record
 # pylint: disable=too-few-public-methods
 
 
-# @zope.interface.implementer(base_classes.ReviewTypePackageBaseClass)
 class CriticalReview(base_classes.ReviewTypePackageBaseClass):
     """Critical review"""
 
