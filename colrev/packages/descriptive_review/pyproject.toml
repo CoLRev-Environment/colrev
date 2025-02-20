@@ -4,8 +4,8 @@ description = "CoLRev package for descriptive_review"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
-]
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+ ]
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/descriptive_review"
 

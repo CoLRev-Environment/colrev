@@ -4,10 +4,10 @@ description = "CoLRev package for osf"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    "Gerit Wagner <gerit.wagner@uni-bamberg.de>",
-    "Peiyao Mao <peiyao.mao@stud.uni-bamberg.de>",
-    "Mingxin Jiang <mingxin.jiang@stud.uni-bamberg.de>",
-    "Johannes Maximilian Diel <jm_diel@stud.uni-bamberg.de>",
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
+    { name = "Peiyao Mao", email = "peiyao.mao@stud.uni-bamberg.de" },
+    { name = "Mingxin Jiang", email = "mingxin.jiang@stud.uni-bamberg.de" },
+    { name = "Johannes Maximilian Diel", email = "jm_diel@stud.uni-bamberg.de" }
 ]
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/osf"

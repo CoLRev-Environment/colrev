@@ -4,11 +4,11 @@ description = "CoLRev package for semanticscholar"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    "Gerit Wagner <gerit.wagner@uni-bamberg.de>",
-    "Louis Langenhan",
-    "Peter Eckhardt",
-    "Amadou-Choumoussidine Kouotou-Ngapout",
-    "Robert Theis",
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
+    { name = "Louis Langenhan" },
+    { name = "Peter Eckhardt" },
+    { name = "Amadou-Choumoussidine Kouotou-Ngapout" },
+    { name = "Robert Theis" }
 ]
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/semanticscholar"
