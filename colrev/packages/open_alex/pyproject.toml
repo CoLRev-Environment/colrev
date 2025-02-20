@@ -10,8 +10,8 @@ requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/open_alex"
 pyalex = "^0.10"
 
-[[tool.poetry.packages]]
-include = "src"
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.colrev]
 colrev_doc_description = "OpenAlex API"

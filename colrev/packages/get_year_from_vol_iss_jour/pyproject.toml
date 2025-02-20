@@ -9,8 +9,8 @@ authors = [
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/get_year_from_vol_iss_jour"
 
-[[tool.poetry.packages]]
-include = "src"
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.colrev]
 colrev_doc_description = "Year-Vol-Iss Prep"

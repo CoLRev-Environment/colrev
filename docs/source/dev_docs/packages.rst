@@ -161,10 +161,10 @@ The package metadata is stored in the ``pyproject.toml`` file. The metadata is u
     repository = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/sync"
 
 
-    [[tool.poetry.packages]]
-include = "src"
+    [tool.hatch.build.targets.wheel]
+    packages = ["src"]
 
-[tool.colrev]
+    [tool.colrev]
     colrev_doc_description = "Package for sync"
     colrev_doc_link = "README.md"
     search_types = ["API", "TOC", "MD"]

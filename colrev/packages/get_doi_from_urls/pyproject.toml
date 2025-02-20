@@ -9,8 +9,8 @@ authors = [
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/get_doi_from_urls"
 
-[[tool.poetry.packages]]
-include = "src"
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.colrev]
 colrev_doc_description = "Get DOI from URLs"

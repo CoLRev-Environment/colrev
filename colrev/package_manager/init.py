@@ -66,8 +66,8 @@ authors = ["{data['author']['name']} <{data['author']['email']}>"]
 requires-python = ">=3.8, <4"
 repository = "{data['repository']}"
 
-[[tool.poetry.packages]]
-include = "src"
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.colrev]
 colrev_doc_description = "{data['doc_description']}"
