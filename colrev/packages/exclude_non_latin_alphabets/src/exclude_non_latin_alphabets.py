@@ -2,11 +2,10 @@
 """Exclude records with non-latin alphabets as a prep operation"""
 from __future__ import annotations
 
-import zope.interface
 from alphabet_detector import AlphabetDetector
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -18,8 +17,7 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
-class ExcludeNonLatinAlphabetsPrep:
+class ExcludeNonLatinAlphabetsPrep(base_classes.PrepPackageBaseClass):
     """Prepares records by excluding ones that have a non-latin alphabet
     (in the title, author, journal, or booktitle field)"""
 

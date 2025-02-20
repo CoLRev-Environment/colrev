@@ -1,15 +1,15 @@
 #! /usr/bin/env python
-"""DataInterface: RefCheck"""
+"""DataPackageBaseClass: RefCheck"""
 from zope.interface import implementer
 
 import colrev.ops.data
 import colrev.package_manager.package_settings
-from colrev.package_manager.interfaces import DataInterface
+from colrev.package_manager.package_base_classes import DataPackageBaseClass
 
 # pylint: disable=unused-argument
 
 
-@implementer(DataInterface)
+@implementer(DataPackageBaseClass)
 class RefCheck:
     """RefCheck Class"""
 

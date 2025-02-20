@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import typing
 
-import zope.interface
 from pydantic import BaseModel
 from pydantic import Field
 
 import colrev.env.language_service
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -72,8 +71,7 @@ class ScopePrescreenSettings(
     }
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
-class ScopePrescreen:
+class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
     """Rule-based prescreen (scope)"""
 
     settings: ScopePrescreenSettings

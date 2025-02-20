@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import zope.interface
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -19,8 +18,7 @@ from colrev.constants import SearchType
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class WileyOnlineLibrarySearchSource:
+class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """Wiley"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
