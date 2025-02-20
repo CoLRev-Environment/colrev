@@ -17,7 +17,7 @@ colrev_doc_description = "Theoretical Review"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 review_type = "colrev.packages.theoretical_review.src.theoretical_review:TheoreticalReview"
 
 [build-system]

@@ -17,7 +17,7 @@ colrev_doc_description = "Prep-man Jupyter Notebook"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prep_man = "colrev.packages.prep_man_curation_jupyter.src.curation_jupyter_prep_man:CurationJupyterNotebookManPrep"
 
 [build-system]

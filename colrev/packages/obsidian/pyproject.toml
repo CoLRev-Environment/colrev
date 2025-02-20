@@ -17,7 +17,7 @@ colrev_doc_description = "Obsidian"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 data = "colrev.packages.obsidian.src.obsidian:Obsidian"
 
 [build-system]

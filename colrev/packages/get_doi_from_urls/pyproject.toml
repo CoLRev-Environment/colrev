@@ -17,7 +17,7 @@ colrev_doc_description = "Get DOI from URLs"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prep = "colrev.packages.get_doi_from_urls.src.doi_from_urls_prep:DOIFromURLsPrep"
 
 [build-system]

@@ -17,7 +17,7 @@ colrev_doc_description = "Curation missing dedupe"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 dedupe = "colrev.packages.curation_missing_dedupe.src.curation_missing_dedupe:CurationMissingDedupe"
 
 [build-system]

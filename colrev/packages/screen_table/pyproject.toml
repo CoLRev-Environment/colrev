@@ -17,7 +17,7 @@ colrev_doc_description = "Screen Table"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 screen = "colrev.packages.screen_table.src.screen_table:TableScreen"
 
 [build-system]

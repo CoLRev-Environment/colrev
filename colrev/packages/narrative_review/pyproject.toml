@@ -17,7 +17,7 @@ colrev_doc_description = "Narrative Review"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 review_type = "colrev.packages.narrative_review.src.narrative_review:NarrativeReview"
 
 [build-system]

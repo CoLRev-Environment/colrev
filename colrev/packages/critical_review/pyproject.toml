@@ -17,7 +17,7 @@ colrev_doc_description = "Critical Review"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 review_type = "colrev.packages.critical_review.src.critical_review:CriticalReview"
 
 [build-system]

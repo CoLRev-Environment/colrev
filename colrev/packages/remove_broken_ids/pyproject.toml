@@ -17,7 +17,7 @@ colrev_doc_description = "Remove Broken IDs"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prep = "colrev.packages.remove_broken_ids.src.remove_broken_ids:RemoveBrokenIDPrep"
 
 [build-system]

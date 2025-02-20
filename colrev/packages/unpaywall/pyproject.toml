@@ -17,7 +17,7 @@ colrev_doc_description = "Unpaywall"
 colrev_doc_link = "README.md"
 search_types = ["API"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 pdf_get = "colrev.packages.unpaywall.src.unpaywall:Unpaywall"
 search_source = "colrev.packages.unpaywall.src.unpaywall_search_source:UnpaywallSearchSource"
 

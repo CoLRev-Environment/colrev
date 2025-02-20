@@ -17,7 +17,7 @@ colrev_doc_description = "Get Masterdata from CiteAs"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prep = "colrev.packages.get_masterdata_from_citeas.src.citeas_prep:CiteAsPrep"
 
 [build-system]

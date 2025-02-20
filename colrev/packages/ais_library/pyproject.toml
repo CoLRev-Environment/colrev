@@ -17,7 +17,7 @@ colrev_doc_description = "AIS electronic Library (AISeL)"
 colrev_doc_link = "README.md"
 search_types = ["DB", "API", "TOC"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.ais_library.src.aisel:AISeLibrarySearchSource"
 
 [build-system]

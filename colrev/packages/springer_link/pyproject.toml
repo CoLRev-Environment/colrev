@@ -17,7 +17,7 @@ colrev_doc_description = "Springer Link"
 colrev_doc_link = "README.md"
 search_types = ["DB", "API"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.springer_link.src.springer_link:SpringerLinkSearchSource"
 
 [build-system]

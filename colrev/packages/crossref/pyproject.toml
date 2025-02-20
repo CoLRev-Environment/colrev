@@ -17,7 +17,7 @@ colrev_doc_description = "Crossref API"
 colrev_doc_link = "README.md"
 search_types = ["API", "TOC", "MD"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.crossref.src.crossref_search_source:CrossrefSearchSource"
 prep = "colrev.packages.crossref.src.crossref_prep:CrossrefMetadataPrep"
 

@@ -18,7 +18,7 @@ colrev_doc_description = "Exclude Non-Latin Alphabets"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prep = "colrev.packages.exclude_non_latin_alphabets.src.exclude_non_latin_alphabets:ExcludeNonLatinAlphabetsPrep"
 
 [build-system]

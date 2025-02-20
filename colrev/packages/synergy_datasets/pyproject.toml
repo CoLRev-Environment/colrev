@@ -17,7 +17,7 @@ colrev_doc_description = "SYNERGY Datasets"
 colrev_doc_link = "README.md"
 search_types = ["API"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.synergy_datasets.src.synergy_datasets:SYNERGYDatasetsSearchSource"
 
 [build-system]

@@ -17,7 +17,7 @@ colrev_doc_description = "Export Man Prep"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prep_man = "colrev.packages.export_man_prep.src.prep_man_export:ExportManPrep"
 
 [build-system]

@@ -17,7 +17,7 @@ colrev_doc_description = "Exclude collections"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prep = "colrev.packages.exclude_collections.src.exclude_collections:ExcludeCollectionsPrep"
 
 [build-system]

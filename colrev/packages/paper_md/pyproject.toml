@@ -17,7 +17,7 @@ colrev_doc_description = "Paper (Markdown)"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 data = "colrev.packages.paper_md.src.paper_md:PaperMarkdown"
 
 [build-system]

@@ -17,7 +17,7 @@ colrev_doc_description = "Transport Research International Documentation"
 colrev_doc_link = "README.md"
 search_types = ["DB"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.trid.src.trid:TransportResearchInternationalDocumentation"
 
 [build-system]

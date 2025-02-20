@@ -17,7 +17,7 @@ colrev_doc_description = "Prescreen (CLI)"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prescreen = "colrev.packages.colrev_cli_prescreen.src.prescreen_cli:CoLRevCLIPrescreen"
 
 [build-system]

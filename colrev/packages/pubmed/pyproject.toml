@@ -17,7 +17,7 @@ colrev_doc_description = "Pubmed"
 colrev_doc_link = "README.md"
 search_types = ["DB", "API", "MD"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.pubmed.src.pubmed:PubMedSearchSource"
 prep = "colrev.packages.pubmed.src.pubmed_metadata_prep:PubmedMetadataPrep"
 

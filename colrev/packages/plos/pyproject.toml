@@ -15,7 +15,7 @@ colrev_doc_description = "TODO"
 colrev_doc_link = "docs/README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.plos.src.plos_search_source:PlosSearchSource"
 
 [build-system]

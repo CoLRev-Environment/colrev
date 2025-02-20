@@ -169,10 +169,10 @@ The package metadata is stored in the ``pyproject.toml`` file. The metadata is u
     colrev_doc_link = "README.md"
     search_types = ["API", "TOC", "MD"]
 
-    [project.entry-points."colrev"]
+    [project.entry-points.colrev]
     search_source = "colrev.packages.abi_inform_proquest.src.package_functionality:ABIInformProQuestSearchSource"
 
-The `tool.poetry.plugins.colrev` section specifies which base classes are extended. The value contains the module path and the class name. The module path is relative to the package directory.
+The `[project.entry-points.colrev]` section specifies which base classes are extended. The value contains the module path and the class name. The module path is relative to the package directory.
 
 Develop
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -187,7 +187,7 @@ Best practices
 * Get paths from review_manager
 * Use the ``logger`` and ``colrev_report_logger`` to help users examine and validate the process, including links to the docs where instructions for tracing and fixing errors are available.
 * Before committing do a pre-commit test
-* Use poetry for dependency management (run `poetry add <package_name>` to add a new dependency)
+* Use uv for dependency management (run `uv add <package_name>` to add a new dependency)
 * Once the package development is completed, make a pull request to the CoLRev origin repository, with brief description of the package.
 * The ``add_endpoint`` is only required for SearchSources. It is optional for other packages.
 

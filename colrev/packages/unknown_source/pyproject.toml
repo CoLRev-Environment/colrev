@@ -17,7 +17,7 @@ colrev_doc_description = "Unknown SearchSource"
 colrev_doc_link = "README.md"
 search_types = ["DB", "OTHER", "TOC", "FORWARD_SEARCH", "BACKWARD_SEARCH"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.unknown_source.src.unknown_source:UnknownSearchSource"
 
 [build-system]

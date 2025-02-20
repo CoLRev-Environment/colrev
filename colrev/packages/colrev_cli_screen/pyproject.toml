@@ -17,7 +17,7 @@ colrev_doc_description = "Screen (CLI)"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 screen = "colrev.packages.colrev_cli_screen.src.screen_cli:CoLRevCLIScreen"
 
 [build-system]

@@ -17,7 +17,7 @@ colrev_doc_description = "Year-Vol-Iss Prep"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prep = "colrev.packages.get_year_from_vol_iss_jour.src.year_vol_iss_prep:YearVolIssPrep"
 
 [build-system]

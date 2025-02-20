@@ -17,7 +17,7 @@ colrev_doc_description = "Files directories (PDFs based on GROBID)"
 colrev_doc_link = "README.md"
 search_types = ["FILES"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.files_dir.src.files_dir:FilesSearchSource"
 
 [build-system]

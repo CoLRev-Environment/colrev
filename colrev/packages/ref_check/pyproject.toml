@@ -17,7 +17,7 @@ colrev_doc_description = "TODO"
 colrev_doc_link = "docs/README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 data = "colrev.packages.ref_check.src.ref_check:RefCheck"
 
 [build-system]

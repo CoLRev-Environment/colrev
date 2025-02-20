@@ -17,7 +17,7 @@ colrev_doc_description = "Remove Last Page"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 pdf_prep = "colrev.packages.remove_last_page.src.remove_last_page:PDFLastPage"
 
 [build-system]

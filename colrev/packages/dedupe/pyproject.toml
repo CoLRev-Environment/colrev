@@ -17,7 +17,7 @@ colrev_doc_description = "Dedupe (BibDedupe)"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 dedupe = "colrev.packages.dedupe.src.dedupe:Dedupe"
 
 [build-system]

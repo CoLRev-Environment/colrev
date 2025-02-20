@@ -74,7 +74,7 @@ colrev_doc_description = "{data['doc_description']}"
 colrev_doc_link = "docs/README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 {plugins_string}
 
 [build-system]

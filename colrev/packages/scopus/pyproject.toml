@@ -17,7 +17,7 @@ colrev_doc_description = "Scopus"
 colrev_doc_link = "README.md"
 search_types = ["DB"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.scopus.src.scopus:ScopusSearchSource"
 
 [build-system]

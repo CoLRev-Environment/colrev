@@ -17,7 +17,7 @@ colrev_doc_description = "Curated masterdata"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 review_type = "colrev.packages.curated_masterdata.src.curated_masterdata:CuratedMasterdata"
 
 [build-system]

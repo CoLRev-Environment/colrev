@@ -17,7 +17,7 @@ colrev_doc_description = "Get PDFs Manually (CLI)"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 pdf_get_man = "colrev.packages.colrev_cli_pdf_get_man.src.pdf_get_man_cli:CoLRevCLIPDFGetMan"
 
 [build-system]

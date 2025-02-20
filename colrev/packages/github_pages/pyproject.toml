@@ -18,7 +18,7 @@ colrev_doc_description = "GitHub pages"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 data = "colrev.packages.github_pages.src.github_pages:GithubPages"
 
 [build-system]

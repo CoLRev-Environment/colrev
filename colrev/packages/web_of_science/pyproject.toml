@@ -17,7 +17,7 @@ colrev_doc_description = "Web of Science"
 colrev_doc_link = "README.md"
 search_types = ["DB"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.web_of_science.src.web_of_science:WebOfScienceSearchSource"
 
 [build-system]

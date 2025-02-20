@@ -17,7 +17,7 @@ colrev_doc_description = "Forward search based on OpenCitations"
 colrev_doc_link = "README.md"
 search_types = ["FORWARD_SEARCH"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.open_citations_forward_search.src.open_citations_forward_search:OpenCitationsSearchSource"
 
 [build-system]

@@ -17,7 +17,7 @@ colrev_doc_description = "Conditional Prescreen"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prescreen = "colrev.packages.conditional_prescreen.src.conditional_prescreen:ConditionalPrescreen"
 
 [build-system]

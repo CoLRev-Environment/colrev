@@ -17,7 +17,7 @@ colrev_doc_description = "OCRMyPDF"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 pdf_prep = "colrev.packages.ocrmypdf.src.ocrmypdf:OCRMyPDF"
 
 [build-system]

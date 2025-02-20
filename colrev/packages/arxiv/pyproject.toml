@@ -18,7 +18,7 @@ colrev_doc_description = "arXiv"
 colrev_doc_link = "README.md"
 search_types = ["API"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.arxiv.src.arxiv:ArXivSource"
 
 [build-system]

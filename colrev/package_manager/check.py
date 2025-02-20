@@ -39,46 +39,44 @@ def _check_key_exists(data: Dict[str, Any], key: str) -> bool:
     return True
 
 
-def _check_tool_poetry(data: dict) -> bool:
-    return _check_key_exists(data, "tool.poetry")
+def _check_project(data: dict) -> bool:
+    return _check_key_exists(data, "project")
 
 
-def _check_tool_poetry_name(data: dict) -> bool:
-    return _check_key_exists(data, "tool.poetry.name")
+def _check_project_name(data: dict) -> bool:
+    return _check_key_exists(data, "project.name")
 
 
-def _check_tool_poetry_description(data: dict) -> bool:
-    return _check_key_exists(data, "tool.poetry.description")
+def _check_project_description(data: dict) -> bool:
+    return _check_key_exists(data, "project.description")
 
 
-def _check_tool_poetry_version(data: dict) -> bool:
-    return _check_key_exists(data, "tool.poetry.version")
+def _check_project_version(data: dict) -> bool:
+    return _check_key_exists(data, "project.version")
 
 
-def _check_tool_poetry_license(data: dict) -> bool:
-    return _check_key_exists(data, "tool.poetry.license")
+def _check_project_license(data: dict) -> bool:
+    return _check_key_exists(data, "project.license")
 
 
-def _check_tool_poetry_authors(data: dict) -> bool:
-    return _check_key_exists(data, "tool.poetry.authors")
+def _check_project_authors(data: dict) -> bool:
+    return _check_key_exists(data, "project.authors")
 
 
-def _check_tool_poetry_plugins_colrev(data: dict) -> bool:
-    return _check_key_exists(data, "tool.poetry.plugins.colrev")
+def _check_project_plugins_colrev(data: dict) -> bool:
+    return _check_key_exists(data, "project.entry-points.colrev")
 
 
-def _check_tool_poetry_plugins_colrev_keys(data: dict) -> bool:
-    colrev_data = (
-        data.get("tool", {}).get("poetry", {}).get("plugins", {}).get("colrev", {})
-    )
-    return all(key in list(BASECLASS_MAP) for key in list(colrev_data))
+def _check_project_entry_points_colrev_keys(data: dict) -> bool:
+    """Check if all colrev entry-points in pyproject.toml are valid."""
+
+    colrev_data = data.get("project", {}).get("entry-points", {}).get("colrev", {})
+    return all(key in BASECLASS_MAP for key in colrev_data)
 
 
 # pylint: disable=too-many-locals
-def _check_tool_poetry_plugins_colrev_classes(data: dict) -> bool:
-    colrev_data = (
-        data.get("tool", {}).get("poetry", {}).get("plugins", {}).get("colrev", {})
-    )
+def _check_project_plugins_colrev_classes(data: dict) -> bool:
+    colrev_data = data.get("project", {}).get("entry-points", {}).get("colrev", {})
 
     for interface_identifier, endpoint_str in colrev_data.items():
         module_path, class_name = endpoint_str.rsplit(":")
@@ -120,38 +118,38 @@ def _check_build_system(data: dict) -> bool:
 
 # Define checks with preconditions
 checks = {
-    "check_tool_poetry": {"method": _check_tool_poetry, "preconditions": []},
-    "check_tool_poetry_name": {
-        "method": _check_tool_poetry_name,
-        "preconditions": ["_check_tool_poetry"],
+    "check_project": {"method": _check_project, "preconditions": []},
+    "check_project_name": {
+        "method": _check_project_name,
+        "preconditions": ["check_project"],
     },
-    "check_tool_poetry_description": {
-        "method": _check_tool_poetry_description,
-        "preconditions": ["_check_tool_poetry"],
+    "check_project_description": {
+        "method": _check_project_description,
+        "preconditions": ["check_project"],
     },
-    "check_tool_poetry_version": {
-        "method": _check_tool_poetry_version,
-        "preconditions": ["_check_tool_poetry"],
+    "check_project_version": {
+        "method": _check_project_version,
+        "preconditions": ["check_project"],
     },
-    "check_tool_poetry_license": {
-        "method": _check_tool_poetry_license,
-        "preconditions": ["_check_tool_poetry"],
+    "check_project_license": {
+        "method": _check_project_license,
+        "preconditions": ["check_project"],
     },
-    "check_tool_poetry_authors": {
-        "method": _check_tool_poetry_authors,
-        "preconditions": ["_check_tool_poetry"],
+    "check_project_authors": {
+        "method": _check_project_authors,
+        "preconditions": ["check_project"],
     },
-    "check_tool_poetry_plugins_colrev": {
-        "method": _check_tool_poetry_plugins_colrev,
-        "preconditions": ["_check_tool_poetry"],
+    "check_project_plugins_colrev": {
+        "method": _check_project_plugins_colrev,
+        "preconditions": ["check_project"],
     },
-    "check_tool_poetry_plugins_colrev_keys": {
-        "method": _check_tool_poetry_plugins_colrev_keys,
-        "preconditions": ["_check_tool_poetry_plugins_colrev"],
+    "check_project_plugins_colrev_keys": {
+        "method": _check_project_entry_points_colrev_keys,
+        "preconditions": ["_check_project_plugins_colrev"],
     },
-    "check_tool_poetry_plugins_colrev_classes": {
-        "method": _check_tool_poetry_plugins_colrev_classes,
-        "preconditions": ["_check_tool_poetry_plugins_colrev"],
+    "check_project_plugins_colrev_classes": {
+        "method": _check_project_plugins_colrev_classes,
+        "preconditions": ["_check_project_plugins_colrev"],
     },
     "check_package_installed": {
         "method": _check_package_installed,
@@ -175,7 +173,7 @@ def _validate_structure(data: dict, checks_dict: dict) -> list:
         result = method(data)
 
         if not result:
-            print(f"Check failed: {check_name}")
+            print(f"{Colors.RED}Check failed: {check_name}{Colors.END}")
             failed_checks.append(check_name)
         else:
             print(f"Check passed: {check_name}")

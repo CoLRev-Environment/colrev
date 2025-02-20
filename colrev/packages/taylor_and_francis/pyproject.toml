@@ -17,7 +17,7 @@ colrev_doc_description = "Taylor and Francis"
 colrev_doc_link = "README.md"
 search_types = ["DB"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.taylor_and_francis.src.taylor_and_francis:TaylorAndFrancisSearchSource"
 
 [build-system]

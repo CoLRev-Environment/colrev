@@ -17,7 +17,7 @@ colrev_doc_description = "LocalIndex"
 colrev_doc_link = "README.md"
 search_types = ["API", "MD"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.local_index.src.local_index:LocalIndexSearchSource"
 prep = "colrev.packages.local_index.src.local_index_prep:LocalIndexPrep"
 pdf_get = "colrev.packages.local_index.src.local_index_pdf_get:LocalIndexPDFGet"

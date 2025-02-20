@@ -18,7 +18,7 @@ colrev_doc_description = "Download PDF from website"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 pdf_get = "colrev.packages.download_from_website.src.download_from_website:WebsiteDownload"
 
 [build-system]

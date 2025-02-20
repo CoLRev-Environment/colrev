@@ -18,7 +18,7 @@ colrev_doc_description = "OpenAlex API"
 colrev_doc_link = "README.md"
 search_types = ["API", "MD"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.open_alex.src.open_alex:OpenAlexSearchSource"
 prep = "colrev.packages.open_alex.src.open_alex_metadata_prep:OpenAlexMetadataPrep"
 

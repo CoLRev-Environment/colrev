@@ -17,7 +17,7 @@ colrev_doc_description = "Get Masterdata from DOI"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prep = "colrev.packages.get_masterdata_from_doi.src.doi_metadata_prep:DOIMetadataPrep"
 
 [build-system]

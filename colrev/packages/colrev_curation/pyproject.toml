@@ -17,7 +17,7 @@ colrev_doc_description = "CoLRev Curations"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 data = "colrev.packages.colrev_curation.src.colrev_curation:ColrevCuration"
 prep = "colrev.packages.colrev_curation.src.curation_prep:CurationPrep"
 

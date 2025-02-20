@@ -17,7 +17,7 @@ colrev_doc_description = "Remove Cover Page"
 search_types = []
 colrev_doc_link = "README.md"
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 pdf_prep = "colrev.packages.remove_coverpage.src.remove_cover_page:PDFCoverPage"
 
 [build-system]

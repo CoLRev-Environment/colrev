@@ -22,7 +22,7 @@ colrev_doc_description = "IEEEXplore"
 colrev_doc_link = "README.md"
 search_types = ["API"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.ieee.src.ieee:IEEEXploreSearchSource"
 
 [build-system]

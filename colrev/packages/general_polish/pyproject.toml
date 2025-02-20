@@ -17,7 +17,7 @@ colrev_doc_description = "General Polish"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prep = "colrev.packages.general_polish.src.general_polish:GeneralPolishPrep"
 
 [build-system]

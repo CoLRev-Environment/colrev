@@ -22,7 +22,7 @@ colrev_doc_description = "GitHub API"
 colrev_doc_link = "README.md"
 search_types = ["API"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.github.src.github_search_source:GitHubSearchSource"
 prep = "colrev.packages.github.src.github_prep:GithubMetadataPrep"
 

@@ -17,7 +17,7 @@ colrev_doc_description = "Europe PMC"
 colrev_doc_link = "README.md"
 search_types = ["API", "DB", "MD"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.europe_pmc.src.europe_pmc:EuropePMCSearchSource"
 prep = "colrev.packages.europe_pmc.src.europe_pmc_prep:EuropePMCMetadataPrep"
 

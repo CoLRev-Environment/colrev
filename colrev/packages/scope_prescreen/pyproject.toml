@@ -17,7 +17,7 @@ colrev_doc_description = "Scope-based Prescreen"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prescreen = "colrev.packages.scope_prescreen.src.scope_prescreen:ScopePrescreen"
 
 [build-system]

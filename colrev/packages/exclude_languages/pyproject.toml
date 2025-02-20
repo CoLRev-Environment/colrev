@@ -17,7 +17,7 @@ colrev_doc_description = "Exclude Languages"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prep = "colrev.packages.exclude_languages.src.exclude_languages:ExcludeLanguagesPrep"
 
 [build-system]

@@ -17,7 +17,7 @@ colrev_doc_description = "Conceptual review"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 review_type = "colrev.packages.conceptual_review.src.conceptual_review:ConceptualReview"
 
 [build-system]

@@ -17,7 +17,7 @@ colrev_doc_description = "EBSCOHost"
 colrev_doc_link = "README.md"
 search_types = ["DB"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.ebsco_host.src.ebsco_host:EbscoHostSearchSource"
 
 [build-system]

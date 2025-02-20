@@ -20,7 +20,7 @@ colrev_doc_description = "OSF"
 colrev_doc_link = "README.md"
 search_types = ["API"]
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 search_source = "colrev.packages.osf.src.osf:OSFSearchSource"
 
 [build-system]

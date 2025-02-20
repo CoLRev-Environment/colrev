@@ -17,7 +17,7 @@ colrev_doc_description = "Bibliography export"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 data = "colrev.packages.bibliography_export.src.bibliography_export:BibliographyExport"
 
 [build-system]

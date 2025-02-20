@@ -17,7 +17,7 @@ colrev_doc_description = "Source-specific Prep"
 colrev_doc_link = "README.md"
 search_types = []
 
-[project.entry-points."colrev"]
+[project.entry-points.colrev]
 prep = "colrev.packages.source_specific_prep.src.source_specific_prep:SourceSpecificPrep"
 
 [build-system]
