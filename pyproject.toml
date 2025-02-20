@@ -71,7 +71,6 @@ sphinx-copybutton = {version = "^0.5.2", optional = true}
 "sphinxcontrib.datatemplates" = {version = "^0.9.2", optional = true }
 sphinx-design = {version = "^0.5.0", optional = true }
 sphinx_collapse = {version = "^0.1.2", optional = true }
-repoze-sphinx-autointerface = {version = "^1.0.0", optional = true }
 pylint = {version = "3.0.1", optional = true }
 pytest = {version = "^7.2.1", optional = true }
 pytest-mock = {version = "^3.10.0", optional = true }
@@ -85,7 +84,7 @@ docutils = {version = "!=0.21.post1", optional = true }
 mypy = {version = "1.12.0", optional = true }
 
 [tool.poetry.extras]
-docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinxcontrib.datatemplates", "sphinx_collapse", "repoze-sphinx-autointerface", "sphinx-design", "sphinx-copybutton", "docutils", "m2r", "beautifulsoup4"]
+docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinxcontrib.datatemplates", "sphinx_collapse", "sphinx-design", "sphinx-copybutton", "docutils", "m2r", "beautifulsoup4"]
 dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock", "pytest-skip-slow", "m2r", "mypy", "importlib_metadata", "coverage-badge"]
 
 [tool.mypy]

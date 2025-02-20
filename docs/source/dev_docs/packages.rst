@@ -2,7 +2,7 @@ Package development
 =====================
 
 CoLRev packages are Python packages that extend CoLRev by relying on its shared data structure and standard process.
-Specifically, a CoLRev package can extend package base classes, such as the `ReviewTypePackageBaseClass <packages/package_interfaces.html#base_classes.ReviewTypePackageBaseClass>`_, or the `SearchSourcePackageBaseClass <packages/package_interfaces.html#base_classes.SearchSourcePackageBaseClass>`_, to implement custom functionality for a specific task or data source.
+Specifically, a CoLRev package can extend package base classes, such as the `ReviewTypePackageBaseClass <packages/package_base_classes.html#base_classes.ReviewTypePackageBaseClass>`_, or the `SearchSourcePackageBaseClass <packages/package_base_classes.html#base_classes.SearchSourcePackageBaseClass>`_, to implement custom functionality for a specific task or data source.
 In addition, packages can provide complementary functionalities (e.g., for ad-hoc data exploration and visualization) without extending a specific base class.
 
 The following guide explains how to develop built-in packages, i.e., packages that reside in the `packages <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages>`_ directory. Built-in packages should also be registered as a dependency in the `pyproject.toml <https://github.com/CoLRev-Environment/colrev/blob/main/pyproject.toml>`_.
@@ -185,42 +185,42 @@ Best practices
 * Once the package development is completed, make a pull request to the CoLRev origin repository, with brief description of the package.
 * The ``add_endpoint`` is only required for SearchSources. It is optional for other packages.
 
-Endpoints allow packages to implement functionality that can be called in the :doc:`standard process </manual/operations>` if users register the endpoint in the `settings.json` of a project.
+Packages allow packages to implement functionality that can be called in the :doc:`standard process </manual/operations>` if users register the package in the `settings.json` of a project.
 
-To implement an endpoint, the `tool.colrev` section of `pyproject.toml` must provide a reference to the endpoint class which implements the respective :doc:`interfaces </dev_docs/packages/package_interfaces>`. The reference is a string that contains the module path and the class name of the endpoint. The module path is relative to the package directory.
+To implement an endpoint, the `tool.colrev` section of `pyproject.toml` must provide a reference to the class which inherits from the respective :doc:`base classes </dev_docs/packages/package_base_classes>`. The reference is a string that contains the module path and the class name. The module path is relative to the package directory.
 
-The following endpoint - interface pairs are available:
+The following endpoint - abstract base class pairs are available:
 
 .. list-table::
    :widths: 50 50
    :header-rows: 1
 
    * - Endpoint
-     - Interface
+     - Abstract base class
    * - review_type
-     - `ReviewTypePackageBaseClass <packages/package_interfaces.html#base_classes.ReviewTypePackageBaseClass>`_
+     - `ReviewTypePackageBaseClass <packages/package_base_classes.html#base_classes.ReviewTypePackageBaseClass>`_
    * - search_source
-     - `SearchSourcePackageBaseClass <packages/package_interfaces.html#base_classes.SearchSourcePackageBaseClass>`_
+     - `SearchSourcePackageBaseClass <packages/package_base_classes.html#base_classes.SearchSourcePackageBaseClass>`_
    * - prep
-     - `PrepPackageBaseClass <packages/package_interfaces.html#base_classes.PrepPackageBaseClass>`_
+     - `PrepPackageBaseClass <packages/package_base_classes.html#base_classes.PrepPackageBaseClass>`_
    * - prep_man
-     - `PrepManPackageBaseClass <packages/package_interfaces.html#base_classes.PrepManPackageBaseClass>`_
+     - `PrepManPackageBaseClass <packages/package_base_classes.html#base_classes.PrepManPackageBaseClass>`_
    * - dedupe
-     - `DedupePackageBaseClass <packages/package_interfaces.html#base_classes.DedupePackageBaseClass>`_
+     - `DedupePackageBaseClass <packages/package_base_classes.html#base_classes.DedupePackageBaseClass>`_
    * - prescreen
-     - `PrescreenPackageBaseClass <packages/package_interfaces.html#base_classes.PrescreenPackageBaseClass>`_
+     - `PrescreenPackageBaseClass <packages/package_base_classes.html#base_classes.PrescreenPackageBaseClass>`_
    * - pdf_get
-     - `PDFGetPackageBaseClass <packages/package_interfaces.html#base_classes.PDFGetPackageBaseClass>`_
+     - `PDFGetPackageBaseClass <packages/package_base_classes.html#base_classes.PDFGetPackageBaseClass>`_
    * - pdf_get_man
-     - `PDFGetManPackageBaseClass <packages/package_interfaces.html#base_classes.PDFGetManPackageBaseClass>`_
+     - `PDFGetManPackageBaseClass <packages/package_base_classes.html#base_classes.PDFGetManPackageBaseClass>`_
    * - pdf_prep
-     - `PDFPrepPackageBaseClass <packages/package_interfaces.html#base_classes.PDFPrepPackageBaseClass>`_
+     - `PDFPrepPackageBaseClass <packages/package_base_classes.html#base_classes.PDFPrepPackageBaseClass>`_
    * - pdf_prep_man
-     - `PDFPrepManPackageBaseClass <packages/package_interfaces.html#base_classes.PDFPrepManPackageBaseClass>`_
+     - `PDFPrepManPackageBaseClass <packages/package_base_classes.html#base_classes.PDFPrepManPackageBaseClass>`_
    * - screen
-     - `ScreenPackageBaseClass <packages/package_interfaces.html#base_classes.ScreenPackageBaseClass>`_
+     - `ScreenPackageBaseClass <packages/package_base_classes.html#base_classes.ScreenPackageBaseClass>`_
    * - data
-     - `DataPackageBaseClass <packages/package_interfaces.html#base_classes.DataPackageBaseClass>`_
+     - `DataPackageBaseClass <packages/package_base_classes.html#base_classes.DataPackageBaseClass>`_
 
 Documentation
 -----------------
@@ -265,7 +265,7 @@ Package development resources
 .. toctree::
    :maxdepth: 1
 
-   packages/package_interfaces
+   packages/package_base_classes
    packages/linters
    packages/custom_packages
    packages/python
