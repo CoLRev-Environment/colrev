@@ -7,10 +7,9 @@ import typing
 from pathlib import Path
 
 import pandas as pd
-import zope.interface
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.screen_utils as util_cli_screen
@@ -20,8 +19,7 @@ from colrev.constants import Fields
 from colrev.constants import RecordState
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.ScreenInterface)
-class TableScreen:
+class TableScreen(base_classes.ScreenPackageBaseClass):
     """Screen documents using tables (exported and imported)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

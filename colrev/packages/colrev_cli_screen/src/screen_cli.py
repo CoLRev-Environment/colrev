@@ -2,12 +2,11 @@
 """Screen based on CLI"""
 from __future__ import annotations
 
-import zope.interface
 from inquirer import Checkbox
 from inquirer import prompt
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.screen_utils as util_cli_screen
@@ -18,8 +17,7 @@ from colrev.constants import Fields
 from colrev.constants import ScreenCriterionType
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.ScreenInterface)
-class CoLRevCLIScreen:
+class CoLRevCLIScreen(base_classes.ScreenPackageBaseClass):
     """Screen documents using a CLI"""
 
     # pylint: disable=too-many-instance-attributes

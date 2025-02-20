@@ -5,12 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import git
-import zope.interface
 from pydantic import BaseModel
 from pydantic import Field
 
 import colrev.env.utils
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -37,8 +36,7 @@ class GHPagesSettings(
     }
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-class GithubPages:
+class GithubPages(base_classes.DataPackageBaseClass):
     """Export the literature review into a Github Page"""
 
     settings: GHPagesSettings

@@ -5,8 +5,6 @@ import typing
 from multiprocessing import Lock
 from pathlib import Path
 
-import zope.interface
-
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
@@ -14,7 +12,7 @@ import colrev.ops.load
 import colrev.ops.prep
 import colrev.ops.search
 import colrev.ops.search_api_feed
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.process.operation
@@ -31,8 +29,7 @@ from colrev.packages.plos.src import plos_api
 
 
 # pylint: disable=unused-argument
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class PlosSearchSource:
+class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     """PLOS API"""
 
     endpoint = "colrev.plos"

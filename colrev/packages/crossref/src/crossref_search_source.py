@@ -9,12 +9,11 @@ from pathlib import Path
 
 import inquirer
 import requests
-import zope.interface
 from pydantic import Field
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.record.record
@@ -35,8 +34,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class CrossrefSearchSource:
+class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Crossref API"""
 
     endpoint = "colrev.crossref"
@@ -429,7 +427,7 @@ class CrossrefSearchSource:
             self.review_manager.logger.info(
                 f"Retrieve papers indexed since {self.api.last_updated.split('T', maxsplit=1)[0]}"
             )
-            nrecs = self.api.get_len()
+            nrecs = self.api.get_number_of_records()
 
         self.review_manager.logger.info(f"Retrieve {nrecs:,} records")
         estimated_time = nrecs * 0.5

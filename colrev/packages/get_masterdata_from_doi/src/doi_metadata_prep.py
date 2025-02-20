@@ -2,10 +2,9 @@
 """Consolidation of metadata based on DOI metadata as a prep operation"""
 from __future__ import annotations
 
-import zope.interface
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.doi_org.src.doi_org as doi_connector
@@ -17,8 +16,7 @@ from colrev.constants import Fields
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
-class DOIMetadataPrep:
+class DOIMetadataPrep(base_classes.PrepPackageBaseClass):
     """Prepares records based on doi.org metadata"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

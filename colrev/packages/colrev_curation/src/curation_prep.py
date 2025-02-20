@@ -2,11 +2,10 @@
 """Preparation of curations"""
 from __future__ import annotations
 
-import zope.interface
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -18,8 +17,7 @@ from colrev.constants import RecordState
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PrepInterface)
-class CurationPrep:
+class CurationPrep(base_classes.PrepPackageBaseClass):
     """Preparation of curations"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

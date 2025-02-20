@@ -6,12 +6,11 @@ import shutil
 import urllib.parse
 from pathlib import Path
 
-import zope.interface
 from pydantic import Field
 
 import colrev.env.utils
 import colrev.ops.pdf_get
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -24,8 +23,7 @@ from colrev.constants import RecordState
 # pylint: disable=unused-argument
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PDFGetManInterface)
-class CoLRevCLIPDFGetMan:
+class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
     """Get PDFs manually based on a CLI"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

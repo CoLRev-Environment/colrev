@@ -7,12 +7,11 @@ import shutil
 from pathlib import Path
 
 import docker
-import zope.interface
 from pydantic import Field
 
 import colrev.env.docker_manager
 import colrev.env.utils
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -23,8 +22,7 @@ from colrev.constants import PDFDefectCodes
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PDFPrepInterface)
-class OCRMyPDF:
+class OCRMyPDF(base_classes.PDFPrepPackageBaseClass):
     """Prepare PDFs by applying OCR based on OCRmyPDF"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
@@ -91,7 +89,7 @@ class OCRMyPDF:
         self,
         record: colrev.record.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
-    ) -> dict:
+    ) -> colrev.record.record_pdf.PDFRecord:
         """Prepare the PDF by applying OCR"""
 
         if (
@@ -99,9 +97,9 @@ class OCRMyPDF:
             or not record.data[Fields.FILE].endswith(".pdf")
             or PDFDefectCodes.NO_TEXT_IN_PDF not in record.defects("file")
         ):
-            return record.data
+            return record
 
         self.review_manager.report_logger.info(f"apply_ocr({record.data[Fields.ID]})")
         record = self._apply_ocr(record=record)
 
-        return record.data
+        return record

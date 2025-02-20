@@ -5,20 +5,18 @@ from __future__ import annotations
 from collections import Counter
 from pathlib import Path
 
-import zope.interface
 from pydantic import BaseModel
 from pydantic import Field
 
 import colrev.env.utils
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-class Obsidian:
+class Obsidian(base_classes.DataPackageBaseClass):
     """Export the sample into an Obsidian database"""
 
     ci_supported: bool = Field(default=False)

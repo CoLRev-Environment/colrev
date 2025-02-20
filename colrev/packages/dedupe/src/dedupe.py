@@ -8,14 +8,13 @@ from pathlib import Path
 import bib_dedupe.cluster
 import bib_dedupe.maybe_cases
 import pandas as pd
-import zope.interface
 from bib_dedupe.bib_dedupe import block
 from bib_dedupe.bib_dedupe import export_maybe
 from bib_dedupe.bib_dedupe import import_maybe
 from bib_dedupe.bib_dedupe import match
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -25,8 +24,7 @@ from colrev.constants import RecordState
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.DedupeInterface)
-class Dedupe:
+class Dedupe(base_classes.DedupePackageBaseClass):
     """Default deduplication"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
