@@ -10,6 +10,9 @@ requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/download_from_website"
 beautifulsoup4 = "^4.11.1"
 
+[[tool.poetry.packages]]
+include = "src"
+
 [tool.colrev]
 colrev_doc_description = "Download PDF from website"
 colrev_doc_link = "README.md"

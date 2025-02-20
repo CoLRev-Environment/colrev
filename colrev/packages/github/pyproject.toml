@@ -14,6 +14,9 @@ repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/pack
 PyGithub = "^2.3.0"
 click = "^8.1.6"
 
+[[tool.poetry.packages]]
+include = "src"
+
 [tool.colrev]
 colrev_doc_description = "GitHub API"
 colrev_doc_link = "README.md"

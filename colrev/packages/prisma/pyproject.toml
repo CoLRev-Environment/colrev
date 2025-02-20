@@ -9,6 +9,9 @@ authors = [
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/prisma"
 
+[[tool.poetry.packages]]
+include = "src"
+
 [tool.colrev]
 colrev_doc_description = "PRISMA Flow Chart"
 colrev_doc_link = "README.md"

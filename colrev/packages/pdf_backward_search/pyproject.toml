@@ -9,6 +9,9 @@ authors = [
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/pdf_backward_search"
 
+[[tool.poetry.packages]]
+include = "src"
+
 [tool.colrev]
 colrev_doc_description = "Backward search extracting references from PDFs using GROBID"
 colrev_doc_link = "README.md"

@@ -10,6 +10,9 @@ requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/arxiv"
 feedparser = "^6.0.10"
 
+[[tool.poetry.packages]]
+include = "src"
+
 [tool.colrev]
 colrev_doc_description = "arXiv"
 colrev_doc_link = "README.md"

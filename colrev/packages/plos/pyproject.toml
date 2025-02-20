@@ -7,6 +7,9 @@ authors = ["olgagirona <olga.girona-cutillas@stud.uni-bamberg.de>"]
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/"
 
+[[tool.poetry.packages]]
+include = "src"
+
 [tool.colrev]
 colrev_doc_description = "TODO"
 colrev_doc_link = "docs/README.md"

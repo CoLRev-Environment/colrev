@@ -10,6 +10,9 @@ requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/exclude_non_latin_alphabets"
 alphabet-detector = "^0.0.7"
 
+[[tool.poetry.packages]]
+include = "src"
+
 [tool.colrev]
 colrev_doc_description = "Exclude Non-Latin Alphabets"
 colrev_doc_link = "README.md"

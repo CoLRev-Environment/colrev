@@ -9,6 +9,9 @@ authors = [
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/prescreen_table"
 
+[[tool.poetry.packages]]
+include = "src"
+
 [tool.colrev]
 colrev_doc_description = "Prescreen Table"
 colrev_doc_link = "README.md"
