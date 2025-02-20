@@ -18,7 +18,7 @@ from colrev.package_manager.package_base_classes import BASECLASS_MAP
 
 
 def _check_package_installed(data: dict) -> bool:
-    package_name = data["tool"]["poetry"]["name"]
+    package_name = data["project"]["name"]
     try:
         subprocess.check_output(["pip", "show", package_name])
     except subprocess.CalledProcessError:

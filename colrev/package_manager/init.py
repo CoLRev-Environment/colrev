@@ -66,9 +66,6 @@ authors = ["{data['author']['name']} <{data['author']['email']}>"]
 requires-python = ">=3.8, <4"
 repository = "{data['repository']}"
 
-[tool.poetry.dependencies]
-python = ">=3.9, <4"
-
 [tool.colrev]
 colrev_doc_description = "{data['doc_description']}"
 colrev_doc_link = "docs/README.md"

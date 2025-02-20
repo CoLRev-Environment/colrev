@@ -9,9 +9,6 @@ authors = [
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/dedupe"
 
-[tool.poetry.dependencies]
-python = ">=3.10, <4"
-
 [tool.colrev]
 colrev_doc_description = "Dedupe (BibDedupe)"
 colrev_doc_link = "README.md"
