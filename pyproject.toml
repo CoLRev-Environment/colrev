@@ -100,12 +100,20 @@ module = [
 ]
 ignore_missing_imports = true
 
+[tool.flake8]
+exclude = [
+    "tests/data/package_init/*",
+]
+
 [tool.pylint.MAIN]
 extension-pkg-whitelist = "lxml.etree"
 load-plugins = ["colrev.linter.colrev_direct_status_assign", "colrev.linter.colrev_missed_constant_usage", "colrev.linter.colrev_records_variable_naming_convention"]
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = ["R0801"]
+
+[pytest]
+norecursedirs = "tests/data/package_init/"
 
 [tool.coverage.report]
 omit = [
@@ -116,6 +124,7 @@ omit = [
     "/tmp/*",
     "tests/*",
     "*/bib-dedupe/bib_dedupe/*",
+    "tests/data/package_init/*",
 ]
 
 [tool.coverage.run]

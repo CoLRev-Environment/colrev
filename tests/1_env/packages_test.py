@@ -1,5 +1,32 @@
 #!/usr/bin/env python
 """Tests for the colrev package manager"""
+from pathlib import Path
+
+import pytest
+
+import colrev.package_manager.init
+from colrev.constants import EndpointType
+
+
+@pytest.mark.parametrize(
+    "endpoint_type",
+    [et.value for et in EndpointType if et.value != "na"],
+)
+def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # type: ignore
+
+    module_content = colrev.package_manager.init.generate_module_content(endpoint_type)
+
+    expected_file = Path(f"data/package_init/{endpoint_type}.py")
+
+    expected_content = (helpers.test_data_path / expected_file).read_text(
+        encoding="utf-8"
+    )
+
+    assert (
+        module_content.rstrip() == expected_content.rstrip()
+    ), "Generated module content does not match expected version!"
+
+
 # @pytest.fixture
 # def settings() -> colrev.settings.Settings:
 #     """Fixture returning a settings object"""

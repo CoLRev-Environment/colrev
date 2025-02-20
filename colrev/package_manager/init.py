@@ -7,29 +7,17 @@ import json
 import os
 import re
 import subprocess
+from abc import ABC
 from datetime import datetime
 from importlib import import_module
 from importlib.metadata import distributions
 from pathlib import Path
-from typing import Type
 
 import git
 import inquirer
 
 from colrev.constants import Colors
 from colrev.package_manager.package_base_classes import BASECLASS_MAP
-from colrev.package_manager.package_base_classes import DataPackageBaseClass
-from colrev.package_manager.package_base_classes import DedupePackageBaseClass
-from colrev.package_manager.package_base_classes import PDFGetManPackageBaseClass
-from colrev.package_manager.package_base_classes import PDFGetPackageBaseClass
-from colrev.package_manager.package_base_classes import PDFPrepManPackageBaseClass
-from colrev.package_manager.package_base_classes import PDFPrepPackageBaseClass
-from colrev.package_manager.package_base_classes import PrepManPackageBaseClass
-from colrev.package_manager.package_base_classes import PrepPackageBaseClass
-from colrev.package_manager.package_base_classes import PrescreenPackageBaseClass
-from colrev.package_manager.package_base_classes import ReviewTypePackageBaseClass
-from colrev.package_manager.package_base_classes import ScreenPackageBaseClass
-from colrev.package_manager.package_base_classes import SearchSourcePackageBaseClass
 
 
 def _get_default_author() -> dict:
@@ -331,147 +319,33 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
     return package_data
 
 
-# TODO : this would need to be revised
-# pylint: disable=too-many-branches
-def _get_init_method(interface_class: Type) -> str:
-
-    # pylint: disable=line-too-long
-    init_method = """
-
-"""
-    if interface_class is ReviewTypePackageBaseClass:
-        init_method += """    def __init__(
-        self, *, operation: colrev.process.operation.Operation, settings: dict
-    ) -> None:
-        self.settings = colrev.package_manager.package_settings.DefaultSettings(**settings)"""
-    elif interface_class is SearchSourcePackageBaseClass:
-        init_method += """
-    def __init__(
-        self,
-        *,
-        source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
-    ) -> None:
-      pass # TODO"""
-    elif interface_class is PrepPackageBaseClass:
-        init_method += """    def __init__(
-        self,
-        *,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
-        settings: dict,
-    ) -> None:
-        self.settings = colrev.package_manager.package_settings.DefaultSettings(**settings)"""
-    elif interface_class is PrepManPackageBaseClass:
-        init_method += """    def __init__(
-        self, *, prep_man_operation: colrev.ops.prep_man.PrepMan, settings: dict
-    ) -> None:
-        self.settings = colrev.package_manager.package_settings.DefaultSettings(**settings)"""
-    elif interface_class is DedupePackageBaseClass:
-        init_method += """    def __init__(
-        self,
-        *,
-        dedupe_operation: colrev.ops.dedupe.Dedupe,
-        settings: dict,
-    ) -> None:
-      pass # TODO"""
-    elif interface_class is PrescreenPackageBaseClass:
-        init_method += """    def __init__(
-        self,
-        *,
-        prescreen_operation: colrev.ops.prescreen.Prescreen,
-        settings: dict,
-    ) -> None:
-      pass # TODO"""
-    elif interface_class is PDFGetPackageBaseClass:
-        init_method += """    def __init__(
-        self,
-        *,
-        pdf_get_operation: colrev.ops.pdf_get.PDFGet,
-        settings: dict,
-    ) -> None:
-      pass # TODO"""
-    elif interface_class is PDFGetManPackageBaseClass:
-        init_method += """    def __init__(
-        self,
-        *,
-        pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
-        settings: dict,
-    ) -> None:
-      pass # TODO"""
-    elif interface_class is PDFPrepPackageBaseClass:
-        init_method += """    def __init__(
-        self,
-        *,
-        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
-        settings: dict,
-    ) -> None:
-      pass # TODO"""
-    elif interface_class is PDFPrepManPackageBaseClass:
-        init_method += """    def __init__(
-        self,
-        *,
-        pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
-        settings: dict,
-    ) ->: None:
-      pass # TODO"""
-    elif interface_class is ScreenPackageBaseClass:
-        init_method += """    def __init__(
-        self,
-        *,
-        screen_operation: colrev.ops.screen.Screen,
-        settings: dict,
-    ) -> None:
-      pass # TODO"""
-    elif interface_class is DataPackageBaseClass:
-        init_method += """    def __init__(
-        self,
-        *,
-        data_operation: colrev.ops.data.Data,
-        settings: dict,
-    ) -> None:
-      pass # TODO"""
-    else:
-        init_method += "#TODO"
-
-    return init_method
-
-
-def _generate_method_signatures(module_path: str, class_name: str) -> list:
+def _generate_method_signatures(module_path: str, class_name: str) -> str:
     module = import_module(module_path)
     interface_class = getattr(module, class_name)
-    members = inspect.getmembers(interface_class)
 
-    interface_class_attrs = next(
-        (member for member in members if member[0] == "_InterfaceClass__attrs"), None
-    )
-    if interface_class_attrs:
-        attrs_dict = interface_class_attrs[1]
+    if not issubclass(interface_class, ABC):
+        return f"Class {class_name} is not an Abstract Base Class (ABC)."
 
-        method_signatures = []
+    method_signatures = []
 
-        for name, attr in attrs_dict.items():
-            # TODO
-            # if isinstance(attr, zope.interface.interface.Attribute) and not isinstance(
-            #     attr, zope.interface.interface.Method
-            # ):
-            method_signatures.append(f"    {name} = '' #TODO\n")
-        method_signatures.append("\n")
-        method_signatures.append(_get_init_method(interface_class))
-        method_signatures.append("\n")
-        method_signatures.append("\n")
+    # Get abstract methods
+    abstract_methods = {
+        name: method
+        for name, method in inspect.getmembers(
+            interface_class, predicate=inspect.isfunction
+        )
+        if getattr(method, "__isabstractmethod__", False)
+    }
 
-        for name, attr in attrs_dict.items():
-            # TODO
-            # if isinstance(attr, zope.interface.interface.Method):
-            sig_string = attr.getSignatureString().replace("(", "(self, ")
-            method_signatures.append(
-                f"    def {name}{sig_string}:\n"
-                f'      """{attr.getDoc()}"""\n      # TODO\n\n'
-            )
+    for name, method in abstract_methods.items():
+        sig = inspect.signature(method)
+        docstring = inspect.getdoc(method) or "TODO: Add docstring."
+        method_signatures.append(
+            f"""    def {name}{sig}:
+        \"\"\"{docstring}\"\"\"\n"""
+        )
 
-        return method_signatures
-
-    return ["Attribute '_InterfaceClass__attrs' not found."]
+    return "\n".join(method_signatures)
 
 
 # pylint: disable=too-many-return-statements
@@ -508,28 +382,40 @@ def _create_module_files(package_data: dict) -> None:
 
     os.makedirs("src", exist_ok=True)
 
-    for plugin, data in package_data["plugins"].items():
+    for endpoint_type, data in package_data["plugins"].items():
         file_path = os.path.join("src", f"{data['module']}.py")
-        baseclass = BASECLASS_MAP[plugin]
 
-        module_path = "colrev.package_manager.package_base_classes"
-        method_signatures = _generate_method_signatures(module_path, baseclass)
+        module_content = generate_module_content(
+            endpoint_type, class_name=data["class"]
+        )
 
         with open(file_path, "w", encoding="utf-8") as file:
-            file.write(
-                f'''#! /usr/bin/env python
-"""{baseclass}: {data['class']}"""
+            file.write(module_content)
 
-import typing
-from colrev.package_manager.package_base_classes import {baseclass}
+
+def generate_module_content(
+    endpoint_type: str, *, class_name: str = "CustomName"
+) -> str:
+    """Generate the content of a module file for a CoLRev package."""
+    module_path = "colrev.package_manager.package_base_classes"
+    baseclass = BASECLASS_MAP[endpoint_type]
+    method_signatures = _generate_method_signatures(module_path, baseclass)
+    package_imports = _get_package_imports(endpoint_type)
+    if endpoint_type == "search_source":
+        package_imports = "import typing\n\n" + package_imports
+
+    module_content = f'''#! /usr/bin/env python
+"""{class_name}"""
+{package_imports}
 import colrev.package_manager.package_settings
-{_get_package_imports(plugin)}
+from colrev.package_manager.package_base_classes import {baseclass}
 
-class {data['class']}({baseclass}):
+class {class_name}({baseclass}):
+
+{method_signatures}
+
 '''
-            )
-            for signature in method_signatures:
-                file.write(signature)
+    return module_content
 
 
 def _create_src_init(package_data: dict) -> None:

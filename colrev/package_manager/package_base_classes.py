@@ -27,11 +27,13 @@ class ReviewTypePackageBaseClass(abc.ABC):
 
     ci_supported: bool
 
-    @abc.abstractmethod
-    def __init__(self, ci_supported: bool):
-        """Initialize the review type"""
+    @abstractmethod
+    def __init__(
+        self, *, operation: colrev.process.operation.Operation, settings: dict
+    ) -> None:
+        pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def initialize(self, settings: colrev.settings.Settings) -> dict:
         """Initialize the review type"""
 
@@ -45,6 +47,15 @@ class SearchSourcePackageBaseClass(ABC):
     search_types: list[SearchType]
     heuristic_status: SearchSourceHeuristicStatus
     search_source: colrev.package_manager.package_settings.DefaultSourceSettings
+
+    @abstractmethod
+    def __init__(
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: typing.Optional[dict] = None,
+    ) -> None:
+        pass
 
     @classmethod
     @abstractmethod
@@ -95,6 +106,15 @@ class PrepPackageBaseClass(ABC):
     always_apply_changes: bool
 
     @abstractmethod
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.ops.prep.Prep,
+        settings: dict,
+    ) -> None:
+        pass
+
+    @abstractmethod
     def prepare(
         self, record: colrev.record.record_prep.PrepRecord
     ) -> colrev.record.record.Record:
@@ -109,6 +129,12 @@ class PrepManPackageBaseClass(ABC):
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
+    def __init__(
+        self, *, prep_man_operation: colrev.ops.prep_man.PrepMan, settings: dict
+    ) -> None:
+        pass
+
+    @abstractmethod
     def prepare_manual(self, records: dict) -> dict:
         """Run the prep-man operation."""
 
@@ -119,6 +145,15 @@ class DedupePackageBaseClass(ABC):
     ci_supported: bool
 
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+
+    @abstractmethod
+    def __init__(
+        self,
+        *,
+        dedupe_operation: colrev.ops.dedupe.Dedupe,
+        settings: dict,
+    ):
+        pass
 
     @abstractmethod
     def run_dedupe(self) -> None:
@@ -134,6 +169,15 @@ class PrescreenPackageBaseClass(ABC):
     settings: colrev.package_manager.package_settings.DefaultSettings
 
     @abstractmethod
+    def __init__(
+        self,
+        *,
+        prescreen_operation: colrev.ops.prescreen.Prescreen,
+        settings: dict,
+    ) -> None:
+        pass
+
+    @abstractmethod
     def run_prescreen(self, records: dict, split: list) -> dict:
         """Run the prescreen operation."""
 
@@ -144,6 +188,15 @@ class PDFGetPackageBaseClass(ABC):
     ci_supported: bool
 
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+
+    @abstractmethod
+    def __init__(
+        self,
+        *,
+        pdf_get_operation: colrev.ops.pdf_get.PDFGet,
+        settings: dict,
+    ) -> None:
+        pass
 
     @abstractmethod
     def get_pdf(
@@ -160,6 +213,15 @@ class PDFGetManPackageBaseClass(ABC):
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
+    def __init__(
+        self,
+        *,
+        pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
+        settings: dict,
+    ) -> None:
+        pass
+
+    @abstractmethod
     def pdf_get_man(self, records: dict) -> dict:
         """Run the pdf-get-man operation."""
 
@@ -170,6 +232,15 @@ class PDFPrepPackageBaseClass(ABC):
     ci_supported: bool
 
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+
+    @abstractmethod
+    def __init__(
+        self,
+        *,
+        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
+        settings: dict,
+    ) -> None:
+        pass
 
     @abstractmethod
     def prep_pdf(
@@ -186,6 +257,15 @@ class PDFPrepManPackageBaseClass(ABC):
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
+    def __init__(
+        self,
+        *,
+        pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
+        settings: dict,
+    ) -> None:
+        pass
+
+    @abstractmethod
     def pdf_prep_man(self, records: dict) -> dict:
         """Run the pdf-prep-man operation."""
 
@@ -198,6 +278,15 @@ class ScreenPackageBaseClass(ABC):
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
+    def __init__(
+        self,
+        *,
+        screen_operation: colrev.ops.screen.Screen,
+        settings: dict,
+    ) -> None:
+        pass
+
+    @abstractmethod
     def run_screen(self, records: dict, split: list) -> dict:
         """Run the screen operation."""
 
@@ -208,6 +297,15 @@ class DataPackageBaseClass(ABC):
     ci_supported: bool
 
     settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+
+    @abstractmethod
+    def __init__(
+        self,
+        *,
+        data_operation: colrev.ops.data.Data,
+        settings: dict,
+    ) -> None:
+        pass
 
     @abstractmethod
     def update_data(
