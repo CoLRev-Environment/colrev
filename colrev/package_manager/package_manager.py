@@ -90,6 +90,12 @@ class PackageManager:
     def is_installed(self, package_name: str) -> bool:
         """Check if a package is installed"""
 
+        print(installed_packages)
+        # TODO : .replace('.', '-') is temporary until packages are renamed
+        print(f"package_name: {package_name}")
+        fixed_package_name = package_name.replace("-", "_").replace(".", "_")
+        print(f"fixed_package_name: {fixed_package_name}")
+
         try:
             # if is_running_inside_uv():
             #     print("Running inside uv")
@@ -105,8 +111,10 @@ class PackageManager:
                     for line in result.stdout.splitlines()[2:]  # Skip header lines
                 }
                 print(f"installed_packages_uv: {installed_packages_uv}")
+                print(fixed_package_name)
+                print(fixed_package_name in installed_packages_uv)
 
-                if package_name.replace(".", "-") in installed_packages_uv:
+                if fixed_package_name in installed_packages_uv:
                     return True
 
             except subprocess.CalledProcessError:
@@ -121,11 +129,6 @@ class PackageManager:
                 installed_packages = [
                     x.replace("-", "_").replace(".", "_") for x in installed_packages
                 ]
-                print(installed_packages)
-                # TODO : .replace('.', '-') is temporary until packages are renamed
-                print(f"package_name: {package_name}")
-                fixed_package_name = package_name.replace("-", "_").replace(".", "_")
-                print(f"fixed_package_name: {fixed_package_name}")
                 if fixed_package_name in installed_packages:
                     return True
                 # if (
