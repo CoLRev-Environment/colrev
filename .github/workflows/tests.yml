@@ -150,6 +150,7 @@ jobs:
         run: |
           pip install -e .[dev,tests]
           colrev install ${{ env.COLREV_PACKAGES }}
+          pip list
       - name: Setup git
         run: |
           git config --global user.name "CoLRev update"
