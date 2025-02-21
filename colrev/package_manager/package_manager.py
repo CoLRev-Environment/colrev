@@ -108,8 +108,7 @@ class PackageManager:
                     from importlib.metadata import distributions
 
                     installed_packages = [
-                        x.replace("_", "-").replace(".", "-")
-                        for x in distributions()
+                        x.replace("_", "-").replace(".", "-") for x in distributions()
                     ]
                     print(f"installed_packages: {installed_packages}")
                     print(f"fixed_package_name: {fixed_package_name}")
