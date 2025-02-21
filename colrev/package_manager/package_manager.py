@@ -90,7 +90,6 @@ class PackageManager:
     def is_installed(self, package_name: str) -> bool:
         """Check if a package is installed"""
 
-        print(installed_packages)
         # TODO : .replace('.', '-') is temporary until packages are renamed
         print(f"package_name: {package_name}")
         fixed_package_name = package_name.replace("-", "_").replace(".", "_")
