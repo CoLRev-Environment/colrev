@@ -92,7 +92,7 @@ class PackageManager:
 
         # TODO : .replace('.', '-') is temporary until packages are renamed
         print(f"package_name: {package_name}")
-        fixed_package_name = package_name.replace("-", "-").replace(".", "-")
+        fixed_package_name = package_name.replace("_", "-").replace(".", "-")
         print(f"fixed_package_name: {fixed_package_name}")
 
         try:
@@ -126,7 +126,7 @@ class PackageManager:
 
                 installed_packages = packages_distributions()
                 installed_packages = [
-                    x.replace("-", "-").replace(".", "-") for x in installed_packages
+                    x.replace("_", "-").replace(".", "-") for x in installed_packages
                 ]
                 if fixed_package_name in installed_packages:
                     return True
