@@ -76,13 +76,13 @@ class PackageManager:
         package = colrev.package_manager.package.Package(package_identifier)
         return package.get_endpoint_class(package_type)
 
-    def is_installed(self, package_name: str) -> bool:
+    def is_installed(self, package_name: str, *, uv: bool = False) -> bool:
         """Check if a package is installed"""
 
         # TODO : .replace('.', '-') is temporary until packages are renamed
         fixed_package_name = package_name.replace("_", "-").replace(".", "-")
 
-        try:
+        if uv:
             try:
                 result = subprocess.run(
                     ["uv", "pip", "list"],
@@ -100,38 +100,40 @@ class PackageManager:
 
             except (subprocess.CalledProcessError, FileNotFoundError):
                 pass
+        else:
+            try:
+                if sys.version_info >= (3, 10):
+                    # Use packages_distributions in Python 3.10+
+                    # pylint: disable=import-outside-toplevel
+                    from importlib.metadata import distributions
 
-            if sys.version_info >= (3, 10):
-                # Use packages_distributions in Python 3.10+
-                # pylint: disable=import-outside-toplevel
-                from importlib.metadata import packages_distributions
-
-                installed_packages = [
-                    x.replace("_", "-").replace(".", "-")
-                    for x in packages_distributions()
-                ]
-                print(f"installed_packages: {installed_packages}")
-                print(f"fixed_package_name: {fixed_package_name}")
-                print(fixed_package_name in installed_packages)
-                if fixed_package_name in installed_packages:
+                    installed_packages = [
+                        x.replace("_", "-").replace(".", "-")
+                        for x in distributions()
+                    ]
+                    print(f"installed_packages: {installed_packages}")
+                    print(f"fixed_package_name: {fixed_package_name}")
+                    print(fixed_package_name in installed_packages)
+                    if fixed_package_name in installed_packages:
+                        return True
+                    # if (
+                    #     "src" in installed_packages
+                    #     and fixed_package_name in installed_packages["src"]
+                    # ):
+                    #     return True
+                else:
+                    # Fallback for Python < 3.10 using the distribution method
+                    importlib.metadata.distribution(package_name.replace("-", "_"))
                     return True
-                # if (
-                #     "src" in installed_packages
-                #     and fixed_package_name in installed_packages["src"]
-                # ):
-                #     return True
-            else:
-                # Fallback for Python < 3.10 using the distribution method
-                importlib.metadata.distribution(package_name.replace("-", "_"))
-                return True
-        except importlib.metadata.PackageNotFoundError:
-            pass
+            except importlib.metadata.PackageNotFoundError:
+                pass
         return False
 
     def _get_packages_to_install(
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
+        uv: bool = False,
     ) -> typing.List[str]:
 
         review_manager.logger.info("Packages:")
@@ -139,7 +141,7 @@ class PackageManager:
 
         installed_packages = []
         for package in packages:
-            if self.is_installed(package):
+            if self.is_installed(package, uv=uv):
                 installed_packages.append(package)
                 review_manager.logger.info(
                     f" {Colors.GREEN}{package}: installed{Colors.END}"
@@ -160,7 +162,7 @@ class PackageManager:
         """Install all packages required for the CoLRev project"""
 
         review_manager.logger.info("Install project")
-        packages = self._get_packages_to_install(review_manager=review_manager)
+        packages = self._get_packages_to_install(review_manager=review_manager, uv=uv)
         if len(packages) == 0:
             review_manager.logger.info("All packages are already installed")
             return
@@ -182,6 +184,8 @@ class PackageManager:
             package_manager = ["uv", "pip"]
         else:
             package_manager = ["pip"]
+
+        print(package_manager)
 
         internal_packages_dict = (
             colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()

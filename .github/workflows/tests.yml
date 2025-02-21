@@ -148,7 +148,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install via pip
         run: |
-          pip install -e .[dev,tests]
+          pip install -e .[dev]
           colrev install ${{ env.COLREV_PACKAGES }}
       - name: Setup git
         run: |
