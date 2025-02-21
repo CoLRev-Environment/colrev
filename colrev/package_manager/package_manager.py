@@ -111,6 +111,9 @@ class PackageManager:
                     x.replace("_", "-").replace(".", "-")
                     for x in packages_distributions()
                 ]
+                print(f"installed_packages: {installed_packages}")
+                print(f"fixed_package_name: {fixed_package_name}")
+                print(fixed_package_name in installed_packages)
                 if fixed_package_name in installed_packages:
                     return True
                 # if (
