@@ -92,10 +92,7 @@ class PackageManager:
                 print(f"package_name: {package_name}")
                 fixed_package_name = package_name.replace("-", "_").replace(".", "-")
                 print(f"fixed_package_name: {fixed_package_name}")
-                if (
-                    fixed_package_name
-                    in installed_packages
-                ):
+                if fixed_package_name in installed_packages:
                     return True
                 if (
                     "src" in installed_packages
