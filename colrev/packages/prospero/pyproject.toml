@@ -12,7 +12,7 @@ authors = [
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/"
 dependencies = [
-    "selenium=^4.27.1"
+    "selenium>=4.27.1"
 ]
 
 [tool.hatch.build.targets.wheel]

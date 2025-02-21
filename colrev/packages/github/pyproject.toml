@@ -13,8 +13,8 @@ authors = [
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/github"
 dependencies = [
-    "PyGithub=^2.3.0",
-    "click=^8.1.6",
+    "PyGithub>=2.3.0",
+    "click>=8.1.6",
 ]
 
 [tool.hatch.build.targets.wheel]

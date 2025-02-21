@@ -9,7 +9,7 @@ authors = [
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/download_from_website"
 dependencies = [
-    "beautifulsoup4=^4.11.1"
+    "beautifulsoup4>=4.11.1"
 ]
 
 [tool.hatch.build.targets.wheel]

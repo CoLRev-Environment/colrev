@@ -13,7 +13,7 @@ authors = [
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/ui_web"
 dependencies = [
-    "dash=^2.11.1",
+    "dash>=2.11.1",
 ]
 
 [project.scripts]
