@@ -91,27 +91,26 @@ class PackageManager:
         """Check if a package is installed"""
 
         try:
-            if is_running_inside_uv():
-                print("Running inside uv")
-                try:
-                    result = subprocess.run(
-                        ["uv", "pip", "list"],
-                        capture_output=True,
-                        text=True,
-                        check=True,
-                    )
-                    installed_packages_uv = {
-                        line.split()[0].replace(".", "-")
-                        for line in result.stdout.splitlines()[2:]  # Skip header lines
-                    }
-                    print(f"installed_packages_uv: {installed_packages_uv}")
+            # if is_running_inside_uv():
+            #     print("Running inside uv")
+            try:
+                result = subprocess.run(
+                    ["uv", "pip", "list"],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                installed_packages_uv = {
+                    line.split()[0].replace(".", "-")
+                    for line in result.stdout.splitlines()[2:]  # Skip header lines
+                }
+                print(f"installed_packages_uv: {installed_packages_uv}")
 
-                    if package_name.replace(".", "-") in installed_packages_uv:
-                        return True
+                if package_name.replace(".", "-") in installed_packages_uv:
+                    return True
 
-                except subprocess.CalledProcessError:
-                    pass  # Ignore errors from uv execution
-                return False
+            except subprocess.CalledProcessError:
+                pass  # Ignore errors from uv execution
 
             if sys.version_info >= (3, 10):
                 # Use packages_distributions in Python 3.10+
