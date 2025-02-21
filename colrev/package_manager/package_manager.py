@@ -18,6 +18,15 @@ from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Filepaths
 
+import os
+
+def is_running_inside_uv():
+    """Check if the script is running inside a uv virtual environment."""
+    return "UV_VENV" in os.environ or ".uv" in sys.executable
+
+# Test it
+print(f"Running inside uv: {is_running_inside_uv()}")
+
 
 class PackageManager:
     """The PackageManager provides functionality for package lookup and discovery"""
@@ -81,6 +90,26 @@ class PackageManager:
         """Check if a package is installed"""
 
         try:
+            if is_running_inside_uv():
+                try:
+                    result = subprocess.run(
+                        ["uv", "pip", "list"],
+                        capture_output=True,
+                        text=True,
+                        check=True,
+                    )
+                    installed_packages_uv = {
+                        line.split()[0].replace(".", "-")
+                        for line in result.stdout.splitlines()[2:]  # Skip header lines
+                    }
+
+                    if package_name.replace(".", "-") in installed_packages_uv:
+                        return True
+
+                except subprocess.CalledProcessError:
+                    pass  # Ignore errors from uv execution
+                return False
+
             if sys.version_info >= (3, 10):
                 # Use packages_distributions in Python 3.10+
                 # pylint: disable=import-outside-toplevel
