@@ -136,7 +136,7 @@ class PackageManager:
                     f" {Colors.ORANGE}{package}: not installed{Colors.END}"
                 )
 
-        return packages
+        return [x for x in packages if x not in installed_packages]
 
     def install_project(
         self,
