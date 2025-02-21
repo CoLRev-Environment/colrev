@@ -80,17 +80,10 @@ class PackageManager:
     def is_installed(self, package_name: str) -> bool:
         """Check if a package is installed"""
 
-        # Notes:
-        # Cannot import directly and check whether it fails
-        # because the package format is non-standard (".")
-        # We deactivate the is_installed() temporarily
-        # until internal colrev packages comply with naming conventions.
-        # if platform.system() in ["Darwin", "Windows", "Linux"]:
-        #    return True  # Return True for macOS, Linux, and Windows
-
         try:
             if sys.version_info >= (3, 10):
                 # Use packages_distributions in Python 3.10+
+                # pylint: disable=import-outside-toplevel
                 from importlib.metadata import packages_distributions
 
                 installed_packages = packages_distributions()
@@ -102,16 +95,12 @@ class PackageManager:
                     and package_name.replace("-", "_") in installed_packages["src"]
                 ):
                     return True
-
-                return False
             else:
                 # Fallback for Python < 3.10 using the distribution method
                 importlib.metadata.distribution(package_name.replace("-", "_"))
                 return True
         except importlib.metadata.PackageNotFoundError:
-            return False
-        except importlib.metadata.PackageNotFoundError:
-            return False
+            pass
         return False
 
     def _get_packages_to_install(
