@@ -1,4 +1,5 @@
 name: Make Documentation
+
 on:
   workflow_dispatch:
   schedule:
@@ -14,42 +15,55 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - name: Install dependencies using Poetry with docs extra
+
+      - name: Install uv and dependencies
         run: |
-          python -m pip install poetry
-          poetry install -E docs --no-cache
+          pip install uv
+          uv venv
+          uv pip install -e .[docs]
+
       - name: Install pre-commit
-        run: poetry run pip install pre-commit
-      - name: Install modules from packages.json via poetry, skipping "colrev"
+        run: uv pip install pre-commit
+
+      - name: Install modules from packages.json via uv, skipping "colrev"
         run: |
           jq -r '.[] | select(.module != "colrev") | .module' colrev/packages/packages.json | while read module; do
-            poetry run pip install $module
+            uv pip install $module
           done
+
       - name: Setup git
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
+
       - name: Set branch name
         run: |
           echo "BRANCH_NAME=docs-update-$(date '+%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
           echo ${{ env.BRANCH_NAME }}
+
       - name: Switch to branch ${{ env.BRANCH_NAME }}
         run: |
           git checkout -b ${{ env.BRANCH_NAME }}
+
       - name: Clean old documentation build
         run: rm -rf docs/source/dev_docs/_autosummary/*
+
       - name: Run docs update
-        run: poetry run colrev env --update_package_list
+        run: colrev env --update_package_list
+
       - name: Build documentation with Sphinx
-        run: poetry run sphinx-build -b html docs/source docs/build
+        run: sphinx-build -b html docs/source docs/build
+
       - name: Run pre-commit hooks excluding black
         continue-on-error: true
         run: |
-          poetry run pre-commit run --all-files
+          pre-commit run --all-files
+
       - name: Commit changes and create pull request
         continue-on-error: true
         env:

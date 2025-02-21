@@ -5,7 +5,6 @@ from __future__ import annotations
 import importlib.metadata
 import importlib.util
 import json
-import platform
 import subprocess
 import sys
 import typing
@@ -77,49 +76,64 @@ class PackageManager:
         package = colrev.package_manager.package.Package(package_identifier)
         return package.get_endpoint_class(package_type)
 
-    def is_installed(self, package_name: str) -> bool:
+    def is_installed(self, package_name: str, *, uv: bool = False) -> bool:
         """Check if a package is installed"""
 
-        # Notes:
-        # Cannot import directly and check whether it fails
-        # because the package format is non-standard (".")
-        # We deactivate the is_installed() temporarily
-        # until internal colrev packages comply with naming conventions.
-        if platform.system() in ["Darwin", "Windows", "Linux"]:
-            return True  # Return True for macOS, Linux, and Windows
-        print(package_name)
+        # TODO : .replace('.', '-') is temporary until packages are renamed
+        fixed_package_name = package_name.replace("_", "-").replace(".", "-")
 
-        # try:
-        #     if sys.version_info >= (3, 10):
-        #         # Use packages_distributions in Python 3.10+
-        #         from importlib.metadata import packages_distributions
+        if uv:
+            try:
+                result = subprocess.run(
+                    ["uv", "pip", "list"],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                installed_packages_uv = {
+                    line.split()[0].replace(".", "-")
+                    for line in result.stdout.splitlines()[2:]  # Skip header lines
+                }
 
-        #         installed_packages = packages_distributions()
+                if fixed_package_name in installed_packages_uv:
+                    return True
 
-        #         if package_name.replace("-", "_") in installed_packages:
-        #             return True
-        #         if (
-        #             "src" in installed_packages
-        #             and package_name.replace("-", "_") in installed_packages["src"]
-        #         ):
-        #             return True
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                pass
+        else:
+            try:
+                if sys.version_info >= (3, 10):
+                    # Use packages_distributions in Python 3.10+
+                    # pylint: disable=import-outside-toplevel
+                    from importlib.metadata import distributions
 
-        #         return False
-        #     else:
-        #         # Fallback for Python < 3.10 using the distribution method
-        #         importlib.metadata.distribution(package_name.replace("-", "_"))
-        #         return True
-        # except PackageNotFoundError:
-        #     return False
-        # except importlib.metadata.PackageNotFoundError:
-        #     return False
-        return True
+                    installed_packages = [
+                        dist.metadata["Name"].replace("_", "-").replace(".", "-")
+                        for dist in distributions()
+                    ]
+                    print(f"installed_packages: {installed_packages}")
+                    print(f"fixed_package_name: {fixed_package_name}")
+                    print(fixed_package_name in installed_packages)
+                    if fixed_package_name in installed_packages:
+                        return True
+                    # if (
+                    #     "src" in installed_packages
+                    #     and fixed_package_name in installed_packages["src"]
+                    # ):
+                    #     return True
+                else:
+                    # Fallback for Python < 3.10 using the distribution method
+                    importlib.metadata.distribution(package_name.replace("-", "_"))
+                    return True
+            except importlib.metadata.PackageNotFoundError:
+                pass
+        return False
 
     def _get_packages_to_install(
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        force_reinstall: bool,
+        uv: bool = False,
     ) -> typing.List[str]:
 
         review_manager.logger.info("Packages:")
@@ -127,7 +141,7 @@ class PackageManager:
 
         installed_packages = []
         for package in packages:
-            if self.is_installed(package):
+            if self.is_installed(package, uv=uv):
                 installed_packages.append(package)
                 review_manager.logger.info(
                     f" {Colors.GREEN}{package}: installed{Colors.END}"
@@ -137,41 +151,41 @@ class PackageManager:
                     f" {Colors.ORANGE}{package}: not installed{Colors.END}"
                 )
 
-        if not force_reinstall:
-            packages = [p for p in packages if p not in installed_packages]
-
-        return packages
+        return [x for x in packages if x not in installed_packages]
 
     def install_project(
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        force_reinstall: bool,
+        uv: bool = False,
     ) -> None:
         """Install all packages required for the CoLRev project"""
 
         review_manager.logger.info("Install project")
-        packages = self._get_packages_to_install(
-            review_manager=review_manager, force_reinstall=force_reinstall
-        )
+        packages = self._get_packages_to_install(review_manager=review_manager, uv=uv)
         if len(packages) == 0:
             review_manager.logger.info("All packages are already installed")
             return
 
-        self.install(packages=packages)
+        self.install(packages=packages, uv=uv)
 
-    # pylint: disable=too-many-arguments
-    # pylint: disable=too-many-branches
     def install(
         self,
         *,
         packages: typing.List[str],
         upgrade: bool = True,
-        editable: str = "",
-        force_reinstall: bool = True,
-        no_cache_dir: bool = True,
+        editable: bool = False,
+        uv: bool = False,
     ) -> None:
-        """Install packages"""
+        """Install packages using uv if available, otherwise fallback to pip"""
+
+        # Check if `uv` is installed, fallback to `pip` if not
+        if uv:
+            package_manager = ["uv", "pip"]
+        else:
+            package_manager = ["pip"]
+
+        print(package_manager)
 
         internal_packages_dict = (
             colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
@@ -180,49 +194,28 @@ class PackageManager:
         if len(packages) == 1 and packages[0] == "all_internal_packages":
             packages = list(internal_packages_dict.keys())
 
-        # Install packages from colrev monorepository first
+        # Install internal colrev packages first
         colrev_packages = []
         for package in packages:
             if package in internal_packages_dict:
                 colrev_packages.append(package)
         packages = [p for p in packages if p not in colrev_packages]
 
-        print(f"ColRev packages: {colrev_packages}")
-        if colrev_packages:
+        print(
+            f"Installing ColRev packages: {colrev_packages + packages} using {package_manager}"
+        )
 
-            colrev_package_paths = [
-                p_path
-                for p_name, p_path in internal_packages_dict.items()
-                if p_name in colrev_packages
-            ]
-            args = [sys.executable, "-m", "pip", "install"]
-            args += colrev_package_paths
-            if upgrade:
-                args += ["--upgrade"]
-            if editable:
-                args += ["--editable", editable]
-            if force_reinstall:
-                args += ["--force-reinstall"]
-            if no_cache_dir:
-                args += ["--no-cache-dir"]
-            # sys.argv = args
-            # run_module("pip", run_name="__main__")
-            # use subprocess because run_module does not return control
-            subprocess.run(args, check=False)
+        install_args = package_manager + ["install"]
+        if upgrade:
+            install_args.append("--upgrade")
+        if editable:
+            install_args.append("--editable")
 
-        print(f"Other packages: {packages}")
-        if packages:
-            args = [sys.executable, "-m", "pip", "install"]
-            if upgrade:
-                args += ["--upgrade"]
-            if editable:
-                args += ["--editable", editable]
-            if force_reinstall:
-                args += ["--force-reinstall"]
-            if no_cache_dir:
-                args += ["--no-cache-dir"]
-            args += list(packages)
-            # sys.argv = args
-            # run_module("pip", run_name="__main__")
-            # use subprocess because run_module does not return control
-            subprocess.run(args, check=False)
+        # Install both internal and external packages in a single command
+        all_packages = [
+            internal_packages_dict[p] if p in internal_packages_dict else p
+            for p in colrev_packages
+        ] + packages
+
+        install_args += all_packages
+        subprocess.run(install_args, check=True)

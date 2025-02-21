@@ -1,27 +1,25 @@
-[tool.poetry]
+[project]
 name = "colrev.open_citations_forward_search"
 description = "CoLRev package for open_citations_forward_search"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
-]
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+ ]
+requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/open_citations_forward_search"
 
-[[tool.poetry.packages]]
-include = "src"
-
-[tool.poetry.dependencies]
-python = ">=3.8, <4"
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.colrev]
 colrev_doc_description = "Forward search based on OpenCitations"
 colrev_doc_link = "README.md"
 search_types = ["FORWARD_SEARCH"]
 
-[tool.poetry.plugins.colrev]
+[project.entry-points.colrev]
 search_source = "colrev.packages.open_citations_forward_search.src.open_citations_forward_search:OpenCitationsSearchSource"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "cython<3.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

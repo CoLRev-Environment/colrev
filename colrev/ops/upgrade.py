@@ -202,6 +202,12 @@ class Upgrade(colrev.process.operation.Operation):
                 "script": self._migrate_0_13_0,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.13.0"),
+                "target_version": CoLRevVersion("0.14.0"),
+                "script": self._migrate_0_14_0,
+                "released": False,
+            },
         ]
         self.review_manager.logger.info(
             "Colrev version installed:           %s", installed_colrev_version
@@ -769,6 +775,23 @@ class Upgrade(colrev.process.operation.Operation):
                 )
                 with open(Filepaths.REGISTRY_FILE, "w", encoding="utf-8") as out:
                     out.write(content)
+
+        return self.repo.is_dirty()
+
+    def _migrate_0_14_0(self) -> bool:
+        """Migrate GitHub Actions workflow files from Poetry to uv and update working directories."""
+
+        if Path(".github/workflows").is_dir():
+
+            workflow_file = Path("ops/init/colrev_update.yml")
+            target_path = self.review_manager.path / Path(
+                ".github/workflows/colrev_update.yml"
+            )
+            colrev.env.utils.retrieve_package_file(
+                template_file=workflow_file, target=target_path
+            )
+
+            self.repo.index.add([str(target_path)])
 
         return self.repo.is_dirty()
 

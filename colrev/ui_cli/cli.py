@@ -3174,23 +3174,17 @@ def version(
     "-e",
     "--editable",
     help="Install a project in editable mode from this path",
+    is_flag=True,
+    default=False,
 )
 @click.option(
-    "--force-reinstall",
+    "--uv",
+    help="Install a project using uv",
     is_flag=True,
-    help="Reinstall all packages even if they are already up-to-date",
-)
-@click.option(
-    "--no-cache-dir",
-    is_flag=True,
-    help="Disable the cache",
+    default=False,
 )
 def install(
-    packages: typing.List[str],
-    upgrade: bool,
-    editable: str,
-    force_reinstall: bool,
-    no_cache_dir: bool,
+    packages: typing.List[str], upgrade: bool, editable: bool, uv: bool
 ) -> None:
     """Install packages
 
@@ -3199,9 +3193,7 @@ def install(
 
     if len(packages) == 1 and packages[0] == ".":
         review_manager = colrev.review_manager.ReviewManager()
-        PACKAGE_MANAGER.install_project(
-            review_manager=review_manager, force_reinstall=force_reinstall
-        )
+        PACKAGE_MANAGER.install_project(review_manager=review_manager, uv=uv)
 
     else:
 
@@ -3209,6 +3201,5 @@ def install(
             packages=packages,
             upgrade=upgrade,
             editable=editable,
-            force_reinstall=force_reinstall,
-            no_cache_dir=no_cache_dir,
+            uv=uv,
         )

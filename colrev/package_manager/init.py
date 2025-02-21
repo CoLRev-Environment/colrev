@@ -57,31 +57,29 @@ def _create_pyproject_toml(data: dict) -> None:
     plugins_string = "\n".join(plugins)
 
     content = f"""
-[tool.poetry]
+[project]
 name = "{data['name']}"
 description = "{data['description']}"
 version = "{data['version']}"
 license = "{data['license']}"
 authors = ["{data['author']['name']} <{data['author']['email']}>"]
+requires-python = ">=3.8, <4"
 repository = "{data['repository']}"
 
-[[tool.poetry.packages]]
-include = "src"
-
-[tool.poetry.dependencies]
-python = ">=3.9, <4"
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.colrev]
 colrev_doc_description = "{data['doc_description']}"
 colrev_doc_link = "docs/README.md"
 search_types = []
 
-[tool.poetry.plugins.colrev]
+[project.entry-points.colrev]
 {plugins_string}
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "cython<3.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 """
     with open("pyproject.toml", "w", encoding="utf-8") as file:
         file.write(content.strip())
