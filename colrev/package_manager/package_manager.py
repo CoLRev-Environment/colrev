@@ -5,7 +5,6 @@ from __future__ import annotations
 import importlib.metadata
 import importlib.util
 import json
-import platform
 import shutil
 import subprocess
 import sys
@@ -86,7 +85,7 @@ class PackageManager:
         # because the package format is non-standard (".")
         # We deactivate the is_installed() temporarily
         # until internal colrev packages comply with naming conventions.
-        #if platform.system() in ["Darwin", "Windows", "Linux"]:
+        # if platform.system() in ["Darwin", "Windows", "Linux"]:
         #    return True  # Return True for macOS, Linux, and Windows
 
         try:
