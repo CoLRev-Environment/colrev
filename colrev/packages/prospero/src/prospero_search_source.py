@@ -49,8 +49,6 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.search_source = self._get_search_source(settings)
         self.review_manager = source_operation.review_manager
         self.operation = source_operation
-
-        # TODO: check the following:
         self.search_word: typing.Optional[str] = None
 
     def _get_search_source(
