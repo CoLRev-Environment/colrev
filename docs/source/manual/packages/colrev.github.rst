@@ -27,7 +27,7 @@ colrev.github
 
 |VERSION| Version: 0.1.1
 
-|MAINTAINER| Maintainer: Kolja Rinne, Philipp Kasimir, Chris Vierath, Karl Schnickmann
+|MAINTAINER| Maintainer: Kolja Rinne, Philipp Kasimir, Chris Vierath, Karl Schnickmann, Gerit Wagner
 
 |LICENSE| License: MIT
 

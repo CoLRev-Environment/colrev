@@ -2,11 +2,13 @@
 name = "colrev.open_citations_forward_search"
 description = "CoLRev package for open_citations_forward_search"
 version = "0.1.0"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
  ]
 requires-python = ">=3.8, <4"
+
+[project.urls]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/open_citations_forward_search"
 
 [tool.hatch.build.targets.wheel]

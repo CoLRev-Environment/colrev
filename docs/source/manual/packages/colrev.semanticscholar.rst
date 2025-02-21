@@ -27,7 +27,7 @@ colrev.semanticscholar
 
 |VERSION| Version: 0.1.0
 
-|MAINTAINER| Maintainer: Gerit Wagner, Louis Langenhan, Peter Eckhardt, Amadou-Choumoussidine Kouotou-Ngapout, Robert Theis
+|MAINTAINER| Maintainer: Louis Langenhan, Peter Eckhardt, Amadou-Choumoussidine Kouotou-Ngapout, Robert Theis, Gerit Wagner
 
 |LICENSE| License: MIT
 

@@ -68,13 +68,19 @@ class PackageDoc:
             )
 
         main_section = self.package_metadata["project"]
-        self.license = main_section["license"]
+        self.license = (
+            main_section["license"]
+            if isinstance(main_section["license"], str)
+            else main_section["license"]["text"]
+        )
         self.version = main_section["version"]
         self.authors = main_section["authors"]
         self.documentation = main_section.get("documentation", None)
-        self.repository = main_section.get("repository", None)
+        self.repository = main_section.get(
+            "repository", main_section.get("urls", {}).get("repository", None)
+        )
         self.endpoints = list(
-            main_section.get("plugins", {}).get("colrev", {"na": "na"}).keys()
+            main_section.get("entry-points", {}).get("colrev", {"na": "na"}).keys()
         )
 
         colrev_section = self.package_metadata.get("tool", {}).get("colrev", {})
@@ -110,7 +116,7 @@ class PackageDoc:
         if response.status_code != 200:
             return False
         try:
-            repo_url = response.json()["info"].get("project_urls", {}).get("Repository")
+            repo_url = response.json()["info"].get("project_urls", {}).get("repository")
         except AttributeError:
             print(f"Failed to get repository URL for package {package_id}")
             return False
@@ -130,11 +136,7 @@ class PackageDoc:
     def _get_authors_for_docs(self) -> str:
         """Get the authors for the documentation  (without emails in <>)"""
 
-        authors = []
-        for author in self.authors:
-            authors.append(author.split("<")[0].strip())
-
-        return ", ".join(authors)
+        return ", ".join(author["name"] for author in self.authors)
 
     def _get_docs_short_description(self) -> str:
         return (
@@ -388,9 +390,11 @@ class DocRegistryManager:
                 toml.decoder.TomlDecodeError,
                 NotImplementedError,
                 ValueError,
+                KeyError,
+                AttributeError,
             ) as exc:
-                print(exc)
                 print(f"Error loading package {package_id}")
+                print(exc)
 
         # Add package endpoints
         os.chdir(Filepaths.COLREV_PATH)

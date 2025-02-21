@@ -25,7 +25,7 @@
 colrev-sync
 ===========
 
-|VERSION| Version: 0.2.0
+|VERSION| Version: 0.4.0
 
 |MAINTAINER| Maintainer: Gerit Wagner
 

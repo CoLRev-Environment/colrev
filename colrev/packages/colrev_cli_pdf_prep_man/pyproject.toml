@@ -2,11 +2,13 @@
 name = "colrev.colrev_cli_pdf_prep_man"
 description = "CoLRev package for colrev_cli_pdf_prep_man"
 version = "0.1.0"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
  ]
 requires-python = ">=3.8, <4"
+
+[project.urls]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_pdf_prep_man"
 
 [tool.hatch.build.targets.wheel]

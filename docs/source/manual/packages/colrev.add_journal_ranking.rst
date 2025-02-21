@@ -27,7 +27,7 @@ colrev.add_journal_ranking
 
 |VERSION| Version: 0.1.0
 
-|MAINTAINER| Maintainer: Gerit Wagner, Alexa Steinheimer, Robert Ahr, Thomas Fleischmann, Anton Liam Frisch
+|MAINTAINER| Maintainer: Alexa Steinheimer, Robert Ahr, Thomas Fleischmann, Anton Liam Frisch, Gerit Wagner
 
 |LICENSE| License: MIT
 
