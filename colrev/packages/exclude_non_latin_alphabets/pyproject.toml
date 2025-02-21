@@ -7,12 +7,12 @@ authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
  ]
 requires-python = ">=3.8, <4"
-
-[project.urls]
-repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/exclude_non_latin_alphabets"
 dependencies = [
     "alphabet-detector>=0.0.7"
 ]
+
+[project.urls]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/exclude_non_latin_alphabets"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

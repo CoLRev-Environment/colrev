@@ -11,13 +11,13 @@ authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
 ]
 requires-python = ">=3.8, <4"
-
-[project.urls]
-repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/github"
 dependencies = [
     "PyGithub>=2.3.0",
     "click>=8.1.6",
 ]
+
+[project.urls]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/github"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
