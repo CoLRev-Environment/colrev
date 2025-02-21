@@ -79,7 +79,6 @@ class PackageManager:
     def is_installed(self, package_name: str, *, uv: bool = False) -> bool:
         """Check if a package is installed"""
 
-        # TODO : .replace('.', '-') is temporary until packages are renamed
         fixed_package_name = package_name.replace("_", "-").replace(".", "-")
 
         if uv:
@@ -92,7 +91,7 @@ class PackageManager:
                 )
                 installed_packages_uv = {
                     line.split()[0].replace(".", "-")
-                    for line in result.stdout.splitlines()[2:]  # Skip header lines
+                    for line in result.stdout.splitlines()[2:]
                 }
 
                 if fixed_package_name in installed_packages_uv:
@@ -111,16 +110,8 @@ class PackageManager:
                         dist.metadata["Name"].replace("_", "-").replace(".", "-")
                         for dist in distributions()
                     ]
-                    print(f"installed_packages: {installed_packages}")
-                    print(f"fixed_package_name: {fixed_package_name}")
-                    print(fixed_package_name in installed_packages)
                     if fixed_package_name in installed_packages:
                         return True
-                    # if (
-                    #     "src" in installed_packages
-                    #     and fixed_package_name in installed_packages["src"]
-                    # ):
-                    #     return True
                 else:
                     # Fallback for Python < 3.10 using the distribution method
                     importlib.metadata.distribution(package_name.replace("-", "_"))
@@ -179,7 +170,6 @@ class PackageManager:
     ) -> None:
         """Install packages using uv if available, otherwise fallback to pip"""
 
-        # Check if `uv` is installed, fallback to `pip` if not
         if uv:
             package_manager = ["uv", "pip"]
         else:
