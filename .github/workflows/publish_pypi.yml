@@ -3,15 +3,24 @@ on:
   workflow_dispatch:
   release:
     types: [published]
+
 jobs:
   pypi:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Install poetry
-        run: pipx install poetry
-      - name: Setup poetry
-        run: poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
-      - name: Publish package
-        run: poetry publish --build
+
+      - name: Install uv and build tools
+        run: |
+          pipx install uv
+          uv pip install --upgrade build hatchling
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish package to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: uv pip publish

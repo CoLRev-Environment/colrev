@@ -9,7 +9,6 @@ Additional checks for major releasese:
 For all releases:
 
 - Run `make linkcheck` in the docs, check `docs/build/linkcheck/output.txt` and fix broken links.
-- Run [poetry update on GitHub](https://github.com/CoLRev-Environment/colrev/actions/workflows/poetry_update.yml).
 - Change released to `True` for the migration script in `ops/upgrade.py`, add a new migration script.
 - Update `settings.py - _add_missing_attributes()` to prevent exceptions.
 - Update the version in `pyproject.toml`. Check whether other parts of the `pyproject.toml` need to be updated. Check whether dependencies can be removed.

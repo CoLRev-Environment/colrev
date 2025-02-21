@@ -67,7 +67,7 @@ class PackageDoc:
                 f"Package {package_id} not found on PyPI/in CoLRev monorepo"
             )
 
-        main_section = self.package_metadata["tool"]["poetry"]
+        main_section = self.package_metadata["project"]
         self.license = main_section["license"]
         self.version = main_section["version"]
         self.authors = main_section["authors"]

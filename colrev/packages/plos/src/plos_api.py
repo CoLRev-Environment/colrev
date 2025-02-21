@@ -304,7 +304,7 @@ class PlosAPI:
 
             last_updated = self.last_updated.split(" ", maxsplit=1)[0]
             last_updated = last_updated.split("+")[0] + "Z"
-            now = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+            now = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
             date_filter = f"fq=publication_date:[{last_updated} TO {now}]"
             url = f"{url}&{date_filter}"
 

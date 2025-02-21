@@ -70,7 +70,7 @@ class Initializer:
         )
 
         # Install packages
-        p_man.install_project(review_manager=self.review_manager, force_reinstall=False)
+        p_man.install_project(review_manager=self.review_manager)
 
     def _setup_repo(
         self,

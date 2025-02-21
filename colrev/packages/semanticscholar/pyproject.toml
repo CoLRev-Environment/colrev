@@ -1,33 +1,33 @@
-[tool.poetry]
+[project]
 name = "colrev.semanticscholar"
 description = "CoLRev package for semanticscholar"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    "Gerit Wagner <gerit.wagner@uni-bamberg.de>",
-    "Louis Langenhan",
-    "Peter Eckhardt",
-    "Amadou-Choumoussidine Kouotou-Ngapout",
-    "Robert Theis",
+    { name = "Louis Langenhan" },
+    { name = "Peter Eckhardt" },
+    { name = "Amadou-Choumoussidine Kouotou-Ngapout" },
+    { name = "Robert Theis" },
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
 ]
+requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/semanticscholar"
+dependencies = [
+    "semanticscholar>=0.6.0"
+]
 
-[[tool.poetry.packages]]
-include = "src"
-
-[tool.poetry.dependencies]
-python = ">=3.8, <4"
-semanticscholar = "^0.6.0"
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.colrev]
 colrev_doc_description = "Semantic Scholar API"
 colrev_doc_link = "README.md"
 search_types = ["API"]
 
-[tool.poetry.plugins.colrev]
+[project.entry-points.colrev]
 search_source = "colrev.packages.semanticscholar.src.semanticscholar_search_source:SemanticScholarSearchSource"
 prep = "colrev.packages.semanticscholar.src.semantic_scholar_prep:SemanticScholarPrep"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "cython<3.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

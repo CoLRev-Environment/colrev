@@ -41,8 +41,7 @@ If you are proposing a feature:
 
 * Explain in detail how it would work.
 * Keep the scope as narrow as possible, to make it easier to implement.
-* Remember that this is a volunteer-driven project, and that contributions
-  are welcome :)
+* Remember that this is a volunteer-driven project, and that contributions are welcome :)
 
 ## Get Started!
 
@@ -55,13 +54,11 @@ Ready to contribute? Here's how to set up `colrev` for local development.
     git clone git@github.com:your_name_here/colrev.git
     ```
 
-3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development:
+3. Install your local copy into a virtualenv. Assuming you have uv installed, this is how you set up your fork for local development:
 
     ```
-    mkvirtualenv colrev
-    cd colrev/
-    pip3 install poetry
-    poetry install
+    uv venv
+    uv pip install --editable .
     ```
 
 4. Create a branch for local development:
