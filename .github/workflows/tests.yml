@@ -113,6 +113,7 @@ jobs:
 
       - name: Install dependencies with uv
         run: |
+          uv venv
           uv sync --all-extras --dev
           colrev install ${{ env.COLREV_PACKAGES }}
 
@@ -123,7 +124,7 @@ jobs:
           git config --global url.https://github.com/.insteadOf git://github.com/
 
       - name: Run tests
-        run: pytest --slow -vv
+        run: uv run pytest --slow -vv
 
   test-pip-install:
     needs: test-minimal-deps
