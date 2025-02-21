@@ -88,7 +88,7 @@ jobs:
           git config --global url.https://github.com/.insteadOf git://github.com/
 
       - name: Run tests (minimal-deps)
-        run: pytest tests/0_core/ -vv
+        run: uv run pytest tests/0_core/ -vv
 
   test-full-deps:
     needs: test-minimal-deps
@@ -124,7 +124,7 @@ jobs:
           git config --global url.https://github.com/.insteadOf git://github.com/
 
       - name: Run tests
-        run: pytest --slow -vv
+        run: uv run pytest --slow -vv
 
   test-pip-install:
     needs: test-minimal-deps
