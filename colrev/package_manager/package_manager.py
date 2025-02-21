@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.metadata
 import importlib.util
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -18,11 +19,11 @@ from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Filepaths
 
-import os
 
 def is_running_inside_uv():
     """Check if the script is running inside a uv virtual environment."""
     return "UV_VENV" in os.environ or ".uv" in sys.executable
+
 
 # Test it
 print(f"Running inside uv: {is_running_inside_uv()}")
