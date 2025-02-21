@@ -95,6 +95,7 @@ class PackageManager:
                 from importlib.metadata import packages_distributions
 
                 installed_packages = packages_distributions()
+                print(f"installed_packages: {installed_packages}")
 
                 if package_name.replace("-", "_") in installed_packages:
                     return True
@@ -113,7 +114,7 @@ class PackageManager:
             return False
         except importlib.metadata.PackageNotFoundError:
             return False
-        return True
+        return False
 
     def _get_packages_to_install(
         self,
