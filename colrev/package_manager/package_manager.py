@@ -5,7 +5,6 @@ from __future__ import annotations
 import importlib.metadata
 import importlib.util
 import json
-import os
 import shutil
 import subprocess
 import sys
@@ -18,15 +17,6 @@ import colrev.package_manager.package
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Filepaths
-
-
-def is_running_inside_uv():
-    """Check if the script is running inside a uv virtual environment."""
-    return "UV_VENV" in os.environ or ".uv" in sys.executable
-
-
-# Test it
-print(f"Running inside uv: {is_running_inside_uv()}")
 
 
 class PackageManager:
@@ -91,13 +81,9 @@ class PackageManager:
         """Check if a package is installed"""
 
         # TODO : .replace('.', '-') is temporary until packages are renamed
-        print(f"package_name: {package_name}")
         fixed_package_name = package_name.replace("_", "-").replace(".", "-")
-        print(f"fixed_package_name: {fixed_package_name}")
 
         try:
-            # if is_running_inside_uv():
-            #     print("Running inside uv")
             try:
                 result = subprocess.run(
                     ["uv", "pip", "list"],
@@ -109,24 +95,21 @@ class PackageManager:
                     line.split()[0].replace(".", "-")
                     for line in result.stdout.splitlines()[2:]  # Skip header lines
                 }
-                print(f"installed_packages_uv: {installed_packages_uv}")
-                print(fixed_package_name)
-                print(fixed_package_name in installed_packages_uv)
 
                 if fixed_package_name in installed_packages_uv:
                     return True
 
             except subprocess.CalledProcessError:
-                pass  # Ignore errors from uv execution
+                pass
 
             if sys.version_info >= (3, 10):
                 # Use packages_distributions in Python 3.10+
                 # pylint: disable=import-outside-toplevel
                 from importlib.metadata import packages_distributions
 
-                installed_packages = packages_distributions()
                 installed_packages = [
-                    x.replace("_", "-").replace(".", "-") for x in installed_packages
+                    x.replace("_", "-").replace(".", "-")
+                    for x in packages_distributions()
                 ]
                 if fixed_package_name in installed_packages:
                     return True
