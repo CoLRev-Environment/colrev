@@ -2,11 +2,13 @@
 name = "colrev.bibliography_export"
 description = "CoLRev package for bibliography_export"
 version = "0.1.0"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
  ]
 requires-python = ">=3.8, <4"
+
+[project.urls]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/bibliography_export"
 
 [tool.hatch.build.targets.wheel]

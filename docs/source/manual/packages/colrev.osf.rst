@@ -27,7 +27,7 @@ colrev.osf
 
 |VERSION| Version: 0.1.0
 
-|MAINTAINER| Maintainer: Gerit Wagner, Peiyao Mao, Mingxin Jiang, Johannes Maximilian Diel
+|MAINTAINER| Maintainer: Peiyao Mao, Mingxin Jiang, Johannes Maximilian Diel, Gerit Wagner
 
 |LICENSE| License: MIT
 

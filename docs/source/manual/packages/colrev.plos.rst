@@ -27,7 +27,7 @@ colrev.plos
 
 |VERSION| Version: 0.1.0
 
-|MAINTAINER| Maintainer: olgagirona
+|MAINTAINER| Maintainer: Olga Girona, Júlia Lopez Marti, Gerit Wagner
 
 |LICENSE| License: MIT
 

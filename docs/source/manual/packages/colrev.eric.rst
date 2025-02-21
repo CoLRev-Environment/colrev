@@ -27,7 +27,7 @@ colrev.eric
 
 |VERSION| Version: 0.1.0
 
-|MAINTAINER| Maintainer: Gerit Wagner, Rhea Nguyen, Malou Schmidt, Frederic Fischer, Janus Fiegen, Albert Borchardt
+|MAINTAINER| Maintainer: Rhea Nguyen, Malou Schmidt, Frederic Fischer, Janus Fiegen, Albert Borchardt, Gerit Wagner
 
 |LICENSE| License: MIT
 

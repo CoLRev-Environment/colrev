@@ -27,7 +27,7 @@ colrev.prospero
 
 |VERSION| Version: 0.1.0
 
-|MAINTAINER| Maintainer: Ammar Al-Balkhi, Phuc Tran, Olha Komashevska
+|MAINTAINER| Maintainer: Ammar Al-Balkhi, Phuc Tran, Olha Komashevska, Gerit Wagner
 
 |LICENSE| License: MIT
 
