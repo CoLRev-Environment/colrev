@@ -87,18 +87,19 @@ class PackageManager:
                 from importlib.metadata import packages_distributions
 
                 installed_packages = packages_distributions()
+                installed_packages = [x.replace("-", "_").replace('.', '_') for x in installed_packages]
                 print(installed_packages)
                 # TODO : .replace('.', '-') is temporary until packages are renamed
                 print(f"package_name: {package_name}")
-                fixed_package_name = package_name.replace("-", "_").replace(".", "-")
+                fixed_package_name = package_name.replace("-", "_").replace(".", "_")
                 print(f"fixed_package_name: {fixed_package_name}")
                 if fixed_package_name in installed_packages:
                     return True
-                if (
-                    "src" in installed_packages
-                    and fixed_package_name in installed_packages["src"]
-                ):
-                    return True
+                # if (
+                #     "src" in installed_packages
+                #     and fixed_package_name in installed_packages["src"]
+                # ):
+                #     return True
             else:
                 # Fallback for Python < 3.10 using the distribution method
                 importlib.metadata.distribution(package_name.replace("-", "_"))
