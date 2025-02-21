@@ -76,9 +76,7 @@ class SearchAPIFeed:
         """Get the source identifier"""
         return self._source_identifier
 
-    # TODO : check where to use validation (all colrev classes?
-    # just those that are used by external/new packages!?)
-    # Note: the problem was caused by a package directly setting
+    # The setter should avoid problems caused by a packages directly setting
     # the source_identifier to a non-supported type/value
     @source_identifier.setter
     def source_identifier(self, value: str) -> None:
