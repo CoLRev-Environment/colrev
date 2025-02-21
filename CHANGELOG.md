@@ -17,6 +17,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 ### Fixed
 -->
 
+## 0.14.0 - 2025-02-21
+
+- Replace poetry by uv (#611)
+- Write internal BibTeX parser to replace pybtex (#605)
+- Replace pkg_resources with importlib (#605)
+- Replace zope interfaces with abstract base classes (#610)
+- Add Prospero search source (#586)
+- Add PLOS search source (#594)
+- Extract colrev-sync to a separate (PyPI) package
+- Implement `colrev convert`
+
 ## 0.13.2 - 2025-01-15
 
 - Minor release to install with updated pre-commit
