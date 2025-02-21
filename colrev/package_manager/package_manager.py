@@ -8,6 +8,7 @@ import json
 import platform
 import shutil
 import subprocess
+import sys
 import typing
 from typing import Any
 
@@ -87,32 +88,31 @@ class PackageManager:
         # until internal colrev packages comply with naming conventions.
         if platform.system() in ["Darwin", "Windows", "Linux"]:
             return True  # Return True for macOS, Linux, and Windows
-        print(package_name)
 
-        # try:
-        #     if sys.version_info >= (3, 10):
-        #         # Use packages_distributions in Python 3.10+
-        #         from importlib.metadata import packages_distributions
+        try:
+            if sys.version_info >= (3, 10):
+                # Use packages_distributions in Python 3.10+
+                from importlib.metadata import packages_distributions
 
-        #         installed_packages = packages_distributions()
+                installed_packages = packages_distributions()
 
-        #         if package_name.replace("-", "_") in installed_packages:
-        #             return True
-        #         if (
-        #             "src" in installed_packages
-        #             and package_name.replace("-", "_") in installed_packages["src"]
-        #         ):
-        #             return True
+                if package_name.replace("-", "_") in installed_packages:
+                    return True
+                if (
+                    "src" in installed_packages
+                    and package_name.replace("-", "_") in installed_packages["src"]
+                ):
+                    return True
 
-        #         return False
-        #     else:
-        #         # Fallback for Python < 3.10 using the distribution method
-        #         importlib.metadata.distribution(package_name.replace("-", "_"))
-        #         return True
-        # except PackageNotFoundError:
-        #     return False
-        # except importlib.metadata.PackageNotFoundError:
-        #     return False
+                return False
+            else:
+                # Fallback for Python < 3.10 using the distribution method
+                importlib.metadata.distribution(package_name.replace("-", "_"))
+                return True
+        except importlib.metadata.PackageNotFoundError:
+            return False
+        except importlib.metadata.PackageNotFoundError:
+            return False
         return True
 
     def _get_packages_to_install(
