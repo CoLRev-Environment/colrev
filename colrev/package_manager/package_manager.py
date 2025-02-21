@@ -99,7 +99,7 @@ class PackageManager:
                 if fixed_package_name in installed_packages_uv:
                     return True
 
-            except subprocess.CalledProcessError:
+            except (subprocess.CalledProcessError, FileNotFoundError):
                 pass
 
             if sys.version_info >= (3, 10):
