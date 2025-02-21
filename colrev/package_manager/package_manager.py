@@ -87,7 +87,9 @@ class PackageManager:
                 from importlib.metadata import packages_distributions
 
                 installed_packages = packages_distributions()
-                installed_packages = [x.replace("-", "_").replace('.', '_') for x in installed_packages]
+                installed_packages = [
+                    x.replace("-", "_").replace(".", "_") for x in installed_packages
+                ]
                 print(installed_packages)
                 # TODO : .replace('.', '-') is temporary until packages are renamed
                 print(f"package_name: {package_name}")
