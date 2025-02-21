@@ -114,7 +114,7 @@ jobs:
       - name: Install dependencies with uv
         run: |
           uv sync --all-extras --dev
-          uv run colrev install ${{ env.COLREV_PACKAGES }}
+          colrev install ${{ env.COLREV_PACKAGES }}
 
       - name: Setup git
         run: |
