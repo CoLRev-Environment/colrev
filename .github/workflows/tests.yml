@@ -124,7 +124,9 @@ jobs:
           git config --global url.https://github.com/.insteadOf git://github.com/
 
       - name: Run tests
-        run: uv run pytest --slow -vv
+        run: |
+          uv run pytest --slow -vv
+          uv pip list
 
   test-pip-install:
     needs: test-minimal-deps

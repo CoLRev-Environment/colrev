@@ -88,7 +88,8 @@ class PackageManager:
 
                 installed_packages = packages_distributions()
 
-                if package_name.replace("-", "_") in installed_packages:
+                # TODO : .replace('.', '-') is temporary until packages are renamed
+                if package_name.replace("-", "_").replace('.', '-') in installed_packages:
                     return True
                 if (
                     "src" in installed_packages
