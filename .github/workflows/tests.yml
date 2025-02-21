@@ -81,7 +81,6 @@ jobs:
           uv venv
           source .venv/bin/activate
           uv pip install .[dev]
-          uv pip list
           colrev install ${{ env.COLREV_PACKAGES }}
           uv pip list
 
@@ -92,7 +91,10 @@ jobs:
           git config --global url.https://github.com/.insteadOf git://github.com/
 
       - name: Run tests (minimal-deps)
-        run: uv run pytest tests/0_core/ -vv
+        run: |
+          source .venv/bin/activate
+          uv pip list
+          uv run pytest tests/0_core/ -vv
 
   test-full-deps:
     needs: test-minimal-deps
