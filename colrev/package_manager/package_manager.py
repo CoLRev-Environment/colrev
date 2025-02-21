@@ -92,6 +92,7 @@ class PackageManager:
 
         try:
             if is_running_inside_uv():
+                print("Running inside uv")
                 try:
                     result = subprocess.run(
                         ["uv", "pip", "list"],
@@ -103,6 +104,7 @@ class PackageManager:
                         line.split()[0].replace(".", "-")
                         for line in result.stdout.splitlines()[2:]  # Skip header lines
                     }
+                    print(f"installed_packages_uv: {installed_packages_uv}")
 
                     if package_name.replace(".", "-") in installed_packages_uv:
                         return True
