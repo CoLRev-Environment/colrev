@@ -78,11 +78,12 @@ jobs:
 
       - name: Install dependencies with uv
         run: |
-          uv venv && uv pip install ".[dev]"
+          uv venv
           source .venv/bin/activate
-          pip list
+          uv pip install .[dev]
           uv pip list
           colrev install ${{ env.COLREV_PACKAGES }}
+          uv pip list
 
       - name: Setup git
         run: |
