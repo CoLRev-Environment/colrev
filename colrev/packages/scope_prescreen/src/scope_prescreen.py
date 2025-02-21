@@ -272,7 +272,7 @@ class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
                 return_value = value.split(",")  # type: ignore
             elif key == "ExcludeComplementaryMaterials":
                 return_value = value == "True"
-            elif key == "OutletInclusionScope" or key == "OutletExclusionScope":
+            elif key in ["OutletInclusionScope", "OutletExclusionScope"]:
                 return_value = {  # type: ignore
                     x.split(":")[0]: x.split(":")[1] for x in value.split(",")
                 }
