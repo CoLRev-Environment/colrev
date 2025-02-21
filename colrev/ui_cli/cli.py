@@ -3177,10 +3177,14 @@ def version(
     is_flag=True,
     default=False,
 )
+@click.option(
+    "--uv",
+    help="Install a project using uv",
+    is_flag=True,
+    default=False,
+)
 def install(
-    packages: typing.List[str],
-    upgrade: bool,
-    editable: bool,
+    packages: typing.List[str], upgrade: bool, editable: bool, uv: bool
 ) -> None:
     """Install packages
 
@@ -3189,7 +3193,7 @@ def install(
 
     if len(packages) == 1 and packages[0] == ".":
         review_manager = colrev.review_manager.ReviewManager()
-        PACKAGE_MANAGER.install_project(review_manager=review_manager)
+        PACKAGE_MANAGER.install_project(review_manager=review_manager, uv=uv)
 
     else:
 
@@ -3197,4 +3201,5 @@ def install(
             packages=packages,
             upgrade=upgrade,
             editable=editable,
+            uv=uv,
         )

@@ -36,7 +36,7 @@ jobs:
       - name: Run CoLRev update
         run: |
           source ${{ runner.temp }}/colrev/.venv/bin/activate
-          colrev install .
+          colrev install --uv .
           colrev search -f
           colrev load
           colrev prep

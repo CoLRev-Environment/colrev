@@ -5,7 +5,6 @@ from __future__ import annotations
 import importlib.metadata
 import importlib.util
 import json
-import shutil
 import subprocess
 import sys
 import typing
@@ -156,6 +155,7 @@ class PackageManager:
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
+        uv: bool = False,
     ) -> None:
         """Install all packages required for the CoLRev project"""
 
@@ -165,7 +165,7 @@ class PackageManager:
             review_manager.logger.info("All packages are already installed")
             return
 
-        self.install(packages=packages)
+        self.install(packages=packages, uv=uv)
 
     def install(
         self,
@@ -173,11 +173,15 @@ class PackageManager:
         packages: typing.List[str],
         upgrade: bool = True,
         editable: bool = False,
+        uv: bool = False,
     ) -> None:
         """Install packages using uv if available, otherwise fallback to pip"""
 
         # Check if `uv` is installed, fallback to `pip` if not
-        package_manager = ["uv", "pip"] if shutil.which("uv") else ["pip"]
+        if uv:
+            package_manager = ["uv", "pip"]
+        else:
+            package_manager = ["pip"]
 
         internal_packages_dict = (
             colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()

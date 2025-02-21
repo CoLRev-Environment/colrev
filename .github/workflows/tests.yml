@@ -81,7 +81,7 @@ jobs:
           uv venv
           source .venv/bin/activate
           uv pip install .[dev]
-          colrev install ${{ env.COLREV_PACKAGES }}
+          colrev install --uv ${{ env.COLREV_PACKAGES }}
 
       - name: Setup git
         run: |
@@ -120,7 +120,7 @@ jobs:
           uv venv
           source .venv/bin/activate
           uv pip install .[dev]
-          colrev install ${{ env.COLREV_PACKAGES }}
+          colrev install --uv ${{ env.COLREV_PACKAGES }}
 
       - name: Setup git
         run: |
