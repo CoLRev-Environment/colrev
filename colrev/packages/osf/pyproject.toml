@@ -6,7 +6,7 @@ license = "MIT"
 authors = [
     { name = "Peiyao Mao", email = "peiyao.mao@stud.uni-bamberg.de" },
     { name = "Mingxin Jiang", email = "mingxin.jiang@stud.uni-bamberg.de" },
-    { name = "Johannes Maximilian Diel", email = "jm_diel@stud.uni-bamberg.de" }
+    { name = "Johannes Maximilian Diel", email = "jm_diel@stud.uni-bamberg.de" },
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
 ]
 requires-python = ">=3.8, <4"

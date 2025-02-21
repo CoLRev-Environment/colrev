@@ -7,7 +7,7 @@ authors = [
     { name = "Alexa Steinheimer" },
     { name = "Robert Ahr" },
     { name = "Thomas Fleischmann" },
-    { name = "Anton Liam Frisch" }
+    { name = "Anton Liam Frisch" },
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
 ]
 requires-python = ">=3.8, <4"
