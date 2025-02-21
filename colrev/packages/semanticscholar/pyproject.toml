@@ -4,15 +4,17 @@ description = "CoLRev package for semanticscholar"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
     { name = "Louis Langenhan" },
     { name = "Peter Eckhardt" },
     { name = "Amadou-Choumoussidine Kouotou-Ngapout" },
-    { name = "Robert Theis" }
+    { name = "Robert Theis" },
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
 ]
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/semanticscholar"
-semanticscholar = "^0.6.0"
+dependencies = [
+    "semanticscholar=^0.6.0"
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

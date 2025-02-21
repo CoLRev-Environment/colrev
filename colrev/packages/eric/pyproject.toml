@@ -4,12 +4,12 @@ description = "CoLRev package for eric"
 version = "0.1.0"
 license = "MIT"
 authors = [
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
     { name = "Rhea Nguyen" },
     { name = "Malou Schmidt" },
     { name = "Frederic Fischer" },
     { name = "Janus Fiegen" },
-    { name = "Albert Borchardt" }
+    { name = "Albert Borchardt" },
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
 ]
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/eric"

@@ -4,15 +4,18 @@ description = "CoLRev package for GitHub"
 version = "0.1.1"
 license = "MIT"
 authors = [
-    "Kolja Rinne <kolja.rinne@stud.uni-bamberg.de>",
-    "Philipp Kasimir <philipp-william.kasimir@stud.uni-bamberg.de>",
-    "Chris Vierath <chris-norman.vierath@stud.uni-bamberg.de>",
-    "Karl Schnickmann <karl.schnickmann@stud.uni-bamberg.de>"
+    { name = "Kolja Rinne", email = "kolja.rinne@stud.uni-bamberg.de" },
+    { name = "Philipp Kasimir", email = "philipp-william.kasimir@stud.uni-bamberg.de" },
+    { name = "Chris Vierath", email = "chris-norman.vierath@stud.uni-bamberg.de" },
+    { name = "Karl Schnickmann", email = "karl.schnickmann@stud.uni-bamberg.de" },
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
 ]
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/github"
-PyGithub = "^2.3.0"
-click = "^8.1.6"
+dependencies = [
+    "PyGithub=^2.3.0",
+    "click=^8.1.6",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

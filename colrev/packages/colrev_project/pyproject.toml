@@ -8,7 +8,9 @@ authors = [
  ]
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_project"
-pandasql = "^0.7.3"
+dependencies = [
+    "pandasql=^0.7.3"
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

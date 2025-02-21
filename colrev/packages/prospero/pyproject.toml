@@ -4,13 +4,16 @@ description = "ColRev package for Prospero"
 version = "0.1.0"
 license = "MIT"
 authors = [
-"Ammar Al-Balkhi <ammar.al-balkhi@stud.uni-bamberg.de>",
-"Phuc Tran <tra-thien-phuc.tran@stud.uni-bamberg.de>",
-"Olha Komashevska <olha.komashevska@stud.uni-bamberg.de>"
+    { name = "Ammar Al-Balkhi", email = "ammar.al-balkhi@stud.uni-bamberg.de" },
+    { name = "Phuc Tran", email = "tra-thien-phuc.tran@stud.uni-bamberg.de" },
+    { name = "Olha Komashevska", email = "olha.komashevska@stud.uni-bamberg.de" },
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
 ]
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/"
-selenium = "^4.27.1"
+dependencies = [
+    "selenium=^4.27.1"
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

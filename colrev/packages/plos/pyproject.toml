@@ -3,7 +3,11 @@ name = "colrev.plos"
 description = ""
 version = "0.1.0"
 license = "MIT"
-authors = ["olgagirona <olga.girona-cutillas@stud.uni-bamberg.de>"]
+authors = [
+    { name = "Olga Girona", email = "olga.girona-cutillas@stud.uni-bamberg.de" },
+    { name = "Júlia Lopez Marti", email = "julia.lopez-marti@stud.uni-bamberg.de" },
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
+]
 requires-python = ">=3.8, <4"
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/"
 
