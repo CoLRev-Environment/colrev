@@ -95,7 +95,6 @@ class PackageManager:
                 from importlib.metadata import packages_distributions
 
                 installed_packages = packages_distributions()
-                print(f"installed_packages: {installed_packages}")
 
                 if package_name.replace("-", "_") in installed_packages:
                     return True
