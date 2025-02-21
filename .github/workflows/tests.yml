@@ -82,7 +82,6 @@ jobs:
           source .venv/bin/activate
           uv pip install .[dev]
           colrev install ${{ env.COLREV_PACKAGES }}
-          uv pip list
 
       - name: Setup git
         run: |
@@ -93,7 +92,6 @@ jobs:
       - name: Run tests (minimal-deps)
         run: |
           source .venv/bin/activate
-          uv pip list
           uv run pytest tests/0_core/ -vv
 
   test-full-deps:
@@ -119,9 +117,10 @@ jobs:
 
       - name: Install dependencies with uv
         run: |
-          uv venv && uv pip install ".[dev]"
-          uv run colrev install ${{ env.COLREV_PACKAGES }}
-          uv pip list
+          uv venv
+          source .venv/bin/activate
+          uv pip install .[dev]
+          colrev install ${{ env.COLREV_PACKAGES }}
 
       - name: Setup git
         run: |
@@ -131,7 +130,7 @@ jobs:
 
       - name: Run tests
         run: |
-          uv pip list
+          source .venv/bin/activate
           uv run pytest --slow -vv
 
   test-pip-install:
