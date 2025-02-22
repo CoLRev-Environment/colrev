@@ -21,7 +21,7 @@ repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/pack
 packages = ["src"]
 
 [tool.colrev]
-colrev_doc_description = "TODO"
+colrev_doc_description = "Prospero"
 colrev_doc_link = "docs/README.md"
 search_types = ["API"]
 
