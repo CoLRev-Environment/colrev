@@ -285,8 +285,10 @@
     {
         "package_endpoint_identifier": "colrev.plos",
         "status": "|EXPERIMENTAL|",
-        "short_description": "TODO (:doc:`instructions </manual/packages/colrev.plos>`)",
-        "search_types": [],
+        "short_description": "PLOS API (:doc:`instructions </manual/packages/colrev.plos>`)",
+        "search_types": [
+            "API"
+        ],
         "endpoint_type": "search_source"
     },
     {
