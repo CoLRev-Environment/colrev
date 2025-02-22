@@ -75,7 +75,7 @@ present short version, long version in the docs
 | Synthesis and reporting                       | ![yes]                            | ![yes]                           | ![yes]                          | ![yes]                          |
 | **Process qualities**                         |                                   |                                  |                                 |                                 |
 | Extensibility                                 | ![yes]                            | ![yes]                           | ![no]                           | ![no]                           |
-| Extensions                                    | 102                               | 0                                | 0                               | 0                               |
+| Extensions                                    | [106](https://colrev-environment.github.io/colrev/manual/packages.html) | 0                                | 0                               | 0                               |
 | Search updates                                | ![yes]                            | ![no]                            | ![maybe]                        | ![maybe]                        |
 | Search: APIs                                  | ![yes] ([18](https://colrev-environment.github.io/colrev/manual/metadata_retrieval/search.html#api-searches))    | ![yes] (7)                       | ![no]                           | ![no]                           |
 | Metadata preparation                          | ![yes]                            | ![yes]                           | ![yes]                          | ![maybe]                        |
