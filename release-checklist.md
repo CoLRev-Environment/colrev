@@ -13,7 +13,7 @@ For all releases:
 - Update `settings.py - _add_missing_attributes()` to prevent exceptions.
 - Update the version in `pyproject.toml`. Check whether other parts of the `pyproject.toml` need to be updated. Check whether dependencies can be removed.
 - Update version in `tests/0_core/review_manager_test.py`
-- Update number of api searches in `README.md`
+- Update number of extensions and api searches in `README.md`
 - Run `colrev env --update_package_list`.
 - Collect release notes and update the `CHANGELOG.md`.
 - Update **version** and **date**  and date in `CITATION.cff`.
