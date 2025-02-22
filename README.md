@@ -77,7 +77,7 @@ present short version, long version in the docs
 | Extensibility                                 | ![yes]                            | ![yes]                           | ![no]                           | ![no]                           |
 | Extensions                                    | 102                               | 0                                | 0                               | 0                               |
 | Search updates                                | ![yes]                            | ![no]                            | ![maybe]                        | ![maybe]                        |
-| Search: APIs                                  | ![yes] (18)                       | ![yes] (7)                       | ![no]                           | ![no]                           |
+| Search: APIs                                  | ![yes] ([18](![api_searches]))    | ![yes] (7)                       | ![no]                           | ![no]                           |
 | Metadata preparation                          | ![yes]                            | ![yes]                           | ![yes]                          | ![maybe]                        |
 | Retract checks                                | ![yes]                            | ![no]                            | ![no]                           | ![yes]                          |
 | PDF retrieval                                 | ![yes]                            | ![no]                            | ![no]                           | ![yes]                          |
@@ -200,3 +200,4 @@ Wagner, G. and Prester, J. (2024) CoLRev - An open-source environment for Collab
 [yes]: ./docs/figures/yes.svg
 [no]: ./docs/figures/no.svg
 [maybe]: ./docs/figures/maybe.svg
+[api_searches]: https://colrev-environment.github.io/colrev/manual/metadata_retrieval/search.html#api-searches
