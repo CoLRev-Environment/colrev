@@ -107,6 +107,14 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.plos",
+            "status": "|EXPERIMENTAL|",
+            "short_description": "PLOS API (:doc:`instructions </manual/packages/colrev.plos>`)",
+            "search_types": [
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.prospero",
             "status": "|EXPERIMENTAL|",
             "short_description": "Prospero (:doc:`instructions </manual/packages/colrev.prospero>`)",

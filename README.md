@@ -77,7 +77,7 @@ present short version, long version in the docs
 | Extensibility                                 | ![yes]                            | ![yes]                           | ![no]                           | ![no]                           |
 | Extensions                                    | [106](https://colrev-environment.github.io/colrev/manual/packages.html) | 0                                | 0                               | 0                               |
 | Search updates                                | ![yes]                            | ![no]                            | ![maybe]                        | ![maybe]                        |
-| Search: APIs                                  | ![yes] ([18](https://colrev-environment.github.io/colrev/manual/metadata_retrieval/search.html#api-searches))    | ![yes] (7)                       | ![no]                           | ![no]                           |
+| Search: APIs                                  | ![yes] ([19](https://colrev-environment.github.io/colrev/manual/metadata_retrieval/search.html#api-searches))    | ![yes] (7)                       | ![no]                           | ![no]                           |
 | Metadata preparation                          | ![yes]                            | ![yes]                           | ![yes]                          | ![maybe]                        |
 | Retract checks                                | ![yes]                            | ![no]                            | ![no]                           | ![yes]                          |
 | PDF retrieval                                 | ![yes]                            | ![no]                            | ![no]                           | ![yes]                          |
