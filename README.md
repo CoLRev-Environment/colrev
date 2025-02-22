@@ -77,7 +77,7 @@ present short version, long version in the docs
 | Extensibility                                 | ![yes]                            | ![yes]                           | ![no]                           | ![no]                           |
 | Extensions                                    | 102                               | 0                                | 0                               | 0                               |
 | Search updates                                | ![yes]                            | ![no]                            | ![maybe]                        | ![maybe]                        |
-| Search: APIs                                  | ![yes]                            | ![yes]                           | ![yes]                          | ![no]                           |
+| Search: APIs                                  | ![yes] (18)                       | ![yes] (7)                       | ![no]                           | ![no]                           |
 | Metadata preparation                          | ![yes]                            | ![yes]                           | ![yes]                          | ![maybe]                        |
 | Retract checks                                | ![yes]                            | ![no]                            | ![no]                           | ![yes]                          |
 | PDF retrieval                                 | ![yes]                            | ![no]                            | ![no]                           | ![yes]                          |
