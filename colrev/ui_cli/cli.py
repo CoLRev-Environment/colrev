@@ -3095,7 +3095,7 @@ def select_format() -> str:
         inquirer.List(
             "format",
             message="Select the format",
-            choices=["bib", "csv"],
+            choices=["bib", "csv", "xlsx", "ris"],
         )
     ]
 
@@ -3114,7 +3114,7 @@ def select_format() -> str:
     "-o",
     "--format",
     "output_format",
-    type=click.Choice(["bib", "csv", "xlsx"], case_sensitive=False),
+    type=click.Choice(["bib", "csv", "xlsx", "ris"], case_sensitive=False),
     default=None,
     help="Optional output format (bib, csv, xlsx)",
 )
