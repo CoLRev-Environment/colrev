@@ -25,6 +25,8 @@ ENTRYTYPE_MAP = {
     ENTRYTYPES.ARTICLE: "JOUR",
     ENTRYTYPES.BOOK: "BOOK",
     ENTRYTYPES.INPROCEEDINGS: "CONF",
+    ENTRYTYPES.PROCEEDINGS: "CONF",
+    ENTRYTYPES.INCOLLECTION: "CONF",
     ENTRYTYPES.MISC: "GEN",
     ENTRYTYPES.PHDTHESIS: "THES",
     ENTRYTYPES.TECHREPORT: "RPRT",
@@ -66,9 +68,9 @@ def _add_sn(record_dict: dict) -> str:
     """Add SN (ISSN/ISBN) to the RIS string"""
     sn_list = []
     if Fields.ISSN in record_dict:
-        sn_list.append(record_dict[Fields.ISSN])
+        sn_list.append(str(record_dict[Fields.ISSN]))
     if Fields.ISBN in record_dict:
-        sn_list.append(record_dict[Fields.ISBN])
+        sn_list.append(str(record_dict[Fields.ISBN]))
     if sn_list:
         return f"SN  - {';'.join(sn_list)}\n"
     return ""
