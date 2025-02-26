@@ -130,7 +130,7 @@ Packages
    packages/colrev_dedupe.rst
 
 
-   packages/colrev_colrev_cli_prescreen.rst
+   packages/colrev_cli_prescreen.rst
    packages/colrev_conditional_prescreen.rst
    packages/colrev_prescreen_table.rst
    packages/colrev_scope_prescreen.rst
@@ -142,7 +142,7 @@ Packages
    packages/colrev_website_screenshot.rst
 
 
-   packages/colrev_colrev_cli_pdf_get_man.rst
+   packages/colrev_cli_pdf_get_man.rst
 
 
    packages/colrev_grobid_tei.rst
@@ -151,10 +151,10 @@ Packages
    packages/colrev_remove_last_page.rst
 
 
-   packages/colrev_colrev_cli_pdf_prep_man.rst
+   packages/colrev_cli_pdf_prep_man.rst
 
 
-   packages/colrev_colrev_cli_screen.rst
+   packages/colrev_cli_screen.rst
    packages/colrev_screen_table.rst
 
 

@@ -22,7 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-colrev_colrev_cli_pdf_get_man
+colrev_cli_pdf_get_man
 =============================
 
 |VERSION| Version: 0.1.0
@@ -45,7 +45,7 @@ colrev_colrev_cli_pdf_get_man
      - .. code-block::
 
 
-         colrev pdf-get-man --add colrev_colrev_cli_pdf_get_man
+         colrev pdf-get-man --add colrev_cli_pdf_get_man
 
 
 Summary

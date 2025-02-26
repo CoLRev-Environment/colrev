@@ -584,9 +584,9 @@
         "endpoint_type": "dedupe"
     },
     {
-        "package_endpoint_identifier": "colrev_colrev_cli_prescreen",
+        "package_endpoint_identifier": "colrev_cli_prescreen",
         "status": "|MATURING|",
-        "short_description": "Prescreen (CLI) (:doc:`instructions </manual/packages/colrev_colrev_cli_prescreen>`)",
+        "short_description": "Prescreen (CLI) (:doc:`instructions </manual/packages/colrev_cli_prescreen>`)",
         "endpoint_type": "prescreen"
     },
     {
@@ -638,9 +638,9 @@
         "endpoint_type": "pdf_get"
     },
     {
-        "package_endpoint_identifier": "colrev_colrev_cli_pdf_get_man",
+        "package_endpoint_identifier": "colrev_cli_pdf_get_man",
         "status": "|MATURING|",
-        "short_description": "Get PDFs Manually (CLI) (:doc:`instructions </manual/packages/colrev_colrev_cli_pdf_get_man>`)",
+        "short_description": "Get PDFs Manually (CLI) (:doc:`instructions </manual/packages/colrev_cli_pdf_get_man>`)",
         "endpoint_type": "pdf_get_man"
     },
     {
@@ -668,15 +668,15 @@
         "endpoint_type": "pdf_prep"
     },
     {
-        "package_endpoint_identifier": "colrev_colrev_cli_pdf_prep_man",
+        "package_endpoint_identifier": "colrev_cli_pdf_prep_man",
         "status": "|MATURING|",
-        "short_description": "Prep PDFs manually (CLI) (:doc:`instructions </manual/packages/colrev_colrev_cli_pdf_prep_man>`)",
+        "short_description": "Prep PDFs manually (CLI) (:doc:`instructions </manual/packages/colrev_cli_pdf_prep_man>`)",
         "endpoint_type": "pdf_prep_man"
     },
     {
-        "package_endpoint_identifier": "colrev_colrev_cli_screen",
+        "package_endpoint_identifier": "colrev_cli_screen",
         "status": "|MATURING|",
-        "short_description": "Screen (CLI) (:doc:`instructions </manual/packages/colrev_colrev_cli_screen>`)",
+        "short_description": "Screen (CLI) (:doc:`instructions </manual/packages/colrev_cli_screen>`)",
         "endpoint_type": "screen"
     },
     {

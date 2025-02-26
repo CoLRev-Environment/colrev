@@ -22,7 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-colrev_colrev_cli_screen
+colrev_cli_screen
 ========================
 
 |VERSION| Version: 0.1.0
@@ -45,7 +45,7 @@ colrev_colrev_cli_screen
      - .. code-block::
 
 
-         colrev screen --add colrev_colrev_cli_screen
+         colrev screen --add colrev_cli_screen
 
 
 Summary

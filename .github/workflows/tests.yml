@@ -10,17 +10,17 @@ env:
     colrev_files_dir
     colrev_export_man_prep
     colrev_dedupe
-    colrev_colrev_cli_prescreen
+    colrev_cli_prescreen
     colrev_local_index
     colrev_unpaywall
     colrev_download_from_website
-    colrev_colrev_cli_pdf_get_man
+    colrev_cli_pdf_get_man
     colrev_ocrmypdf
     colrev_remove_coverpage
     colrev_remove_last_page
     colrev_grobid_tei
-    colrev_colrev_cli_pdf_prep_man
-    colrev_colrev_cli_screen
+    colrev_cli_pdf_prep_man
+    colrev_cli_screen
     colrev_paper_md
     colrev_source_specific_prep
     colrev_exclude_non_latin_alphabets

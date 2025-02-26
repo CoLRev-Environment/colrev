@@ -22,7 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-colrev_colrev_cli_pdf_prep_man
+colrev_cli_pdf_prep_man
 ==============================
 
 |VERSION| Version: 0.1.0
@@ -45,7 +45,7 @@ colrev_colrev_cli_pdf_prep_man
      - .. code-block::
 
 
-         colrev pdf-prep-man --add colrev_colrev_cli_pdf_prep_man
+         colrev pdf-prep-man --add colrev_cli_pdf_prep_man
 
 
 Summary

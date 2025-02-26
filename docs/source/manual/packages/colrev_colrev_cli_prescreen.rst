@@ -22,7 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-colrev_colrev_cli_prescreen
+colrev_cli_prescreen
 ===========================
 
 |VERSION| Version: 0.1.0
@@ -45,7 +45,7 @@ colrev_colrev_cli_prescreen
      - .. code-block::
 
 
-         colrev prescreen --add colrev_colrev_cli_prescreen
+         colrev prescreen --add colrev_cli_prescreen
 
 
 Summary
