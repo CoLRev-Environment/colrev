@@ -283,29 +283,25 @@
         "endpoint_type": "search_source"
     },
     {
-<<<<<<< HEAD
-        "package_endpoint_identifier": "colrev.plos",
+        "package_endpoint_identifier": "colrev_plos",
         "status": "|EXPERIMENTAL|",
-        "short_description": "PLOS API (:doc:`instructions </manual/packages/colrev.plos>`)",
+        "short_description": "PLOS API (:doc:`instructions </manual/packages/colrev_plos>`)",
         "search_types": [
             "API"
         ],
         "endpoint_type": "search_source"
     },
     {
-        "package_endpoint_identifier": "colrev.prospero",
+        "package_endpoint_identifier": "colrev_prospero",
         "status": "|EXPERIMENTAL|",
-        "short_description": "Prospero (:doc:`instructions </manual/packages/colrev.prospero>`)",
+        "short_description": "Prospero (:doc:`instructions </manual/packages/colrev_prospero>`)",
         "search_types": [
             "API"
         ],
         "endpoint_type": "search_source"
     },
     {
-        "package_endpoint_identifier": "colrev.psycinfo",
-=======
         "package_endpoint_identifier": "colrev_psycinfo",
->>>>>>> 7f1749f2c (update package_names)
         "status": "|EXPERIMENTAL|",
         "short_description": "PsycINFO (:doc:`instructions </manual/packages/colrev_psycinfo>`)",
         "search_types": [
@@ -612,17 +608,13 @@
         "endpoint_type": "prescreen"
     },
     {
-<<<<<<< HEAD
         "package_endpoint_identifier": "colrev-scidb",
         "status": "|EXPERIMENTAL|",
         "short_description": "TODO (:doc:`instructions </manual/packages/colrev-scidb>`)",
         "endpoint_type": "pdf_get"
     },
     {
-        "package_endpoint_identifier": "colrev.download_from_website",
-=======
         "package_endpoint_identifier": "colrev_download_from_website",
->>>>>>> 7f1749f2c (update package_names)
         "status": "|MATURING|",
         "short_description": "Download PDF from website (:doc:`instructions </manual/packages/colrev_download_from_website>`)",
         "endpoint_type": "pdf_get"
@@ -736,43 +728,27 @@
         "endpoint_type": "data"
     },
     {
-<<<<<<< HEAD
-        "package_endpoint_identifier": "colrev.ref_check",
+        "package_endpoint_identifier": "colrev_ref_check",
         "status": "|EXPERIMENTAL|",
-        "short_description": "TODO (:doc:`instructions </manual/packages/colrev.ref_check>`)",
+        "short_description": "TODO (:doc:`instructions </manual/packages/colrev_ref_check>`)",
         "endpoint_type": "data"
     },
     {
-        "package_endpoint_identifier": "colrev.structured",
-=======
         "package_endpoint_identifier": "colrev_structured",
->>>>>>> 7f1749f2c (update package_names)
         "status": "|EXPERIMENTAL|",
         "short_description": "Structured Data Extraction (:doc:`instructions </manual/packages/colrev_structured>`)",
         "endpoint_type": "data"
     },
     {
-<<<<<<< HEAD
         "package_endpoint_identifier": "colrev-sync",
         "status": "|EXPERIMENTAL|",
         "short_description": "Sync (:doc:`instructions </manual/packages/colrev-sync>`)",
         "endpoint_type": "na"
     },
     {
-        "package_endpoint_identifier": "colrev.doi_org",
-        "status": "|MATURING|",
-        "short_description": "Doi.org (:doc:`instructions </manual/packages/colrev.doi_org>`)",
-=======
         "package_endpoint_identifier": "colrev_doi_org",
         "status": "|MATURING|",
         "short_description": "Doi.org (:doc:`instructions </manual/packages/colrev_doi_org>`)",
-        "endpoint_type": "na"
-    },
-    {
-        "package_endpoint_identifier": "colrev_sync",
-        "status": "|EXPERIMENTAL|",
-        "short_description": "Sync (:doc:`instructions </manual/packages/colrev_sync>`)",
->>>>>>> 7f1749f2c (update package_names)
         "endpoint_type": "na"
     },
     {

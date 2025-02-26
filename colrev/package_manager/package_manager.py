@@ -251,7 +251,7 @@ class PackageManager:
         if upgrade:
             args += ["--upgrade"]
         if editable:
-            args += ["--editable", editable]
+            args += ["--editable", str(editable)]
 
         # sys.argv = args
         # run_module("pip", run_name="__main__")
@@ -264,5 +264,5 @@ class PackageManager:
             for p in colrev_packages
         ] + packages
 
-        install_args += all_packages
-        subprocess.run(install_args, check=True)
+        args += all_packages
+        subprocess.run(args, check=True)
