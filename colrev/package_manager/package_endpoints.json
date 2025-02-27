@@ -267,7 +267,7 @@
             ]
         },
         {
-            "package_endpoint_identifier": "colrev.psycinfo",
+            "package_endpoint_identifier": "colrev_psycinfo",
             "status": "|EXPERIMENTAL|",
             "short_description": "PsycINFO (:doc:`instructions </manual/packages/colrev_psycinfo>`)",
             "search_types": [
