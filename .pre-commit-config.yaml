@@ -37,7 +37,7 @@ repos:
     hooks:
     -   id: autoflake
 -   repo: https://github.com/PyCQA/flake8
-    rev: 7.1.1
+    rev: 7.1.2
     hooks:
     -   id: flake8
         additional_dependencies: [flake8-typing-imports==1.12.0]
@@ -62,7 +62,7 @@ repos:
         additional_dependencies: [types-toml]
         exclude: "tests/data/package_init/"
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.9.6
+  rev: v0.9.9
   hooks:
     - id: ruff # runs faster than pylint
       args: [--fix, --exit-non-zero-on-fix]
