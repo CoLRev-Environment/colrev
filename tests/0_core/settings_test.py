@@ -75,9 +75,6 @@ def test_settings_load() -> None:
                         {"endpoint": "colrev_get_year_from_vol_iss_jour"},
                         {"endpoint": "colrev_crossref"},
                         {"endpoint": "colrev_pubmed"},
-                        {"endpoint": "colrev_europe_pmc"},
-                        {"endpoint": "colrev_dblp"},
-                        {"endpoint": "colrev_open_library"},
                     ],
                 }
             ],

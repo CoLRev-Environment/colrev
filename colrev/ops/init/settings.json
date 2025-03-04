@@ -66,15 +66,6 @@
                     },
                     {
                         "endpoint": "colrev_pubmed"
-                    },
-                    {
-                        "endpoint": "colrev_europe_pmc"
-                    },
-                    {
-                        "endpoint": "colrev_dblp"
-                    },
-                    {
-                        "endpoint": "colrev_open_library"
                     }
                 ]
             }
