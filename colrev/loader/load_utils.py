@@ -134,6 +134,8 @@ import tempfile
 import typing
 from pathlib import Path
 
+import pandas as pd
+
 import colrev.loader.bib
 import colrev.loader.enl
 import colrev.loader.json
@@ -141,7 +143,6 @@ import colrev.loader.md
 import colrev.loader.nbib
 import colrev.loader.ris
 import colrev.loader.table
-
 
 # pylint: disable=too-many-arguments
 # flake8: noqa: E501
@@ -232,6 +233,16 @@ def loads(  # type: ignore
         unique_id_field=unique_id_field,
         logger=logger,
     )
+
+
+def load_df(
+    filename: Path,
+) -> pd.DataFrame:
+    assert isinstance(
+        filename, Path
+    ), f"filename must be a Path object, not {type(filename)}"
+    record_dict = load(filename)
+    return pd.DataFrame.from_dict(record_dict, orient="index")
 
 
 def get_nr_records(  # type: ignore
