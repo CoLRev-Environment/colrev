@@ -2,6 +2,7 @@
 """SearchSource: ERIC"""
 from __future__ import annotations
 
+import logging
 import typing
 import urllib.parse
 from pathlib import Path
@@ -180,7 +181,8 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented"""
         return record
 
-    def _load_nbib(self) -> dict:
+    @classmethod
+    def _load_nbib(cls, *, filename: Path, logger: logging.Logger) -> dict:
         def entrytype_setter(record_dict: dict) -> None:
             if "Journal Articles" in record_dict["PT"]:
                 record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
@@ -201,11 +203,11 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
                     "AB": Fields.ABSTRACT,
                     "AID": Fields.DOI,
                     "ISSN": Fields.ISSN,
-                    "OID": f"{self.endpoint}.eric_id",
+                    "OID": f"{cls.endpoint}.eric_id",
                     "OT": Fields.KEYWORDS,
                     "LA": Fields.LANGUAGE,
                     "PT": "type",
-                    "LID": f"{self.endpoint}.eric_url",
+                    "LID": f"{cls.endpoint}.eric_url",
                 }
             }
 
@@ -236,25 +238,26 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
                 record_dict[key] = str(value)
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             unique_id_field="OID",
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
         )
 
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".nbib":
-            return self._load_nbib()
+        if filename.suffix == ".nbib":
+            return cls._load_nbib(filename=filename, logger=logger)
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
+                filename=filename,
+                logger=logger,
             )
             return records
 

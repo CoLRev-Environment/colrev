@@ -2,6 +2,7 @@
 """SearchSource: AIS electronic Library"""
 from __future__ import annotations
 
+import logging
 import re
 import urllib.parse
 from pathlib import Path
@@ -338,37 +339,40 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented"""
         return record
 
-    def _load_enl(self) -> dict:
+    @classmethod
+    def _load_enl(cls, *, filename: Path, logger: logging.Logger) -> dict:
 
         return colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             id_labeler=ais_load_utils.enl_id_labeler,
             entrytype_setter=ais_load_utils.enl_entrytype_setter,
             field_mapper=ais_load_utils.enl_field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
         )
 
-    def _load_bib(self) -> dict:
+    @classmethod
+    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
-            logger=self.review_manager.logger,
+            filename=filename,
+            logger=logger,
             field_mapper=ais_load_utils.bib_field_mapper,
             unique_id_field="ID",
         )
 
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
         # pylint: disable=colrev-missed-constant-usage
-        if self.search_source.filename.suffix in [".txt", ".enl"]:
-            return self._load_enl()
+        if filename.suffix in [".txt", ".enl"]:
+            return cls._load_enl(filename=filename, logger=logger)
 
         # for API-based searches
-        if self.search_source.filename.suffix == ".bib":
-            return self._load_bib()
+        if filename.suffix == ".bib":
+            return cls._load_bib(filename=filename, logger=logger)
 
         raise NotImplementedError
 

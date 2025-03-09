@@ -2,8 +2,8 @@
 """SearchSource: Unknown source (default for all other sources)"""
 from __future__ import annotations
 
+import logging
 import re
-import shutil
 from pathlib import Path
 
 import pandas as pd
@@ -18,7 +18,6 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
-from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldSet
@@ -107,49 +106,8 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented"""
         return record
 
-    def _rename_erroneous_extensions(self) -> None:
-        if self.search_source.filename.suffix in [".xls", ".xlsx"]:
-            return
-        data = self.search_source.filename.read_text(encoding="utf-8")
-        # # Correct the file extension if necessary
-        if re.findall(
-            r"^%0", data, re.MULTILINE
-        ) and self.search_source.filename.suffix not in [".enl"]:
-            new_filename = self.search_source.filename.with_suffix(".enl")
-            self.review_manager.logger.info(
-                f"{Colors.GREEN}Rename to {new_filename} "
-                f"(because the format is .enl){Colors.END}"
-            )
-            shutil.move(str(self.search_source.filename), str(new_filename))
-            self.review_manager.dataset.add_changes(
-                self.search_source.filename, remove=True
-            )
-            self.search_source.filename = new_filename
-            self.review_manager.dataset.add_changes(new_filename)
-            self.review_manager.dataset.create_commit(
-                msg=f"Rename {self.search_source.filename}"
-            )
-            return
-
-        if re.findall(
-            r"^TI ", data, re.MULTILINE
-        ) and self.search_source.filename.suffix not in [".ris"]:
-            new_filename = self.search_source.filename.with_suffix(".ris")
-            self.review_manager.logger.info(
-                f"{Colors.GREEN}Rename to {new_filename} "
-                f"(because the format is .ris){Colors.END}"
-            )
-            shutil.move(str(self.search_source.filename), str(new_filename))
-            self.review_manager.dataset.add_changes(
-                self.search_source.filename, remove=True
-            )
-            self.search_source.filename = new_filename
-            self.review_manager.dataset.add_changes(new_filename)
-            self.review_manager.dataset.create_commit(
-                msg=f"Rename {self.search_source.filename}"
-            )
-
-    def _load_ris(self, *, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def _load_ris(cls, *, filename: Path, logger: logging.Logger) -> dict:
         def entrytype_setter(record_dict: dict) -> None:
             # Based on https://github.com/aurimasv/translators/wiki/RIS-Tag-Map
             reference_types = {
@@ -295,26 +253,27 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             for key, value in record_dict.items():
                 record_dict[key] = str(value)
 
-        load_operation.ensure_append_only(self.search_source.filename)
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             unique_id_field="INCREMENTAL",
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
         )
         return records
 
-    def _load_bib(self, *, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
-            logger=self.review_manager.logger,
+            filename=filename,
+            logger=logger,
             unique_id_field="ID",
         )
         return records
 
     # pylint: disable=colrev-missed-constant-usage
-    def _table_drop_fields(self, *, record_dict: dict) -> None:
+    @classmethod
+    def _table_drop_fields(cls, *, record_dict: dict) -> None:
         for key in list(record_dict.keys()):
             if record_dict[key] in [f"no {key}", "", "nan"]:
                 del record_dict[key]
@@ -336,7 +295,8 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         if "citation_key" in record_dict:
             del record_dict["citation_key"]
 
-    def _load_table(self, *, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def _load_table(cls, *, filename: Path, logger: logging.Logger) -> dict:
         def entrytype_setter(record_dict: dict) -> None:
             if "type" in record_dict:
                 record_dict[Fields.ENTRYTYPE] = record_dict.pop("type")
@@ -399,7 +359,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             if "author" in record_dict and ";" in record_dict["author"]:
                 record_dict["author"] = record_dict["author"].replace("; ", " and ")
 
-            self._table_drop_fields(record_dict=record_dict)
+            cls._table_drop_fields(record_dict=record_dict)
 
             for key in list(record_dict.keys()):
                 value = record_dict[key]
@@ -413,28 +373,27 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if Fields.ID not in record_dict:
                     record_dict[Fields.ID] = str(counter + 1).zfill(6)
 
-        load_operation.ensure_append_only(self.search_source.filename)
-
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             id_labeler=id_labeler,
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
         )
 
         return records
 
-    def _load_md(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        load_operation.ensure_append_only(self.search_source.filename)
+    @classmethod
+    def _load_md(cls, *, filename: Path, logger: logging.Logger) -> dict:
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
-            logger=load_operation.review_manager.logger,
+            filename=filename,
+            logger=logger,
         )
         return records
 
-    def _load_enl(self, *, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def _load_enl(cls, *, filename: Path, logger: logging.Logger) -> dict:
         def entrytype_setter(record_dict: dict) -> None:
             if "0" not in record_dict:
                 keys_to_check = ["V", "N"]
@@ -506,39 +465,41 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
                 record_dict[key] = str(value)
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             unique_id_field="INCREMENTAL",
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
         )
 
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def ensure_append_only(cls, filename: Path) -> bool:
+        """Ensure that the SearchSource file is append-only"""
+        return filename.suffix in [".ris", ".csv", ".xlsx", ".xls", ".md"]
+
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if not self.search_source.filename.is_file():
+        if not filename.is_file():
             return {}
 
-        self._rename_erroneous_extensions()
-
         __load_methods = {
-            ".ris": self._load_ris,
-            ".bib": self._load_bib,
-            ".csv": self._load_table,
-            ".xls": self._load_table,
-            ".xlsx": self._load_table,
-            ".md": self._load_md,
-            ".enl": self._load_enl,
+            ".ris": cls._load_ris,
+            ".bib": cls._load_bib,
+            ".csv": cls._load_table,
+            ".xls": cls._load_table,
+            ".xlsx": cls._load_table,
+            ".md": cls._load_md,
+            ".enl": cls._load_enl,
         }
 
-        if self.search_source.filename.suffix not in __load_methods:
+        if filename.suffix not in __load_methods:
             raise NotImplementedError
 
-        records = __load_methods[self.search_source.filename.suffix](
-            load_operation=load_operation
-        )
+        records = __load_methods[filename.suffix](filename=filename, logger=logger)
         for record_id in records:
             records[record_id] = {
                 k: v

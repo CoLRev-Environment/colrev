@@ -333,6 +333,13 @@ def _generate_method_signatures(module_path: str, class_name: str) -> str:
         \"\"\"{docstring}\"\"\"\n"""
         )
 
+    # Temporary fix
+    if class_name == "SearchSourcePackageBaseClass":
+        method_signatures.append(
+            """    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+        \"\"\"Load records from the SearchSource.\"\"\""""
+        )
+
     return "\n".join(method_signatures)
 
 
@@ -342,7 +349,9 @@ def _get_package_imports(plugin: str) -> str:
     if plugin == "review_type":
         return "import colrev.ops.data"
     if plugin == "search_source":
-        return "import colrev.process.operation"
+        return """from pathlib import Path
+import logging
+import colrev.process.operation"""
     if plugin == "prep":
         return "import colrev.ops.prep"
     if plugin == "prep_man":

@@ -240,7 +240,6 @@ class LocalIndexBuilder:
             ) as exc:
                 if self.verbose_mode:
                     print(exc)
-                    print(record_dict)
             finally:
                 self._drop_toc_item(
                     toc_to_index=toc_to_index,

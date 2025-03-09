@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import difflib
+import logging
 import typing
 import webbrowser
 from multiprocessing import Lock
@@ -263,10 +264,11 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         operation.add_source_and_search(search_source)
         return search_source
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
                 if "link" in record_dict:
@@ -276,15 +278,13 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                         record_dict[Fields.URL] = record_dict.pop("link")
                 for key in list(record_dict.keys()):
                     if key not in FieldSet.STANDARDIZED_FIELD_KEYS:
-                        self.review_manager.logger.debug(
-                            f"Field {key} not in standard field set"
-                        )
+                        logger.debug(f"Field {key} not in standard field set")
                         del record_dict[key]
 
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
+                filename=filename,
                 field_mapper=field_mapper,
-                logger=self.review_manager.logger,
+                logger=logger,
             )
             for record_id in records:
                 record_dict = {

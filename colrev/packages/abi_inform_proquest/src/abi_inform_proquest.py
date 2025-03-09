@@ -2,6 +2,7 @@
 """SearchSource: ABI/INFORM (ProQuest)"""
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 
@@ -80,7 +81,10 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
                 source=self.search_source,
             )
 
-    def _remove_duplicates(self, records: dict) -> None:
+    @classmethod
+    def _remove_duplicates(
+        cls, *, records: dict, filename: Path, logger: logging.Logger
+    ) -> None:
         to_delete = []
         for record in records.values():
             if re.search(r"-\d{1,2}$", record[Fields.ID]):
@@ -105,10 +109,10 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
                 to_delete.append(record[Fields.ID])
         if to_delete:
             for rid in to_delete:
-                self.review_manager.logger.info(f" remove duplicate {rid}")
+                logger.info(f" remove duplicate {rid}")
                 del records[rid]
 
-            write_file(records_dict=records, filename=self.search_source.filename)
+            write_file(records_dict=records, filename=filename)
 
     def prep_link_md(
         self,
@@ -120,7 +124,8 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented"""
         return record
 
-    def _load_ris(self) -> dict:
+    @classmethod
+    def _load_ris(cls, filename: Path, logger: logging.Logger) -> dict:
 
         def id_labeler(records: list) -> None:
             for record_dict in records:
@@ -153,7 +158,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
                     "SP": Fields.PAGES,
                     "PMID": Fields.PUBMED_ID,
                     "SN": Fields.ISSN,
-                    "AN": f"{self.endpoint}.accession_number",
+                    "AN": f"{cls.endpoint}.accession_number",
                     "LA": Fields.LANGUAGE,
                     "L2": Fields.FULLTEXT,
                     "UR": Fields.URL,
@@ -165,12 +170,12 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
                     "UR": Fields.URL,
                     "PB": Fields.SCHOOL,
                     "KW": Fields.KEYWORDS,
-                    "AN": f"{self.endpoint}.accession_number",
+                    "AN": f"{cls.endpoint}.accession_number",
                     "AB": Fields.ABSTRACT,
                     "LA": Fields.LANGUAGE,
                     "CY": Fields.ADDRESS,
                     "L2": Fields.FULLTEXT,
-                    "A3": f"{self.endpoint}.supervisor",
+                    "A3": f"{cls.endpoint}.supervisor",
                 },
             }
 
@@ -230,29 +235,30 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
                 record_dict[key] = str(value)
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             id_labeler=id_labeler,
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
         )
 
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
+                filename=filename,
+                logger=logger,
                 unique_id_field="ID",
             )
-            self._remove_duplicates(records)
+            cls._remove_duplicates(records=records, filename=filename, logger=logger)
             return records
 
-        if self.search_source.filename.suffix == ".ris":
-            return self._load_ris()
+        if filename.suffix == ".ris":
+            return cls._load_ris(filename, logger)
 
         raise NotImplementedError
 

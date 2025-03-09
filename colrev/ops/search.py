@@ -384,7 +384,7 @@ class Search(colrev.process.operation.Operation):
                     source = [
                         x
                         for x in results_list
-                        if x["source_candidate"].endpoint == "colrev_unknown_source"
+                        if "unknown_source" in x["source_candidate"].endpoint
                     ][0]
                 else:
                     selection = str(best_candidate_pos)

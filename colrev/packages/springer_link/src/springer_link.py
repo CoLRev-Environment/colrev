@@ -2,6 +2,7 @@
 """SearchSource: Springer Link"""
 from __future__ import annotations
 
+import logging
 import re
 import typing
 import urllib.parse
@@ -384,7 +385,8 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented"""
         return record
 
-    def _load_csv(self) -> dict:
+    @classmethod
+    def _load_csv(cls, *, filename: Path, logger: logging.Logger) -> dict:
         def entrytype_setter(record_dict: dict) -> None:
             if record_dict["Content Type"] == "Article":
                 record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
@@ -429,11 +431,11 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
                     del record_dict[key]
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             unique_id_field="Item DOI",
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
             format_names=True,
         )
         return records
@@ -513,24 +515,26 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.SETTINGS["api_key"], input_key
         )
 
-    def _load_bib(self) -> dict:
+    @classmethod
+    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """load bib file"""
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
-            logger=self.review_manager.logger,
+            filename=filename,
+            logger=logger,
             unique_id_field="ID",
             format_names=True,
         )
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".csv":
-            return self._load_csv()
+        if filename.suffix == ".csv":
+            return cls._load_csv(filename=filename, logger=logger)
 
-        if self.search_source.filename.suffix == ".bib":
-            return self._load_bib()
+        if filename.suffix == ".bib":
+            return cls._load_bib(filename=filename, logger=logger)
 
         raise NotImplementedError
 

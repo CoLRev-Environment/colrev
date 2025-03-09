@@ -2,6 +2,7 @@
 """Searchsource:OSF"""
 from __future__ import annotations
 
+import logging
 import typing
 from pathlib import Path
 
@@ -190,13 +191,14 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         return record
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records."""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=load_operation.review_manager.logger,
+                filename=filename,
+                logger=logger,
                 unique_id_field="ID",
             )
             return records

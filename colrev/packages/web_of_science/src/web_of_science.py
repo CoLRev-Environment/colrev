@@ -2,6 +2,7 @@
 """SearchSource: Web of Science"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from pydantic import Field
@@ -106,7 +107,8 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented"""
         return record
 
-    def _load_bib(self) -> dict:
+    @classmethod
+    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
         def field_mapper(record_dict: dict) -> None:
             for key in list(record_dict.keys()):
                 if key not in ["ID", "ENTRYTYPE"]:
@@ -120,39 +122,40 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
                 else:
                     record_dict[Fields.ISSN] += ";" + record_dict.pop("eissn", "")
             if "note" in record_dict:
-                record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+                record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
             if "earlyaccessdate" in record_dict:
-                record_dict[f"{self.endpoint}.earlyaccessdate"] = record_dict.pop(
+                record_dict[f"{cls.endpoint}.earlyaccessdate"] = record_dict.pop(
                     "earlyaccessdate"
                 )
             if "article-number" in record_dict:
-                record_dict[f"{self.endpoint}.article-number"] = record_dict.pop(
+                record_dict[f"{cls.endpoint}.article-number"] = record_dict.pop(
                     "article-number"
                 )
             if "orcid-numbers" in record_dict:
-                record_dict[f"{self.endpoint}.orcid-numbers"] = record_dict.pop(
+                record_dict[f"{cls.endpoint}.orcid-numbers"] = record_dict.pop(
                     "orcid-numbers"
                 )
             if "unique-id" in record_dict:
-                record_dict[f"{self.endpoint}.unique-id"] = record_dict.pop("unique-id")
+                record_dict[f"{cls.endpoint}.unique-id"] = record_dict.pop("unique-id")
             if "book-author" in record_dict:
-                record_dict[f"{self.endpoint}.book-author"] = record_dict.pop(
+                record_dict[f"{cls.endpoint}.book-author"] = record_dict.pop(
                     "book-author"
                 )
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
-            logger=self.review_manager.logger,
+            filename=filename,
+            logger=logger,
             unique_id_field="ID",
             field_mapper=field_mapper,
         )
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
-            return self._load_bib()
+        if filename.suffix == ".bib":
+            return cls._load_bib(filename=filename, logger=logger)
 
         raise NotImplementedError
 

@@ -2,6 +2,7 @@
 """SearchSource: Taylor and Francis"""
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 
@@ -85,31 +86,33 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented"""
         return record
 
-    def _load_bib(self) -> dict:
+    @classmethod
+    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
         def field_mapper(record_dict: dict) -> None:
             if "note" in record_dict:
-                record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+                record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
             if "eprint" in record_dict:
-                record_dict[f"{self.endpoint}.eprint"] = record_dict.pop("eprint")
+                record_dict[f"{cls.endpoint}.eprint"] = record_dict.pop("eprint")
 
             for key in list(record_dict.keys()):
                 if key not in ["ID", "ENTRYTYPE"]:
                     record_dict[key.lower()] = record_dict.pop(key)
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
-            logger=self.review_manager.logger,
+            filename=filename,
+            logger=logger,
             unique_id_field="ID",
             field_mapper=field_mapper,
             format_names=True,
         )
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
-            return self._load_bib()
+        if filename.suffix == ".bib":
+            return cls._load_bib(filename=filename, logger=logger)
 
         raise NotImplementedError
 

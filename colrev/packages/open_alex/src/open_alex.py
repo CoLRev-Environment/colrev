@@ -2,6 +2,7 @@
 """SearchSource: OpenAlex"""
 from __future__ import annotations
 
+import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
@@ -167,13 +168,14 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         raise NotImplementedError
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
+                filename=filename,
+                logger=logger,
             )
             return records
 
