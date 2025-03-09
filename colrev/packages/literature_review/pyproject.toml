@@ -32,7 +32,7 @@ dependencies = [
     "colrev_grobid_tei>=0.1.0",
     "colrev_cli_pdf_prep_man>=0.1.0",
     "colrev_cli_screen>=0.1.0",
-    "colrev_rev_check>=0.1.0"
+    "colrev_ref_check>=0.1.0"
 ]
 
 [project.urls]

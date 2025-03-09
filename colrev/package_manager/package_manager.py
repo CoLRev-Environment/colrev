@@ -195,7 +195,7 @@ class PackageManager:
     #                 "colrev_grobid_tei",
     #                 "colrev_cli_pdf_prep_man",
     #                 "colrev_cli_screen",
-    #                 "colrev_rev_check",
+    #                 "colrev_ref_check",
     #             ]
     #         )
     #     return packages
