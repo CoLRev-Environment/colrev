@@ -2,6 +2,7 @@
 """SearchSource: Transport Research International Documentation"""
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 
@@ -91,7 +92,8 @@ class TransportResearchInternationalDocumentation(
         """Not implemented"""
         return record
 
-    def _load_ris(self) -> dict:
+    @classmethod
+    def _load_ris(cls, *, filename: Path, logger: logging.Logger) -> dict:
         def entrytype_setter(record_dict: dict) -> None:
             if record_dict["TY"] in ["JOUR", "ABST"]:
                 record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
@@ -118,7 +120,7 @@ class TransportResearchInternationalDocumentation(
                     "KW": Fields.KEYWORDS,
                     "UR": Fields.URL,
                     "SP": Fields.PAGES,
-                    "AN": f"{self.endpoint}.accession_number",
+                    "AN": f"{cls.endpoint}.accession_number",
                 },
                 ENTRYTYPES.TECHREPORT: {
                     "PY": Fields.YEAR,
@@ -129,7 +131,7 @@ class TransportResearchInternationalDocumentation(
                     "KW": Fields.KEYWORDS,
                     "SP": Fields.PAGES,
                     "AB": Fields.ABSTRACT,
-                    "AN": f"{self.endpoint}.accession_number",
+                    "AN": f"{cls.endpoint}.accession_number",
                 },
             }
 
@@ -152,7 +154,7 @@ class TransportResearchInternationalDocumentation(
             trid_url = [url for url in urls if url.startswith("https://trid.trb.org")]
             if trid_url:
                 urls.remove(trid_url[0])
-                record_dict[f"{self.endpoint}.trid_url"] = trid_url[0]
+                record_dict[f"{cls.endpoint}.trid_url"] = trid_url[0]
             record_dict[Fields.URL] = urls[0]
 
             if Fields.AUTHOR in record_dict and isinstance(
@@ -184,20 +186,21 @@ class TransportResearchInternationalDocumentation(
                 record_dict[key] = str(value)
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             unique_id_field="AN",
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
         )
 
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".ris":
-            return self._load_ris()
+        if filename.suffix == ".ris":
+            return cls._load_ris(filename=filename, logger=logger)
 
         raise NotImplementedError
 

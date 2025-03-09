@@ -15,6 +15,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 if typing.TYPE_CHECKING:  # pragma: no cover
+    import logging
     import colrev.record.record
     import colrev.settings
 
@@ -83,8 +84,15 @@ class SearchSourcePackageBaseClass(ABC):
     ) -> colrev.record.record.Record:
         """Retrieve masterdata from the SearchSource."""
 
+    # pylint: disable=unused-argument
+    @classmethod
+    def ensure_append_only(cls, filename: Path) -> bool:
+        """Ensure that the SearchSource is append-only."""
+        return False
+
+    @classmethod
     @abstractmethod
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load records from the SearchSource."""
 
     @abstractmethod

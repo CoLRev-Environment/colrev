@@ -2,6 +2,7 @@
 """SearchSource: JSTOR"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from pydantic import Field
@@ -91,7 +92,8 @@ class JSTORSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented"""
         return record
 
-    def _load_ris(self) -> dict:
+    @classmethod
+    def _load_ris(cls, *, filename: Path, logger: logging.Logger) -> dict:
 
         def id_labeler(records: list) -> None:
             for record_dict in records:
@@ -179,20 +181,21 @@ class JSTORSearchSource(base_classes.SearchSourcePackageBaseClass):
                 record_dict[key] = str(value)
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             id_labeler=id_labeler,
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
         )
 
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".ris":
-            return self._load_ris()
+        if filename.suffix == ".ris":
+            return cls._load_ris(filename=filename, logger=logger)
 
         raise NotImplementedError
 

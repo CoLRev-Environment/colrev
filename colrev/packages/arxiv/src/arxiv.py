@@ -2,6 +2,7 @@
 """SearchSource: arXiv"""
 from __future__ import annotations
 
+import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
@@ -366,14 +367,15 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
                 rerun=rerun,
             )
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
         # for API-based searches
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
+                filename=filename,
+                logger=logger,
             )
             for record in records.values():
                 record[Fields.INSTITUTION] = "ArXiv"

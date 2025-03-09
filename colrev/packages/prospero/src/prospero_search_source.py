@@ -5,6 +5,7 @@ A CoLRev SearchSource plugin to scrape and import records from PROSPERO.
 """
 from __future__ import annotations
 
+import logging
 import typing
 from pathlib import Path
 
@@ -194,23 +195,25 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Empty method as requested."""
         return record
 
-    def _load_bib(self) -> dict:
+    @classmethod
+    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Helper to load from .bib file using CoLRev's load_utils."""
         return colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
-            logger=self.review_manager.logger,
+            filename=filename,
+            logger=logger,
             unique_id_field="ID",
         )
 
     # pylint: disable=unused-argument
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """
         The interface requires a load method.
         We only handle .bib files here,
         so we raise NotImplementedError for other formats.
         """
-        if self.search_source.filename.suffix == ".bib":
-            return self._load_bib()
+        if filename.suffix == ".bib":
+            return cls._load_bib(filename=filename, logger=logger)
         raise NotImplementedError(
             "Only .bib loading is implemented for ProsperoSearchSource."
         )
