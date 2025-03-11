@@ -9,6 +9,8 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import Type
 
+from search_query.query import Query
+
 import colrev.package_manager.package_settings
 from colrev.constants import EndpointType
 from colrev.constants import SearchSourceHeuristicStatus
@@ -73,6 +75,24 @@ class SearchSourcePackageBaseClass(ABC):
     @abstractmethod
     def search(self, rerun: bool) -> None:
         """Run a search of the SearchSource."""
+
+    @classmethod
+    def search_api(cls, *, url: str, logger: logging.Logger) -> dict:
+        """Search the API."""
+        # Not strictly required by all SearchSources
+        raise NotImplementedError()
+
+    @classmethod
+    def parse_query(cls, *, query: str, logger: logging.Logger) -> Query:
+        """Get the SearchQuery object based on the query string."""
+        # Not strictly required by all SearchSources (maybe later)
+        raise NotImplementedError()
+
+    @classmethod
+    def get_query_string(cls, *, query: Query, logger: logging.Logger) -> dict:
+        """Get the SearchQuery string based on an object (serialize)."""
+        # Not strictly required by all SearchSources (maybe later)
+        raise NotImplementedError()
 
     @abstractmethod
     def prep_link_md(
