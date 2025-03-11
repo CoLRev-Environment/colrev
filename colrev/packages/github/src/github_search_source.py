@@ -2,6 +2,7 @@
 """SearchSource: GitHub"""
 from __future__ import annotations
 
+import logging
 import re
 import typing
 from multiprocessing import Lock
@@ -217,12 +218,13 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
             self._run_api_search(github_feed)
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
+                filename=filename,
+                logger=logger,
                 unique_id_field="url",
             )
 

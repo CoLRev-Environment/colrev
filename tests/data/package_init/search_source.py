@@ -2,6 +2,11 @@
 """CustomName"""
 import typing
 
+<<<<<<< HEAD
+=======
+from pathlib import Path
+import logging
+>>>>>>> main
 import colrev.process.operation
 import colrev.package_manager.package_settings
 from colrev.package_manager.package_base_classes import SearchSourcePackageBaseClass
@@ -11,9 +16,12 @@ class CustomName(SearchSourcePackageBaseClass):
     def __init__(self, *, source_operation: 'colrev.process.operation.Operation', settings: 'typing.Optional[dict]' = None) -> 'None':
         """Initialize self.  See help(type(self)) for accurate signature."""
 
+<<<<<<< HEAD
     def load(self, load_operation: 'colrev.ops.load.Load') -> 'dict':
         """Load records from the SearchSource."""
 
+=======
+>>>>>>> main
     def prep_link_md(self, prep_operation: 'colrev.ops.prep.Prep', record: 'colrev.record.record.Record', save_feed: 'bool' = True, timeout: 'int' = 10) -> 'colrev.record.record.Record':
         """Retrieve masterdata from the SearchSource."""
 
@@ -22,3 +30,9 @@ class CustomName(SearchSourcePackageBaseClass):
 
     def search(self, rerun: 'bool') -> 'None':
         """Run a search of the SearchSource."""
+<<<<<<< HEAD
+=======
+
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+        """Load records from the SearchSource."""
+>>>>>>> main

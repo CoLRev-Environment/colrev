@@ -2,6 +2,7 @@
 """SearchSource: directory containing PDF files (based on GROBID)"""
 from __future__ import annotations
 
+import logging
 import re
 import typing
 from pathlib import Path
@@ -764,11 +765,13 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         operation.add_source_and_search(search_source)
         return search_source
 
-    def _update_based_on_doi(self, *, record_dict: dict) -> None:
+    @classmethod
+    def _update_based_on_doi(cls, *, record_dict: dict) -> None:
         if Fields.DOI not in record_dict:
             return
         try:
-            retrieved_record = self.crossref_api.query_doi(
+            api = crossref_api.CrossrefAPI(params={})
+            retrieved_record = api.query_doi(
                 doi=record_dict[Fields.DOI],
             )
 
@@ -791,33 +794,28 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         except (colrev_exceptions.RecordNotFoundInPrepSourceException,):
             pass
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
                 if "note" in record_dict:
-                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+                    record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
 
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
+                filename=filename,
                 unique_id_field="ID",
                 field_mapper=field_mapper,
-                logger=self.review_manager.logger,
+                logger=logger,
             )
 
             for record_dict in records.values():
                 if Fields.GROBID_VERSION in record_dict:
                     del record_dict[Fields.GROBID_VERSION]
 
-                # self._update_based_on_doi(record_dict=record_dict)
-
-                # Rerun restrictions and __update_fields_based_on_pdf_dirs
-                # because the restrictions/subdir-pattern may change
-                record_dict = self._update_fields_based_on_pdf_dirs(
-                    record_dict=record_dict, params=self.search_source.search_parameters
-                )
+                cls._update_based_on_doi(record_dict=record_dict)
 
             return records
 

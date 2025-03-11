@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: plos"""
 import datetime
+import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
@@ -315,6 +316,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         else:
             raise NotImplementedError
 
+<<<<<<< HEAD
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load records from the SearchSource (and convert to .bib)"""
 
@@ -322,6 +324,16 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,
                 logger=self.review_manager.logger,
+=======
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+        """Load records from the SearchSource (and convert to .bib)"""
+
+        if filename.suffix == ".bib":
+            records = colrev.loader.load_utils.load(
+                filename=filename,
+                logger=logger,
+>>>>>>> main
                 unique_id_field="ID",
             )
             return records

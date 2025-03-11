@@ -2,6 +2,7 @@
 """SearchSource: Scopus"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from pydantic import Field
@@ -94,7 +95,8 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented"""
         return record
 
-    def _load_bib(self) -> dict:
+    @classmethod
+    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
 
         def entrytype_setter(record_dict: dict) -> None:
             if "document_type" in record_dict:
@@ -124,17 +126,17 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
                     record_dict[Fields.TITLE] = record_dict.pop(Fields.JOURNAL, None)
 
             if "art_number" in record_dict:
-                record_dict[f"{self.endpoint}.art_number"] = record_dict.pop(
+                record_dict[f"{cls.endpoint}.art_number"] = record_dict.pop(
                     "art_number"
                 )
             if "note" in record_dict:
-                record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+                record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
             if "document_type" in record_dict:
-                record_dict[f"{self.endpoint}.document_type"] = record_dict.pop(
+                record_dict[f"{cls.endpoint}.document_type"] = record_dict.pop(
                     "document_type"
                 )
             if "source" in record_dict:
-                record_dict[f"{self.endpoint}.source"] = record_dict.pop("source")
+                record_dict[f"{cls.endpoint}.source"] = record_dict.pop("source")
 
             if "Start_Page" in record_dict and "End_Page" in record_dict:
                 if (
@@ -150,24 +152,23 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
                     del record_dict["Start_Page"]
                     del record_dict["End_Page"]
 
-        colrev.loader.bib.run_fix_bib_file(
-            self.search_source.filename, logger=self.review_manager.logger
-        )
+        colrev.loader.bib.run_fix_bib_file(filename, logger=logger)
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             unique_id_field="ID",
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
         )
 
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
-            return self._load_bib()
+        if filename.suffix == ".bib":
+            return cls._load_bib(filename=filename, logger=logger)
 
         raise NotImplementedError
 

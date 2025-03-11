@@ -2,6 +2,7 @@
 """SearchSource: Pubmed"""
 from __future__ import annotations
 
+import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
@@ -430,7 +431,8 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         else:
             raise NotImplementedError
 
-    def _load_csv(self) -> dict:
+    @classmethod
+    def _load_csv(cls, *, filename: Path, logger: logging.Logger) -> dict:
         def entrytype_setter(record_dict: dict) -> None:
             record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
 
@@ -440,10 +442,10 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             record_dict[Fields.YEAR] = record_dict.pop("Publication Year", "")
             record_dict[Fields.URL] = record_dict.pop("URL", "")
             record_dict[Fields.DOI] = record_dict.pop("DOI", "")
-            record_dict[f"{self.endpoint}.nihms_id"] = record_dict.pop("NIHMS ID", "")
+            record_dict[f"{cls.endpoint}.nihms_id"] = record_dict.pop("NIHMS ID", "")
             record_dict[Fields.PUBMED_ID] = record_dict.pop("PMID", "")
             record_dict[Fields.PMCID] = record_dict.pop("PMCID", "")
-            record_dict[f"{self.endpoint}.create_date"] = record_dict.pop(
+            record_dict[f"{cls.endpoint}.create_date"] = record_dict.pop(
                 "Create Date", ""
             )
 
@@ -481,24 +483,25 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                     del record_dict[key]
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             unique_id_field="PMID",
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
         )
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".csv":
-            return self._load_csv()
+        if filename.suffix == ".csv":
+            return cls._load_csv(filename=filename, logger=logger)
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
+                filename=filename,
+                logger=logger,
             )
             return records
 

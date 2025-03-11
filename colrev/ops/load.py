@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import itertools
+import re
+import shutil
 import string
 from pathlib import Path
 
@@ -68,7 +70,7 @@ class Load(colrev.process.operation.Operation):
         ]
         return imported_origins
 
-    def ensure_append_only(self, file: Path) -> None:
+    def ensure_append_only(self, filename: Path) -> None:
         """Ensure that the file was only appended to.
 
         This method must be called for all packages that work
@@ -77,26 +79,26 @@ class Load(colrev.process.operation.Operation):
         git_repo = self.review_manager.dataset.get_repo()
 
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
-        search_file_path = str(Path("data/search") / file.name).replace("\\", "/")
+        search_file_path = str(Path("data/search") / filename.name).replace("\\", "/")
         revlist = (
             (
                 commit.hexsha,
                 (commit.tree / search_file_path).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(paths=str(file))
+            for commit in git_repo.iter_commits(paths=str(filename))
         )
         prior_file_content = ""
         for commit, filecontents in list(revlist):
             if not filecontents.decode("utf-8").startswith(prior_file_content):
                 raise colrev_exceptions.AppendOnlyViolation(
-                    f"{file} was changed (commit: {commit})"
+                    f"{filename} was changed (commit: {commit})"
                 )
             prior_file_content = filecontents.decode("utf-8").replace("\r", "")
-        current_contents = file.read_text(encoding="utf-8").replace("\r", "")
+        current_contents = filename.read_text(encoding="utf-8").replace("\r", "")
 
         if not current_contents.startswith(prior_file_content):
             raise colrev_exceptions.AppendOnlyViolation(
-                f"{file} was changed (uncommitted file)"
+                f"{filename} was changed (uncommitted file)"
             )
 
     def _import_provenance(
@@ -218,6 +220,50 @@ class Load(colrev.process.operation.Operation):
                         f"Key {key} should not be in imported record"
                     )
 
+    def _rename_erroneous_extensions(
+        self, source: base_classes.SearchSourcePackageBaseClass
+    ) -> None:
+        if source.search_source.filename.suffix in [".xls", ".xlsx"]:
+            return
+        data = source.search_source.filename.read_text(encoding="utf-8")
+        # # Correct the file extension if necessary
+        if re.findall(
+            r"^%0", data, re.MULTILINE
+        ) and source.search_source.filename.suffix not in [".enl"]:
+            new_filename = source.search_source.filename.with_suffix(".enl")
+            self.review_manager.logger.info(
+                f"{Colors.GREEN}Rename to {new_filename} "
+                f"(because the format is .enl){Colors.END}"
+            )
+            shutil.move(str(source.search_source.filename), str(new_filename))
+            self.review_manager.dataset.add_changes(
+                source.search_source.filename, remove=True
+            )
+            source.search_source.filename = new_filename
+            self.review_manager.dataset.add_changes(new_filename)
+            self.review_manager.dataset.create_commit(
+                msg=f"Rename {source.search_source.filename}"
+            )
+            return
+
+        if re.findall(
+            r"^TI ", data, re.MULTILINE
+        ) and source.search_source.filename.suffix not in [".ris"]:
+            new_filename = source.search_source.filename.with_suffix(".ris")
+            self.review_manager.logger.info(
+                f"{Colors.GREEN}Rename to {new_filename} "
+                f"(because the format is .ris){Colors.END}"
+            )
+            shutil.move(str(source.search_source.filename), str(new_filename))
+            self.review_manager.dataset.add_changes(
+                source.search_source.filename, remove=True
+            )
+            source.search_source.filename = new_filename
+            self.review_manager.dataset.add_changes(new_filename)
+            self.review_manager.dataset.create_commit(
+                msg=f"Rename {source.search_source.filename}"
+            )
+
     def setup_source_for_load(
         self,
         source: base_classes.SearchSourcePackageBaseClass,
@@ -236,7 +282,16 @@ class Load(colrev.process.operation.Operation):
             select_new_records: A boolean flag indicating whether to filter out records
                                 that have already been imported. Defaults to True.
         """
-        source_records_list = list(source.load(self).values())  # type: ignore
+        if "unknown_source" in source.search_source.endpoint:
+            self._rename_erroneous_extensions(source)
+
+        if source.ensure_append_only(filename=source.search_source.filename):
+            self.ensure_append_only(filename=source.search_source.filename)
+
+        source_records = source.load(
+            filename=source.search_source.filename, logger=self.review_manager.logger
+        )
+        source_records_list = list(source_records.values())  # type: ignore
         self._validate_source_records(source_records_list, source=source)
 
         origin_prefix = source.search_source.get_origin_prefix()

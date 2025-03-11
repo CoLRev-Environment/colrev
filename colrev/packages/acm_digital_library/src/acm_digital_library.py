@@ -2,6 +2,7 @@
 """SearchSource: ACM Digital Library"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from pydantic import Field
@@ -104,10 +105,11 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented"""
         return record
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
                 record_dict.pop("url", None)
@@ -116,21 +118,21 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 record_dict.pop("month", None)
 
                 if "issue_date" in record_dict:
-                    record_dict[f"{self.endpoint}.issue_date"] = record_dict.pop(
+                    record_dict[f"{cls.endpoint}.issue_date"] = record_dict.pop(
                         "issue_date"
                     )
                 if "location" in record_dict:
                     record_dict[Fields.ADDRESS] = record_dict.pop("location", None)
                 if "articleno" in record_dict:
-                    record_dict[f"{self.endpoint}.articleno"] = record_dict.pop(
+                    record_dict[f"{cls.endpoint}.articleno"] = record_dict.pop(
                         "articleno"
                     )
 
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
+                filename=filename,
                 unique_id_field="ID",
                 field_mapper=field_mapper,
-                logger=self.review_manager.logger,
+                logger=logger,
             )
 
             return records

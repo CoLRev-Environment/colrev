@@ -2,6 +2,7 @@
 """SearchSource: GoogleScholar"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from pydantic import Field
@@ -102,58 +103,59 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented"""
         return record
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
 
             def bib_field_mapper(record_dict: dict) -> None:
                 if "related" in record_dict:
-                    record_dict[f"{self.endpoint}.related"] = record_dict.pop("related")
+                    record_dict[f"{cls.endpoint}.related"] = record_dict.pop("related")
                 if "note" in record_dict:
-                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+                    record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
                 if "type" in record_dict:
-                    record_dict[f"{self.endpoint}.type"] = record_dict.pop("type")
+                    record_dict[f"{cls.endpoint}.type"] = record_dict.pop("type")
 
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
+                filename=filename,
                 field_mapper=bib_field_mapper,
-                logger=self.review_manager.logger,
+                logger=logger,
             )
             return records
 
-        if self.search_source.filename.suffix == ".json":
+        if filename.suffix == ".json":
             # pylint: disable=too-many-branches
             def json_field_mapper(record_dict: dict) -> None:
                 if "related" in record_dict:
-                    record_dict[f"{self.endpoint}.related"] = record_dict.pop("related")
+                    record_dict[f"{cls.endpoint}.related"] = record_dict.pop("related")
                 if "note" in record_dict:
-                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+                    record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
                 if "type" in record_dict:
-                    record_dict[f"{self.endpoint}.type"] = record_dict.pop("type")
+                    record_dict[f"{cls.endpoint}.type"] = record_dict.pop("type")
                 if "article_url" in record_dict:
-                    record_dict[f"{self.endpoint}.article_url"] = record_dict.pop(
+                    record_dict[f"{cls.endpoint}.article_url"] = record_dict.pop(
                         "article_url"
                     )
                 if "cites_url" in record_dict:
-                    record_dict[f"{self.endpoint}.cites_url"] = record_dict.pop(
+                    record_dict[f"{cls.endpoint}.cites_url"] = record_dict.pop(
                         "cites_url"
                     )
                 if "related_url" in record_dict:
-                    record_dict[f"{self.endpoint}.related_url"] = record_dict.pop(
+                    record_dict[f"{cls.endpoint}.related_url"] = record_dict.pop(
                         "related_url"
                     )
                 if "fulltext_url" in record_dict:
-                    record_dict[f"{self.endpoint}.fulltext_url"] = record_dict.pop(
+                    record_dict[f"{cls.endpoint}.fulltext_url"] = record_dict.pop(
                         "fulltext_url"
                     )
 
                 if "uid" in record_dict:
-                    record_dict[f"{self.endpoint}.uid"] = record_dict.pop("uid")
+                    record_dict[f"{cls.endpoint}.uid"] = record_dict.pop("uid")
                 if "source" in record_dict:
                     record_dict[Fields.JOURNAL] = record_dict.pop("source")
                 if "cites" in record_dict:
-                    record_dict[f"{self.endpoint}.cites"] = record_dict.pop("cites")
+                    record_dict[f"{cls.endpoint}.cites"] = record_dict.pop("cites")
 
                 record_dict.pop("volume", None)
                 record_dict.pop("issue", None)
@@ -181,12 +183,12 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
                 record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
+                filename=filename,
                 entrytype_setter=json_entrytype_setter,
                 field_mapper=json_field_mapper,
                 # Note: uid not always available.
                 unique_id_field="INCREMENTAL",
-                logger=self.review_manager.logger,
+                logger=logger,
             )
 
             return records

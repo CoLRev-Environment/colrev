@@ -2,6 +2,7 @@
 """Template for a custom SearchSource PackageEndpoint"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
@@ -74,10 +75,8 @@ class CustomSearch(base_classes.SearchSourcePackageBaseClass):
 
         return result
 
-    def load(
-        self,
-        load_operation: colrev.ops.load.Load,  # pylint: disable=unused-argument
-    ) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load fixes for the custom source"""
         records = {"ID1": {"ID": "ID1", "title": "..."}}
 
