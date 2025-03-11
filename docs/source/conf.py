@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime
 
 import sphinx_rtd_theme
 
@@ -32,7 +33,7 @@ sys.path.insert(
 # -- Project information -----------------------------------------------------
 
 project = "CoLRev"
-copyright = "2023, Gerit Wagner and Julian Prester"
+copyright = f"{datetime.now().year}, Gerit Wagner and Julian Prester"
 author = "Gerit Wagner and Julian Prester"
 
 # The full version, including alpha/beta/rc tags
