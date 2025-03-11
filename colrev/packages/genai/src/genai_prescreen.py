@@ -7,12 +7,11 @@ from pathlib import Path
 from typing import ClassVar
 
 import pandas as pd
-import zope.interface
 from litellm import completion
 from pydantic import BaseModel
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -42,8 +41,7 @@ class PreScreenDecision(BaseModel):
     explanation: str = Field(description="Explanation of the inclusion decision.")
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
-class GenAIPrescreen:
+class GenAIPrescreen(base_classes.PrescreenPackageBaseClass):
     """GenAI-based prescreen"""
 
     ci_supported: bool = Field(default=True)
