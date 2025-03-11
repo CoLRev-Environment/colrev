@@ -54,6 +54,7 @@ env:
     colrev_eric
     colrev_ais_library
     colrev_ieee
+    colrev_ref_check
 
 jobs:
   test-minimal-deps:
