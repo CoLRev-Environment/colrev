@@ -16,6 +16,7 @@ import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+from colrev.constants import Colors
 from colrev.constants import RecordState
 
 
@@ -81,6 +82,21 @@ class GenAIPrescreen:
         split: list,
     ) -> dict:
         """Prescreen records based on GenAI"""
+
+        if self.review_manager.settings.prescreen.explanation == "":
+            print(
+                f"\n{Colors.ORANGE}Provide a short explanation of the prescreen{Colors.END} "
+                "(why should particular papers be included?):"
+            )
+            print(
+                'Example objective: "Include papers that focus on digital technology."'
+            )
+            self.review_manager.settings.prescreen.explanation = input("")
+            self.review_manager.save_settings()
+        else:
+            print("\nIn the prescreen, the following process is followed:\n")
+            print("   " + self.review_manager.settings.prescreen.explanation)
+            print()
 
         # API key needs to be set as an environment variable
         inclusion_criterion = self.review_manager.settings.prescreen.explanation
