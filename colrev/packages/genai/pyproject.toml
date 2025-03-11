@@ -17,7 +17,7 @@ dependencies = [
 repository ="https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/genai"
 
 [tool.hatch.build.targets.wheel]
-include = "src"
+packages = ["src"]
 
 [tool.colrev]
 colrev_doc_description = "GenAI"
