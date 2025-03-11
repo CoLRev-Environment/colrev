@@ -84,10 +84,6 @@ class SearchSourcePackageBaseClass(ABC):
     ) -> colrev.record.record.Record:
         """Retrieve masterdata from the SearchSource."""
 
-<<<<<<< HEAD
-    @abstractmethod
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
-=======
     # pylint: disable=unused-argument
     @classmethod
     def ensure_append_only(cls, filename: Path) -> bool:
@@ -97,7 +93,6 @@ class SearchSourcePackageBaseClass(ABC):
     @classmethod
     @abstractmethod
     def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
->>>>>>> main
         """Load records from the SearchSource."""
 
     @abstractmethod
