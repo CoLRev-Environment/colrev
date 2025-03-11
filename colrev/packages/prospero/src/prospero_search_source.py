@@ -195,42 +195,25 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Empty method as requested."""
         return record
 
-<<<<<<< HEAD
-    def _load_bib(self) -> dict:
-        """Helper to load from .bib file using CoLRev's load_utils."""
-        return colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
-            logger=self.review_manager.logger,
-=======
     @classmethod
     def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Helper to load from .bib file using CoLRev's load_utils."""
         return colrev.loader.load_utils.load(
             filename=filename,
             logger=logger,
->>>>>>> main
             unique_id_field="ID",
         )
 
     # pylint: disable=unused-argument
-<<<<<<< HEAD
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
-=======
     @classmethod
     def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
->>>>>>> main
         """
         The interface requires a load method.
         We only handle .bib files here,
         so we raise NotImplementedError for other formats.
         """
-<<<<<<< HEAD
-        if self.search_source.filename.suffix == ".bib":
-            return self._load_bib()
-=======
         if filename.suffix == ".bib":
             return cls._load_bib(filename=filename, logger=logger)
->>>>>>> main
         raise NotImplementedError(
             "Only .bib loading is implemented for ProsperoSearchSource."
         )
