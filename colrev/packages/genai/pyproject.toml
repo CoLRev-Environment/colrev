@@ -1,0 +1,33 @@
+[project]
+name = "colrev.genai"
+description = "CoLRev package for GenAI"
+version = "0.1.0"
+license = "MIT"
+authors = [
+    { name = "Julian Prester", email = "julian.prester@sydney.edu.au" },
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+ ]
+requires-python = ">=3.8, <4"
+dependencies = [
+  "litellm>=1.37.0",
+  "pydantic>=2.7.1",
+]
+
+[project.urls]
+repository ="https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/genai"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.colrev]
+colrev_doc_description = "GenAI"
+colrev_doc_link = "README.md"
+search_types = []
+
+[project.entry-points.colrev]
+prescreen = "colrev.packages.genai.src.genai_prescreen:GenAIPrescreen"
+screen = "colrev.packages.genai.src.genai_screen:GenAIScreen"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
