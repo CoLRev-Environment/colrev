@@ -1,5 +1,5 @@
 [project]
-name = "colrev.genai"
+name = "colrev_genai"
 description = "CoLRev package for GenAI"
 version = "0.1.0"
 license = "MIT"

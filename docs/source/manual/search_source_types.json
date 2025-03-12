@@ -19,14 +19,6 @@
             ]
         },
         {
-            "package_endpoint_identifier": "colrev_colrev_project",
-            "status": "|MATURING|",
-            "short_description": "CoLRev projects (:doc:`instructions </manual/packages/colrev_colrev_project>`)",
-            "search_types": [
-                "API"
-            ]
-        },
-        {
             "package_endpoint_identifier": "colrev_crossref",
             "status": "|MATURING|",
             "short_description": "Crossref API (:doc:`instructions </manual/packages/colrev_crossref>`)",
@@ -110,6 +102,14 @@
             "package_endpoint_identifier": "colrev_plos",
             "status": "|EXPERIMENTAL|",
             "short_description": "PLOS API (:doc:`instructions </manual/packages/colrev_plos>`)",
+            "search_types": [
+                "API"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev_project",
+            "status": "|MATURING|",
+            "short_description": "CoLRev projects (:doc:`instructions </manual/packages/colrev_project>`)",
             "search_types": [
                 "API"
             ]

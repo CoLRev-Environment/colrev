@@ -22,8 +22,8 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-colrev_colrev_curation
-======================
+colrev_curation
+===============
 
 |VERSION| Version: 0.1.0
 
@@ -45,14 +45,14 @@ colrev_colrev_curation
      - .. code-block::
 
 
-         colrev prep --add colrev_colrev_curation
+         colrev prep --add colrev_curation
 
    * - data
      - |MATURING|
      - .. code-block::
 
 
-         colrev data --add colrev_colrev_curation
+         colrev data --add colrev_curation
 
 
 Summary
@@ -80,7 +80,7 @@ They can be set as follows:
 
    "data_package_endpoints": [
        {
-           "endpoint": "colrev.colrev_curation",
+           "endpoint": "colrev_curation",
            ...
            "masterdata_restrictions": {
                "1985": {

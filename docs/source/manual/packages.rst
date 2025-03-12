@@ -65,7 +65,6 @@ Packages
    packages/colrev_acm_digital_library.rst
    packages/colrev_ais_library.rst
    packages/colrev_arxiv.rst
-   packages/colrev_colrev_project.rst
    packages/colrev_crossref.rst
    packages/colrev_dblp.rst
    packages/colrev_ebsco_host.rst
@@ -82,6 +81,9 @@ Packages
    packages/colrev_open_library.rst
    packages/colrev_osf.rst
    packages/colrev_pdf_backward_search.rst
+   packages/colrev_plos.rst
+   packages/colrev_project.rst
+   packages/colrev_prospero.rst
    packages/colrev_psycinfo.rst
    packages/colrev_pubmed.rst
    packages/colrev_scopus.rst
@@ -97,8 +99,8 @@ Packages
 
 
    packages/colrev_add_journal_ranking.rst
-   packages/colrev_colrev_curation.rst
    packages/colrev_crossref.rst
+   packages/colrev_curation.rst
    packages/colrev_dblp.rst
    packages/colrev_europe_pmc.rst
    packages/colrev_exclude_collections.rst
@@ -159,12 +161,13 @@ Packages
 
 
    packages/colrev_bibliography_export.rst
-   packages/colrev_colrev_curation.rst
+   packages/colrev_curation.rst
    packages/colrev_github_pages.rst
    packages/colrev_obsidian.rst
    packages/colrev_paper_md.rst
    packages/colrev_prisma.rst
    packages/colrev_profile.rst
+   packages/colrev_ref_check.rst
    packages/colrev_structured.rst
 
 

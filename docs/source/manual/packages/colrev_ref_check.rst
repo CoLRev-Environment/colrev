@@ -22,8 +22,8 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-colrev_cli_screen
-========================
+colrev_ref_check
+================
 
 |VERSION| Version: 0.1.0
 
@@ -31,7 +31,7 @@ colrev_cli_screen
 
 |LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_screen>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/>`_
 
 .. list-table::
    :header-rows: 1
@@ -40,25 +40,25 @@ colrev_cli_screen
    * - Endpoint
      - Status
      - Add
-   * - screen
-     - |MATURING|
+   * - data
+     - |EXPERIMENTAL|
      - .. code-block::
 
 
-         colrev screen --add colrev_cli_screen
+         colrev data --add colrev_ref_check
 
 
 Summary
 -------
 
-screen
-------
+Installation
+------------
 
-The cli screen asks for user input, indicating for each paper whether it should be included or not. At the beginning, screening criteria can be defined.
+.. code-block:: bash
 
+   colrev install colrev.ref_check
 
-.. raw:: html
+Usage
+-----
 
-   <!--
-   ## Links
-   -->
+``colrev.ref_check`` can be added as a data endpoint. It ensures that records are only set to ``rev_synthesized`` if there are no remaining defects in the record metadata.

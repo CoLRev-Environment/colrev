@@ -107,14 +107,6 @@
             ]
         },
         {
-            "package_endpoint_identifier": "colrev_project",
-            "status": "|MATURING|",
-            "short_description": "CoLRev projects (:doc:`instructions </manual/packages/colrev_colrev_project>`)",
-            "search_types": [
-                "API"
-            ]
-        },
-        {
             "package_endpoint_identifier": "colrev_crossref",
             "status": "|MATURING|",
             "short_description": "Crossref API (:doc:`instructions </manual/packages/colrev_crossref>`)",
@@ -259,6 +251,14 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev_project",
+            "status": "|MATURING|",
+            "short_description": "CoLRev projects (:doc:`instructions </manual/packages/colrev_project>`)",
+            "search_types": [
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev_prospero",
             "status": "|EXPERIMENTAL|",
             "short_description": "Prospero (:doc:`instructions </manual/packages/colrev_prospero>`)",
@@ -377,14 +377,14 @@
             "short_description": "Add Journal ranking information (:doc:`instructions </manual/packages/colrev_add_journal_ranking>`)"
         },
         {
-            "package_endpoint_identifier": "colrev_curation",
-            "status": "|MATURING|",
-            "short_description": "CoLRev Curations (:doc:`instructions </manual/packages/colrev_colrev_curation>`)"
-        },
-        {
             "package_endpoint_identifier": "colrev_crossref",
             "status": "|MATURING|",
             "short_description": "Crossref API (:doc:`instructions </manual/packages/colrev_crossref>`)"
+        },
+        {
+            "package_endpoint_identifier": "colrev_curation",
+            "status": "|MATURING|",
+            "short_description": "CoLRev Curations (:doc:`instructions </manual/packages/colrev_curation>`)"
         },
         {
             "package_endpoint_identifier": "colrev_dblp",
@@ -540,11 +540,6 @@
     ],
     "pdf_get": [
         {
-            "package_endpoint_identifier": "colrev-scidb",
-            "status": "|EXPERIMENTAL|",
-            "short_description": "TODO (:doc:`instructions </manual/packages/colrev-scidb>`)"
-        },
-        {
             "package_endpoint_identifier": "colrev_download_from_website",
             "status": "|MATURING|",
             "short_description": "Download PDF from website (:doc:`instructions </manual/packages/colrev_download_from_website>`)"
@@ -622,7 +617,7 @@
         {
             "package_endpoint_identifier": "colrev_curation",
             "status": "|MATURING|",
-            "short_description": "CoLRev Curations (:doc:`instructions </manual/packages/colrev_colrev_curation>`)"
+            "short_description": "CoLRev Curations (:doc:`instructions </manual/packages/colrev_curation>`)"
         },
         {
             "package_endpoint_identifier": "colrev_github_pages",
@@ -661,11 +656,6 @@
         }
     ],
     "na": [
-        {
-            "package_endpoint_identifier": "colrev-sync",
-            "status": "|EXPERIMENTAL|",
-            "short_description": "Sync (:doc:`instructions </manual/packages/colrev-sync>`)"
-        },
         {
             "package_endpoint_identifier": "colrev_doi_org",
             "status": "|MATURING|",

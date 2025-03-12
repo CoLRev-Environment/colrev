@@ -22,8 +22,8 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-colrev_cli_pdf_prep_man
-==============================
+colrev_project
+==============
 
 |VERSION| Version: 0.1.0
 
@@ -31,7 +31,7 @@ colrev_cli_pdf_prep_man
 
 |LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_pdf_prep_man>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_project>`_
 
 .. list-table::
    :header-rows: 1
@@ -40,25 +40,28 @@ colrev_cli_pdf_prep_man
    * - Endpoint
      - Status
      - Add
-   * - pdf_prep_man
+   * - search_source
      - |MATURING|
      - .. code-block::
 
 
-         colrev pdf-prep-man --add colrev_cli_pdf_prep_man
+         colrev search --add colrev_project
 
 
 Summary
 -------
 
-pdf-prep-man
-------------
+search
+------
 
-Note: This document is currently under development. It will contain the following elements.
+API search
+^^^^^^^^^^
 
+ℹ️ Restriction: API searches do not support complex queries (yet)
 
-* description
-* example
+.. code-block::
+
+   colrev search --add colrev.colrev_project -p "https://github.com/CoLRev-Environment/example"
 
 Links
 -----

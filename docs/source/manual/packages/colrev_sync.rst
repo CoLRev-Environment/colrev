@@ -22,9 +22,8 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-
-colrev-sync
-========
+colrev_sync
+===========
 
 |VERSION| Version: 0.4.0
 

@@ -22,12 +22,12 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-colrev.ref_check
-================
+colrev_plos
+===========
 
 |VERSION| Version: 0.1.0
 
-|MAINTAINER| Maintainer: Gerit Wagner
+|MAINTAINER| Maintainer: Olga Girona, Júlia Lopez Marti, Gerit Wagner
 
 |LICENSE| License: MIT
 
@@ -40,25 +40,79 @@ colrev.ref_check
    * - Endpoint
      - Status
      - Add
-   * - data
+   * - search_source
      - |EXPERIMENTAL|
      - .. code-block::
 
 
-         colrev data --add colrev.ref_check
+         colrev search --add colrev_plos
 
 
 Summary
 -------
+
+PLOS is a SearchSource providing open access metadata for articles published in PLOS journals. It focuses on life sciences and health but includes articles in other disciplines. Its database contains metadata for thousands of articles across multiple PLOS journals.
 
 Installation
 ------------
 
 .. code-block:: bash
 
-   colrev install colrev.ref_check
+   colrev install colrev_plos
 
 Usage
 -----
 
-``colrev.ref_check`` can be added as a data endpoint. It ensures that records are only set to ``rev_synthesized`` if there are no remaining defects in the record metadata.
+API search
+^^^^^^^^^^
+
+To make an API search, first introduce the next command:
+
+.. code-block::
+
+   colrev search -a colrev_plos
+
+On the menu displayed, select the option API:
+
+.. code-block::
+
+   2024-12-20 16:22:31 [INFO] Add search package: colrev_plos
+   [?] Select SearchType::
+    > API
+      TOC
+
+Finally introduce a keyword to search:
+
+.. code-block::
+
+   Add colrev_plos as an API SearchSource
+
+   Enter the keywords:
+
+Load
+^^^^
+
+.. code-block::
+
+   colrev load
+
+Debugging
+---------
+
+In order to test the metada provided for a specific ``DOI`` it can be used the following link:
+
+.. code-block::
+
+   https://api.plos.org/search?q=DOI:
+
+License
+-------
+
+This project is licensed under the MIT License - see the `LICENSE <LICENSE>`_ file for details.
+
+Links
+-----
+
+
+* `PLOS API <https://api.plos.org>`_
+* `Sorl Search Fileds and Article types <https://api.plos.org/solr/search-fields/>`_

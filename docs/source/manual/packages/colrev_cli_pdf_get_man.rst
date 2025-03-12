@@ -22,16 +22,16 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-colrev-scidb
-============
+colrev_cli_pdf_get_man
+======================
 
 |VERSION| Version: 0.1.0
 
-|MAINTAINER| Maintainer: Julian Prester
+|MAINTAINER| Maintainer: Gerit Wagner
 
 |LICENSE| License: MIT
 
-|GIT_REPO| Repository: `julianprester/scidb <https://github.com/julianprester/scidb>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_pdf_get_man>`_
 
 .. list-table::
    :header-rows: 1
@@ -40,30 +40,27 @@ colrev-scidb
    * - Endpoint
      - Status
      - Add
-   * - pdf_get
-     - |EXPERIMENTAL|
+   * - pdf_get_man
+     - |MATURING|
      - .. code-block::
 
 
-         colrev pdf-get --add colrev-scidb
+         colrev pdf-get-man --add colrev_cli_pdf_get_man
 
 
 Summary
 -------
 
-Installation
-------------
+pdf-get-man
+-----------
 
-.. code-block:: bash
+Note: This document is currently under development. It will contain the following elements.
 
-   colrev install colrev-scidb
 
-Usage
------
+* description
+* example
 
-colrev pdf-get --add colrev-scidb
 
-License
--------
+.. raw:: html
 
-This project is licensed under the MIT License - see the `LICENSE <https://github.com/julianprester/scidb/blob/main/LICENSE>`_ file for details.
+   <!-- ## Links -->

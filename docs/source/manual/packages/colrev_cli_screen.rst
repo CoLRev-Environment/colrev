@@ -22,8 +22,8 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
-colrev_cli_pdf_get_man
-=============================
+colrev_cli_screen
+=================
 
 |VERSION| Version: 0.1.0
 
@@ -31,7 +31,7 @@ colrev_cli_pdf_get_man
 
 |LICENSE| License: MIT
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_pdf_get_man>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/colrev_cli_screen>`_
 
 .. list-table::
    :header-rows: 1
@@ -40,27 +40,25 @@ colrev_cli_pdf_get_man
    * - Endpoint
      - Status
      - Add
-   * - pdf_get_man
+   * - screen
      - |MATURING|
      - .. code-block::
 
 
-         colrev pdf-get-man --add colrev_cli_pdf_get_man
+         colrev screen --add colrev_cli_screen
 
 
 Summary
 -------
 
-pdf-get-man
------------
+screen
+------
 
-Note: This document is currently under development. It will contain the following elements.
-
-
-* description
-* example
+The cli screen asks for user input, indicating for each paper whether it should be included or not. At the beginning, screening criteria can be defined.
 
 
 .. raw:: html
 
-   <!-- ## Links -->
+   <!--
+   ## Links
+   -->
