@@ -4,6 +4,7 @@ from search_query import AndQuery
 from search_query import OrQuery
 
 from colrev.packages.crossref.src.crossref_search_source import CrossrefSearchSource
+
 # pylint: disable=line-too-long
 
 
