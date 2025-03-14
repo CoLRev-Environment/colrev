@@ -1,5 +1,5 @@
 [project]
-name = "colrev.europe_pmc"
+name = "colrev_europe_pmc"
 description = "CoLRev package for europe_pmc"
 version = "0.1.0"
 license = {text = "MIT"}

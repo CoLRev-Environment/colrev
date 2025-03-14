@@ -1,5 +1,5 @@
 [project]
-name = "colrev.conditional_prescreen"
+name = "colrev_conditional_prescreen"
 description = "CoLRev package for conditional_prescreen"
 version = "0.1.0"
 license = {text = "MIT"}

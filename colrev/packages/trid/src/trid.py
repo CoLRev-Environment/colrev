@@ -28,7 +28,7 @@ class TransportResearchInternationalDocumentation(
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
 
-    endpoint = "colrev.trid"
+    endpoint = "colrev_trid"
     source_identifier = "biburl"
     search_types = [SearchType.DB]
 

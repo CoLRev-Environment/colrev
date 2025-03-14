@@ -1,5 +1,5 @@
 [project]
-name = "colrev.abi_inform_proquest"
+name = "colrev_abi_inform_proquest"
 description = "CoLRev package for abi_inform_proquest"
 version = "0.1.0"
 license = {text = "MIT"}

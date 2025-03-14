@@ -858,7 +858,7 @@ class Prep(colrev.process.operation.Operation):
 
     def _prep_packages_ram_heavy(self, prep_round: colrev.settings.PrepRound) -> bool:
         prep_pe_names = [r["endpoint"] for r in prep_round.prep_package_endpoints]
-        ram_reavy = "colrev.exclude_languages" in prep_pe_names  # type: ignore
+        ram_reavy = "colrev_exclude_languages" in prep_pe_names  # type: ignore
         self.review_manager.logger.info(
             "Info: The language detector requires RAM and may take longer"
         )

@@ -1,5 +1,5 @@
 [project]
-name = "colrev.psycinfo"
+name = "colrev_psycinfo"
 description = "CoLRev package for psycinfo"
 version = "0.1.0"
 license = {text = "MIT"}

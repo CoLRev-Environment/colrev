@@ -1,5 +1,5 @@
 [project]
-name = "colrev.unknown_source"
+name = "colrev_unknown_source"
 description = "CoLRev package for unknown_source"
 version = "0.1.0"
 license = {text = "MIT"}

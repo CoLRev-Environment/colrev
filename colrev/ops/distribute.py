@@ -110,7 +110,7 @@ class Distribute(colrev.process.operation.Operation):
                     import_records = []
 
                     new_source = colrev.settings.SearchSource(
-                        endpoint="colrev.unknown_source",
+                        endpoint="colrev_unknown_source",
                         filename=Path("search") / target_bib_file.name,
                         search_type=SearchType.OTHER,
                         search_parameters={},

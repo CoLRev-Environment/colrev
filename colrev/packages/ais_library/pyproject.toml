@@ -1,5 +1,5 @@
 [project]
-name = "colrev.ais_library"
+name = "colrev_ais_library"
 description = "CoLRev package for aisel"
 version = "0.1.0"
 license = {text = "MIT"}

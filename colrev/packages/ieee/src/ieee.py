@@ -35,7 +35,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
     search_types = [SearchType.API]
-    endpoint = "colrev.ieee"
+    endpoint = "colrev_ieee"
 
     ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.oni

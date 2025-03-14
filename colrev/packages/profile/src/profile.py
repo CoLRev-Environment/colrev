@@ -56,7 +56,7 @@ class Profile(base_classes.DataPackageBaseClass):
         """Add as an endpoint"""
 
         add_package = {
-            "endpoint": "colrev.profile",
+            "endpoint": "colrev_profile",
             "version": "0.1",
         }
         operation.review_manager.settings.data.data_package_endpoints.append(

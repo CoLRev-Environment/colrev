@@ -36,7 +36,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     source_identifier = "colrev_project_identifier"
     search_types = [SearchType.API]
-    endpoint = "colrev.colrev_project"
+    endpoint = "colrev_project"
 
     ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported

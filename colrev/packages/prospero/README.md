@@ -5,14 +5,14 @@
 ### Installation
 
 ```bash
-colrev install colrev.prospero
+colrev install colrev_prospero
 ```
 
 ### search
 
 Download the search results and store them in the data/search/ directory.
 ```
-colrev search --add colrev.prospero
+colrev search --add colrev_prospero
 ```
 The search is done using keywords that can be entered into the console.
 

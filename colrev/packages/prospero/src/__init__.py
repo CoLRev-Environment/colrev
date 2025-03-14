@@ -1,4 +1,4 @@
-"""Package for colrev.prospero."""
+"""Package for colrev_prospero."""
 
 __author__ = "Ammar Al-Balkhi, Phuc Tran, Olha Komashevska"
 __email__ = [

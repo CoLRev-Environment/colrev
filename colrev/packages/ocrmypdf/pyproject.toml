@@ -1,5 +1,5 @@
 [project]
-name = "colrev.ocrmypdf"
+name = "colrev_ocrmypdf"
 description = "CoLRev package for ocrmypdf"
 version = "0.1.0"
 license = {text = "MIT"}

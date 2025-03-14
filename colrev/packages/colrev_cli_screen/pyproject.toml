@@ -1,5 +1,5 @@
 [project]
-name = "colrev.colrev_cli_screen"
+name = "colrev_cli_screen"
 description = "CoLRev package for screen_cli"
 version = "0.1.0"
 license = {text = "MIT"}

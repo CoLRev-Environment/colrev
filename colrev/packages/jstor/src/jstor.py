@@ -24,7 +24,7 @@ class JSTORSearchSource(base_classes.SearchSourcePackageBaseClass):
     """JSTOR"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    endpoint = "colrev.jstor"
+    endpoint = "colrev_jstor"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
     search_types = [SearchType.DB]

@@ -25,27 +25,27 @@ NO_CUSTOM_SOURCE = None
     [
         (
             Path("google_scholar.json"),
-            "colrev.google_scholar",
+            "colrev_google_scholar",
             NO_CUSTOM_SOURCE,
             Path("google_scholar_result.bib"),
         ),
         (
             Path("eric_nbib.nbib"),
-            "colrev.eric",
+            "colrev_eric",
             NO_CUSTOM_SOURCE,
             Path("eric_nbib_result.bib"),
         ),
         (
             Path("ais_enl.txt"),
-            "colrev.ais_library",
+            "colrev_ais_library",
             NO_CUSTOM_SOURCE,
             Path("ais_enl_result.bib"),
         ),
         (
             Path("crossref_bib.bib"),
-            "colrev.crossref",
+            "colrev_crossref",
             colrev.settings.SearchSource(
-                endpoint="colrev.crossref",
+                endpoint="colrev_crossref",
                 filename=Path("data/search/crossref_bib.bib"),
                 search_type=SearchType.API,
                 search_parameters={
@@ -57,81 +57,81 @@ NO_CUSTOM_SOURCE = None
         ),
         (
             Path("pubmed_csv.csv"),
-            "colrev.pubmed",
+            "colrev_pubmed",
             NO_CUSTOM_SOURCE,
             Path("pubmed_csv_result.bib"),
         ),
         (
             Path("springer_csv.csv"),
-            "colrev.springer_link",
+            "colrev_springer_link",
             NO_CUSTOM_SOURCE,
             Path("springer_csv_result.bib"),
         ),
         (
             Path("ebsco_bib.bib"),
-            "colrev.ebsco_host",
+            "colrev_ebsco_host",
             NO_CUSTOM_SOURCE,
             Path("ebsco_bib_result.bib"),
         ),
         (
             Path("dblp_bib.bib"),
-            "colrev.dblp",
+            "colrev_dblp",
             NO_CUSTOM_SOURCE,
             Path("dblp_bib_result.bib"),
         ),
         (
             Path("europe_pmc_bib.bib"),
-            "colrev.europe_pmc",
+            "colrev_europe_pmc",
             NO_CUSTOM_SOURCE,
             Path("europe_pmc_bib_result.bib"),
         ),
         (
             Path("acm_bib.bib"),
-            "colrev.acm_digital_library",
+            "colrev_acm_digital_library",
             NO_CUSTOM_SOURCE,
             Path("acm_bib_result.bib"),
         ),
         (
             Path("abi_inform_proquest_bib.bib"),
-            "colrev.abi_inform_proquest",
+            "colrev_abi_inform_proquest",
             NO_CUSTOM_SOURCE,
             Path("abi_inform_proquest_bib_result.bib"),
         ),
         (
             Path("abi_inform_proquest_ris.ris"),
-            "colrev.abi_inform_proquest",
+            "colrev_abi_inform_proquest",
             NO_CUSTOM_SOURCE,
             Path("abi_inform_proquest_ris_result.bib"),
         ),
         (
             Path("scopus_bib.bib"),
-            "colrev.scopus",
+            "colrev_scopus",
             NO_CUSTOM_SOURCE,
             Path("scopus_bib_result.bib"),
         ),
         (
             Path("taylor_and_francis_bib.bib"),
-            "colrev.taylor_and_francis",
+            "colrev_taylor_and_francis",
             NO_CUSTOM_SOURCE,
             Path("taylor_and_francis_bib_result.bib"),
         ),
         (
             Path("web_of_science_bib.bib"),
-            "colrev.web_of_science",
+            "colrev_web_of_science",
             NO_CUSTOM_SOURCE,
             Path("web_of_science_bib_result.bib"),
         ),
         (
             Path("wiley_bib.bib"),
-            "colrev.wiley",
+            "colrev_wiley",
             NO_CUSTOM_SOURCE,
             Path("wiley_bib_result.bib"),
         ),
         (
             Path("files_dir_bib.bib"),
-            "colrev.files_dir",
+            "colrev_files_dir",
             colrev.settings.SearchSource(
-                endpoint="colrev.files_dir",
+                endpoint="colrev_files_dir",
                 filename=Path("data/search/files_dir_bib.bib"),
                 search_type=SearchType.FILES,
                 search_parameters={"scope": {"path": "test"}},
@@ -141,9 +141,9 @@ NO_CUSTOM_SOURCE = None
         ),
         (
             Path("ieee_ris.ris"),
-            "colrev.ieee",
+            "colrev_ieee",
             colrev.settings.SearchSource(
-                endpoint="colrev.ieee",
+                endpoint="colrev_ieee",
                 filename=Path("data/search/ieee_ris.ris"),
                 search_type=SearchType.DB,
                 search_parameters={"scope": {"path": "test"}},
@@ -153,9 +153,9 @@ NO_CUSTOM_SOURCE = None
         ),
         (
             Path("ieee_csv.csv"),
-            "colrev.ieee",
+            "colrev_ieee",
             colrev.settings.SearchSource(
-                endpoint="colrev.ieee",
+                endpoint="colrev_ieee",
                 filename=Path("data/search/ieee_csv.csv"),
                 search_type=SearchType.DB,
                 search_parameters={"scope": {"path": "test"}},
@@ -165,25 +165,25 @@ NO_CUSTOM_SOURCE = None
         ),
         (
             Path("jstor_ris.ris"),
-            "colrev.jstor",
+            "colrev_jstor",
             NO_CUSTOM_SOURCE,
             Path("jstor_ris_result.bib"),
         ),
         (
             Path("trid_ris.ris"),
-            "colrev.trid",
+            "colrev_trid",
             NO_CUSTOM_SOURCE,
             Path("trid_ris_result.bib"),
         ),
         (
             Path("psycinfo_ris.ris"),
-            "colrev.psycinfo",
+            "colrev_psycinfo",
             NO_CUSTOM_SOURCE,
             Path("psycinfo_ris_result.bib"),
         ),
         (
             Path("unknown_source_bib.bib"),
-            "colrev.unknown_source",
+            "colrev_unknown_source",
             NO_CUSTOM_SOURCE,
             Path("unknown_source_bib_result.bib"),
         ),
@@ -209,7 +209,7 @@ def test_source(  # type: ignore
     )
 
     base_repo_review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
-        {"endpoint": "colrev.source_specific_prep"},
+        {"endpoint": "colrev_source_specific_prep"},
     ]
     base_repo_review_manager.settings.prep.defects_to_ignore = [
         "inconsistent-with-url-metadata",

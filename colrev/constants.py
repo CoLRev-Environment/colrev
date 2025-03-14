@@ -183,20 +183,20 @@ class Fields:
     METADATA_SOURCE_REPOSITORY_PATHS = "metadata_source_repository_paths"
     GROBID_VERSION = "grobid-version"
 
-    DBLP_KEY = "colrev.dblp.dblp_key"
-    SEMANTIC_SCHOLAR_ID = "colrev.semantic_scholar.id"
-    WEB_OF_SCIENCE_ID = "colrev.web_of_science.unique-id"
-    PUBMED_ID = "colrev.pubmed.pubmedid"
-    PMCID = "colrev.pubmed.pmcid"
+    DBLP_KEY = "colrev_dblp.dblp_key"
+    SEMANTIC_SCHOLAR_ID = "colrev_semantic_scholar.id"
+    WEB_OF_SCIENCE_ID = "colrev_web_of_science.unique-id"
+    PUBMED_ID = "colrev_pubmed.pubmedid"
+    PMCID = "colrev_pubmed.pmcid"
     # https://www.nlm.nih.gov/bsd/mms/medlineelements.html#pmc
-    EUROPE_PMC_ID = "colrev.europe_pmc.europe_pmc_id"
-    PROSPERO_ID = "colrev.prospero.id"
+    PROSPERO_ID = "colrev_prospero.id"
+    EUROPE_PMC_ID = "colrev_europe_pmc.europe_pmc_id"
 
-    GITHUB_VERSION = "colrev.github.version"
-    GITHUB_LICENSE = "colrev.github.license"
-    GITHUB_LANGUAGE = "colrev.github.language"
-    GITHUB_NR_CONTRIBUTORS = "colrev.github.nr_contributors"
-    GITHUB_NR_COMMITS = "colrev.github.nr_commits"
+    GITHUB_VERSION = "colrev_github.version"
+    GITHUB_LICENSE = "colrev_github.license"
+    GITHUB_LANGUAGE = "colrev_github.language"
+    GITHUB_NR_CONTRIBUTORS = "colrev_github.nr_contributors"
+    GITHUB_NR_COMMITS = "colrev_github.nr_commits"
 
 
 class LocalIndexFields:

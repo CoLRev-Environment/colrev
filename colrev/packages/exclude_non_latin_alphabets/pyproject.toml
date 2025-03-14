@@ -1,5 +1,5 @@
 [project]
-name = "colrev.exclude_non_latin_alphabets"
+name = "colrev_exclude_non_latin_alphabets"
 description = "CoLRev package for exclude_non_latin_alphabets"
 version = "0.1.0"
 license = {text = "MIT"}

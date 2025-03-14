@@ -32,7 +32,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
 
-    endpoint = "colrev.arxiv"
+    endpoint = "colrev_arxiv"
     source_identifier = "arxivid"
     search_types = [SearchType.API]
     api_search_supported = True
@@ -62,7 +62,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
                 self.search_source = arxiv_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev.arxiv",
+                    endpoint="colrev_arxiv",
                     filename=self._arxiv_md_filename,
                     search_type=SearchType.API,
                     search_parameters={},
@@ -116,7 +116,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
             filename = operation.get_unique_filename(file_path_string="arxiv")
 
             search_source = colrev.settings.SearchSource(
-                endpoint="colrev.arxiv",
+                endpoint="colrev_arxiv",
                 filename=filename,
                 search_type=SearchType.API,
                 search_parameters={"query": query},

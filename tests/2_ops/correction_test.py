@@ -14,7 +14,7 @@ def get_correction_fixture(base_repo_review_manager):  # type: ignore
     """Fixture returning the test_local_index_dir"""
     base_repo_review_manager.get_validate_operation()
 
-    base_repo_review_manager.settings.sources[0].endpoint = "colrev.local_index"
+    base_repo_review_manager.settings.sources[0].endpoint = "colrev_local_index"
     base_repo_review_manager.save_settings()
 
     records = base_repo_review_manager.dataset.load_records_dict()

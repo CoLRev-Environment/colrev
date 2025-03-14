@@ -33,7 +33,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
 
-    endpoint = "colrev.open_library"
+    endpoint = "colrev_open_library"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "isbn"
     search_types = [SearchType.MD]
@@ -70,7 +70,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 self.search_source = open_library_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev.open_library",
+                    endpoint="colrev_open_library",
                     filename=self._open_library_md_filename,
                     search_type=SearchType.MD,
                     search_parameters={},

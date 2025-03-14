@@ -1357,14 +1357,14 @@ def test_has_fatal_quality_defects() -> None:
                 "source": "web_of_science.bib/WOS:000616658300022",
                 "note": "",
             },
-            "colrev.web_of_science.unique-id": {
+            "colrev_web_of_science.unique-id": {
                 "source": "web_of_science.bib/WOS:000616658300022",
                 "note": "",
             },
             "issn": {"source": "web_of_science.bib/WOS:000616658300022", "note": ""},
             "language": {"source": "LanguageDetector", "note": ""},
         },
-        "colrev.web_of_science.unique-id": "WOS:000616658300022",
+        "colrev_web_of_science.unique-id": "WOS:000616658300022",
         "journal": "International Journal of Communication",
         "title": "Intersectional English(es) and the Gig Economy: Teaching English Online",
         "year": "2020",
@@ -1477,7 +1477,7 @@ def test_is_retracted() -> None:
     actual = record.is_retracted()
     assert actual is False
 
-    record.data["colrev.crossref.crossmark"] = "True"
+    record.data["colrev_crossref.crossmark"] = "True"
     assert record.is_retracted()
 
     record.data["crossmark"] = "True"

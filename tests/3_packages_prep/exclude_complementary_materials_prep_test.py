@@ -21,7 +21,7 @@ def elp(
     prep_operation: colrev.ops.prep.Prep,
 ) -> ECMPrep:
     """Fixture returning an ExcludeComplementaryMaterialsPrep instance"""
-    settings = {"endpoint": "colrev.exclude_complementary_materials"}
+    settings = {"endpoint": "colrev_exclude_complementary_materials"}
     elp_instance = ECMPrep(prep_operation=prep_operation, settings=settings)
     return elp_instance
 
