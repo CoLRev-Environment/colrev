@@ -89,6 +89,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                 self.r_subdir_pattern = re.compile("([0-9]{1,4})")
 
         self.crossref_api = crossref_api.CrossrefAPI(params={})
+        self.local_index = colrev.env.local_index.LocalIndex()
 
     def _update_if_pdf_renamed(
         self,
@@ -444,21 +445,18 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         file_path: Path,
         files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         linked_file_paths: list,
-        local_index: colrev.env.local_index.LocalIndex,
     ) -> dict:
         if file_path.suffix == ".pdf":
             return self._index_pdf(
                 file_path=file_path,
                 files_dir_feed=files_dir_feed,
                 linked_file_paths=linked_file_paths,
-                local_index=local_index,
             )
         if file_path.suffix == ".mp4":
             return self._index_mp4(
                 file_path=file_path,
                 files_dir_feed=files_dir_feed,
                 linked_file_paths=linked_file_paths,
-                local_index=local_index,
             )
         raise NotImplementedError
 
@@ -517,7 +515,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         file_path: Path,
         files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         linked_file_paths: list,
-        local_index: colrev.env.local_index.LocalIndex,
     ) -> dict:
         new_record: dict = {}
 
@@ -550,7 +547,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                 colrev_pdf_id = colrev.record.record.Record.get_colrev_pdf_id(
                     pdf_path=file_path_abs
                 )
-                new_record_object = local_index.retrieve_based_on_colrev_pdf_id(
+                new_record_object = self.local_index.retrieve_based_on_colrev_pdf_id(
                     colrev_pdf_id=colrev_pdf_id
                 )
                 new_record = new_record_object.data
@@ -596,7 +593,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         file_path: Path,
         files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         linked_file_paths: list,
-        local_index: colrev.env.local_index.LocalIndex,
     ) -> dict:
         record_dict = {Fields.ENTRYTYPE: "online", Fields.FILE: file_path}
         return record_dict
@@ -626,7 +622,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
-        local_index: colrev.env.local_index.LocalIndex,
         linked_file_paths: list,
     ) -> None:
         file_batches = self._get_file_batches()
@@ -642,7 +637,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                     file_path=file_path,
                     files_dir_feed=files_dir_feed,
                     linked_file_paths=linked_file_paths,
-                    local_index=local_index,
                 )
                 if new_record == {}:
                     continue
@@ -712,8 +706,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         grobid_service = self.review_manager.get_grobid_service()
         grobid_service.start()
 
-        local_index = colrev.env.local_index.LocalIndex()
-
         records = self.review_manager.dataset.load_records_dict()
         files_dir_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
@@ -728,7 +720,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         self._run_dir_search(
             files_dir_feed=files_dir_feed,
             linked_file_paths=linked_file_paths,
-            local_index=local_index,
         )
 
     @classmethod

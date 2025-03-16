@@ -25,6 +25,8 @@ KEYS_TO_REMOVE = (
     Fields.GROBID_VERSION,
     Fields.SCREENING_CRITERIA,
     Fields.METADATA_SOURCE_REPOSITORY_PATHS,
+    Fields.MD_PROV,
+    Fields.D_PROV,
 )
 
 
