@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import typing
+from sqlite3 import OperationalError
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -131,9 +132,20 @@ class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
         if Fields.JOURNAL not in record.data:
             return
 
-        rankings = self.local_index.get_journal_rankings(record.data[Fields.JOURNAL])
-        if any(x["predatory"] == "yes" for x in rankings):
-            record.prescreen_exclude(reason="predatory_journals_beal")
+        try:
+            rankings = self.local_index.get_journal_rankings(
+                record.data[Fields.JOURNAL]
+            )
+            if any(x["predatory"] == "yes" for x in rankings):
+                record.prescreen_exclude(reason="predatory_journals_beal")
+        except OperationalError as e:
+            if "no such table: rankings" in str(e):
+                raise colrev_exceptions.DependencyConfigurationError(
+                    "Error: The 'rankings' table does not exist in the local_index"
+                    " (scope_prescreen with predatory_journals needs the rankings table)."
+                    "Run `colrev env -i` to update the database."
+                )
+            raise e
 
     def _conditional_prescreen_outlets_exclusion(
         self, record: colrev.record.record.Record
