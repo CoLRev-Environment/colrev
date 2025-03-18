@@ -2405,8 +2405,9 @@ def env(
         print("Index rankings")
         import colrev.env.local_index_builder
 
+        index_tei = input("Index TEI files (y/n)?") == "y"
         local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder(
-            verbose_mode=verbose
+            index_tei=index_tei, verbose_mode=verbose
         )
         local_index_builder.index()
         local_index_builder.index_journal_rankings()

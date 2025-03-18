@@ -22,9 +22,9 @@
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
 
-</div>
-
 # Collaborative Literature Reviews (CoLRev)
+
+</div>
 
 CoLRev is an open-source environment for collaborative literature reviews. It integrates with differerent synthesis tools, takes care of the data, and facilitates Git-based collaboration.
 

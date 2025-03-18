@@ -391,6 +391,8 @@ class LocalIndexBuilder:
                 )
                 record_dict[LocalIndexFields.TEI] = str(tei_path)
                 record_dict[Fields.FULLTEXT] = tei.get_tei_str()
+                if record_dict.get(Fields.ABSTRACT, "") == "":
+                    record_dict[Fields.ABSTRACT] = tei.get_abstract()
 
             except (
                 colrev_exceptions.TEIException,

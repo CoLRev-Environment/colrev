@@ -25,6 +25,8 @@ KEYS_TO_REMOVE = (
     Fields.GROBID_VERSION,
     Fields.SCREENING_CRITERIA,
     Fields.METADATA_SOURCE_REPOSITORY_PATHS,
+    Fields.MD_PROV,
+    Fields.D_PROV,
 )
 
 
@@ -160,9 +162,6 @@ def prepare_record_for_return(
 ) -> colrev.record.record.Record:
     """Prepare record for return from LocalIndex."""
 
-    for key in KEYS_TO_REMOVE:
-        record_dict.pop(key, None)
-
     # Note: record['file'] should be an absolute path by definition
     # when stored in the LocalIndex
     if Fields.FILE in record_dict and not Path(record_dict[Fields.FILE]).is_file():
@@ -184,5 +183,8 @@ def prepare_record_for_return(
             + f"#{record_dict[Fields.ID]}"
         )
         record_dict[Fields.CURATION_ID] = identifier_string
+
+    for key in KEYS_TO_REMOVE:
+        record_dict.pop(key, None)
 
     return record
