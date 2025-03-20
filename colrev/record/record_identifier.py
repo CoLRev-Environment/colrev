@@ -193,6 +193,9 @@ def get_colrev_id(record: colrev.record.record.Record, *, assume_complete: bool)
 
 
 def _get_colrev_pdf_id_cpid2(pdf_path: Path) -> str:
+    # assert  pymupdf>=1.24.3,<=1.25.3
+    assert pymupdf.__version__ <= "1.25.3", "for pymupdf>1.25.3, use cpid3"
+
     with tempfile.NamedTemporaryFile(suffix=".png") as temp_file:
         file_name = temp_file.name
         try:
