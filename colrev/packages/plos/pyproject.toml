@@ -1,5 +1,5 @@
 [project]
-name = "colrev.plos"
+name = "colrev_plos"
 description = ""
 version = "0.1.0"
 license = {text = "MIT"}

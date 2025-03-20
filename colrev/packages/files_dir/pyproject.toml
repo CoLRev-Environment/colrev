@@ -1,5 +1,5 @@
 [project]
-name = "colrev.files_dir"
+name = "colrev_files_dir"
 description = "CoLRev package for files_dir"
 version = "0.1.0"
 license = {text = "MIT"}

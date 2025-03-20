@@ -29,7 +29,7 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
     """OpenAlex API"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    endpoint = "colrev.open_alex"
+    endpoint = "colrev_open_alex"
     source_identifier = "openalex_id"
     search_types = [SearchType.MD]
 
@@ -46,7 +46,7 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.review_manager = source_operation.review_manager
         # Note: not yet implemented
-        # Note : once this is implemented, add "colrev.open_alex" to the default settings
+        # Note : once this is implemented, add "colrev_open_alex" to the default settings
         # if settings:
         #     # OpenAlex as a search_source
         #     self.search_source = self.settings_class(**settings)
@@ -61,7 +61,7 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.search_source = open_alex_md_source_l[0]
         else:
             self.search_source = colrev.settings.SearchSource(
-                endpoint="colrev.open_alex",
+                endpoint="colrev_open_alex",
                 filename=self._open_alex_md_filename,
                 search_type=SearchType.MD,
                 search_parameters={},
@@ -103,7 +103,7 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
             _, email = self.review_manager.get_committer()
             api = open_alex_api.OpenAlexAPI(email=email)
             retrieved_record = api.get_record(
-                open_alex_id=record.data["colrev.open_alex.id"]
+                open_alex_id=record.data["colrev_open_alex.id"]
             )
 
             self.open_alex_lock.acquire(timeout=120)
@@ -151,7 +151,7 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.record.record.Record:
         """Retrieve masterdata from OpenAlex based on similarity with the record provided"""
 
-        if "colrev.open_alex.id" in record.data:
+        if "colrev_open_alex.id" in record.data:
             # Note: not yet implemented
             # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
             # if len(record.data.get(Fields.TITLE, "")) < 35 and Fields.DOI not in record.data:

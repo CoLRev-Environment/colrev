@@ -1,5 +1,5 @@
 [project]
-name = "colrev.osf"
+name = "colrev_osf"
 description = "CoLRev package for osf"
 version = "0.1.0"
 license = {text = "MIT"}

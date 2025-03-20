@@ -83,7 +83,7 @@ class Obsidian(base_classes.DataPackageBaseClass):
         """Add as an endpoint"""
 
         add_source = {
-            "endpoint": "colrev.obsidian",
+            "endpoint": "colrev_obsidian",
             "version": "0.1",
             "config": {},
         }

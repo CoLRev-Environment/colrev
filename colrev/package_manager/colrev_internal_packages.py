@@ -53,11 +53,16 @@ def _clone_colrev_repository() -> Path:
             "clone",
             "--depth",
             "1",
+            "--branch",  # TODO : temp
+            "package_rename",  # Specify the branch you want to clone
             "https://github.com/CoLRev-Environment/colrev",
             temp_dir,
         ],
         check=False,
     )
+    # TODO : temporary.
+    # checkout package_rename  branch
+    subprocess.run(["git", "checkout", "package_rename"], cwd=temp_dir, check=False)
     return Path(temp_dir)
 
 
@@ -79,7 +84,7 @@ def _get_colrev_path() -> Path:
     potential_nested_path = colrev_path / "colrev"
     if potential_nested_path.is_dir():
         colrev_path = potential_nested_path
-
+    print(colrev_path)
     return colrev_path
 
 

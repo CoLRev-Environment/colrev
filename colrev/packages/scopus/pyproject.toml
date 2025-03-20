@@ -1,5 +1,5 @@
 [project]
-name = "colrev.scopus"
+name = "colrev_scopus"
 description = "CoLRev package for scopus"
 version = "0.1.0"
 license = {text = "MIT"}

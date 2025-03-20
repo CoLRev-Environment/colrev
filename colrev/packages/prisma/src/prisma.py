@@ -78,7 +78,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
         """Add as an endpoint"""
 
         add_package = {
-            "endpoint": "colrev.prisma",
+            "endpoint": "colrev_prisma",
             "version": "0.1",
             "diagram_path": ["PRISMA.png"],
         }

@@ -70,7 +70,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
         """Add as an endpoint"""
 
         add_source = {
-            "endpoint": "colrev.github_pages",
+            "endpoint": "colrev_github_pages",
             "version": "0.1",
             "auto_push": True,
         }

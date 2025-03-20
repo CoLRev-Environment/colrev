@@ -37,7 +37,7 @@ def test_load_md(  # type: ignore
         return
 
     search_source = colrev.settings.SearchSource(
-        endpoint="colrev.unknown_source",
+        endpoint="colrev_unknown_source",
         filename=Path("data/search/md_data.md"),
         search_type=SearchType.OTHER,
         search_parameters={},

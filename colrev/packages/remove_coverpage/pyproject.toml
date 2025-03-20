@@ -1,5 +1,5 @@
 [project]
-name = "colrev.remove_coverpage"
+name = "colrev_remove_coverpage"
 description = "CoLRev package for remove_coverpage"
 version = "0.1.0"
 license = {text = "MIT"}

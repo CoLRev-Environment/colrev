@@ -32,14 +32,14 @@ def test_settings_load() -> None:
             criterion_type=ScreenCriterionType.inclusion_criterion,
         )
     }
-    settings.data.data_package_endpoints = [{"endpoint": "colrev.export_data"}]
+    settings.data.data_package_endpoints = [{"endpoint": "colrev_export_data"}]
     expected = {
         "project": {
             "title": "",
             "authors": [],
             "keywords": [],
             "protocol": None,
-            "review_type": "literature_review",
+            "review_type": "colrev_literature_review",
             "id_pattern": IDPattern.three_authors_year,
             "share_stat_req": colrev.settings.ShareStatReq.processed,
             "delay_automated_processing": False,
@@ -48,7 +48,7 @@ def test_settings_load() -> None:
         },
         "sources": [
             {
-                "endpoint": "colrev.files_dir",
+                "endpoint": "colrev_files_dir",
                 "filename": Path("data/search/files.bib"),
                 "search_type": SearchType.FILES,
                 "search_parameters": {"scope": {"path": "data/pdfs"}},
@@ -63,35 +63,32 @@ def test_settings_load() -> None:
                 {
                     "name": "prep",
                     "prep_package_endpoints": [
-                        {"endpoint": "colrev.source_specific_prep"},
-                        {"endpoint": "colrev.exclude_non_latin_alphabets"},
-                        {"endpoint": "colrev.exclude_collections"},
-                        {"endpoint": "colrev.exclude_complementary_materials"},
-                        {"endpoint": "colrev.local_index"},
-                        {"endpoint": "colrev.exclude_languages"},
-                        {"endpoint": "colrev.remove_urls_with_500_errors"},
-                        {"endpoint": "colrev.remove_broken_ids"},
-                        {"endpoint": "colrev.get_doi_from_urls"},
-                        {"endpoint": "colrev.get_year_from_vol_iss_jour"},
-                        {"endpoint": "colrev.crossref"},
-                        {"endpoint": "colrev.pubmed"},
-                        {"endpoint": "colrev.europe_pmc"},
-                        {"endpoint": "colrev.dblp"},
-                        {"endpoint": "colrev.open_library"},
+                        {"endpoint": "colrev_source_specific_prep"},
+                        {"endpoint": "colrev_exclude_non_latin_alphabets"},
+                        {"endpoint": "colrev_exclude_collections"},
+                        {"endpoint": "colrev_exclude_complementary_materials"},
+                        {"endpoint": "colrev_local_index"},
+                        {"endpoint": "colrev_exclude_languages"},
+                        {"endpoint": "colrev_remove_urls_with_500_errors"},
+                        {"endpoint": "colrev_remove_broken_ids"},
+                        {"endpoint": "colrev_get_doi_from_urls"},
+                        {"endpoint": "colrev_get_year_from_vol_iss_jour"},
+                        {"endpoint": "colrev_crossref"},
+                        {"endpoint": "colrev_pubmed"},
                     ],
                 }
             ],
-            "prep_man_package_endpoints": [{"endpoint": "colrev.export_man_prep"}],
+            "prep_man_package_endpoints": [{"endpoint": "colrev_export_man_prep"}],
         },
         "dedupe": {
             "dedupe_package_endpoints": [
-                {"endpoint": "colrev.dedupe"},
+                {"endpoint": "colrev_dedupe"},
             ],
         },
         "prescreen": {
             "explanation": "",
             "prescreen_package_endpoints": [
-                {"endpoint": "colrev.colrev_cli_prescreen"},
+                {"endpoint": "colrev_cli_prescreen"},
             ],
         },
         "pdf_get": {
@@ -100,25 +97,21 @@ def test_settings_load() -> None:
             "defects_to_ignore": [],
             "rename_pdfs": True,
             "pdf_get_package_endpoints": [
-                {"endpoint": "colrev.local_index"},
-                {"endpoint": "colrev.unpaywall"},
-                {"endpoint": "colrev.download_from_website"},
+                {"endpoint": "colrev_local_index"},
+                {"endpoint": "colrev_unpaywall"},
+                {"endpoint": "colrev_download_from_website"},
             ],
-            "pdf_get_man_package_endpoints": [
-                {"endpoint": "colrev.colrev_cli_pdf_get_man"}
-            ],
+            "pdf_get_man_package_endpoints": [{"endpoint": "colrev_cli_pdf_get_man"}],
         },
         "pdf_prep": {
             "keep_backup_of_pdfs": True,
             "pdf_prep_package_endpoints": [
-                {"endpoint": "colrev.ocrmypdf"},
-                {"endpoint": "colrev.remove_coverpage"},
-                {"endpoint": "colrev.remove_last_page"},
-                {"endpoint": "colrev.grobid_tei"},
+                {"endpoint": "colrev_ocrmypdf"},
+                {"endpoint": "colrev_remove_coverpage"},
+                {"endpoint": "colrev_remove_last_page"},
+                {"endpoint": "colrev_grobid_tei"},
             ],
-            "pdf_prep_man_package_endpoints": [
-                {"endpoint": "colrev.colrev_cli_pdf_prep_man"}
-            ],
+            "pdf_prep_man_package_endpoints": [{"endpoint": "colrev_cli_pdf_prep_man"}],
         },
         "screen": {
             "explanation": None,
@@ -129,9 +122,9 @@ def test_settings_load() -> None:
                     "criterion_type": ScreenCriterionType.inclusion_criterion,
                 }
             },
-            "screen_package_endpoints": [{"endpoint": "colrev.colrev_cli_screen"}],
+            "screen_package_endpoints": [{"endpoint": "colrev_cli_screen"}],
         },
-        "data": {"data_package_endpoints": [{"endpoint": "colrev.export_data"}]},
+        "data": {"data_package_endpoints": [{"endpoint": "colrev_export_data"}]},
     }
     actual = settings.model_dump()
 
@@ -174,7 +167,7 @@ def test_curated_masterdata() -> None:
 
     settings.data.data_package_endpoints = [
         {
-            "endpoint": "colrev.colrev_curation",
+            "endpoint": "colrev_colrev_curation",
             "curation_url": "https://github.com/CoLRev-curations/the-journal-of-strategic-information-systems",
             "curated_masterdata": True,
             "masterdata_restrictions": {

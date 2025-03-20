@@ -1,5 +1,5 @@
 [project]
-name = "colrev.meta_analysis"
+name = "colrev_meta_analysis"
 description = "CoLRev package for meta-analysis"
 version = "0.1.0"
 license = {text = "MIT"}

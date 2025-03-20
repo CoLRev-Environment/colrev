@@ -51,7 +51,7 @@ class PDFGet(colrev.process.operation.Operation):
         pdf_endpoints = [
             s
             for s in self.review_manager.settings.sources
-            if s.endpoint == "colrev.files_dir"
+            if s.endpoint == "colrev_files_dir"
         ]
         if pdf_endpoints:
             self.filepath_directory_pattern = (
@@ -329,7 +329,7 @@ class PDFGet(colrev.process.operation.Operation):
         sources = [
             s
             for s in self.review_manager.settings.sources
-            if s.endpoint == "colrev.files_dir" and s.filename.is_file()
+            if s.endpoint == "colrev_files_dir" and s.filename.is_file()
         ]
         for source in sources:
             self._relink_pdfs_in_source(source)

@@ -1,5 +1,5 @@
 [project]
-name = "colrev.dedupe"
+name = "colrev_dedupe"
 description = "CoLRev package for dedupe"
 version = "0.1.0"
 license = {text = "MIT"}

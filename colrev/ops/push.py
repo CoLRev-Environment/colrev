@@ -69,7 +69,7 @@ class Push(colrev.process.operation.Operation):
                     source_origin[: source_origin.find("/")]
                 ]
 
-                if search_source in ["colrev.unknown_source"]:
+                if search_source in ["colrev_unknown_source"]:
                     continue
 
                 output[Fields.FILE] = correction_path
@@ -142,7 +142,7 @@ class Push(colrev.process.operation.Operation):
             + f"{corrections}\n\nBest regards\n\n"
         )
 
-        if source.endpoint == "colrev.dblp":
+        if source.endpoint == "colrev_dblp":
             file_path = Path("dblp-corrections-mail.txt")
             dblp_header = (
                 "Send to: dblp@dagstuhl.de\n\n"

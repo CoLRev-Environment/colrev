@@ -366,7 +366,7 @@ class Repare(colrev.process.operation.Operation):
 
     def _fix_curated_sources(self, records: dict) -> None:
         for search_source in self.review_manager.settings.sources:
-            if search_source.endpoint != "colrev.local_index":
+            if search_source.endpoint != "colrev_local_index":
                 continue
 
             curation_recs = colrev.loader.load_utils.load(

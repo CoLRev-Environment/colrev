@@ -1,5 +1,5 @@
 [project]
-name = "colrev.bibliography_export"
+name = "colrev_bibliography_export"
 description = "CoLRev package for bibliography_export"
 version = "0.1.0"
 license = {text = "MIT"}

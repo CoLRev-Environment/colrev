@@ -128,7 +128,7 @@ class DBLPAPI:
                 item["type"] = "Journal Articles"
             if item["key"][:4] == "conf":
                 item["type"] = "Conference and Workshop Papers"
-            item["colrev.dblp.warning"] = "Withdrawn (according to DBLP)"
+            item["colrev_dblp.warning"] = "Withdrawn (according to DBLP)"
 
         if "corr" == ven_key:
             item[Fields.ENTRYTYPE] = ENTRYTYPES.TECHREPORT

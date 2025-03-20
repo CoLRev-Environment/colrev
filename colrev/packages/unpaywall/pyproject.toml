@@ -1,5 +1,5 @@
 [project]
-name = "colrev.unpaywall"
+name = "colrev_unpaywall"
 description = "CoLRev package for unpaywall"
 version = "0.1.0"
 license = {text = "MIT"}

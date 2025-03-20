@@ -1,5 +1,5 @@
 [project]
-name = "colrev.pdf_backward_search"
+name = "colrev_pdf_backward_search"
 description = "CoLRev package for pdf_backward_search"
 version = "0.1.0"
 license = {text = "MIT"}

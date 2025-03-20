@@ -1,5 +1,5 @@
 [project]
-name = "colrev.get_masterdata_from_doi"
+name = "colrev_get_masterdata_from_doi"
 description = "CoLRev package for doi_metadata_prep"
 version = "0.1.0"
 license = {text = "MIT"}

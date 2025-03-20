@@ -1,5 +1,5 @@
 [project]
-name = "colrev.colrev_cli_pdf_get_man"
+name = "colrev_cli_pdf_get_man"
 description = "CoLRev package for pdf_get_man_cli"
 version = "0.1.0"
 license = {text = "MIT"}

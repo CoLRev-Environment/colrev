@@ -1,5 +1,5 @@
 [project]
-name = "colrev.source_specific_prep"
+name = "colrev_source_specific_prep"
 description = "CoLRev package for source_specific_prep"
 version = "0.1.0"
 license = {text = "MIT"}

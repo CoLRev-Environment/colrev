@@ -1,5 +1,5 @@
 [project]
-name = "colrev.get_doi_from_urls"
+name = "colrev_get_doi_from_urls"
 description = "CoLRev package for get_doi_from_urls"
 version = "0.1.0"
 license = {text = "MIT"}

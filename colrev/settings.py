@@ -390,7 +390,7 @@ class Settings(BaseModel):
         curation_endpoints = [
             x
             for x in self.data.data_package_endpoints
-            if x["endpoint"] == "colrev.colrev_curation"
+            if x["endpoint"] == "colrev_colrev_curation"
         ]
         return bool(curation_endpoints)
 
@@ -400,7 +400,7 @@ class Settings(BaseModel):
         curation_endpoints = [
             x
             for x in self.data.data_package_endpoints
-            if x["endpoint"] == "colrev.colrev_curation"
+            if x["endpoint"] == "colrev_colrev_curation"
         ]
 
         if curation_endpoints:
