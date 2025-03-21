@@ -78,9 +78,7 @@ jobs:
 
       - name: Install dependencies with uv
         run: |
-          uv venv
-          source .venv/bin/activate
-          uv pip install .[dev]
+          run: uv sync --all-extras --dev
           colrev install --uv ${{ env.COLREV_PACKAGES }}
 
       - name: Setup git
@@ -91,8 +89,7 @@ jobs:
 
       - name: Run tests (minimal-deps)
         run: |
-          source .venv/bin/activate
-          uv run pytest tests/0_core/ -vv
+          run: uv run pytest tests/0_core/ -vv
 
   test-full-deps:
     needs: test-minimal-deps
@@ -117,9 +114,7 @@ jobs:
 
       - name: Install dependencies with uv
         run: |
-          uv venv
-          source .venv/bin/activate
-          uv pip install .[dev]
+          run: uv sync --all-extras --dev
           colrev install --uv ${{ env.COLREV_PACKAGES }}
 
       - name: Setup git
@@ -130,8 +125,7 @@ jobs:
 
       - name: Run tests
         run: |
-          source .venv/bin/activate
-          uv run pytest --slow -vv
+          run: uv run pytest tests --slow -vv
 
   test-pip-install:
     needs: test-minimal-deps
