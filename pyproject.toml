@@ -126,6 +126,14 @@ disable = ["R0801"]
 [pytest]
 norecursedirs = "tests/data/package_init/"
 
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:'DataFrame.swapaxes' is deprecated:FutureWarning",
+    "ignore:.*SwigPyPacked.*:DeprecationWarning",
+    "ignore:.*SwigPyObject.*:DeprecationWarning",
+    "ignore:.*swigvarlink.*:DeprecationWarning"
+]
+
 [tool.coverage.report]
 omit = [
     "colrev/packages/*",

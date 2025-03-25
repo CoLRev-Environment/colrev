@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import shutil
 import typing
+import warnings
 from pathlib import Path
 
 import git
@@ -154,36 +155,38 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         return test_records_dict
 
     temp_sqlite = review_manager.path.parent / Path("sqlite_index_test.db")
-    with session_mocker.patch.object(
-        colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
-    ):
-        test_records_dict = load_test_records(helpers.test_data_path)
-        local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder(
-            verbose_mode=True
-        )
-        local_index_builder.reinitialize_sqlite_db()
-
-        for path, records in test_records_dict.items():
-            if "cura" in str(path):
-                continue
-            local_index_builder.index_records(
-                records=records,
-                repo_source_path=path,
-                curated_fields=[],
-                curation_url="gh...",
-                curated_masterdata=True,
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        with session_mocker.patch.object(
+            colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
+        ):
+            test_records_dict = load_test_records(helpers.test_data_path)
+            local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder(
+                verbose_mode=True
             )
+            local_index_builder.reinitialize_sqlite_db()
 
-        for path, records in test_records_dict.items():
-            if "cura" not in str(path):
-                continue
-            local_index_builder.index_records(
-                records=records,
-                repo_source_path=path,
-                curated_fields=["literature_review"],
-                curation_url="gh...",
-                curated_masterdata=False,
-            )
+            for path, records in test_records_dict.items():
+                if "cura" in str(path):
+                    continue
+                local_index_builder.index_records(
+                    records=records,
+                    repo_source_path=path,
+                    curated_fields=[],
+                    curation_url="gh...",
+                    curated_masterdata=True,
+                )
+
+            for path, records in test_records_dict.items():
+                if "cura" not in str(path):
+                    continue
+                local_index_builder.index_records(
+                    records=records,
+                    repo_source_path=path,
+                    curated_fields=["literature_review"],
+                    curation_url="gh...",
+                    curated_masterdata=False,
+                )
 
     dedupe_operation = review_manager.get_dedupe_operation()
     dedupe_operation.review_manager.settings.project.delay_automated_processing = True
