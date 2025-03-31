@@ -30,7 +30,7 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
     )
 
     search_source = colrev.settings.SearchSource(
-        endpoint="colrev.unknown_source",
+        endpoint="colrev_unknown_source",
         filename=Path("data/search/complementary_backward_search.bib"),
         search_type=SearchType.OTHER,
         search_parameters={},

@@ -40,7 +40,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         SearchType.API,
         SearchType.MD,
     ]
-    endpoint = "colrev.pubmed"
+    endpoint = "colrev_pubmed"
 
     ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported
@@ -512,8 +512,8 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Pubmed"""
 
-        if "colrev.pubmed.first_author" in record.data:
-            record.remove_field(key="colrev.pubmed.first_author")
+        if "colrev_pubmed.first_author" in record.data:
+            record.remove_field(key="colrev_pubmed.first_author")
 
         if Fields.AUTHOR in record.data:
             record.data[Fields.AUTHOR] = (

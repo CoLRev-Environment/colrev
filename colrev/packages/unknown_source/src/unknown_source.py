@@ -33,9 +33,9 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Unknown SearchSource"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    endpoint = "colrev.unknown_source"
+    endpoint = "colrev_unknown_source"
 
-    source_identifier = "colrev.unknown_source"
+    source_identifier = "colrev_unknown_source"
     search_types = [
         SearchType.DB,
         SearchType.OTHER,
@@ -509,7 +509,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         for record in records.values():
             for key in list(record.keys()):
                 if key not in FieldSet.STANDARDIZED_FIELD_KEYS:
-                    record[f"colrev.unknonwn_source.{key}"] = record.pop(key)
+                    record[f"colrev_unknonwn_source.{key}"] = record.pop(key)
 
         return records
 

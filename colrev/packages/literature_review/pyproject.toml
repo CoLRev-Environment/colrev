@@ -1,5 +1,5 @@
 [project]
-name = "colrev.literature_review"
+name = "colrev_literature_review"
 description = "CoLRev package for literature_review"
 version = "0.1.0"
 license = {text = "MIT"}
@@ -7,6 +7,33 @@ authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
  ]
 requires-python = ">=3.8, <4"
+dependencies = [
+    "colrev>=0.14.0",
+    "colrev_source_specific_prep>=0.1.0",
+    "colrev_exclude_non_latin_alphabets>=0.1.0",
+    "colrev_exclude_collections>=0.1.0",
+    "colrev_exclude_complementary_materials>=0.1.0",
+    "colrev_local_index>=0.1.0",
+    "colrev_exclude_languages>=0.1.0",
+    "colrev_remove_urls_with_500_errors>=0.1.0",
+    "colrev_remove_broken_ids>=0.1.0",
+    "colrev_get_doi_from_urls>=0.1.0",
+    "colrev_get_year_from_vol_iss_jour>=0.1.0",
+    "colrev_crossref>=0.1.0",
+    "colrev_export_man_prep>=0.1.0",
+    "colrev_dedupe>=0.1.0",
+    "colrev_cli_prescreen>=0.1.0",
+    "colrev_unpaywall>=0.1.0",
+    "colrev_download_from_website>=0.1.0",
+    "colrev_cli_pdf_get_man>=0.1.0",
+    "colrev_ocrmypdf>=0.1.0",
+    "colrev_remove_coverpage>=0.1.0",
+    "colrev_remove_last_page>=0.1.0",
+    "colrev_grobid_tei>=0.1.0",
+    "colrev_cli_pdf_prep_man>=0.1.0",
+    "colrev_cli_screen>=0.1.0",
+    "colrev_ref_check>=0.1.0"
+]
 
 [project.urls]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/literature_review"

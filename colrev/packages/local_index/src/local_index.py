@@ -40,7 +40,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = Fields.CURATION_ID
     search_types = [SearchType.API, SearchType.MD]
-    endpoint = "colrev.local_index"
+    endpoint = "colrev_local_index"
 
     ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported
@@ -176,7 +176,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         for record_dict in local_index_feed.records.values():
             record = colrev.record.record.Record(record_dict)
-            record.remove_field(key="colrev.local_index.curation_ID")
+            record.remove_field(key="colrev_local_index.curation_ID")
 
         local_index_feed.save()
 
@@ -194,10 +194,10 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                 continue
 
         for record_dict in local_index_feed.feed_records.values():
-            record_dict.pop("colrev.local_index.curation_ID", None)
+            record_dict.pop("colrev_local_index.curation_ID", None)
             record_dict.pop("curation_ID", None)
         for record_dict in local_index_feed.records.values():
-            record_dict.pop("colrev.local_index.curation_ID", None)
+            record_dict.pop("colrev_local_index.curation_ID", None)
             record_dict.pop("curation_ID", None)
 
         local_index_feed.save()

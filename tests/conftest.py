@@ -195,17 +195,17 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     dedupe_operation.review_manager.settings.project.delay_automated_processing = False
 
     review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
-        {"endpoint": "colrev.source_specific_prep"},
+        {"endpoint": "colrev_source_specific_prep"},
     ]
     review_manager.settings.dedupe.dedupe_package_endpoints = [
-        {"endpoint": "colrev.dedupe"}
+        {"endpoint": "colrev_dedupe"}
     ]
     review_manager.settings.prescreen.prescreen_package_endpoints = [
-        {"endpoint": "colrev.conditional_prescreen"}
+        {"endpoint": "colrev_conditional_prescreen"}
     ]
 
     review_manager.settings.pdf_get.pdf_get_package_endpoints = [
-        {"endpoint": "colrev.local_index"}
+        {"endpoint": "colrev_local_index"}
     ]
     review_manager.settings.pdf_prep.pdf_prep_package_endpoints = []
     review_manager.settings.screen.screen_package_endpoints = []

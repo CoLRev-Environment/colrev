@@ -1,5 +1,5 @@
 [project]
-name = "colrev.grobid_tei"
+name = "colrev_grobid_tei"
 description = "CoLRev package for grobid_tei"
 version = "0.1.0"
 license = {text = "MIT"}

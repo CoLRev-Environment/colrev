@@ -208,6 +208,12 @@ class Upgrade(colrev.process.operation.Operation):
                 "script": self._migrate_0_14_0,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.14.0"),
+                "target_version": CoLRevVersion("0.15.0"),
+                "script": self._migrate_0_15_0,
+                "released": False,
+            },
         ]
         self.review_manager.logger.info(
             "Colrev version installed:           %s", installed_colrev_version
@@ -792,6 +798,115 @@ class Upgrade(colrev.process.operation.Operation):
             )
 
             self.repo.index.add([str(target_path)])
+
+        return self.repo.is_dirty()
+
+    def _migrate_0_15_0(self) -> bool:
+
+        package_rename_map = {
+            "colrev.blank": "colrev_blank",
+            "colrev.conceptual_review": "colrev_conceptual_review",
+            "colrev.critical_review": "colrev_critical_review",
+            "colrev.curated_masterdata": "colrev_curated_masterdata",
+            "colrev.descriptive_review": "colrev_descriptive_review",
+            "colrev.literature_review": "colrev_literature_review",
+            "colrev.meta_analysis": "colrev_meta_analysis",
+            "colrev.methodological_review": "colrev_methodological_review",
+            "colrev.narrative_review": "colrev_narrative_review",
+            "colrev.qualitative_systematic_review": "colrev_qualitative_systematic_review",
+            "colrev.scientometric": "colrev_scientometric",
+            "colrev.scoping_review": "colrev_scoping_review",
+            "colrev.theoretical_review": "colrev_theoretical_review",
+            "colrev.umbrella": "colrev_umbrella",
+            "colrev.abi_inform_proquest": "colrev_abi_inform_proquest",
+            "colrev.acm_digital_library": "colrev_acm_digital_library",
+            "colrev.ais_library": "colrev_ais_library",
+            "colrev.arxiv": "colrev_arxiv",
+            "colrev.colrev_project": "colrev_colrev_project",
+            "colrev.crossref": "colrev_crossref",
+            "colrev.dblp": "colrev_dblp",
+            "colrev.ebsco_host": "colrev_ebsco_host",
+            "colrev.eric": "colrev_eric",
+            "colrev.europe_pmc": "colrev_europe_pmc",
+            "colrev.files_dir": "colrev_files_dir",
+            "colrev.github": "colrev_github",
+            "colrev.google_scholar": "colrev_google_scholar",
+            "colrev.ieee": "colrev_ieee",
+            "colrev.jstor": "colrev_jstor",
+            "colrev.local_index": "colrev_local_index",
+            "colrev.open_alex": "colrev_open_alex",
+            "colrev.open_citations_forward_search": "colrev_open_citations_forward_search",
+            "colrev.open_library": "colrev_open_library",
+            "colrev.osf": "colrev_osf",
+            "colrev.pdf_backward_search": "colrev_pdf_backward_search",
+            "colrev.psycinfo": "colrev_psycinfo",
+            "colrev.plos": "colrev_plos",
+            "colrev.prospero": "colrev_prospero",
+            "colrev.pubmed": "colrev_pubmed",
+            "colrev.scopus": "colrev_scopus",
+            "colrev.semanticscholar": "colrev_semanticscholar",
+            "colrev.springer_link": "colrev_springer_link",
+            "colrev.synergy_datasets": "colrev_synergy_datasets",
+            "colrev.taylor_and_francis": "colrev_taylor_and_francis",
+            "colrev.trid": "colrev_trid",
+            "colrev.unknown_source": "colrev_unknown_source",
+            "colrev.unpaywall": "colrev_unpaywall",
+            "colrev.web_of_science": "colrev_web_of_science",
+            "colrev.wiley": "colrev_wiley",
+            "colrev.add_journal_ranking": "colrev_add_journal_ranking",
+            "colrev.colrev_curation": "colrev_colrev_curation",
+            "colrev.exclude_collections": "colrev_exclude_collections",
+            "colrev.exclude_complementary_materials": "colrev_exclude_complementary_materials",
+            "colrev.exclude_languages": "colrev_exclude_languages",
+            "colrev.exclude_non_latin_alphabets": "colrev_exclude_non_latin_alphabets",
+            "colrev.general_polish": "colrev_general_polish",
+            "colrev.get_doi_from_urls": "colrev_get_doi_from_urls",
+            "colrev.get_masterdata_from_citeas": "colrev_get_masterdata_from_citeas",
+            "colrev.get_masterdata_from_doi": "colrev_get_masterdata_from_doi",
+            "colrev.get_year_from_vol_iss_jour": "colrev_get_year_from_vol_iss_jour",
+            "colrev.remove_broken_ids": "colrev_remove_broken_ids",
+            "colrev.remove_urls_with_500_errors": "colrev_remove_urls_with_500_errors",
+            "colrev.source_specific_prep": "colrev_source_specific_prep",
+            "colrev.export_man_prep": "colrev_export_man_prep",
+            "colrev.prep_man_curation_jupyter": "colrev_prep_man_curation_jupyter",
+            "colrev.colrev_cli_prescreen": "colrev_cli_prescreen",
+            "colrev.conditional_prescreen": "colrev_conditional_prescreen",
+            "colrev.prescreen_table": "colrev_prescreen_table",
+            "colrev.scope_prescreen": "colrev_scope_prescreen",
+            "colrev.download_from_website": "colrev_download_from_website",
+            "colrev.website_screenshot": "colrev_website_screenshot",
+            "colrev.colrev_cli_pdf_get_man": "colrev_cli_pdf_get_man",
+            "colrev.grobid_tei": "colrev_grobid_tei",
+            "colrev.ocrmypdf": "colrev_ocrmypdf",
+            "colrev.remove_coverpage": "colrev_remove_coverpage",
+            "colrev.remove_last_page": "colrev_remove_last_page",
+            "colrev.colrev_cli_pdf_prep_man": "colrev_cli_pdf_prep_man",
+            "colrev.colrev_cli_screen": "colrev_cli_screen",
+            "colrev.screen_table": "colrev_screen_table",
+            "colrev.bibliography_export": "colrev_bibliography_export",
+            "colrev.github_pages": "colrev_github_pages",
+            "colrev.obsidian": "colrev_obsidian",
+            "colrev.paper_md": "colrev_paper_md",
+            "colrev.prisma": "colrev_prisma",
+            "colrev.structured": "colrev_structured",
+            "colrev.profile": "colrev_profile",
+            "colrev.ref_check": "colrev_ref_check",
+            "colrev.doi_org": "colrev_doi_org",
+            "colrev-sync": "colrev_sync",
+            "colrev.ui_web": "colrev_ui_web",
+        }
+
+        settings_file = "settings.json"
+        with open(settings_file, encoding="utf-8") as file:
+            content = file.read()
+        for old_value, new_value in package_rename_map.items():
+            content = content.replace(
+                f'"endpoint": "{old_value}"', f'"endpoint": "{new_value}"'
+            )
+        with open(settings_file, "w", encoding="utf-8") as file:
+            file.write(content)
+
+        # TODO : rename in data/records.bib (in colrev_masterdata_provenance, colrev_data_provenance)
 
         return self.repo.is_dirty()
 

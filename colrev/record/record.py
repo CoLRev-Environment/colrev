@@ -724,11 +724,11 @@ class Record:
         # Legacy
         if (
             self.data.get("crossmark", "") == "True"
-            or self.data.get("colrev.crossref.crossmark", "") == "True"
+            or self.data.get("colrev_crossref.crossmark", "") == "True"
         ):
             self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
             self.remove_field(key="crossmark")
-            self.remove_field(key="colrev.crossref.crossmark")
+            self.remove_field(key="colrev_crossref.crossmark")
         if self.data.get("warning", "") == "Withdrawn (according to DBLP)":
             self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
             self.remove_field(key="warning")

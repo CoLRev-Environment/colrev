@@ -90,7 +90,7 @@ class Search(colrev.process.operation.Operation):
             filename = Path(params["search_file"])
         else:
             filename = self.get_unique_filename(
-                file_path_string=search_source_cls.endpoint.replace("colrev.", "")
+                file_path_string=search_source_cls.endpoint.replace("colrev_", "")
             )
         self.review_manager.logger.debug(f"Add new DB source: {filename}")
 

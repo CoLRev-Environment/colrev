@@ -1,4 +1,4 @@
-# colrev.plos
+# colrev_plos
 
 ## Summary
 
@@ -7,7 +7,7 @@ PLOS is a SearchSource providing open access metadata for articles published in 
 ## Installation
 
 ```bash
-colrev install colrev.plos
+colrev install colrev_plos
 ```
 
 ## Usage
@@ -16,12 +16,12 @@ colrev install colrev.plos
 To make an API search, first introduce the next command:
 
 ```
-colrev search -a colrev.plos
+colrev search -a colrev_plos
 ```
 On the menu displayed, select the option API:
 
 ```
-2024-12-20 16:22:31 [INFO] Add search package: colrev.plos
+2024-12-20 16:22:31 [INFO] Add search package: colrev_plos
 [?] Select SearchType::
  > API
    TOC
@@ -29,7 +29,7 @@ On the menu displayed, select the option API:
 
 Finally introduce a keyword to search:
 ```
-Add colrev.plos as an API SearchSource
+Add colrev_plos as an API SearchSource
 
 Enter the keywords:
 ```

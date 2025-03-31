@@ -1,5 +1,5 @@
 [project]
-name = "colrev.crossref"
+name = "colrev_crossref"
 description = "Crossref package for CoLRev"
 version = "0.1.0"
 license = {text = "MIT"}

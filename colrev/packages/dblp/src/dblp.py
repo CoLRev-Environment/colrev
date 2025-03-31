@@ -59,7 +59,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         SearchType.MD,
         SearchType.TOC,
     ]
-    endpoint = "colrev.dblp"
+    endpoint = "colrev_dblp"
 
     ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported
@@ -388,10 +388,10 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 source="dblp",
                 keep_source_if_equal=True,
             )
-        record.remove_field(key="colrev.dblp.bibsource")
+        record.remove_field(key="colrev_dblp.bibsource")
         if any(x in record.data.get(Fields.URL, "") for x in ["dblp.org", "doi.org"]):
             record.remove_field(key=Fields.URL)
-        record.remove_field(key="colrev.dblp.timestamp")
+        record.remove_field(key="colrev_dblp.timestamp")
 
         return record
 
@@ -460,7 +460,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
                 record.set_status(RecordState.md_prepared)
                 if "Withdrawn (according to DBLP)" in record.data.get(
-                    "colrev.dblp.warning", ""
+                    "colrev_dblp.warning", ""
                 ):
                     record.prescreen_exclude(reason=FieldValues.RETRACTED)
                     # record.remove_field(key="warning")

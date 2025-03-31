@@ -160,6 +160,48 @@ class PackageManager:
 
         self.install(packages=packages, uv=uv)
 
+    # def _add_dependencies(self, packages: typing.List[str]) -> typing.List[str]:
+    #     packages = list(packages)
+
+    #     if len(packages) == 1 and packages[0] == "colrev_literature_review":
+    #         packages.extend(
+    #             [
+    #                 "colrev_paper_md",
+    #                 "colrev_files_dir",
+    #                 "colrev_source_specific_prep",
+    #                 "colrev_exclude_non_latin_alphabets",
+    #                 "colrev_exclude_collections",
+    #                 "colrev_exclude_complementary_materials",
+    #                 "colrev_local_index",
+    #                 "colrev_exclude_languages",
+    #                 "colrev_remove_urls_with_500_errors",
+    #                 "colrev_remove_broken_ids",
+    #                 "colrev_get_doi_from_urls",
+    #                 "colrev_get_year_from_vol_iss_jour",
+    #                 "colrev_crossref",
+    #                 "colrev_pubmed",
+    #                 "colrev_europe_pmc",
+    #                 "colrev_dblp",
+    #                 "colrev_open_library",
+    #                 "colrev_export_man_prep",
+    #                 "colrev_dedupe",
+    #                 "colrev_cli_prescreen",
+    #                 "colrev_unpaywall",
+    #                 "colrev_download_from_website",
+    #                 "colrev_cli_pdf_get_man",
+    #                 "colrev_ocrmypdf",
+    #                 "colrev_remove_coverpage",
+    #                 "colrev_remove_last_page",
+    #                 "colrev_grobid_tei",
+    #                 "colrev_cli_pdf_prep_man",
+    #                 "colrev_cli_screen",
+    #                 "colrev_ref_check",
+    #             ]
+    #         )
+    #     return packages
+
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-branches
     def install(
         self,
         *,
@@ -175,8 +217,6 @@ class PackageManager:
         else:
             package_manager = ["pip"]
 
-        print(package_manager)
-
         internal_packages_dict = (
             colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
         )
@@ -184,7 +224,10 @@ class PackageManager:
         if len(packages) == 1 and packages[0] == "all_internal_packages":
             packages = list(internal_packages_dict.keys())
 
-        # Install internal colrev packages first
+        # TODO : this is a temporary method
+        # self._add_dependencies(packages)
+
+        # Install packages from colrev monorepository first
         colrev_packages = []
         for package in packages:
             if package in internal_packages_dict:
@@ -195,11 +238,23 @@ class PackageManager:
             f"Installing ColRev packages: {colrev_packages + packages} using {package_manager}"
         )
 
-        install_args = package_manager + ["install"]
+        colrev_package_paths = [
+            p_path
+            for p_name, p_path in internal_packages_dict.items()
+            if p_name in colrev_packages
+        ]
+        print(colrev_package_paths)
+        args = package_manager + ["install"]
+        args += colrev_package_paths
         if upgrade:
-            install_args.append("--upgrade")
+            args += ["--upgrade"]
         if editable:
-            install_args.append("--editable")
+            args += ["--editable", str(editable)]
+
+        # sys.argv = args
+        # run_module("pip", run_name="__main__")
+        # use subprocess because run_module does not return control
+        subprocess.run(args, check=False)
 
         # Install both internal and external packages in a single command
         all_packages = [
@@ -207,5 +262,5 @@ class PackageManager:
             for p in colrev_packages
         ] + packages
 
-        install_args += all_packages
-        subprocess.run(install_args, check=True)
+        args += all_packages
+        subprocess.run(args, check=True)

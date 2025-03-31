@@ -1,5 +1,5 @@
 [project]
-name = "colrev.curation_missing_dedupe"
+name = "colrev_curation_missing_dedupe"
 description = "CoLRev package for curation_missing_dedupe"
 version = "0.1.0"
 license = {text = "MIT"}

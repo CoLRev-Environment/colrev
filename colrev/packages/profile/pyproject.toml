@@ -1,5 +1,5 @@
 [project]
-name = "colrev.profile"
+name = "colrev_profile"
 description = "CoLRev package for creating profiles"
 version = "0.1.0"
 license = {text = "MIT"}

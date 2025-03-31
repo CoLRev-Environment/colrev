@@ -1,5 +1,5 @@
 [project]
-name = "colrev.synergy_datasets"
+name = "colrev_synergy_datasets"
 description = "CoLRev package for SYNERGY Datasets"
 version = "0.1.0"
 license = {text = "MIT"}

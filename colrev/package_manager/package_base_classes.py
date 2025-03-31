@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import abc
+import logging
 import typing
 from abc import ABC
 from abc import abstractmethod
 from pathlib import Path
 from typing import Type
+
+from search_query.query import Query
 
 import colrev.package_manager.package_settings
 from colrev.constants import EndpointType
@@ -15,7 +18,6 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 if typing.TYPE_CHECKING:  # pragma: no cover
-    import logging
     import colrev.record.record
     import colrev.settings
 
@@ -73,6 +75,36 @@ class SearchSourcePackageBaseClass(ABC):
     @abstractmethod
     def search(self, rerun: bool) -> None:
         """Run a search of the SearchSource."""
+
+    @classmethod
+    def search_api(cls, *, url: str, logger: logging.Logger) -> dict:
+        """Search the API."""
+        # Not strictly required by all SearchSources
+        raise NotImplementedError()
+
+    @classmethod
+    def parse_query(
+        cls,
+        *,
+        query: str,
+        syntax_version: str,
+        logger: logging.Logger = logging.getLogger(__name__),
+    ) -> Query:
+        """Get the SearchQuery object based on the query string."""
+        # Not strictly required by all SearchSources (maybe later)
+        raise NotImplementedError()
+
+    @classmethod
+    def get_query_string(
+        cls,
+        *,
+        query: Query,
+        syntax_version: str,
+        logger: logging.Logger = logging.getLogger(__name__),
+    ) -> str:
+        """Get the SearchQuery string based on an object (serialize)."""
+        # Not strictly required by all SearchSources (maybe later)
+        raise NotImplementedError()
 
     @abstractmethod
     def prep_link_md(

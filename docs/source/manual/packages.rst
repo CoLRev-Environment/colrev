@@ -45,133 +45,132 @@ Packages
 
 
 
-   packages/colrev.blank.rst
-   packages/colrev.conceptual_review.rst
-   packages/colrev.critical_review.rst
-   packages/colrev.curated_masterdata.rst
-   packages/colrev.descriptive_review.rst
-   packages/colrev.literature_review.rst
-   packages/colrev.meta_analysis.rst
-   packages/colrev.methodological_review.rst
-   packages/colrev.narrative_review.rst
-   packages/colrev.qualitative_systematic_review.rst
-   packages/colrev.scientometric.rst
-   packages/colrev.scoping_review.rst
-   packages/colrev.theoretical_review.rst
-   packages/colrev.umbrella.rst
+   packages/colrev_blank.rst
+   packages/colrev_conceptual_review.rst
+   packages/colrev_critical_review.rst
+   packages/colrev_curated_masterdata.rst
+   packages/colrev_descriptive_review.rst
+   packages/colrev_literature_review.rst
+   packages/colrev_meta_analysis.rst
+   packages/colrev_methodological_review.rst
+   packages/colrev_narrative_review.rst
+   packages/colrev_qualitative_systematic_review.rst
+   packages/colrev_scientometric.rst
+   packages/colrev_scoping_review.rst
+   packages/colrev_theoretical_review.rst
+   packages/colrev_umbrella.rst
 
 
-   packages/colrev.abi_inform_proquest.rst
-   packages/colrev.acm_digital_library.rst
-   packages/colrev.ais_library.rst
-   packages/colrev.arxiv.rst
-   packages/colrev.colrev_project.rst
-   packages/colrev.crossref.rst
-   packages/colrev.dblp.rst
-   packages/colrev.ebsco_host.rst
-   packages/colrev.eric.rst
-   packages/colrev.europe_pmc.rst
-   packages/colrev.files_dir.rst
-   packages/colrev.github.rst
-   packages/colrev.google_scholar.rst
-   packages/colrev.ieee.rst
-   packages/colrev.jstor.rst
-   packages/colrev.local_index.rst
-   packages/colrev.open_alex.rst
-   packages/colrev.open_citations_forward_search.rst
-   packages/colrev.open_library.rst
-   packages/colrev.osf.rst
-   packages/colrev.pdf_backward_search.rst
-   packages/colrev.plos.rst
-   packages/colrev.prospero.rst
-   packages/colrev.psycinfo.rst
-   packages/colrev.pubmed.rst
-   packages/colrev.scopus.rst
-   packages/colrev.semanticscholar.rst
-   packages/colrev.springer_link.rst
-   packages/colrev.synergy_datasets.rst
-   packages/colrev.taylor_and_francis.rst
-   packages/colrev.trid.rst
-   packages/colrev.unknown_source.rst
-   packages/colrev.unpaywall.rst
-   packages/colrev.web_of_science.rst
-   packages/colrev.wiley.rst
+   packages/colrev_abi_inform_proquest.rst
+   packages/colrev_acm_digital_library.rst
+   packages/colrev_ais_library.rst
+   packages/colrev_arxiv.rst
+   packages/colrev_crossref.rst
+   packages/colrev_dblp.rst
+   packages/colrev_ebsco_host.rst
+   packages/colrev_eric.rst
+   packages/colrev_europe_pmc.rst
+   packages/colrev_files_dir.rst
+   packages/colrev_github.rst
+   packages/colrev_google_scholar.rst
+   packages/colrev_ieee.rst
+   packages/colrev_jstor.rst
+   packages/colrev_local_index.rst
+   packages/colrev_open_alex.rst
+   packages/colrev_open_citations_forward_search.rst
+   packages/colrev_open_library.rst
+   packages/colrev_osf.rst
+   packages/colrev_pdf_backward_search.rst
+   packages/colrev_plos.rst
+   packages/colrev_project.rst
+   packages/colrev_prospero.rst
+   packages/colrev_psycinfo.rst
+   packages/colrev_pubmed.rst
+   packages/colrev_scopus.rst
+   packages/colrev_semanticscholar.rst
+   packages/colrev_springer_link.rst
+   packages/colrev_synergy_datasets.rst
+   packages/colrev_taylor_and_francis.rst
+   packages/colrev_trid.rst
+   packages/colrev_unknown_source.rst
+   packages/colrev_unpaywall.rst
+   packages/colrev_web_of_science.rst
+   packages/colrev_wiley.rst
 
 
-   packages/colrev.add_journal_ranking.rst
-   packages/colrev.colrev_curation.rst
-   packages/colrev.crossref.rst
-   packages/colrev.dblp.rst
-   packages/colrev.europe_pmc.rst
-   packages/colrev.exclude_collections.rst
-   packages/colrev.exclude_complementary_materials.rst
-   packages/colrev.exclude_languages.rst
-   packages/colrev.exclude_non_latin_alphabets.rst
-   packages/colrev.general_polish.rst
-   packages/colrev.get_doi_from_urls.rst
-   packages/colrev.get_masterdata_from_citeas.rst
-   packages/colrev.get_masterdata_from_doi.rst
-   packages/colrev.get_year_from_vol_iss_jour.rst
-   packages/colrev.github.rst
-   packages/colrev.local_index.rst
-   packages/colrev.open_alex.rst
-   packages/colrev.open_library.rst
-   packages/colrev.pubmed.rst
-   packages/colrev.remove_broken_ids.rst
-   packages/colrev.remove_urls_with_500_errors.rst
-   packages/colrev.semanticscholar.rst
-   packages/colrev.source_specific_prep.rst
+   packages/colrev_add_journal_ranking.rst
+   packages/colrev_crossref.rst
+   packages/colrev_curation.rst
+   packages/colrev_dblp.rst
+   packages/colrev_europe_pmc.rst
+   packages/colrev_exclude_collections.rst
+   packages/colrev_exclude_complementary_materials.rst
+   packages/colrev_exclude_languages.rst
+   packages/colrev_exclude_non_latin_alphabets.rst
+   packages/colrev_general_polish.rst
+   packages/colrev_get_doi_from_urls.rst
+   packages/colrev_get_masterdata_from_citeas.rst
+   packages/colrev_get_masterdata_from_doi.rst
+   packages/colrev_get_year_from_vol_iss_jour.rst
+   packages/colrev_github.rst
+   packages/colrev_local_index.rst
+   packages/colrev_open_alex.rst
+   packages/colrev_open_library.rst
+   packages/colrev_pubmed.rst
+   packages/colrev_remove_broken_ids.rst
+   packages/colrev_remove_urls_with_500_errors.rst
+   packages/colrev_semanticscholar.rst
+   packages/colrev_source_specific_prep.rst
 
 
-   packages/colrev.export_man_prep.rst
-   packages/colrev.prep_man_curation_jupyter.rst
+   packages/colrev_export_man_prep.rst
+   packages/colrev_prep_man_curation_jupyter.rst
 
 
-   packages/colrev.curation_full_outlet_dedupe.rst
-   packages/colrev.curation_missing_dedupe.rst
-   packages/colrev.dedupe.rst
+   packages/colrev_curation_full_outlet_dedupe.rst
+   packages/colrev_curation_missing_dedupe.rst
+   packages/colrev_dedupe.rst
 
 
-   packages/colrev.colrev_cli_prescreen.rst
-   packages/colrev.conditional_prescreen.rst
-   packages/colrev.prescreen_table.rst
-   packages/colrev.scope_prescreen.rst
+   packages/colrev_cli_prescreen.rst
+   packages/colrev_conditional_prescreen.rst
+   packages/colrev_prescreen_table.rst
+   packages/colrev_scope_prescreen.rst
 
 
-   packages/colrev-scidb.rst
-   packages/colrev.download_from_website.rst
-   packages/colrev.local_index.rst
-   packages/colrev.unpaywall.rst
-   packages/colrev.website_screenshot.rst
+   packages/colrev_download_from_website.rst
+   packages/colrev_local_index.rst
+   packages/colrev_unpaywall.rst
+   packages/colrev_website_screenshot.rst
 
 
-   packages/colrev.colrev_cli_pdf_get_man.rst
+   packages/colrev_cli_pdf_get_man.rst
 
 
-   packages/colrev.grobid_tei.rst
-   packages/colrev.ocrmypdf.rst
-   packages/colrev.remove_coverpage.rst
-   packages/colrev.remove_last_page.rst
+   packages/colrev_grobid_tei.rst
+   packages/colrev_ocrmypdf.rst
+   packages/colrev_remove_coverpage.rst
+   packages/colrev_remove_last_page.rst
 
 
-   packages/colrev.colrev_cli_pdf_prep_man.rst
+   packages/colrev_cli_pdf_prep_man.rst
 
 
-   packages/colrev.colrev_cli_screen.rst
-   packages/colrev.screen_table.rst
+   packages/colrev_cli_screen.rst
+   packages/colrev_screen_table.rst
 
 
-   packages/colrev.bibliography_export.rst
-   packages/colrev.colrev_curation.rst
-   packages/colrev.github_pages.rst
-   packages/colrev.obsidian.rst
-   packages/colrev.paper_md.rst
-   packages/colrev.prisma.rst
-   packages/colrev.profile.rst
-   packages/colrev.ref_check.rst
-   packages/colrev.structured.rst
+   packages/colrev_bibliography_export.rst
+   packages/colrev_curation.rst
+   packages/colrev_github_pages.rst
+   packages/colrev_obsidian.rst
+   packages/colrev_paper_md.rst
+   packages/colrev_prisma.rst
+   packages/colrev_profile.rst
+   packages/colrev_ref_check.rst
+   packages/colrev_structured.rst
 
 
-   packages/colrev-sync.rst
-   packages/colrev.doi_org.rst
-   packages/colrev.ui_web.rst
+   packages/colrev_doi_org.rst
+   packages/colrev_sync.rst
+   packages/colrev_ui_web.rst

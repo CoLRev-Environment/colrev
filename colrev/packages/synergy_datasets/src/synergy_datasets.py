@@ -42,7 +42,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
     """
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    endpoint = "colrev.synergy_datasets"
+    endpoint = "colrev_synergy_datasets"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
     search_types = [SearchType.API]
@@ -135,7 +135,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
             file_path_string=f"SYNERGY_{dataset.replace('/', '_').replace('_ids.csv', '')}"
         )
         search_source = colrev.settings.SearchSource(
-            endpoint="colrev.synergy_datasets",
+            endpoint="colrev_synergy_datasets",
             filename=filename,
             search_type=SearchType.API,
             search_parameters={"dataset": dataset},
@@ -315,7 +315,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
                     "openalex_id",
                     Fields.ENTRYTYPE,
                 ]:
-                    record[f"colrev.synergy_datasets.{key}"] = record.pop(key)
+                    record[f"colrev_synergy_datasets.{key}"] = record.pop(key)
 
             if Fields.DOI in record:
                 existing_keys[Fields.DOI].append(record[Fields.DOI])
@@ -371,14 +371,14 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Source-specific preparation for SYNERGY-datasets"""
 
         record.rename_field(
-            key="colrev.synergy_datasets.pubmedid", new_key=Fields.PUBMED_ID
+            key="colrev_synergy_datasets.pubmedid", new_key=Fields.PUBMED_ID
         )
         record.rename_field(
-            key="colrev.synergy_datasets.openalex_id", new_key="colrev.open_alex.id"
+            key="colrev_synergy_datasets.openalex_id", new_key="colrev_open_alex.id"
         )
         if not any(
             x in record.data
-            for x in [Fields.PUBMED_ID, Fields.DOI, "colrev.open_alex.id"]
+            for x in [Fields.PUBMED_ID, Fields.DOI, "colrev_open_alex.id"]
         ):
             record.prescreen_exclude(reason="no-metadata-available")
         return record

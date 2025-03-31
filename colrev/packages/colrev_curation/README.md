@@ -15,7 +15,7 @@ They can be set as follows:
 ```
 "data_package_endpoints": [
     {
-        "endpoint": "colrev.colrev_curation",
+        "endpoint": "colrev_curation",
         ...
         "masterdata_restrictions": {
             "1985": {

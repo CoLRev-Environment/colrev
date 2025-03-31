@@ -63,7 +63,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         SearchType.DB,
         SearchType.MD,
     ]
-    endpoint = "colrev.europe_pmc"
+    endpoint = "colrev_europe_pmc"
 
     ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported

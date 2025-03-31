@@ -1,5 +1,5 @@
 [project]
-name = "colrev.arxiv"
+name = "colrev_arxiv"
 description = "CoLRev package for arxiv"
 version = "0.1.0"
 license = {text = "MIT"}

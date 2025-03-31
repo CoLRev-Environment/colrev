@@ -1,5 +1,5 @@
 [project]
-name = "colrev.remove_urls_with_500_errors"
+name = "colrev_remove_urls_with_500_errors"
 description = "CoLRev package for remove_urls_with_500_errors"
 version = "0.1.0"
 license = {text = "MIT"}

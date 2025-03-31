@@ -1,5 +1,5 @@
 [project]
-name = "colrev.open_library"
+name = "colrev_open_library"
 description = "CoLRev package for open_library"
 version = "0.1.0"
 license = {text = "MIT"}

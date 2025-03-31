@@ -1,5 +1,5 @@
 [project]
-name = "colrev.ui_web"
+name = "colrev_ui_web"
 description = "Web-UI package for CoLRev"
 version = "0.1.0"
 license = {text = "MIT"}
