@@ -280,5 +280,8 @@
     },
     "colrev.plos": {
         "dev_status": "experimental"
+    },
+    "colrev.genai": {
+        "dev_status": "experimental"
     }
 }
