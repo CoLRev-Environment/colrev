@@ -154,6 +154,14 @@ class GithubPages(base_classes.DataPackageBaseClass):
                 self.review_manager.paths.PRE_COMMIT_CONFIG
             )
 
+        # replace "." in keys:
+        for included_record in included_records.values():
+            for key in list(included_record.keys()):
+                if "." in key:
+                    new_key = key.replace(".", "_")
+                    included_record[new_key] = included_record[key]
+                    del included_record[key]
+
         data_file = Path("data.bib")
         write_file(records_dict=included_records, filename=data_file)
 
