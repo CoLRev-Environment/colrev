@@ -62,7 +62,7 @@ repos:
         additional_dependencies: [types-toml]
         exclude: "tests/data/package_init/"
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.11.6
+  rev: v0.11.8
   hooks:
     - id: ruff # runs faster than pylint
       args: [--fix, --exit-non-zero-on-fix]
