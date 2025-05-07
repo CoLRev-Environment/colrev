@@ -23,17 +23,18 @@ from colrev.package_manager.package_base_classes import BASECLASS_MAP
 def _get_default_author() -> dict:
     try:
         name = (
-            subprocess.check_output(["git", "config", "--global", "user.name"])
+            subprocess.check_output(["git", "config", "--get", "user.name"])
             .decode()
             .strip()
         )
         email = (
-            subprocess.check_output(["git", "config", "--global", "user.email"])
+            subprocess.check_output(["git", "config", "--get", "user.email"])
             .decode()
             .strip()
         )
         return {"name": name, "email": email}
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as exc:
+        print(exc)
         return {}
 
 
