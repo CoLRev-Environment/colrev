@@ -12,14 +12,12 @@ import inquirer
 import requests
 import toml
 from bs4 import BeautifulSoup
-from m2r import parse_from_file
+from m2r import parse_from_file  # pylint: disable=import-error
 
 import colrev.package_manager.colrev_internal_packages
 from colrev.constants import EndpointType
 from colrev.constants import Filepaths
 from colrev.constants import SearchType
-
-# pylint: disable=import-error
 
 
 INTERNAL_PACKAGES = (
