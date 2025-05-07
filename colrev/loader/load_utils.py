@@ -179,7 +179,6 @@ def load(  # type: ignore
         raise FileNotFoundError
 
     if filename.suffix == ".bib":
-        entrytype_setter = bib_entrytype_setter
         parser = colrev.loader.bib.BIBLoader  # type: ignore
     elif filename.suffix in [".csv", ".xls", ".xlsx"]:
         parser = colrev.loader.table.TableLoader  # type: ignore
