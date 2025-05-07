@@ -364,7 +364,9 @@ class PDFPrep(colrev.process.operation.Operation):
     def generate_tei(self) -> None:
         """Generate TEI documents for included records"""
 
-        self.review_manager.logger.info("Generate TEI documents")
+        self.review_manager.logger.info(
+            "Generate TEI documents for records with status=rev_included|rev_synthesized"
+        )
         endpoint = colrev.packages.grobid_tei.src.grobid_tei.GROBIDTEI(
             pdf_prep_operation=self, settings={"endpoint": "colrev.grobid_tei"}
         )
