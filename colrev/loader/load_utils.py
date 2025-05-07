@@ -143,18 +143,21 @@ import colrev.loader.md
 import colrev.loader.nbib
 import colrev.loader.ris
 import colrev.loader.table
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 # pylint: disable=too-many-arguments
 # flake8: noqa: E501
 
 
-def bib_entrytype_setter(entrytype: str) -> None:
-    if "ENTRYTYPE" not in entrytype:
-        entrytype["ENTRYTYPE"] = "misc"
+def bib_entrytype_setter(entrytype: dict) -> None:
+    """Set the entrytype for BibTeX records"""
+    if Fields.ENTRYTYPE not in entrytype:
+        entrytype[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
         return
-    entrytype["ENTRYTYPE"] = entrytype["ENTRYTYPE"].lower()
-    if entrytype["ENTRYTYPE"] in ["www", "electronic"]:
-        entrytype["ENTRYTYPE"] = "misc"
+    entrytype[Fields.ENTRYTYPE] = entrytype[Fields.ENTRYTYPE].lower()
+    if entrytype[Fields.ENTRYTYPE] in ["www", "electronic"]:
+        entrytype[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
 
 def load(  # type: ignore

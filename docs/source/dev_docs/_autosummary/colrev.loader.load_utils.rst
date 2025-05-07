@@ -17,4 +17,5 @@ colrev.loader.load\_utils
 
       get_nr_records
       load
+      load_df
       loads

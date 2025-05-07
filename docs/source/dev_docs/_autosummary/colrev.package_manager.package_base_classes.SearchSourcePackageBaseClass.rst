@@ -17,6 +17,7 @@ colrev.package\_manager.package\_base\_classes.SearchSourcePackageBaseClass
       :nosignatures:
 
       ~SearchSourcePackageBaseClass.add_endpoint
+      ~SearchSourcePackageBaseClass.ensure_append_only
       ~SearchSourcePackageBaseClass.heuristic
       ~SearchSourcePackageBaseClass.load
       ~SearchSourcePackageBaseClass.prep_link_md
