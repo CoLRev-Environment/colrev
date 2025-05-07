@@ -148,6 +148,15 @@ import colrev.loader.table
 # flake8: noqa: E501
 
 
+def bib_entrytype_setter(entrytype: str) -> None:
+    if "ENTRYTYPE" not in entrytype:
+        entrytype["ENTRYTYPE"] = "misc"
+        return
+    entrytype["ENTRYTYPE"] = entrytype["ENTRYTYPE"].lower()
+    if entrytype["ENTRYTYPE"] in ["www", "electronic"]:
+        entrytype["ENTRYTYPE"] = "misc"
+
+
 def load(  # type: ignore
     filename: Path,
     *,
@@ -167,6 +176,7 @@ def load(  # type: ignore
         raise FileNotFoundError
 
     if filename.suffix == ".bib":
+        entrytype_setter = bib_entrytype_setter
         parser = colrev.loader.bib.BIBLoader  # type: ignore
     elif filename.suffix in [".csv", ".xls", ".xlsx"]:
         parser = colrev.loader.table.TableLoader  # type: ignore
