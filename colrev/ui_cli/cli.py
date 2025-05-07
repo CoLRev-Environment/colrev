@@ -3155,6 +3155,32 @@ def convert(
     )
 
 
+@main.command(help_priority=100)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.pass_context
+def run(
+    ctx: click.core.Context,
+    verbose: bool,
+) -> None:
+    """Run a simplified version of CoLRev (tutorial)"""
+    # pylint: disable=import-outside-toplevel
+    import colrev.ops.run
+
+    try:
+        colrev.ops.run.main()
+    except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
+        print(exc)
+
+
+
 @main.command(help_priority=34)
 @click.pass_context
 def version(
