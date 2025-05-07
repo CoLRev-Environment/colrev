@@ -236,6 +236,11 @@ class LocalIndex:
                     continue
 
                 return prepare_record_for_return(record_dict, include_file=include_file)
+
+            if "DROPPED" in toc_items:
+                raise colrev_exceptions.RecordNotInIndexException(
+                    record.data[Fields.ID]
+                )
             raise colrev_exceptions.RecordNotInTOCException(
                 record_id=record.data[Fields.ID], toc_key=toc_key
             )
