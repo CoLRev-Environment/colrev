@@ -80,6 +80,7 @@ class HTTPRequest:
             / self.rate_limits["x-rate-limit-limit"]
         )
 
+    # pylint: disable=too-many-positional-arguments
     def retrieve(
         self,
         endpoint: str,
