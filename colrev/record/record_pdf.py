@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Functionality for PDF handling."""
+"""Class to handle PDFs associated with a record."""
 from __future__ import annotations
 
 import logging
@@ -22,7 +22,7 @@ from colrev.constants import Fields
 
 
 class PDFRecord(colrev.record.record.Record):
-    """The PDFRecord class provides a range of convenience functions for PDF handling"""
+    """The PDFRecord class provides a range of Function for PDF handling"""
 
     def __init__(self, data: dict, path: Path) -> None:
         self.data = data

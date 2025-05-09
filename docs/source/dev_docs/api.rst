@@ -53,7 +53,6 @@ The package interfaces are documented :doc:`here </dev_docs/packages>`.
 
    colrev.env
    colrev.package_manager
-   colrev.packages
 
 **Low-level**
 

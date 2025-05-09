@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Functionality to identify records."""
+"""Record identifier."""
 from __future__ import annotations
 
 import logging

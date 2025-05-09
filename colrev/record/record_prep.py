@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Functionality for individual records."""
+"""Class for the preparation of records."""
 from __future__ import annotations
 
 import re
@@ -52,7 +52,7 @@ def capitalize_entities(input_str: str) -> str:
 
 
 class PrepRecord(colrev.record.record.Record):
-    """The PrepRecord class provides a range of convenience functions for record preparation"""
+    """The PrepRecord class provides a range of Function for record preparation"""
 
     @classmethod
     def format_author_field(cls, input_string: str) -> str:

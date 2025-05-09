@@ -8,7 +8,6 @@ def main() -> int:
 
     review_manager = colrev.review_manager.ReviewManager()
     ret = review_manager.check_repo()
-
     print(ret)
 
     return ret["status"]

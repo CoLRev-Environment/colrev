@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scripts to print the CoLRev status (cli)."""
+"""Scripts to support command-line validation."""
 from __future__ import annotations
 
 import difflib

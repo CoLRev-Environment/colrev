@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to write files (BiBTeX, RIS, CSV, etc.)
+"""Function to write files (BiBTeX, RIS, CSV, etc.)
 
 Usage::
 

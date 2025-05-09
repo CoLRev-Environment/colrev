@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to load files (BiBTeX, RIS, CSV, etc.)"""
+"""Function to load files (BiBTeX, RIS, CSV, etc.)"""
 import logging
 import typing
 from pathlib import Path

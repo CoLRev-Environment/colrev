@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to load RIS files"""
+"""Function to load RIS files"""
 from __future__ import annotations
 
 import logging

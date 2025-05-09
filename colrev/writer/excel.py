@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to write excel files"""
+"""Function to write excel files"""
 from __future__ import annotations
 
 import pandas as pd

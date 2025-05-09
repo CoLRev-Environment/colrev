@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Functionality for individual records."""
+"""Base record class."""
 from __future__ import annotations
 
 import pprint
@@ -30,7 +30,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Record:
-    """The Record class provides a range of basic convenience functions"""
+    """The Record class provides a range of basic Function"""
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 

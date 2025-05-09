@@ -1,4 +1,4 @@
-colrev.packages.screen\_utils
+﻿colrev.packages.screen\_utils
 =============================
 
 .. automodule:: colrev.packages.screen_utils

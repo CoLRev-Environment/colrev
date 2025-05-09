@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Loggers for CoLRev"""
+"""Logger"""
 from __future__ import annotations
 
 import logging

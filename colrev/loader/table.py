@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to load tabular files (csv, xlsx)"""
+"""Function to load tabular files (csv, xlsx)"""
 from __future__ import annotations
 
 import logging

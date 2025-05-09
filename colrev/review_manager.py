@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""CoLRev review manager"""
+"""Review Manager
+
+This module provides the core `ReviewManager` class, which acts as the central interface
+for managing a CoLRev project repository. It encapsulates configuration, logging,
+dataset access, and orchestrates the execution of review operations.
+
+Key responsibilities of the `ReviewManager` include:
+
+- Initializing and validating the project repository
+- Loading, saving, and validating project settings
+- Providing access to the dataset (`colrev.dataset.Dataset`)"""
 from __future__ import annotations
 
 import logging

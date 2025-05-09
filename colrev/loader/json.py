@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to load JSON files"""
+"""Function to load JSON files"""
 from __future__ import annotations
 
 import json
