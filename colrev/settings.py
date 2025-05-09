@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Settings of the CoLRev project."""
+"""Settings of the CoLRev project"""
 from __future__ import annotations
 
 import json

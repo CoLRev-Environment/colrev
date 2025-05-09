@@ -15,6 +15,7 @@ colrev.loader.load\_utils
       :toctree:
       :nosignatures:
 
+      bib_entrytype_setter
       get_nr_records
       load
       load_df

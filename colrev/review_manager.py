@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The CoLRev review manager (main entrypoint)."""
+"""CoLRev review manager"""
 from __future__ import annotations
 
 import logging

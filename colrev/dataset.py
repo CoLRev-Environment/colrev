@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Functionality for data/records.bib and git repository."""
+"""CoLRev dataset, providing functionality for data/records.bib and git repository"""
 from __future__ import annotations
 
 import os

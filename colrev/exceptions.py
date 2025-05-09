@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Exceptions of CoLRev."""
+"""Exceptions of CoLRev"""
 from __future__ import annotations
 
 import typing
