@@ -60,10 +60,8 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.in_test_environment
       ~ReviewManager.in_virtualenv
       ~ReviewManager.load_settings
-      ~ReviewManager.report
       ~ReviewManager.reset_report_logger
       ~ReviewManager.save_settings
-      ~ReviewManager.sharing
       ~ReviewManager.update_config
       ~ReviewManager.update_status_yaml
 

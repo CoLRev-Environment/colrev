@@ -26,9 +26,7 @@ import yaml
 import colrev.dataset
 import colrev.exceptions as colrev_exceptions
 import colrev.logger
-import colrev.ops.check
 import colrev.ops.checker
-import colrev.process.operation
 import colrev.record.qm.quality_model
 import colrev.settings
 from colrev.constants import Colors
@@ -46,7 +44,7 @@ class ReviewManager:
     # pylint: disable=too-many-public-methods
     # pylint: disable=too-many-arguments
 
-    notified_next_operation = None
+    notified_next_operation: typing.Optional[OperationsType] = None
     """ReviewManager was notified for the upcoming process and
     will provide access to the Dataset"""
 
@@ -223,51 +221,6 @@ class ReviewManager:
         """Get the CoLRev versions"""
         checker = colrev.ops.checker.Checker(review_manager=self)
         return checker.get_colrev_versions()
-
-    def report(self, *, msg_file: Path) -> None:
-        """Append commit-message report if not already available
-        (Entrypoint for pre-commit hooks)
-        """
-        import colrev.ops.commit
-        import colrev.ops.correct
-
-        with open(msg_file, encoding="utf8") as file:
-            available_contents = file.read()
-
-        with open(msg_file, "w", encoding="utf8") as file:
-            file.write(available_contents)
-            # Don't append if it's already there
-            # update = False
-            # if "Command" not in available_contents:
-            #     update = True
-            # if "Properties" in available_contents:
-            #     update = False
-            # if update:
-            commit = colrev.ops.commit.Commit(
-                review_manager=self,
-                msg=available_contents,
-                manual_author=True,
-                script_name="MANUAL",
-            )
-            commit.update_report(msg_file=msg_file)
-
-        if (
-            not self.settings.is_curated_masterdata_repo()
-            and self.dataset.records_changed()
-        ):  # pragma: no cover
-            colrev.ops.check.CheckOperation(self)  # to notify
-            corrections_operation = colrev.ops.correct.Corrections(review_manager=self)
-            corrections_operation.check_corrections_of_records()
-
-    def sharing(self) -> dict:
-        """Check whether sharing requirements are met
-        (Entrypoint for pre-commit hooks)
-        """
-
-        self.notified_next_operation = OperationsType.check
-        advisor = self.get_advisor()
-        sharing_advice = advisor.get_sharing_instructions()
-        return sharing_advice
 
     def update_status_yaml(
         self, *, add_to_git: bool = True, records: typing.Optional[dict] = None
