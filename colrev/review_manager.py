@@ -130,11 +130,13 @@ class ReviewManager:
         """return loggers"""
         if self.verbose_mode:
             return colrev.logger.setup_report_logger(
-                review_manager=self, level=logging.DEBUG
-            ), colrev.logger.setup_logger(review_manager=self, level=logging.DEBUG)
+                report_path=self.paths.report, level=logging.DEBUG
+            ), colrev.logger.setup_logger(
+                logger_path=self.paths.report, level=logging.DEBUG
+            )
         return colrev.logger.setup_report_logger(
-            review_manager=self, level=logging.INFO
-        ), colrev.logger.setup_logger(review_manager=self, level=logging.INFO)
+            report_path=self.paths.report, level=logging.INFO
+        ), colrev.logger.setup_logger(logger_path=self.paths.report, level=logging.INFO)
 
     def _check_update(self) -> None:
         # Once the following has run for all repositories,
@@ -179,7 +181,19 @@ class ReviewManager:
 
     def reset_report_logger(self) -> None:
         """Reset the report logger"""
-        colrev.logger.reset_report_logger(review_manager=self)
+
+        # Stop and remove the report log file
+        if self.report_logger.handlers:
+            report_handler = self.report_logger.handlers[0]
+            self.report_logger.removeHandler(report_handler)
+            report_handler.close()
+
+        report_path = self.paths.report
+        if report_path.is_file():
+            with open(report_path, "r+", encoding="utf8") as file:
+                file.truncate(0)
+        file_handler = colrev.logger.reset_report_logger(report_path=self.paths.report)
+        self.report_logger.addHandler(file_handler)
 
     def check_repo(self) -> dict:
         """Check the repository"""
