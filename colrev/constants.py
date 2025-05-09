@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Constants for CoLRev"""
+"""Constants, including filepaths, fields, entrytypes, colrev_status, etc."""
 # pylint: disable=too-few-public-methods
 # pylint: disable=colrev-missed-constant-usage
 import importlib.util
