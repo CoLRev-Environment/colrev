@@ -231,7 +231,7 @@ class Endpoint:
 
         request_url = str(self.request_url)
 
-        if request_url.startswith("https://api.crossref.org/works/10."):
+        if request_url.startswith("https://api.crossref.org/works/"):
             result = self.retrieve(
                 request_url,
                 headers=self.headers,
