@@ -11,14 +11,13 @@ import pandas as pd
 from docker.errors import DockerException
 from pydantic import BaseModel
 from pydantic import Field
-from search_query.constants import Colors
 
 import colrev.env.docker_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
+from colrev.constants import Colors
 
 
 class PRISMA(base_classes.DataPackageBaseClass):
