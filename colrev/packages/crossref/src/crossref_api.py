@@ -287,7 +287,11 @@ class Endpoint:
 
                 result = result.json()
 
-                if len(result["message"]["items"]) == 0:
+                if (
+                    "message" not in result
+                    or "items" not in result["message"]
+                    or len(result["message"]["items"]) == 0
+                ):
                     return
 
                 yield from result["message"]["items"]
