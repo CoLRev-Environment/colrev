@@ -130,6 +130,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
         prisma_data.loc["new_studies", "n"] = status_stats.overall.rev_included
         prisma_data.loc["dbr_notretrieved_reports", "n"] = (
             status_stats.overall.pdf_not_available
+            + status_stats.currently.pdf_needs_manual_retrieval
         )
         prisma_data.loc["dbr_sought_reports", "n"] = (
             status_stats.overall.rev_prescreen_included
@@ -200,7 +201,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
             container.wait()
             # Print the logs (including Pandoc errors)
             logs = container.logs().decode("utf-8")
-            if logs:
+            if logs and not logs.endswith('[1] "/data/output/PRISMA.png"\n'):
                 print(f"🔧 Docker container logs:\n{Colors.RED}{logs}{Colors.END}")
 
             container.stop()
