@@ -133,6 +133,9 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
             choice = inquirer.prompt(questions)["bib_format"]
             add_package["bib_format"] = choice
 
+        package_manager = colrev.package_manager.package_manager.PackageManager()
+        package_manager.install(packages=[add_package["endpoint"]])
+
         operation.review_manager.settings.data.data_package_endpoints.append(
             add_package
         )
@@ -153,6 +156,9 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
         silent_mode: bool,
     ) -> None:
         """Update the data/bibliography"""
+
+        if silent_mode:
+            return
 
         self.endpoint_path.mkdir(exist_ok=True, parents=True)
 
