@@ -1999,6 +1999,7 @@ def pdf_prep_man(
     type=str,
     help="Parameters",
 )
+@click.option("--view", is_flag=True, default=False, help="View search sources")
 @click.option(
     "--reading_heuristics",
     is_flag=True,
@@ -2032,6 +2033,7 @@ def data(
     ctx: click.core.Context,
     add: str,
     params: str,
+    view: bool,
     reading_heuristics: bool,
     setup_custom_script: bool,
     verbose: bool,
@@ -2051,6 +2053,13 @@ def data(
         },
     )
     data_operation = review_manager.get_data_operation()
+    if view:
+        data_endpoints = (
+            data_operation.review_manager.settings.data.data_package_endpoints
+        )
+        for data_endpoint in data_endpoints:
+            data_operation.review_manager.p_printer.pprint(data_endpoint)
+        return
 
     if reading_heuristics:
         heuristic_results = data_operation.reading_heuristics()
