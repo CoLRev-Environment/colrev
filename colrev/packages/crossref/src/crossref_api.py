@@ -192,7 +192,7 @@ class Endpoint:
                 f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
             ) from exc
 
-        return int(result["message"]["total-results"])
+        return int(result["message"].get("total-results", 0))
 
     def get_dois(self) -> typing.List[str]:
         """Retrieve the dois resulting from a query."""
