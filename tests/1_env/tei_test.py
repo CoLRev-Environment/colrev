@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """Test the tei parser"""
+import platform
 import re
 from pathlib import Path
 
 import pytest
 
-import colrev.env.environment_manager
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import ENTRYTYPES
@@ -23,6 +23,9 @@ def script_loc(request) -> Path:  # type: ignore
     return Path(request.fspath).parent
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+)
 @pytest.fixture(scope="module")
 def tei_doc(script_loc) -> colrev.env.tei_parser.TEIParser:  # type: ignore
     """Return the tei_doc"""
@@ -33,10 +36,11 @@ def tei_doc(script_loc) -> colrev.env.tei_parser.TEIParser:  # type: ignore
     return tei_doc
 
 
-def test_tei_creation(script_loc, base_repo_review_manager) -> None:  # type: ignore
+@pytest.mark.skipif(
+    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+)
+def test_tei_creation(script_loc) -> None:  # type: ignore
     """Test the tei"""
-    if base_repo_review_manager.in_ci_environment():
-        return
     tei_file = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.tei.xml")
     pdf_path = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.pdf")
 
@@ -55,11 +59,17 @@ def test_tei_creation(script_loc, base_repo_review_manager) -> None:  # type: ig
         file.write(tei_content)
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+)
 def test_tei_version(tei_doc) -> None:  # type: ignore
     """Test the tei version"""
     assert "0.8.1" == tei_doc.get_grobid_version()
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+)
 def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
     """Test the tei version"""
     assert (
@@ -1810,7 +1820,11 @@ def test_tei_mark_references(tei_doc, tmp_path) -> None:  # type: ignore
     assert "NOT_INCLUDED" not in actual
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+)
 def test_tei_exception(tmp_path) -> None:  # type: ignore
+
     tei_path = tmp_path / Path("erroneous_tei.tei.xml")
 
     with open(tei_path, "wb") as f:
@@ -1820,7 +1834,11 @@ def test_tei_exception(tmp_path) -> None:  # type: ignore
         colrev.env.tei_parser.TEIParser(tei_path=tei_path)
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+)
 def test_tei_pdf_not_exists() -> None:
+
     pdf_path = Path("data/non_existent.pdf")
 
     with pytest.raises(FileNotFoundError):
