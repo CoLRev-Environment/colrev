@@ -43,7 +43,6 @@ class TEIParser:
     def __init__(
         self,
         *,
-        environment_manager: colrev.env.environment_manager.EnvironmentManager,
         pdf_path: typing.Optional[Path] = None,
         tei_path: typing.Optional[Path] = None,
     ):
@@ -54,7 +53,6 @@ class TEIParser:
         - tei_path: read TEI from file
         """
 
-        self.environment_manager = environment_manager
         # pylint: disable=consider-using-with
         assert pdf_path is not None or tei_path is not None
         if pdf_path is not None:
@@ -88,9 +86,7 @@ class TEIParser:
 
     def _create_tei(self) -> None:
         """Create the TEI (based on GROBID)"""
-        grobid_service = colrev.env.grobid_service.GrobidService(
-            environment_manager=self.environment_manager
-        )
+        grobid_service = colrev.env.grobid_service.GrobidService()
         grobid_service.start()
         # Note: we have more control and transparency over the consolidation
         # if we do it in the colrev process

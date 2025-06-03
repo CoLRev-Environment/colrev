@@ -29,11 +29,7 @@ def tei_doc(script_loc) -> colrev.env.tei_parser.TEIParser:  # type: ignore
 
     tei_file = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.tei.xml")
 
-    environment_manager = colrev.env.environment_manager.EnvironmentManager()
-
-    tei_doc = colrev.env.tei_parser.TEIParser(
-        environment_manager=environment_manager, tei_path=tei_file
-    )
+    tei_doc = colrev.env.tei_parser.TEIParser(tei_path=tei_file)
     return tei_doc
 
 
@@ -46,11 +42,7 @@ def test_tei_creation(script_loc, base_repo_review_manager) -> None:  # type: ig
 
     tei_file.unlink(missing_ok=True)
 
-    environment_manager = colrev.env.environment_manager.EnvironmentManager()
-
-    colrev.env.tei_parser.TEIParser(
-        environment_manager=environment_manager, pdf_path=pdf_path, tei_path=tei_file
-    )
+    colrev.env.tei_parser.TEIParser(pdf_path=pdf_path, tei_path=tei_file)
 
     with open(tei_file) as file:
         tei_content = file.read()
@@ -1824,20 +1816,12 @@ def test_tei_exception(tmp_path) -> None:  # type: ignore
     with open(tei_path, "wb") as f:
         f.write(b"[BAD_INPUT_DATA]")
 
-    environment_manager = colrev.env.environment_manager.EnvironmentManager()
-
     with pytest.raises(colrev_exceptions.TEIException):
-        colrev.env.tei_parser.TEIParser(
-            environment_manager=environment_manager, tei_path=tei_path
-        )
+        colrev.env.tei_parser.TEIParser(tei_path=tei_path)
 
 
 def test_tei_pdf_not_exists() -> None:
     pdf_path = Path("data/non_existent.pdf")
 
-    environment_manager = colrev.env.environment_manager.EnvironmentManager()
-
     with pytest.raises(FileNotFoundError):
-        colrev.env.tei_parser.TEIParser(
-            environment_manager=environment_manager, pdf_path=pdf_path
-        )
+        colrev.env.tei_parser.TEIParser(pdf_path=pdf_path)

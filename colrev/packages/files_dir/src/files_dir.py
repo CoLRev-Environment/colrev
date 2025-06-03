@@ -270,7 +270,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         pdf_path = self.review_manager.path / Path(record_dict[Fields.FILE])
         try:
-            tei = self.review_manager.get_tei(
+            tei = colrev.env.tei_parser.TEIParser(
                 pdf_path=pdf_path,
             )
         except (

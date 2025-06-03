@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import logging
 import time
-import typing
 
 import docker
 import requests
 
 import colrev.env.docker_manager
-import colrev.env.environment_manager
 
 
 class GrobidService:
@@ -19,17 +17,11 @@ class GrobidService:
     GROBID_URL = "http://localhost:8070"
     GROBID_IMAGE = "lfoppiano/grobid:0.8.1"
 
-    def __init__(
-        self,
-        *,
-        environment_manager: typing.Optional[
-            colrev.env.environment_manager.EnvironmentManager
-        ] = None,
-    ) -> None:
+    def __init__(self) -> None:
         colrev.env.docker_manager.DockerManager.build_docker_image(
             imagename=self.GROBID_IMAGE
         )
-        self.start(environment_manager)
+        self.start()
         self.check_grobid_availability()
 
     def check_grobid_availability(self, *, wait: bool = True) -> bool:
@@ -52,12 +44,7 @@ class GrobidService:
                 raise requests.exceptions.ConnectionError()
         return True
 
-    def start(
-        self,
-        environment_manager: typing.Optional[
-            colrev.env.environment_manager.EnvironmentManager
-        ] = None,
-    ) -> None:
+    def start(self) -> None:
         """Start the GROBID service"""
         # pylint: disable=consider-using-with
 
@@ -79,7 +66,5 @@ class GrobidService:
             ports={8070: 8070, 8071: 8071},
             detach=True,
         )
-        if environment_manager:
-            environment_manager.register_ports(["8070", "8071"])
 
         self.check_grobid_availability()

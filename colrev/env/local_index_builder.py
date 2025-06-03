@@ -372,7 +372,6 @@ class LocalIndexBuilder:
                 if not tei_path.is_file():
                     print(f"Create tei for {record_dict[Fields.FILE]}")
                 tei = colrev.env.tei_parser.TEIParser(
-                    environment_manager=self.environment_manager,
                     pdf_path=Path(record_dict[Fields.FILE]),
                     tei_path=tei_path,
                 )

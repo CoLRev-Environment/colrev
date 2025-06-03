@@ -433,7 +433,7 @@ class Screen(colrev.process.operation.Operation):
                 continue
 
             try:
-                tei = self.review_manager.get_tei(
+                tei = colrev.env.tei_parser.TEIParser(
                     pdf_path=Path(record_dict[Fields.FILE]),
                     tei_path=colrev.record.record.Record(
                         record_dict

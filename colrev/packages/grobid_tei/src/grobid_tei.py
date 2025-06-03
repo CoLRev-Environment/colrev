@@ -52,7 +52,7 @@ class GROBIDTEI(base_classes.PDFPrepPackageBaseClass):
 
         if not record.get_tei_filename().is_file():
             self.review_manager.logger.debug(f" creating tei: {record.data['ID']}")
-            _ = self.review_manager.get_tei(
+            _ = colrev.env.tei_parser.TEIParser(
                 pdf_path=Path(record.data[Fields.FILE]),
                 tei_path=record.get_tei_filename(),
             )

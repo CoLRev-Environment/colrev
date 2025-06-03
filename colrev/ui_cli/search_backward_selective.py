@@ -29,7 +29,7 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
         search_operation.review_manager.logger.debug(
             f" creating tei: {record.data['ID']}"
         )
-    tei = search_operation.review_manager.get_tei(
+    tei = colrev.env.tei_parser.TEIParser(
         pdf_path=Path(record.data[Fields.FILE]),
         tei_path=record.get_tei_filename(),
     )

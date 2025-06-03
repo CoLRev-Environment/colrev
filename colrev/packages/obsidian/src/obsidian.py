@@ -108,7 +108,7 @@ class Obsidian(base_classes.DataPackageBaseClass):
             )
 
             if tei_file.is_file():
-                tei = self.review_manager.get_tei(tei_path=tei_file)
+                tei = colrev.env.tei_parser.TEIParser(tei_path=tei_file)
                 keywords = [
                     x.lower().replace(" ", "-") for x in tei.get_paper_keywords()
                 ]

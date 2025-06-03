@@ -75,7 +75,7 @@ class Data(colrev.process.operation.Operation):
             if not tei_file.is_file():
                 missing.append(required_records_id)
 
-            tei_doc = self.review_manager.get_tei(
+            tei_doc = colrev.env.tei_parser.TEIParser(
                 tei_path=tei_file,
             )
             tei_doc.mark_references(records=records)

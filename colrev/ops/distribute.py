@@ -82,7 +82,7 @@ class Distribute(colrev.process.operation.Operation):
 
                 grobid_service.start()
 
-                tei = self.review_manager.get_tei(
+                tei = colrev.env.tei_parser.TEIParser(
                     pdf_path=path,
                 )
                 record = tei.get_metadata()

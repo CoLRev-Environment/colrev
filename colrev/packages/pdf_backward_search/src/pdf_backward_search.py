@@ -469,7 +469,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
 
                 pdf_path = review_manager.path / Path(record[Fields.FILE])
-                tei = review_manager.get_tei(
+                tei = colrev.env.tei_parser.TEIParser(
                     pdf_path=pdf_path,
                     tei_path=colrev.record.record.Record(record).get_tei_filename(),
                 )
