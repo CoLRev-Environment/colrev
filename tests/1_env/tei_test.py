@@ -109,6 +109,9 @@ def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
     ] == tei_doc.get_author_details()
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+)
 def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
     """Test the tei extraction of references"""
 
@@ -1548,6 +1551,9 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
     ] == tei_doc.get_references(add_intext_citation_count=True)
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+)
 def test_tei_citations_per_section(tei_doc, tmp_path) -> None:  # type: ignore
     """Test the tei citations per section method."""
 
@@ -1768,6 +1774,9 @@ def test_tei_citations_per_section(tei_doc, tmp_path) -> None:  # type: ignore
     } == tei_doc.get_citations_per_section()
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+)
 def test_tei_mark_references(tei_doc, tmp_path) -> None:  # type: ignore
     """Test the tei extraction of references"""
 
