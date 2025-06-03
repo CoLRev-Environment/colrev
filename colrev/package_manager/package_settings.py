@@ -8,8 +8,6 @@ from pathlib import Path
 from pydantic import BaseModel
 from pydantic import Field
 
-import colrev.process.operation
-import colrev.record.record
 import colrev.settings
 from colrev.constants import SearchType
 

@@ -15,6 +15,9 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
 
+if typing.TYPE_CHECKING:
+    import colrev.ops.validate
+
 # pylint: disable=duplicate-code
 keys = [
     Fields.AUTHOR,

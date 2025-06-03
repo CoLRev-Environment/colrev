@@ -12,7 +12,6 @@ from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
 
 import colrev.ops.check
-import colrev.process.operation
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import FieldValues

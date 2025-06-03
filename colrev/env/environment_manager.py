@@ -12,8 +12,6 @@ import yaml
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
-import colrev.process.operation
-import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import Filepaths

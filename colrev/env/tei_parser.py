@@ -12,7 +12,6 @@ from lxml.etree import XMLSyntaxError  # nosec
 
 import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
-import colrev.process.operation
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields

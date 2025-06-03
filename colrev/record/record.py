@@ -22,8 +22,8 @@ from colrev.constants import FieldValues
 from colrev.constants import RecordState
 
 if typing.TYPE_CHECKING:  # pragma: no cover
-    import colrev.review_manager
     import colrev.record.qm.quality_model
+    import colrev.record.record_prep
 
 
 # pylint: disable=too-many-public-methods

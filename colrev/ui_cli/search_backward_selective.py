@@ -2,11 +2,16 @@
 """Scripts to run a selective backward search."""
 from __future__ import annotations
 
+import typing
 from pathlib import Path
 
 import colrev.record.record
+import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import SearchType
+
+if typing.TYPE_CHECKING:
+    import colrev.ops.search
 
 
 def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:

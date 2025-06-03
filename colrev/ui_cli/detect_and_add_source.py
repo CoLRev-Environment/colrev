@@ -7,9 +7,12 @@ from pathlib import Path
 
 import inquirer
 
-import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import EndpointType
+
+if typing.TYPE_CHECKING:
+    import colrev.settings
+    import colrev.ops.search
 
 # pylint: disable=too-few-public-methods
 

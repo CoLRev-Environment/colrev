@@ -14,7 +14,6 @@ import imagehash
 import pymupdf
 from PIL import Image
 
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 from colrev.constants import Colors

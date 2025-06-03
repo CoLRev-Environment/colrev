@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import typing
 
 from nameparser import HumanName
 
@@ -12,10 +11,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
-if typing.TYPE_CHECKING:  # pragma: no cover
-    import colrev.review_manager
-    import colrev.record.qm.quality_model
 
 
 NO_CAPS = ["of", "for", "the", "and"]

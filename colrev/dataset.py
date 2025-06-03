@@ -17,8 +17,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.bib
 import colrev.loader.load_utils
 import colrev.ops.check
-import colrev.process.operation
-import colrev.record.record
 import colrev.record.record_id_setter
 import colrev.record.record_prep
 from colrev.constants import ExitCodes

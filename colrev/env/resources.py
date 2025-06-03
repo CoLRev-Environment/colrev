@@ -7,8 +7,6 @@ from pathlib import Path
 import git
 
 import colrev.env.environment_manager
-import colrev.process.operation
-import colrev.record.record
 from colrev.constants import Filepaths
 
 

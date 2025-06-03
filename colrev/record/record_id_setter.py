@@ -10,11 +10,9 @@ import typing
 
 from tqdm import tqdm
 
+import colrev.env.local_index
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.bib
-import colrev.loader.load_utils
-import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
