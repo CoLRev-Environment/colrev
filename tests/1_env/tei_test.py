@@ -24,7 +24,7 @@ def script_loc(request) -> Path:  # type: ignore
 
 
 @pytest.mark.skipif(
-    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
 )
 @pytest.fixture(scope="module")
 def tei_doc(script_loc) -> colrev.env.tei_parser.TEIParser:  # type: ignore
@@ -37,7 +37,7 @@ def tei_doc(script_loc) -> colrev.env.tei_parser.TEIParser:  # type: ignore
 
 
 @pytest.mark.skipif(
-    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
 )
 def test_tei_creation(script_loc) -> None:  # type: ignore
     """Test the tei"""
@@ -60,7 +60,7 @@ def test_tei_creation(script_loc) -> None:  # type: ignore
 
 
 @pytest.mark.skipif(
-    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
 )
 def test_tei_version(tei_doc) -> None:  # type: ignore
     """Test the tei version"""
@@ -68,7 +68,7 @@ def test_tei_version(tei_doc) -> None:  # type: ignore
 
 
 @pytest.mark.skipif(
-    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
 )
 def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
     """Test the tei version"""
@@ -110,7 +110,7 @@ def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
 
 
 @pytest.mark.skipif(
-    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
 )
 def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
     """Test the tei extraction of references"""
@@ -1552,7 +1552,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
 
 
 @pytest.mark.skipif(
-    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
 )
 def test_tei_citations_per_section(tei_doc, tmp_path) -> None:  # type: ignore
     """Test the tei citations per section method."""
@@ -1775,7 +1775,7 @@ def test_tei_citations_per_section(tei_doc, tmp_path) -> None:  # type: ignore
 
 
 @pytest.mark.skipif(
-    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
 )
 def test_tei_mark_references(tei_doc, tmp_path) -> None:  # type: ignore
     """Test the tei extraction of references"""
@@ -1830,7 +1830,7 @@ def test_tei_mark_references(tei_doc, tmp_path) -> None:  # type: ignore
 
 
 @pytest.mark.skipif(
-    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
 )
 def test_tei_exception(tmp_path) -> None:  # type: ignore
 
@@ -1844,7 +1844,7 @@ def test_tei_exception(tmp_path) -> None:  # type: ignore
 
 
 @pytest.mark.skipif(
-    platform.system() == "Darwin", reason="Docker not supported on GitHub macOS runners"
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
 )
 def test_tei_pdf_not_exists() -> None:
 
