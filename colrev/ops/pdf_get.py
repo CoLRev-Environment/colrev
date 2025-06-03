@@ -360,8 +360,6 @@ class PDFGet(colrev.process.operation.Operation):
         if len(unlinked_pdfs) == 0:
             return records
 
-        grobid_service = self.review_manager.get_grobid_service()
-        grobid_service.start()
         self.review_manager.logger.info("Check unlinked PDFs")
         for file in unlinked_pdfs:
             msg = f"Check unlinked PDF: {file.relative_to(self.review_manager.path)}"

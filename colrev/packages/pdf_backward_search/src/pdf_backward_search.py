@@ -58,11 +58,6 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
             settings["search_parameters"]["min_intext_citations"] = 3
 
         self.search_source = self.settings_class(**settings)
-        # Do not run in continuous-integration environment
-        if not self.review_manager.in_ci_environment():
-            self.grobid_service = self.review_manager.get_grobid_service()
-            self.grobid_service.start()
-
         self.crossref_api = crossref_api.CrossrefAPI(params={})
 
     @classmethod

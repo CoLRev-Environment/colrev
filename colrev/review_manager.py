@@ -327,16 +327,6 @@ class ReviewManager:
         return colrev.package_manager.package_manager.PackageManager()
 
     @classmethod
-    def get_grobid_service(
-        cls,
-    ) -> colrev.env.grobid_service.GrobidService:  # pragma: no cover
-        """Get a grobid service object"""
-        import colrev.env.grobid_service
-
-        cls.get_environment_manager()
-        return colrev.env.grobid_service.GrobidService()
-
-    @classmethod
     def get_environment_manager(
         cls,
     ) -> colrev.env.environment_manager.EnvironmentManager:  # pragma: no cover

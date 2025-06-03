@@ -52,7 +52,6 @@ class TEIParser:
         - pfd_path and tei_path: create TEI and save in tei_path
         - tei_path: read TEI from file
         """
-
         # pylint: disable=consider-using-with
         assert pdf_path is not None or tei_path is not None
         if pdf_path is not None:
@@ -67,6 +66,13 @@ class TEIParser:
         if tei_path is not None:
             if tei_path.is_file():
                 load_from_tei = True
+
+        # TODO / TBD:
+        # Do not run in continuous-integration environment
+        # if not self.review_manager.in_ci_environment():
+
+        grobid_service = colrev.env.grobid_service.GrobidService()
+        grobid_service.start()
 
         if pdf_path is not None and not load_from_tei:
             self._create_tei()

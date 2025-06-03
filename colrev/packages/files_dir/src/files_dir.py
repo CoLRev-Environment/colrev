@@ -703,9 +703,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         if self.review_manager.settings.is_curated_masterdata_repo():
             self._remove_records_if_pdf_no_longer_exists()
 
-        grobid_service = self.review_manager.get_grobid_service()
-        grobid_service.start()
-
         records = self.review_manager.dataset.load_records_dict()
         files_dir_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,

@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-
+import typing
 from pydantic import Field
 
-import colrev.env.utils
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
-import colrev.record.record
 from colrev.constants import Fields
 
+if typing.TYPE_CHECKING:
+    import colrev.record.record_pdf
 
 # pylint: disable=too-few-public-methods
 
@@ -32,13 +31,10 @@ class GROBIDTEI(base_classes.PDFPrepPackageBaseClass):
         self.review_manager = pdf_prep_operation.review_manager
 
         if not pdf_prep_operation.review_manager.in_ci_environment():
-            grobid_service = pdf_prep_operation.review_manager.get_grobid_service()
-            grobid_service.start()
             self.tei_path = (
                 pdf_prep_operation.review_manager.path / self.TEI_PATH_RELATIVE
             )
             self.tei_path.mkdir(exist_ok=True, parents=True)
-            pdf_prep_operation.docker_images_to_stop.append(grobid_service.GROBID_IMAGE)
 
     def prep_pdf(
         self,

@@ -78,9 +78,6 @@ class Distribute(colrev.process.operation.Operation):
                 input(path)
 
             if path.suffix == ".pdf":
-                grobid_service = self.review_manager.get_grobid_service()
-
-                grobid_service.start()
 
                 tei = colrev.env.tei_parser.TEIParser(
                     pdf_path=path,
