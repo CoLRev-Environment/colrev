@@ -76,6 +76,9 @@ jobs:
         with:
           python-version-file: "pyproject.toml"
 
+      - name: List files after clone
+        run: find . -type f
+
       - name: Install dependencies with uv
         run: |
           uv sync --all-extras --dev
@@ -149,9 +152,6 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-
-      - name: List files after clone
-        run: find . -type f
 
       - name: Install via pip
         run: |
