@@ -137,7 +137,7 @@ class PDFPrep(colrev.process.operation.Operation):
             record_dict, path=self.review_manager.path
         )
         if record_dict[Fields.FILE].endswith(".pdf"):
-            record.set_text_from_pdf()
+            record.set_text_from_pdf(first_pages=True)
         original_filename = record_dict[Fields.FILE]
 
         self.review_manager.logger.debug(f"Start PDF prep of {record_dict[Fields.ID]}")

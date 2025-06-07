@@ -98,11 +98,17 @@ class PDFRecord(colrev.record.record.Record):
             pages_in_file = doc.page_count
         self.data[Fields.NR_PAGES_IN_FILE] = pages_in_file
 
-    def set_text_from_pdf(self) -> None:
+    def set_text_from_pdf(self, *, first_pages: bool = False) -> None:
         """Set the text_from_pdf field based on the PDF"""
         self.data[Fields.TEXT_FROM_PDF] = ""
         self.set_nr_pages_in_pdf()
-        text = self.extract_text_by_page(pages=[0, 1, 2])
+
+        if first_pages:
+            pages = [0, 1, 2]
+        else:
+            pages = list(range(self.data[Fields.NR_PAGES_IN_FILE]))
+
+        text = self.extract_text_by_page(pages=pages)
         text_from_pdf = text.replace("\n", " ").replace("\x0c", "")
         self.data[Fields.TEXT_FROM_PDF] = text_from_pdf
 

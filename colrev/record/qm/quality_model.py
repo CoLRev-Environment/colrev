@@ -86,7 +86,7 @@ class QualityModel:
             ):
                 # The following should be improved.
                 record = colrev.record.record_pdf.PDFRecord(record.data, path=self.path)
-                record.set_text_from_pdf()
+                record.set_text_from_pdf(first_pages=True)
 
         for checker in self.checkers:
             if checker.msg in self.defects_to_ignore:

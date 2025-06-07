@@ -110,7 +110,7 @@ class GenAIData(base_classes.DataPackageBaseClass):
             record = colrev.record.record_pdf.PDFRecord(
                 record_dict, path=self.review_manager.path
             )
-            record.set_text_from_pdf(all_pages=True)
+            record.set_text_from_pdf()
 
             user_message = self.settings.prompt.format(
                 record_id=record_dict[Fields.ID],

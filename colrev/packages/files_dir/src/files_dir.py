@@ -315,7 +315,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                     record = colrev.record.record_pdf.PDFRecord(
                         record_dict, path=self.review_manager.path
                     )
-                    record.set_text_from_pdf()
+                    record.set_text_from_pdf(first_pages=True)
                     record_dict = record.get_data()
                     if Fields.TEXT_FROM_PDF in record_dict:
                         text: str = record_dict[Fields.TEXT_FROM_PDF]
@@ -676,7 +676,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                 record_dict, path=self.review_manager.path
             )
             if Fields.DOI not in record_dict:
-                record.set_text_from_pdf()
+                record.set_text_from_pdf(first_pages=True)
                 res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])
                 if res:
                     record.data[Fields.DOI] = res[0].upper()
