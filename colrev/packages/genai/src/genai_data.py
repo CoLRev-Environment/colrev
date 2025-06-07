@@ -192,8 +192,12 @@ class GenAIData(base_classes.DataPackageBaseClass):
         #     + f"({path_str})",
         #     "detailed_msg": "TODO",
         # }
+        msg = (
+            f"GenAI data operation: {self.settings.endpoint} "
+            f"(version: {self.settings.version})"
+        )
         advice = {
-            "msg": f"GenAI data operation: {self.settings.endpoint} (version: {self.settings.version})",
+            "msg": msg,
             "detailed_msg": f"Prompt used: {self.settings.prompt}",
         }
         return advice
