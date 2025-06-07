@@ -74,8 +74,12 @@ def _get_colrev_path() -> Path:
     # Try editable install
     try:
         dist = distribution("colrev")
-        dist_info_folder = f"{dist.metadata['Name'].replace('-', '_')}-{dist.version}.dist-info"
-        dist_info_path = Path(dist.locate_file("")) / dist_info_folder / "direct_url.json"
+        dist_info_folder = (
+            f"{dist.metadata['Name'].replace('-', '_')}-{dist.version}.dist-info"
+        )
+        dist_info_path = (
+            Path(dist.locate_file("")) / dist_info_folder / "direct_url.json"
+        )
 
         if dist_info_path.exists():
             with open(dist_info_path, encoding="utf-8") as file:
@@ -97,7 +101,9 @@ def _get_colrev_path() -> Path:
             print(f"[DEBUG] Using candidate CoLRev root: {candidate}")
             return candidate
 
-    raise FileNotFoundError(f"Cannot find CoLRev root folder with 'packages/' under: {clone_path}")
+    raise FileNotFoundError(
+        f"Cannot find CoLRev root folder with 'packages/' under: {clone_path}"
+    )
 
 
 def get_internal_packages_dict() -> dict:
