@@ -80,10 +80,16 @@ def _get_colrev_path() -> Path:
     else:
         colrev_path = _clone_colrev_repository().resolve(strict=False)
 
-    if (colrev_path / "colrev").is_dir() and not (
-        colrev_path.name == "colrev" and (colrev_path / "packages").is_dir()
-    ):
-        colrev_path = colrev_path / "colrev"
+    if (colrev_path / "pyproject.toml").exists() and (
+        colrev_path / "packages"
+    ).is_dir():
+        return colrev_path  # e.g., /home/user/colrev
+    elif (colrev_path.parent / "pyproject.toml").exists() and (
+        colrev_path.parent / "packages"
+    ).is_dir():
+        return colrev_path.parent  # e.g., /home/user/colrev/colrev → move up
+    else:
+        raise FileNotFoundError(f"Cannot find CoLRev project root at: {colrev_path}")
 
     return colrev_path
 
