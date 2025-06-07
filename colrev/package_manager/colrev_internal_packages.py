@@ -67,31 +67,33 @@ def _clone_colrev_repository() -> Path:
 
 
 def _get_colrev_path() -> Path:
+    def looks_like_colrev_root(path: Path) -> bool:
+        return (path / "pyproject.toml").exists() and (path / "packages").is_dir()
 
     local_editable_colrev_path = _get_local_editable_colrev_path()
-    if local_editable_colrev_path:
-        colrev_path = Path(local_editable_colrev_path)
-        if local_editable_colrev_path.startswith("/D:"):
-            # Remove the leading slash to correct the path format
-            corrected_path_str = local_editable_colrev_path.lstrip("/")
-            colrev_path = Path(corrected_path_str).resolve(strict=False)
-        else:
-            colrev_path = colrev_path.resolve(strict=False)
-    else:
-        colrev_path = _clone_colrev_repository().resolve(strict=False)
+    base_path = (
+        Path(local_editable_colrev_path).resolve(strict=False)
+        if local_editable_colrev_path
+        else _clone_colrev_repository().resolve(strict=False)
+    )
 
-    if (colrev_path / "pyproject.toml").exists() and (
-        colrev_path / "packages"
-    ).is_dir():
-        return colrev_path  # e.g., /home/user/colrev
-    elif (colrev_path.parent / "pyproject.toml").exists() and (
-        colrev_path.parent / "packages"
-    ).is_dir():
-        return colrev_path.parent  # e.g., /home/user/colrev/colrev → move up
-    else:
-        raise FileNotFoundError(f"Cannot find CoLRev project root at: {colrev_path}")
+    print(f"[DEBUG] Base path: {base_path}")
 
-    return colrev_path
+    # Try direct
+    if looks_like_colrev_root(base_path):
+        return base_path
+
+    # Try parent (e.g., colrev/colrev/)
+    if looks_like_colrev_root(base_path.parent):
+        return base_path.parent
+
+    # Try subfolders (in case of unexpected nesting after clone)
+    for sub in base_path.glob("**/"):
+        if looks_like_colrev_root(sub):
+            print(f"[DEBUG] Found CoLRev root under: {sub}")
+            return sub
+
+    raise FileNotFoundError(f"Cannot find CoLRev project root under: {base_path}")
 
 
 def get_internal_packages_dict() -> dict:

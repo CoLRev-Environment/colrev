@@ -150,6 +150,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+      - name: List files after clone
+        run: find . -type f
+
       - name: Install via pip
         run: |
           pip install -e .[dev]
