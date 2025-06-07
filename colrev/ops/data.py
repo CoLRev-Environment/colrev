@@ -5,6 +5,7 @@ from __future__ import annotations
 import typing
 from pathlib import Path
 
+import colrev.env.tei_parser
 import colrev.packages.grobid_tei.src.grobid_tei
 import colrev.process.operation
 from colrev.constants import Colors
@@ -12,7 +13,7 @@ from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
-import colrev.env.tei_parser
+
 
 class Data(colrev.process.operation.Operation):
     """Class supporting structured and unstructured

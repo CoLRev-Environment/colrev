@@ -12,11 +12,12 @@ from bib_dedupe.bib_dedupe import block
 from bib_dedupe.bib_dedupe import match
 from bib_dedupe.bib_dedupe import prep
 
+import colrev.env.tei_parser
 import colrev.ops.check
 import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import colrev.env.tei_parser
+
 
 def load_df(
     *,
