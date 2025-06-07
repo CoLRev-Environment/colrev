@@ -80,10 +80,8 @@ def _get_colrev_path() -> Path:
     else:
         colrev_path = _clone_colrev_repository().resolve(strict=False)
 
-    # Check if there is a nested colrev directory
-    potential_nested_path = colrev_path / "colrev"
-    if potential_nested_path.is_dir():
-        colrev_path = potential_nested_path
+    if (colrev_path / "colrev").is_dir() and colrev_path.name != "colrev":
+        colrev_path = colrev_path / "colrev"
 
     return colrev_path
 
