@@ -9,6 +9,8 @@ import tempfile
 from importlib.metadata import distribution
 from importlib.metadata import PackageNotFoundError
 from pathlib import Path
+from urllib.parse import unquote
+from urllib.parse import urlparse
 
 import toml
 
@@ -41,7 +43,10 @@ def _get_local_editable_colrev_path() -> str:
     if "url" not in data or not data["url"].startswith("file://"):
         return ""
 
-    return data["url"].replace("file://", "")
+    parsed_url = urlparse(data["url"])
+    local_path = Path(unquote(parsed_url.path)).resolve(strict=False)
+
+    return str(local_path)
 
 
 def _clone_colrev_repository() -> Path:
