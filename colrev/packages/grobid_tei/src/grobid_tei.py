@@ -7,6 +7,7 @@ from pathlib import Path
 
 from pydantic import Field
 
+import colrev.env.tei_parser
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 from colrev.constants import Fields

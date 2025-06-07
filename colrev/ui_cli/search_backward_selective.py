@@ -5,6 +5,7 @@ from __future__ import annotations
 import typing
 from pathlib import Path
 
+import colrev.env.tei_parser
 import colrev.record.record
 import colrev.settings
 from colrev.constants import Fields

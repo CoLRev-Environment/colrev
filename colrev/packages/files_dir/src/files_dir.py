@@ -12,6 +12,7 @@ import requests
 from pydantic import Field
 
 import colrev.env.local_index
+import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager

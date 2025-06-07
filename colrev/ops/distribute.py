@@ -6,6 +6,7 @@ import os
 import shutil
 from pathlib import Path
 
+import colrev.env.tei_parser
 import colrev.process.operation
 import colrev.settings
 from colrev.constants import Fields
