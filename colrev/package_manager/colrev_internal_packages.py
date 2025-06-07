@@ -66,33 +66,38 @@ def _clone_colrev_repository() -> Path:
 
 
 def _get_colrev_path() -> Path:
-    def looks_like_colrev_root(path: Path) -> bool:
-        return (path / "pyproject.toml").exists() and (path / "packages").is_dir()
+    from urllib.parse import urlparse, unquote
 
-    local_editable_colrev_path = _get_local_editable_colrev_path()
-    base_path = (
-        Path(local_editable_colrev_path).resolve(strict=False)
-        if local_editable_colrev_path
-        else _clone_colrev_repository().resolve(strict=False)
-    )
+    def is_colrev_root(path: Path) -> bool:
+        return (path / "packages").is_dir()
 
-    print(f"[DEBUG] Base path: {base_path}")
+    # Try editable install
+    try:
+        dist = distribution("colrev")
+        dist_info_folder = f"{dist.metadata['Name'].replace('-', '_')}-{dist.version}.dist-info"
+        dist_info_path = Path(dist.locate_file("")) / dist_info_folder / "direct_url.json"
 
-    # Try direct
-    if looks_like_colrev_root(base_path):
-        return base_path
+        if dist_info_path.exists():
+            with open(dist_info_path, encoding="utf-8") as file:
+                url = json.load(file).get("url", "")
+                if url.startswith("file://"):
+                    parsed = urlparse(url)
+                    editable_path = Path(unquote(parsed.path)).resolve(strict=False)
+                    if is_colrev_root(editable_path):
+                        return editable_path
+                    if (editable_path / "colrev").is_dir():
+                        return editable_path / "colrev"
+    except PackageNotFoundError:
+        print("CoLRev not installed")
 
-    # Try parent (e.g., colrev/colrev/)
-    if looks_like_colrev_root(base_path.parent):
-        return base_path.parent
+    # Fallback to clone
+    clone_path = _clone_colrev_repository().resolve(strict=False)
+    for candidate in [clone_path, *clone_path.glob("**/")]:
+        if is_colrev_root(candidate):
+            print(f"[DEBUG] Using candidate CoLRev root: {candidate}")
+            return candidate
 
-    # Try subfolders (in case of unexpected nesting after clone)
-    for sub in base_path.glob("**/"):
-        if looks_like_colrev_root(sub):
-            print(f"[DEBUG] Found CoLRev root under: {sub}")
-            return sub
-
-    raise FileNotFoundError(f"Cannot find CoLRev project root under: {base_path}")
+    raise FileNotFoundError(f"Cannot find CoLRev root folder with 'packages/' under: {clone_path}")
 
 
 def get_internal_packages_dict() -> dict:
