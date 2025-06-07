@@ -18,6 +18,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
     import logging
     import colrev.record.record
     import colrev.settings
+    import colrev.ops
 
 
 # pylint: disable=too-few-public-methods

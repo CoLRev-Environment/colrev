@@ -327,34 +327,6 @@ class ReviewManager:
         return colrev.package_manager.package_manager.PackageManager()
 
     @classmethod
-    def get_grobid_service(
-        cls,
-    ) -> colrev.env.grobid_service.GrobidService:  # pragma: no cover
-        """Get a grobid service object"""
-        import colrev.env.grobid_service
-
-        environment_manager = cls.get_environment_manager()
-        return colrev.env.grobid_service.GrobidService(
-            environment_manager=environment_manager
-        )
-
-    def get_tei(
-        self,
-        *,
-        pdf_path: typing.Optional[Path] = None,
-        tei_path: typing.Optional[Path] = None,
-    ) -> colrev.env.tei_parser.TEIParser:  # type: ignore # pragma: no cover
-        """Get a tei object"""
-
-        import colrev.env.tei_parser
-
-        return colrev.env.tei_parser.TEIParser(
-            environment_manager=self.environment_manager,
-            pdf_path=self.path / pdf_path if pdf_path else None,
-            tei_path=self.path / tei_path if tei_path else None,
-        )
-
-    @classmethod
     def get_environment_manager(
         cls,
     ) -> colrev.env.environment_manager.EnvironmentManager:  # pragma: no cover

@@ -19,6 +19,7 @@ from pydantic import Field
 from rapidfuzz import fuzz
 from tqdm import tqdm
 
+import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
@@ -58,11 +59,6 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
             settings["search_parameters"]["min_intext_citations"] = 3
 
         self.search_source = self.settings_class(**settings)
-        # Do not run in continuous-integration environment
-        if not self.review_manager.in_ci_environment():
-            self.grobid_service = self.review_manager.get_grobid_service()
-            self.grobid_service.start()
-
         self.crossref_api = crossref_api.CrossrefAPI(params={})
 
     @classmethod
@@ -469,7 +465,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
 
                 pdf_path = review_manager.path / Path(record[Fields.FILE])
-                tei = review_manager.get_tei(
+                tei = colrev.env.tei_parser.TEIParser(
                     pdf_path=pdf_path,
                     tei_path=colrev.record.record.Record(record).get_tei_filename(),
                 )

@@ -5,6 +5,7 @@ from __future__ import annotations
 import typing
 from pathlib import Path
 
+import colrev.env.tei_parser
 import colrev.packages.grobid_tei.src.grobid_tei
 import colrev.process.operation
 from colrev.constants import Colors
@@ -75,7 +76,7 @@ class Data(colrev.process.operation.Operation):
             if not tei_file.is_file():
                 missing.append(required_records_id)
 
-            tei_doc = self.review_manager.get_tei(
+            tei_doc = colrev.env.tei_parser.TEIParser(
                 tei_path=tei_file,
             )
             tei_doc.mark_references(records=records)

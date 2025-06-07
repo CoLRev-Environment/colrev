@@ -7,6 +7,7 @@ from glob import glob
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
+import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record_pdf
@@ -359,14 +360,12 @@ class PDFGet(colrev.process.operation.Operation):
         if len(unlinked_pdfs) == 0:
             return records
 
-        grobid_service = self.review_manager.get_grobid_service()
-        grobid_service.start()
         self.review_manager.logger.info("Check unlinked PDFs")
         for file in unlinked_pdfs:
             msg = f"Check unlinked PDF: {file.relative_to(self.review_manager.path)}"
             self.review_manager.logger.info(msg)
             if file.stem not in records.keys():
-                tei = self.review_manager.get_tei(pdf_path=file)
+                tei = colrev.env.tei_parser.TEIParser(pdf_path=file)
                 pdf_record = tei.get_metadata()
 
                 if "error" in pdf_record:

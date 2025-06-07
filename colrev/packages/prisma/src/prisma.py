@@ -19,6 +19,9 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 from colrev.constants import Colors
 
+if typing.TYPE_CHECKING:
+    import colrev.ops.data
+
 
 class PRISMA(base_classes.DataPackageBaseClass):
     """Create a PRISMA diagram"""

@@ -12,6 +12,7 @@ import requests
 from pydantic import Field
 
 import colrev.env.local_index
+import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
@@ -270,7 +271,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         pdf_path = self.review_manager.path / Path(record_dict[Fields.FILE])
         try:
-            tei = self.review_manager.get_tei(
+            tei = colrev.env.tei_parser.TEIParser(
                 pdf_path=pdf_path,
             )
         except (
@@ -702,9 +703,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         # In these cases, we may simply print a warning instead of modifying/removing records?
         if self.review_manager.settings.is_curated_masterdata_repo():
             self._remove_records_if_pdf_no_longer_exists()
-
-        grobid_service = self.review_manager.get_grobid_service()
-        grobid_service.start()
 
         records = self.review_manager.dataset.load_records_dict()
         files_dir_feed = self.search_source.get_api_feed(

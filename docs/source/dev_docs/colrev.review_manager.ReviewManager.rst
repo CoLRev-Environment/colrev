@@ -29,7 +29,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_dedupe_operation
       ~ReviewManager.get_distribute_operation
       ~ReviewManager.get_environment_manager
-      ~ReviewManager.get_grobid_service
       ~ReviewManager.get_load_operation
       ~ReviewManager.get_loggers
       ~ReviewManager.get_merge_operation
@@ -52,7 +51,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_search_operation
       ~ReviewManager.get_status_operation
       ~ReviewManager.get_status_stats
-      ~ReviewManager.get_tei
       ~ReviewManager.get_trace_operation
       ~ReviewManager.get_upgrade
       ~ReviewManager.get_validate_operation

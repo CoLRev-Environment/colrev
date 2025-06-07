@@ -8,9 +8,8 @@ from pathlib import Path
 from pydantic import BaseModel
 from pydantic import Field
 
-import colrev.env.utils
+import colrev.env.tei_parser
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
@@ -109,7 +108,7 @@ class Obsidian(base_classes.DataPackageBaseClass):
             self.review_manager.logger.info(f"  extract keywords for {tei_file.name}")
 
             if tei_file.is_file():
-                tei = self.review_manager.get_tei(tei_path=tei_file)
+                tei = colrev.env.tei_parser.TEIParser(tei_path=tei_file)
                 keywords = [
                     x.lower().replace(" ", "-") for x in tei.get_paper_keywords()
                 ]
