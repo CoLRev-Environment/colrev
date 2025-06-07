@@ -124,9 +124,7 @@ class Obsidian(base_classes.DataPackageBaseClass):
         included = self.data_operation.get_record_ids_for_synthesis(records)
         missing_records = self._get_obsidian_missing(included=included)
         if len(missing_records) == 0:
-            self.review_manager.logger.info(
-                "All records included. Nothing to export."
-            )
+            self.review_manager.logger.info("All records included. Nothing to export.")
             return
 
         inbox_text = ""
@@ -219,7 +217,6 @@ class Obsidian(base_classes.DataPackageBaseClass):
         self.review_manager.logger.debug("Export to obsidian endpoint")
 
         self._append_missing_records(records=records)
-
 
     def update_record_status_matrix(
         self,
