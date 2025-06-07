@@ -66,7 +66,6 @@ def _clone_colrev_repository() -> Path:
 
 
 def _get_colrev_path() -> Path:
-    from urllib.parse import urlparse, unquote
 
     def is_colrev_root(path: Path) -> bool:
         return (path / "packages").is_dir()

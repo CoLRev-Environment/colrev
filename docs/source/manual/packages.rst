@@ -165,6 +165,7 @@ Packages
 
    packages/colrev.bibliography_export.rst
    packages/colrev.colrev_curation.rst
+   packages/colrev.genai.rst
    packages/colrev.github_pages.rst
    packages/colrev.obsidian.rst
    packages/colrev.paper_md.rst
