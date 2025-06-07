@@ -80,7 +80,9 @@ def _get_colrev_path() -> Path:
     else:
         colrev_path = _clone_colrev_repository().resolve(strict=False)
 
-    if (colrev_path / "colrev").is_dir() and colrev_path.name != "colrev":
+    if (colrev_path / "colrev").is_dir() and not (
+        colrev_path.name == "colrev" and (colrev_path / "packages").is_dir()
+    ):
         colrev_path = colrev_path / "colrev"
 
     return colrev_path
