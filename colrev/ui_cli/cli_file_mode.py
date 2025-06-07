@@ -2,19 +2,18 @@
 """File mode operations."""
 from __future__ import annotations
 
-from colrev.constants import Fields
-
 from pathlib import Path
+
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
+from colrev.constants import Fields
+
 
 def pdf_get(file: Path) -> None:
     print(f"Download PDFs for: {file}")
 
     records = colrev.loader.load_utils.load(Path(file))
-    local_index = colrev.env.local_index.LocalIndex(
-        verbose_mode=True
-    )
+    local_index = colrev.env.local_index.LocalIndex(verbose_mode=True)
 
     for record in records.values():
         if Fields.FILE in record:
@@ -28,4 +27,3 @@ def pdf_get(file: Path) -> None:
 
         if Fields.FILE in retrieved_record.data:
             input(retrieved_record.data[Fields.FILE])
-        
