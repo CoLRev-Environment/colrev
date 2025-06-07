@@ -78,7 +78,7 @@ def _get_colrev_path() -> Path:
             f"{dist.metadata['Name'].replace('-', '_')}-{dist.version}.dist-info"
         )
         dist_info_path = (
-            Path(dist.locate_file("")) / dist_info_folder / "direct_url.json"
+            Path(str(dist.locate_file(""))) / dist_info_folder / "direct_url.json"
         )
 
         if dist_info_path.exists():
