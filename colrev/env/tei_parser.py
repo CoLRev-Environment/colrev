@@ -67,14 +67,12 @@ class TEIParser:
             if tei_path.is_file():
                 load_from_tei = True
 
-        # TODO / TBD:
-        # Do not run in continuous-integration environment
-        # if not self.review_manager.in_ci_environment():
-
-        grobid_service = colrev.env.grobid_service.GrobidService()
-        grobid_service.start()
-
         if pdf_path is not None and not load_from_tei:
+            # TODO / TBD:
+            # Do not run in continuous-integration environment
+            # if not self.review_manager.in_ci_environment():
+            grobid_service = colrev.env.grobid_service.GrobidService()
+            grobid_service.start()
             self._create_tei()
 
         elif tei_path is not None:
