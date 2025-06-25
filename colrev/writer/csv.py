@@ -26,10 +26,11 @@ FIELDS = [
 def to_dataframe(*, records_dict: dict) -> pd.DataFrame:
     """Convert a records dict to a pandas DataFrame"""
     data = []
+    additional_fields = [x for x in list(records_dict) if x not in FIELDS]
     for record_id in sorted(records_dict.keys()):
         record_dict = records_dict[record_id]
         row = {}
-        for field in FIELDS:
+        for field in FIELDS + additional_fields:
             if field in record_dict:
                 row[field] = record_dict[field]
             else:
