@@ -142,4 +142,4 @@ Pull Request, by asking @all-contributors:
 
 ## Release
 
-See [release checklist](release-checklist.md).
+See [release checklist](release-checklist.md)
