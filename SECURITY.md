@@ -13,3 +13,9 @@ currently being supported with security updates.
 ## Reporting a Vulnerability
 
 Please report vulnerabilities to gerit.wagner@uni-bamberg.de.
+
+Vulnerabilities:
+
+1. Unsecured authentication
+
+2. No two factor authentication
