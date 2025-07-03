@@ -38,6 +38,8 @@ class CLISourceAdder:
             )
             for heuristic_source in source_candidates
         ]
+        # sort choices by confidence
+        choices.sort(key=lambda x: x[1]["confidence"], reverse=True)
         questions = [
             inquirer.List(
                 "source",
