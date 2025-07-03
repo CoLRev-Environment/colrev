@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function to write Excel files with flexible field handling"""
+"""Function to write Markdown (table) files"""
 from __future__ import annotations
 
 import pandas as pd
@@ -49,6 +49,31 @@ def to_dataframe(
     return df
 
 
+def to_string(
+    *,
+    records_dict: dict,
+    sort_fields_first: bool = True,
+    drop_empty_fields: bool = True,
+) -> str:
+    """Convert a records dict to a markdown string with a table"""
+    data_frame = to_dataframe(
+        records_dict=records_dict,
+        sort_fields_first=sort_fields_first,
+        drop_empty_fields=drop_empty_fields,
+    )
+
+    headers = list(data_frame.columns)
+    md_lines = [
+        "| " + " | ".join(headers) + " |",
+        "|" + "|".join(["---"] * len(headers)) + "|",
+    ]
+    for _, row in data_frame.iterrows():
+        row_values = [str(row[h]).replace("\n", " ") for h in headers]
+        md_lines.append("| " + " | ".join(row_values) + " |")
+
+    return "\n".join(md_lines)
+
+
 def write_file(
     *,
     records_dict: dict,
@@ -56,19 +81,11 @@ def write_file(
     sort_fields_first: bool = True,
     drop_empty_fields: bool = True,
 ) -> None:
-    """Write an Excel file from a records dict"""
-    data_frame = to_dataframe(
+    """Write a markdown file with a table from a records dict"""
+    md_string = to_string(
         records_dict=records_dict,
         sort_fields_first=sort_fields_first,
         drop_empty_fields=drop_empty_fields,
     )
-    writer = pd.ExcelWriter(filename, engine="xlsxwriter")
-    data_frame.to_excel(writer, index=False)
-
-    worksheet = writer.sheets["Sheet1"]
-    for i, column in enumerate(data_frame.columns):
-        column_width = max(data_frame[column].astype(str).map(len).max(), len(column))
-        column_width = max(min(column_width, 130), 10)
-        worksheet.set_column(i, i, column_width)
-
-    writer.close()
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(md_string)

@@ -6,10 +6,10 @@ Usage::
     import colrev.loader.load_utils
 
     # Files
-    records = colrev.loader.load_utils.load(filename=filename, logger=logger)
+    records = colrev.loader.load_utils.load(filename=filename)
 
     # Strings
-    records = colrev.loader.load_utils.loads(load_str=load_str, logger=logger)
+    records = colrev.loader.load_utils.loads(load_str=load_str)
 
     returns: records (dict)
 
@@ -172,6 +172,9 @@ def load(  # type: ignore
     format_names: bool = False,
 ) -> dict:
     """Load a file and return records as a dictionary"""
+
+    if isinstance(filename, str):
+        filename = Path(filename)
 
     if not filename.is_file():
         if empty_if_file_not_exists:

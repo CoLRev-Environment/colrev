@@ -29,5 +29,6 @@ colrev.writer
    colrev.writer.bib
    colrev.writer.csv
    colrev.writer.excel
+   colrev.writer.markdown
    colrev.writer.ris
    colrev.writer.write_utils
