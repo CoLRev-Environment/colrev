@@ -12,13 +12,13 @@ repos:
         name: "CoLRev ReviewManager: format"
         entry: colrev-hooks-format
         language: python
-        stages: [commit]
+        stages: [pre-commit]
         pass_filenames: false
     -   id: colrev-hooks-check
         name: "CoLRev ReviewManager: check"
         entry: colrev-hooks-check
         language: python
-        stages: [commit]
+        stages: [pre-commit]
         pass_filenames: false
     -   id: colrev-hooks-report
         name: "CoLRev ReviewManager: report"
@@ -29,5 +29,5 @@ repos:
         name: "CoLRev ReviewManager: share"
         entry: colrev-hooks-share
         language: python
-        stages: [push]
+        stages: [pre-push]
         pass_filenames: false
