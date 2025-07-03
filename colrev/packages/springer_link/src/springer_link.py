@@ -82,7 +82,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        params_dict: dict[str, str] = {}
+        params_dict = {params.split("=")[0]: params.split("=")[1]}
         search_type = operation.select_search_type(
             search_types=cls.search_types, params=params_dict
         )
@@ -90,7 +90,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         if search_type == SearchType.DB:
             search_source = operation.create_db_source(
                 search_source_cls=cls,
-                params={},
+                params=params_dict,
             )
 
         elif search_type == SearchType.API:
