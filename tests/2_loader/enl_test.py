@@ -6,8 +6,7 @@ from pathlib import Path
 
 import pytest
 
-import colrev.review_manager
-import colrev.settings
+import colrev.loader.load_utils
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.writer.write_utils import to_string
