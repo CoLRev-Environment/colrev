@@ -9,8 +9,8 @@ import pytest
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.bib
 import colrev.loader.load_utils
-import colrev.review_manager
-import colrev.settings
+
+# flake8: noqa
 
 
 def test_load(tmp_path, helpers) -> None:  # type: ignore
@@ -56,6 +56,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
     )
     colrev.loader.bib.run_resolve_crossref(records, logger=logging.getLogger(__name__))
 
+    print(records)
     assert records == {
         "articlewriter_firstrandomword_2020": {
             "ID": "articlewriter_firstrandomword_2020",
@@ -108,12 +109,20 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
             "title": "Mouse stories two",
             "crossref": "ICRC2016",
         },
+        "WOS:000072095400011": {
+            "ID": "WOS:000072095400011",
+            "ENTRYTYPE": "article",
+            "Author": "Andreica, D and Schmid, H",
+            "Title": "Magnetic properties and phase transitions of iron boracites, Fe3B7O13X (X = Cl, Br OR I)",
+            "Journal": "FERROELECTRICS",
+            "Year": "1997",
+        },
     }
 
     nr_records = colrev.loader.load_utils.get_nr_records(
         Path("data/search/bib_data.bib")
     )
-    assert 5 == nr_records
+    assert 6 == nr_records
 
     # if the file does not (yet) exist
     nr_records = colrev.loader.load_utils.get_nr_records(
