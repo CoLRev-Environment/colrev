@@ -1518,6 +1518,11 @@ def pdfs(
     help="Setup template for custom pdf-get script.",
 )
 @click.option(
+    "--file",
+    type=click.Path(exists=True),
+    help="Path to file(s)",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -1541,6 +1546,7 @@ def pdf_get(
     rename: bool,
     relink_pdfs: bool,
     setup_custom_script: bool,
+    file: Path,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -1548,6 +1554,12 @@ def pdf_get(
 
     Docs: https://colrev-environment.github.io/colrev/manual/pdf_retrieval/pdf_get.html
     """
+
+    if file:
+        import colrev.ui_cli.cli_file_mode
+
+        colrev.ui_cli.cli_file_mode.pdf_get(file)
+        return
 
     review_manager = get_review_manager(
         ctx,
