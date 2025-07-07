@@ -123,6 +123,7 @@ Packages
    packages/colrev.source_specific_prep.rst
 
 
+   packages/colrev.cli_prep_man.rst
    packages/colrev.export_man_prep.rst
    packages/colrev.prep_man_curation_jupyter.rst
 
