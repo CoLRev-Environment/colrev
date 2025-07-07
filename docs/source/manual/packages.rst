@@ -177,4 +177,5 @@ Packages
 
    packages/colrev-sync.rst
    packages/colrev.doi_org.rst
+   packages/colrev.enlit.rst
    packages/colrev.ui_web.rst

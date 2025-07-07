@@ -286,5 +286,8 @@
     },
     "colrev.cli_prep_man": {
         "dev_status": "experimental"
+    },
+    "colrev.enlit": {
+        "dev_status": "experimental"
     }
 }

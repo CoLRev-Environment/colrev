@@ -770,6 +770,12 @@
         "endpoint_type": "na"
     },
     {
+        "package_endpoint_identifier": "colrev.enlit",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "TODO (:doc:`instructions </manual/packages/colrev.enlit>`)",
+        "endpoint_type": "na"
+    },
+    {
         "package_endpoint_identifier": "colrev.ui_web",
         "status": "|MATURING|",
         "short_description": "Web-UI (:doc:`instructions </manual/packages/colrev.ui_web>`)",
