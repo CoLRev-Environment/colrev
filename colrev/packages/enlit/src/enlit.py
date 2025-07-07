@@ -180,7 +180,8 @@ def main() -> None:
     after_duplication_size = df_all_references.shape[0]
     nr_duplicates = pre_duplication_size - after_duplication_size
     review_manager.logger.info(
-        f"Remove {Colors.RED}{str(nr_duplicates).rjust(6)} duplicates{Colors.END}:    {Colors.GREEN}{str(after_duplication_size).rjust(6)} references{Colors.END}"
+        f"Remove {Colors.RED}{str(nr_duplicates).rjust(6)} duplicates{Colors.END}:"
+        f"    {Colors.GREEN}{str(after_duplication_size).rjust(6)} references{Colors.END}"
     )
 
     # Filter to keep only rows where nr_references > 0
@@ -188,14 +189,17 @@ def main() -> None:
     nr_cited = df_all_references.shape[0]
     non_cited_references = after_duplication_size - nr_cited
     review_manager.logger.info(
-        f"Remove {Colors.RED}{str(non_cited_references).rjust(6)} non-cited{Colors.END}:     {Colors.GREEN}{str(nr_cited).rjust(6)} references{Colors.END}"
+        f"Remove {Colors.RED}{str(non_cited_references).rjust(6)} non-cited{Colors.END}:"
+        f"     {Colors.GREEN}{str(nr_cited).rjust(6)} references{Colors.END}"
     )
 
     df_all_references = df_all_references[df_all_references["in_sample"]]
     nr_in_sample = df_all_references.shape[0]
     out_of_sample_difference = nr_cited - nr_in_sample
     review_manager.logger.info(
-        f"Remove {Colors.RED}{str(out_of_sample_difference).rjust(6)} out-of-sample{Colors.END}: {Colors.GREEN}{str(nr_in_sample).rjust(6)} references{Colors.END}"
+        f"Remove {Colors.RED}{str(out_of_sample_difference).rjust(6)} "
+        f"out-of-sample{Colors.END}: {Colors.GREEN}{str(nr_in_sample).rjust(6)} "
+        f"references{Colors.END}"
     )
 
     # df_all_references.to_csv("export_2.csv", index=False, encoding="utf-8-sig")
