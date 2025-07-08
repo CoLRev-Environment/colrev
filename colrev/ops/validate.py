@@ -32,7 +32,7 @@ class Validate(colrev.process.operation.Operation):
         self.cpus = 4
 
     def _load_prior_records_dict(self, *, commit_sha: str) -> dict:
-        """If commit is "": return the last commited version of records"""
+        """If commit is "": return the last committed version of records"""
         git_repo = self.review_manager.dataset.get_repo()
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
         records_file_path = self.review_manager.paths.RECORDS_FILE_GIT

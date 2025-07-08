@@ -128,7 +128,7 @@ Other Constraints supported by the Springers Nature API
 
 For additional contraints visit the SpringerLink API Documentation (Link below).
 
-API search: entering the search paramters
+API search: entering the search parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In this step the user can enter the search parameters into the console.

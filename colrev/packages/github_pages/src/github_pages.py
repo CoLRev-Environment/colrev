@@ -247,7 +247,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
 
         if self.review_manager.dataset.has_record_changes():
             self.review_manager.logger.error(
-                "Cannot update github pages because there are uncommited changes."
+                "Cannot update github pages because there are uncommitted changes."
             )
             return
 
