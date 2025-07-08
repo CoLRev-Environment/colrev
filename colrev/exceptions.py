@@ -384,7 +384,7 @@ class RecordNotFoundException(CoLRevException):
 
 
 class ImportException(CoLRevException):
-    """An error occured in the import functions."""
+    """An error occurred in the import functions."""
 
     def __init__(
         self,

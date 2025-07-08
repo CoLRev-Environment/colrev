@@ -64,7 +64,7 @@ The user can type the individual search constraints that can also use the boolea
 
 For additional contraints visit the SpringerLink API Documentation (Link below).
 
-#### API search: entering the search paramters
+#### API search: entering the search parameters
 
 In this step the user can enter the search parameters into the console.
 The user can provide values for the following parameters: keyword, subject, language, year and type. Pressing `enter` will confirm the choice. If the field is blank, this parameter will be skipped. The parameters should be entered as followed:
