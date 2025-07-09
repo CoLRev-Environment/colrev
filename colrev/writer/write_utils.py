@@ -10,7 +10,7 @@ Usage::
     records = colrev.loader.load_utils.load(filename=filename)
 
     # Write
-    colrev.loader.write_utils.write_file(records, filename=filename)
+    colrev.writer.write_utils.write_file(records, filename=filename)
 
 """
 from __future__ import annotations
