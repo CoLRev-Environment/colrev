@@ -160,13 +160,13 @@ class XPLORE:
         self.startRecord = math.ceil(start) if (start > 0) else 1
 
     def maximumResults(self, maximum: int) -> None:
-        """set the maximum number of results
+        """Set the maximum number of results
         string maximum   Max number of results to return"""
         self.resultSetMax = math.ceil(maximum) if (maximum > 0) else 25
         self.resultSetMax = min(self.resultSetMax, self.resultSetMaxCap)
 
     def resultsFilter(self, filterParam: str, value: str) -> None:
-        """setting a filter on results
+        """Set a filter on results
         string filterParam   Field used for filtering
         string value    Text to filter on"""
 

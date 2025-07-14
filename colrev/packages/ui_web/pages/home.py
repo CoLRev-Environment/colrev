@@ -21,7 +21,7 @@ dash.register_page(__name__, path="/")
 
 
 def analytics() -> px.line:
-    """function creating Burn Down Chart"""
+    """Function creating burn down chart."""
 
     # get data from get_analytics function
     review_manager = colrev.review_manager.ReviewManager()
@@ -86,13 +86,13 @@ def analytics() -> px.line:
 
 
 def timestamp_to_date(timestamp: float) -> datetime:
-    """convert the timestamp to a datetime object in the local timezone"""
+    """Convert the timestamp to a datetime object in the local timezone."""
     date = datetime.fromtimestamp(timestamp)
     return date
 
 
 def scale_completed_atomic_steps(steps: int, max_steps: int) -> float:
-    """scales completed atomic steps for burn down chart"""
+    """Scale completed atomic steps for burn down chart."""
     return 100 - (steps / max_steps) * 100
 
 

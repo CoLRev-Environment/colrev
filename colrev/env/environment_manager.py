@@ -38,7 +38,7 @@ class EnvironmentManager:
             self._registered_ports.append(port_to_register)
 
     def load_environment_registry(self) -> dict:
-        """Load the local registry"""
+        """Load the local registry."""
         environment_registry = {}
         if Filepaths.REGISTRY_FILE.is_file():
             self.load_yaml = False
@@ -50,7 +50,7 @@ class EnvironmentManager:
         return environment_registry
 
     def local_repos(self) -> list:
-        """gets local repos from local index"""
+        """Get local repositories from the local index."""
         self.environment_registry = self.load_environment_registry()
         if (
             "local_index" not in self.environment_registry
@@ -71,7 +71,7 @@ class EnvironmentManager:
         return result
 
     def save_environment_registry(self, updated_registry: dict) -> None:
-        """Save the local registry"""
+        """Save the local registry."""
         Filepaths.REGISTRY_FILE.parents[0].mkdir(parents=True, exist_ok=True)
         with open(Filepaths.REGISTRY_FILE, "w", encoding="utf8") as file:
             json.dump(

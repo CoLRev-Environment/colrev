@@ -62,6 +62,6 @@ class RecordsVariableNamingConventionChecker(checkers.BaseChecker):
 
 
 def register(linter: PyLinter) -> None:  # pragma: no cover
-    """required method to auto register this checker"""
+    """Required method to auto register this checker."""
 
     linter.register_checker(RecordsVariableNamingConventionChecker(linter))

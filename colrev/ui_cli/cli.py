@@ -162,7 +162,7 @@ class SpecialHelpOrder(click.Group):
         return super().get_help(ctx)
 
     def list_commands_for_help(self, ctx: click.core.Context) -> typing.Generator:
-        """reorder the list of commands when listing the help"""
+        """Reorder the list of commands when listing the help."""
         commands = super().list_commands(ctx)
         return (
             c[1]
