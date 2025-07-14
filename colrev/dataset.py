@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dataset class, providing functionality for data/records.bib and git repository"""
+"""Dataset class providing functionality for data/records.bib and git repository."""
 from __future__ import annotations
 
 import os

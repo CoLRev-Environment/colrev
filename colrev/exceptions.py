@@ -604,7 +604,7 @@ class InvalidLanguageCodeException(CoLRevException):
 
 
 class PackageSettingMustStartWithPackagesException(CoLRevException):
-    """package settings must start with `packages` key"""
+    """Package settings must start with `packages` key."""
 
     def __init__(self, invalid_key: str) -> None:
         self.invalid_key = invalid_key

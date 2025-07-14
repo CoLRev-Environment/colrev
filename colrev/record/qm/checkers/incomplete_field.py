@@ -49,7 +49,7 @@ class IncompleteFieldChecker:
     def _incomplete_field(
         self, *, record: colrev.record.record.Record, key: str
     ) -> bool:
-        """check for incomplete field"""
+        """Check for incomplete field."""
         if record.data[key].endswith("...") or record.data[key].endswith("…"):
             return True
         if key == Fields.AUTHOR:
