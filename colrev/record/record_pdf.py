@@ -34,7 +34,9 @@ class PDFRecord(colrev.record.record.Record):
 
     def _get_path(self) -> Path:
         if Fields.FILE not in self.data:
-            raise colrev_exceptions.InvalidPDFException(path=self.data[Fields.ID])
+            raise colrev_exceptions.InvalidPDFException(
+                path=self.data.get(Fields.ID, self.data.get(Fields.FILE, "unknown"))
+            )
 
         pdf_path = (self.path / Path(self.data[Fields.FILE])).absolute()
 
