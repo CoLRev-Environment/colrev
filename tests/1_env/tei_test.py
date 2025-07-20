@@ -64,7 +64,7 @@ def test_tei_creation(script_loc) -> None:  # type: ignore
 )
 def test_tei_version(tei_doc) -> None:  # type: ignore
     """Test the tei version"""
-    assert "0.8.1" == tei_doc.get_grobid_version()
+    assert "0.8.3-SNAPSHOT" == tei_doc.get_grobid_version()
 
 
 @pytest.mark.skipif(
