@@ -15,7 +15,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.review_manager import ReviewManager
-
+import colrev.exceptions as colrev_exceptions
 
 def _extract_references_from_records(
     review_manager: ReviewManager,
@@ -28,27 +28,40 @@ def _extract_references_from_records(
         if Fields.FILE not in record:
             continue
 
-        tei = colrev.env.tei_parser.TEIParser(
-            pdf_path=Path(record[Fields.FILE]),
-            tei_path=Path(
-                record[Fields.FILE]
-                .replace(".pdf", ".tei.xml")
-                .replace("/pdfs", "/.tei")
-            ),
-        )
-        refs = tei.get_references(add_intext_citation_count=True)
-        for ref in refs:
-            ref[Fields.ID] = record["ID"] + "_" + ref[Fields.ID]
+        try:
+            tei = colrev.env.tei_parser.TEIParser(
+                pdf_path=Path(record[Fields.FILE]),
+                tei_path=Path(
+                    record[Fields.FILE]
+                    .replace(".pdf", ".tei.xml")
+                    .replace("/pdfs", "/.tei")
+                ),
+            )
+            refs = tei.get_references(add_intext_citation_count=True)
+            for ref in refs:
+                ref[Fields.ID] = record["ID"] + "_" + ref[Fields.ID]
 
-        refs_list.extend(refs)
-        col = Colors.GREEN
-        if len(refs) == 0:
-            col = Colors.RED
-        elif len(refs) < 10:
-            col = Colors.ORANGE
-        review_manager.logger.info(
-            f" extracted {col}{str(len(refs)).rjust(4)}{Colors.END} references from {record[Fields.FILE]}"
-        )
+            refs_list.extend(refs)
+            col = Colors.GREEN
+            if len(refs) == 0:
+                col = Colors.RED
+            elif len(refs) < 10:
+                col = Colors.ORANGE
+            review_manager.logger.info(
+                f" extracted {col}{str(len(refs)).rjust(4)}{Colors.END} references from {record[Fields.FILE]}"
+            )
+        except FileNotFoundError:
+            review_manager.logger.warning(
+                f"Could not find TEI file for {record[Fields.FILE]}: "
+                "Please check the TEI file or the PDF."
+            )
+            continue
+        except colrev_exceptions.TEIException:
+            review_manager.logger.warning(
+                f"Could not extract references from {record[Fields.FILE]}: "
+                "Please check the TEI file or the PDF."
+            )
+            continue
 
     # Create a DataFrame from the flattened list of references
     df_all_references = pd.DataFrame(refs_list)
