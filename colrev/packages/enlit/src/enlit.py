@@ -10,12 +10,13 @@ from bib_dedupe.bib_dedupe import prep
 from bib_dedupe.merge import merge
 
 import colrev.env.tei_parser
+import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.review_manager import ReviewManager
-import colrev.exceptions as colrev_exceptions
+
 
 def _extract_references_from_records(
     review_manager: ReviewManager,
