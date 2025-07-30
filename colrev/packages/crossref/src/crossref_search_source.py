@@ -26,10 +26,12 @@ from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.crossref.src import crossref_api
+from colrev.packages.crossref.src import crossref_query
 
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.settings
+    from search_query.query import Query
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -636,3 +638,31 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
         return record
+
+    @classmethod
+    def parse_query(
+        cls,
+        *,
+        query: str,
+        syntax_version: str,
+        logger: logging.Logger = logging.getLogger(__name__),
+    ) -> Query:
+        """Get the SearchQuery object based on the query string."""
+        # Not strictly required by all SearchSources (maybe later)
+        return crossref_query.parse(
+            query=query, syntax_version=syntax_version, logger=logger
+        )
+
+    @classmethod
+    def get_query_string(
+        cls,
+        *,
+        query: Query,
+        syntax_version: str,
+        logger: logging.Logger = logging.getLogger(__name__),
+    ) -> str:
+        """Get the SearchQuery string based on an object (serialize)."""
+        # Not strictly required by all SearchSources (maybe later)
+        return crossref_query.get_query_string(
+            query=query, syntax_version=syntax_version, logger=logger
+        )
