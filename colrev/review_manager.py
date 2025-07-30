@@ -135,7 +135,7 @@ class ReviewManager:
         self.logger = logger
 
     def get_loggers(self) -> typing.Tuple[logging.Logger, logging.Logger]:
-        """return loggers"""
+        """Return loggers."""
         if self.verbose_mode:
             return colrev.logger.setup_report_logger(
                 report_path=self.paths.report, level=logging.DEBUG
