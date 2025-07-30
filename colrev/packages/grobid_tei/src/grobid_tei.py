@@ -68,11 +68,9 @@ def convert(pdf_dir: Path, tei_dir: Path) -> None:
     import colrev.env.grobid_service
     import colrev.env.environment_manager
 
-    environment_manager = colrev.env.environment_manager.EnvironmentManager()
+    colrev.env.environment_manager.EnvironmentManager()
 
-    grobid_service = colrev.env.grobid_service.GrobidService(
-        environment_manager=environment_manager
-    )
+    grobid_service = colrev.env.grobid_service.GrobidService()
     grobid_service.start()
 
     import colrev.env.tei_parser
@@ -83,7 +81,6 @@ def convert(pdf_dir: Path, tei_dir: Path) -> None:
             print(tei_file)
 
             colrev.env.tei_parser.TEIParser(
-                environment_manager=environment_manager,
                 pdf_path=pdf_file,
                 tei_path=tei_file,
             )
