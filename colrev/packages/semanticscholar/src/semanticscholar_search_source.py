@@ -2,12 +2,12 @@
 """SearchSource: Semantic Scholar"""
 from __future__ import annotations
 
+import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
 
 import requests
-import zope.interface
 from pydantic import Field
 from semanticscholar import SemanticScholar
 from semanticscholar import SemanticScholarException
@@ -18,7 +18,7 @@ import colrev.env.environment_manager
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.load
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.process.operation
@@ -40,8 +40,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class SemanticScholarSearchSource:
+class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Semantic Scholar API Search Source"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -52,7 +51,7 @@ class SemanticScholarSearchSource:
     endpoint = "colrev.semanticscholar"
     ci_supported: bool = Field(default=True)
 
-    # SearchSourceInterface constants
+    # SearchSourcePackageBaseClass constants
     heuristic_status = SearchSourceHeuristicStatus.oni
     search_types = [SearchType.API]
 
@@ -136,6 +135,7 @@ class SemanticScholarSearchSource:
             _search_return = self.author_search(params=params, rerun=rerun)
         else:
             self.review_manager.logger.info("No search parameters were found.")
+            raise NotImplementedError
 
         return _search_return
 
@@ -392,14 +392,15 @@ class SemanticScholarSearchSource:
 
         return result
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
         # Not yet implemented
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
+                filename=filename,
+                logger=logger,
             )
             return records
 

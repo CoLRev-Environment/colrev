@@ -8,6 +8,7 @@ import typing
 import pandas as pd
 
 import colrev.exceptions as colrev_exceptions
+import colrev.loader.load_utils
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths

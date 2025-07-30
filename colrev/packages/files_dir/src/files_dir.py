@@ -2,18 +2,19 @@
 """SearchSource: directory containing PDF files (based on GROBID)"""
 from __future__ import annotations
 
+import logging
 import re
 import typing
 from pathlib import Path
 
 import pymupdf
 import requests
-import zope.interface
 from pydantic import Field
 
 import colrev.env.local_index
+import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.pdf_backward_search.src.pdf_backward_search as bws
@@ -35,8 +36,7 @@ from colrev.writer.write_utils import write_file
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class FilesSearchSource:
+class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Files directories (PDFs based on GROBID)"""
 
     # pylint: disable=too-many-instance-attributes
@@ -52,6 +52,7 @@ class FilesSearchSource:
 
     _doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
     _batch_size = 20
+    rerun: bool
 
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
@@ -89,6 +90,7 @@ class FilesSearchSource:
                 self.r_subdir_pattern = re.compile("([0-9]{1,4})")
 
         self.crossref_api = crossref_api.CrossrefAPI(params={})
+        self.local_index = colrev.env.local_index.LocalIndex()
 
     def _update_if_pdf_renamed(
         self,
@@ -244,7 +246,7 @@ class FilesSearchSource:
         if record_dict.get(Fields.TITLE, "NA") in ["NA", ""]:
             if "title" in doc.metadata:
                 try:
-                    record_dict[Fields.TITLE] = doc.metadata["title"].decode("utf-8")
+                    record_dict[Fields.TITLE] = doc.metadata["title"]
                 except UnicodeDecodeError:
                     pass
         if record_dict.get(Fields.AUTHOR, "NA") in ["NA", ""]:
@@ -269,10 +271,15 @@ class FilesSearchSource:
 
         pdf_path = self.review_manager.path / Path(record_dict[Fields.FILE])
         try:
-            tei = self.review_manager.get_tei(
+            tei = colrev.env.tei_parser.TEIParser(
                 pdf_path=pdf_path,
             )
-        except (FileNotFoundError, requests.exceptions.ReadTimeout):
+        except (
+            FileNotFoundError,
+            requests.exceptions.ReadTimeout,
+            requests.exceptions.ConnectionError,
+            colrev_exceptions.TEITimeoutException,
+        ):
             return record_dict
 
         for key, val in tei.get_metadata().items():
@@ -308,7 +315,7 @@ class FilesSearchSource:
                     record = colrev.record.record_pdf.PDFRecord(
                         record_dict, path=self.review_manager.path
                     )
-                    record.set_text_from_pdf()
+                    record.set_text_from_pdf(first_pages=True)
                     record_dict = record.get_data()
                     if Fields.TEXT_FROM_PDF in record_dict:
                         text: str = record_dict[Fields.TEXT_FROM_PDF]
@@ -439,23 +446,69 @@ class FilesSearchSource:
         file_path: Path,
         files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         linked_file_paths: list,
-        local_index: colrev.env.local_index.LocalIndex,
     ) -> dict:
         if file_path.suffix == ".pdf":
             return self._index_pdf(
                 file_path=file_path,
                 files_dir_feed=files_dir_feed,
                 linked_file_paths=linked_file_paths,
-                local_index=local_index,
             )
         if file_path.suffix == ".mp4":
             return self._index_mp4(
                 file_path=file_path,
                 files_dir_feed=files_dir_feed,
                 linked_file_paths=linked_file_paths,
-                local_index=local_index,
             )
         raise NotImplementedError
+
+    def _fix_grobid_errors(self, new_record: dict) -> None:
+        # Fix common GROBID errors that would cause problems in deduplication
+
+        # drop title if it is identical with journal
+        if Fields.TITLE in new_record and Fields.JOURNAL in new_record:
+            if new_record[Fields.TITLE] == new_record[Fields.JOURNAL]:
+                new_record.pop(Fields.TITLE)
+        # drop title if it starts with "doi:"
+        if Fields.TITLE in new_record:
+            if new_record[Fields.TITLE].lower().startswith("doi:"):
+                new_record.pop(Fields.TITLE)
+
+        # drop title with erroneous terms
+        if Fields.TITLE in new_record:
+            if any(
+                x in new_record[Fields.TITLE].lower()
+                for x in [
+                    "papers must be in english",
+                    "please contact",
+                    "before submission",
+                    "chairman of the editorial board",
+                    "received his ph",
+                    "received her ph",
+                    "can be submitted to",
+                ]
+            ):
+                new_record.pop(Fields.TITLE)
+        # drop title based on erroneous list
+        if Fields.TITLE in new_record:
+            if new_record[Fields.TITLE].lower() in [
+                "the international journal of information systems applications",
+                "c ommunications of the a i s ssociation for nformation ystems",
+                "communications of the association for information systems "
+                + "communications of the association for information systems",
+            ]:
+                new_record.pop(Fields.TITLE)
+
+        # drop title if longer than 200 characters
+        if Fields.TITLE in new_record:
+            if len(new_record[Fields.TITLE]) > 200:
+                new_record.pop(Fields.TITLE)
+
+        # drop title if it has more numbers than characters
+        if Fields.TITLE in new_record:
+            if sum(c.isdigit() for c in new_record[Fields.TITLE]) > sum(
+                c.isalpha() for c in new_record[Fields.TITLE]
+            ):
+                new_record.pop(Fields.TITLE)
 
     def _index_pdf(
         self,
@@ -463,7 +516,6 @@ class FilesSearchSource:
         file_path: Path,
         files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         linked_file_paths: list,
-        local_index: colrev.env.local_index.LocalIndex,
     ) -> dict:
         new_record: dict = {}
 
@@ -478,6 +530,8 @@ class FilesSearchSource:
                 if file_path in linked_file_paths:
                     # Otherwise: skip linked PDFs
                     return new_record
+
+        if not self.rerun:
 
             if file_path in [
                 Path(r[Fields.FILE])
@@ -494,7 +548,7 @@ class FilesSearchSource:
                 colrev_pdf_id = colrev.record.record.Record.get_colrev_pdf_id(
                     pdf_path=file_path_abs
                 )
-                new_record_object = local_index.retrieve_based_on_colrev_pdf_id(
+                new_record_object = self.local_index.retrieve_based_on_colrev_pdf_id(
                     colrev_pdf_id=colrev_pdf_id
                 )
                 new_record = new_record_object.data
@@ -512,6 +566,8 @@ class FilesSearchSource:
         ):
             # otherwise, get metadata from grobid (indexing)
             new_record = self._get_grobid_metadata(file_path=file_path_abs)
+
+        self._fix_grobid_errors(new_record)
 
         new_record[Fields.FILE] = str(file_path)
         new_record = self._add_md_string(record_dict=new_record)
@@ -538,7 +594,6 @@ class FilesSearchSource:
         file_path: Path,
         files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         linked_file_paths: list,
-        local_index: colrev.env.local_index.LocalIndex,
     ) -> dict:
         record_dict = {Fields.ENTRYTYPE: "online", Fields.FILE: file_path}
         return record_dict
@@ -562,11 +617,12 @@ class FilesSearchSource:
         return file_batches
 
     # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-nested-blocks
+    # pylint: disable=too-many-locals
     def _run_dir_search(
         self,
         *,
         files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
-        local_index: colrev.env.local_index.LocalIndex,
         linked_file_paths: list,
     ) -> None:
         file_batches = self._get_file_batches()
@@ -582,16 +638,29 @@ class FilesSearchSource:
                     file_path=file_path,
                     files_dir_feed=files_dir_feed,
                     linked_file_paths=linked_file_paths,
-                    local_index=local_index,
                 )
                 if new_record == {}:
                     continue
 
                 self._add_doi_from_pdf_if_not_available(new_record)
                 retrieved_record = colrev.record.record.Record(new_record)
-                files_dir_feed.add_update_record(
-                    retrieved_record=retrieved_record,
-                )
+
+                # Generally: add to feed but do not "update" records
+                prev_feed_record = files_dir_feed.get_prev_feed_record(retrieved_record)
+                files_dir_feed.add_record_to_feed(retrieved_record, prev_feed_record)
+
+                if self.rerun:
+                    # If rerun: fix_grobid_fields: in feed and records (if only pdf-file origin)
+                    prefix = self.search_source.get_origin_prefix()
+                    origin = f"{prefix}/{retrieved_record.data['ID']}"
+                    for record_dict in files_dir_feed.records.values():
+                        if origin in record_dict[Fields.ORIGIN]:
+                            if len(record_dict[Fields.ORIGIN]) == 1:
+                                self._fix_grobid_errors(record_dict)
+                                if Fields.TITLE not in record_dict:
+                                    record_dict[Fields.STATUS] = (
+                                        RecordState.md_needs_manual_preparation
+                                    )
 
             for record in files_dir_feed.feed_records.values():
                 record.pop("md_string")
@@ -602,20 +671,24 @@ class FilesSearchSource:
     def _add_doi_from_pdf_if_not_available(self, record_dict: dict) -> None:
         if Path(record_dict[Fields.FILE]).suffix != ".pdf":
             return
-        record = colrev.record.record_pdf.PDFRecord(
-            record_dict, path=self.review_manager.path
-        )
-        if Fields.DOI not in record_dict:
-            record.set_text_from_pdf()
-            res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])
-            if res:
-                record.data[Fields.DOI] = res[0].upper()
-        record.data.pop(Fields.TEXT_FROM_PDF, None)
-        record.data.pop(Fields.NR_PAGES_IN_FILE, None)
+        try:
+            record = colrev.record.record_pdf.PDFRecord(
+                record_dict, path=self.review_manager.path
+            )
+            if Fields.DOI not in record_dict:
+                record.set_text_from_pdf(first_pages=True)
+                res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])
+                if res:
+                    record.data[Fields.DOI] = res[0].upper()
+            record.data.pop(Fields.TEXT_FROM_PDF, None)
+            record.data.pop(Fields.NR_PAGES_IN_FILE, None)
+        except colrev_exceptions.InvalidPDFException:
+            pass
 
     def search(self, rerun: bool) -> None:
         """Run a search of a Files directory"""
 
+        self.rerun = rerun
         self._validate_source()
 
         # Do not run in continuous-integration environment
@@ -631,11 +704,6 @@ class FilesSearchSource:
         if self.review_manager.settings.is_curated_masterdata_repo():
             self._remove_records_if_pdf_no_longer_exists()
 
-        grobid_service = self.review_manager.get_grobid_service()
-        grobid_service.start()
-
-        local_index = colrev.env.local_index.LocalIndex()
-
         records = self.review_manager.dataset.load_records_dict()
         files_dir_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
@@ -650,7 +718,6 @@ class FilesSearchSource:
         self._run_dir_search(
             files_dir_feed=files_dir_feed,
             linked_file_paths=linked_file_paths,
-            local_index=local_index,
         )
 
     @classmethod
@@ -687,11 +754,13 @@ class FilesSearchSource:
         operation.add_source_and_search(search_source)
         return search_source
 
-    def _update_based_on_doi(self, *, record_dict: dict) -> None:
+    @classmethod
+    def _update_based_on_doi(cls, *, record_dict: dict) -> None:
         if Fields.DOI not in record_dict:
             return
         try:
-            retrieved_record = self.crossref_api.query_doi(
+            api = crossref_api.CrossrefAPI(params={})
+            retrieved_record = api.query_doi(
                 doi=record_dict[Fields.DOI],
             )
 
@@ -714,33 +783,28 @@ class FilesSearchSource:
         except (colrev_exceptions.RecordNotFoundInPrepSourceException,):
             pass
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
                 if "note" in record_dict:
-                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+                    record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
 
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
+                filename=filename,
                 unique_id_field="ID",
                 field_mapper=field_mapper,
-                logger=self.review_manager.logger,
+                logger=logger,
             )
 
             for record_dict in records.values():
                 if Fields.GROBID_VERSION in record_dict:
                     del record_dict[Fields.GROBID_VERSION]
 
-                # self._update_based_on_doi(record_dict=record_dict)
-
-                # Rerun restrictions and __update_fields_based_on_pdf_dirs
-                # because the restrictions/subdir-pattern may change
-                record_dict = self._update_fields_based_on_pdf_dirs(
-                    record_dict=record_dict, params=self.search_source.search_parameters
-                )
+                cls._update_based_on_doi(record_dict=record_dict)
 
             return records
 

@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 import datetime
+import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
 
 import inquirer
 import requests
-import zope.interface
 from pydantic import Field
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.record.record
@@ -35,8 +35,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class CrossrefSearchSource:
+class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Crossref API"""
 
     endpoint = "colrev.crossref"
@@ -424,16 +423,16 @@ class CrossrefSearchSource:
         self.api.last_updated = crossref_feed.get_last_updated()
 
         nrecs = self.api.get_len_total()
-        self.review_manager.logger.info(f"Total: {nrecs} records")
+        self.review_manager.logger.info(f"Total: {nrecs:,} records")
         if not rerun:
             self.review_manager.logger.info(
                 f"Retrieve papers indexed since {self.api.last_updated.split('T', maxsplit=1)[0]}"
             )
-            nrecs = self.api.get_len()
+            nrecs = self.api.get_number_of_records()
 
-        self.review_manager.logger.info(f"Retrieve {nrecs} records")
+        self.review_manager.logger.info(f"Retrieve {nrecs:,} records")
         estimated_time = nrecs * 0.5
-        estimated_time_formatted = str(datetime.timedelta(seconds=estimated_time))
+        estimated_time_formatted = str(datetime.timedelta(seconds=int(estimated_time)))
         self.review_manager.logger.info(f"Estimated time: {estimated_time_formatted}")
 
         try:
@@ -481,13 +480,14 @@ class CrossrefSearchSource:
         else:
             raise NotImplementedError
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
+                filename=filename,
+                logger=logger,
                 unique_id_field="ID",
             )
             return records
@@ -582,7 +582,7 @@ class CrossrefSearchSource:
             return record
 
         except (
-            requests.exceptions.RequestException,
+            colrev_exceptions.ServiceNotAvailableException,
             OSError,
             IndexError,
             colrev_exceptions.RecordNotFoundInPrepSourceException,

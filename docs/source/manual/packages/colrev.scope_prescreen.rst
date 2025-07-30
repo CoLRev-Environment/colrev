@@ -65,8 +65,17 @@ The Scope Prescreen can be added as follows:
 .. code-block::
 
    colrev prescreen -a colrev.scope_prescreen -p "TimeScopeFrom=2010"
+   colrev prescreen -a colrev.scope_prescreen -p "TimeScopeTo=2020"
+   colrev prescreen -a colrev.scope_prescreen -p "LanguageScope=eng,deu"
+   colrev prescreen -a colrev.scope_prescreen -p "ExcludeComplementaryMaterials=True"
+   colrev prescreen -a colrev.scope_prescreen -p "ENTRYTYPEScope=article,inproceedings"
+   colrev prescreen -a colrev.scope_prescreen -p "RequireRankedJournals=True"
 
-**Prerequesite**\ : The endpoint colrev.add_journal_ranking in the settings of prep must be installed.
-"colrev prep" must have been executed and journal_ranking must be included in metadata.
+   # TODO : OutletInclusionScope,OutletExclusionScope
 
-**Description**\ : Use case: User is able to decide whether journals, which are not included in any ranking, will be marked as "rev_prescreen_included" or as "rev_prescreen_excluded".
+For **RequireRankedJournals**\ :
+
+
+* Prerequisite: The endpoint colrev.add_journal_ranking in the settings of prep must be installed.
+  "colrev prep" must have been executed and ``journal_ranking`` must be included in metadata.
+* Description: Use case: User is able to decide whether journals, which are not included in any ranking, will be marked as "rev_prescreen_included" or as "rev_prescreen_excluded".

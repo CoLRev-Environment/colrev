@@ -8,9 +8,11 @@ import tempfile
 import typing
 from pathlib import Path
 
+import inquirer
 import requests
 import toml
-from m2r import parse_from_file
+from bs4 import BeautifulSoup
+from m2r import parse_from_file  # pylint: disable=import-error
 
 import colrev.package_manager.colrev_internal_packages
 from colrev.constants import EndpointType
@@ -36,6 +38,8 @@ class PackageDoc:
 
     # For monorepo packages
     package_dir: Path
+
+    monorepo: bool
 
     package_metadata: dict
 
@@ -63,14 +67,20 @@ class PackageDoc:
                 f"Package {package_id} not found on PyPI/in CoLRev monorepo"
             )
 
-        main_section = self.package_metadata["tool"]["poetry"]
-        self.license = main_section["license"]
+        main_section = self.package_metadata["project"]
+        self.license = (
+            main_section["license"]
+            if isinstance(main_section["license"], str)
+            else main_section["license"]["text"]
+        )
         self.version = main_section["version"]
         self.authors = main_section["authors"]
         self.documentation = main_section.get("documentation", None)
-        self.repository = main_section.get("repository", None)
+        self.repository = main_section.get(
+            "repository", main_section.get("urls", {}).get("repository", None)
+        )
         self.endpoints = list(
-            main_section.get("plugins", {}).get("colrev", {"na": "na"}).keys()
+            main_section.get("entry-points", {}).get("colrev", {"na": "na"}).keys()
         )
 
         colrev_section = self.package_metadata.get("tool", {}).get("colrev", {})
@@ -83,6 +93,7 @@ class PackageDoc:
         self.docs_rst_path = Path(f"{self.package_id}.rst")
 
     def _initialize_from_colrev_monorepo(self, package_id: str) -> bool:
+        self.monorepo = True
 
         if package_id in INTERNAL_PACKAGES:
             self.package_dir = Path(INTERNAL_PACKAGES[package_id])
@@ -99,13 +110,17 @@ class PackageDoc:
         return False
 
     def _initialize_from_pypi(self, package_id: str) -> bool:
+        self.monorepo = False
 
         response = requests.get(f"https://pypi.org/pypi/{package_id}/json", timeout=30)
         if response.status_code != 200:
             return False
-
-        repo_url = response.json()["info"].get("project_urls", {}).get("Repository")
-        gh_response = requests.get(f"{repo_url}/blob/main/pyproject.toml", timeout=30)
+        try:
+            repo_url = response.json()["info"].get("project_urls", {}).get("repository")
+        except AttributeError:
+            print(f"Failed to get repository URL for package {package_id}")
+            return False
+        gh_response = requests.get(f"{repo_url}/raw/main/pyproject.toml", timeout=30)
         if response.status_code != 200:
             return False
 
@@ -121,11 +136,7 @@ class PackageDoc:
     def _get_authors_for_docs(self) -> str:
         """Get the authors for the documentation  (without emails in <>)"""
 
-        authors = []
-        for author in self.authors:
-            authors.append(author.split("<")[0].strip())
-
-        return ", ".join(authors)
+        return ", ".join(author["name"] for author in self.authors)
 
     def _get_docs_short_description(self) -> str:
         return (
@@ -136,10 +147,12 @@ class PackageDoc:
 
     def _set_docs_package_readme_path(self, colrev_doc_link: str) -> None:
 
-        if self.package_dir:
+        if self.monorepo:
             self.docs_package_readme_path = self.package_dir / colrev_doc_link
         else:
-            response = requests.get(self.repository + "/" + colrev_doc_link, timeout=30)
+            response = requests.get(
+                self.repository + "/raw/main/" + colrev_doc_link, timeout=30
+            )
             if response.status_code != 200:
                 raise ValueError("Failed to download package readme from repository")
             with tempfile.NamedTemporaryFile(delete=False) as temp_file:
@@ -207,7 +220,7 @@ class PackageDoc:
         header_info += f"|LICENSE| License: {self.license}  \n\n"
         if self.repository != "":
             repo_name = self.repository.replace("https://github.com/", "")
-            if "CoLRev-Environment/colrev" in repo_name:
+            if "CoLRev-Environment/colrev/tree" in repo_name:
                 repo_name = "CoLRev-Environment/colrev"
             header_info += (
                 f"|GIT_REPO| Repository: `{repo_name} <{self.repository}>`_ \n\n"
@@ -353,19 +366,22 @@ class DocRegistryManager:
         "docs/source/manual/search_source_types.json"
     )
 
+    pypi_ignored_packages_file = Filepaths.COLREV_PATH / Path(
+        "docs/source/manual/pypi_ignored_packages.json"
+    )
+
     package_endpoints_json: typing.Dict[str, list] = {x.value: [] for x in EndpointType}
     docs_for_index: typing.Dict[str, list] = {x.value: [] for x in EndpointType}
+    packages_data: typing.Dict[str, dict] = {}
 
     def __init__(self) -> None:
-        self._load_packages()
-
-    def _load_packages(self) -> None:
+        self.packages: typing.List[PackageDoc] = []
 
         with open(Filepaths.PACKAGES_JSON, encoding="utf-8") as file:
-            packages_data = json.load(file)
+            self.packages_data = json.load(file)
 
-        self.packages = []
-        for package_id, package_data in packages_data.items():
+    def _load_packages(self) -> None:
+        for package_id, package_data in self.packages_data.items():
             try:
                 package_doc = PackageDoc(package_id)
                 package_doc.dev_status = package_data["dev_status"]
@@ -374,9 +390,11 @@ class DocRegistryManager:
                 toml.decoder.TomlDecodeError,
                 NotImplementedError,
                 ValueError,
+                KeyError,
+                AttributeError,
             ) as exc:
-                print(exc)
                 print(f"Error loading package {package_id}")
+                print(exc)
 
         # Add package endpoints
         os.chdir(Filepaths.COLREV_PATH)
@@ -479,8 +497,73 @@ class DocRegistryManager:
             for line in new_doc:
                 file.write(line + "\n")
 
+    def _update_pypi_packages(self) -> None:
+        """Retrieves CoLRev packages from PyPI"""
+
+        def ask_package_action(package_name: str) -> str:
+            questions = [
+                inquirer.List(
+                    "action",
+                    message=f"What should be done with the package '{package_name}'?",
+                    choices=["Ignore", "Add to colrev packages/docs"],
+                )
+            ]
+            answer = inquirer.prompt(questions)
+            return answer["action"]
+
+        response = requests.get("https://pypi.org/search/?q=colrev", timeout=30)
+
+        # read self.pypi_ignored_packages_file
+        with open(self.pypi_ignored_packages_file, encoding="utf-8") as file:
+            pypi_ignored_packages = json.load(file)
+
+        if response.status_code == 200:
+
+            soup = BeautifulSoup(response.text, "html.parser")
+            package_snippets = soup.find_all("a", class_="package-snippet")
+            search_results = []
+            for package_snippet in package_snippets:
+                span_elems = package_snippet.find_all("span")
+                name = span_elems[0].text.strip()
+                if "colrev" not in name:
+                    continue
+                search_results.append(
+                    {
+                        "name": name,
+                        "version": span_elems[1].text.strip(),
+                        "release_date": span_elems[2].text.strip(),
+                        "description": package_snippet.p.text.strip(),
+                    }
+                )
+            for search_result in search_results:
+                package_name = search_result["name"]
+                if package_name in pypi_ignored_packages:
+                    continue
+                if package_name in self.packages_data:
+                    continue
+
+                action = ask_package_action(package_name)
+
+                if action == "Ignore":
+                    print(f"The package '{package_name}' will be ignored.")
+                    pypi_ignored_packages[package_name] = {}
+
+                elif action == "Add to colrev packages/docs":
+                    print(
+                        f"The package '{package_name}' will be added to colrev packages/docs."
+                    )
+                    self.packages_data[package_name] = {"dev_status": "experimental"}
+
+            with open(self.pypi_ignored_packages_file, "w", encoding="utf-8") as file:
+                json.dump(pypi_ignored_packages, file, indent=4)
+            with open(Filepaths.PACKAGES_JSON, "w", encoding="utf-8") as file:
+                json.dump(self.packages_data, file, indent=4)
+
     def update(self) -> None:
         """Update the package endpoints and the package status."""
+
+        self._update_pypi_packages()
+        self._load_packages()
 
         self._update_package_endpoints_json()
         self._extract_search_source_types()

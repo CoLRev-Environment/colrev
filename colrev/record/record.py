@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Functionality for individual records."""
+"""Base record class."""
 from __future__ import annotations
 
 import pprint
@@ -22,15 +22,15 @@ from colrev.constants import FieldValues
 from colrev.constants import RecordState
 
 if typing.TYPE_CHECKING:  # pragma: no cover
-    import colrev.review_manager
     import colrev.record.qm.quality_model
+    import colrev.record.record_prep
 
 
 # pylint: disable=too-many-public-methods
 
 
 class Record:
-    """The Record class provides a range of basic convenience functions"""
+    """The Record class provides a range of basic Function"""
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
@@ -353,7 +353,7 @@ class Record:
         return self.get_field_provenance(key=key)["source"]
 
     def remove_field_provenance_note(self, *, key: str, note: str) -> None:
-        """Remove field provenance notes based on a key"""
+        """Remove field provenance notes based on a key (also if IGNORE:note)"""
         if key in FieldSet.MASTERDATA:
             if Fields.MD_PROV not in self.data:
                 return
@@ -363,7 +363,7 @@ class Record:
             if note not in notes:
                 return
             self.data[Fields.MD_PROV][key]["note"] = ",".join(
-                n for n in notes if n != note
+                n for n in notes if n not in [note, f"IGNORE:{note}"]
             )
 
         else:
@@ -375,7 +375,7 @@ class Record:
             if note not in notes:
                 return
             self.data[Fields.D_PROV][key]["note"] = ",".join(
-                n for n in notes if n != note
+                n for n in notes if n not in [note, f"IGNORE:{note}"]
             )
 
     def complete_provenance(self, *, source_info: str) -> bool:
@@ -503,6 +503,44 @@ class Record:
             if not n.startswith("IGNORE:") and n != ""
         ]
         return bool(defect_codes)
+
+    def has_fatal_quality_defects(self) -> bool:
+        """Check whether a record has fatal quality defects"""
+
+        required_fields = [Fields.TITLE, Fields.AUTHOR, Fields.YEAR]
+        if not all(r in self.data for r in required_fields) or not all(
+            self.data[r] != FieldValues.UNKNOWN for r in required_fields
+        ):
+            return True
+
+        if (
+            self.data.get(Fields.JOURNAL, FieldValues.UNKNOWN) == FieldValues.UNKNOWN
+            and self.data.get(Fields.BOOKTITLE, FieldValues.UNKNOWN)
+            == FieldValues.UNKNOWN
+            and self.data[Fields.ENTRYTYPE]
+            in [ENTRYTYPES.ARTICLE, ENTRYTYPES.INPROCEEDINGS]
+        ):
+            return True
+
+        if (
+            DefectCodes.IDENTICAL_VALUES_BETWEEN_TITLE_AND_CONTAINER
+            in self.get_field_provenance_notes(Fields.TITLE)
+        ):
+            return True
+
+        # title if it starts with "doi:"
+        if Fields.TITLE in self.data:
+            if self.data[Fields.TITLE].lower().startswith("doi:"):
+                return True
+
+        # title has more numbers than characters
+        if Fields.TITLE in self.data:
+            if sum(c.isdigit() for c in self.data[Fields.TITLE]) > sum(
+                c.isalpha() for c in self.data[Fields.TITLE]
+            ):
+                return True
+
+        return False
 
     def has_pdf_defects(self) -> bool:
         """Check whether the PDF has quality defects"""
@@ -660,23 +698,24 @@ class Record:
         self.require_prov()
         self.is_retracted()
 
-        if self.masterdata_is_curated():
-            if set_prepared:
-                self.set_status(RecordState.md_prepared)
+        if self.masterdata_is_curated() and set_prepared:
+            self.set_status(RecordState.md_prepared)
             return
 
         # Apply the checkers (including field key requirements etc.)
         quality_model.run(record=self)
 
+        if not set_prepared:
+            return
         if (
             Fields.STATUS in self.data
             and self.data[Fields.STATUS] == RecordState.rev_prescreen_excluded
         ):
             return
 
-        if self.has_quality_defects():
+        if self.has_fatal_quality_defects():
             self.set_status(RecordState.md_needs_manual_preparation)
-        elif set_prepared:
+        else:
             self.set_status(RecordState.md_prepared)
 
     def is_retracted(self) -> bool:
@@ -752,13 +791,13 @@ class Record:
                 f"No ENTRYTYPE specification ({new_entrytype})"
             )
 
-        self.run_quality_model(qm)
+        self.run_quality_model(qm, set_prepared=True)
 
     def set_status(self, target_state: RecordState, *, force: bool = False) -> None:
         """Set the record status"""
 
         if RecordState.md_prepared == target_state and not force:
-            if self.has_quality_defects():
+            if self.has_fatal_quality_defects():
                 target_state = RecordState.md_needs_manual_preparation
         # pylint: disable=colrev-direct-status-assign
         self.data[Fields.STATUS] = target_state

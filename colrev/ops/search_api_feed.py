@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import time
+import typing
 from copy import deepcopy
 from random import randint
 
@@ -19,6 +20,10 @@ from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
+
+if typing.TYPE_CHECKING:
+    import colrev.review_manager
+    import colrev.settings
 
 
 # Keep in mind the need for lock-mechanisms, e.g., in concurrent prep operations
@@ -71,6 +76,21 @@ class SearchAPIFeed:
         if not prep_mode:
             self.records = self.review_manager.dataset.load_records_dict()
 
+    @property
+    def source_identifier(self) -> str:
+        """Get the source identifier"""
+        return self._source_identifier
+
+    # The setter should avoid problems caused by a packages directly setting
+    # the source_identifier to a non-supported type/value
+    @source_identifier.setter
+    def source_identifier(self, value: str) -> None:
+        if not isinstance(value, str):
+            raise ValueError("source_identifier must be a string")
+        if not len(value) > 1:
+            raise ValueError("source_identifier must be at least 2 characters")
+        self._source_identifier = value
+
     def get_last_updated(self) -> str:
         """Returns the date of the last update (if available) in YYYY-MM-DD format"""
         file = self.feed_file
@@ -106,19 +126,6 @@ class SearchAPIFeed:
             + 1
         )
 
-    def _get_prev_feed_record(
-        self, retrieved_record: colrev.record.record.Record
-    ) -> colrev.record.record.Record:
-        """Get the previous record dict version"""
-        self._set_id(retrieved_record)
-
-        prev_feed_record_dict = {}
-        if retrieved_record.data[Fields.ID] in self.feed_records:
-            prev_feed_record_dict = deepcopy(
-                self.feed_records[retrieved_record.data[Fields.ID]]
-            )
-        return colrev.record.record.Record(prev_feed_record_dict)
-
     def _set_id(self, record: colrev.record.record.Record) -> None:
         """Set incremental record ID
         If self.source_identifier is in record_dict, it is updated, otherwise added as a new record.
@@ -134,7 +141,7 @@ class SearchAPIFeed:
         else:
             record.data[Fields.ID] = str(self._next_incremental_id).rjust(6, "0")
 
-    def _add_record_to_feed(
+    def add_record_to_feed(
         self,
         record: colrev.record.record.Record,
         prev_feed_record: colrev.record.record.Record,
@@ -434,9 +441,9 @@ class SearchAPIFeed:
     def add_update_record(self, retrieved_record: colrev.record.record.Record) -> bool:
         """Add or update a record in the api_search_feed and records"""
         self._prep_retrieved_record(retrieved_record)
-        prev_feed_record = self._get_prev_feed_record(retrieved_record)
+        prev_feed_record = self.get_prev_feed_record(retrieved_record)
 
-        added = self._add_record_to_feed(retrieved_record, prev_feed_record)
+        added = self.add_record_to_feed(retrieved_record, prev_feed_record)
         updated = False
         if not self.prep_mode:
             try:

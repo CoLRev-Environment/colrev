@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to write ris files"""
+"""Function to write ris files"""
 from __future__ import annotations
 
 from colrev.constants import ENTRYTYPES
@@ -14,13 +14,19 @@ RECORDS_FIELD_ORDER = [
     "EP",
     "JO",
     "VL",
-    "ER",  # Must be the last field
+    "IS",
+    "N2",
+    "UR",
+    "SN",
+    "DO",
 ]
 
 ENTRYTYPE_MAP = {
     ENTRYTYPES.ARTICLE: "JOUR",
     ENTRYTYPES.BOOK: "BOOK",
     ENTRYTYPES.INPROCEEDINGS: "CONF",
+    ENTRYTYPES.PROCEEDINGS: "CONF",
+    ENTRYTYPES.INCOLLECTION: "CONF",
     ENTRYTYPES.MISC: "GEN",
     ENTRYTYPES.PHDTHESIS: "THES",
     ENTRYTYPES.TECHREPORT: "RPRT",
@@ -33,7 +39,41 @@ RECORD_FIELD_MAP = {
     "PY": Fields.YEAR,
     "JO": Fields.JOURNAL,
     "VL": Fields.VOLUME,
+    "IS": Fields.NUMBER,
+    "N2": Fields.ABSTRACT,
+    "UR": Fields.URL,
+    "DO": Fields.DOI,
 }
+
+
+def _add_pages(record_dict: dict) -> str:
+    """Add pages to the RIS string"""
+    pages_str = ""
+    if Fields.PAGES in record_dict:
+        pages = str(record_dict[Fields.PAGES])
+        if "--" in pages:
+            start, end = pages.split("--")
+            pages_str += f"SP  - {start}\n"
+            pages_str += f"EP  - {end}\n"
+        elif "-" in pages and pages.count("-") == 1:
+            start, end = pages.split("-")
+            pages_str += f"SP  - {start}\n"
+            pages_str += f"EP  - {end}\n"
+        else:
+            pages_str += f"SP  - {pages}\n"
+    return pages_str
+
+
+def _add_sn(record_dict: dict) -> str:
+    """Add SN (ISSN/ISBN) to the RIS string"""
+    sn_list = []
+    if Fields.ISSN in record_dict:
+        sn_list.append(str(record_dict[Fields.ISSN]))
+    if Fields.ISBN in record_dict:
+        sn_list.append(str(record_dict[Fields.ISBN]))
+    if sn_list:
+        return f"SN  - {';'.join(sn_list)}\n"
+    return ""
 
 
 def to_string(*, records_dict: dict) -> str:
@@ -46,28 +86,22 @@ def to_string(*, records_dict: dict) -> str:
                 entrytype = ENTRYTYPE_MAP[record_dict[Fields.ENTRYTYPE]]
                 ris_str += f"TY  - {entrytype}\n"
 
-            elif field in RECORD_FIELD_MAP:
+            elif field in RECORD_FIELD_MAP and str(
+                record_dict.get(RECORD_FIELD_MAP[field], "")
+            ) not in ["", "None", "UNKNOWN", "nan"]:
                 ris_str += f"{field}  - {record_dict[RECORD_FIELD_MAP[field]]}\n"
-            elif field == Fields.PAGES:
-                if Fields.PAGES in record_dict:
-                    pages = record_dict[Fields.PAGES]
-                    if "-" in pages:
-                        start, end = pages.split("-")
-                        ris_str += f"SP  - {start}\n"
-                        ris_str += f"EP  - {end}\n"
-                    else:
-                        ris_str += f"SP  - {pages}\n"
 
             elif field == "AU":
-                for author in record_dict[Fields.AUTHOR].split(" and "):
-                    ris_str += f"AU  - {author}\n"
+                if record_dict[Fields.AUTHOR] and str(
+                    record_dict[Fields.AUTHOR]
+                ) not in ["None", "UNKNOWN", "nan"]:
+                    for author in record_dict[Fields.AUTHOR].split(" and "):
+                        ris_str += f"AU  - {author}\n"
 
-            elif field == "ER":
-                ris_str += "ER  -\n\n"
-                break  # must be last field
+        ris_str += _add_pages(record_dict)
+        ris_str += _add_sn(record_dict)
 
-            else:
-                pass  # field not (yet) supported
+        ris_str += "ER  -\n\n"
 
     return ris_str
 

@@ -6,6 +6,8 @@ import dash  # pylint: disable=import-error
 from dash import Dash  # pylint: disable=import-error
 from dash import html  # pylint: disable=import-error
 
+import colrev.exceptions as colrev_exceptions
+
 # dash dependencies optional
 # install with pip install colrev[ui_web]
 # will fail if not installed
@@ -18,7 +20,7 @@ class Dashboard:
     """Dashboard class"""
 
     def make_dashboard(self) -> Dash:
-        """creates dashboard header and general structure"""
+        """Create dashboard header and general structure."""
         app = Dash(__name__, use_pages=True)
 
         app.layout = html.Div(
@@ -44,6 +46,11 @@ class Dashboard:
 def main() -> None:
     """Main method for the dashboard"""
 
-    dashboard = Dashboard()
-    app = dashboard.make_dashboard()
-    app.run_server()  # debug=True
+    try:
+        dashboard = Dashboard()
+        app = dashboard.make_dashboard()
+        app.run_server()  # debug=True
+    except colrev_exceptions.NoRecordsError:
+        print("No records imported yet.")
+    except colrev_exceptions.CoLRevException as exc:
+        raise exc

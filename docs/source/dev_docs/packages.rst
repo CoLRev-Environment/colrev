@@ -1,8 +1,9 @@
 Package development
 =====================
 
-CoLRev packages are Python packages that extend CoLRev by relying on its shared data structure, standard process, and common interfaces.
-Packages can support specific endpoints (e.g., `search_source`, `prescreen`, `pdf-get`) or provide complementary functionalities (e.g., for ad-hoc data exploration and visualization).
+CoLRev packages are Python packages that extend CoLRev by relying on its shared data structure and standard process.
+Specifically, a CoLRev package can extend package base classes, such as the `ReviewTypePackageBaseClass <packages/package_base_classes.html#base_classes.ReviewTypePackageBaseClass>`_, or the `SearchSourcePackageBaseClass <packages/package_base_classes.html#base_classes.SearchSourcePackageBaseClass>`_, to implement custom functionality for a specific task or data source.
+In addition, packages can provide complementary functionalities (e.g., for ad-hoc data exploration and visualization) without extending a specific base class.
 
 The following guide explains how to develop built-in packages, i.e., packages that reside in the `packages <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages>`_ directory. Built-in packages should also be registered as a dependency in the `pyproject.toml <https://github.com/CoLRev-Environment/colrev/blob/main/pyproject.toml>`_.
 
@@ -87,7 +88,7 @@ To install a CoLRev package, you can use the following command (`pip install <pa
 
     colrev install <package_name>
 
-Once installed, packages that implement endpoints can be used in the standard process by registering the package's endpoint in the `settings.json` of a project (e.g., by running `colrev search --add <package_name>`).
+Once installed, packages that extends a base class can be used in the standard process by registering the package in the `settings.json` of a project (e.g., by running `colrev search --add <package_name>`).
 
 Creating a new CoLRev package
 ----------------------------------------
@@ -148,29 +149,35 @@ The package metadata is stored in the ``pyproject.toml`` file. The metadata is u
 
    ::
 
-    [tool.poetry]
+    [project]
     name = "colrev.abi_inform_proquest"
     description = "CoLRev package for abi_inform_proquest"
     version = "0.1.0"
-    authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>"]
+    authors = [
+      { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
+    ]
     license = "MIT"
+    requires-python = ">=3.8, <4"
     repository = "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/sync"
 
+
+    [tool.hatch.build.targets.wheel]
+    packages = ["src"]
 
     [tool.colrev]
     colrev_doc_description = "Package for sync"
     colrev_doc_link = "README.md"
     search_types = ["API", "TOC", "MD"]
 
-    [tool.poetry.plugins.colrev]
+    [project.entry-points.colrev]
     search_source = "colrev.packages.abi_inform_proquest.src.package_functionality:ABIInformProQuestSearchSource"
 
-In the `tool.poetry.plugins.colrev` section, the endpoints can be specified. The endpoint class is a string that contains the module path and the class name of the endpoint. The module path is relative to the package directory.
+The `[project.entry-points.colrev]` section specifies which base classes are extended. The value contains the module path and the class name. The module path is relative to the package directory.
 
 Develop
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Package development is done in the `src` directory. The package should implement the respective endpoint interface.
+Package development is done in the `src` directory. The package should extend the respective base class(es).
 
 Best practices
 
@@ -180,46 +187,46 @@ Best practices
 * Get paths from review_manager
 * Use the ``logger`` and ``colrev_report_logger`` to help users examine and validate the process, including links to the docs where instructions for tracing and fixing errors are available.
 * Before committing do a pre-commit test
-* Use poetry for dependency management (run `poetry add <package_name>` to add a new dependency)
-* Once the package development is completed, make a PR to the CoLRev, with brief description of the package.
-* The ``add_endpoint`` is only required for SearchSources. It is optional for other endpoint types.
+* Use uv for dependency management (run `uv add <package_name>` to add a new dependency)
+* Once the package development is completed, make a pull request to the CoLRev origin repository, with brief description of the package.
+* The ``add_endpoint`` is only required for SearchSources. It is optional for other packages.
 
-Endpoints allow packages to implement functionality that can be called in the :doc:`standard process </manual/operations>` if users register the endpoint in the `settings.json` of a project.
+Packages allow packages to implement functionality that can be called in the :doc:`standard process </manual/operations>` if users register the package in the `settings.json` of a project.
 
-To implement an endpoint, the `tool.colrev` section of `pyproject.toml` must provide a reference to the endpoint class which implements the respective :doc:`interfaces </dev_docs/packages/package_interfaces>`. The reference is a string that contains the module path and the class name of the endpoint. The module path is relative to the package directory.
+To implement an endpoint, the `tool.colrev` section of `pyproject.toml` must provide a reference to the class which inherits from the respective :doc:`base classes </dev_docs/packages/package_base_classes>`. The reference is a string that contains the module path and the class name. The module path is relative to the package directory.
 
-The following endpoint - interface pairs are available:
+The following endpoint - abstract base class pairs are available:
 
 .. list-table::
    :widths: 50 50
    :header-rows: 1
 
    * - Endpoint
-     - Interface
+     - Abstract base class
    * - review_type
-     - `ReviewTypeInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.ReviewTypeInterface>`_
+     - `ReviewTypePackageBaseClass <packages/package_base_classes.html#base_classes.ReviewTypePackageBaseClass>`_
    * - search_source
-     - `SearchSourceInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface>`_
+     - `SearchSourcePackageBaseClass <packages/package_base_classes.html#base_classes.SearchSourcePackageBaseClass>`_
    * - prep
-     - `PrepInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PrepInterface>`_
+     - `PrepPackageBaseClass <packages/package_base_classes.html#base_classes.PrepPackageBaseClass>`_
    * - prep_man
-     - `PrepManInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PrepManInterface>`_
+     - `PrepManPackageBaseClass <packages/package_base_classes.html#base_classes.PrepManPackageBaseClass>`_
    * - dedupe
-     - `DedupeInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.DedupeInterface>`_
+     - `DedupePackageBaseClass <packages/package_base_classes.html#base_classes.DedupePackageBaseClass>`_
    * - prescreen
-     - `PrescreenInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PrescreenInterface>`_
+     - `PrescreenPackageBaseClass <packages/package_base_classes.html#base_classes.PrescreenPackageBaseClass>`_
    * - pdf_get
-     - `PDFGetInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PDFGetInterface>`_
+     - `PDFGetPackageBaseClass <packages/package_base_classes.html#base_classes.PDFGetPackageBaseClass>`_
    * - pdf_get_man
-     - `PDFGetManInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PDFGetManInterface>`_
+     - `PDFGetManPackageBaseClass <packages/package_base_classes.html#base_classes.PDFGetManPackageBaseClass>`_
    * - pdf_prep
-     - `PDFPrepInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PDFPrepInterface>`_
+     - `PDFPrepPackageBaseClass <packages/package_base_classes.html#base_classes.PDFPrepPackageBaseClass>`_
    * - pdf_prep_man
-     - `PDFPrepManInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.PDFPrepManInterface>`_
+     - `PDFPrepManPackageBaseClass <packages/package_base_classes.html#base_classes.PDFPrepManPackageBaseClass>`_
    * - screen
-     - `ScreenInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.ScreenInterface>`_
+     - `ScreenPackageBaseClass <packages/package_base_classes.html#base_classes.ScreenPackageBaseClass>`_
    * - data
-     - `DataInterface <packages/package_interfaces.html#colrev.package_manager.interfaces.DataInterface>`_
+     - `DataPackageBaseClass <packages/package_base_classes.html#base_classes.DataPackageBaseClass>`_
 
 Documentation
 -----------------
@@ -256,7 +263,7 @@ To integrate the package documentation into the official CoLRev documentation, t
 
 * Reviews the package.
 * Assigns a package status.
-* Runs the ``colrev env --update_package_list`` command. This updates the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/docs/source/manual/package_endpoints.json>`_, and the `search_source_types.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/docs/source/search_source_types.json>`_, which are used to generate the documentation pages.
+* Runs the ``colrev env --update_package_list`` command. This updates the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/docs/source/manual/package_endpoints.json>`_, and the `search_source_types.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/docs/source/manual/search_source_types.json>`_, which are used to generate the documentation pages.
 
 Package development resources
 ------------------------------
@@ -264,7 +271,7 @@ Package development resources
 .. toctree::
    :maxdepth: 1
 
-   packages/package_interfaces
+   packages/package_base_classes
    packages/linters
    packages/custom_packages
    packages/python

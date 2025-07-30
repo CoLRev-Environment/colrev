@@ -12,6 +12,7 @@ from bib_dedupe.bib_dedupe import block
 from bib_dedupe.bib_dedupe import match
 from bib_dedupe.bib_dedupe import prep
 
+import colrev.env.tei_parser
 import colrev.ops.check
 import colrev.review_manager
 from colrev.constants import Fields
@@ -174,17 +175,13 @@ def add_from_tei(
     if fields is None:
         fields = [Fields.ABSTRACT, Fields.KEYWORDS]
 
-    review_manager = colrev.review_manager.ReviewManager(
-        path_str=project_path, force_mode=True
-    )
-
     def extract_abstract(record: pd.Series) -> str:
         if Fields.ABSTRACT in record and not pd.isnull(record[Fields.ABSTRACT]):
             return record[Fields.ABSTRACT]
 
         try:
             tei_filename = colrev.record.record.Record(record).get_tei_filename()
-            tei = review_manager.get_tei(tei_path=tei_filename)
+            tei = colrev.env.tei_parser.TEIParser(tei_path=tei_filename)
             return tei.get_abstract()
         except FileNotFoundError:
             return ""
@@ -194,7 +191,7 @@ def add_from_tei(
             return record[Fields.KEYWORDS]
         try:
             tei_filename = colrev.record.record.Record(record).get_tei_filename()
-            tei = review_manager.get_tei(tei_path=tei_filename)
+            tei = colrev.env.tei_parser.TEIParser(tei_path=tei_filename)
             return ", ".join(tei.get_paper_keywords())
         except FileNotFoundError:
             return ""

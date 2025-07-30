@@ -1,27 +1,27 @@
-[tool.poetry]
+[project]
 name = "colrev.acm_digital_library"
 description = "CoLRev package for acm_digital_library"
 version = "0.1.0"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
-    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]
+requires-python = ">=3.8, <4"
+
+[project.urls]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/acm_digital_library"
 
-[[tool.poetry.packages]]
-include = "src"
-
-[tool.poetry.dependencies]
-python = ">=3.8, <4"
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.colrev]
 colrev_doc_description = "ACM digital Library"
 colrev_doc_link = "README.md"
 search_types = ["DB"]
 
-[tool.poetry.plugins.colrev]
+[project.entry-points.colrev]
 search_source = "colrev.packages.acm_digital_library.src.acm_digital_library:ACMDigitalLibrarySearchSource"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "cython<3.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

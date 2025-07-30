@@ -200,6 +200,18 @@ class Upgrade(colrev.process.operation.Operation):
                 "version": CoLRevVersion("0.12.0"),
                 "target_version": CoLRevVersion("0.13.0"),
                 "script": self._migrate_0_13_0,
+                "released": True,
+            },
+            {
+                "version": CoLRevVersion("0.13.0"),
+                "target_version": CoLRevVersion("0.14.0"),
+                "script": self._migrate_0_14_0,
+                "released": True,
+            },
+            {
+                "version": CoLRevVersion("0.14.0"),
+                "target_version": CoLRevVersion("0.15.0"),
+                "script": self._migrate_0_15_0,
                 "released": False,
             },
         ]
@@ -720,6 +732,22 @@ class Upgrade(colrev.process.operation.Operation):
                     out.write(bibtex_str + "\n")
                 self.repo.index.add([source["filename"]])
 
+        # Add "colrev.ref_check" to data endpoints
+        if "colrev.ref_check" not in [
+            e["endpoint"] for e in settings["data"]["data_package_endpoints"]
+        ]:
+            settings["data"]["data_package_endpoints"].append(
+                {"endpoint": "colrev.ref_check"}
+            )
+
+        # Remove "inconsistent-with-url-metadata" from settings["prep"]["defects_to_ignore"]
+        settings["prep"]["defects_to_ignore"] = [
+            d
+            for d in settings["prep"]["defects_to_ignore"]
+            if d != "inconsistent-with-url-metadata"
+        ]
+        self._save_settings(settings)
+
         # Rename LOCAL_ENVIRONMENT_DIR
         if not Filepaths.LOCAL_ENVIRONMENT_DIR.is_dir():
             shutil.move(
@@ -733,9 +761,9 @@ class Upgrade(colrev.process.operation.Operation):
                 content = file.read()
                 if "colrev install" not in content:
                     content = content.replace(
-                        "          poetry run --directory ${{ runner.temp }}/colrev colrev env -i",
+                        "          poetry run --directory ${{ runner.temp }}/colrev colrev search -f",
                         "          poetry run --directory ${{ runner.temp }}/colrev colrev install .\n"
-                        + "          poetry run --directory ${{ runner.temp }}/colrev colrev env -i",
+                        + "          poetry run --directory ${{ runner.temp }}/colrev colrev search -f",
                     )
 
                     with open(
@@ -753,6 +781,37 @@ class Upgrade(colrev.process.operation.Operation):
                 )
                 with open(Filepaths.REGISTRY_FILE, "w", encoding="utf-8") as out:
                     out.write(content)
+
+        return self.repo.is_dirty()
+
+    def _migrate_0_14_0(self) -> bool:
+        """Migrate GitHub Actions workflow files from Poetry to uv and update working directories."""
+
+        if Path(".github/workflows").is_dir():
+
+            workflow_file = Path("ops/init/colrev_update.yml")
+            target_path = self.review_manager.path / Path(
+                ".github/workflows/colrev_update.yml"
+            )
+            colrev.env.utils.retrieve_package_file(
+                template_file=workflow_file, target=target_path
+            )
+
+            self.repo.index.add([str(target_path)])
+
+        return self.repo.is_dirty()
+
+    def _migrate_0_15_0(self) -> bool:
+
+        # replace "commit" with "pre-commit" and "push" with "pre-push" in .pre-commit-config.yaml
+        pre_commit_config_path = Path(".pre-commit-config.yaml")
+        if pre_commit_config_path.is_file():
+            pre_commit_contents = pre_commit_config_path.read_text(encoding="utf-8")
+            pre_commit_contents = pre_commit_contents.replace(
+                "[commit]", "[pre-commit]"
+            ).replace("[push]", "[pre-push]")
+            pre_commit_config_path.write_text(pre_commit_contents, encoding="utf-8")
+            self.repo.index.add([str(pre_commit_config_path)])
 
         return self.repo.is_dirty()
 

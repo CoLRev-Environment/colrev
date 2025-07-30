@@ -6,6 +6,7 @@ import os
 import shutil
 from pathlib import Path
 
+import colrev.env.tei_parser
 import colrev.process.operation
 import colrev.settings
 from colrev.constants import Fields
@@ -78,11 +79,8 @@ class Distribute(colrev.process.operation.Operation):
                 input(path)
 
             if path.suffix == ".pdf":
-                grobid_service = self.review_manager.get_grobid_service()
 
-                grobid_service.start()
-
-                tei = self.review_manager.get_tei(
+                tei = colrev.env.tei_parser.TEIParser(
                     pdf_path=path,
                 )
                 record = tei.get_metadata()
@@ -120,9 +118,10 @@ class Distribute(colrev.process.operation.Operation):
                     self.review_manager.settings.sources.append(new_source)
                     self.review_manager.save_settings()
 
-                if 0 != len(import_records):
-                    record_id = int(self.get_next_id(bib_file=target_bib_file))
+                if 0 == len(import_records):
+                    return
 
+                record_id = int(self.get_next_id(bib_file=target_bib_file))
                 record[Fields.ID] = f"{record_id}".rjust(10, "0")
                 record.update(file=str(target_pdf_path))
                 import_records.append(record)

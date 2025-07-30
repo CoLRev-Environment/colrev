@@ -2,20 +2,20 @@
 """SearchSource: GitHub"""
 from __future__ import annotations
 
+import logging
 import re
 import typing
 from multiprocessing import Lock
 from pathlib import Path
 
 import inquirer
-import zope.interface
 from github import Auth
 from github import Github
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 from colrev.constants import Fields
@@ -34,8 +34,7 @@ def is_github_api_key(previous: dict, answer: str) -> bool:
     raise inquirer.errors.ValidationError("", reason="Invalid GitHub API key format.")
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class GitHubSearchSource:
+class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
     """GitHub API"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -48,7 +47,7 @@ class GitHubSearchSource:
 
     docs_link = (
         "https://colrev-environment.github.io/colrev/dev_docs/packages/"
-        + "package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface"
+        + "package_interfaces.html#base_classes.SearchSourcePackageBaseClass"
         + "https://docs.github.com/en/rest?apiVersion=2022-11-28"
     )
     db_url = "https://github.com/"
@@ -96,20 +95,16 @@ class GitHubSearchSource:
 
     @classmethod
     def _choice_scope(cls) -> str:
-        while True:
-            user_choice = input(
-                "Where do you want to search in (1 = Only in URL, 2 = Only in Readme, 3 = Both): "
+        questions = [
+            inquirer.Checkbox(
+                "search_in",
+                message="Where do you want to search?",
+                choices=[("URL", "url"), ("Readme", "readme"), ("Topic", "topic")],
             )
-            if user_choice in ["1", "2", "3"]:
+        ]
 
-                if user_choice == "1":
-                    return "url"
-                if user_choice == "2":
-                    return "readme"
-                if user_choice == "3":
-                    return "url,readme"
-
-            print("Invalid choice. Please try again.")
+        answers = inquirer.prompt(questions)
+        return ",".join(answers["search_in"])
 
     @classmethod
     def add_endpoint(
@@ -198,10 +193,10 @@ class GitHubSearchSource:
         # Getting API key
         token = self._get_api_key()
         auth = Auth.Token(token)
-        g = Github(auth=auth)
+        github_connection = Github(auth=auth)
 
         # Searching on Github
-        repositories = g.search_repositories(query=query)
+        repositories = github_connection.search_repositories(query=query)
 
         # Saving search results
         for repo in repositories:
@@ -210,7 +205,7 @@ class GitHubSearchSource:
             github_feed.add_update_record(record)
 
         github_feed.save()
-        g.close()
+        github_connection.close()
 
     def search(self, rerun: bool = False) -> None:
         """Run a search on GitHub"""
@@ -223,12 +218,13 @@ class GitHubSearchSource:
             )
             self._run_api_search(github_feed)
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
+                filename=filename,
+                logger=logger,
                 unique_id_field="url",
             )
 
@@ -260,9 +256,9 @@ class GitHubSearchSource:
             # get API access
             token = self._get_api_key()
             auth = Auth.Token(token)
-            g = Github(auth=auth)
+            github_connection = Github(auth=auth)
 
-            repo = g.get_repo(match.group(1) + "/" + match.group(2))
+            repo = github_connection.get_repo(match.group(1) + "/" + match.group(2))
             new_record = record_transformer.repo_to_record(repo=repo)
             record.data.update(new_record.data)
 

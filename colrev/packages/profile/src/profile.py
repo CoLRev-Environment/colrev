@@ -5,13 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
-import zope.interface
 from pydantic import BaseModel
 from pydantic import Field
 
 import colrev.env.docker_manager
 import colrev.env.utils
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 from colrev.constants import Fields
@@ -19,8 +18,7 @@ from colrev.constants import FieldValues
 from colrev.constants import RecordState
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-class Profile:
+class Profile(base_classes.DataPackageBaseClass):
     """Create a profile"""
 
     ci_supported: bool = Field(default=False)
@@ -63,10 +61,6 @@ class Profile:
         }
         operation.review_manager.settings.data.data_package_endpoints.append(
             add_package
-        )
-        operation.review_manager.save_settings()
-        operation.review_manager.dataset.create_commit(
-            msg=f"Add {operation.type} profile",
         )
 
     def _update_profile(self, silent_mode: bool) -> None:

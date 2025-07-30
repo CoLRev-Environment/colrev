@@ -2,19 +2,17 @@
 """Screen based on GenAI"""
 from __future__ import annotations
 
-import zope.interface
 from pydantic import Field
 
-import colrev.package_manager.interfaces
-import colrev.package_manager.package_manager
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
-import colrev.settings
 from colrev.constants import RecordState
 
+# pylint: disable=too-few-public-methods
 
-@zope.interface.implementer(colrev.package_manager.interfaces.ScreenInterface)
-class GenAIScreen:
+
+class GenAIScreen(base_classes.ScreenPackageBaseClass):
     """Screen documents using GenAI"""
 
     ci_supported: bool = Field(default=False)
@@ -32,13 +30,9 @@ class GenAIScreen:
         self.screen_operation = screen_operation
         self.settings = self.settings_class(**settings)
 
-        # TODO : load API-Key and initialize connection here
-
     # pylint: disable=unused-argument
     def run_screen(self, records: dict, split: list) -> dict:
         """Screen records based on GenAI"""
-
-        # TODO : add logic based on records and split here
 
         # screening_criteria = self.review_manager.settings.screen.criteria
         for record_dict in records.values():

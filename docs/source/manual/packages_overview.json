@@ -283,6 +283,24 @@
         "endpoint_type": "search_source"
     },
     {
+        "package_endpoint_identifier": "colrev.plos",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "PLOS API (:doc:`instructions </manual/packages/colrev.plos>`)",
+        "search_types": [
+            "API"
+        ],
+        "endpoint_type": "search_source"
+    },
+    {
+        "package_endpoint_identifier": "colrev.prospero",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "Prospero (:doc:`instructions </manual/packages/colrev.prospero>`)",
+        "search_types": [
+            "API"
+        ],
+        "endpoint_type": "search_source"
+    },
+    {
         "package_endpoint_identifier": "colrev.psycinfo",
         "status": "|EXPERIMENTAL|",
         "short_description": "PsycINFO (:doc:`instructions </manual/packages/colrev.psycinfo>`)",
@@ -536,6 +554,12 @@
         "endpoint_type": "prep"
     },
     {
+        "package_endpoint_identifier": "colrev.cli_prep_man",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "TODO (:doc:`instructions </manual/packages/colrev.cli_prep_man>`)",
+        "endpoint_type": "prep_man"
+    },
+    {
         "package_endpoint_identifier": "colrev.export_man_prep",
         "status": "|MATURING|",
         "short_description": "Export Man Prep (:doc:`instructions </manual/packages/colrev.export_man_prep>`)",
@@ -594,6 +618,12 @@
         "status": "|MATURING|",
         "short_description": "Scope-based Prescreen (:doc:`instructions </manual/packages/colrev.scope_prescreen>`)",
         "endpoint_type": "prescreen"
+    },
+    {
+        "package_endpoint_identifier": "colrev-scidb",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "TODO (:doc:`instructions </manual/packages/colrev-scidb>`)",
+        "endpoint_type": "pdf_get"
     },
     {
         "package_endpoint_identifier": "colrev.download_from_website",
@@ -686,6 +716,12 @@
         "endpoint_type": "data"
     },
     {
+        "package_endpoint_identifier": "colrev.genai",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "GenAI (:doc:`instructions </manual/packages/colrev.genai>`)",
+        "endpoint_type": "data"
+    },
+    {
         "package_endpoint_identifier": "colrev.github_pages",
         "status": "|MATURING|",
         "short_description": "GitHub pages (:doc:`instructions </manual/packages/colrev.github_pages>`)",
@@ -716,10 +752,22 @@
         "endpoint_type": "data"
     },
     {
+        "package_endpoint_identifier": "colrev.ref_check",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "TODO (:doc:`instructions </manual/packages/colrev.ref_check>`)",
+        "endpoint_type": "data"
+    },
+    {
         "package_endpoint_identifier": "colrev.structured",
         "status": "|EXPERIMENTAL|",
         "short_description": "Structured Data Extraction (:doc:`instructions </manual/packages/colrev.structured>`)",
         "endpoint_type": "data"
+    },
+    {
+        "package_endpoint_identifier": "colrev-sync",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "Sync (:doc:`instructions </manual/packages/colrev-sync>`)",
+        "endpoint_type": "na"
     },
     {
         "package_endpoint_identifier": "colrev.doi_org",
@@ -728,9 +776,9 @@
         "endpoint_type": "na"
     },
     {
-        "package_endpoint_identifier": "colrev.sync",
+        "package_endpoint_identifier": "colrev.enlit",
         "status": "|EXPERIMENTAL|",
-        "short_description": "Sync (:doc:`instructions </manual/packages/colrev.sync>`)",
+        "short_description": "TODO (:doc:`instructions </manual/packages/colrev.enlit>`)",
         "endpoint_type": "na"
     },
     {

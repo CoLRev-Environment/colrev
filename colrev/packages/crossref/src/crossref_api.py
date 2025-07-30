@@ -21,7 +21,7 @@ from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.packages.crossref.src import record_transformer
 
-LIMIT = 100
+LIMIT = 1000
 MAXOFFSET = 10000
 
 SESSION = requests_cache.CachedSession(
@@ -75,6 +75,7 @@ class HTTPRequest:
         )
 
     # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-positional-arguments
     def retrieve(
         self,
         endpoint: str,
@@ -82,15 +83,21 @@ class HTTPRequest:
         data: typing.Optional[dict] = None,
         only_headers: bool = False,
         skip_throttle: bool = False,
+        cache: bool = True,
     ) -> requests.Response:
         """Retrieve data from a given endpoint."""
 
         if only_headers is True:
             return requests.head(endpoint, timeout=2)
 
-        result = SESSION.get(
-            endpoint, params=data, timeout=self.timeout, headers=headers
-        )
+        if cache:
+            result = SESSION.get(
+                endpoint, params=data, timeout=self.timeout, headers=headers
+            )
+        else:
+            result = requests.get(
+                endpoint, params=data, timeout=self.timeout, headers=headers
+            )
 
         if not skip_throttle:
             self._update_rate_limits(result.headers)
@@ -102,7 +109,7 @@ class HTTPRequest:
 class Endpoint:
     """Endpoint"""
 
-    CURSOR_AS_ITER_METHOD = False
+    cursor_as_iter_method = False
 
     def __init__(
         self,
@@ -185,7 +192,25 @@ class Endpoint:
                 f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
             ) from exc
 
-        return int(result["message"]["total-results"])
+        return int(result["message"].get("total-results", 0))
+
+    def get_dois(self) -> typing.List[str]:
+        """Retrieve the dois resulting from a query."""
+        request_params = dict(self.request_params)
+        request_url = str(self.request_url)
+
+        try:
+            result = self.retrieve(
+                request_url,
+                data=request_params,
+                headers=self.headers,
+            ).json()
+        except requests.exceptions.RequestException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
+            ) from exc
+
+        return [item["DOI"] for item in result["message"]["items"]]
 
     @property
     def url(self) -> str:
@@ -206,7 +231,7 @@ class Endpoint:
 
         request_url = str(self.request_url)
 
-        if request_url.startswith("https://api.crossref.org/works/10."):
+        if request_url.startswith("https://api.crossref.org/works/"):
             result = self.retrieve(
                 request_url,
                 headers=self.headers,
@@ -221,7 +246,7 @@ class Endpoint:
 
             return
 
-        if self.CURSOR_AS_ITER_METHOD is True:
+        if self.cursor_as_iter_method is True:
             request_params = dict(self.request_params)
             request_params["cursor"] = "*"
             request_params["rows"] = str(LIMIT)
@@ -231,6 +256,7 @@ class Endpoint:
                     request_url,
                     data=request_params,
                     headers=self.headers,
+                    cache=False,
                 )
 
                 if result.status_code == 404:
@@ -261,7 +287,11 @@ class Endpoint:
 
                 result = result.json()
 
-                if len(result["message"]["items"]) == 0:
+                if (
+                    "message" not in result
+                    or "items" not in result["message"]
+                    or len(result["message"]["items"]) == 0
+                ):
                     return
 
                 yield from result["message"]["items"]
@@ -361,7 +391,7 @@ class CrossrefAPI:
         endpoint = Endpoint(self.params["url"], email=self.email)
         return endpoint.get_nr()
 
-    def get_len(self) -> int:
+    def get_number_of_records(self) -> int:
         """Get the number of records from Crossref based on the parameters"""
 
         endpoint = Endpoint(self.get_url(), email=self.email)
@@ -373,6 +403,9 @@ class CrossrefAPI:
         url = self.get_url()
 
         endpoint = Endpoint(url, email=self.email)
+        if self.get_number_of_records() > 10000:
+            endpoint.cursor_as_iter_method = True
+
         try:
             for item in endpoint:
                 try:
@@ -503,7 +536,16 @@ class CrossrefAPI:
         else:
             endpoint.request_params["rows"] = "15"
 
-        for counter, item in enumerate(endpoint):
+        counter = 0
+        while True:
+            try:
+                item = next(iter(endpoint), None)
+            except requests.exceptions.RequestException as exc:
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
+                ) from exc
+            if item is None:
+                break
             try:
                 retrieved_record = record_transformer.json_to_record(item=item)
                 similarity = self._get_similarity(
@@ -517,6 +559,7 @@ class CrossrefAPI:
                     most_similar_record = retrieved_record.get_data()
             except colrev_exceptions.RecordNotParsableException:
                 pass
+            counter += 1
             if jour_vol_iss_list and counter > 200:
                 break
             if not jour_vol_iss_list and counter > 5:

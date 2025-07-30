@@ -1,28 +1,30 @@
-[tool.poetry]
+[project]
 name = "colrev.exclude_non_latin_alphabets"
 description = "CoLRev package for exclude_non_latin_alphabets"
 version = "0.1.0"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
-    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+ ]
+requires-python = ">=3.8, <4"
+dependencies = [
+    "alphabet-detector>=0.0.7"
 ]
+
+[project.urls]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/exclude_non_latin_alphabets"
 
-[[tool.poetry.packages]]
-include = "src"
-
-[tool.poetry.dependencies]
-python = ">=3.8, <4"
-alphabet-detector = "^0.0.7"
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.colrev]
 colrev_doc_description = "Exclude Non-Latin Alphabets"
 colrev_doc_link = "README.md"
 search_types = []
 
-[tool.poetry.plugins.colrev]
+[project.entry-points.colrev]
 prep = "colrev.packages.exclude_non_latin_alphabets.src.exclude_non_latin_alphabets:ExcludeNonLatinAlphabetsPrep"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "cython<3.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

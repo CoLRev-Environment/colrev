@@ -11,18 +11,20 @@ from typing import Any
 from typing import Dict
 
 import toml
-from zope.interface.verify import verifyClass
 
-import colrev.package_manager.interfaces
-from colrev.package_manager.interfaces import INTERFACE_MAP
+import colrev.package_manager.package_base_classes as base_classes
+from colrev.constants import Colors
+from colrev.package_manager.package_base_classes import BASECLASS_MAP
 
 
 def _check_package_installed(data: dict) -> bool:
-    package_name = data["tool"]["poetry"]["name"]
+    package_name = data["project"]["name"]
     try:
         subprocess.check_output(["pip", "show", package_name])
     except subprocess.CalledProcessError:
-        print(f"Warning: Package '{package_name}' is not installed.")
+        print(
+            f"Navigate to {Path.cwd()} and run: {Colors.GREEN} pip install -e .{Colors.END}"
+        )
 
     return True
 
@@ -37,46 +39,44 @@ def _check_key_exists(data: Dict[str, Any], key: str) -> bool:
     return True
 
 
-def _check_tool_poetry(data: dict) -> bool:
-    return _check_key_exists(data, "tool.poetry")
+def _check_project(data: dict) -> bool:
+    return _check_key_exists(data, "project")
 
 
-def _check_tool_poetry_name(data: dict) -> bool:
-    return _check_key_exists(data, "tool.poetry.name")
+def _check_project_name(data: dict) -> bool:
+    return _check_key_exists(data, "project.name")
 
 
-def _check_tool_poetry_description(data: dict) -> bool:
-    return _check_key_exists(data, "tool.poetry.description")
+def _check_project_description(data: dict) -> bool:
+    return _check_key_exists(data, "project.description")
 
 
-def _check_tool_poetry_version(data: dict) -> bool:
-    return _check_key_exists(data, "tool.poetry.version")
+def _check_project_version(data: dict) -> bool:
+    return _check_key_exists(data, "project.version")
 
 
-def _check_tool_poetry_license(data: dict) -> bool:
-    return _check_key_exists(data, "tool.poetry.license")
+def _check_project_license(data: dict) -> bool:
+    return _check_key_exists(data, "project.license")
 
 
-def _check_tool_poetry_authors(data: dict) -> bool:
-    return _check_key_exists(data, "tool.poetry.authors")
+def _check_project_authors(data: dict) -> bool:
+    return _check_key_exists(data, "project.authors")
 
 
-def _check_tool_poetry_plugins_colrev(data: dict) -> bool:
-    return _check_key_exists(data, "tool.poetry.plugins.colrev")
+def _check_project_plugins_colrev(data: dict) -> bool:
+    return _check_key_exists(data, "project.entry-points.colrev")
 
 
-def _check_tool_poetry_plugins_colrev_keys(data: dict) -> bool:
-    colrev_data = (
-        data.get("tool", {}).get("poetry", {}).get("plugins", {}).get("colrev", {})
-    )
-    return all(key in list(INTERFACE_MAP) for key in list(colrev_data))
+def _check_project_entry_points_colrev_keys(data: dict) -> bool:
+    """Check if all colrev entry-points in pyproject.toml are valid."""
+
+    colrev_data = data.get("project", {}).get("entry-points", {}).get("colrev", {})
+    return all(key in BASECLASS_MAP for key in colrev_data)
 
 
 # pylint: disable=too-many-locals
-def _check_tool_poetry_plugins_colrev_classes(data: dict) -> bool:
-    colrev_data = (
-        data.get("tool", {}).get("poetry", {}).get("plugins", {}).get("colrev", {})
-    )
+def _check_project_plugins_colrev_classes(data: dict) -> bool:
+    colrev_data = data.get("project", {}).get("entry-points", {}).get("colrev", {})
 
     for interface_identifier, endpoint_str in colrev_data.items():
         module_path, class_name = endpoint_str.rsplit(":")
@@ -91,17 +91,21 @@ def _check_tool_poetry_plugins_colrev_classes(data: dict) -> bool:
             if not package_spec.origin:
                 return False
             package_path = Path(package_spec.origin).parent
-            fp = package_path / Path(module_path.replace(".", "/") + ".py")
-            module_spec = util.spec_from_file_location(f"{package}.{module_path}", fp)
+            filepath = package_path / Path(module_path.replace(".", "/") + ".py")
+            module_spec = util.spec_from_file_location(
+                f"{package}.{module_path}", filepath
+            )
 
             module = import_module(f"{package}.{module_path}")
             module_spec.loader.exec_module(module)  # type: ignore
             cls = getattr(module, class_name)  # type: ignore
-            interface: str = INTERFACE_MAP.get(interface_identifier)  # type: ignore
+            baseclass: str = BASECLASS_MAP.get(interface_identifier)  # type: ignore
 
-            interface_class = getattr(colrev.package_manager.interfaces, interface)
-            if not interface or not verifyClass(interface_class, cls):
-                return False
+            baseclass_class = getattr(base_classes, baseclass)
+            if not issubclass(cls, baseclass_class):
+                raise TypeError(
+                    f"{cls} must implement all abstract methods of {baseclass_class}!"
+                )
         except (ImportError, AttributeError) as exc:
             print(exc)
             return False
@@ -114,38 +118,38 @@ def _check_build_system(data: dict) -> bool:
 
 # Define checks with preconditions
 checks = {
-    "check_tool_poetry": {"method": _check_tool_poetry, "preconditions": []},
-    "check_tool_poetry_name": {
-        "method": _check_tool_poetry_name,
-        "preconditions": ["_check_tool_poetry"],
+    "check_project": {"method": _check_project, "preconditions": []},
+    "check_project_name": {
+        "method": _check_project_name,
+        "preconditions": ["check_project"],
     },
-    "check_tool_poetry_description": {
-        "method": _check_tool_poetry_description,
-        "preconditions": ["_check_tool_poetry"],
+    "check_project_description": {
+        "method": _check_project_description,
+        "preconditions": ["check_project"],
     },
-    "check_tool_poetry_version": {
-        "method": _check_tool_poetry_version,
-        "preconditions": ["_check_tool_poetry"],
+    "check_project_version": {
+        "method": _check_project_version,
+        "preconditions": ["check_project"],
     },
-    "check_tool_poetry_license": {
-        "method": _check_tool_poetry_license,
-        "preconditions": ["_check_tool_poetry"],
+    "check_project_license": {
+        "method": _check_project_license,
+        "preconditions": ["check_project"],
     },
-    "check_tool_poetry_authors": {
-        "method": _check_tool_poetry_authors,
-        "preconditions": ["_check_tool_poetry"],
+    "check_project_authors": {
+        "method": _check_project_authors,
+        "preconditions": ["check_project"],
     },
-    "check_tool_poetry_plugins_colrev": {
-        "method": _check_tool_poetry_plugins_colrev,
-        "preconditions": ["_check_tool_poetry"],
+    "check_project_plugins_colrev": {
+        "method": _check_project_plugins_colrev,
+        "preconditions": ["check_project"],
     },
-    "check_tool_poetry_plugins_colrev_keys": {
-        "method": _check_tool_poetry_plugins_colrev_keys,
-        "preconditions": ["_check_tool_poetry_plugins_colrev"],
+    "check_project_plugins_colrev_keys": {
+        "method": _check_project_entry_points_colrev_keys,
+        "preconditions": ["_check_project_plugins_colrev"],
     },
-    "check_tool_poetry_plugins_colrev_classes": {
-        "method": _check_tool_poetry_plugins_colrev_classes,
-        "preconditions": ["_check_tool_poetry_plugins_colrev"],
+    "check_project_plugins_colrev_classes": {
+        "method": _check_project_plugins_colrev_classes,
+        "preconditions": ["_check_project_plugins_colrev"],
     },
     "check_package_installed": {
         "method": _check_package_installed,
@@ -169,7 +173,7 @@ def _validate_structure(data: dict, checks_dict: dict) -> list:
         result = method(data)
 
         if not result:
-            print(f"Check failed: {check_name}")
+            print(f"{Colors.RED}Check failed: {check_name}{Colors.END}")
             failed_checks.append(check_name)
         else:
             print(f"Check passed: {check_name}")
@@ -183,8 +187,8 @@ def main() -> None:
     file_path = "pyproject.toml"
 
     try:
-        with open(file_path, encoding="utf-8") as f:
-            data = toml.load(f)
+        with open(file_path, encoding="utf-8") as file:
+            data = toml.load(file)
 
         failed_checks = _validate_structure(data, checks)
         if failed_checks:
@@ -193,6 +197,6 @@ def main() -> None:
                 print(f" - {check}")
         else:
             print("Check passed: check_pyproject_valid_structure")
-    except Exception as e:  # pylint: disable=broad-except
-        print(f"Error reading pyproject.toml: {e}")
+    except Exception as exc:  # pylint: disable=broad-except
+        print(f"Error reading pyproject.toml: {exc}")
         sys.exit(1)

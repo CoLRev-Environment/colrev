@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 import datetime
+import logging
 import tempfile
 import typing
 from pathlib import Path
 
+import inquirer
 import pandas as pd
-import zope.interface
 from git import Repo
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -27,8 +28,7 @@ from colrev.constants import SearchType
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class SYNERGYDatasetsSearchSource:
+class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
     """SYNERGY-datasets
 
     https://github.com/asreview/synergy-dataset
@@ -78,6 +78,40 @@ class SYNERGYDatasetsSearchSource:
         return result
 
     @classmethod
+    def __select_datset_interactively(cls) -> dict:
+        date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        temp_path = tempfile.gettempdir() / Path(f"{date_now_string}-synergy")
+        temp_path.mkdir()
+        Repo.clone_from(
+            "https://github.com/asreview/synergy-dataset", temp_path, depth=1
+        )
+        data_path = temp_path / Path("datasets")
+        files = data_path.glob("**/*_ids.csv")
+
+        print("https://github.com/asreview/synergy-dataset")
+
+        choices = [f"{f.parent.name}/{f.name}" for f in files]
+        if not choices:
+            print("No datasets found.")
+            raise ValueError
+        questions = [
+            inquirer.List(
+                "dataset",
+                message="Select a dataset:",
+                choices=choices,
+            )
+        ]
+        answers = inquirer.prompt(questions)
+        dataset = answers.get("dataset", None)
+
+        if not dataset:
+            print("No dataset selected.")
+            raise ValueError
+        params_dict = {"dataset": dataset}
+        print(f"Selected dataset: {params_dict}")
+        return params_dict
+
+    @classmethod
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
@@ -93,21 +127,7 @@ class SYNERGYDatasetsSearchSource:
 
         if len(params_dict) == 0:
             operation.review_manager.logger.info("Retrieving available datasets")
-            date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            temp_path = tempfile.gettempdir() / Path(f"{date_now_string}-synergy")
-            temp_path.mkdir()
-            Repo.clone_from(
-                "https://github.com/asreview/synergy-dataset", temp_path, depth=1
-            )
-            data_path = temp_path / Path("datasets")
-            files = data_path.glob("**/*_ids.csv")
-            print("https://github.com/asreview/synergy-dataset")
-            print(
-                "\n- "
-                + "\n- ".join([str(f.parent.name) + "/" + str(f.name) for f in files])
-            )
-            dataset = input("Enter dataset:")
-            params_dict = {"dataset": dataset}
+            params_dict = cls.__select_datset_interactively()
 
         assert "dataset" in params_dict
         dataset = params_dict["dataset"]
@@ -156,7 +176,7 @@ class SYNERGYDatasetsSearchSource:
             )
         return dataset_df
 
-    def _validate_decisions(self, *, decisions: dict, record: dict) -> None:
+    def _update_decisions(self, *, decisions: dict, record: dict) -> None:
         if "doi" in record:
             doi = record["doi"].lower()
             if doi in decisions["doi"]:
@@ -208,6 +228,7 @@ class SYNERGYDatasetsSearchSource:
             if self.review_manager.force_mode:
                 print(msg)
             else:
+                print("Exiting. Use force-mode to retrieve anyway.")
                 raise colrev_exceptions.SearchSourceException(msg)
 
     def _prep_record(self, *, record: dict, ind: int) -> None:
@@ -271,7 +292,7 @@ class SYNERGYDatasetsSearchSource:
         empty_records, duplicates = 0, 0
         for ind, record in enumerate(dataset_df.to_dict(orient="records")):
             self._prep_record(record=record, ind=ind)
-            self._validate_decisions(decisions=decisions, record=record)
+            self._update_decisions(decisions=decisions, record=record)
             # Skip records without metadata
             if {Fields.ID, Fields.ENTRYTYPE, "label_included"} == set(record.keys()):
                 empty_records += 1
@@ -325,13 +346,14 @@ class SYNERGYDatasetsSearchSource:
         """Not implemented"""
         return record
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
+                filename=filename,
+                logger=logger,
             )
             for record in records.values():
                 if "pmid" in record:

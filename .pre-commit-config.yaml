@@ -12,10 +12,10 @@ ci:
 
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
     -   id: trailing-whitespace
-        exclude: status.txt|commit_report_details.txt|commit_report_header.txt|pdf_get_man_mail.txt|bib$|txt$|ris$|enl$|xml$|extensions_index/
+        exclude: bib$|txt$|ris$|enl$|xml$|extensions_index/
     -   id: end-of-file-fixer
         exclude: bib$|txt$|ris$|enl$|xml$|corrections/SrivastavaShainesh2015.json
     -   id: check-docstring-first
@@ -25,39 +25,44 @@ repos:
     -   id: check-toml
     -   id: debug-statements
     -   id: name-tests-test
+        exclude: "tests/data/package_init/"
 -   repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 24.8.0
+    rev: 25.1.0
     hooks:
       - id: black
         language_version: python3
+        exclude: "tests/data/package_init/"
 -   repo: https://github.com/PyCQA/autoflake
     rev: v2.3.1
     hooks:
     -   id: autoflake
 -   repo: https://github.com/PyCQA/flake8
-    rev: 7.1.1
+    rev: 7.2.0
     hooks:
     -   id: flake8
         additional_dependencies: [flake8-typing-imports==1.12.0]
         args: ['--max-line-length=110', '--extend-ignore=E203,TYP006']
+        exclude: "tests/data/package_init/"
 -   repo: https://github.com/asottile/reorder-python-imports
-    rev: v3.13.0
+    rev: v3.14.0
     hooks:
     -   id: reorder-python-imports
         args: [--py3-plus]
+        exclude: "tests/data/package_init/search_source.py"
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.17.0
+    rev: v3.19.1
     hooks:
     -   id: pyupgrade
         args: [--py36-plus, --keep-runtime-typing]
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.11.2'
+    rev: 'v1.15.0'
     hooks:
     -   id: mypy
         args: [--disallow-untyped-defs, --disallow-incomplete-defs, --disallow-untyped-calls]
         additional_dependencies: [types-toml]
+        exclude: "tests/data/package_init/"
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.6.2
+  rev: v0.11.6
   hooks:
     - id: ruff # runs faster than pylint
       args: [--fix, --exit-non-zero-on-fix]
@@ -69,11 +74,7 @@ repos:
       language: system
       types: [python]
       files: colrev
-      args:
-        [
-          "-rn", # Only display messages
-          "-sn", # Don't display the score
-        ]
+      args: ["-rn","-sn"]
 - repo: local
   hooks:
   - id: pytest-check

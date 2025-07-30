@@ -2,13 +2,13 @@
 """SearchSource: Taylor and Francis"""
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 
-import zope.interface
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -20,8 +20,7 @@ from colrev.constants import SearchType
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class TaylorAndFrancisSearchSource:
+class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Taylor and Francis"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -58,9 +57,11 @@ class TaylorAndFrancisSearchSource:
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
+        params_dict = {params.split("=")[0]: params.split("=")[1]}
+
         search_source = operation.create_db_source(
             search_source_cls=cls,
-            params={},
+            params=params_dict,
         )
         operation.add_source_and_search(search_source)
         return search_source
@@ -87,30 +88,33 @@ class TaylorAndFrancisSearchSource:
         """Not implemented"""
         return record
 
-    def _load_bib(self) -> dict:
+    @classmethod
+    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
         def field_mapper(record_dict: dict) -> None:
             if "note" in record_dict:
-                record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+                record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
             if "eprint" in record_dict:
-                record_dict[f"{self.endpoint}.eprint"] = record_dict.pop("eprint")
+                record_dict[f"{cls.endpoint}.eprint"] = record_dict.pop("eprint")
 
             for key in list(record_dict.keys()):
                 if key not in ["ID", "ENTRYTYPE"]:
                     record_dict[key.lower()] = record_dict.pop(key)
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
-            logger=self.review_manager.logger,
+            filename=filename,
+            logger=logger,
             unique_id_field="ID",
             field_mapper=field_mapper,
+            format_names=True,
         )
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
-            return self._load_bib()
+        if filename.suffix == ".bib":
+            return cls._load_bib(filename=filename, logger=logger)
 
         raise NotImplementedError
 

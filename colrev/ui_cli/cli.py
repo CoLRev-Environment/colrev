@@ -3,18 +3,15 @@
 from __future__ import annotations
 
 import logging
-import os
 import subprocess  # nosec
 import sys
 import time
 import typing
-import webbrowser
 from functools import partial
 from functools import wraps
 from pathlib import Path
 
 import click
-import click_completion.core
 import click_repl
 import inquirer
 import pandas as pd
@@ -34,6 +31,7 @@ from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import IDPattern
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
 
@@ -47,6 +45,7 @@ from colrev.constants import ScreenCriterionType
 # pylint: disable=too-many-locals
 # pylint: disable=import-outside-toplevel
 # pylint: disable=too-many-return-statements
+# pylint: disable=too-many-positional-arguments
 
 # Note: autocompletion needs bash/... activation:
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
@@ -57,18 +56,6 @@ PACKAGE_MANAGER = colrev.package_manager.package_manager.PackageManager()
 # TYPE_IDENTIFIER_ENDPOINT_DICT = PACKAGE_MANAGER.load_type_identifier_endpoint_dict()
 
 SHELL_MODE = False
-
-
-def _custom_startswith(string: str, incomplete: str) -> bool:
-    """A custom completion matching that supports case insensitive matching"""
-    if os.environ.get("_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE"):
-        string = string.lower()
-        incomplete = incomplete.lower()
-    return string.startswith(incomplete)
-
-
-click_completion.core.startswith = _custom_startswith
-click_completion.init()
 
 
 def _add_endpoint_interactively(add: str, endpoint_type: EndpointType) -> str:
@@ -175,7 +162,7 @@ class SpecialHelpOrder(click.Group):
         return super().get_help(ctx)
 
     def list_commands_for_help(self, ctx: click.core.Context) -> typing.Generator:
-        """reorder the list of commands when listing the help"""
+        """Reorder the list of commands when listing the help."""
         commands = super().list_commands(ctx)
         return (
             c[1]
@@ -204,6 +191,8 @@ def catch_exception(func=None, *, handle) -> typing.Any:  # type: ignore
     """Catch typical cli exceptions (e.g., CoLRevException)"""
     if not func:
         return partial(catch_exception, handle=handle)
+
+    # func.__name__
 
     # pylint: disable=inconsistent-return-statements
     @wraps(func)
@@ -403,32 +392,6 @@ def status(
         print(exc)
 
 
-@main.command(help_priority=100)
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    default=False,
-    help="Verbose: printing more infos",
-)
-@click.pass_context
-def dashboard(
-    ctx: click.core.Context,
-    verbose: bool,
-) -> None:
-    """Allows to track project progress through dashboard"""
-    import colrev.packages.ui_web.src.dashboard
-
-    try:
-        colrev.packages.ui_web.src.dashboard.main()
-    except colrev_exceptions.NoRecordsError:
-        print("No records imported yet.")
-    except colrev_exceptions.CoLRevException as exc:
-        if verbose:
-            raise exc
-        print(exc)
-
-
 @main.command(help_priority=3)
 @click.option(
     "-v",
@@ -481,7 +444,7 @@ def retrieve(
             " - add an API-based search, as described in the documentation:\n"
             "https://colrev-environment.github.io/colrev/manual/metadata_retrieval/search.html"
         )
-        return
+        ctx.exit(1)
 
     review_manager.logger.info("Retrieve")
     review_manager.logger.info(
@@ -840,7 +803,7 @@ def prep(
         print(exc)
         print("You can use the force mode to override")
         print(f"  {Colors.ORANGE}colrev prep -f{Colors.END}")
-        return
+        ctx.exit(1)
 
 
 @main.command(help_priority=7)
@@ -1060,7 +1023,7 @@ def dedupe(
             or dedupe_operation.non_dupe_file_txt.is_file()
         ):
             review_manager.logger.error("No file with potential errors found.")
-            return
+            ctx.exit(1)
 
         false_positives = colrev.ui_cli.dedupe_errors.load_dedupe_false_positives(
             dedupe_operation=dedupe_operation
@@ -1485,6 +1448,7 @@ def pdfs(
     if open_dir:
         # pylint: disable=consider-using-with
         # pylint: disable=no-member
+        import webbrowser
 
         path = review_manager.path / Path("data/pdfs")
         webbrowser.open(str(path))
@@ -2035,6 +1999,7 @@ def pdf_prep_man(
     type=str,
     help="Parameters",
 )
+@click.option("--view", is_flag=True, default=False, help="View search sources")
 @click.option(
     "--reading_heuristics",
     is_flag=True,
@@ -2068,6 +2033,7 @@ def data(
     ctx: click.core.Context,
     add: str,
     params: str,
+    view: bool,
     reading_heuristics: bool,
     setup_custom_script: bool,
     verbose: bool,
@@ -2087,6 +2053,13 @@ def data(
         },
     )
     data_operation = review_manager.get_data_operation()
+    if view:
+        data_endpoints = (
+            data_operation.review_manager.settings.data.data_package_endpoints
+        )
+        for data_endpoint in data_endpoints:
+            data_operation.review_manager.p_printer.pprint(data_endpoint)
+        return
 
     if reading_heuristics:
         heuristic_results = data_operation.reading_heuristics()
@@ -2418,6 +2391,17 @@ def env(
 
     # pylint: disable=too-many-branches
 
+    options_set = any(
+        [index, install, pull, status, register, unregister, update_package_list]
+    )
+    if not options_set:
+        click.echo(
+            "Error: No option provided. Please specify at least one of the following options:",
+            err=True,
+        )
+        click.echo(ctx.get_help())
+        ctx.exit(1)
+
     if update_package_list:
         import colrev.package_manager.doc_registry_manager
 
@@ -2431,8 +2415,9 @@ def env(
         print("Index rankings")
         import colrev.env.local_index_builder
 
+        index_tei = input("Index TEI files (y/n)?") == "y"
         local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder(
-            verbose_mode=verbose
+            index_tei=index_tei, verbose_mode=verbose
         )
         local_index_builder.index()
         local_index_builder.index_journal_rankings()
@@ -2527,6 +2512,17 @@ def package(
 ) -> None:
     """Manage CoLRev packages"""
 
+    # Collect all options
+    options_set = any([init, check])
+
+    if not options_set:
+        click.echo(
+            "Error: No option provided. Please specify at least one of the following options:",
+            err=True,
+        )
+        click.echo(ctx.get_help())
+        ctx.exit(1)
+
     if init:
         import colrev.package_manager.init
 
@@ -2572,6 +2568,7 @@ def package(
     default=False,
     help="Force mode",
 )
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
 @click.pass_context
 def settings(
     ctx: click.core.Context,
@@ -2584,6 +2581,17 @@ def settings(
     """Settings of the CoLRev project"""
 
     # pylint: disable=reimported
+
+    # Collect all options
+    options_set = any([update_hooks, modify, update_global])
+
+    if not options_set:
+        click.echo(
+            "Error: No option provided. Please specify at least one of the following options:",
+            err=True,
+        )
+        click.echo(ctx.get_help())
+        ctx.exit(1)
 
     from subprocess import check_call  # nosec
     from subprocess import DEVNULL  # nosec
@@ -2601,7 +2609,7 @@ def settings(
 
         if review_manager.dataset.has_record_changes():
             print("Clean repo required. Commit or stash changes.")
-            return
+            ctx.exit(1)
 
         scripts_to_call = [
             [
@@ -2790,6 +2798,7 @@ def _validate_show(ctx: click.core.Context, param: str, value: str) -> None:
     default=False,
     help="Force mode",
 )
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
 @click.pass_context
 def show(  # type: ignore
     ctx: click.core.Context,
@@ -2862,41 +2871,6 @@ def show(  # type: ignore
                 f"{cmd['date']} ({cmd['committer']}, {cmd['commit_id']}):    "
                 f"{Colors.ORANGE}{cmd['cmd']}{Colors.END}"
             )
-
-
-# @main.command(help_priority=28)
-# @click.option(
-#     "-v",
-#     "--verbose",
-#     is_flag=True,
-#     default=False,
-#     help="Verbose: printing more infos",
-# )
-# @click.option(
-#     "-f",
-#     "--force",
-#     is_flag=True,
-#     default=False,
-#     help="Force mode",
-# )
-# @click.pass_context
-# def web(
-#     ctx: click.core.Context,
-#     verbose: bool,
-#     force: bool,
-# ) -> None:
-#     """CoLRev web interface."""
-
-#
-#     import colrev.packages.ui_web.src.settings_editor
-
-#     review_manager = colrev.review_manager.ReviewManager(
-#         force_mode=force, verbose_mode=verbose
-#     )
-#     se_instance = colrev.packages.ui_web.src.settings_editor.SettingsEditor(
-#         review_manager=review_manager
-#     )
-#     se_instance.open_settings_editor()
 
 
 @main.command(hidden=True, help_priority=27)
@@ -2980,7 +2954,7 @@ def repare(
 @click.option(
     "--ids",
     help="Remove records and their origins from the repository (ID1,ID2,...).",
-    required=False,
+    required=True,
 )
 @click.option(
     "-v",
@@ -2996,6 +2970,7 @@ def repare(
     default=False,
     help="Force mode",
 )
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
 @click.pass_context
 def remove(
     ctx: click.core.Context,
@@ -3038,6 +3013,7 @@ def docs(
     force: bool,
 ) -> None:
     """Show the CoLRev documentation."""
+    import webbrowser
 
     webbrowser.open("https://colrev-environment.github.io/colrev/")
 
@@ -3062,6 +3038,7 @@ def docs(
     default=False,
     help="Force mode",
 )
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
 @click.pass_context
 def merge(
     ctx: click.core.Context,
@@ -3102,6 +3079,7 @@ def merge(
     default=False,
     help="Force mode",
 )
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
 @click.pass_context
 def undo(
     ctx: click.core.Context,
@@ -3122,7 +3100,71 @@ def undo(
         git_repo.git.reset("--hard", "HEAD~1")
 
 
+def select_format() -> str:
+    """Select the format"""
+    questions = [
+        inquirer.List(
+            "format",
+            message="Select the format",
+            choices=["bib", "csv", "xlsx", "ris"],
+        )
+    ]
+
+    answers = inquirer.prompt(questions)
+    selected_format = answers.get("format")
+    print(f"You selected: {selected_format}")
+    return selected_format
+
+
 @main.command(help_priority=33)
+@click.argument(
+    "input_file",
+    type=click.Path(exists=True, readable=True),
+)
+@click.option(
+    "-o",
+    "--format",
+    "output_format",
+    type=click.Choice(["bib", "csv", "xlsx", "ris"], case_sensitive=False),
+    default=None,
+    help="Optional output format (bib, csv, xlsx)",
+)
+@click.pass_context
+def convert(
+    ctx: click.core.Context,
+    input_file: str,
+    output_format: str,
+) -> None:
+    """
+    Convert a file to the specified format.
+    """
+    # Example placeholder logic
+    click.echo(f"Converting file: {input_file}")
+    if output_format:
+        click.echo(f"Output format: {output_format}")
+    else:
+        output_format = select_format()
+
+    import colrev.loader.load_utils
+    from colrev.writer.write_utils import write_file
+
+    records = colrev.loader.load_utils.load(Path(input_file))
+    if Path(input_file).suffix == ".md":  # or generate_ids flag
+        print("Generating IDs")
+        id_setter = colrev.record.record_id_setter.IDSetter(
+            id_pattern=IDPattern.three_authors_year,
+            skip_local_index=True,
+        )
+        records = id_setter.set_ids(
+            records=records,
+        )
+
+    write_file(
+        records_dict=records, filename=Path(input_file).with_suffix(f".{output_format}")
+    )
+
+
+@main.command(help_priority=34)
 @click.pass_context
 def version(
     ctx: click.core.Context,
@@ -3135,7 +3177,7 @@ def version(
 
 
 @main.command(help_priority=34)
-@click.argument("packages", nargs=-1, required=False)
+@click.argument("packages", nargs=-1, required=True)
 @click.option(
     "-U", "--upgrade", is_flag=True, help="Upgrade packages to latest version"
 )
@@ -3143,31 +3185,26 @@ def version(
     "-e",
     "--editable",
     help="Install a project in editable mode from this path",
+    is_flag=True,
+    default=False,
 )
 @click.option(
-    "--force-reinstall",
+    "--uv",
+    help="Install a project using uv",
     is_flag=True,
-    help="Reinstall all packages even if they are already up-to-date",
-)
-@click.option(
-    "--no-cache-dir",
-    is_flag=True,
-    help="Disable the cache",
+    default=False,
 )
 def install(
-    packages: typing.List[str],
-    upgrade: bool,
-    editable: str,
-    force_reinstall: bool,
-    no_cache_dir: bool,
+    packages: typing.List[str], upgrade: bool, editable: bool, uv: bool
 ) -> None:
-    """Install packages"""
+    """Install packages
+
+    To install all internal packages, run\n
+        colrev install all_internal_packages"""
 
     if len(packages) == 1 and packages[0] == ".":
         review_manager = colrev.review_manager.ReviewManager()
-        PACKAGE_MANAGER.install_project(
-            review_manager=review_manager, force_reinstall=force_reinstall
-        )
+        PACKAGE_MANAGER.install_project(review_manager=review_manager, uv=uv)
 
     else:
 
@@ -3175,51 +3212,5 @@ def install(
             packages=packages,
             upgrade=upgrade,
             editable=editable,
-            force_reinstall=force_reinstall,
-            no_cache_dir=no_cache_dir,
+            uv=uv,
         )
-
-
-@main.command(hidden=True)
-@click.option(
-    "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"
-)
-@click.argument(
-    "shell",
-    required=False,
-    type=click_completion.DocumentedChoice(click_completion.core.shells),
-)
-def show_click(shell, case_insensitive) -> None:  # type: ignore
-    """Show the click-completion-command completion code"""
-    extra_env = (
-        {"_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE": "ON"}
-        if case_insensitive
-        else {}
-    )
-    click.echo(click_completion.core.get_code(shell, extra_env=extra_env))
-
-
-@main.command(hidden=True)
-@click.option(
-    "--append/--overwrite", help="Append the completion code to the file", default=None
-)
-@click.option(
-    "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"
-)
-@click.argument(
-    "shell",
-    required=False,
-    type=click_completion.DocumentedChoice(click_completion.core.shells),
-)
-@click.argument("path", required=False)
-def install_click(append, case_insensitive, shell, path) -> None:  # type: ignore
-    """Install the click-completion-command completion"""
-    extra_env = (
-        {"_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE": "ON"}
-        if case_insensitive
-        else {}
-    )
-    shell, path = click_completion.core.install(  # nosec
-        shell=shell, path=path, append=append, extra_env=extra_env
-    )
-    click.echo(f"{shell} completion installed in {path}")

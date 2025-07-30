@@ -5,12 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import git
-import zope.interface
 from pydantic import BaseModel
 from pydantic import Field
 
 import colrev.env.utils
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -37,8 +36,7 @@ class GHPagesSettings(
     }
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-class GithubPages:
+class GithubPages(base_classes.DataPackageBaseClass):
     """Export the literature review into a Github Page"""
 
     settings: GHPagesSettings
@@ -78,10 +76,6 @@ class GithubPages:
         }
 
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
-        operation.review_manager.save_settings()
-        operation.review_manager.dataset.create_commit(
-            msg=f"Add {operation.type} github_pages",
-        )
 
     def _setup_github_pages_branch(self) -> None:
         # if branch does not exist: create and add index.html
@@ -159,6 +153,14 @@ class GithubPages:
             self.review_manager.dataset.add_changes(
                 self.review_manager.paths.PRE_COMMIT_CONFIG
             )
+
+        # replace "." in keys:
+        for included_record in included_records.values():
+            for key in list(included_record.keys()):
+                if "." in key:
+                    new_key = key.replace(".", "_")
+                    included_record[new_key] = included_record[key]
+                    del included_record[key]
 
         data_file = Path("data.bib")
         write_file(records_dict=included_records, filename=data_file)
@@ -245,7 +247,7 @@ class GithubPages:
 
         if self.review_manager.dataset.has_record_changes():
             self.review_manager.logger.error(
-                "Cannot update github pages because there are uncommited changes."
+                "Cannot update github pages because there are uncommitted changes."
             )
             return
 

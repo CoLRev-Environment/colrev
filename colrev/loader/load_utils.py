@@ -1,15 +1,15 @@
 #! /usr/bin/env python
-"""Convenience functions to load files (BiBTeX, RIS, CSV, etc.)
+"""Function to load files (BiBTeX, RIS, CSV, etc.)
 
 Usage::
 
     import colrev.loader.load_utils
 
     # Files
-    records = colrev.loader.load_utils.load(filename=filename, logger=logger)
+    records = colrev.loader.load_utils.load(filename=filename)
 
     # Strings
-    records = colrev.loader.load_utils.loads(load_str=load_str, logger=logger)
+    records = colrev.loader.load_utils.loads(load_str=load_str)
 
     returns: records (dict)
 
@@ -134,6 +134,8 @@ import tempfile
 import typing
 from pathlib import Path
 
+import pandas as pd
+
 import colrev.loader.bib
 import colrev.loader.enl
 import colrev.loader.json
@@ -141,10 +143,21 @@ import colrev.loader.md
 import colrev.loader.nbib
 import colrev.loader.ris
 import colrev.loader.table
-
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 # pylint: disable=too-many-arguments
 # flake8: noqa: E501
+
+
+def bib_entrytype_setter(entrytype: dict) -> None:
+    """Set the entrytype for BibTeX records"""
+    if Fields.ENTRYTYPE not in entrytype:
+        entrytype[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+        return
+    entrytype[Fields.ENTRYTYPE] = entrytype[Fields.ENTRYTYPE].lower()
+    if entrytype[Fields.ENTRYTYPE] in ["www", "electronic"]:
+        entrytype[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
 
 def load(  # type: ignore
@@ -156,8 +169,12 @@ def load(  # type: ignore
     unique_id_field: str = "",
     logger: logging.Logger = logging.getLogger(__name__),
     empty_if_file_not_exists: bool = True,
+    format_names: bool = False,
 ) -> dict:
     """Load a file and return records as a dictionary"""
+
+    if isinstance(filename, str):
+        filename = Path(filename)
 
     if not filename.is_file():
         if empty_if_file_not_exists:
@@ -179,7 +196,7 @@ def load(  # type: ignore
     elif filename.suffix == ".json":
         parser = colrev.loader.json.JSONLoader  # type: ignore
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Unsupported file type: {filename.suffix}")
 
     return parser(
         filename=filename,
@@ -188,6 +205,7 @@ def load(  # type: ignore
         id_labeler=id_labeler,
         unique_id_field=unique_id_field,
         logger=logger,
+        format_names=format_names,
     ).load()
 
 
@@ -232,6 +250,17 @@ def loads(  # type: ignore
     )
 
 
+def load_df(
+    filename: Path,
+) -> pd.DataFrame:
+    """Load a file and return records as a DataFrame"""
+    assert isinstance(
+        filename, Path
+    ), f"filename must be a Path object, not {type(filename)}"
+    record_dict = load(filename)
+    return pd.DataFrame.from_dict(record_dict, orient="index")
+
+
 def get_nr_records(  # type: ignore
     filename: Path,
 ) -> int:
@@ -255,6 +284,6 @@ def get_nr_records(  # type: ignore
     elif filename.suffix == ".json":
         parser = colrev.loader.json.JSONLoader  # type: ignore
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Unsupported file type: {filename.suffix}")
 
     return parser.get_nr_records(filename)

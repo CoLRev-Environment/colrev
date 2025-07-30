@@ -2,13 +2,13 @@
 """SearchSource: ABI/INFORM (ProQuest)"""
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 
-import zope.interface
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -22,8 +22,7 @@ from colrev.writer.write_utils import write_file
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class ABIInformProQuestSearchSource:
+class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
     """ABI/INFORM (ProQuest)"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -66,9 +65,11 @@ class ABIInformProQuestSearchSource:
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint"""
 
+        params_dict = {params.split("=")[0]: params.split("=")[1]}
+
         search_source = operation.create_db_source(
             search_source_cls=cls,
-            params={},
+            params=params_dict,
         )
         operation.add_source_and_search(search_source)
         return search_source
@@ -82,7 +83,10 @@ class ABIInformProQuestSearchSource:
                 source=self.search_source,
             )
 
-    def _remove_duplicates(self, records: dict) -> None:
+    @classmethod
+    def _remove_duplicates(
+        cls, *, records: dict, filename: Path, logger: logging.Logger
+    ) -> None:
         to_delete = []
         for record in records.values():
             if re.search(r"-\d{1,2}$", record[Fields.ID]):
@@ -107,10 +111,10 @@ class ABIInformProQuestSearchSource:
                 to_delete.append(record[Fields.ID])
         if to_delete:
             for rid in to_delete:
-                self.review_manager.logger.info(f" remove duplicate {rid}")
+                logger.info(f" remove duplicate {rid}")
                 del records[rid]
 
-            write_file(records_dict=records, filename=self.search_source.filename)
+            write_file(records_dict=records, filename=filename)
 
     def prep_link_md(
         self,
@@ -122,7 +126,8 @@ class ABIInformProQuestSearchSource:
         """Not implemented"""
         return record
 
-    def _load_ris(self) -> dict:
+    @classmethod
+    def _load_ris(cls, filename: Path, logger: logging.Logger) -> dict:
 
         def id_labeler(records: list) -> None:
             for record_dict in records:
@@ -155,7 +160,7 @@ class ABIInformProQuestSearchSource:
                     "SP": Fields.PAGES,
                     "PMID": Fields.PUBMED_ID,
                     "SN": Fields.ISSN,
-                    "AN": f"{self.endpoint}.accession_number",
+                    "AN": f"{cls.endpoint}.accession_number",
                     "LA": Fields.LANGUAGE,
                     "L2": Fields.FULLTEXT,
                     "UR": Fields.URL,
@@ -167,12 +172,12 @@ class ABIInformProQuestSearchSource:
                     "UR": Fields.URL,
                     "PB": Fields.SCHOOL,
                     "KW": Fields.KEYWORDS,
-                    "AN": f"{self.endpoint}.accession_number",
+                    "AN": f"{cls.endpoint}.accession_number",
                     "AB": Fields.ABSTRACT,
                     "LA": Fields.LANGUAGE,
                     "CY": Fields.ADDRESS,
                     "L2": Fields.FULLTEXT,
-                    "A3": f"{self.endpoint}.supervisor",
+                    "A3": f"{cls.endpoint}.supervisor",
                 },
             }
 
@@ -232,29 +237,30 @@ class ABIInformProQuestSearchSource:
                 record_dict[key] = str(value)
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             id_labeler=id_labeler,
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
         )
 
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
+                filename=filename,
+                logger=logger,
                 unique_id_field="ID",
             )
-            self._remove_duplicates(records)
+            cls._remove_duplicates(records=records, filename=filename, logger=logger)
             return records
 
-        if self.search_source.filename.suffix == ".ris":
-            return self._load_ris()
+        if filename.suffix == ".ris":
+            return cls._load_ris(filename, logger)
 
         raise NotImplementedError
 

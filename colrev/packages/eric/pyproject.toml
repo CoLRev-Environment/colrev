@@ -1,32 +1,32 @@
-[tool.poetry]
+[project]
 name = "colrev.eric"
 description = "CoLRev package for eric"
 version = "0.1.0"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
-    "Gerit Wagner <gerit.wagner@uni-bamberg.de>",
-    "Rhea Nguyen",
-    "Malou Schmidt",
-    "Frederic Fischer",
-    "Janus Fiegen",
-    "Albert Borchardt"
+    { name = "Rhea Nguyen" },
+    { name = "Malou Schmidt" },
+    { name = "Frederic Fischer" },
+    { name = "Janus Fiegen" },
+    { name = "Albert Borchardt" },
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
 ]
+requires-python = ">=3.8, <4"
+
+[project.urls]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/eric"
 
-[[tool.poetry.packages]]
-include = "src"
-
-[tool.poetry.dependencies]
-python = ">=3.8, <4"
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.colrev]
 colrev_doc_description = "ERIC API"
 colrev_doc_link = "README.md"
 search_types = ["API"]
 
-[tool.poetry.plugins.colrev]
+[project.entry-points.colrev]
 search_source = "colrev.packages.eric.src.eric:ERICSearchSource"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "cython<3.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

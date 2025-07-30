@@ -1,0 +1,27 @@
+[project]
+name = "colrev.enlit"
+description = "ENLIT"
+version = "0.1.0"
+license = "MIT"
+authors = [
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
+ ]
+requires-python = ">=3.8, <4"
+
+[project.urls]
+repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/enlit"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.colrev]
+colrev_doc_description = "TODO"
+colrev_doc_link = "docs/README.md"
+search_types = []
+
+[project.scripts]
+colrev_enlit = "colrev.packages.enlit.src.enlit:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

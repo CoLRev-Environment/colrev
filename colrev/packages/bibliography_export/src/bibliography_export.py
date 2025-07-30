@@ -7,13 +7,12 @@ from enum import Enum
 from pathlib import Path
 
 import inquirer
-import zope.interface
 from pydantic import BaseModel
 from pydantic import Field
 
 import colrev.env.docker_manager
 import colrev.env.utils
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -49,8 +48,7 @@ class BibliographyExportSettings(
     bib_format: BibFormats
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-class BibliographyExport:
+class BibliographyExport(base_classes.DataPackageBaseClass):
     """Export the sample references in Endpoint format"""
 
     settings: BibliographyExportSettings
@@ -101,6 +99,8 @@ class BibliographyExport:
 
         elif self.settings.bib_format is BibFormats.EXCEL:
             export_filepath = self.endpoint_path / Path("references.xlsx")
+        else:
+            raise NotImplementedError
 
         write_file(records_dict=selected_records, filename=export_filepath)
 
@@ -133,6 +133,9 @@ class BibliographyExport:
             choice = inquirer.prompt(questions)["bib_format"]
             add_package["bib_format"] = choice
 
+        package_manager = colrev.package_manager.package_manager.PackageManager()
+        package_manager.install(packages=[add_package["endpoint"]])
+
         operation.review_manager.settings.data.data_package_endpoints.append(
             add_package
         )
@@ -153,6 +156,9 @@ class BibliographyExport:
         silent_mode: bool,
     ) -> None:
         """Update the data/bibliography"""
+
+        if silent_mode:
+            return
 
         self.endpoint_path.mkdir(exist_ok=True, parents=True)
 

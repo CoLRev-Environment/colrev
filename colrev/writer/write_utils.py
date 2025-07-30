@@ -1,9 +1,16 @@
 #! /usr/bin/env python
-"""Convenience functions to write files (BiBTeX, RIS, CSV, etc.)
+"""Function to write files (BiBTeX, RIS, CSV, etc.)
 
 Usage::
 
-    TODO
+    import colrev.loader.load_utils
+    import colrev.writer.write_utils
+
+    # Load
+    records = colrev.loader.load_utils.load(filename=filename)
+
+    # Write
+    colrev.writer.write_utils.write_file(records, filename=filename)
 
 """
 from __future__ import annotations
@@ -13,11 +20,20 @@ from pathlib import Path
 import colrev.writer.bib
 import colrev.writer.csv
 import colrev.writer.excel
+import colrev.writer.markdown
 import colrev.writer.ris
 
 
-def write_file(records_dict: dict, filename: Path, **kw) -> dict:  # type: ignore
-    """Write a file (BiBTex, RIS, or other) from a dictionary of records."""
+def write_file(records_dict: dict, *, filename: Path, **kw) -> dict:  # type: ignore
+    """Write a file (BiBTex, RIS, or other) from a dictionary of records.
+
+    Note:
+        For tabular formats (csv, xlsx, md), the following options are supported:
+            - sort_fields_first: list of fields to appear first in the output
+            - drop_empty_fields: if True, empty fields will be omitted
+    """
+    if isinstance(filename, str):
+        filename = Path(filename)
     if filename.suffix == ".bib":
         writer = colrev.writer.bib.write_file  # type: ignore
     elif filename.suffix == ".ris":
@@ -26,6 +42,8 @@ def write_file(records_dict: dict, filename: Path, **kw) -> dict:  # type: ignor
         writer = colrev.writer.csv.write_file  # type: ignore
     elif filename.suffix == ".xlsx":
         writer = colrev.writer.excel.write_file  # type: ignore
+    elif filename.suffix == ".md":
+        writer = colrev.writer.markdown.write_file  # type: ignore
     else:
         raise NotImplementedError
 

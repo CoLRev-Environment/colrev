@@ -2,12 +2,12 @@
 """SearchSource: ACM Digital Library"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
-import zope.interface
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -19,8 +19,7 @@ from colrev.constants import SearchType
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class ACMDigitalLibrarySearchSource:
+class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """ACM digital Library"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -106,10 +105,11 @@ class ACMDigitalLibrarySearchSource:
         """Not implemented"""
         return record
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
                 record_dict.pop("url", None)
@@ -118,21 +118,21 @@ class ACMDigitalLibrarySearchSource:
                 record_dict.pop("month", None)
 
                 if "issue_date" in record_dict:
-                    record_dict[f"{self.endpoint}.issue_date"] = record_dict.pop(
+                    record_dict[f"{cls.endpoint}.issue_date"] = record_dict.pop(
                         "issue_date"
                     )
                 if "location" in record_dict:
                     record_dict[Fields.ADDRESS] = record_dict.pop("location", None)
                 if "articleno" in record_dict:
-                    record_dict[f"{self.endpoint}.articleno"] = record_dict.pop(
+                    record_dict[f"{cls.endpoint}.articleno"] = record_dict.pop(
                         "articleno"
                     )
 
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
+                filename=filename,
                 unique_id_field="ID",
                 field_mapper=field_mapper,
-                logger=self.review_manager.logger,
+                logger=logger,
             )
 
             return records

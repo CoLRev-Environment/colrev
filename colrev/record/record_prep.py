@@ -1,9 +1,8 @@
 #! /usr/bin/env python
-"""Functionality for individual records."""
+"""Class for the preparation of records."""
 from __future__ import annotations
 
 import re
-import typing
 
 from nameparser import HumanName
 
@@ -12,10 +11,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
-if typing.TYPE_CHECKING:  # pragma: no cover
-    import colrev.review_manager
-    import colrev.record.qm.quality_model
 
 
 NO_CAPS = ["of", "for", "the", "and"]
@@ -52,7 +47,7 @@ def capitalize_entities(input_str: str) -> str:
 
 
 class PrepRecord(colrev.record.record.Record):
-    """The PrepRecord class provides a range of convenience functions for record preparation"""
+    """The PrepRecord class provides a range of Function for record preparation"""
 
     @classmethod
     def format_author_field(cls, input_string: str) -> str:

@@ -25,7 +25,7 @@ Upon entering the command above with no additional parameters, a console interfa
 
 In the main menu, the user can decide whether they want to search for a single paper or author, or conduct a full keyword search. Authors can be searched for via their distinct SemanticScholar-ID, which the user is asked to enter into the console. Papers can be searched for by different IDs - SemanticScholarID, DOI, ArXiv etc.
 
-If the user opted for a full keyword search, they are asked to enter a series of search parameters: A query, a yearspan, fields of study, publication types etc. These parameters restrict the search within the SemanticScholar library to recieve more precise results.
+If the user opted for a full keyword search, they are asked to enter a series of search parameters: A query, a yearspan, fields of study, publication types etc. These parameters restrict the search within the SemanticScholar library to receive more precise results.
 
 For all search parameters except the query, the user can press the `enter` key to leave them blank. The query then will not restrict the search in the respective parameters, resulting in an increasingly broad search and more returned papers.
 

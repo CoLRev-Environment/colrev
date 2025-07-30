@@ -27,7 +27,7 @@ Abstract
 ------------------------------
 
 SearchSource packages are an essential part of CoLRev.
-A SearchSource package is a CoLRev package implementing the `SearchSourceInterface <../../dev_docs/packages/package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface>`_, e.g., for data sources like Web of Science, Scopus, or Crossref.
+A SearchSource package is a CoLRev package implementing the `SearchSourcePackageBaseClass <../../dev_docs/packages/package_interfaces.html#base_classes.SearchSourcePackageBaseClass>`_, e.g., for data sources like Web of Science, Scopus, or Crossref.
 Distinguishing SearchSources matters because many aspects are source-specific, including:
 
 - Available `search types <../../manual/metadata_retrieval/search.html>`_ (API, DB, BACKWARD, FORWARD, TOC, OTHER, FILES, MD)
@@ -37,7 +37,7 @@ Distinguishing SearchSources matters because many aspects are source-specific, i
 - Restrictions, bugs, and potential fixes (see Li and Rainer, 2022)
 - Paths to have metadata corrected (if any)
 
-SearchSource packages must comply with the `SearchSourceInterface <../../dev_docs/packages/package_interfaces.html#colrev.package_manager.interfaces.SearchSourceInterface>`_ for class and method definitions.
+SearchSource packages must comply with the `SearchSourcePackageBaseClass <../../dev_docs/packages/package_interfaces.html#base_classes.SearchSourcePackageBaseClass>`_ for class and method definitions.
 
 .. _search_source_data:
 

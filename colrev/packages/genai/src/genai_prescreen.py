@@ -2,19 +2,19 @@
 """Prescreen based on GenAI"""
 from __future__ import annotations
 
-import textwrap
+import csv
+from pathlib import Path
 from typing import ClassVar
 
-import instructor
-import zope.interface
+import pandas as pd
 from litellm import completion
 from pydantic import BaseModel
 from pydantic import Field
 
-import colrev.package_manager.interfaces
-import colrev.package_manager.package_manager
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
+from colrev.constants import Colors
 from colrev.constants import RecordState
 
 
@@ -22,7 +22,7 @@ from colrev.constants import RecordState
 # pylint: disable=duplicate-code
 
 
-class PreScreenDecision:
+class PreScreenDecision(BaseModel):
     """
     Class for a prescreen
     """
@@ -40,8 +40,7 @@ class PreScreenDecision:
     explanation: str = Field(description="Explanation of the inclusion decision.")
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
-class GenAIPrescreen:
+class GenAIPrescreen(base_classes.PrescreenPackageBaseClass):
     """GenAI-based prescreen"""
 
     ci_supported: bool = Field(default=True)
@@ -56,7 +55,7 @@ class GenAIPrescreen:
         # pylint: disable=too-many-instance-attributes
 
         endpoint: str
-        model: str = "claude-3-haiku-20240307"
+        model: str = "gpt-4o-mini"
 
     settings_class = GenAIPrescreenSettings
 
@@ -68,53 +67,10 @@ class GenAIPrescreen:
     ) -> None:
         self.review_manager = prescreen_operation.review_manager
         self.settings = self.settings_class(**settings)
-
-    def _print_table(self, data: list, max_width: int = 200) -> None:
-        """Print a table with the given data"""
-        if not data:
-            print("No data to display")
-            return
-
-        # Extract column names from the keys of the first dictionary
-        col_names = list(data[0].keys())
-
-        # Calculate the maximum width for each column
-        col_widths = {col: len(col) for col in col_names}
-        for row in data:
-            for col, value in row.items():
-                # Limit the maximum width of any column
-                col_widths[col] = min(
-                    max(col_widths[col], len(str(value).split("\n")[0])), max_width
-                )
-
-        # Print header
-        header = " | ".join(
-            f"{col[:col_widths[col]]:<{col_widths[col]}}" for col in col_names
+        self.prescreen_decision_explanation_path = (
+            self.review_manager.paths.prescreen
+            / Path("prescreen_decision_explanation.csv")
         )
-        print(header)
-        print("-" * len(header))
-
-        # Print rows
-        for row in data:
-            # Wrap text for each cell
-            wrapped_row = {
-                col: textwrap.wrap(str(row.get(col, "")), width=col_widths[col])
-                for col in col_names
-            }
-
-            # Find the maximum number of lines in any cell of this row
-            max_lines = max(len(cell) for cell in wrapped_row.values())
-
-            # Print each line of the row
-            for i in range(max_lines):
-                line = []
-                for col in col_names:
-                    cell = wrapped_row[col]
-                    if i < len(cell):
-                        line.append(f"{cell[i]:<{col_widths[col]}}")
-                    else:
-                        line.append(" " * col_widths[col])
-                print(" | ".join(line))
 
     # pylint: disable=unused-argument
     def run_prescreen(
@@ -124,15 +80,29 @@ class GenAIPrescreen:
     ) -> dict:
         """Prescreen records based on GenAI"""
 
+        if self.review_manager.settings.prescreen.explanation == "":
+            print(
+                f"\n{Colors.ORANGE}Provide a short explanation of the prescreen{Colors.END} "
+                "(why should particular papers be included?):"
+            )
+            print(
+                'Example objective: "Include papers that focus on digital technology."'
+            )
+            self.review_manager.settings.prescreen.explanation = input("")
+            self.review_manager.save_settings()
+        else:
+            print("\nIn the prescreen, the following process is followed:\n")
+            print("   " + self.review_manager.settings.prescreen.explanation)
+            print()
+
         # API key needs to be set as an environment variable
-        client = instructor.from_litellm(completion)
         inclusion_criterion = self.review_manager.settings.prescreen.explanation
 
         screening_decisions = []
 
         for record_dict in records.values():
             record = colrev.record.record.Record(record_dict)
-            response = client.chat.completions.create(
+            response = completion(
                 model=self.settings.model,
                 max_tokens=1024,
                 messages=[
@@ -143,9 +113,12 @@ class GenAIPrescreen:
                         + f"METADATA:\n\n{record}",
                     }
                 ],
-                response_model=PreScreenDecision,
+                response_format=PreScreenDecision,
             )
-            if response.included:
+            prescreen_decision = PreScreenDecision.model_validate_json(
+                response.choices[0].message.content
+            )
+            if prescreen_decision.included:
                 record.set_status(RecordState.rev_prescreen_included)
             else:
                 record.set_status(RecordState.rev_prescreen_excluded)
@@ -154,15 +127,20 @@ class GenAIPrescreen:
                 {
                     "Record": record.get_data()["ID"],
                     "Inclusion/Exclusion Decision": (
-                        "Included" if response.included else "Excluded"
+                        "Included" if prescreen_decision.included else "Excluded"
                     ),
-                    "Explanation": response.explanation,
+                    "Explanation": prescreen_decision.explanation,
                 }
             )
 
-        print(f"\nGenAI (model: {self.settings.model}) screening decisions:")
-        self._print_table(screening_decisions)
-        print("\n")
+        self.review_manager.paths.prescreen.mkdir(parents=True, exist_ok=True)
+        screening_decisions_df = pd.DataFrame(screening_decisions)
+        screening_decisions_df.to_csv(
+            self.prescreen_decision_explanation_path, index=False, quoting=csv.QUOTE_ALL
+        )
+        self.review_manager.logger.info(
+            f"Exported prescreening decisions to {self.prescreen_decision_explanation_path}"
+        )
 
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(

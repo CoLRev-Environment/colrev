@@ -17,6 +17,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 ### Fixed
 -->
 
+## 0.14.0 - 2025-02-21
+
+- Replace poetry by uv (#611)
+- Write internal BibTeX parser to replace pybtex (#605)
+- Replace pkg_resources with importlib (#605)
+- Replace zope interfaces with abstract base classes (#610)
+- Add Prospero search source (#586)
+- Add PLOS search source (#594)
+- Extract colrev-sync to a separate (PyPI) package
+- Implement `colrev convert`
+
+## 0.13.2 - 2025-01-15
+
+- Minor release to install with updated pre-commit
+
+## 0.13.1 - 2024-12-17
+
+- Minor release to install with updated dependencies
+
+## 0.13.0 - 2024-10-04
+
+- Restructure package management, moving dependencies to built-in packages (#442)
+- Relay prep requirements (#529)
+- Add GitHub SearchSource (#468), Unpaywall SearchSource (#469), SpringerLink SearchSource (#466), OSF SearchSource (#471)
+- Refactor other SearchSources
+- Replace dacite by pydantic
+- Stop Docker containers
+- CLI: option to add packages interactively
+- Testing and bugfixes in built-in packages (paper-md, files_dir, aisel)
+- Update docs (add asciinema demonstration)
+
 ## 0.12.3 - 2024-06-15
 
 - Extend documentation (package development, package summaries, asciinema demo)
@@ -56,7 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Implemented loaders as a separate package, created a standard interface. SearchSources now create the specific mapping of IDs, entrytypes and fields.
 - Moved field standardization from `load` to SearchSources.
 - Extended use of constants
-- SearchSourceInterface: renamed `run_search` to `search`, prefer `prep_link_md` over `get_masterdata`
+- SearchSourcePackageBaseClass: renamed `run_search` to `search`, prefer `prep_link_md` over `get_masterdata`
 - Renamed and refactored `GeneralOriginFeed` to `SearchAPIFeed`
 - Pass record objects instead of dicts (in `local_index` in particular)
 - Replaced unnecessary keyword arguments by positional arguments

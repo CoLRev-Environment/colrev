@@ -170,7 +170,14 @@ def test_contributor_validation(
                 "committer_email": "tester@email.de",
             },
             {
-                "msg": "Init: create repository for the review project",
+                "msg": "Init: Create CoLRev project",
+                "author": "Tester Name",
+                "author_email": "tester@email.de",
+                "committer": "Tester Name",
+                "committer_email": "tester@email.de",
+            },
+            {
+                "msg": "Init: Create CoLRev repository",
                 "author": "Tester Name",
                 "author_email": "tester@email.de",
                 "committer": "Tester Name",

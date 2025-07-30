@@ -2,18 +2,18 @@
 """SearchSource: DBLP"""
 from __future__ import annotations
 
+import logging
 import re
 import typing
 from multiprocessing import Lock
 from pathlib import Path
 
 import requests
-import zope.interface
 from pydantic import BaseModel
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -50,8 +50,7 @@ class DBLPSearchSourceSettings(colrev.settings.SearchSource, BaseModel):
     }
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class DBLPSearchSource:
+class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     """DBLP API"""
 
     source_identifier = "dblp_key"
@@ -242,7 +241,7 @@ class DBLPSearchSource:
         )
 
         total = api.total
-        self.review_manager.logger.info(f"Total: {total}")
+        self.review_manager.logger.info(f"Total: {total:,}")
         if not rerun and len(dblp_feed.feed_records) > 0:
             self.review_manager.logger.info(
                 "Retrieving latest results (no estimate available)"
@@ -344,30 +343,31 @@ class DBLPSearchSource:
         else:
             raise NotImplementedError
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
                 if "timestamp" in record_dict:
-                    record_dict[f"{self.endpoint}.timestamp"] = record_dict.pop(
+                    record_dict[f"{cls.endpoint}.timestamp"] = record_dict.pop(
                         "timestamp"
                     )
                 if "biburl" in record_dict:
-                    record_dict[f"{self.endpoint}.biburl"] = record_dict.pop("biburl")
+                    record_dict[f"{cls.endpoint}.biburl"] = record_dict.pop("biburl")
                 if "bibsource" in record_dict:
-                    record_dict[f"{self.endpoint}.bibsource"] = record_dict.pop(
+                    record_dict[f"{cls.endpoint}.bibsource"] = record_dict.pop(
                         "bibsource"
                     )
                 if "dblp_key" in record_dict:
                     record_dict[Fields.DBLP_KEY] = record_dict.pop("dblp_key")
 
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
+                filename=filename,
                 unique_id_field="ID",
                 field_mapper=field_mapper,
-                logger=self.review_manager.logger,
+                logger=logger,
             )
             return records
 

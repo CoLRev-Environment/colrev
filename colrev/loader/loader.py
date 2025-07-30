@@ -1,12 +1,12 @@
 #! /usr/bin/env python
-"""Convenience functions to load files (BiBTeX, RIS, CSV, etc.)"""
+"""Function to load files (BiBTeX, RIS, CSV, etc.)"""
 import logging
 import typing
 from pathlib import Path
 
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-
+from colrev.loader.load_utils_name_formatter import parse_names_in_records
 
 # pylint: disable=too-many-arguments
 
@@ -23,6 +23,7 @@ class Loader:
         id_labeler: typing.Callable,
         unique_id_field: str,
         logger: logging.Logger,
+        format_names: bool = False,
     ):
         self.filename = filename
         self.unique_id_field = unique_id_field
@@ -30,6 +31,7 @@ class Loader:
         self.id_labeler = id_labeler
         self.entrytype_setter = entrytype_setter
         self.field_mapper = field_mapper
+        self.format_names = format_names
 
         self.logger = logger
 
@@ -48,7 +50,12 @@ class Loader:
             Fields.ID in record_dict for record_dict in records_list
         ), "ID not set in all records"
         unique_ids = {record_dict[Fields.ID] for record_dict in records_list}
-        assert len(unique_ids) == len(records_list), "ID is not unique in records"
+        non_unique_ids = [
+            id
+            for id in unique_ids
+            if sum(1 for r in records_list if r[Fields.ID] == id) > 1
+        ]
+        assert not non_unique_ids, f"ID is not unique in records: {non_unique_ids}"
 
     def _set_entrytypes(self, records_dict: dict) -> None:
         for r_dict_val in records_dict.values():
@@ -106,5 +113,8 @@ class Loader:
         records_dict = {str(r[Fields.ID]): r for r in records_list}
         self._set_entrytypes(records_dict)
         self._set_fields(records_dict)
+
+        if self.format_names:
+            parse_names_in_records(records_dict)
 
         return records_dict

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Functionality for data/records.bib and git repository."""
+"""Dataset class providing functionality for data/records.bib and git repository."""
 from __future__ import annotations
 
 import os
@@ -17,8 +17,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.bib
 import colrev.loader.load_utils
 import colrev.ops.check
-import colrev.process.operation
-import colrev.record.record
 import colrev.record.record_id_setter
 import colrev.record.record_prep
 from colrev.constants import ExitCodes
@@ -280,7 +278,8 @@ class Dataset:
 
     def save_records_dict(self, records: dict, *, partial: bool = False) -> None:
         """Save the records dict in RECORDS_FILE"""
-
+        if not records:
+            return
         if partial:
             self._save_record_list_by_id(records)
             return
@@ -422,6 +421,8 @@ class Dataset:
             path_changed = path_str in diff_head
         elif change_type == "unstaged":
             path_changed = path_str in unstaged_changes
+        else:
+            return False
         return path_changed
 
     def _sleep_util_git_unlocked(self) -> None:
@@ -509,7 +510,8 @@ class Dataset:
         assert commit_nr == 0  # extension : implement other cases
         if commit_nr == 0:
             cmsg = master.commit.message
-        return cmsg
+            return cmsg
+        return ""
 
     def _add_record_changes(self) -> None:
         """Add changes in records to git"""
@@ -597,8 +599,8 @@ class Dataset:
                     _,
                     nr_commits_ahead,
                 ) = self._get_remote_commit_differences()
-        if nr_commits_ahead > 0:
-            return True
+                if nr_commits_ahead > 0:
+                    return True
         return False
 
     def pull_if_repo_clean(self) -> None:  # pragma: no cover

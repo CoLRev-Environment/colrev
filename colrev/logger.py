@@ -1,25 +1,20 @@
 #! /usr/bin/env python
-"""Loggers for CoLRev"""
+"""Logger"""
 from __future__ import annotations
 
 import logging
-import typing
+from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
 
-if typing.TYPE_CHECKING:  # pragma: no cover
-    import colrev.review_manager
 
-
-def setup_logger(
-    *, review_manager: colrev.review_manager.ReviewManager, level: int = logging.INFO
-) -> logging.Logger:
+def setup_logger(*, logger_path: Path, level: int = logging.INFO) -> logging.Logger:
     """Setup the CoLRev logger"""
 
     # for logger debugging:
     # from logging_tree import printout
     # printout()
-    logger = logging.getLogger(f"colrev{str(review_manager.path).replace('/', '_')}")
+    logger = logging.getLogger(f"colrev{str(logger_path).replace('/', '_')}")
     logger.setLevel(level)
 
     if logger.handlers:
@@ -41,13 +36,13 @@ def setup_logger(
 
 
 def setup_report_logger(
-    *, review_manager: colrev.review_manager.ReviewManager, level: int = logging.INFO
+    *, report_path: Path, level: int = logging.INFO
 ) -> logging.Logger:
     """Setup the report logger (used for git commit report)"""
 
     try:
         report_logger = logging.getLogger(
-            f"colrev_report{str(review_manager.path).replace('/', '_')}"
+            f"colrev_report{str(report_path.parent).replace('/', '_')}"
         )
 
         if report_logger.handlers:
@@ -59,7 +54,6 @@ def setup_report_logger(
             fmt="%(asctime)s [%(levelname)s] %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
-        report_path = review_manager.paths.report
         report_file_handler = logging.FileHandler(report_path, mode="a")
         report_file_handler.setFormatter(formatter)
 
@@ -76,30 +70,13 @@ def setup_report_logger(
     return report_logger
 
 
-def stop_logger(*, review_manager: colrev.review_manager.ReviewManager) -> None:
-    """Stop and remove the report log file"""
-
-    if review_manager.report_logger.handlers:
-        report_handler = review_manager.report_logger.handlers[0]
-        review_manager.report_logger.removeHandler(report_handler)
-        report_handler.close()
-
-    report_path = review_manager.paths.report
-    if report_path.is_file():
-        with open(report_path, "r+", encoding="utf8") as file:
-            file.truncate(0)
-
-
-def reset_report_logger(*, review_manager: colrev.review_manager.ReviewManager) -> None:
+def reset_report_logger(*, report_path: Path) -> logging.FileHandler:
     """Reset the report log file (used for the git commit report)"""
 
-    stop_logger(review_manager=review_manager)
-
-    report_path = review_manager.paths.report
     file_handler = logging.FileHandler(report_path, mode="a")
     file_handler.setLevel(logging.INFO)
     formatter = logging.Formatter(
         fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
     file_handler.setFormatter(formatter)
-    review_manager.report_logger.addHandler(file_handler)
+    return file_handler

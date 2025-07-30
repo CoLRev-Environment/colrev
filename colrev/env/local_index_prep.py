@@ -5,14 +5,8 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-import colrev.env.environment_manager
-import colrev.env.local_index_sqlite
-import colrev.env.resources
-import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.check
 import colrev.record.record
-import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
@@ -25,21 +19,29 @@ KEYS_TO_REMOVE = (
     Fields.GROBID_VERSION,
     Fields.SCREENING_CRITERIA,
     Fields.METADATA_SOURCE_REPOSITORY_PATHS,
+    Fields.MD_PROV,
+    Fields.D_PROV,
 )
 
 
 def _apply_status_requirements(record_dict: dict) -> None:
     if Fields.STATUS not in record_dict:
-        raise colrev_exceptions.RecordNotIndexableException()
+        raise colrev_exceptions.RecordNotIndexableException(
+            record_dict.get(Fields.ID, "NA"), Fields.STATUS
+        )
 
     # It is important to exclude md_prepared if the LocalIndex
     # is used to dissociate duplicates
     if record_dict[Fields.STATUS] in RecordState.get_non_processed_states():
-        raise colrev_exceptions.RecordNotIndexableException()
+        raise colrev_exceptions.RecordNotIndexableException(
+            record_dict.get(Fields.ID, "NA"), "non_processed"
+        )
 
     # Some prescreen_excluded records are not prepared
     if record_dict[Fields.STATUS] == RecordState.rev_prescreen_excluded:
-        raise colrev_exceptions.RecordNotIndexableException()
+        raise colrev_exceptions.RecordNotIndexableException(
+            record_dict.get(Fields.ID, "NA"), "rev_prescreen_excluded"
+        )
 
 
 def _remove_fields(record_dict: dict) -> None:
@@ -68,7 +70,9 @@ def _remove_fields(record_dict: dict) -> None:
     if record_dict.get(Fields.YEAR, "NA").isdigit():
         record_dict[Fields.YEAR] = int(record_dict[Fields.YEAR])
     else:
-        raise colrev_exceptions.RecordNotIndexableException()
+        raise colrev_exceptions.RecordNotIndexableException(
+            record_dict.get(Fields.ID, "NA"), "year_not_digit"
+        )
 
     if Fields.LANGUAGE in record_dict and len(record_dict[Fields.LANGUAGE]) != 3:
         print(f"Language not in ISO 639-3 format: {record_dict[Fields.LANGUAGE]}")
@@ -138,7 +142,7 @@ def prepare_record_for_indexing(record_dict: dict) -> dict:
         if exc.missing_fields is not None:
             missing_key = ",".join(exc.missing_fields)
         raise colrev_exceptions.RecordNotIndexableException(
-            missing_key=missing_key
+            record_dict.get(Fields.ID, "NA"), missing_key=missing_key
         ) from exc
 
     return record_dict
@@ -151,9 +155,6 @@ def prepare_record_for_return(
     include_colrev_ids: bool = False,
 ) -> colrev.record.record.Record:
     """Prepare record for return from LocalIndex."""
-
-    for key in KEYS_TO_REMOVE:
-        record_dict.pop(key, None)
 
     # Note: record['file'] should be an absolute path by definition
     # when stored in the LocalIndex
@@ -176,5 +177,8 @@ def prepare_record_for_return(
             + f"#{record_dict[Fields.ID]}"
         )
         record_dict[Fields.CURATION_ID] = identifier_string
+
+    for key in KEYS_TO_REMOVE:
+        record_dict.pop(key, None)
 
     return record

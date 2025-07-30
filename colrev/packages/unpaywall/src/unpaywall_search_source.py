@@ -2,14 +2,14 @@
 """SearchSource: Unpaywall"""
 from __future__ import annotations
 
+import logging
 import typing
 from pathlib import Path
 
-import zope.interface
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -21,8 +21,7 @@ from colrev.packages.unpaywall.src.api import UnpaywallAPI
 # pylint: disable=unused-argument
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class UnpaywallSearchSource:
+class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Unpaywall Search Source"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -64,7 +63,9 @@ class UnpaywallSearchSource:
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls, operation: colrev.ops.search.Search, params: str
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         params_dict = {}
@@ -115,6 +116,7 @@ class UnpaywallSearchSource:
             )
 
         operation.add_source_and_search(search_source)
+        return search_source
 
     def _run_api_search(
         self, *, unpaywall_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
@@ -140,13 +142,14 @@ class UnpaywallSearchSource:
         else:
             raise NotImplementedError
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
+                filename=filename,
+                logger=logger,
             )
             return records
 

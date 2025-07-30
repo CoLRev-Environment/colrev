@@ -48,13 +48,20 @@ class Initializer:
         light: bool = False,
         exact_call: str = "",
     ) -> None:
+        p_man = colrev.package_manager.package_manager.PackageManager()
+        self.review_type = self._format_review_type(review_type)
+        if not p_man.is_installed(self.review_type):
+            print(
+                f"Run {Colors.ORANGE}colrev install all_internal_packages{Colors.END} "
+                "before colrev init"
+            )
+            raise colrev.exceptions.MissingDependencyError(self.review_type)
         self.force_mode = force_mode
         self.target_path = target_path
         os.chdir(target_path)
         self.review_manager = colrev.review_manager.ReviewManager(
             path_str=str(self.target_path), force_mode=True, navigate_to_home_dir=False
         )
-        self.review_type = self._format_review_type(review_type)
         self.title = str(self.target_path.name)
         self._setup_repo(
             example=example,
@@ -63,8 +70,7 @@ class Initializer:
         )
 
         # Install packages
-        p_man = colrev.package_manager.package_manager.PackageManager()
-        p_man.install_project(review_manager=self.review_manager, force_reinstall=False)
+        p_man.install_project(review_manager=self.review_manager)
 
     def _setup_repo(
         self,
@@ -92,11 +98,20 @@ class Initializer:
 
         self.review_manager = colrev.review_manager.ReviewManager(exact_call=exact_call)
 
+        self._git_rm_settings()
+
         self.review_manager.dataset.create_commit(
-            msg="Init: create repository for the review project",
+            msg="Init: Create CoLRev repository",
             manual_author=True,
             skip_hooks=True,
         )
+        self._add_colrev_project_details()
+        self.review_manager.dataset.create_commit(
+            msg="Init: Create CoLRev project",
+            manual_author=True,
+            skip_hooks=True,
+        )
+
         self._register_repo(example=example)
 
         self._post_commit_edits()
@@ -104,6 +119,22 @@ class Initializer:
         self.review_manager.logger.info(
             "%sCompleted init operation%s", Colors.GREEN, Colors.END
         )
+
+    def _git_rm_settings(self) -> None:
+        colrev.ops.check.CheckOperation(self.review_manager)
+        git_repo = self.review_manager.dataset.get_repo()
+        git_repo.index.remove([self.review_manager.paths.settings])
+
+    def _add_colrev_project_details(self) -> None:
+
+        # Note : to avoid file setup at colrev status (calls data_operation.main)
+        data_operation = self.review_manager.get_data_operation(
+            notify_state_transition_operation=False
+        )
+        data_operation.main(silent_mode=True)
+
+        git_repo = self.review_manager.dataset.get_repo()
+        git_repo.git.add(all=True)
 
     def _format_review_type(self, review_type: str) -> str:
         formatted_review_type = review_type.replace("-", "_").lower().replace(" ", "_")
@@ -376,11 +407,6 @@ class Initializer:
     def _finalize(self) -> None:
         settings = self.review_manager.settings
 
-        # Note : to avoid file setup at colrev status (calls data_operation.main)
-        data_operation = self.review_manager.get_data_operation(
-            notify_state_transition_operation=False
-        )
-        data_operation.main(silent_mode=True)
         self.review_manager.logger.info("Set up %s", self.review_type)
 
         for source in settings.sources:

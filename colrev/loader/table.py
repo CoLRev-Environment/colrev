@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to load tabular files (csv, xlsx)"""
+"""Function to load tabular files (csv, xlsx)"""
 from __future__ import annotations
 
 import logging
@@ -23,12 +23,14 @@ class TableLoader(colrev.loader.loader.Loader):
         self,
         *,
         filename: Path,
-        entrytype_setter: typing.Callable,
-        field_mapper: typing.Callable,
-        id_labeler: typing.Callable,
+        entrytype_setter: typing.Callable = lambda x: x,
+        field_mapper: typing.Callable = lambda x: x,
+        id_labeler: typing.Callable = lambda x: x,
         unique_id_field: str = "",
         logger: logging.Logger = logging.getLogger(__name__),
+        format_names: bool = False,
     ):
+
         super().__init__(
             filename=filename,
             id_labeler=id_labeler,
@@ -36,6 +38,7 @@ class TableLoader(colrev.loader.loader.Loader):
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
             logger=logger,
+            format_names=format_names,
         )
 
     @classmethod
@@ -45,6 +48,8 @@ class TableLoader(colrev.loader.loader.Loader):
             data = pd.read_csv(filename)
         elif filename.name.endswith((".xls", ".xlsx")):
             data = pd.read_excel(filename, dtype=str)
+        else:
+            raise NotImplementedError
         count = len(data)
         return count
 
@@ -56,6 +61,8 @@ class TableLoader(colrev.loader.loader.Loader):
                 data = pd.read_excel(
                     self.filename, dtype=str
                 )  # dtype=str to avoid type casting
+            else:
+                raise NotImplementedError
 
         except pd.errors.ParserError as exc:  # pragma: no cover
             raise colrev_exceptions.ImportException(

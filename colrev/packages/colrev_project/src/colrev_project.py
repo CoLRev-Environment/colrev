@@ -2,6 +2,7 @@
 """SearchSource: CoLRev project"""
 from __future__ import annotations
 
+import logging
 import shutil
 import tempfile
 from copy import deepcopy
@@ -9,14 +10,13 @@ from pathlib import Path
 
 import pandas as pd
 import pandasql as ps
-import zope.interface
 from git import Repo
 from pandasql.sqldf import PandaSQLException
 from pydantic import Field
 from tqdm import tqdm
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -29,8 +29,7 @@ from colrev.constants import SearchType
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class ColrevProjectSearchSource:
+class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
     """CoLRev projects"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -267,13 +266,14 @@ class ColrevProjectSearchSource:
 
         return result
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".bib":
+        if filename.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
+                filename=filename,
+                logger=logger,
             )
             for record_id in records:
                 records[record_id] = {

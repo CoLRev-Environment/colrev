@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Functionality for record ID setting."""
+"""Record ID setter."""
 from __future__ import annotations
 
 import itertools
@@ -10,11 +10,9 @@ import typing
 
 from tqdm import tqdm
 
+import colrev.env.local_index
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.bib
-import colrev.loader.load_utils
-import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
@@ -147,21 +145,26 @@ class IDSetter:
             if selected_ids is not None:
                 if record_id not in selected_ids:  # pragma: no cover
                     continue
-            elif record_dict[Fields.STATUS] not in [
+            elif Fields.STATUS in record_dict and record_dict[Fields.STATUS] not in [
                 RecordState.md_imported,
                 RecordState.md_prepared,
             ]:
                 continue
             old_id = record_id
 
-            temp_stat = record_dict[Fields.STATUS]
+            temp_stat = record_dict.get(Fields.STATUS, "")
             if selected_ids:
                 record = colrev.record.record.Record(record_dict)
                 record.set_status(RecordState.md_prepared)
 
             new_id = old_id
+            if Fields.STATUS not in record_dict:
+                new_id = self._generate_id(
+                    record_dict,
+                    existing_ids=[x for x in id_list if x != record_id],
+                )
             # Only change IDs that are before md_processed
-            if record_dict[Fields.STATUS] not in RecordState.get_post_x_states(
+            elif record_dict[Fields.STATUS] not in RecordState.get_post_x_states(
                 state=RecordState.md_processed
             ):
                 new_id = self._generate_id(
@@ -171,7 +174,8 @@ class IDSetter:
 
             if selected_ids:
                 record = colrev.record.record.Record(record_dict)
-                record.set_status(temp_stat)
+                if temp_stat:
+                    record.set_status(temp_stat)
 
             self._update_id(
                 records,

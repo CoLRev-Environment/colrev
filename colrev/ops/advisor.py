@@ -12,7 +12,6 @@ from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
 
 import colrev.ops.check
-import colrev.process.operation
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import FieldValues
@@ -301,7 +300,7 @@ class Advisor:
                 rec_str = ", ".join([x["origin"] for x in transitioned_records])
                 instruction = {
                     "msg": "Detected multiple processes in progress "
-                    + f"({', '.join(in_progress_processes)}). Complete one "
+                    + f"({', '.join(list(in_progress_processes))}). Complete one "
                     + "(save and revert the other) and commit before continuing!\n"
                     + f"  Records: {rec_str}",
                     "priority": "yes",

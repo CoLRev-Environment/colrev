@@ -8,14 +8,13 @@ from dataclasses import asdict
 from pathlib import Path
 
 import pandas as pd
-import zope.interface
 from git.exc import GitCommandError
 from pydantic import BaseModel
 from pydantic import Field
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -49,8 +48,7 @@ class StructuredDataSettings(BaseModel):
     }
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-class StructuredData:
+class StructuredData(base_classes.DataPackageBaseClass):
     """Summarize the literature in a structured data extraction (a table)"""
 
     settings: StructuredDataSettings
@@ -101,10 +99,6 @@ class StructuredData:
             "data_path_relative": "data/data/data.csv",
         }
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
-        operation.review_manager.save_settings()
-        operation.review_manager.dataset.create_commit(
-            msg=f"Add {operation.type} colrev.structured",
-        )
 
     def validate_structured_data(self) -> None:
         """Validate the extracted data"""

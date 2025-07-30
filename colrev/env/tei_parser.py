@@ -12,7 +12,6 @@ from lxml.etree import XMLSyntaxError  # nosec
 
 import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
-import colrev.process.operation
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -44,7 +43,6 @@ class TEIParser:
     def __init__(
         self,
         *,
-        environment_manager: colrev.env.environment_manager.EnvironmentManager,
         pdf_path: typing.Optional[Path] = None,
         tei_path: typing.Optional[Path] = None,
     ):
@@ -54,8 +52,6 @@ class TEIParser:
         - pfd_path and tei_path: create TEI and save in tei_path
         - tei_path: read TEI from file
         """
-
-        self.environment_manager = environment_manager
         # pylint: disable=consider-using-with
         assert pdf_path is not None or tei_path is not None
         if pdf_path is not None:
@@ -72,6 +68,11 @@ class TEIParser:
                 load_from_tei = True
 
         if pdf_path is not None and not load_from_tei:
+            # TODO / TBD:
+            # Do not run in continuous-integration environment
+            # if not self.review_manager.in_ci_environment():
+            grobid_service = colrev.env.grobid_service.GrobidService()
+            grobid_service.start()
             self._create_tei()
 
         elif tei_path is not None:
@@ -89,9 +90,7 @@ class TEIParser:
 
     def _create_tei(self) -> None:
         """Create the TEI (based on GROBID)"""
-        grobid_service = colrev.env.grobid_service.GrobidService(
-            environment_manager=self.environment_manager
-        )
+        grobid_service = colrev.env.grobid_service.GrobidService()
         grobid_service.start()
         # Note: we have more control and transparency over the consolidation
         # if we do it in the colrev process
@@ -269,13 +268,14 @@ class TEIParser:
         )
         record = self._get_dict_from_reference(reference)
 
-        record[Fields.TITLE] = (
-            record[Fields.TITLE]
-            .replace("(Completed paper)", "")
-            .replace("(Completed-paper)", "")
-            .replace("(Research-in-Progress)", "")
-            .replace("Completed Research Paper", "")
-        )
+        if Fields.TITLE in record:
+            record[Fields.TITLE] = (
+                record[Fields.TITLE]
+                .replace("(Completed paper)", "")
+                .replace("(Completed-paper)", "")
+                .replace("(Research-in-Progress)", "")
+                .replace("Completed Research Paper", "")
+            )
 
         for key, value in record.items():
             if key != Fields.FILE:
@@ -346,6 +346,8 @@ class TEIParser:
             authors_node = reference.find(self.ns["tei"] + "analytic")
         elif reference.find(self.ns["tei"] + "monogr") is not None:
             authors_node = reference.find(self.ns["tei"] + "monogr")
+        else:
+            return ""
 
         if authors_node is not None:
             for author_node in authors_node.iterfind(self.ns["tei"] + "author"):
@@ -554,9 +556,9 @@ class TEIParser:
                 Fields.ENTRYTYPE: entrytype,
                 Fields.BOOKTITLE: self._get_reference_monograph_string(reference),
             }
-        elif entrytype == ENTRYTYPES.MISC:
+        else:
             ref_rec = {
-                Fields.ENTRYTYPE: entrytype,
+                Fields.ENTRYTYPE: ENTRYTYPES.MISC,
             }
         ref_rec = {**ground_dict, **ref_rec}
 

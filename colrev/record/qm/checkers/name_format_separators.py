@@ -44,11 +44,16 @@ class NameFormatSeparatorsChecker:
     def _name_separator_error(
         self, *, record: colrev.record.record.Record, key: str
     ) -> bool:
+
+        # this should also catch organizations
         if "," not in record.data[key]:
             return True
 
         santized_names = colrev.env.utils.remove_accents(record.data[key])
         sanitized_names = re.sub(r"[{}]|\(\w*\b\)|\"\w*\"", "", santized_names)
+        sanitized_names = sanitized_names.replace(" and others", "").replace(
+            " et al.", ""
+        )
         sanitized_names_list = sanitized_names.split(" and ")
         if not all(
             re.findall(

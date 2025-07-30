@@ -1,10 +1,34 @@
-Collaborative Literature Reviews
-========================================
-
 .. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png
    :width: 400
    :align: center
    :alt: Logo
+
+Collaborative Literature Reviews
+========================================
+
+.. image:: https://zenodo.org/badge/363073613.svg
+   :target: https://zenodo.org/badge/latestdoi/363073613
+
+.. image:: https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg
+   :target: https://github.com/CoLRev-Environment/colrev/releases/
+
+.. image:: https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg
+   :target: https://github.com/CoLRev-Environment/colrev/releases/
+
+.. image:: https://app.codacy.com/project/badge/Grade/bd4e44c6cda646e4b9e494c4c4d9487b
+   :target: https://app.codacy.com/gh/CoLRev-Environment/colrev/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
+
+.. image:: https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev
+
+.. image:: https://static.pepy.tech/badge/colrev/month
+   :target: https://pepy.tech/project/colrev
+
+.. image:: https://bestpractices.coreinfrastructure.org/projects/7148/badge
+   :target: https://bestpractices.coreinfrastructure.org/projects/7148
+
+.. image:: https://img.shields.io/badge/all_contributors-32-green.svg?style=flat-square
+   :target: #contributors
+
 
 CoLRev is an open-source environment for collaborative literature reviews. It integrates with differerent synthesis tools, takes care of the data, and facilitates Git-based collaboration.
 
@@ -16,7 +40,7 @@ The following features stand out:
 - Offers a self-explanatory, fault-tolerant, and configurable user workflow
 - Operates a model for data quality, content curation, and reuse
 - Provides validate and undo operations
-- Enables typological and methodological pluralism throughout the process (`in-progress <https://github.com/CoLRev-Environment/colrev/issues/110>`_)
+- Enables typological and methodological pluralism throughout the process
 
 A complete example run of CoLRev can be seen below:
 
@@ -48,16 +72,16 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
 
 .. code-block::
 
-   # Install CoLRev
-   pip install colrev
+   # Create and activate a python virtual environment
+   python -m venv ~/venv-colrev && source ~/venv-colrev/bin/activate
 
-   # Install packages required for the CoLRev project
-   colrev install .
+   # Install CoLRev and all CoLRev related packages ...
+   pip install colrev && colrev install all_internal_packages
 
    # ... and start with the main command
    colrev status
 
-The CoLRev environment supports for the whole literature review process:
+The CoLRev environment supports the whole literature review process:
 
 .. figure:: ../figures/figure-docs.png
    :width: 600

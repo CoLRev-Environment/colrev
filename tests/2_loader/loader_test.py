@@ -7,8 +7,6 @@ from pathlib import Path
 import pytest
 
 import colrev.loader.load_utils
-import colrev.review_manager
-import colrev.settings
 
 
 def test_load(tmp_path, helpers) -> None:  # type: ignore
@@ -39,6 +37,10 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
     helpers.retrieve_test_file(
         source=Path("2_loader/data/bib_data.bib"),
         target=Path("data/search/bib_data.bib"),
+    )
+
+    colrev.loader.bib.run_fix_bib_file(
+        Path("data/search/bib_data.bib"), logger=logging.getLogger(__name__)
     )
 
     colrev.loader.load_utils.load(

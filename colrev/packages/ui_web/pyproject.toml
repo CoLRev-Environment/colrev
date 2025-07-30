@@ -1,23 +1,28 @@
-[tool.poetry]
+[project]
 name = "colrev.ui_web"
 description = "Web-UI package for CoLRev"
 version = "0.1.0"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
-    "Jessica Petry Klarmann",
-    "Katharina Maria Ernst",
-    "Luca Rita Ossendorf",
-    "Simon Mühlbauer",
-    "Gerit Wagner <gerit.wagner@uni-bamberg.de>"
+    { name = "Jessica Petry Klarmann" },
+    { name = "Katharina Maria Ernst" },
+    { name = "Luca Rita Ossendorf" },
+    { name = "Simon Mühlbauer" },
+    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" }
 ]
+requires-python = ">=3.8, <4"
+dependencies = [
+    "dash>=2.11.1",
+]
+
+[project.urls]
 repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/ui_web"
 
-[[tool.poetry.packages]]
-include = "src"
+[project.scripts]
+colrev-ui-web = "colrev.packages.ui_web.src.dashboard:main"
 
-[tool.poetry.dependencies]
-python = ">=3.8, <4"
-dash = "^2.11.1"
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.colrev]
 colrev_doc_description = "Web-UI"
@@ -25,5 +30,5 @@ colrev_doc_link = "README.md"
 search_types = []
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "cython<3.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

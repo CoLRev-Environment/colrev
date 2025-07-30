@@ -13,7 +13,6 @@ from threading import Timer
 
 import docker
 import requests
-import zope.interface
 from docker.errors import DockerException
 from pydantic import BaseModel
 from pydantic import Field
@@ -22,7 +21,7 @@ import colrev.env.docker_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -57,8 +56,7 @@ class PaperMarkdownSettings(BaseModel):
 
 
 # pylint: disable=too-many-instance-attributes
-@zope.interface.implementer(colrev.package_manager.interfaces.DataInterface)
-class PaperMarkdown:
+class PaperMarkdown(base_classes.DataPackageBaseClass):
     """Synthesize the literature in a markdown paper
 
     The paper (paper.md) is created automatically.
@@ -146,10 +144,6 @@ class PaperMarkdown:
         }
 
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
-        operation.review_manager.save_settings()
-        operation.review_manager.dataset.create_commit(
-            msg=f"Add {operation.type} paper_md",
-        )
 
     def _retrieve_default_word_template(self, word_template: Path) -> bool:
 
@@ -332,9 +326,10 @@ class PaperMarkdown:
         _, temp_filepath = tempfile.mkstemp(dir=self._temp_path)
         Path(temp_filepath).unlink(missing_ok=True)
         shutil.move(str(paper_path), str(temp_filepath))
-        with open(temp_filepath, encoding="utf-8") as reader, open(
-            paper_path, "w", encoding="utf-8"
-        ) as writer:
+        with (
+            open(temp_filepath, encoding="utf-8") as reader,
+            open(paper_path, "w", encoding="utf-8") as writer,
+        ):
             appended, completed = False, False
             line = reader.readline()
             while line:
@@ -454,9 +449,10 @@ class PaperMarkdown:
             notify_state_transition_operation=False
         )
 
-        with open(temp.name, encoding="utf-8") as reader, open(
-            paper_path, "w", encoding="utf-8"
-        ) as writer:
+        with (
+            open(temp.name, encoding="utf-8") as reader,
+            open(paper_path, "w", encoding="utf-8") as writer,
+        ):
             line = reader.readline()
             while line:
                 if not line.startswith("EXCLUDE "):
@@ -595,9 +591,10 @@ class PaperMarkdown:
                 paper_path = self.settings.paper_path
                 Path(temp.name).unlink(missing_ok=True)
                 shutil.move(str(paper_path), str(temp.name))
-                with open(temp.name, encoding="utf-8") as reader, open(
-                    paper_path, "w", encoding="utf-8"
-                ) as writer:
+                with (
+                    open(temp.name, encoding="utf-8") as reader,
+                    open(paper_path, "w", encoding="utf-8") as writer,
+                ):
                     line = reader.readline()
                     while line:
                         if "# Method" not in line:
@@ -688,8 +685,13 @@ class PaperMarkdown:
                 volumes=[self.review_manager.path.as_posix() + ":/data"],
                 detach=True,
             )
-            # Wait for the container to finish
+
             container.wait()
+            # Print the logs (including Pandoc errors)
+            logs = container.logs().decode("utf-8")
+            if logs:
+                print(f"🔧 Docker container logs:\n{Colors.RED}{logs}{Colors.END}")
+
             container.stop()
             container.remove()
 
@@ -749,6 +751,7 @@ class PaperMarkdown:
             + f"--output {output_relative_path.as_posix()}"
         )
 
+        # self._call_docker_build_process(script=script)
         Timer(
             1,
             lambda: self._call_docker_build_process(script=script),

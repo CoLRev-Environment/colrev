@@ -82,6 +82,8 @@ Packages
    packages/colrev.open_library.rst
    packages/colrev.osf.rst
    packages/colrev.pdf_backward_search.rst
+   packages/colrev.plos.rst
+   packages/colrev.prospero.rst
    packages/colrev.psycinfo.rst
    packages/colrev.pubmed.rst
    packages/colrev.scopus.rst
@@ -121,6 +123,7 @@ Packages
    packages/colrev.source_specific_prep.rst
 
 
+   packages/colrev.cli_prep_man.rst
    packages/colrev.export_man_prep.rst
    packages/colrev.prep_man_curation_jupyter.rst
 
@@ -137,6 +140,7 @@ Packages
    packages/colrev.scope_prescreen.rst
 
 
+   packages/colrev-scidb.rst
    packages/colrev.download_from_website.rst
    packages/colrev.local_index.rst
    packages/colrev.unpaywall.rst
@@ -162,14 +166,17 @@ Packages
 
    packages/colrev.bibliography_export.rst
    packages/colrev.colrev_curation.rst
+   packages/colrev.genai.rst
    packages/colrev.github_pages.rst
    packages/colrev.obsidian.rst
    packages/colrev.paper_md.rst
    packages/colrev.prisma.rst
    packages/colrev.profile.rst
+   packages/colrev.ref_check.rst
    packages/colrev.structured.rst
 
 
+   packages/colrev-sync.rst
    packages/colrev.doi_org.rst
-   packages/colrev.sync.rst
+   packages/colrev.enlit.rst
    packages/colrev.ui_web.rst

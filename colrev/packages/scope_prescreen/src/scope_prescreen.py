@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import typing
+from sqlite3 import OperationalError
 
-import zope.interface
 from pydantic import BaseModel
 from pydantic import Field
 
 import colrev.env.language_service
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -34,15 +34,15 @@ class ScopePrescreenSettings(
     # pylint: disable=too-many-instance-attributes
 
     endpoint: str
-    ExcludePredatoryJournals: bool
-    TimeScopeFrom: typing.Optional[int]
-    TimeScopeTo: typing.Optional[int]
-    LanguageScope: typing.Optional[list]
-    ExcludeComplementaryMaterials: typing.Optional[bool]
-    OutletInclusionScope: typing.Optional[dict]
-    OutletExclusionScope: typing.Optional[dict]
-    ENTRYTYPEScope: typing.Optional[list]
-    RequireRankedJournals: typing.Optional[list]
+    ExcludePredatoryJournals: typing.Optional[bool] = True
+    TimeScopeFrom: typing.Optional[int] = None
+    TimeScopeTo: typing.Optional[int] = None
+    LanguageScope: typing.Optional[list] = None
+    ExcludeComplementaryMaterials: typing.Optional[bool] = None
+    OutletInclusionScope: typing.Optional[dict] = None
+    OutletExclusionScope: typing.Optional[dict] = None
+    ENTRYTYPEScope: typing.Optional[list] = None
+    RequireRankedJournals: typing.Optional[list] = None
 
     _details = {
         "TimeScopeFrom": {
@@ -72,8 +72,7 @@ class ScopePrescreenSettings(
     }
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
-class ScopePrescreen:
+class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
     """Rule-based prescreen (scope)"""
 
     settings: ScopePrescreenSettings
@@ -122,6 +121,7 @@ class ScopePrescreen:
     def _conditional_prescreen_entrytypes(
         self, record: colrev.record.record.Record
     ) -> None:
+        # pylint: disable=unsupported-membership-test
         if self.settings.ENTRYTYPEScope:
             if record.data[Fields.ENTRYTYPE] not in self.settings.ENTRYTYPEScope:
                 record.prescreen_exclude(reason="not in ENTRYTYPEScope")
@@ -132,18 +132,31 @@ class ScopePrescreen:
         if Fields.JOURNAL not in record.data:
             return
 
-        rankings = self.local_index.get_journal_rankings(record.data[Fields.JOURNAL])
-        if any(x["predatory"] == "yes" for x in rankings):
-            record.prescreen_exclude(reason="predatory_journals_beal")
+        try:
+            rankings = self.local_index.get_journal_rankings(
+                record.data[Fields.JOURNAL]
+            )
+            if any(x["predatory"] == "yes" for x in rankings):
+                record.prescreen_exclude(reason="predatory_journals_beal")
+        except OperationalError as e:
+            if "no such table: rankings" in str(e):
+                raise colrev_exceptions.DependencyConfigurationError(
+                    "Error: The 'rankings' table does not exist in the local_index"
+                    " (scope_prescreen with predatory_journals needs the rankings table)."
+                    "Run `colrev env -i` to update the database."
+                )
+            raise e
 
     def _conditional_prescreen_outlets_exclusion(
         self, record: colrev.record.record.Record
     ) -> None:
         if not self.settings.OutletExclusionScope:
             return
+        # pylint: disable=unsupported-membership-test
         if "values" not in self.settings.OutletExclusionScope:
             return
 
+        # pylint: disable=unsubscriptable-object
         for resource in self.settings.OutletExclusionScope["values"]:
             for key, value in resource.items():
                 if key in record.data and record.data.get(key, "") == value:
@@ -156,11 +169,14 @@ class ScopePrescreen:
             return
 
         in_outlet_scope = False
-        if "values" in self.settings.OutletInclusionScope:
-            for outlet in self.settings.OutletInclusionScope["values"]:
-                for key, value in outlet.items():
-                    if key in record.data and record.data.get(key, "") == value:
-                        in_outlet_scope = True
+        # pylint: disable=unsubscriptable-object
+        # pylint: disable=unsupported-membership-test
+        if self.settings.OutletInclusionScope:
+            if "values" in self.settings.OutletInclusionScope:
+                for outlet in self.settings.OutletInclusionScope["values"]:
+                    for key, value in outlet.items():
+                        if key in record.data and record.data.get(key, "") == value:
+                            in_outlet_scope = True
         if not in_outlet_scope:
             record.prescreen_exclude(reason="not in OutletInclusionScope")
 
@@ -201,6 +217,19 @@ class ScopePrescreen:
         if record.data["journal_ranking"] == "not included in a ranking":
             record.set_status(RecordState.rev_prescreen_excluded)
 
+    def _conditional_presecreen_languages(
+        self, record: colrev.record.record.Record
+    ) -> None:
+        if not self.settings.LanguageScope:
+            return
+
+        if Fields.LANGUAGE not in record.data:
+            return
+
+        # pylint: disable=unsupported-membership-test
+        if record.data[Fields.LANGUAGE] not in self.settings.LanguageScope:
+            record.prescreen_exclude(reason="not in LanguageScope")
+
     def _conditional_prescreen(
         self,
         *,
@@ -220,6 +249,7 @@ class ScopePrescreen:
         self._conditional_prescreen_timescope(record=record)
         self._conditional_prescreen_complementary_materials(record=record)
         self._conditional_presecreen_not_in_ranking(record=record)
+        self._conditional_presecreen_languages(record=record)
 
         if record.data[Fields.STATUS] == RecordState.rev_prescreen_excluded:
             self.review_manager.report_logger.info(
@@ -239,10 +269,37 @@ class ScopePrescreen:
     def add_endpoint(cls, *, operation: colrev.ops.search.Search, params: str) -> None:
         """Add  the scope_prescreen as an endpoint"""
 
-        params_dict = {}
+        if not params:
+            print("Interactive mode not yet implemented.")
+            return
+
+        def parse_value(
+            key: str, value: str
+        ) -> typing.Union[str, int, bool, list, dict]:
+            if key == "ExcludePredatoryJournals":
+                return_value = value == "True"
+            elif key in ["TimeScopeTo", "TimeScopeFrom"]:
+                return_value = int(value)  # type: ignore
+            elif key == "LanguageScope":
+                return_value = value.split(",")  # type: ignore
+            elif key == "ExcludeComplementaryMaterials":
+                return_value = value == "True"
+            elif key in ["OutletInclusionScope", "OutletExclusionScope"]:
+                return_value = {  # type: ignore
+                    x.split(":")[0]: x.split(":")[1] for x in value.split(",")
+                }
+            elif key == "ENTRYTYPEScope":
+                return_value = value.split(",")  # type: ignore
+            elif key == "RequireRankedJournals":
+                return_value = value.split(",")  # type: ignore
+            else:
+                return_value = value  # type: ignore
+            return return_value
+
+        params_dict: dict[str, typing.Any] = {}
         for p_el in params.split(";"):
             key, value = p_el.split("=")
-            params_dict[key] = value
+            params_dict[key] = parse_value(key, value)
 
         for (
             existing_scope_prescreen
@@ -260,7 +317,8 @@ class ScopePrescreen:
                     operation.review_manager.logger.info(
                         f"Replacing {key} ({existing_scope_prescreen[key]} -> {value})"
                     )
-                existing_scope_prescreen[key] = value
+
+                existing_scope_prescreen[key] = parse_value(key, value)
             return
 
         # Insert (if not added before)

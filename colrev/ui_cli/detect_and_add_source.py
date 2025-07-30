@@ -7,9 +7,12 @@ from pathlib import Path
 
 import inquirer
 
-import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import EndpointType
+
+if typing.TYPE_CHECKING:
+    import colrev.settings
+    import colrev.ops.search
 
 # pylint: disable=too-few-public-methods
 
@@ -35,6 +38,8 @@ class CLISourceAdder:
             )
             for heuristic_source in source_candidates
         ]
+        # sort choices by confidence
+        choices.sort(key=lambda x: x[1]["confidence"], reverse=True)
         questions = [
             inquirer.List(
                 "source",
@@ -61,13 +66,16 @@ class CLISourceAdder:
                 f"Selected {heuristic_source_dict['source_candidate'].endpoint}"
             )
 
+        candidate: colrev.settings.SearchSource = heuristic_source_dict[
+            "source_candidate"
+        ]
         search_source_class = self.package_manager.get_package_endpoint_class(
             package_type=EndpointType.search_source,
-            package_identifier=heuristic_source_dict["source_candidate"].endpoint,
+            package_identifier=candidate.endpoint,
         )
         endpoint = search_source_class(
             source_operation=self,
-            settings=heuristic_source_dict["source_candidate"].get_dict(),
+            settings=candidate.model_dump(),
         )
 
         params = f"search_file={filename}"

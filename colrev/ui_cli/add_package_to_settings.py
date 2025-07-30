@@ -87,7 +87,8 @@ def add_package_to_settings(
     else:
         add_package = {"endpoint": package_identifier}
         endpoints_in_settings.append(add_package)  # type: ignore
-        operation.review_manager.save_settings()
-        operation.review_manager.dataset.create_commit(
-            msg=f"Add {operation.type} {package_identifier}",
-        )
+
+    operation.review_manager.save_settings()
+    operation.review_manager.dataset.create_commit(
+        msg=f"Add {operation.type} {package_identifier}",
+    )

@@ -6,10 +6,14 @@ import typing
 
 from pydantic import BaseModel
 
-import colrev.process.operation
+import colrev.loader.load_utils
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.process.model import ProcessModel
+
+if typing.TYPE_CHECKING:
+    import colrev.review_manager
+    import colrev.record.record
 
 
 class StatusStatsCurrently(BaseModel):
@@ -212,6 +216,17 @@ def _get_md_retrieved(sources: list) -> int:
     return md_retrieved
 
 
+def _get_currently_md_retrieved(origin_states_dict: dict, md_retrieved: int) -> int:
+
+    # select records that are not md_ records
+    # (origin_states_dict only has records beyond md_retrieved)
+    non_md_records = {
+        k: v for k, v in origin_states_dict.items() if not k.startswith("md_")
+    }
+
+    return md_retrieved - len(non_md_records)
+
+
 def _get_status_stats_overall(
     status_list: list, records: dict, md_retrieved: int
 ) -> StatusStatsOverall:
@@ -362,7 +377,9 @@ def get_status_stats(
         status_list, records, screening_statistics, md_retrieved
     )
     overall = _get_status_stats_overall(status_list, records, md_retrieved)
-    currently.md_retrieved = currently.md_retrieved - overall.md_imported
+    currently.md_retrieved = _get_currently_md_retrieved(
+        origin_states_dict, md_retrieved
+    )
     nr_curated_records = _get_nr_curated_records(
         records, review_manager.settings.is_curated_masterdata_repo(), overall
     )
@@ -533,4 +550,4 @@ class StatusStats(BaseModel):
     def get_operation_in_progress(self, *, transitioned_records: list) -> set:
         """Get the operation currently in progress"""
 
-        return {x["type"] for x in transitioned_records}
+        return {str(x["type"]) for x in transitioned_records}

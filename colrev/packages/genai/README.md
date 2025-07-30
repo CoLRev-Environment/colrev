@@ -2,35 +2,39 @@
 
 ## Installation
 
-To install the dependencies of `colrev.genai`, run
+To install the dependencies of ``colrev.genai``, run
+
 ```
 pip install colrev[colrev.genai]
+```
+
+To set the open-AI key, run
+
+```
+export OPENAI_API_KEY="your_api_key_here"
 ```
 
 ## prescreen
 
 Note: This document is currently under development. It will contain the following elements.
 
-- description
-- example
+* description
+* example
 
 ```
-colrev settings -m "prescreen.prescreen_package_endpoints=[{'endpoint': 'colrev.genai'}]"
+colrev prescreen --add colrev.genai
 ```
 
 ## screen
 
 Note: This document is currently under development. It will contain the following elements.
 
-- description
-- example
+* description
+* example
 
 ```
-colrev settings -m "screen.screen_package_endpoints=[{'endpoint': 'colrev.genai'}]"
+colrev screen --add colrev.genai
 ```
-
-## Links
-
 
 ## References
 

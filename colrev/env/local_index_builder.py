@@ -27,11 +27,9 @@ import colrev.ops.check
 import colrev.record.record
 import colrev.review_manager
 from colrev.constants import Colors
-from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import LocalIndexFields
-from colrev.constants import RecordState
 from colrev.env.local_index_prep import prepare_record_for_indexing
 from colrev.writer.write_utils import to_string
 
@@ -78,36 +76,12 @@ class LocalIndexBuilder:
             return True
         return False
 
-    def _drop_toc_item(
-        self, *, toc_to_index: dict, copy_for_toc_index: dict, curated_masterdata: bool
-    ) -> None:
-        if not curated_masterdata or copy_for_toc_index.get(
-            Fields.ENTRYTYPE, ""
-        ) not in [
-            ENTRYTYPES.ARTICLE,
-            ENTRYTYPES.INPROCEEDINGS,
-        ]:
-            return
-
-        toc_item = colrev.record.record.Record(copy_for_toc_index).get_toc_key()
-        # Note : drop (do not index) tocs where records are missing
-        # otherwise, record-not-in-toc will be triggered erroneously.
-        drop_toc = copy_for_toc_index[
-            Fields.STATUS
-        ] not in RecordState.get_post_x_states(state=RecordState.md_processed)
-        try:
-            colrev_id = colrev.record.record.Record(copy_for_toc_index).get_colrev_id(
-                assume_complete=True
-            )
-        except colrev_exceptions.NotEnoughDataToIdentifyException:
-            drop_toc = True
-        if drop_toc:
-            toc_to_index[toc_item] = "DROPPED"
-        elif toc_to_index.get("toc_item", "") != "DROPPED":
-            if toc_item in toc_to_index:
-                toc_to_index[toc_item] += f";{colrev_id}"
-            else:
-                toc_to_index[toc_item] = colrev_id
+    def _drop_toc_item(self, *, toc_to_index: dict, curated_masterdata: bool) -> None:
+        toc_keys = list(toc_to_index.keys())
+        for toc_key in toc_keys:
+            if not curated_masterdata:
+                toc_to_index.pop(toc_key)
+                continue
 
     def _add_index_records(self, *, recs_to_index: list, curated_fields: list) -> None:
         list_to_add = [
@@ -207,6 +181,7 @@ class LocalIndexBuilder:
         toc_to_index: typing.Dict[str, str] = {}
         for record_dict in tqdm(records.values()):
             copy_for_toc_index = deepcopy(record_dict)
+            toc_item = colrev.record.record.Record(copy_for_toc_index).get_toc_key()
             try:
                 record_dict[Fields.METADATA_SOURCE_REPOSITORY_PATHS] = str(
                     repo_source_path
@@ -233,20 +208,31 @@ class LocalIndexBuilder:
                 record_dict = prepare_record_for_indexing(record_dict)
                 recs_to_index.append(record_dict)
 
+                colrev_id = colrev.record.record.Record(
+                    copy_for_toc_index
+                ).get_colrev_id(assume_complete=True)
+                if toc_item in toc_to_index:
+                    toc_to_index[toc_item] += f";{colrev_id}"
+                else:
+                    toc_to_index[toc_item] = colrev_id
+
             except (
                 colrev_exceptions.RecordNotIndexableException,
                 colrev_exceptions.NotTOCIdentifiableException,
                 colrev_exceptions.NotEnoughDataToIdentifyException,
             ) as exc:
+                if toc_item in toc_to_index:
+                    toc_to_index[toc_item] += ";DROPPED"
+                else:
+                    toc_to_index[toc_item] = "DROPPED"
+
                 if self.verbose_mode:
                     print(exc)
-                    print(record_dict)
-            finally:
-                self._drop_toc_item(
-                    toc_to_index=toc_to_index,
-                    copy_for_toc_index=copy_for_toc_index,
-                    curated_masterdata=curated_masterdata,
-                )
+
+        self._drop_toc_item(
+            toc_to_index=toc_to_index,
+            curated_masterdata=curated_masterdata,
+        )
         # Select fields and insert into index (sqlite)
 
         self._index_tei_document(recs_to_index)
@@ -386,12 +372,13 @@ class LocalIndexBuilder:
                 if not tei_path.is_file():
                     print(f"Create tei for {record_dict[Fields.FILE]}")
                 tei = colrev.env.tei_parser.TEIParser(
-                    environment_manager=self.environment_manager,
                     pdf_path=Path(record_dict[Fields.FILE]),
                     tei_path=tei_path,
                 )
                 record_dict[LocalIndexFields.TEI] = str(tei_path)
                 record_dict[Fields.FULLTEXT] = tei.get_tei_str()
+                if record_dict.get(Fields.ABSTRACT, "") == "":
+                    record_dict[Fields.ABSTRACT] = tei.get_abstract()
 
             except (
                 colrev_exceptions.TEIException,

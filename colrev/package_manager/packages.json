@@ -38,7 +38,7 @@
     "colrev.ocrmypdf": {
         "dev_status": "maturing"
     },
-    "colrev.sync": {
+    "colrev-sync": {
         "dev_status": "experimental"
     },
     "colrev.web_of_science": {
@@ -269,10 +269,28 @@
     "colrev.github": {
         "dev_status": "maturing"
     },
+    "colrev.ref_check": {
+        "dev_status": "experimental"
+    },
+    "colrev-scidb": {
+        "dev_status": "experimental"
+    },
+    "colrev.prospero": {
+        "dev_status": "experimental"
+    },
+    "colrev.plos": {
+        "dev_status": "experimental"
+    },
     "colrev.genai": {
         "dev_status": "experimental"
     },
     "colrev.importer": {
+        "dev_status": "experimental"
+    },
+    "colrev.cli_prep_man": {
+        "dev_status": "experimental"
+    },
+    "colrev.enlit": {
         "dev_status": "experimental"
     }
 }

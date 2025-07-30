@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime
 
 import sphinx_rtd_theme
 
@@ -32,8 +33,8 @@ sys.path.insert(
 # -- Project information -----------------------------------------------------
 
 project = "CoLRev"
-copyright = "2023, Gerit Wagner and Julian Prester"
 author = "Gerit Wagner and Julian Prester"
+copyright = f"{datetime.now().year}, {author}"
 
 # The full version, including alpha/beta/rc tags
 release = colrev_version
@@ -52,7 +53,6 @@ extensions = [
     "sphinx_click",
     "sphinxcontrib.datatemplates",
     "sphinx_collapse",
-    "repoze.sphinx.autointerface",
     "sphinx_design",
     "sphinx_copybutton",
 ]

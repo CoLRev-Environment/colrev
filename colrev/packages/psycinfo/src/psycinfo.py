@@ -2,12 +2,12 @@
 """SearchSource: PsycINFO"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
-import zope.interface
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -20,8 +20,7 @@ from colrev.constants import SearchType
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class PsycINFOSearchSource:
+class PsycINFOSearchSource(base_classes.SearchSourcePackageBaseClass):
     """PsycINFO"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
@@ -65,9 +64,11 @@ class PsycINFOSearchSource:
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
+        params_dict = {params.split("=")[0]: params.split("=")[1]}
+
         search_source = operation.create_db_source(
             search_source_cls=cls,
-            params={},
+            params=params_dict,
         )
         operation.add_source_and_search(search_source)
         return search_source
@@ -94,7 +95,8 @@ class PsycINFOSearchSource:
         """Not implemented"""
         return record
 
-    def _load_ris(self) -> dict:
+    @classmethod
+    def _load_ris(cls, *, filename: Path, logger: logging.Logger) -> dict:
         def entrytype_setter(record_dict: dict) -> None:
             if record_dict["TY"] == "JOUR":
                 record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
@@ -163,20 +165,21 @@ class PsycINFOSearchSource:
                 record_dict[key] = str(value)
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             unique_id_field="ID",
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
         )
 
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".ris":
-            return self._load_ris()
+        if filename.suffix == ".ris":
+            return cls._load_ris(filename=filename, logger=logger)
 
         raise NotImplementedError
 

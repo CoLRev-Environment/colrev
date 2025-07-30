@@ -20,3 +20,52 @@ The package interfaces are documented :doc:`here </dev_docs/packages>`.
    :recursive:
 
    colrev
+
+**Interfaces**
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   colrev.ui_cli
+   colrev.hooks
+
+**High-level (project)**
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   colrev.review_manager
+   colrev.settings
+   colrev.ops
+   colrev.process
+   colrev.dataset
+
+**High-level (environment)**
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   colrev.env
+   colrev.package_manager
+
+**Low-level**
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+
+   colrev.constants
+   colrev.logger
+   colrev.exceptions
+   colrev.paths
+   colrev.loader
+   colrev.writer
+   colrev.record

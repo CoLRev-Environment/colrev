@@ -40,6 +40,8 @@ class EPMCAPI:
             return
 
         root = etree.fromstring(str.encode(ret.text))
+        if not root.findall("resultList"):
+            return
         result_list = root.findall("resultList")[0]
         for result_item in result_list.findall("result"):
             retrieved_record = self._europe_pmc_xml_to_record(item=result_item)

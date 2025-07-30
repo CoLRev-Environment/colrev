@@ -2,15 +2,15 @@
 """SearchSource: IEEEXplore"""
 from __future__ import annotations
 
+import logging
 import typing
 from pathlib import Path
 
 import pandas as pd
-import zope.interface
 from pydantic import Field
 
 import colrev.ops.prep
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.ieee.src.ieee_api
@@ -25,8 +25,7 @@ from colrev.constants import SearchType
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.SearchSourceInterface)
-class IEEEXploreSearchSource:
+class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
     """IEEEXplore"""
 
     flag = True
@@ -136,6 +135,8 @@ class IEEEXploreSearchSource:
                     search_parameters=search_parameters,
                     comment="",
                 )
+            else:
+                raise NotImplementedError
 
         elif search_type == SearchType.DB:
             search_source = operation.create_db_source(
@@ -209,7 +210,8 @@ class IEEEXploreSearchSource:
         """Not implemented"""
         return record
 
-    def _load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def _load_ris(cls, *, filename: Path, logger: logging.Logger) -> dict:
         def entrytype_setter(record_dict: dict) -> None:
             if record_dict["TY"] == "JOUR":
                 record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
@@ -289,18 +291,24 @@ class IEEEXploreSearchSource:
             for key, value in record_dict.items():
                 record_dict[key] = str(value)
 
-        load_operation.ensure_append_only(self.search_source.filename)
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             unique_id_field="INCREMENTAL",
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
+            format_names=True,
         )
 
         return records
 
-    def _load_csv(self) -> dict:
+    @classmethod
+    def ensure_append_only(cls, filename: Path) -> bool:
+        """Ensure that the SearchSource file is append-only"""
+        return filename.suffix in [".ris"]
+
+    @classmethod
+    def _load_csv(cls, *, filename: Path, logger: logging.Logger) -> dict:
         def entrytype_setter(record_dict: dict) -> None:
             if record_dict["Category"] == "Magazine":
                 record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
@@ -330,22 +338,23 @@ class IEEEXploreSearchSource:
                     del record_dict[key]
 
         records = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filename=filename,
             unique_id_field="DOI",
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
-            logger=self.review_manager.logger,
+            logger=logger,
         )
         return records
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+    @classmethod
+    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".ris":
-            return self._load_ris(load_operation)
+        if filename.suffix == ".ris":
+            return cls._load_ris(filename=filename, logger=logger)
 
-        if self.search_source.filename.suffix == ".csv":
-            return self._load_csv()
+        if filename.suffix == ".csv":
+            return cls._load_csv(filename=filename, logger=logger)
 
         raise NotImplementedError
 

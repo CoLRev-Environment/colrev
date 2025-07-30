@@ -7,9 +7,11 @@ import typing
 from multiprocessing import Lock
 from pathlib import Path
 
-import colrev.record.qm.checkers
 import colrev.record.record
 from colrev.constants import Fields
+
+if typing.TYPE_CHECKING:
+    import colrev.record.record_pdf
 
 
 class QualityModel:
@@ -84,7 +86,7 @@ class QualityModel:
             ):
                 # The following should be improved.
                 record = colrev.record.record_pdf.PDFRecord(record.data, path=self.path)
-                record.set_text_from_pdf()
+                record.set_text_from_pdf(first_pages=True)
 
         for checker in self.checkers:
             if checker.msg in self.defects_to_ignore:

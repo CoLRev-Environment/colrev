@@ -37,10 +37,6 @@ Install the following tools mandatory for CoLRev (using the shell / ``Ctrl``\ +\
    sudo apt install python3-full
    sudo apt install python-is-python3
    sudo apt install python3-pip
-.. these lines are obsolete/redundant, will get handled later by "$ pip install -e .[dev,docs]"
-   python3 -m pip install --upgrade pip
-   python3 -m pip install poetry
-   python3 -m pip install --upgrade paramiko
 
 .. note::
    In the following, we assume that the ``colrev`` directory and the ``test`` directory are located on the Desktop. If you have chosen a different location, please adjust the paths accordingly.
@@ -71,14 +67,15 @@ Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt
 
 ::
 
-   # Install CoLRev
+   # Install CoLRev and additional CoLRev packages
    cd ~/Desktop/colrev
    pip install -e .[dev,docs]
-   pre-commit install
+   colrev install all_internal_packages
 
 ::
 
-   # Run the pre-commit hooks
+   # Install and run the pre-commit hooks
+   pre-commit install
    pre-commit run --all
 
 ::

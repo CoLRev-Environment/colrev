@@ -13,12 +13,8 @@ from git.exc import GitCommandError
 
 import colrev.env.environment_manager
 import colrev.env.local_index_sqlite
-import colrev.env.resources
-import colrev.env.tei_parser
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
-import colrev.ops.check
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -236,6 +232,11 @@ class LocalIndex:
                     continue
 
                 return prepare_record_for_return(record_dict, include_file=include_file)
+
+            if "DROPPED" in toc_items:
+                raise colrev_exceptions.RecordNotInIndexException(
+                    record.data[Fields.ID]
+                )
             raise colrev_exceptions.RecordNotInTOCException(
                 record_id=record.data[Fields.ID], toc_key=toc_key
             )

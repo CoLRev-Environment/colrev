@@ -9,7 +9,6 @@ from multiprocessing import Value
 
 from requests.exceptions import ConnectionError as requests_ConnectionError
 
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.prep
 import colrev.process.operation
@@ -18,7 +17,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 
 if typing.TYPE_CHECKING:  # pragma: no cover
-    import colrev.package_manager.interfaces
+    import colrev.package_manager.package_base_classes as base_classes
     import colrev.review_manager
 
 # logging.getLogger("urllib3").setLevel(logging.ERROR)
@@ -55,7 +54,7 @@ class PrepDebug(colrev.ops.prep.Prep):
         *,
         prior: colrev.record.record_prep.PrepRecord,
         preparation_record: colrev.record.record_prep.PrepRecord,
-        prep_package_endpoint: colrev.package_manager.interfaces.PrepInterface,
+        prep_package_endpoint: base_classes.PrepPackageBaseClass,
     ) -> None:
 
         diffs = prior.get_diff(preparation_record)

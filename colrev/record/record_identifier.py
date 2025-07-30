@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Functionality to identify records."""
+"""Record identifier."""
 from __future__ import annotations
 
 import logging
@@ -193,6 +193,9 @@ def get_colrev_id(record: colrev.record.record.Record, *, assume_complete: bool)
 
 
 def _get_colrev_pdf_id_cpid2(pdf_path: Path) -> str:
+    # assert  pymupdf>=1.24.3,<=1.25.3
+    assert pymupdf.__version__ <= "1.25.3", "for pymupdf>1.25.3, use cpid3"
+
     with tempfile.NamedTemporaryFile(suffix=".png") as temp_file:
         file_name = temp_file.name
         try:
@@ -218,7 +221,11 @@ def get_colrev_pdf_id(pdf_path: Path, *, cpid_version: str = "cpid2") -> str:
     """Get the PDF hash"""
 
     pdf_path = pdf_path.resolve()
-    if 0 == os.path.getsize(pdf_path):
+    try:
+        file_size = os.path.getsize(pdf_path)
+    except FileNotFoundError as exc:
+        raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
+    if 0 == file_size:
         logging.error("%sPDF with size 0: %s %s", Colors.RED, pdf_path, Colors.END)
         raise colrev_exceptions.InvalidPDFException(path=pdf_path)
 

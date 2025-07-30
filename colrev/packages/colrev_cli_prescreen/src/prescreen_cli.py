@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import textwrap
 
-import zope.interface
 from pydantic import Field
 
-import colrev.package_manager.interfaces
+import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -19,8 +18,7 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.package_manager.interfaces.PrescreenInterface)
-class CoLRevCLIPrescreen:
+class CoLRevCLIPrescreen(base_classes.PrescreenPackageBaseClass):
     """CLI-based prescreen"""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
@@ -78,21 +76,6 @@ class CoLRevCLIPrescreen:
         stat_len: int,
         padding: int,
     ) -> bool:
-        if self.review_manager.settings.prescreen.explanation == "":
-            print(
-                f"\n{Colors.ORANGE}Provide a short explanation of the prescreen{Colors.END} "
-                "(why should particular papers be included?):"
-            )
-            print(
-                'Example objective: "Include papers that focus on digital technology."'
-            )
-            self.review_manager.settings.prescreen.explanation = input("")
-            self.review_manager.save_settings()
-        else:
-            print("\nIn the prescreen, the following process is followed:\n")
-            print("   " + self.review_manager.settings.prescreen.explanation)
-            print()
-
         self.review_manager.logger.debug("Start prescreen")
 
         if 0 == stat_len:
