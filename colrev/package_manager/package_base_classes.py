@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 """Package interfaces."""
 from __future__ import annotations
-import logging
 
 import abc
+import logging
 import typing
 from abc import ABC
 from abc import abstractmethod
