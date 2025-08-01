@@ -36,8 +36,10 @@ class GrobidService:
                 if ret.text == "true":
 
                     # Get and print the GROBID version via HTTP request
-                    response = requests.get(self.GROBID_URL + "/api/version", timeout=10)
-                    running_version = response.json()['version']
+                    response = requests.get(
+                        self.GROBID_URL + "/api/version", timeout=10
+                    )
+                    running_version = response.json()["version"]
                     # print(f"GROBID service version: {running_version}")
                     if running_version != self.GROBID_IMAGE.split(":")[1]:
                         logging.warning(

@@ -11,7 +11,6 @@ import colrev.exceptions as colrev_exceptions
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import requests
 
 # pylint: disable=line-too-long
 # pylint: disable=too-many-lines
