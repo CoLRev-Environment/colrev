@@ -118,6 +118,7 @@ def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
         {"surname": "Paré", "forename": "Guy"},
     ] == tei_doc.get_author_details()
 
+
 @pytest.mark.skipif(
     platform.system() != "Linux", reason="Docker tests only run on Linux runners"
 )
@@ -130,7 +131,9 @@ def test_tei_reference_extraction(tei_doc, helpers) -> None:  # type: ignore
         with open(helpers.test_data_path / expected_file, encoding="utf-8") as file:
             expected = json.load(file)
     except FileNotFoundError as exc:
-        with open(helpers.test_data_path / expected_file, "w", encoding="utf-8") as file:
+        with open(
+            helpers.test_data_path / expected_file, "w", encoding="utf-8"
+        ) as file:
             json.dump(actual, file, indent=4)
         raise Exception(
             f"The expected_file ({expected_file.name}) was not (yet) available. "
@@ -139,7 +142,9 @@ def test_tei_reference_extraction(tei_doc, helpers) -> None:  # type: ignore
         ) from exc
 
     if expected != actual:
-        with open(helpers.test_data_path / expected_file, "w", encoding="utf-8") as file:
+        with open(
+            helpers.test_data_path / expected_file, "w", encoding="utf-8"
+        ) as file:
             json.dump(actual, file, indent=4)
     assert expected == actual
 
@@ -156,7 +161,9 @@ def test_tei_citations_per_section(tei_doc, helpers, tmp_path) -> None:  # type:
         with open(helpers.test_data_path / expected_file, encoding="utf-8") as file:
             expected = json.load(file)
     except FileNotFoundError as exc:
-        with open(helpers.test_data_path / expected_file, "w", encoding="utf-8") as file:
+        with open(
+            helpers.test_data_path / expected_file, "w", encoding="utf-8"
+        ) as file:
             json.dump(actual, file, indent=4)
         raise Exception(
             f"The expected_file ({expected_file.name}) was not (yet) available. "
@@ -165,9 +172,12 @@ def test_tei_citations_per_section(tei_doc, helpers, tmp_path) -> None:  # type:
         ) from exc
 
     if expected != actual:
-        with open(helpers.test_data_path / expected_file, "w", encoding="utf-8") as file:
+        with open(
+            helpers.test_data_path / expected_file, "w", encoding="utf-8"
+        ) as file:
             json.dump(actual, file, indent=4)
     assert expected == actual
+
 
 @pytest.mark.skipif(
     platform.system() != "Linux", reason="Docker tests only run on Linux runners"
