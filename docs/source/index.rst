@@ -119,7 +119,6 @@ Our goal is to provide a manual that is self-contained. Yet, it can help to be f
 
 The manual is available under the `Creative Commons Attribution-NonCommercial-NoDerivs 3.0 License <https://creativecommons.org/licenses/by-nc-nd/3.0/us/>`_ and endorses the `Code of Conduct <https://www.contributor-covenant.org/version/2/0/code_of_conduct/>`_ for contributions.
 
-
 .. toctree::
    :hidden:
    :maxdepth: 2
@@ -142,6 +141,13 @@ The manual is available under the `Creative Commons Attribution-NonCommercial-No
    manual/collaboration
    manual/packages
    manual/appendix
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: Python
+
+   python/python_programmatic
 
 .. toctree::
    :hidden:
