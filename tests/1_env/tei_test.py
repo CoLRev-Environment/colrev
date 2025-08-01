@@ -64,7 +64,7 @@ def test_tei_creation(script_loc) -> None:  # type: ignore
 )
 def test_tei_version(tei_doc) -> None:  # type: ignore
     """Test the tei version"""
-    assert "0.8.3-SNAPSHOT" == tei_doc.get_grobid_version()
+    assert "0.8.2" == tei_doc.get_grobid_version()
 
 
 @pytest.mark.skipif(
@@ -83,7 +83,7 @@ def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
         Fields.ENTRYTYPE: ENTRYTYPES.MISC,
         Fields.AUTHOR: "Wagner, Gerit and Lukyanenko, Roman and Par, Guy and Paré, Guy",
         Fields.DOI: "10.1177/02683962211048201",
-        Fields.TITLE: "Debates and Perspectives Paper",
+        Fields.TITLE: "Artificial intelligence and the conduct of literature reviews",
     } == tei_doc.get_metadata()
 
     assert [
@@ -115,7 +115,7 @@ def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
 def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
     """Test the tei extraction of references"""
 
-    assert [
+    assert tei_doc.get_references(add_intext_citation_count=True) == [
         {
             Fields.ID: "b0",
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
@@ -192,11 +192,12 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
         },
         {
             Fields.ID: "b6",
-            Fields.ENTRYTYPE: ENTRYTYPES.BOOK,
+            Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
             Fields.TEI_ID: "b6",
             Fields.AUTHOR: "Antons, D. and Breidbach, C. F and Joshi, A. M",
             Fields.TITLE: "Computational literature reviews: method, algorithms, and roadmap",
             Fields.YEAR: "2021",
+            Fields.JOURNAL: "Organizational Research Methods",
             Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
@@ -294,7 +295,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.ID: "b14",
             Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
             Fields.TEI_ID: "b14",
-            Fields.AUTHOR: "Boell, S. K and Wang, B ; Kk and Wei, W. W and Huang,  and Lee, ",
+            Fields.AUTHOR: "Boell, S. K and Wang, B.",
             Fields.TITLE: "wwwlitbaskets.io, an IT artifact supporting exploratory literature searches for Information Systems research",
             Fields.BOOKTITLE: "Proceedings of the Pacific Asia conference on information systems",
             Fields.YEAR: "2019",
@@ -311,7 +312,6 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "MIS Quarterly",
             Fields.VOLUME: "45",
             Fields.NUMBER: "2",
-            Fields.PAGES: "iii--xviii",
             Fields.NR_INTEXT_CITATIONS: 3,
         },
         {
@@ -322,6 +322,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TITLE: "Identifying barriers to the systematic literature review process",
             Fields.BOOKTITLE: "ternational symposium on empirical software engineering and measurement",
             Fields.YEAR: "2013",
+            Fields.PAGES: "10--11",
             Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
@@ -388,7 +389,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TEI_ID: "b22",
             Fields.AUTHOR: "Dalgali, A. and Crowston, K.",
             Fields.TITLE: "Sharing open deep learning models",
-            Fields.BOOKTITLE: "Proceedings of the hawaii international conference on system sciences, Grand",
+            Fields.BOOKTITLE: "Proceedings of the hawaii international conference on system sciences",
             Fields.YEAR: "2019",
             Fields.NR_INTEXT_CITATIONS: 1,
         },
@@ -431,11 +432,10 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
         },
         {
             Fields.ID: "b26",
-            Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
+            Fields.ENTRYTYPE: ENTRYTYPES.BOOK,
             Fields.TEI_ID: "b26",
             Fields.AUTHOR: "Duboue, P.",
             Fields.TITLE: "The Art of Feature Engineering: Essentials for Machine Learning",
-            Fields.BOOKTITLE: "The Art of Feature Engineering: Essentials for Machine Learning",
             Fields.YEAR: "2020",
             Fields.NR_INTEXT_CITATIONS: 1,
         },
@@ -490,17 +490,18 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TEI_ID: "b31",
             Fields.AUTHOR: "Gleasure, R.",
             Fields.TITLE: "Conceptual design science research? How and why untested meta-artifacts have a place in IS",
-            Fields.BOOKTITLE: "Proceedings of the international conference on design science research in information systems and technology",
             Fields.YEAR: "2014",
+            Fields.BOOKTITLE: "Proceedings of the international conference on design science research in information systems and technology",
             Fields.PAGES: "99--114",
             Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b32",
-            Fields.ENTRYTYPE: ENTRYTYPES.BOOK,
+            Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
             Fields.TEI_ID: "b32",
             Fields.AUTHOR: "Goodfellow, I. and Bengio, Y. and Courville, A.",
             Fields.TITLE: "Deep Learning, Adaptive Computation and Machine Learning Series",
+            Fields.BOOKTITLE: "Deep Learning, Adaptive Computation and Machine Learning Series",
             Fields.YEAR: "2016",
             Fields.NR_INTEXT_CITATIONS: 1,
         },
@@ -523,8 +524,8 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TEI_ID: "b34",
             Fields.AUTHOR: "Hake, P. and Fettke, P. and Neumann, G.",
             Fields.TITLE: "Extracting business objects and activities from labels of German process models",
-            Fields.BOOKTITLE: "Proceedings of the international conference on design science research in information system and technology",
             Fields.YEAR: "2017",
+            Fields.BOOKTITLE: "Proceedings of the international conference on design science research in information system and technology",
             Fields.PAGES: "21--38",
             Fields.NR_INTEXT_CITATIONS: 1,
         },
@@ -560,7 +561,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TEI_ID: "b37",
             Fields.AUTHOR: "Hassan, N. R and Prester, J. and Wagner, G.",
             Fields.TITLE: "Seeking out clear and unique Information Systems Concepts: a natural language processing approach",
-            Fields.BOOKTITLE: "Proceedings of the European conference on information systems",
+            Fields.BOOKTITLE: "Proceedings of the European conference on information systems (eds MLF Rowe and R El Amrani)",
             Fields.YEAR: "2020",
             Fields.PAGES: "15--17",
             Fields.NR_INTEXT_CITATIONS: 1,
@@ -602,11 +603,10 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
         },
         {
             Fields.ID: "b41",
-            Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
+            Fields.ENTRYTYPE: ENTRYTYPES.BOOK,
             Fields.TEI_ID: "b41",
             Fields.AUTHOR: "Hunter, J. E and Schmidt, F. L",
-            Fields.TITLE: "Methods of Meta-Analysis: Correcting Error and Bias in Research Findings. 2nd edition",
-            Fields.BOOKTITLE: "Methods of Meta-Analysis: Correcting Error and Bias in Research Findings. 2nd edition",
+            Fields.TITLE: "Methods of Meta-Analysis: Correcting Error and Bias in Research Findings",
             Fields.YEAR: "2014",
             Fields.NR_INTEXT_CITATIONS: 1,
         },
@@ -621,7 +621,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "360",
             Fields.NUMBER: "6388",
             Fields.PAGES: "478--479",
-            Fields.NR_INTEXT_CITATIONS: 1,
+            Fields.NR_INTEXT_CITATIONS: 0,
         },
         {
             Fields.ID: "b43",
@@ -634,7 +634,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "359",
             Fields.NUMBER: "6377",
             Fields.PAGES: "725--726",
-            Fields.NR_INTEXT_CITATIONS: 1,
+            Fields.NR_INTEXT_CITATIONS: 0,
         },
         {
             Fields.ID: "b44",
@@ -649,11 +649,14 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
         },
         {
             Fields.ID: "b45",
-            Fields.ENTRYTYPE: ENTRYTYPES.BOOK,
+            Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
             Fields.TEI_ID: "b45",
             Fields.AUTHOR: "Johnson, C. D and Bauer, B. C and Niederman, F.",
+            Fields.TITLE: "The Automation of Management and Business Science",
             Fields.YEAR: "2019",
-            Fields.TITLE: "The Automation of Management and Business Science. Academy of Management Perspectives",
+            Fields.JOURNAL: "Academy of Management Perspectives",
+            Fields.VOLUME: "35",
+            Fields.NUMBER: "2",
             Fields.PAGES: "292--309",
             Fields.NR_INTEXT_CITATIONS: 4,
         },
@@ -709,7 +712,6 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.YEAR: "2009",
             Fields.JOURNAL: "Science",
             Fields.VOLUME: "324",
-            Fields.NUMBER: "5923",
             Fields.PAGES: "85--89",
             Fields.NR_INTEXT_CITATIONS: 2,
         },
@@ -743,7 +745,6 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TITLE: "Darpa Is Funding Projects that Will Try to Open up AI's Black Boxes",
             Fields.YEAR: "2017",
             Fields.JOURNAL: "MIT Technology Review",
-            Fields.VOLUME: "25",
             Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
@@ -1018,7 +1019,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TEI_ID: "b76",
             Fields.AUTHOR: "Müller-Bloch, C. and Kranz, J.",
             Fields.TITLE: "A framework for rigorously identifying research gaps in qualitative literature reviews",
-            Fields.BOOKTITLE: "Proceedings of the international conference on information systems",
+            Fields.BOOKTITLE: "Proceedings of the international conference on information systems (eds T Carte, A Heinzl and C Urquhart)",
             Fields.YEAR: "2015",
             Fields.NR_INTEXT_CITATIONS: 2,
         },
@@ -1182,7 +1183,6 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "MIS Quarterly",
             Fields.VOLUME: "38",
             Fields.NUMBER: "2",
-            Fields.PAGES: "iii--xiv",
             Fields.NR_INTEXT_CITATIONS: 3,
         },
         {
@@ -1199,11 +1199,11 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
             Fields.TEI_ID: "b91",
             Fields.AUTHOR: "Shokraneh, Russell-Rose T And and , F.",
-            Fields.TITLE: "Dsearch: Facilitating reproducible and valid searching in evidence synthesis",
+            Fields.TITLE: "2Dsearch: Facilitating reproducible and valid searching in evidence synthesis",
             Fields.YEAR: "2019",
             Fields.JOURNAL: "BMJ Evidence-Based Medicine",
             Fields.VOLUME: "24",
-            Fields.NUMBER: "2",
+            Fields.NUMBER: "Suppl 1",
             Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
@@ -1335,10 +1335,11 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
         },
         {
             Fields.ID: "b102",
-            Fields.ENTRYTYPE: ENTRYTYPES.BOOK,
+            Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
             Fields.TEI_ID: "b102",
             Fields.AUTHOR: "Taulli, T. and Oni, M.",
-            Fields.TITLE: "Artificial Intelligence Basics. 1st edition",
+            Fields.TITLE: "Artificial Intelligence Basics",
+            Fields.BOOKTITLE: "Artificial Intelligence Basics",
             Fields.YEAR: "2019",
             Fields.NR_INTEXT_CITATIONS: 1,
         },
@@ -1442,9 +1443,9 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
             Fields.TEI_ID: "b111",
             Fields.AUTHOR: "Vom Brocke, J. and Simons, A. and Riemer, K.",
-            Fields.TITLE: "Standing on the shoulders of giants: challenges and recommendations of literature search in information systems research. Communications of the Association for",
+            Fields.TITLE: "Standing on the shoulders of giants: challenges and recommendations of literature search in information systems research",
             Fields.YEAR: "2015",
-            Fields.JOURNAL: "Information Systems",
+            Fields.JOURNAL: "Communications of the Association for Information Systems",
             Fields.VOLUME: "37",
             Fields.NUMBER: "9",
             Fields.PAGES: "205--224",
@@ -1519,7 +1520,6 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "MIS Quarterly",
             Fields.VOLUME: "26",
             Fields.NUMBER: "2",
-            Fields.PAGES: "xiii--xxiii",
             Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
@@ -1548,7 +1548,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.PAGES: "777--794",
             Fields.NR_INTEXT_CITATIONS: 1,
         },
-    ] == tei_doc.get_references(add_intext_citation_count=True)
+    ]
 
 
 @pytest.mark.skipif(
@@ -1739,11 +1739,9 @@ def test_tei_citations_per_section(tei_doc, tmp_path) -> None:  # type: ignore
             "b21",
             "b18",
             "b39",
-            "b42",
             "b4",
             "b26",
             "b17",
-            "b43",
             "b46",
             "b21",
             "b18",
