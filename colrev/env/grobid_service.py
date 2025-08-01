@@ -16,11 +16,13 @@ class GrobidService:
 
     GROBID_URL = "http://localhost:8070"
     GROBID_IMAGE = "lfoppiano/grobid:latest-crf"
+    GROBID_IMAGE = "lfoppiano/grobid:0.8.2"
 
     def __init__(self) -> None:
         colrev.env.docker_manager.DockerManager.build_docker_image(
             imagename=self.GROBID_IMAGE
         )
+
         self.start()
         self.check_grobid_availability()
 
@@ -35,14 +37,16 @@ class GrobidService:
                 if ret.text == "true":
 
                     # Get and print the GROBID version via HTTP request
-                    version_resp = requests.get(self.GROBID_URL + "/api/version", timeout=10)
-                    print(f"GROBID service version: {version_resp.text}")
-                    if version_resp.text != self.GROBID_IMAGE.split(":")[1]:
+                    response = requests.get(self.GROBID_URL + "/api/version", timeout=10)
+                    running_version = response.json()['version']
+                    # print(f"GROBID service version: {running_version}")
+                    if running_version != self.GROBID_IMAGE.split(":")[1]:
                         logging.warning(
-                            "GROBID version mismatch: expected %s, got %s",
+                            "GROBID version mismatch. Expected: %s, currently running: %s",
                             self.GROBID_IMAGE.split(":")[1],
-                            version_resp.text,
+                            running_version,
                         )
+                        raise Exception
 
                     return True
             except requests.exceptions.ConnectionError:
