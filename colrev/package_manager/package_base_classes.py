@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import abc
+import logging
 import typing
 from abc import ABC
 from abc import abstractmethod
-import logging
 from pathlib import Path
 from typing import Type
 
