@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 """SearchSource: Scopus"""
 
 from __future__ import annotations
