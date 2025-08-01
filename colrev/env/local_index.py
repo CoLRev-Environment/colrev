@@ -393,3 +393,11 @@ class LocalIndex:
                     return fields_to_remove
 
         return fields_to_remove
+
+    def get_curations(self) -> list[Path]:
+        """Get the directories of curations"""
+        return [
+            Path(x["repo_source_path"])
+            for x in self.environment_manager.local_repos()
+            if "curated_metadata" in x["repo_source_path"]
+        ]
