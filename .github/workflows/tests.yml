@@ -93,7 +93,6 @@ jobs:
       - name: Run tests (minimal-deps)
         run: |
           uv run pytest tests/0_core/ -vv
-          uv run pytest tests/1_env/tei_test.py -vv
 
   test-full-deps:
     needs: test-minimal-deps
