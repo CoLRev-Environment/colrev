@@ -46,7 +46,7 @@ PDF: text and tei
     input(record[Fields.TEXT_FROM_PDF])
 
     import colrev.env.tei_parser
-    
+
 
     tei = colrev.env.tei_parser.TEIParser(
         pdf_path=pdf_path,
