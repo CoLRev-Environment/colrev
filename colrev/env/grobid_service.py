@@ -15,8 +15,7 @@ class GrobidService:
     """An environment service for machine readability/annotation (PDF to TEI conversion)"""
 
     GROBID_URL = "http://localhost:8070"
-    GROBID_IMAGE = "lfoppiano/grobid:latest-crf"
-    # GROBID_IMAGE = "lfoppiano/grobid:0.8.2"
+    GROBID_IMAGE = "lfoppiano/grobid:0.8.2"
 
     def __init__(self) -> None:
         colrev.env.docker_manager.DockerManager.build_docker_image(
