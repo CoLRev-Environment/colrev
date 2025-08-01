@@ -93,7 +93,7 @@ def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
         Fields.ENTRYTYPE: ENTRYTYPES.MISC,
         Fields.AUTHOR: "Wagner, Gerit and Lukyanenko, Roman and Par, Guy and Paré, Guy",
         Fields.DOI: "10.1177/02683962211048201",
-        Fields.TITLE: "Debates and Perspectives Paper",
+        Fields.TITLE: "Artificial intelligence and the conduct of literature reviews",
     } == tei_doc.get_metadata()
 
     assert [
