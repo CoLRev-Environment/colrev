@@ -33,6 +33,17 @@ class GrobidService:
             try:
                 ret = requests.get(self.GROBID_URL + "/api/isalive", timeout=30)
                 if ret.text == "true":
+
+                    # Get and print the GROBID version via HTTP request
+                    version_resp = requests.get(self.GROBID_URL + "/api/version", timeout=10)
+                    print(f"GROBID service version: {version_resp.text}")
+                    if version_resp.text != self.GROBID_IMAGE.split(":")[1]:
+                        logging.warning(
+                            "GROBID version mismatch: expected %s, got %s",
+                            self.GROBID_IMAGE.split(":")[1],
+                            version_resp.text,
+                        )
+
                     return True
             except requests.exceptions.ConnectionError:
                 pass
