@@ -6,7 +6,7 @@ from colrev.package_manager.package_base_classes import ReviewTypePackageBaseCla
 
 class CustomName(ReviewTypePackageBaseClass):
 
-    def __init__(self, *, operation: 'colrev.process.operation.Operation', settings: 'dict') -> 'None':
+    def __init__(self, *, operation: 'colrev.process.operation.Operation', settings: 'dict', logger: 'logging.Logger' = logging.getLogger(__name__)) -> 'None':
         """Initialize self.  See help(type(self)) for accurate signature."""
 
     def initialize(self, settings: 'colrev.settings.Settings') -> 'dict':
