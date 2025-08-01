@@ -2,8 +2,10 @@
 """Default deduplication module for CoLRev"""
 from __future__ import annotations
 
+import logging
 import shutil
 from pathlib import Path
+from typing import Optional
 
 import bib_dedupe.cluster
 import bib_dedupe.maybe_cases
@@ -35,7 +37,9 @@ class Dedupe(base_classes.DedupePackageBaseClass):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ):
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.dedupe_operation = dedupe_operation
         self.review_manager = dedupe_operation.review_manager

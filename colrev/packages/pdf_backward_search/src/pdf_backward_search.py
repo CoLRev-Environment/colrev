@@ -6,6 +6,7 @@ import json
 import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 import inquirer
 import pandas as pd
@@ -52,8 +53,13 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         if "min_intext_citations" not in settings["search_parameters"]:
             settings["search_parameters"]["min_intext_citations"] = 3
@@ -79,7 +85,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         assert source.search_type == SearchType.BACKWARD_SEARCH
 
@@ -99,7 +105,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
                     "search_parameters/scope/colrev_status must be rev_included|rev_synthesized"
                 )
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug(f"SearchSource {source.filename} validated")
 
     def _bw_search_condition(self, *, record: dict) -> bool:
         # rev_included/rev_synthesized required, but record not in rev_included/rev_synthesized
@@ -123,7 +129,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
                 return False
 
         if not (self.review_manager.path / Path(record[Fields.FILE])).is_file():
-            self.review_manager.logger.error(f"File not found for {record[Fields.ID]}")
+            self.logger.error(f"File not found for {record[Fields.ID]}")
             return False
 
         return True
@@ -153,7 +159,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
                 ):
                     pass
         except json.decoder.JSONDecodeError:
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"Error retrieving citations from Opencitations for {record_dict['ID']}"
             )
 
@@ -265,7 +271,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         pdf_backward_search_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         records: dict,
     ) -> None:
-        self.review_manager.logger.info("Comparing records with open-citations data")
+        self.logger.info("Comparing records with open-citations data")
 
         for feed_record_dict in pdf_backward_search_feed.feed_records.values():
             parent_record = self._get_parent_record(feed_record_dict, records)
@@ -296,7 +302,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if max_similarity > 0.9:
             feed_record.data.update(**best_match)
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"Updated record {feed_record.data[Fields.ID]} with OpenCitations data."
             )
 
@@ -368,22 +374,16 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         records = self.review_manager.dataset.load_records_dict()
 
         if not records:
-            self.review_manager.logger.info(
-                "No records imported. Cannot run backward search yet."
-            )
+            self.logger.info("No records imported. Cannot run backward search yet.")
             return
         min_intext_citations = self.search_source.search_parameters[
             "min_intext_citations"
         ]
-        self.review_manager.logger.info(
-            f"Set min_intext_citations={min_intext_citations}"
-        )
+        self.logger.info(f"Set min_intext_citations={min_intext_citations}")
         nr_references_threshold = self.search_source.search_parameters.get(
             "min_ref_freq", 1
         )
-        self.review_manager.logger.info(
-            f"Set nr_references_threshold={nr_references_threshold}"
-        )
+        self.logger.info(f"Set nr_references_threshold={nr_references_threshold}")
 
         selected_records = {
             rid: record
@@ -460,9 +460,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         for record in tqdm(selected_records.values()):
             try:
 
-                review_manager.logger.info(
-                    f" run backward search for {record[Fields.ID]}"
-                )
+                self.logger.info(f" run backward search for {record[Fields.ID]}")
 
                 pdf_path = review_manager.path / Path(record[Fields.FILE])
                 tei = colrev.env.tei_parser.TEIParser(
@@ -481,9 +479,9 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
                 all_references[record[Fields.ID]] = references
 
             except colrev_exceptions.TEIException:
-                review_manager.logger.info("Error accessing TEI")
+                self.logger.info("Error accessing TEI")
             except KeyError as exc:
-                review_manager.logger.info(exc)
+                self.logger.info(exc)
         return all_references
 
     @classmethod

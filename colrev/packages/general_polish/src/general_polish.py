@@ -2,7 +2,9 @@
 """Genral polishing rules"""
 from __future__ import annotations
 
+import logging
 import re
+from typing import Optional
 
 from pydantic import Field
 
@@ -53,7 +55,9 @@ class GeneralPolishPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
 
     def prepare(

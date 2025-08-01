@@ -2,6 +2,9 @@
 """Exclude records with non-latin alphabets as a prep operation"""
 from __future__ import annotations
 
+import logging
+from typing import Optional
+
 from alphabet_detector import AlphabetDetector
 from pydantic import Field
 
@@ -34,7 +37,9 @@ class ExcludeNonLatinAlphabetsPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
 

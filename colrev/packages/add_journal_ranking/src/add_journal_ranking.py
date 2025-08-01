@@ -2,6 +2,9 @@
 """Adding of journal rankings to metadata"""
 from __future__ import annotations
 
+import logging
+from typing import Optional
+
 from pydantic import Field
 
 import colrev.env.local_index
@@ -27,7 +30,9 @@ class AddJournalRanking(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.local_index = colrev.env.local_index.LocalIndex()
 

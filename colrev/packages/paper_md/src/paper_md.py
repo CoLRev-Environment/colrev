@@ -2,6 +2,7 @@
 """Creation of a markdown paper as part of the data operations"""
 from __future__ import annotations
 
+import logging
 import os
 import re
 import shutil
@@ -10,6 +11,7 @@ import typing
 from collections import Counter
 from pathlib import Path
 from threading import Timer
+from typing import Optional
 
 import docker
 import requests
@@ -91,7 +93,9 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.data_operation = data_operation
         self.review_manager = data_operation.review_manager
 
@@ -160,9 +164,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             with open(template_name, "wb") as file:
                 file.write(filedata)
         else:
-            self.review_manager.logger.error(
-                f"Could not retrieve {template_name} from the package"
-            )
+            self.logger.error(f"Could not retrieve {template_name} from the package")
             return False
         self.review_manager.dataset.add_changes(template_name)
         return True
@@ -187,7 +189,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             )
             self.review_manager.dataset.add_changes(self.settings.paper_path)
             self.review_manager.dataset.add_changes(Path(csl_filename))
-            self.review_manager.logger.debug("Downloaded csl file for offline use")
+            self.logger.debug("Downloaded csl file for offline use")
 
     def _check_new_record_source_tag(
         self,
@@ -244,7 +246,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             + "the document."
         )
         self.review_manager.report_logger.warning(msg)
-        self.review_manager.logger.warning(msg)
+        self.logger.warning(msg)
         if line != "\n":
             writer.write("\n")
         marker = f"{self.NEW_RECORD_SOURCE_TAG}_Records to synthesize_:\n\n"
@@ -256,7 +258,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 f" {missing_record} added"
             )
             if not silent_mode:
-                self.review_manager.logger.info(
+                self.logger.info(
                     # f" {missing_record}".ljust(self._PAD, " ") + " added"
                     f" {missing_record} added"
                 )
@@ -297,13 +299,13 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
 
         for paper_id_added in paper_ids_added:
             if not silent_mode:
-                self.review_manager.logger.info(
+                self.logger.info(
                     f" {Colors.GREEN}{paper_id_added}".ljust(45)
                     + f"add to paper{Colors.END}"
                 )
 
         if not silent_mode:
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"Added to {paper_path.name}".ljust(24)
                 + f"{nr_records_added}".rjust(15, " ")
                 + " records"
@@ -368,7 +370,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
     def _create_paper(self, silent_mode: bool) -> None:
         if not silent_mode:
             self.review_manager.report_logger.info("Create paper")
-            self.review_manager.logger.info("Create paper")
+            self.logger.info("Create paper")
 
         title = "Paper template"
         readme_file = self.review_manager.paths.readme
@@ -479,10 +481,10 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                         screening_criteria="NA",
                     )
 
-                    self.review_manager.logger.info(f"Excluded {record_id}")
+                    self.logger.info(f"Excluded {record_id}")
                     self.review_manager.report_logger.info(f"Excluded {record_id}")
                 else:
-                    self.review_manager.logger.error(f"Did not find ID {record_id}")
+                    self.logger.error(f"Did not find ID {record_id}")
                     writer.write(line)
                     line = reader.readline()
                     continue
@@ -499,7 +501,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             record_id_list=list(synthesized_record_status_matrix.keys()),
         )
         missing_records = sorted(missing_records)
-        # review_manager.logger.debug(f"missing_records: {missing_records}")
+        # self.logger.debug(f"missing_records: {missing_records}")
 
         self._check_new_record_source_tag()
 
@@ -508,15 +510,13 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 self.review_manager.report_logger.info(
                     f"All records included in {self.settings.paper_path.name}"
                 )
-            # review_manager.logger.debug(
+            # self.logger.debug(
             #     f"All records included in {self.settings.paper_path.name}"
             # )
         else:
             if not silent_mode:
                 self.review_manager.report_logger.info("Update paper")
-                self.review_manager.logger.info(
-                    f"Update paper ({self.settings.paper_path.name})"
-                )
+                self.logger.info(f"Update paper ({self.settings.paper_path.name})")
             self._add_missing_records_to_paper(
                 missing_records=missing_records,
                 silent_mode=silent_mode,
@@ -531,13 +531,13 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
 
             non_sample_records = colrev.loader.load_utils.load(
                 filename=self.non_sample_references,
-                logger=self.review_manager.logger,
+                logger=self.logger,
             )
 
             records_to_add = colrev.loader.load_utils.loads(
                 load_string=filedata.decode("utf-8"),
                 implementation="bib",
-                logger=self.review_manager.logger,
+                logger=self.logger,
             )
 
             # maybe prefix "non_sample_NameYear"? (also avoid conflicts with records.bib)
@@ -553,7 +553,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 k: v for k, v in records_to_add.items() if k not in non_sample_records
             }
             if duplicated_keys:
-                self.review_manager.logger.error(
+                self.logger.error(
                     f"{Colors.RED}Cannot add {duplicated_keys} to "
                     f"{self.NON_SAMPLE_REFERENCES_RELATIVE}, "
                     f"please change ID and add manually:{Colors.END}"
@@ -580,7 +580,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         if prisma_endpoint_l:
             if "PRISMA.png" not in self.settings.paper_path.read_text(encoding="UTF-8"):
                 if not silent_mode:
-                    self.review_manager.logger.info("Add PRISMA diagram to paper")
+                    self.logger.info("Add PRISMA diagram to paper")
                 self._append_to_non_sample_references(
                     module="colrev.packages.prisma",
                     filepath=Path("prisma/prisma-refs.bib"),
@@ -696,7 +696,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             container.remove()
 
         except docker.errors.ImageNotFound:
-            self.review_manager.logger.error("Docker image not found")
+            self.logger.error("Docker image not found")
         except docker.errors.ContainerError as exc:
             if "Temporary failure in name resolution" in str(exc):
                 raise colrev_exceptions.ServiceNotAvailableException(
@@ -715,10 +715,8 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             self.review_manager.paths.records.touch()
 
         if not self.settings.paper_path.is_file():
-            self.review_manager.logger.error(
-                "File %s does not exist.", self.settings.paper_path
-            )
-            self.review_manager.logger.info("Complete processing and use colrev data")
+            self.logger.error("File %s does not exist.", self.settings.paper_path)
+            self.logger.info("Complete processing and use colrev data")
             return
 
         self._retrieve_default_csl()
@@ -728,7 +726,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         word_template = self.settings.word_template
 
         if not self._retrieve_default_word_template(word_template):
-            self.review_manager.logger.error(f"Word template {word_template} not found")
+            self.logger.error(f"Word template {word_template} not found")
             return
 
         output_relative_path = self.settings.paper_output.relative_to(
@@ -739,11 +737,11 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             not self.review_manager.dataset.has_changes(self.paper_relative_path)
             and self.settings.paper_output.is_file()
         ):
-            self.review_manager.logger.debug("Skipping paper build (no changes)")
+            self.logger.debug("Skipping paper build (no changes)")
             return
 
         if self.review_manager.verbose_mode:
-            self.review_manager.logger.info("Build paper")
+            self.logger.info("Build paper")
 
         script = (
             f"{self.paper_relative_path.as_posix()} --filter pandoc-crossref --citeproc "
@@ -771,7 +769,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 self.paper_relative_path, change_type="unstaged"
             )
         ):
-            self.review_manager.logger.warning(
+            self.logger.warning(
                 f"{Colors.RED}Skipping updates of "
                 f"{self.paper_relative_path} due to unstaged changes{Colors.END}"
             )

@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import re
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
@@ -38,8 +39,13 @@ class TransportResearchInternationalDocumentation(
     db_url = "https://trid.trb.org/"
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.search_source = self.settings_class(**settings)
         self.source_operation = source_operation
         self.review_manager = source_operation.review_manager

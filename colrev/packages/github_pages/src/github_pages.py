@@ -2,7 +2,9 @@
 """Creation of a github-page for the review as part of the data operations"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
+from typing import Optional
 
 import git
 from pydantic import BaseModel
@@ -53,7 +55,9 @@ class GithubPages(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         # Set default values (if necessary)
         if "version" not in settings:
             settings["version"] = "0.1.0"
@@ -79,7 +83,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
 
     def _setup_github_pages_branch(self) -> None:
         # if branch does not exist: create and add index.html
-        self.review_manager.logger.info("Setup gh-pages branch")
+        self.logger.info("Setup gh-pages branch")
         self.git_repo.git.checkout("--orphan", self.GH_PAGES_BRANCH_NAME)
         self.git_repo.git.rm("-rf", Path("."))
 
@@ -128,7 +132,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
         silent_mode: bool,
     ) -> None:
         if not silent_mode:
-            self.review_manager.logger.info("Update data on github pages")
+            self.logger.info("Update data on github pages")
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -177,7 +181,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
         silent_mode: bool,
     ) -> None:
         if not silent_mode:
-            self.review_manager.logger.info("Push to github pages")
+            self.logger.info("Push to github pages")
         if "origin" in self.git_repo.remotes:
             if "origin/gh-pages" in [r.name for r in self.git_repo.remotes.origin.refs]:
                 try:
@@ -185,7 +189,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
                         refspec=f"{self.GH_PAGES_BRANCH_NAME}:{self.GH_PAGES_BRANCH_NAME}"
                     )
                 except git.exc.GitCommandError:  # pylint: disable=no-member
-                    self.review_manager.logger.error(
+                    self.logger.error(
                         "Could not push branch gh-pages. Please resolve manually, i.e., run "
                         f"{Colors.ORANGE}git switch gh-pages && "
                         f"git pull --rebase && git push{Colors.END}"
@@ -204,12 +208,12 @@ class GithubPages(base_classes.DataPackageBaseClass):
                 .split("/")
             )
             if not silent_mode:
-                self.review_manager.logger.info(
+                self.logger.info(
                     f"Data available at: https://{username}.github.io/{project}/"
                 )
         else:
             if not silent_mode:
-                self.review_manager.logger.info("No remotes specified")
+                self.logger.info("No remotes specified")
 
     def _check_gh_pages_setup(self) -> None:
         username, project = (
@@ -240,13 +244,13 @@ class GithubPages(base_classes.DataPackageBaseClass):
         # pylint: disable=too-many-branches
 
         if self.review_manager.in_ci_environment():
-            self.review_manager.logger.error(
+            self.logger.error(
                 "Running in CI environment. Skipping github-pages generation."
             )
             return
 
         if self.review_manager.dataset.has_record_changes():
-            self.review_manager.logger.error(
+            self.logger.error(
                 "Cannot update github pages because there are uncommitted changes."
             )
             return
@@ -310,7 +314,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
             self.git_repo.git.checkout(active_branch)
             self._check_gh_pages_setup()
         else:
-            self.review_manager.logger.warning(
+            self.logger.warning(
                 "Cannot push github pages because there is no remote origin. "
                 "gh-pages branch will only be created locally."
             )

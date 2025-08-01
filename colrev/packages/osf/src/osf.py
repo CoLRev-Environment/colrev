@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
@@ -54,7 +55,9 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
 
         if settings:
@@ -159,7 +162,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
             parameters=self.search_source.search_parameters["query"],
             api_key=self._get_api_key(),
         )
-        self.review_manager.logger.info(f"Retrieve {api.overall()} records")
+        self.logger.info(f"Retrieve {api.overall()} records")
 
         while True:
             for record_dict in api.retrieve_records():

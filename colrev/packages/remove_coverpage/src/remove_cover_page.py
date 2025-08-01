@@ -2,9 +2,11 @@
 """Cover-page removal as a PDF preparation operation"""
 from __future__ import annotations
 
+import logging
 import shutil
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pymupdf
 from pydantic import Field
@@ -33,7 +35,9 @@ class PDFCoverPage(base_classes.PDFPrepPackageBaseClass):
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = pdf_prep_operation.review_manager
 

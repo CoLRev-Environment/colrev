@@ -6,6 +6,7 @@ import logging
 import re
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pymupdf
 import requests
@@ -55,8 +56,13 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     rerun: bool
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         self.source_operation = source_operation
 
@@ -79,9 +85,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.subdir_pattern = self.search_source.search_parameters["scope"][
                 "subdir_pattern"
             ]
-            self.review_manager.logger.info(
-                f"Activate subdir_pattern: {self.subdir_pattern}"
-            )
+            self.logger.info(f"Activate subdir_pattern: {self.subdir_pattern}")
             if self.subdir_pattern == Fields.YEAR:
                 self.r_subdir_pattern = re.compile("([1-3][0-9]{3})")
             if self.subdir_pattern == "volume_number":
@@ -131,7 +135,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         return not_updated
 
     def _remove_records_if_pdf_no_longer_exists(self) -> None:
-        # search_operation.review_manager.logger.debug(
+        # self.logger.debug(
         #     "Checking for PDFs that no longer exist"
         # )
 
@@ -140,7 +144,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         search_rd = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
-            logger=self.review_manager.logger,
+            logger=self.logger,
             unique_id_field="ID",
         )
 
@@ -180,7 +184,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                     if origin_to_remove in record_dict[Fields.ORIGIN]:
                         record_dict[Fields.ORIGIN].remove(origin_to_remove)
             if to_remove:
-                self.review_manager.logger.info(
+                self.logger.info(
                     f" {Colors.RED}Removed {len(to_remove)} records "
                     f"(PDFs no longer available){Colors.END}"
                 )
@@ -356,9 +360,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         file_path: Path,
     ) -> bool:
         if ";" in str(file_path):
-            self.review_manager.logger.error(
-                f'skipping PDF with ";" in filepath: \n{file_path}'
-            )
+            self.logger.error(f'skipping PDF with ";" in filepath: \n{file_path}')
             return True
 
         if (
@@ -367,9 +369,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             or "_with_lp.pdf" == str(file_path)[-10:]
             or "_backup.pdf" == str(file_path)[-11:]
         ):
-            self.review_manager.logger.info(
-                f"Skipping PDF with _ocr.pdf/_with_cp.pdf: {file_path}"
-            )
+            self.logger.info(f"Skipping PDF with _ocr.pdf/_with_cp.pdf: {file_path}")
             return True
 
         return False
@@ -379,7 +379,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         source = self.search_source
 
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         assert source.search_type == SearchType.FILES
 
@@ -407,7 +407,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             raise colrev_exceptions.InvalidQueryException(
                 "path required in search_parameters/scope"
             )
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug(f"SearchSource {source.filename} validated")
 
     def _add_md_string(self, *, record_dict: dict) -> dict:
         # To identify potential duplicates
@@ -541,7 +541,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                 return new_record
         # otherwise: reindex all
 
-        self.review_manager.logger.info(f" extract metadata from {file_path}")
+        self.logger.info(f" extract metadata from {file_path}")
         try:
             if not self.review_manager.settings.is_curated_masterdata_repo():
                 # retrieve_based_on_colrev_pdf_id
@@ -558,7 +558,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             else:
                 new_record = self._get_grobid_metadata(file_path=file_path)
         except FileNotFoundError:
-            self.review_manager.logger.error(f"File not found: {file_path} (skipping)")
+            self.logger.error(f"File not found: {file_path} (skipping)")
             return {}
         except (
             colrev_exceptions.PDFHashError,
@@ -580,7 +580,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             and not r[Fields.FILE] == new_record[Fields.FILE]
         ]
         if potential_duplicates:
-            self.review_manager.logger.warning(
+            self.logger.warning(
                 f" {Colors.RED}skip record (PDF potential duplicate): "
                 f"{new_record['file']} {Colors.END} "
                 f"({','.join([r['file'] for r in potential_duplicates])})"
@@ -696,7 +696,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             raise colrev_exceptions.SearchNotAutomated("PDFs Dir Search not automated.")
 
         if self.review_manager.force_mode:  # i.e., reindex all
-            self.review_manager.logger.info("Reindex all")
+            self.logger.info("Reindex all")
 
         # Removing records/origins for which PDFs were removed makes sense for curated repositories
         # In regular repositories, it may be confusing (e.g., if PDFs are renamed)

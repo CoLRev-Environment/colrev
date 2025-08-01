@@ -2,7 +2,9 @@
 """Retrieval of PDFs from the website (URL)"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urljoin
 
 import requests
@@ -40,7 +42,9 @@ class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = pdf_get_operation.review_manager
         self.pdf_get_operation = pdf_get_operation
@@ -66,21 +70,19 @@ class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
                     if pdf_response.status_code == 200:
                         with open(pdf_filepath, "wb") as pdf_file:
                             pdf_file.write(pdf_response.content)
-                        self.review_manager.logger.debug(
+                        self.logger.debug(
                             f"PDF downloaded successfully as {pdf_filepath}"
                         )
                     else:
-                        self.review_manager.logger.debug(
+                        self.logger.debug(
                             f"Failed to download PDF. Status code: {pdf_response.status_code}"
                         )
                 else:
-                    self.review_manager.logger.debug(
-                        "Paper title not found on the page."
-                    )
+                    self.logger.debug("Paper title not found on the page.")
             else:
-                self.review_manager.logger.debug("PDF link not found on the page.")
+                self.logger.debug("PDF link not found on the page.")
         else:
-            self.review_manager.logger.debug(
+            self.logger.debug(
                 f"Failed to retrieve the article page. Status code: {response.status_code}"
             )
 
@@ -108,19 +110,19 @@ class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
                         with open(pdf_filepath, "wb") as pdf_file:
                             pdf_file.write(pdf_response.content)
 
-                        self.review_manager.logger.debug(
+                        self.logger.debug(
                             f"PDF downloaded successfully as {pdf_filepath}"
                         )
                     else:
-                        self.review_manager.logger.debug(
+                        self.logger.debug(
                             f"Failed to download PDF. Status code: {pdf_response.status_code}"
                         )
                 else:
-                    self.review_manager.logger.debug("PDF URL not found on the page.")
+                    self.logger.debug("PDF URL not found on the page.")
             else:
-                self.review_manager.logger.debug("PDF link not found on the page.")
+                self.logger.debug("PDF link not found on the page.")
         else:
-            self.review_manager.logger.debug(
+            self.logger.debug(
                 f"Failed to retrieve the article page. Status code: {response.status_code}"
             )
 
@@ -152,19 +154,19 @@ class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
                         with open(pdf_filepath, "wb") as pdf_file:
                             pdf_file.write(pdf_response.content)
 
-                        self.review_manager.logger.debug(
+                        self.logger.debug(
                             f"PDF downloaded successfully as {pdf_filepath}"
                         )
                     else:
-                        self.review_manager.logger.debug(
+                        self.logger.debug(
                             f"Failed to download PDF. Status code: {pdf_response.status_code}"
                         )
                 else:
-                    self.review_manager.logger.debug("PDF URL not found on the page.")
+                    self.logger.debug("PDF URL not found on the page.")
             else:
-                self.review_manager.logger.debug("PDF link not found on the page.")
+                self.logger.debug("PDF link not found on the page.")
         else:
-            self.review_manager.logger.debug(
+            self.logger.debug(
                 f"Failed to retrieve the Minerva Medica page. Status code: {response.status_code}"
             )
 

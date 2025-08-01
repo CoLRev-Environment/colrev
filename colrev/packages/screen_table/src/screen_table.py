@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import csv
+import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import Field
@@ -33,14 +35,16 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
         *,
         screen_operation: colrev.ops.screen.Screen,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = screen_operation.review_manager
         self.screen_operation = screen_operation
         self.settings = self.settings_class(**settings)
 
     def _create_screening_table(self, *, records: dict, split: list) -> list:
         # pylint: disable=too-many-branches
-        self.review_manager.logger.info("Loading records for export")
+        self.logger.info("Loading records for export")
 
         screening_criteria = util_cli_screen.get_screening_criteria_from_user_input(
             screen_operation=self.screen_operation, records=records
@@ -129,7 +133,7 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
         if export_table_format.lower() == "csv":
             screen_df = pd.DataFrame(tbl)
             screen_df.to_csv(self.screen_table_path, index=False, quoting=csv.QUOTE_ALL)
-            self.review_manager.logger.info(f"Created {self.screen_table_path}")
+            self.logger.info(f"Created {self.screen_table_path}")
 
         if export_table_format.lower() == "xlsx":
             screen_df = pd.DataFrame(tbl)
@@ -138,9 +142,7 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
                 index=False,
                 sheet_name="screen",
             )
-            self.review_manager.logger.info(
-                f"Created {self.screen_table_path.with_suffix('.xlsx')}"
-            )
+            self.logger.info(f"Created {self.screen_table_path.with_suffix('.xlsx')}")
 
         return
 
@@ -156,9 +158,7 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
             import_table_path = self.screen_table_path
 
         if not Path(import_table_path).is_file():
-            self.review_manager.logger.error(
-                f"Did not find {import_table_path} - exiting."
-            )
+            self.logger.error(f"Did not find {import_table_path} - exiting.")
             return
 
         screen_df = pd.read_csv(import_table_path)

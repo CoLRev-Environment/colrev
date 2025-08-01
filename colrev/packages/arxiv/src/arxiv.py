@@ -6,6 +6,7 @@ import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urlparse
 
 import feedparser
@@ -46,7 +47,9 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         if settings:
             # arXiv as a search_source
@@ -133,9 +136,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         if source.filename.name != self._arxiv_md_filename.name:
             if "query" not in source.search_parameters:
@@ -146,9 +147,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
             # if "query_file" in source.search_parameters:
             # ...
 
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.logger.debug(f"SearchSource {source.filename} validated")
 
     def check_availability(
         self, *, source_operation: colrev.process.operation.Operation
@@ -200,11 +199,11 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
     #         headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
     #         session = self.review_manager.get_cached_session()
 
-    #         # review_manager.logger.debug(url)
+    #         # self.logger.debug(url)
     #         ret = session.request("GET", url, headers=headers, timeout=timeout)
     #         ret.raise_for_status()
     #         if ret.status_code != 200:
-    #             # review_manager.logger.debug(
+    #             # self.logger.debug(
     #             #     f"crossref_query failed with status {ret.status_code}"
     #             # )
     #             return {"arxiv_id": arxiv_id}
@@ -264,9 +263,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         rerun: bool,
     ) -> None:
         if rerun:
-            self.review_manager.logger.info(
-                "Performing a search of the full history (may take time)"
-            )
+            self.logger.info("Performing a search of the full history (may take time)")
 
         try:
             for record_dict in self._get_arxiv_query_return():
@@ -275,9 +272,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
                     if "" == record_dict.get(
                         Fields.AUTHOR, ""
                     ) and "" == record_dict.get(Fields.TITLE, ""):
-                        self.review_manager.logger.warning(
-                            f"Skipped record: {record_dict}"
-                        )
+                        self.logger.warning(f"Skipped record: {record_dict}")
                         continue
 
                     prep_record = colrev.record.record_prep.PrepRecord(record_dict)

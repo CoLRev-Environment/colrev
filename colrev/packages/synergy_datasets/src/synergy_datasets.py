@@ -7,6 +7,7 @@ import logging
 import tempfile
 import typing
 from pathlib import Path
+from typing import Optional
 
 import inquirer
 import pandas as pd
@@ -51,8 +52,13 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         self.search_source = self.settings_class(**settings)
         self.quality_model = self.review_manager.get_qm()
@@ -126,7 +132,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
                 params_dict[key] = value
 
         if len(params_dict) == 0:
-            operation.review_manager.logger.info("Retrieving available datasets")
+            self.logger.info("Retrieving available datasets")
             params_dict = cls.__select_datset_interactively()
 
         assert "dataset" in params_dict
@@ -166,14 +172,12 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
         missing_metadata_percentage = missing_metadata.sum() / dataset_df.shape[0]
         if missing_metadata_percentage > 0.1:
-            self.review_manager.logger.error(
+            self.logger.error(
                 f"Missing metadata percentage: {missing_metadata_percentage}"
             )
             input("ENTER to continue anyway")
         else:
-            self.review_manager.logger.info(
-                f"Missing metadata: {missing_metadata_percentage:.2%}"
-            )
+            self.logger.info(f"Missing metadata: {missing_metadata_percentage:.2%}")
         return dataset_df
 
     def _update_decisions(self, *, decisions: dict, record: dict) -> None:
@@ -215,9 +219,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
             if len(v) > 1 and len(set(v)) != 1
         }
         if decisions[Fields.DOI] or decisions["pmid"] or decisions["openalex_id"]:
-            self.review_manager.logger.error(
-                "Errors in dataset: ambiguous inclusion decisions:"
-            )
+            self.logger.error("Errors in dataset: ambiguous inclusion decisions:")
             msg = (
                 f"{Colors.RED}"
                 + f"- dois: {', '.join(decisions['doi'])}"
@@ -253,7 +255,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def _validate_source(self) -> None:
         source = self.search_source
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
         assert source.search_type == SearchType.API
 
     def search(self, rerun: bool) -> None:
@@ -331,8 +333,8 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
             # The linking of doi/... should happen in the prep operation
 
         self._check_quality(decisions=decisions)
-        self.review_manager.logger.info(f"Dropped {empty_records} empty records")
-        self.review_manager.logger.info(f"Dropped {duplicates} duplicate records")
+        self.logger.info(f"Dropped {empty_records} empty records")
+        self.logger.info(f"Dropped {duplicates} duplicate records")
         self.review_manager.dataset.load_records_dict()
         synergy_feed.save()
 

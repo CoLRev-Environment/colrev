@@ -7,6 +7,7 @@ import re
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 
 import requests
 from pydantic import BaseModel
@@ -73,7 +74,9 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         self.search_source = self._get_search_source(settings)
         self.dblp_lock = Lock()
@@ -241,11 +244,9 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
         total = api.total
-        self.review_manager.logger.info(f"Total: {total:,}")
+        self.logger.info(f"Total: {total:,}")
         if not rerun and len(dblp_feed.feed_records) > 0:
-            self.review_manager.logger.info(
-                "Retrieving latest results (no estimate available)"
-            )
+            self.logger.info("Retrieving latest results (no estimate available)")
         elif total > 0 and rerun:
             seconds = 10 + (total / 10)
             if total > 1000:
@@ -259,9 +260,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 + str(int(seconds % 60)).zfill(2)
             )
 
-            self.review_manager.logger.info(
-                f"Estimated runtime [hh:mm:ss]: {formatted_time}"
-            )
+            self.logger.info(f"Estimated runtime [hh:mm:ss]: {formatted_time}")
 
         while True:
             api.set_next_url()
@@ -294,7 +293,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         assert source.search_type in self.search_types
 
@@ -319,7 +318,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "scope or query required in search_parameters"
             )
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug(f"SearchSource {source.filename} validated")
 
     def search(self, rerun: bool) -> None:
         """Run a search of DBLP"""
@@ -475,6 +474,6 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
             pass
         except colrev_exceptions.ServiceNotAvailableException:
             if self.review_manager.force_mode:
-                self.review_manager.logger.error("Service not available: DBLP")
+                self.logger.error("Service not available: DBLP")
 
         return record

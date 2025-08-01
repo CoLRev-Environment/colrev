@@ -6,6 +6,7 @@ import json
 import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 import requests
 from pydantic import Field
@@ -39,8 +40,13 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.search_source = self.settings_class(**settings)
         self.review_manager = source_operation.review_manager
         self.crossref_api = crossref_api.CrossrefAPI(params={})
@@ -63,7 +69,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         source = self.search_source
 
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         assert source.search_type == SearchType.FORWARD_SEARCH
 
@@ -80,7 +86,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "search_parameters/scope/colrev_status must be rev_included|rev_synthesized"
             )
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug(f"SearchSource {source.filename} validated")
 
     def _fw_search_condition(self, *, record: dict) -> bool:
         if Fields.DOI not in record:
@@ -119,7 +125,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
                 retrieved_record.data[Fields.ID] = retrieved_record.data[Fields.DOI]
                 forward_citations.append(retrieved_record.data)
         except json.decoder.JSONDecodeError:
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"Error retrieving citations from Opencitations for {record_dict['ID']}"
             )
 
@@ -148,9 +154,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
             if not self._fw_search_condition(record=record):
                 continue
 
-            self.review_manager.logger.info(
-                f"Run forward search for {record[Fields.ID]}"
-            )
+            self.logger.info(f"Run forward search for {record[Fields.ID]}")
 
             new_records = self._get_forward_search_records(record_dict=record)
 

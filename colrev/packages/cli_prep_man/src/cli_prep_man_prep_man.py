@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 """CliPrepMan"""
+import logging
 import typing
+from typing import Optional
 
 import inquirer
 
@@ -18,8 +20,13 @@ class CliPrepMan(PrepManPackageBaseClass):
     """CLI for manual preparation of records"""
 
     def __init__(
-        self, *, prep_man_operation: colrev.ops.prep_man.PrepMan, settings: dict
+        self,
+        *,
+        prep_man_operation: colrev.ops.prep_man.PrepMan,
+        settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> "None":
+        self.logger = logger or logging.getLogger(__name__)
         """Initialize self.  See help(type(self)) for accurate signature."""
 
     def _get_choices(

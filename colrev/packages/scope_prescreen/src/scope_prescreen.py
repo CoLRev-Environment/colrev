@@ -2,8 +2,10 @@
 """Prescreen based on specified scope"""
 from __future__ import annotations
 
+import logging
 import typing
 from sqlite3 import OperationalError
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -85,7 +87,9 @@ class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         if "TimeScopeFrom" in settings:
             settings["TimeScopeFrom"] = int(settings["TimeScopeFrom"])
             assert settings["TimeScopeFrom"] > 1900
@@ -306,15 +310,13 @@ class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
         ) in operation.review_manager.settings.prescreen.prescreen_package_endpoints:
             if existing_scope_prescreen["endpoint"] != "colrev.scope_prescreen":
                 continue
-            operation.review_manager.logger.info(
-                "Integrating into existing colrev.scope_prescreen"
-            )
+            self.logger.info("Integrating into existing colrev.scope_prescreen")
             for key, value in params_dict.items():
                 if (
                     key in existing_scope_prescreen
                     and existing_scope_prescreen[key] != value
                 ):
-                    operation.review_manager.logger.info(
+                    self.logger.info(
                         f"Replacing {key} ({existing_scope_prescreen[key]} -> {value})"
                     )
 

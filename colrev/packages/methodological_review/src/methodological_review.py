@@ -1,5 +1,8 @@
 #! /usr/bin/env python
 """Methodological review"""
+import logging
+from typing import Optional
+
 from pydantic import Field
 
 import colrev.ops.search
@@ -20,8 +23,13 @@ class MethodologicalReview(base_classes.ReviewTypePackageBaseClass):
     settings_class: colrev.package_manager.package_settings.DefaultSettings
 
     def __init__(
-        self, *, operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        operation: colrev.process.operation.Operation,
+        settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
 
     def __str__(self) -> str:
