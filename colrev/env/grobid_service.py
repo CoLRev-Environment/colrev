@@ -27,9 +27,7 @@ class GrobidService:
         self.check_grobid_availability()
 
     def _ensure_correct_version(self) -> None:
-        response = requests.get(
-            self.GROBID_URL + "/api/version", timeout=10
-        )
+        response = requests.get(self.GROBID_URL + "/api/version", timeout=10)
         running_version = response.json()["version"]
         if running_version != self.GROBID_IMAGE.split(":")[1]:
             logging.warning(
