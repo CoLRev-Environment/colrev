@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 """Source-specific preparation as a prep operation"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
@@ -14,7 +15,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import EndpointType
 from colrev.constants import Fields
-import logging
 
 # pylint: disable=duplicate-code
 

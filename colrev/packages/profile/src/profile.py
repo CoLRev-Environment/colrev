@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 """Creation of a profile of studies as part of the data operations"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import BaseModel
@@ -17,7 +18,6 @@ import colrev.package_manager.package_settings
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
-import logging
 
 
 class Profile(base_classes.DataPackageBaseClass):

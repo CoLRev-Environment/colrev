@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: Europe PMC"""
 from __future__ import annotations
-from typing import Optional
 
 import json
 import logging
@@ -9,6 +8,7 @@ import typing
 from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
+from typing import Optional
 from urllib.parse import quote
 from urllib.parse import urlparse
 
@@ -328,9 +328,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
                 for retrieved_record in api.get_records():
                     if Fields.TITLE not in retrieved_record.data:
-                        self.logger.warning(
-                            f"Skipped record: {retrieved_record.data}"
-                        )
+                        self.logger.warning(f"Skipped record: {retrieved_record.data}")
                         continue
 
                     source = f"{self._SOURCE_URL}{retrieved_record.data[Fields.EUROPE_PMC_ID]}"

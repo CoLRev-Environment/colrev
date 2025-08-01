@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 """Data based on GenAI"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 import re
 import typing
 from pathlib import Path
+from typing import Optional
 
 from litellm import completion
 from pydantic import BaseModel
@@ -16,7 +17,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record_pdf
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import logging
 
 
 # pylint: disable=too-few-public-methods

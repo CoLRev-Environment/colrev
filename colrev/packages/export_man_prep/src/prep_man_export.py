@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 """Export of bib/pdfs as a prep-man operation"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 import platform
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 import pymupdf
@@ -23,7 +24,6 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
-import logging
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods

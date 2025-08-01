@@ -1,10 +1,11 @@
 #! /usr/bin/env python
 """Prescreen based on specified scope"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 import typing
 from sqlite3 import OperationalError
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -18,7 +19,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import logging
 
 
 # pylint: disable=too-few-public-methods
@@ -310,9 +310,7 @@ class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
         ) in operation.review_manager.settings.prescreen.prescreen_package_endpoints:
             if existing_scope_prescreen["endpoint"] != "colrev.scope_prescreen":
                 continue
-            self.logger.info(
-                "Integrating into existing colrev.scope_prescreen"
-            )
+            self.logger.info("Integrating into existing colrev.scope_prescreen")
             for key, value in params_dict.items():
                 if (
                     key in existing_scope_prescreen

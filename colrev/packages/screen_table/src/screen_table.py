@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 """Screen based on a table"""
 from __future__ import annotations
-from typing import Optional
 
 import csv
+import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import Field
@@ -18,7 +19,6 @@ import colrev.record.record
 import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import logging
 
 
 class TableScreen(base_classes.ScreenPackageBaseClass):
@@ -142,9 +142,7 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
                 index=False,
                 sheet_name="screen",
             )
-            self.logger.info(
-                f"Created {self.screen_table_path.with_suffix('.xlsx')}"
-            )
+            self.logger.info(f"Created {self.screen_table_path.with_suffix('.xlsx')}")
 
         return
 
@@ -160,9 +158,7 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
             import_table_path = self.screen_table_path
 
         if not Path(import_table_path).is_file():
-            self.logger.error(
-                f"Did not find {import_table_path} - exiting."
-            )
+            self.logger.error(f"Did not find {import_table_path} - exiting.")
             return
 
         screen_df = pd.read_csv(import_table_path)

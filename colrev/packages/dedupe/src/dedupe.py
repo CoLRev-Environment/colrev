@@ -1,10 +1,11 @@
 #! /usr/bin/env python
 """Default deduplication module for CoLRev"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 import shutil
 from pathlib import Path
+from typing import Optional
 
 import bib_dedupe.cluster
 import bib_dedupe.maybe_cases
@@ -21,7 +22,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import logging
 
 # pylint: disable=too-few-public-methods
 

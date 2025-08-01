@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 """Narrative review"""
+import logging
 from typing import Optional
+
 from pydantic import Field
 
 import colrev.ops.search
@@ -8,7 +10,6 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
-import logging
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -22,7 +23,10 @@ class NarrativeReview(base_classes.ReviewTypePackageBaseClass):
     ci_supported: bool = Field(default=True)
 
     def __init__(
-        self, *, operation: colrev.process.operation.Operation, settings: dict,
+        self,
+        *,
+        operation: colrev.process.operation.Operation,
+        settings: dict,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)

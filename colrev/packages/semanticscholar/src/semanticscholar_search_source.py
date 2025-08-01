@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 """SearchSource: Semantic Scholar"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 
 import requests
 from pydantic import Field
@@ -183,9 +183,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             print(exc)
             raise colrev_exceptions.ServiceNotAvailableException(exc)
 
-        self.logger.info(
-            str(record_return.total) + " records have been found.\n"
-        )
+        self.logger.info(str(record_return.total) + " records have been found.\n")
 
         if record_return.total == 0:
             self.logger.info(
@@ -291,9 +289,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
         # rerun not implemented yet
         if rerun:
-            self.logger.info(
-                "Performing a search of the full history (may take time)"
-            )
+            self.logger.info("Performing a search of the full history (may take time)")
         try:
             params = self.search_source.search_parameters
             _search_return = self._get_semantic_scholar_api(params=params, rerun=rerun)

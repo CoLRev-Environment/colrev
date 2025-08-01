@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 """OCR as a PDF preparation operation"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 import os
 import shutil
 from pathlib import Path
+from typing import Optional
 
 import docker
 from pydantic import Field
@@ -18,7 +19,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import PDFDefectCodes
-import logging
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code

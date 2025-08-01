@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 """Dedupe functionality dedicated to curated metadata repositories"""
 from __future__ import annotations
+
+import logging
 from typing import Optional
 
 import numpy as np
@@ -17,7 +19,6 @@ import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import logging
 
 
 # pylint: disable=too-many-arguments
@@ -285,9 +286,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
                 ),
             )
         else:
-            self.logger.info(
-                f"{Colors.GREEN}No duplicates found{Colors.END}"
-            )
+            self.logger.info(f"{Colors.GREEN}No duplicates found{Colors.END}")
 
     def _prep_records(self, *, records: dict) -> dict:
         required_fields = [
@@ -314,9 +313,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         return records
 
     def _dedupe_source(self, *, records: dict) -> list[list]:
-        self.logger.info(
-            "Processing as a non-pdf source (matching exact colrev_ids)"
-        )
+        self.logger.info("Processing as a non-pdf source (matching exact colrev_ids)")
 
         source_records = [
             r
@@ -561,9 +558,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
             )
             return
 
-        self.logger.info(
-            f"{Colors.GREEN}Duplicates identified{Colors.END}"
-        )
+        self.logger.info(f"{Colors.GREEN}Duplicates identified{Colors.END}")
 
         preferred_masterdata_sources = [
             s

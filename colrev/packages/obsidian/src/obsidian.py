@@ -1,10 +1,11 @@
 #! /usr/bin/env python
 """Creation of an Obsidian database as part of the data operations"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 from collections import Counter
 from pathlib import Path
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -14,7 +15,6 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
-import logging
 
 
 class Obsidian(base_classes.DataPackageBaseClass):

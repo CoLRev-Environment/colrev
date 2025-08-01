@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 """SearchSource: EBSCOHost"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import re
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
@@ -40,7 +40,10 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
     db_url = "https://search.ebscohost.com/"
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)

@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 """SearchSource: directory containing PDF files (based on GROBID)"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import re
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pymupdf
 import requests
@@ -56,7 +56,10 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     rerun: bool
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
@@ -82,9 +85,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.subdir_pattern = self.search_source.search_parameters["scope"][
                 "subdir_pattern"
             ]
-            self.logger.info(
-                f"Activate subdir_pattern: {self.subdir_pattern}"
-            )
+            self.logger.info(f"Activate subdir_pattern: {self.subdir_pattern}")
             if self.subdir_pattern == Fields.YEAR:
                 self.r_subdir_pattern = re.compile("([1-3][0-9]{3})")
             if self.subdir_pattern == "volume_number":
@@ -359,9 +360,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         file_path: Path,
     ) -> bool:
         if ";" in str(file_path):
-            self.logger.error(
-                f'skipping PDF with ";" in filepath: \n{file_path}'
-            )
+            self.logger.error(f'skipping PDF with ";" in filepath: \n{file_path}')
             return True
 
         if (
@@ -370,9 +369,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             or "_with_lp.pdf" == str(file_path)[-10:]
             or "_backup.pdf" == str(file_path)[-11:]
         ):
-            self.logger.info(
-                f"Skipping PDF with _ocr.pdf/_with_cp.pdf: {file_path}"
-            )
+            self.logger.info(f"Skipping PDF with _ocr.pdf/_with_cp.pdf: {file_path}")
             return True
 
         return False

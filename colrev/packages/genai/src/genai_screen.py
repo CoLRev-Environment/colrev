@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 """Screen based on GenAI"""
 from __future__ import annotations
+
+import logging
 from typing import Optional
 
 from pydantic import Field
@@ -9,7 +11,6 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import RecordState
-import logging
 
 # pylint: disable=too-few-public-methods
 

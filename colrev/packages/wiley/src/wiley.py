@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 """SearchSource: Wiley"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
@@ -34,7 +34,10 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     db_url = "https://onlinelibrary.wiley.com/"
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)

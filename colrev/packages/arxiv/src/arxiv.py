@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 """SearchSource: arXiv"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urlparse
 
 import feedparser
@@ -136,9 +136,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
-        self.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         if source.filename.name != self._arxiv_md_filename.name:
             if "query" not in source.search_parameters:
@@ -149,9 +147,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
             # if "query_file" in source.search_parameters:
             # ...
 
-        self.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.logger.debug(f"SearchSource {source.filename} validated")
 
     def check_availability(
         self, *, source_operation: colrev.process.operation.Operation
@@ -267,9 +263,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         rerun: bool,
     ) -> None:
         if rerun:
-            self.logger.info(
-                "Performing a search of the full history (may take time)"
-            )
+            self.logger.info("Performing a search of the full history (may take time)")
 
         try:
             for record_dict in self._get_arxiv_query_return():
@@ -278,9 +272,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
                     if "" == record_dict.get(
                         Fields.AUTHOR, ""
                     ) and "" == record_dict.get(Fields.TITLE, ""):
-                        self.logger.warning(
-                            f"Skipped record: {record_dict}"
-                        )
+                        self.logger.warning(f"Skipped record: {record_dict}")
                         continue
 
                     prep_record = colrev.record.record_prep.PrepRecord(record_dict)

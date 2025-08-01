@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 """Prescreen based on CLI"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 import textwrap
+from typing import Optional
 
 from pydantic import Field
 
@@ -14,7 +15,6 @@ import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-import logging
 
 
 # pylint: disable=too-few-public-methods

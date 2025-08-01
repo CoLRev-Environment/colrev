@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 """Consolidation of metadata based on SemanticScholar API as a prep operation"""
 from __future__ import annotations
-from typing import Optional
 
 import json
+import logging
+from typing import Optional
 
 import requests
 from pydantic import Field
@@ -16,7 +17,6 @@ import colrev.record.record_prep
 import colrev.record.record_similarity
 from colrev.constants import Fields
 from colrev.packages.semanticscholar.src import record_transformer
-import logging
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code

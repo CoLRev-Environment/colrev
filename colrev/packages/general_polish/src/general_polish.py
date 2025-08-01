@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 """Genral polishing rules"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 import re
+from typing import Optional
 
 from pydantic import Field
 
@@ -12,7 +13,6 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
-import logging
 
 
 # pylint: disable=too-few-public-methods

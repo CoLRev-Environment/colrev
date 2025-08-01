@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 """Retrieval of PDFs from the website (URL)"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urljoin
 
 import requests
@@ -15,7 +16,6 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
-import logging
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
@@ -78,9 +78,7 @@ class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
                             f"Failed to download PDF. Status code: {pdf_response.status_code}"
                         )
                 else:
-                    self.logger.debug(
-                        "Paper title not found on the page."
-                    )
+                    self.logger.debug("Paper title not found on the page.")
             else:
                 self.logger.debug("PDF link not found on the page.")
         else:

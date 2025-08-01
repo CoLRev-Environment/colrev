@@ -1,12 +1,13 @@
 #! /usr/bin/env python
 """Colrev curated data as part of the data operations"""
 from __future__ import annotations
-from typing import Optional
 
 import collections
+import logging
 import os
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import BaseModel
@@ -20,7 +21,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import logging
 
 
 class ColrevCurationSettings(

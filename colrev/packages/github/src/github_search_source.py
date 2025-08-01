@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 """SearchSource: GitHub"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import re
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 
 import inquirer
 from github import Auth

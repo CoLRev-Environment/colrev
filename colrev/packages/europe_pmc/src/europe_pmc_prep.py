@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 """Consolidation of metadata based on Europe PMC API as a prep operation"""
 from __future__ import annotations
+
+import logging
 from typing import Optional
 
 from pydantic import Field
@@ -10,7 +12,6 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.europe_pmc.src.europe_pmc as europe_pmc_connector
 import colrev.record.record
-import logging
 
 
 # pylint: disable=too-few-public-methods

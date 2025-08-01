@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 """Removal of broken IDs as a prep operation"""
 from __future__ import annotations
+
+import logging
 from typing import Optional
 
 from pydantic import Field
@@ -11,7 +13,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
-import logging
 
 
 # pylint: disable=too-few-public-methods

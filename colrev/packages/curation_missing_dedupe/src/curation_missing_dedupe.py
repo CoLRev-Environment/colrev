@@ -1,10 +1,11 @@
 #! /usr/bin/env python
 """Deduplication of remaining records in curated metadata repositories"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import Field
@@ -18,7 +19,6 @@ import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import logging
 
 
 # pylint: disable=too-many-arguments
@@ -80,9 +80,7 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
                 self.logger.info(
                     f"{Colors.ORANGE}Source {source_origin} not fully merged{Colors.END}"
                 )
-                self.logger.info(
-                    f"Exporting details to dedupe/{source_origin}.xlsx"
-                )
+                self.logger.info(f"Exporting details to dedupe/{source_origin}.xlsx")
 
                 records_df = records_df[
                     records_df.columns.intersection(

@@ -1,12 +1,13 @@
 #! /usr/bin/env python
 """Structured data extraction as part of the data operations"""
 from __future__ import annotations
-from typing import Optional
 
 import csv
+import logging
 import typing
 from dataclasses import asdict
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from git.exc import GitCommandError
@@ -22,7 +23,6 @@ import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import logging
 
 
 # pylint: disable=too-few-public-methods

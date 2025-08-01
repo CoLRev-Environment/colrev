@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 """SearchSource: ERIC"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import typing
 import urllib.parse
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 

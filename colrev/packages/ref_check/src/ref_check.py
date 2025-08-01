@@ -1,10 +1,11 @@
 #! /usr/bin/env python
 """DataPackageBaseClass: RefCheck"""
+import logging
 from typing import Optional
+
 import colrev.ops.data
 import colrev.package_manager.package_settings
 from colrev.package_manager.package_base_classes import DataPackageBaseClass
-import logging
 
 # pylint: disable=unused-argument
 

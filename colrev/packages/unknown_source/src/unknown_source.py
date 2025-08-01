@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 """SearchSource: Unknown source (default for all other sources)"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import re
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import Field
@@ -54,7 +54,10 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     _padding = 40
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)

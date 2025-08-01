@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 """SearchSource: plos"""
-from typing import Optional
 import datetime
 import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions

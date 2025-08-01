@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 """Creation of screenshots (PDFs) for online ENTRYTYPES"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 import docker
 import requests
@@ -20,7 +21,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import logging
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods

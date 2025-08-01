@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 """CLI interface for manual retrieval of PDFs"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 import shutil
 import urllib.parse
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
@@ -18,7 +19,6 @@ import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import logging
 
 
 # pylint: disable=too-few-public-methods
@@ -282,9 +282,7 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
         self.pdf_get_man_operation.export_retrieval_table(records)
         pdf_get_man_data = self.pdf_get_man_operation.get_data()
         if pdf_get_man_data["nr_tasks"] == 0:
-            self.logger.info(
-                "No tasks for PDF retrieval (run colrev pdf-get )."
-            )
+            self.logger.info("No tasks for PDF retrieval (run colrev pdf-get ).")
             return records
         print(
             "\nInstructions\n\n      "

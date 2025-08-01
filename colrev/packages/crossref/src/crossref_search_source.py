@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 """SearchSource: Crossref"""
 from __future__ import annotations
-from typing import Optional
 
 import datetime
 import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 
 import inquirer
 import requests

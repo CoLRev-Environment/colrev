@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 """Prescreen based on GenAI"""
 from __future__ import annotations
-from typing import Optional
 
 import csv
+import logging
 from pathlib import Path
 from typing import ClassVar
+from typing import Optional
 
 import pandas as pd
 from litellm import completion
@@ -17,7 +18,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import RecordState
-import logging
 
 
 # pylint: disable=too-few-public-methods

@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 """Export of references in different bibliographical formats as a data operation"""
 from __future__ import annotations
-from typing import Optional
 
 import copy
+import logging
 from enum import Enum
 from pathlib import Path
+from typing import Optional
 
 import inquirer
 from pydantic import BaseModel
@@ -21,7 +22,6 @@ from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
-import logging
 
 
 class BibFormats(Enum):
@@ -193,9 +193,7 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
             self._export(selected_records=selected_records)
 
         except NotImplementedError:
-            self.logger.info(
-                f"Not yet implemented ({self.settings.bib_format})"
-            )
+            self.logger.info(f"Not yet implemented ({self.settings.bib_format})")
 
     def update_record_status_matrix(
         self,

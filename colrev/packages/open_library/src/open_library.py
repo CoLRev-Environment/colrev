@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 """Connector to OpenLibrary (API)"""
 from __future__ import annotations
-from typing import Optional
 
 import json
 import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 
 import requests
 from pydantic import Field

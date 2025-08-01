@@ -4,11 +4,11 @@
 A CoLRev SearchSource plugin to scrape and import records from PROSPERO.
 """
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
@@ -116,9 +116,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
                 f"not {self.search_source.search_type}"
             )
         if self.logger:
-            self.logger.debug(
-                "Validate SearchSource %s", self.search_source.filename
-            )
+            self.logger.debug("Validate SearchSource %s", self.search_source.filename)
 
     def get_search_word(self) -> str:
         """
@@ -135,9 +133,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
         else:
             self.search_word = input("Enter your search query: ").strip()
-            self.logger.debug(
-                "Using user-input query: %s", self.search_word
-            )
+            self.logger.debug("Using user-input query: %s", self.search_word)
 
         return self.search_word
 
@@ -146,9 +142,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         """Add newly scraped records to the feed."""
         if rerun and self.review_manager:
-            self.logger.info(
-                "Performing a search of the full history (may take time)"
-            )
+            self.logger.info("Performing a search of the full history (may take time)")
 
         search_word = self.get_search_word()
         self.logger.info("Prospero search with query: %s", search_word)
@@ -158,9 +152,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
         for record_dict in prospero_api.get_next_record():
-            self.logger.info(
-                f"retrieve record: {record_dict[Fields.URL]}"
-            )
+            self.logger.info(f"retrieve record: {record_dict[Fields.URL]}")
 
             try:
                 if not record_dict.get(Fields.AUTHOR, "") and not record_dict.get(

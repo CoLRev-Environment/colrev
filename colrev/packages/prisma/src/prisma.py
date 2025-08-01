@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 """Creation of a PRISMA chart as part of the data operations"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 import os
 import typing
 from pathlib import Path
+from typing import Optional
 
 import docker
 import pandas as pd
@@ -19,7 +20,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 from colrev.constants import Colors
-import logging
 
 if typing.TYPE_CHECKING:
     import colrev.ops.data

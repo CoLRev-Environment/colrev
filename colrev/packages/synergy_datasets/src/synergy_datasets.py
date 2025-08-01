@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 """SearchSource: SYNERGY-datasets"""
 from __future__ import annotations
-from typing import Optional
 
 import datetime
 import logging
 import tempfile
 import typing
 from pathlib import Path
+from typing import Optional
 
 import inquirer
 import pandas as pd
@@ -52,7 +52,10 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
@@ -174,9 +177,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
             input("ENTER to continue anyway")
         else:
-            self.logger.info(
-                f"Missing metadata: {missing_metadata_percentage:.2%}"
-            )
+            self.logger.info(f"Missing metadata: {missing_metadata_percentage:.2%}")
         return dataset_df
 
     def _update_decisions(self, *, decisions: dict, record: dict) -> None:
@@ -218,9 +219,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
             if len(v) > 1 and len(set(v)) != 1
         }
         if decisions[Fields.DOI] or decisions["pmid"] or decisions["openalex_id"]:
-            self.logger.error(
-                "Errors in dataset: ambiguous inclusion decisions:"
-            )
+            self.logger.error("Errors in dataset: ambiguous inclusion decisions:")
             msg = (
                 f"{Colors.RED}"
                 + f"- dois: {', '.join(decisions['doi'])}"

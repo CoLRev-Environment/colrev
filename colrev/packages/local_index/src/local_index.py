@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: LocalIndex"""
 from __future__ import annotations
-from typing import Optional
 
 import difflib
 import logging
@@ -9,6 +8,7 @@ import typing
 import webbrowser
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urlparse
 
 import git
@@ -872,9 +872,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         if check_review_manager.dataset.behind_remote():
             git_repo = check_review_manager.dataset.get_repo()
             origin = git_repo.remotes.origin
-            self.logger.info(
-                f"Pull project changes from {git_repo.remotes.origin}"
-            )
+            self.logger.info(f"Pull project changes from {git_repo.remotes.origin}")
             res = origin.pull()
             self.logger.info(res)
 
@@ -887,9 +885,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             print(exc)
             return
 
-        self.logger.info(
-            "Precondition for correction (pull-request) checked."
-        )
+        self.logger.info("Precondition for correction (pull-request) checked.")
 
         success = self._apply_change_item_correction(
             check_operation=check_operation,

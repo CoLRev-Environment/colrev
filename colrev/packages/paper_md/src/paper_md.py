@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """Creation of a markdown paper as part of the data operations"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 import os
 import re
 import shutil
@@ -11,6 +11,7 @@ import typing
 from collections import Counter
 from pathlib import Path
 from threading import Timer
+from typing import Optional
 
 import docker
 import requests
@@ -30,7 +31,6 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.writer.write_utils import write_file
-import logging
 
 
 class PaperMarkdownSettings(BaseModel):
@@ -164,9 +164,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             with open(template_name, "wb") as file:
                 file.write(filedata)
         else:
-            self.logger.error(
-                f"Could not retrieve {template_name} from the package"
-            )
+            self.logger.error(f"Could not retrieve {template_name} from the package")
             return False
         self.review_manager.dataset.add_changes(template_name)
         return True
@@ -518,9 +516,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         else:
             if not silent_mode:
                 self.review_manager.report_logger.info("Update paper")
-                self.logger.info(
-                    f"Update paper ({self.settings.paper_path.name})"
-                )
+                self.logger.info(f"Update paper ({self.settings.paper_path.name})")
             self._add_missing_records_to_paper(
                 missing_records=missing_records,
                 silent_mode=silent_mode,
@@ -719,9 +715,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             self.review_manager.paths.records.touch()
 
         if not self.settings.paper_path.is_file():
-            self.logger.error(
-                "File %s does not exist.", self.settings.paper_path
-            )
+            self.logger.error("File %s does not exist.", self.settings.paper_path)
             self.logger.info("Complete processing and use colrev data")
             return
 

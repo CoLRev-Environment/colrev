@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 """SearchSource: Springer Link"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import re
 import typing
 import urllib.parse
 from pathlib import Path
+from typing import Optional
 
 import inquirer
 import pandas as pd
@@ -52,7 +52,10 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     db_url = "https://link.springer.com/"
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)

@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 """SearchSource: AIS electronic Library"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import re
 import urllib.parse
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urlparse
 
 import requests
@@ -68,7 +68,10 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     }
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
@@ -277,9 +280,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         # pylint: disable=too-many-branches
 
         if rerun:
-            self.logger.info(
-                "Performing a search of the full history (may take time)"
-            )
+            self.logger.info("Performing a search of the full history (may take time)")
 
         try:
             for record_dict in self._get_ais_query_return():

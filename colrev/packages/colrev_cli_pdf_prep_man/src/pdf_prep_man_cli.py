@@ -1,14 +1,15 @@
 #! /usr/bin/env python
 """CLI interface for manual preparation of PDFs"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 import os
 import platform
 import re
 import subprocess
 import textwrap
 from pathlib import Path
+from typing import Optional
 
 import inquirer
 from pydantic import Field
@@ -22,7 +23,6 @@ from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import logging
 
 # pylint: disable=too-few-public-methods
 

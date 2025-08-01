@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 """Screen based on CLI"""
 from __future__ import annotations
+
+import logging
 from typing import Optional
 
 from inquirer import Checkbox
@@ -16,7 +18,6 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import ScreenCriterionType
-import logging
 
 
 class CoLRevCLIScreen(base_classes.ScreenPackageBaseClass):

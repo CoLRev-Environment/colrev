@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 """Creation of a github-page for the review as part of the data operations"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 from pathlib import Path
+from typing import Optional
 
 import git
 from pydantic import BaseModel
@@ -18,7 +19,6 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
-import logging
 
 
 class GHPagesSettings(

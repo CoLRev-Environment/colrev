@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 """Last-page removal as a PDF preparation operation"""
 from __future__ import annotations
-from typing import Optional
 
+import logging
 import shutil
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pymupdf
 from pydantic import Field
@@ -15,7 +16,6 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 from colrev.constants import Fields
 from colrev.constants import Filepaths
-import logging
 
 # pylint: disable=duplicate-code
 

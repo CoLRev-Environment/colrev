@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 """SearchSource: Pubmed"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urlparse
 
 import pandas as pd
@@ -337,9 +337,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         rerun: bool,
     ) -> None:
         if rerun:
-            self.logger.info(
-                "Performing a search of the full history (may take time)"
-            )
+            self.logger.info("Performing a search of the full history (may take time)")
 
         api = pubmed_api.PubmedAPI(
             parameters=self.search_source.search_parameters,

@@ -1,10 +1,11 @@
 #! /usr/bin/env python
 """Prescreen based on a table"""
 from __future__ import annotations
-from typing import Optional
 
 import csv
+import logging
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import Field
@@ -16,7 +17,6 @@ import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import logging
 
 
 # pylint: disable=too-few-public-methods
@@ -137,9 +137,7 @@ class TablePrescreen(base_classes.PrescreenPackageBaseClass):
 
         # pylint: disable=duplicate-code
         if not Path(import_table_path).is_file():
-            self.logger.error(
-                f"Did not find {import_table_path} - exiting."
-            )
+            self.logger.error(f"Did not find {import_table_path} - exiting.")
             return
 
         if import_table_path.endswith(".csv"):
@@ -204,9 +202,7 @@ class TablePrescreen(base_classes.PrescreenPackageBaseClass):
             f" {Colors.RED}{prescreen_excluded} records prescreen_excluded{Colors.END}"
         )
 
-        self.logger.info(
-            f" {Colors.ORANGE}{nr_todo} records to prescreen{Colors.END}"
-        )
+        self.logger.info(f" {Colors.ORANGE}{nr_todo} records to prescreen{Colors.END}")
 
         self.review_manager.dataset.save_records_dict(records)
         self.logger.info("Completed import")

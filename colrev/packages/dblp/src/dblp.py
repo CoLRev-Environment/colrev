@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 """SearchSource: DBLP"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import re
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 
 import requests
 from pydantic import BaseModel
@@ -246,9 +246,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         total = api.total
         self.logger.info(f"Total: {total:,}")
         if not rerun and len(dblp_feed.feed_records) > 0:
-            self.logger.info(
-                "Retrieving latest results (no estimate available)"
-            )
+            self.logger.info("Retrieving latest results (no estimate available)")
         elif total > 0 and rerun:
             seconds = 10 + (total / 10)
             if total > 1000:
@@ -262,9 +260,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 + str(int(seconds % 60)).zfill(2)
             )
 
-            self.logger.info(
-                f"Estimated runtime [hh:mm:ss]: {formatted_time}"
-            )
+            self.logger.info(f"Estimated runtime [hh:mm:ss]: {formatted_time}")
 
         while True:
             api.set_next_url()

@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 """SearchSource: OpenCitations"""
 from __future__ import annotations
-from typing import Optional
 
 import json
 import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 import requests
 from pydantic import Field
@@ -40,7 +40,10 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
@@ -151,9 +154,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
             if not self._fw_search_condition(record=record):
                 continue
 
-            self.logger.info(
-                f"Run forward search for {record[Fields.ID]}"
-            )
+            self.logger.info(f"Run forward search for {record[Fields.ID]}")
 
             new_records = self._get_forward_search_records(record_dict=record)
 

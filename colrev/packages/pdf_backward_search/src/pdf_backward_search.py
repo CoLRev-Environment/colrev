@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 """SearchSource: backward search (based on PDFs and GROBID)"""
 from __future__ import annotations
-from typing import Optional
 
 import json
 import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 import inquirer
 import pandas as pd
@@ -53,7 +53,10 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
@@ -371,22 +374,16 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         records = self.review_manager.dataset.load_records_dict()
 
         if not records:
-            self.logger.info(
-                "No records imported. Cannot run backward search yet."
-            )
+            self.logger.info("No records imported. Cannot run backward search yet.")
             return
         min_intext_citations = self.search_source.search_parameters[
             "min_intext_citations"
         ]
-        self.logger.info(
-            f"Set min_intext_citations={min_intext_citations}"
-        )
+        self.logger.info(f"Set min_intext_citations={min_intext_citations}")
         nr_references_threshold = self.search_source.search_parameters.get(
             "min_ref_freq", 1
         )
-        self.logger.info(
-            f"Set nr_references_threshold={nr_references_threshold}"
-        )
+        self.logger.info(f"Set nr_references_threshold={nr_references_threshold}")
 
         selected_records = {
             rid: record
@@ -463,9 +460,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         for record in tqdm(selected_records.values()):
             try:
 
-                self.logger.info(
-                    f" run backward search for {record[Fields.ID]}"
-                )
+                self.logger.info(f" run backward search for {record[Fields.ID]}")
 
                 pdf_path = review_manager.path / Path(record[Fields.FILE])
                 tei = colrev.env.tei_parser.TEIParser(

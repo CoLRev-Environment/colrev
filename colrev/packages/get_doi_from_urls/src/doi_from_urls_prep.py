@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 """Retrieving DOIs from a papers website/url as a prep operation"""
 from __future__ import annotations
-from typing import Optional
 
 import collections
+import logging
 import re
 from sqlite3 import OperationalError
+from typing import Optional
 
 import requests
 from pydantic import Field
@@ -19,7 +20,6 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
 from colrev.constants import Fields
-import logging
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code

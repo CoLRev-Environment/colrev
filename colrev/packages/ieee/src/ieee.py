@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 """SearchSource: IEEEXplore"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import Field

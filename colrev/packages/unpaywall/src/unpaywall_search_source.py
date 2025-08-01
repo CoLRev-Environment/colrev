@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 """SearchSource: Unpaywall"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 

@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 """SearchSource: CoLRev project"""
 from __future__ import annotations
-from typing import Optional
 
 import logging
 import shutil
 import tempfile
 from copy import deepcopy
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 import pandasql as ps
@@ -43,7 +43,10 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        settings: dict,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)

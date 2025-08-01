@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 """Completion of metadata based on year-volume-issue dependency as a prep operation"""
 from __future__ import annotations
+
+import logging
 from typing import Optional
 
 import requests
@@ -15,7 +17,6 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.packages.crossref.src import crossref_api
-import logging
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods

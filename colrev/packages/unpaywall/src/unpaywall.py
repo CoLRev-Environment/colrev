@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 """Retrieval of PDFs from the unpaywall API"""
 from __future__ import annotations
-from typing import Optional
 
 import json
+import logging
 import os
 from pathlib import Path
+from typing import Optional
 
 import pymupdf
 import requests
@@ -17,7 +18,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.packages.unpaywall.src import utils
-import logging
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
