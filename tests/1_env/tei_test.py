@@ -63,7 +63,7 @@ def test_tei_creation(script_loc) -> None:  # type: ignore
 
         with open(tei_file, "w") as file:
             file.write(tei_content)
-    except requests.exceptions.ConnectionError as exc:
+    except Exception as exc:
         print("Restoring original TEI file")
         tmp_tei_file.rename(tei_file)
         raise exc

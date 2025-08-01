@@ -15,8 +15,8 @@ class GrobidService:
     """An environment service for machine readability/annotation (PDF to TEI conversion)"""
 
     GROBID_URL = "http://localhost:8070"
-    # GROBID_IMAGE = "lfoppiano/grobid:latest-crf"
-    GROBID_IMAGE = "lfoppiano/grobid:0.8.2"
+    GROBID_IMAGE = "lfoppiano/grobid:latest-crf"
+    # GROBID_IMAGE = "lfoppiano/grobid:0.8.2"
 
     def __init__(self) -> None:
         colrev.env.docker_manager.DockerManager.build_docker_image(
@@ -39,8 +39,7 @@ class GrobidService:
                     # Get and print the GROBID version via HTTP request
                     response = requests.get(self.GROBID_URL + "/api/version", timeout=10)
                     running_version = response.json()['version']
-                    print(f"GROBID service version: {running_version}")
-                    raise Exception
+                    # print(f"GROBID service version: {running_version}")
                     if running_version != self.GROBID_IMAGE.split(":")[1]:
                         logging.warning(
                             "GROBID version mismatch. Expected: %s, currently running: %s",
