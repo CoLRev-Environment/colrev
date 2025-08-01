@@ -46,6 +46,8 @@ class GrobidService:
             try:
                 ret = requests.get(self.GROBID_URL + "/api/isalive", timeout=30)
                 if ret.text == "true":
+                    # When GROBID is running, it may not be the same version as expected
+                    # in self.GROBID_IMAGE, possibly leading to failing tests.
                     self._ensure_correct_version()
                     return True
             except requests.exceptions.ConnectionError:
