@@ -44,19 +44,28 @@ def test_tei_creation(script_loc) -> None:  # type: ignore
     tei_file = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.tei.xml")
     pdf_path = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.pdf")
 
-    tei_file.unlink(missing_ok=True)
+    tmp_tei_file = tei_file.with_name(tei_file.stem + "_tmp.tei.xml")
+    if tmp_tei_file.exists():
+        tmp_tei_file.unlink(missing_ok=True)
+    tei_file.rename(tmp_tei_file)
 
-    colrev.env.tei_parser.TEIParser(pdf_path=pdf_path, tei_path=tei_file)
+    try:
 
-    with open(tei_file) as file:
-        tei_content = file.read()
+        colrev.env.tei_parser.TEIParser(pdf_path=pdf_path, tei_path=tei_file)
 
-    tei_content = re.sub(
-        r'(ident="GROBID" when=")[^"]+(">)', r"\g<1>NA\g<2>", tei_content
-    )
+        with open(tei_file) as file:
+            tei_content = file.read()
 
-    with open(tei_file, "w") as file:
-        file.write(tei_content)
+        tei_content = re.sub(
+            r'(ident="GROBID" when=")[^"]+(">)', r"\g<1>NA\g<2>", tei_content
+        )
+
+        with open(tei_file, "w") as file:
+            file.write(tei_content)
+    except Exception as exc:
+        print("Restoring original TEI file")
+        tmp_tei_file.rename(tei_file)
+        raise exc
 
 
 @pytest.mark.skipif(
@@ -64,7 +73,7 @@ def test_tei_creation(script_loc) -> None:  # type: ignore
 )
 def test_tei_version(tei_doc) -> None:  # type: ignore
     """Test the tei version"""
-    assert "0.8.3-SNAPSHOT" == tei_doc.get_grobid_version()
+    assert "0.8.2" == tei_doc.get_grobid_version()
 
 
 @pytest.mark.skipif(

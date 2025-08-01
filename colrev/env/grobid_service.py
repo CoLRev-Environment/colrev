@@ -15,7 +15,9 @@ class GrobidService:
     """An environment service for machine readability/annotation (PDF to TEI conversion)"""
 
     GROBID_URL = "http://localhost:8070"
-    GROBID_IMAGE = "lfoppiano/grobid:latest-crf"
+    # Important: do not use :latest versions or :SNAPSHOT versions
+    # as they may change without notice
+    GROBID_IMAGE = "lfoppiano/grobid:0.8.2"
 
     def __init__(self) -> None:
         colrev.env.docker_manager.DockerManager.build_docker_image(
@@ -23,6 +25,17 @@ class GrobidService:
         )
         self.start()
         self.check_grobid_availability()
+
+    def _ensure_correct_version(self) -> None:
+        response = requests.get(self.GROBID_URL + "/api/version", timeout=10)
+        running_version = response.json()["version"]
+        if running_version != self.GROBID_IMAGE.split(":")[1]:
+            logging.warning(
+                "GROBID version mismatch. Expected: %s, currently running: %s",
+                self.GROBID_IMAGE.split(":")[1],
+                running_version,
+            )
+            raise Exception
 
     def check_grobid_availability(self, *, wait: bool = True) -> bool:
         """Check whether the GROBID service is available"""
@@ -33,6 +46,9 @@ class GrobidService:
             try:
                 ret = requests.get(self.GROBID_URL + "/api/isalive", timeout=30)
                 if ret.text == "true":
+                    # When GROBID is running, it may not be the same version as expected
+                    # in self.GROBID_IMAGE, possibly leading to failing tests.
+                    self._ensure_correct_version()
                     return True
             except requests.exceptions.ConnectionError:
                 pass
