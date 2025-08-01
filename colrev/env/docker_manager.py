@@ -23,8 +23,10 @@ class DockerManager:
         """Build a docker image"""
 
         try:
+            print('Call build')
             client = docker.from_env()
             repo_tags = [t for image in client.images.list() for t in image.tags]
+            print(repo_tags)
 
             if imagename not in repo_tags:
                 if dockerfile:
