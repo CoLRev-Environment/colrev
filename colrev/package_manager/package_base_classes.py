@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Package interfaces."""
 from __future__ import annotations
+import logging
 
 import abc
 import typing
@@ -15,7 +16,6 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 if typing.TYPE_CHECKING:  # pragma: no cover
-    import logging
     import colrev.record.record
     import colrev.settings
     import colrev.ops
