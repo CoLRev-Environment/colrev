@@ -365,7 +365,6 @@ def _get_package_imports(plugin: str) -> str:
         return "import colrev.ops.data"
     if plugin == "search_source":
         return """from pathlib import Path
-import logging
 import colrev.process.operation"""
     if plugin == "prep":
         return "import colrev.ops.prep"
@@ -418,6 +417,8 @@ def generate_module_content(
 
     module_content = f'''#! /usr/bin/env python
 """{class_name}"""
+import logging
+
 {package_imports}
 import colrev.package_manager.package_settings
 from colrev.package_manager.package_base_classes import {baseclass}

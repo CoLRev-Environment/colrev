@@ -8,7 +8,7 @@ from colrev.package_manager.package_base_classes import ScreenPackageBaseClass
 
 class CustomName(ScreenPackageBaseClass):
 
-    def __init__(self, *, screen_operation: 'colrev.ops.screen.Screen', settings: 'dict', logger: 'logging.Logger' = logging.getLogger(__name__)) -> 'None':
+    def __init__(self, *, screen_operation: 'colrev.ops.screen.Screen', settings: 'dict', logger: 'logging.Logger' = None) -> 'None':
         """Initialize self.  See help(type(self)) for accurate signature."""
 
     def run_screen(self, records: 'dict', split: 'list') -> 'dict':

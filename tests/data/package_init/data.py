@@ -8,7 +8,7 @@ from colrev.package_manager.package_base_classes import DataPackageBaseClass
 
 class CustomName(DataPackageBaseClass):
 
-    def __init__(self, *, data_operation: 'colrev.ops.data.Data', settings: 'dict', logger: 'logging.Logger' = logging.getLogger(__name__)) -> 'None':
+    def __init__(self, *, data_operation: 'colrev.ops.data.Data', settings: 'dict', logger: 'logging.Logger' = None) -> 'None':
         """Initialize self.  See help(type(self)) for accurate signature."""
 
     def get_advice(self) -> 'dict':
