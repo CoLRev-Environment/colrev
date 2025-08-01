@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Prescreen based on GenAI"""
 from __future__ import annotations
+from typing import Optional
 
 import csv
 from pathlib import Path
@@ -16,6 +17,7 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import RecordState
+import logging
 
 
 # pylint: disable=too-few-public-methods
@@ -64,7 +66,9 @@ class GenAIPrescreen(base_classes.PrescreenPackageBaseClass):
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = prescreen_operation.review_manager
         self.settings = self.settings_class(**settings)
         self.prescreen_decision_explanation_path = (
@@ -138,7 +142,7 @@ class GenAIPrescreen(base_classes.PrescreenPackageBaseClass):
         screening_decisions_df.to_csv(
             self.prescreen_decision_explanation_path, index=False, quoting=csv.QUOTE_ALL
         )
-        self.review_manager.logger.info(
+        self.logger.info(
             f"Exported prescreening decisions to {self.prescreen_decision_explanation_path}"
         )
 

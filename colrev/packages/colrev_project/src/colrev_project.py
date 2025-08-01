@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: CoLRev project"""
 from __future__ import annotations
+from typing import Optional
 
 import logging
 import shutil
@@ -42,8 +43,10 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.search_source = self.settings_class(**settings)
         self.review_manager = source_operation.review_manager
 
@@ -52,7 +55,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
 
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
@@ -63,7 +66,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "url field required in search_parameters"
             )
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug(f"SearchSource {source.filename} validated")
 
     # pylint: disable=colrev-missed-constant-usage
     @classmethod
@@ -109,7 +112,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
             notify_state_transition_operation=False,
         )
         # pylint: disable=colrev-missed-constant-usage
-        self.review_manager.logger.info(
+        self.logger.info(
             f'Loading records from {self.search_source.search_parameters["scope"]["url"]}'
         )
         records = project_review_manager.dataset.load_records_dict()
@@ -192,7 +195,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
             Fields.GROBID_VERSION,
         ]
 
-        self.review_manager.logger.info("Importing selected records")
+        self.logger.info("Importing selected records")
         for record_to_import in tqdm(list(records_to_import.values())):
             if "condition" in self.search_source.search_parameters["scope"]:
                 res = []

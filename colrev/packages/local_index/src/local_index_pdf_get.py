@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Retrieval of PDFs from the LocalIndex"""
 from __future__ import annotations
+from typing import Optional
 
 import shutil
 from pathlib import Path
@@ -14,6 +15,7 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
+import logging
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
@@ -30,7 +32,9 @@ class LocalIndexPDFGet(base_classes.PDFGetPackageBaseClass):
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.pdf_get_operation = pdf_get_operation
         self.review_manager = pdf_get_operation.review_manager

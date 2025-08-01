@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: Unknown source (default for all other sources)"""
 from __future__ import annotations
+from typing import Optional
 
 import logging
 import re
@@ -53,8 +54,10 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     _padding = 40
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.search_source = self.settings_class(**settings)
         self.review_manager = source_operation.review_manager
         self.language_service = colrev.env.language_service.LanguageService()

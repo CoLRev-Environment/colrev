@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: plos"""
+from typing import Optional
 import datetime
 import logging
 import typing
@@ -46,7 +47,9 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         self.search_source = self._get_search_source(settings)
         self.plos_lock = Lock()
@@ -224,20 +227,20 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.api.last_updated = plos_feed.get_last_updated()
 
         num_records = self.api.get_len_total()
-        self.review_manager.logger.info(f"Total: {num_records:,} records")
+        self.logger.info(f"Total: {num_records:,} records")
 
         # It retrieves only new records added since the last sync, avoiding a full download.
         if not rerun:
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"Retrieve papers indexed since {self.api.last_updated.split('T', maxsplit=1)[0]}"
             )
             num_records = self.api.get_len()
 
-        self.review_manager.logger.info(f"Retrieve {num_records:,} records")
+        self.logger.info(f"Retrieve {num_records:,} records")
 
         estimated_time = num_records * 0.5
         estimated_time_formatted = str(datetime.timedelta(seconds=int(estimated_time)))
-        self.review_manager.logger.info(f"Estimated time: {estimated_time_formatted}")
+        self.logger.info(f"Estimated time: {estimated_time_formatted}")
 
         try:
             for record in self.api.get_records():
@@ -291,7 +294,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         if source.search_type == SearchType.API:
             self._validate_api_params()
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug(f"SearchSource {source.filename} validated")
 
     # pylint: disable=pointless-statement
     def _validate_api_params(self) -> None:

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Genral polishing rules"""
 from __future__ import annotations
+from typing import Optional
 
 import re
 
@@ -11,6 +12,7 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
+import logging
 
 
 # pylint: disable=too-few-public-methods
@@ -53,7 +55,9 @@ class GeneralPolishPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
 
     def prepare(

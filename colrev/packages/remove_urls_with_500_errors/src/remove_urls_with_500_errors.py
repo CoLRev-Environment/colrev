@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Removal of broken URLs (error 500) a prep operation"""
 from __future__ import annotations
+from typing import Optional
 
 import requests
 from pydantic import Field
@@ -10,6 +11,7 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
+import logging
 
 
 # pylint: disable=too-few-public-methods
@@ -36,7 +38,9 @@ class RemoveError500URLsPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager

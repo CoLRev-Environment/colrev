@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Consolidation of metadata based on SemanticScholar API as a prep operation"""
 from __future__ import annotations
+from typing import Optional
 
 import json
 
@@ -15,6 +16,7 @@ import colrev.record.record_prep
 import colrev.record.record_similarity
 from colrev.constants import Fields
 from colrev.packages.semanticscholar.src import record_transformer
+import logging
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -37,7 +39,9 @@ class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
@@ -54,7 +58,7 @@ class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
         search_api_url = "https://api.semanticscholar.org/graph/v1/paper/search?query="
         url = search_api_url + record_in.data.get(Fields.TITLE, "").replace(" ", "+")
 
-        # prep_operation.review_manager.logger.debug(url)
+        # self.logger.debug(url)
         ret = self.session.request(
             "GET", url, headers=self.headers, timeout=self.prep_operation.timeout
         )
@@ -69,7 +73,7 @@ class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
 
         paper_id = items[0]["paperId"]
         record_retrieval_url = "https://api.semanticscholar.org/v1/paper/" + paper_id
-        # prep_operation.review_manager.logger.debug(record_retrieval_url)
+        # self.logger.debug(record_retrieval_url)
         ret_ent = self.session.request(
             "GET",
             record_retrieval_url,

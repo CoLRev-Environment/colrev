@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Creation of screenshots (PDFs) for online ENTRYTYPES"""
 from __future__ import annotations
+from typing import Optional
 
 import time
 from datetime import datetime
@@ -19,6 +20,7 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
+import logging
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
@@ -36,7 +38,9 @@ class WebsiteScreenshot(base_classes.PDFGetPackageBaseClass):
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = pdf_get_operation.review_manager
         self.pdf_get_operation = pdf_get_operation

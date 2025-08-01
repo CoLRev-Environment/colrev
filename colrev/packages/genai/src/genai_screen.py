@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Screen based on GenAI"""
 from __future__ import annotations
+from typing import Optional
 
 from pydantic import Field
 
@@ -8,6 +9,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import RecordState
+import logging
 
 # pylint: disable=too-few-public-methods
 
@@ -25,7 +27,9 @@ class GenAIScreen(base_classes.ScreenPackageBaseClass):
         *,
         screen_operation: colrev.ops.screen.Screen,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = screen_operation.review_manager
         self.screen_operation = screen_operation
         self.settings = self.settings_class(**settings)

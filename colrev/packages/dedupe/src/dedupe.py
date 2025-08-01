@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Default deduplication module for CoLRev"""
 from __future__ import annotations
+from typing import Optional
 
 import shutil
 from pathlib import Path
@@ -20,6 +21,7 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
+import logging
 
 # pylint: disable=too-few-public-methods
 
@@ -35,7 +37,9 @@ class Dedupe(base_classes.DedupePackageBaseClass):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ):
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.dedupe_operation = dedupe_operation
         self.review_manager = dedupe_operation.review_manager

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """CLI interface for manual preparation of PDFs"""
 from __future__ import annotations
+from typing import Optional
 
 import os
 import platform
@@ -21,6 +22,7 @@ from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
+import logging
 
 # pylint: disable=too-few-public-methods
 
@@ -38,7 +40,9 @@ class CoLRevCLIPDFManPrep(base_classes.PDFPrepManPackageBaseClass):
         *,
         pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = pdf_prep_man_operation.review_manager
         self.pdf_prep_man_operation = pdf_prep_man_operation
@@ -345,7 +349,7 @@ class CoLRevCLIPDFManPrep(base_classes.PDFPrepManPackageBaseClass):
     def pdf_prep_man(self, records: dict) -> dict:
         """Prepare PDF manually based on a cli"""
 
-        self.review_manager.logger.info("Loading data for pdf_prep_man")
+        self.logger.info("Loading data for pdf_prep_man")
         pdf_prep_man_data = self.pdf_prep_man_operation.get_data()
         records = self.review_manager.dataset.load_records_dict()
 
@@ -372,7 +376,7 @@ class CoLRevCLIPDFManPrep(base_classes.PDFPrepManPackageBaseClass):
                     manual_author=True,
                 )
         else:
-            self.review_manager.logger.info(
+            self.logger.info(
                 "Prepare PDFs manually. Afterwards, use colrev pdf-get-man"
             )
 

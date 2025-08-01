@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Connector to OpenLibrary (API)"""
 from __future__ import annotations
+from typing import Optional
 
 import json
 import logging
@@ -53,7 +54,9 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         if settings:
             # OpenLibrary as a search_source
@@ -164,7 +167,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 timeout=prep_operation.timeout,
             )
             ret.raise_for_status()
-            # prep_operation.review_manager.logger.debug(url)
+            # self.logger.debug(url)
             if '"error": "notfound"' in ret.text:
                 record.remove_field(key=Fields.ISBN)
 
@@ -211,7 +214,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 timeout=prep_operation.timeout,
             )
             ret.raise_for_status()
-            # prep_operation.review_manager.logger.debug(url)
+            # self.logger.debug(url)
 
             # if we have an exact match, we don't need to check the similarity
             if '"numFoundExact": true,' not in ret.text:

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Consolidation of metadata based on GitHub REST API as a prep operation"""
 from __future__ import annotations
+from typing import Optional
 
 from pydantic import Field
 
@@ -9,6 +10,7 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.github.src.github_search_source as github_connector
 import colrev.record.record
+import logging
 
 
 # pylint: disable=too-few-public-methods
@@ -31,7 +33,9 @@ class GithubMetadataPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Conslidation of metadata based on LocalIndex as a prep operation"""
 from __future__ import annotations
+from typing import Optional
 
 from pydantic import Field
 
@@ -10,6 +11,7 @@ import colrev.package_manager.package_settings
 import colrev.packages.local_index.src.local_index as local_index_connector
 import colrev.record.record
 from colrev.constants import Fields
+import logging
 
 # pylint: disable=duplicate-code
 
@@ -30,7 +32,8 @@ class LocalIndexPrep(base_classes.PrepPackageBaseClass):
     )
     always_apply_changes = True
 
-    def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
+    def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict, logger: Optional[logging.Logger] = None) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
 
         self.local_index_source = local_index_connector.LocalIndexSearchSource(

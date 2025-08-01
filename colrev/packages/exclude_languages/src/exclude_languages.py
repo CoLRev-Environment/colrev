@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Exclude records based on language as a prep operation"""
 from __future__ import annotations
+from typing import Optional
 
 import re
 import statistics
@@ -15,6 +16,7 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
+import logging
 
 
 # pylint: disable=too-few-public-methods
@@ -30,7 +32,8 @@ class ExcludeLanguagesPrep(base_classes.PrepPackageBaseClass):
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
+    def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict, logger: Optional[logging.Logger] = None) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
 
         # Note : the following objects have heavy memory footprints and should be

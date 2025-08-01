@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Conditional prescreen"""
 from __future__ import annotations
+from typing import Optional
 
 from pydantic import Field
 
@@ -10,6 +11,7 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
+import logging
 
 
 # pylint: disable=too-few-public-methods
@@ -27,7 +29,9 @@ class ConditionalPrescreen(base_classes.PrescreenPackageBaseClass):
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = prescreen_operation.review_manager
 

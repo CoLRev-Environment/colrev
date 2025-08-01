@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Completion of metadata based on year-volume-issue dependency as a prep operation"""
 from __future__ import annotations
+from typing import Optional
 
 import requests
 from pydantic import Field
@@ -14,6 +15,7 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.packages.crossref.src import crossref_api
+import logging
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
@@ -38,7 +40,9 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager

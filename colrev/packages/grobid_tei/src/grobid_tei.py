@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Creation of TEI as a PDF preparation operation"""
 from __future__ import annotations
+from typing import Optional
 
 import typing
 from pathlib import Path
@@ -11,6 +12,7 @@ import colrev.env.tei_parser
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 from colrev.constants import Fields
+import logging
 
 if typing.TYPE_CHECKING:
     import colrev.record.record_pdf
@@ -27,8 +29,10 @@ class GROBIDTEI(base_classes.PDFPrepPackageBaseClass):
     ci_supported: bool = Field(default=False)
 
     def __init__(
-        self, *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, settings: dict
+        self, *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = pdf_prep_operation.review_manager
 
@@ -49,7 +53,7 @@ class GROBIDTEI(base_classes.PDFPrepPackageBaseClass):
             return record
 
         if not record.get_tei_filename().is_file():
-            self.review_manager.logger.debug(f" creating tei: {record.data['ID']}")
+            self.logger.debug(f" creating tei: {record.data['ID']}")
             _ = colrev.env.tei_parser.TEIParser(
                 pdf_path=Path(record.data[Fields.FILE]),
                 tei_path=record.get_tei_filename(),

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Last-page removal as a PDF preparation operation"""
 from __future__ import annotations
+from typing import Optional
 
 import shutil
 import typing
@@ -14,6 +15,7 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+import logging
 
 # pylint: disable=duplicate-code
 
@@ -33,7 +35,9 @@ class PDFLastPage(base_classes.PDFPrepPackageBaseClass):
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = pdf_prep_operation.review_manager
 

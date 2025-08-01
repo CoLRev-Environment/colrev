@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: Pubmed"""
 from __future__ import annotations
+from typing import Optional
 
 import logging
 import typing
@@ -53,7 +54,9 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         if settings:
             # Pubmed as a search_source
@@ -171,7 +174,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Validate the SearchSource (parameters etc.)"""
 
         source = self.search_source
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         if source.filename.name != self._pubmed_md_filename.name:
             if "query" not in source.search_parameters:
@@ -182,7 +185,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             # if "query_file" in source.search_parameters:
             # ...
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug(f"SearchSource {source.filename} validated")
 
     def check_availability(
         self, *, source_operation: colrev.process.operation.Operation
@@ -230,7 +233,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 parameters=self.search_source.search_parameters,
                 email=self.email,
                 session=self.review_manager.get_cached_session(),
-                logger=self.review_manager.logger,
+                logger=self.logger,
             )
 
             retrieved_record = api.query_id(pubmed_id=record.data["pubmedid"])
@@ -334,7 +337,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         rerun: bool,
     ) -> None:
         if rerun:
-            self.review_manager.logger.info(
+            self.logger.info(
                 "Performing a search of the full history (may take time)"
             )
 
@@ -342,7 +345,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             parameters=self.search_source.search_parameters,
             email=self.email,
             session=self.review_manager.get_cached_session(),
-            logger=self.review_manager.logger,
+            logger=self.logger,
         )
 
         for record in api.get_query_return():
@@ -351,7 +354,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if "" == record.data.get(Fields.AUTHOR, "") and "" == record.data.get(
                     Fields.TITLE, ""
                 ):
-                    self.review_manager.logger.warning(f"Skipped record: {record.data}")
+                    self.logger.warning(f"Skipped record: {record.data}")
                     continue
                 prep_record = colrev.record.record_prep.PrepRecord(record.data)
 
@@ -381,7 +384,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             parameters=self.search_source.search_parameters,
             email=self.email,
             session=self.review_manager.get_cached_session(),
-            logger=self.review_manager.logger,
+            logger=self.logger,
         )
 
         for feed_record_dict in pubmed_feed.feed_records.values():

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: Wiley"""
 from __future__ import annotations
+from typing import Optional
 
 import logging
 from pathlib import Path
@@ -33,8 +34,10 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     db_url = "https://onlinelibrary.wiley.com/"
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.search_source = self.settings_class(**settings)
         self.source_operation = source_operation
         self.review_manager = source_operation.review_manager

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: Taylor and Francis"""
 from __future__ import annotations
+from typing import Optional
 
 import logging
 import re
@@ -31,8 +32,10 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.search_source = self.settings_class(**settings)
         self.review_manager = source_operation.review_manager
         self.source_operation = source_operation

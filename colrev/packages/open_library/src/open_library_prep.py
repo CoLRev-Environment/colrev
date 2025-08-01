@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Consolidation of metadata based on OpenLibrary API as a prep operation"""
 from __future__ import annotations
+from typing import Optional
 
 from pydantic import Field
 
@@ -10,6 +11,7 @@ import colrev.package_manager.package_settings
 import colrev.packages.open_library.src.open_library as open_library_connector
 import colrev.record.record
 from colrev.constants import Fields
+import logging
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -29,7 +31,9 @@ class OpenLibraryMetadataPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.open_library_connector = open_library_connector.OpenLibrarySearchSource(

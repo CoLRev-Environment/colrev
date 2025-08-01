@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: GitHub"""
 from __future__ import annotations
+from typing import Optional
 
 import logging
 import re
@@ -61,7 +62,9 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         if settings:
             # GitHub as a search source

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Export of references in different bibliographical formats as a data operation"""
 from __future__ import annotations
+from typing import Optional
 
 import copy
 from enum import Enum
@@ -20,6 +21,7 @@ from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
+import logging
 
 
 class BibFormats(Enum):
@@ -64,7 +66,9 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = data_operation.review_manager
 
         if "bib_format" not in settings:
@@ -77,7 +81,7 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
         self.endpoint_path = self.review_manager.paths.output
 
     def _export(self, *, selected_records: dict) -> None:
-        self.review_manager.logger.info(f"Export {self.settings.bib_format.name}")
+        self.logger.info(f"Export {self.settings.bib_format.name}")
 
         if self.settings.bib_format is BibFormats.zotero:
             export_filepath = self.endpoint_path / Path("zotero.bib")
@@ -189,7 +193,7 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
             self._export(selected_records=selected_records)
 
         except NotImplementedError:
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"Not yet implemented ({self.settings.bib_format})"
             )
 

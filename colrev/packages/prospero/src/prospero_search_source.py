@@ -4,6 +4,7 @@
 A CoLRev SearchSource plugin to scrape and import records from PROSPERO.
 """
 from __future__ import annotations
+from typing import Optional
 
 import logging
 import typing
@@ -44,7 +45,9 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         """Initialize the ProsperoSearchSource plugin."""
 
         self.search_source = self._get_search_source(settings)
@@ -112,8 +115,8 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
                 f"Prospero search_type must be one of {self.search_types}, "
                 f"not {self.search_source.search_type}"
             )
-        if self.review_manager.logger:
-            self.review_manager.logger.debug(
+        if self.logger:
+            self.logger.debug(
                 "Validate SearchSource %s", self.search_source.filename
             )
 
@@ -127,12 +130,12 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if "query" in (self.search_source.search_parameters or {}):
             self.search_word = self.search_source.search_parameters["query"]
-            self.review_manager.logger.debug(
+            self.logger.debug(
                 "Using query from search_parameters: %s", self.search_word
             )
         else:
             self.search_word = input("Enter your search query: ").strip()
-            self.review_manager.logger.debug(
+            self.logger.debug(
                 "Using user-input query: %s", self.search_word
             )
 
@@ -143,19 +146,19 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         """Add newly scraped records to the feed."""
         if rerun and self.review_manager:
-            self.review_manager.logger.info(
+            self.logger.info(
                 "Performing a search of the full history (may take time)"
             )
 
         search_word = self.get_search_word()
-        self.review_manager.logger.info("Prospero search with query: %s", search_word)
+        self.logger.info("Prospero search with query: %s", search_word)
 
         prospero_api = colrev.packages.prospero.src.prospero_api.PROSPEROAPI(
-            search_word, logger=self.review_manager.logger
+            search_word, logger=self.logger
         )
 
         for record_dict in prospero_api.get_next_record():
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"retrieve record: {record_dict[Fields.URL]}"
             )
 

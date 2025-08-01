@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: Springer Link"""
 from __future__ import annotations
+from typing import Optional
 
 import logging
 import re
@@ -51,8 +52,10 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     db_url = "https://link.springer.com/"
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         self.search_source = self.settings_class(**settings)
         self.quality_model = self.review_manager.get_qm()

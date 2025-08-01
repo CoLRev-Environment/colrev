@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: Crossref"""
 from __future__ import annotations
+from typing import Optional
 
 import datetime
 import logging
@@ -58,7 +59,9 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
 
         self.review_manager = source_operation.review_manager
         self.search_source = self._get_search_source(settings)
@@ -330,7 +333,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         if source.search_type not in self.search_types:
             raise colrev_exceptions.InvalidQueryException(
@@ -340,7 +343,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         if source.search_type == SearchType.API:
             self._validate_api_params()
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug(f"SearchSource {source.filename} validated")
 
     def _restore_url(
         self,
@@ -423,17 +426,17 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.api.last_updated = crossref_feed.get_last_updated()
 
         nrecs = self.api.get_len_total()
-        self.review_manager.logger.info(f"Total: {nrecs:,} records")
+        self.logger.info(f"Total: {nrecs:,} records")
         if not rerun:
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"Retrieve papers indexed since {self.api.last_updated.split('T', maxsplit=1)[0]}"
             )
             nrecs = self.api.get_number_of_records()
 
-        self.review_manager.logger.info(f"Retrieve {nrecs:,} records")
+        self.logger.info(f"Retrieve {nrecs:,} records")
         estimated_time = nrecs * 0.5
         estimated_time_formatted = str(datetime.timedelta(seconds=int(estimated_time)))
-        self.review_manager.logger.info(f"Estimated time: {estimated_time_formatted}")
+        self.logger.info(f"Estimated time: {estimated_time_formatted}")
 
         try:
             for retrieved_record in self.api.get_records():

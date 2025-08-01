@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Preparation of curations"""
 from __future__ import annotations
+from typing import Optional
 
 from pydantic import Field
 
@@ -11,6 +12,7 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
+import logging
 
 
 # pylint: disable=too-few-public-methods
@@ -32,7 +34,9 @@ class CurationPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.quality_model = prep_operation.review_manager.get_qm()
         self.prep_operation = prep_operation

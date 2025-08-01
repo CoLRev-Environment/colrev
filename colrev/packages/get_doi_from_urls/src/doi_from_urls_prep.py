@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Retrieving DOIs from a papers website/url as a prep operation"""
 from __future__ import annotations
+from typing import Optional
 
 import collections
 import re
@@ -18,6 +19,7 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
 from colrev.constants import Fields
+import logging
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -41,7 +43,9 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager

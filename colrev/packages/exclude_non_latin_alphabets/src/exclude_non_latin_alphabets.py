@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Exclude records with non-latin alphabets as a prep operation"""
 from __future__ import annotations
+from typing import Optional
 
 from alphabet_detector import AlphabetDetector
 from pydantic import Field
@@ -10,6 +11,7 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
+import logging
 
 # pylint: disable=duplicate-code
 
@@ -34,7 +36,9 @@ class ExcludeNonLatinAlphabetsPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
 

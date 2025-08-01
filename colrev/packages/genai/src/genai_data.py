@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Data based on GenAI"""
 from __future__ import annotations
+from typing import Optional
 
 import re
 import typing
@@ -15,6 +16,7 @@ import colrev.package_manager.package_settings
 import colrev.record.record_pdf
 from colrev.constants import Fields
 from colrev.constants import RecordState
+import logging
 
 
 # pylint: disable=too-few-public-methods
@@ -44,7 +46,9 @@ class GenAIData(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = data_operation.review_manager
         self.data_operation = data_operation
 

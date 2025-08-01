@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: AIS electronic Library"""
 from __future__ import annotations
+from typing import Optional
 
 import logging
 import re
@@ -67,8 +68,10 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     }
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.search_source = self.settings_class(**settings)
         self.review_manager = source_operation.review_manager
         self.quality_model = self.review_manager.get_qm()
@@ -208,14 +211,14 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
         source = self.search_source
 
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         if source.search_type == SearchType.API:
             if "query" not in source.search_parameters:
                 # if "search_terms" not in source.search_parameters["query"]:
                 raise colrev_exceptions.InvalidQueryException("query parameter missing")
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug(f"SearchSource {source.filename} validated")
 
     def _get_ais_query_return(self) -> list:
         def query_from_params(params: dict) -> str:
@@ -260,7 +263,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
             id_labeler=ais_load_utils.enl_id_labeler,
             entrytype_setter=ais_load_utils.enl_entrytype_setter,
             field_mapper=ais_load_utils.enl_field_mapper,
-            logger=self.review_manager.logger,
+            logger=self.logger,
         )
 
         return list(records.values())
@@ -274,7 +277,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         # pylint: disable=too-many-branches
 
         if rerun:
-            self.review_manager.logger.info(
+            self.logger.info(
                 "Performing a search of the full history (may take time)"
             )
 

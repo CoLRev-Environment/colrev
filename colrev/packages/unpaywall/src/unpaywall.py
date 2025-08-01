@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Retrieval of PDFs from the unpaywall API"""
 from __future__ import annotations
+from typing import Optional
 
 import json
 import os
@@ -16,6 +17,7 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.packages.unpaywall.src import utils
+import logging
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
@@ -36,7 +38,9 @@ class Unpaywall(base_classes.PDFGetPackageBaseClass):
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = pdf_get_operation.review_manager
         self.pdf_get_operation = pdf_get_operation
@@ -132,7 +136,7 @@ class Unpaywall(base_classes.PDFGetPackageBaseClass):
                 if Fields.FULLTEXT not in record.data:
                     record.data[Fields.FULLTEXT] = url
                 if self.review_manager.verbose_mode:
-                    self.review_manager.logger.info(
+                    self.logger.info(
                         "Unpaywall retrieval error " f"{res.status_code} - {url}"
                     )
         except (

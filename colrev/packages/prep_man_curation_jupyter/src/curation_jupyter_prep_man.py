@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Jupyter notebook for prep-man operation"""
 from __future__ import annotations
+from typing import Optional
 
 from pathlib import Path
 
@@ -11,6 +12,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+import logging
 
 # pylint: disable=too-few-public-methods
 
@@ -22,13 +24,15 @@ class CurationJupyterNotebookManPrep(base_classes.PrepManPackageBaseClass):
     ci_supported: bool = Field(default=False)
 
     def __init__(
-        self, *, prep_man_operation: colrev.ops.prep_man.PrepMan, settings: dict
+        self, *, prep_man_operation: colrev.ops.prep_man.PrepMan, settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
 
         Path("prep_man").mkdir(exist_ok=True)
         if not Path("prep_man/prep_man_curation.ipynb").is_file():
-            prep_man_operation.review_manager.logger.info(
+            self.logger.info(
                 f"Activated jupyter notebook to"
                 f"{Path('prep_man/prep_man_curation.ipynb')}"
             )

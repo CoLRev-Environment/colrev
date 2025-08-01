@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: Europe PMC"""
 from __future__ import annotations
+from typing import Optional
 
 import json
 import logging
@@ -78,7 +79,9 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         if settings:
             # EuropePMC as a search_source
@@ -262,7 +265,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         source = self.search_source
 
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         assert source.search_type in self.search_types
 
@@ -271,7 +274,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "Query required in search_parameters"
             )
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug(f"SearchSource {source.filename} validated")
 
     def search(self, rerun: bool) -> None:
         """Run a search of Europe PMC"""
@@ -325,7 +328,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
                 for retrieved_record in api.get_records():
                     if Fields.TITLE not in retrieved_record.data:
-                        self.review_manager.logger.warning(
+                        self.logger.warning(
                             f"Skipped record: {retrieved_record.data}"
                         )
                         continue
