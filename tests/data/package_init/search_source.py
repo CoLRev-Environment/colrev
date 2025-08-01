@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 """CustomName"""
+import logging
 import typing
 
 from pathlib import Path
-import logging
 import colrev.process.operation
 import colrev.package_manager.package_settings
 from colrev.package_manager.package_base_classes import SearchSourcePackageBaseClass
