@@ -164,7 +164,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             with open(template_name, "wb") as file:
                 file.write(filedata)
         else:
-            self.logger.error(f"Could not retrieve {template_name} from the package")
+            self.logger.error("Could not retrieve %s from the package", template_name)
             return False
         self.review_manager.dataset.add_changes(template_name)
         return True
@@ -253,15 +253,9 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         writer.write(marker)
         for missing_record in missing_records:
             writer.write(missing_record)
-            self.review_manager.report_logger.info(
-                # f" {missing_record}".ljust(self._PAD, " ") + " added"
-                f" {missing_record} added"
-            )
+            self.review_manager.report_logger.info(" %s added", missing_record)
             if not silent_mode:
-                self.logger.info(
-                    # f" {missing_record}".ljust(self._PAD, " ") + " added"
-                    f" {missing_record} added"
-                )
+                self.logger.info(" %s added", missing_record)
 
     # pylint: disable=too-many-arguments
     def _update_new_records_source_section(
@@ -288,27 +282,30 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
 
         for paper_id in paper_ids_added:
             self.review_manager.report_logger.info(
-                # f" {missing_record}".ljust(self._PAD, " ")
-                f" {paper_id}"
-                + f" added to {paper_path.name}"
+                " %s added to %s",
+                paper_id,
+                paper_path.name,
             )
         nr_records_added = len(missing_records)
         self.review_manager.report_logger.info(
-            f"{nr_records_added} records added to {self.settings.paper_path.name}"
+            "%s records added to %s",
+            nr_records_added,
+            self.settings.paper_path.name,
         )
 
         for paper_id_added in paper_ids_added:
             if not silent_mode:
                 self.logger.info(
-                    f" {Colors.GREEN}{paper_id_added}".ljust(45)
-                    + f"add to paper{Colors.END}"
+                    " %sadd to paper%s",
+                    f"{Colors.GREEN}{paper_id_added}".ljust(45),
+                    Colors.END,
                 )
 
         if not silent_mode:
             self.logger.info(
-                f"Added to {paper_path.name}".ljust(24)
-                + f"{nr_records_added}".rjust(15, " ")
-                + " records"
+                "%s%s records",
+                f"Added to {paper_path.name}".ljust(24),
+                f"{nr_records_added}".rjust(15, " "),
             )
 
         # skip empty lines between to connect lists
@@ -481,10 +478,10 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                         screening_criteria="NA",
                     )
 
-                    self.logger.info(f"Excluded {record_id}")
-                    self.review_manager.report_logger.info(f"Excluded {record_id}")
+                    self.logger.info("Excluded %s", record_id)
+                    self.review_manager.report_logger.info("Excluded %s", record_id)
                 else:
-                    self.logger.error(f"Did not find ID {record_id}")
+                    self.logger.error("Did not find ID %s", record_id)
                     writer.write(line)
                     line = reader.readline()
                     continue
@@ -516,7 +513,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         else:
             if not silent_mode:
                 self.review_manager.report_logger.info("Update paper")
-                self.logger.info(f"Update paper ({self.settings.paper_path.name})")
+                self.logger.info("Update paper (%s)", self.settings.paper_path.name)
             self._add_missing_records_to_paper(
                 missing_records=missing_records,
                 silent_mode=silent_mode,
@@ -726,7 +723,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         word_template = self.settings.word_template
 
         if not self._retrieve_default_word_template(word_template):
-            self.logger.error(f"Word template {word_template} not found")
+            self.logger.error("Word template %s not found", word_template)
             return
 
         output_relative_path = self.settings.paper_output.relative_to(

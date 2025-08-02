@@ -227,20 +227,21 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.api.last_updated = plos_feed.get_last_updated()
 
         num_records = self.api.get_len_total()
-        self.logger.info(f"Total: {num_records:,} records")
+        self.logger.info("Total: %s records", f"{num_records:,}")
 
         # It retrieves only new records added since the last sync, avoiding a full download.
         if not rerun:
             self.logger.info(
-                f"Retrieve papers indexed since {self.api.last_updated.split('T', maxsplit=1)[0]}"
+                "Retrieve papers indexed since %s",
+                self.api.last_updated.split("T", maxsplit=1)[0],
             )
             num_records = self.api.get_len()
 
-        self.logger.info(f"Retrieve {num_records:,} records")
+        self.logger.info("Retrieve %s records", f"{num_records:,}")
 
         estimated_time = num_records * 0.5
         estimated_time_formatted = str(datetime.timedelta(seconds=int(estimated_time)))
-        self.logger.info(f"Estimated time: {estimated_time_formatted}")
+        self.logger.info("Estimated time: %s", estimated_time_formatted)
 
         try:
             for record in self.api.get_records():

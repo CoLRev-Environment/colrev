@@ -209,7 +209,9 @@ class GithubPages(base_classes.DataPackageBaseClass):
             )
             if not silent_mode:
                 self.logger.info(
-                    f"Data available at: https://{username}.github.io/{project}/"
+                    "Data available at: https://%s.github.io/%s/",
+                    username,
+                    project,
                 )
         else:
             if not silent_mode:

@@ -69,7 +69,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "url field required in search_parameters"
             )
 
-        self.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.filename)
 
     # pylint: disable=colrev-missed-constant-usage
     @classmethod

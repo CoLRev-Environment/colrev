@@ -274,7 +274,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "Query required in search_parameters"
             )
 
-        self.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.filename)
 
     def search(self, rerun: bool) -> None:
         """Run a search of Europe PMC"""

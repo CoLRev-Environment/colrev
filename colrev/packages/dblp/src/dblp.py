@@ -260,7 +260,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 + str(int(seconds % 60)).zfill(2)
             )
 
-            self.logger.info(f"Estimated runtime [hh:mm:ss]: {formatted_time}")
+            self.logger.info("Estimated runtime [hh:mm:ss]: %s", formatted_time)
 
         while True:
             api.set_next_url()
@@ -318,7 +318,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "scope or query required in search_parameters"
             )
 
-        self.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.filename)
 
     def search(self, rerun: bool) -> None:
         """Run a search of DBLP"""

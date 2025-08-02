@@ -86,7 +86,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "search_parameters/scope/colrev_status must be rev_included|rev_synthesized"
             )
 
-        self.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.filename)
 
     def _fw_search_condition(self, *, record: dict) -> bool:
         if Fields.DOI not in record:

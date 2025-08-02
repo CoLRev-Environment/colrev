@@ -133,7 +133,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             #         f"Source missing query/query search_parameter ({source.filename})"
             #     )
 
-        self.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.filename)
 
     def _retrieve_from_index(self) -> typing.List[dict]:
         params = self.search_source.search_parameters
