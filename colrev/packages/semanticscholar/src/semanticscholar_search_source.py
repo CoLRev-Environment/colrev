@@ -213,7 +213,8 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
                 raise colrev_exceptions.ServiceNotAvailableException(exc)
         else:
             self.logger.error(
-                'Error: Search type "Search for paper" is not available with your parameters.\nSearch parameter: %s',
+                'Error: Search type "Search for paper"'
+                + ' is not available with your parameters.\nSearch parameter: %s',
                 params.get("paper_ids"),
             )
             raise colrev_exceptions.ServiceNotAvailableException(
@@ -239,7 +240,8 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
                 raise colrev_exceptions.ServiceNotAvailableException(exc)
         else:
             self.logger.error(
-                '\nError: Search type "Search for author" is not available with your parameters.\nSearch parameter: %s',
+                '\nError: Search type "Search for author"'
+                + ' is not available with your parameters.\nSearch parameter: %s',
                 params.get("author_ids"),
             )
             raise colrev_exceptions.ServiceNotAvailableException(
