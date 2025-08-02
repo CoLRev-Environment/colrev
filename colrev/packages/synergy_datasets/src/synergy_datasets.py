@@ -132,7 +132,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
                 params_dict[key] = value
 
         if len(params_dict) == 0:
-            self.logger.info("Retrieving available datasets")
+            print("Retrieving available datasets")
             params_dict = cls.__select_datset_interactively()
 
         assert "dataset" in params_dict

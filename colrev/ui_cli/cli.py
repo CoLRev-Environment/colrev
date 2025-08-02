@@ -562,7 +562,7 @@ def search(
 
     if view:
         for source in search_operation.sources:
-            colrev.utils.pprint(source)
+            colrev.utils.p_print(source)
         return
 
     if add:
@@ -2059,12 +2059,12 @@ def data(
             data_operation.review_manager.settings.data.data_package_endpoints
         )
         for data_endpoint in data_endpoints:
-            colrev.utils.pprint(data_endpoint)
+            colrev.utils.p_print(data_endpoint)
         return
 
     if reading_heuristics:
         heuristic_results = data_operation.reading_heuristics()
-        colrev.utils.pprint(heuristic_results)
+        colrev.utils.p_print(heuristic_results)
         return
     if setup_custom_script:
         data_operation.setup_custom_script()

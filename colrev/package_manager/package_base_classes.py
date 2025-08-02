@@ -8,6 +8,7 @@ import typing
 from abc import ABC
 from abc import abstractmethod
 from pathlib import Path
+from typing import Optional
 from typing import Type
 
 import colrev.package_manager.package_settings
@@ -41,7 +42,7 @@ class ReviewTypePackageBaseClass(abc.ABC):
         *,
         operation: colrev.process.operation.Operation,
         settings: dict,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         pass
 
@@ -78,7 +79,7 @@ class SearchSourcePackageBaseClass(ABC):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         pass
 
@@ -148,7 +149,7 @@ class PrepPackageBaseClass(ABC):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         pass
 
@@ -178,7 +179,7 @@ class PrepManPackageBaseClass(ABC):
         *,
         prep_man_operation: colrev.ops.prep_man.PrepMan,
         settings: dict,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         pass
 
@@ -205,7 +206,7 @@ class DedupePackageBaseClass(ABC):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ):
         pass
 
@@ -232,7 +233,7 @@ class PrescreenPackageBaseClass(ABC):
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         pass
 
@@ -259,7 +260,7 @@ class PDFGetPackageBaseClass(ABC):
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,
         settings: dict,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         pass
 
@@ -287,7 +288,7 @@ class PDFGetManPackageBaseClass(ABC):
         *,
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
         settings: dict,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         pass
 
@@ -314,7 +315,7 @@ class PDFPrepPackageBaseClass(ABC):
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         settings: dict,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         pass
 
@@ -343,7 +344,7 @@ class PDFPrepManPackageBaseClass(ABC):
         *,
         pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
         settings: dict,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         pass
 
@@ -371,7 +372,7 @@ class ScreenPackageBaseClass(ABC):
         *,
         screen_operation: colrev.ops.screen.Screen,
         settings: dict,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         pass
 
@@ -398,7 +399,7 @@ class DataPackageBaseClass(ABC):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         pass
 

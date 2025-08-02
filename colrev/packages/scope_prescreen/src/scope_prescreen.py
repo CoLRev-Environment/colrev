@@ -310,13 +310,13 @@ class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
         ) in operation.review_manager.settings.prescreen.prescreen_package_endpoints:
             if existing_scope_prescreen["endpoint"] != "colrev.scope_prescreen":
                 continue
-            self.logger.info("Integrating into existing colrev.scope_prescreen")
+            print("Integrating into existing colrev.scope_prescreen")
             for key, value in params_dict.items():
                 if (
                     key in existing_scope_prescreen
                     and existing_scope_prescreen[key] != value
                 ):
-                    self.logger.info(
+                    print(
                         f"Replacing {key} ({existing_scope_prescreen[key]} -> {value})"
                     )
 

@@ -13,6 +13,6 @@ def pformat(obj: typing.Any) -> str:
     return _p_printer.pformat(obj)
 
 
-def pprint(obj: typing.Any) -> None:
+def p_print(obj: typing.Any) -> None:
     """Pretty-print ``obj`` using repository defaults."""
     _p_printer.pprint(obj)

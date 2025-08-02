@@ -11,7 +11,7 @@ from colrev.package_manager.package_base_classes import SearchSourcePackageBaseC
 
 class CustomName(SearchSourcePackageBaseClass):
 
-    def __init__(self, *, source_operation: 'colrev.process.operation.Operation', settings: 'typing.Optional[dict]' = None, logger: 'logging.Logger' = None) -> 'None':
+    def __init__(self, *, source_operation: 'colrev.process.operation.Operation', settings: 'typing.Optional[dict]' = None, logger: 'Optional[logging.Logger]' = None) -> 'None':
         """Initialize self.  See help(type(self)) for accurate signature."""
 
     def prep_link_md(self, prep_operation: 'colrev.ops.prep.Prep', record: 'colrev.record.record.Record', save_feed: 'bool' = True, timeout: 'int' = 10) -> 'colrev.record.record.Record':

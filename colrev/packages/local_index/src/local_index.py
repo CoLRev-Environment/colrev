@@ -559,7 +559,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                         + f": {Colors.GREEN}{values[0][1]}{Colors.END}"
                     )
                 else:
-                    colrev.utils.pprint(change_item)
+                    colrev.utils.p_print(change_item)
             selected_changes.append(item)
         return selected_changes
 

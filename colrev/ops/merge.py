@@ -243,7 +243,7 @@ class Merge(colrev.process.operation.Operation):
             records_reconciled=current_branch_records,
         )
         print("Statistics:")
-        colrev.utils.pprint(validation_details["statistics"])
+        colrev.utils.p_print(validation_details["statistics"])
 
         print(
             f"\n{Colors.ORANGE}Please add (git add .) and commit (git commit){Colors.END}"

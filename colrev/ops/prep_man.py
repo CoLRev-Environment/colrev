@@ -93,10 +93,10 @@ class PrepMan(colrev.process.operation.Operation):
             )
 
         print("Entry type statistics overall:")
-        colrev.utils.pprint(overall_types[Fields.ENTRYTYPE])
+        colrev.utils.p_print(overall_types[Fields.ENTRYTYPE])
 
         print("Entry type statistics (needs_manual_preparation):")
-        colrev.utils.pprint(stats[Fields.ENTRYTYPE])
+        colrev.utils.p_print(stats[Fields.ENTRYTYPE])
 
         return pd.DataFrame(crosstab, columns=[Fields.ORIGIN, "hint"])
 
