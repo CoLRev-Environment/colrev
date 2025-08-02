@@ -415,9 +415,7 @@ class SearchAPIFeed:
             )
         else:
             if self.records:
-                self.logger.info(
-                    f"{Colors.GREEN}Records up-to-date{Colors.END}"
-                )
+                self.logger.info(f"{Colors.GREEN}Records up-to-date{Colors.END}")
 
     def get_prev_feed_record(
         self, record: colrev.record.record.Record
