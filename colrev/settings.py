@@ -160,7 +160,7 @@ class SearchSource(BaseModel):
         source_identifier: str,
         update_only: bool,
         prep_mode: bool = False,
-        primary_records: typing.Optional[dict] = None,
+        records: typing.Optional[dict] = None,
     ) -> colrev.ops.search_api_feed.SearchAPIFeed:
         """Get a feed to add and update records"""
 
@@ -172,7 +172,7 @@ class SearchSource(BaseModel):
             logger=review_manager.logger,
             prep_mode=prep_mode,
             verbose_mode=review_manager.verbose_mode,
-            primary_records=primary_records,
+            records=records,
         )
 
     def __str__(self) -> str:

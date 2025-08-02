@@ -48,7 +48,7 @@ class SearchAPIFeed:
         logger: logging.Logger,
         prep_mode: bool = False,
         verbose_mode: bool = False,
-        primary_records: typing.Optional[dict] = None,
+        records: typing.Optional[dict] = None,
     ):
         self.source = search_source
         self.feed_file = search_source.filename
@@ -77,11 +77,11 @@ class SearchAPIFeed:
 
         self._load_feed()
 
-        if not prep_mode:
-            assert primary_records is not None
+        if prep_mode:
+            assert records is not None
         self.verbose_mode = verbose_mode
         self.prep_mode = prep_mode
-        self.primary_records = primary_records
+        self.records = records or {}
 
     @property
     def source_identifier(self) -> str:

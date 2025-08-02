@@ -564,7 +564,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                     source_identifier=self.source_identifier,
                     update_only=False,
                     prep_mode=True,
-                    primary_records=self.review_manager.dataset.load_records_dict(),
+                    records=self.review_manager.dataset.load_records_dict(),
                 )
 
                 crossref_feed.add_update_record(retrieved_record)
