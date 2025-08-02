@@ -414,8 +414,7 @@ class SearchAPIFeed:
         else:
             if self.records:
                 self.review_manager.logger.info(
-                    f"{Colors.GREEN}Records ({self.review_manager.paths.RECORDS_FILE})"
-                    f" up-to-date{Colors.END}"
+                    f"{Colors.GREEN}Records up-to-date{Colors.END}"
                 )
 
     def get_prev_feed_record(
