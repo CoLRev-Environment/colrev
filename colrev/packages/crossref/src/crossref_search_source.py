@@ -415,12 +415,6 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
             return False
         return len(params["scope"][Fields.ISSN]) > 1
 
-    def _get_last_updated(self, feed_file: Path) -> str:
-        """Returns the date of the last update (if available) in YYYY-MM-DD format"""
-        if not feed_file.is_file():
-            return ""
-        return self.review_manager.dataset.get_last_commit_date(feed_file)
-
     def _run_api_search(
         self,
         *,
@@ -429,7 +423,9 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
 
         self.api.rerun = rerun
-        self.api.last_updated = self._get_last_updated(crossref_feed.feed_file)
+        self.api.last_updated = self.review_manager.dataset.get_last_updated(
+            crossref_feed.feed_file
+        )
 
         nrecs = self.api.get_len_total()
         self.logger.info(f"Total: {nrecs:,} records")

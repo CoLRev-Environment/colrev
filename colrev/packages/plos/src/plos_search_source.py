@@ -224,7 +224,9 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         rerun: bool,
     ) -> None:
         self.api.rerun = rerun
-        self.api.last_updated = plos_feed.get_last_updated()
+        self.api.last_updated = self.review_manager.dataset.get_last_updated(
+            plos_feed.feed_file
+        )
 
         num_records = self.api.get_len_total()
         self.logger.info("Total: %s records", f"{num_records:,}")

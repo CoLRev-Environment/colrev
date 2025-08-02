@@ -550,6 +550,12 @@ class Dataset:
         tree_hash = self._git_repo.git.execute(["git", "write-tree"])
         return str(tree_hash)
 
+    def get_last_updated(self, feed_file: Path) -> str:
+        """Returns the date of the last update (if available) in YYYY-MM-DD format"""
+        if not feed_file.is_file():
+            return ""
+        return self.get_last_commit_date(feed_file)
+
     def _get_remote_commit_differences(self) -> list:  # pragma: no cover
         origin = self._git_repo.remotes.origin
         if origin.exists():
