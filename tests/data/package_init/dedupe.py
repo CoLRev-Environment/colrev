@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 """CustomName"""
 import logging
+from typing import Optional
 
 import colrev.ops.dedupe
-import colrev.package_manager.package_settings
 from colrev.package_manager.package_base_classes import DedupePackageBaseClass
 
 class CustomName(DedupePackageBaseClass):

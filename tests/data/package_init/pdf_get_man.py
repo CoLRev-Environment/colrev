@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 """CustomName"""
 import logging
+from typing import Optional
 
 import colrev.ops.pdf_get_man
-import colrev.package_manager.package_settings
 from colrev.package_manager.package_base_classes import PDFGetManPackageBaseClass
 
 class CustomName(PDFGetManPackageBaseClass):

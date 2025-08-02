@@ -412,15 +412,15 @@ def generate_module_content(
     baseclass = BASECLASS_MAP[endpoint_type]
     method_signatures = _generate_method_signatures(module_path, baseclass)
     package_imports = _get_package_imports(endpoint_type)
-    if endpoint_type == "search_source":
-        package_imports = "import typing\n\n" + package_imports
+    # if endpoint_type == "search_source":
+    #     package_imports = "import typing\n\n" + package_imports
 
     module_content = f'''#! /usr/bin/env python
 """{class_name}"""
 import logging
+from typing import Optional
 
 {package_imports}
-import colrev.package_manager.package_settings
 from colrev.package_manager.package_base_classes import {baseclass}
 
 class {class_name}({baseclass}):

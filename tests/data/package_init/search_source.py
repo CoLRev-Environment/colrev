@@ -1,17 +1,15 @@
 #! /usr/bin/env python
 """CustomName"""
 import logging
-
-import typing
+from typing import Optional
 
 from pathlib import Path
 import colrev.process.operation
-import colrev.package_manager.package_settings
 from colrev.package_manager.package_base_classes import SearchSourcePackageBaseClass
 
 class CustomName(SearchSourcePackageBaseClass):
 
-    def __init__(self, *, source_operation: 'colrev.process.operation.Operation', settings: 'typing.Optional[dict]' = None, logger: 'Optional[logging.Logger]' = None) -> 'None':
+    def __init__(self, *, source_operation: 'colrev.process.operation.Operation', settings: 'dict', logger: 'Optional[logging.Logger]' = None) -> 'None':
         """Initialize self.  See help(type(self)) for accurate signature."""
 
     def prep_link_md(self, prep_operation: 'colrev.ops.prep.Prep', record: 'colrev.record.record.Record', save_feed: 'bool' = True, timeout: 'int' = 10) -> 'colrev.record.record.Record':

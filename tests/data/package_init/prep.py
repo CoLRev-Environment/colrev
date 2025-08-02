@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 """CustomName"""
 import logging
+from typing import Optional
 
 import colrev.ops.prep
-import colrev.package_manager.package_settings
 from colrev.package_manager.package_base_classes import PrepPackageBaseClass
 
 class CustomName(PrepPackageBaseClass):

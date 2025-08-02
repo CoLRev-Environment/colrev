@@ -78,7 +78,7 @@ class SearchSourcePackageBaseClass(ABC):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        settings: dict,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         pass
