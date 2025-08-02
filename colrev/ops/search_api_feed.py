@@ -47,6 +47,8 @@ class SearchAPIFeed:
         update_only: bool,
         logger: logging.Logger,
         prep_mode: bool = False,
+        verbose_mode: bool = False,
+        primary_records: typing.Optional[dict] = None,
     ):
         self.source = search_source
         self.feed_file = search_source.filename
@@ -75,9 +77,11 @@ class SearchAPIFeed:
 
         self._load_feed()
 
-        self.prep_mode = prep_mode
         if not prep_mode:
-            self.records = self.review_manager.dataset.load_records_dict()
+            assert primary_records is not None
+        self.verbose_mode = verbose_mode
+        self.prep_mode = prep_mode
+        self.primary_records = primary_records
 
     @property
     def source_identifier(self) -> str:
@@ -94,12 +98,6 @@ class SearchAPIFeed:
             raise ValueError("source_identifier must be at least 2 characters")
         self._source_identifier = value
 
-    def get_last_updated(self) -> str:
-        """Returns the date of the last update (if available) in YYYY-MM-DD format"""
-        file = self.feed_file
-        if not file.is_file():
-            return ""
-        return self.review_manager.dataset.get_last_commit_date(self.feed_file)
 
     def _load_feed(self) -> None:
         if not self.feed_file.is_file():
@@ -180,7 +178,7 @@ class SearchAPIFeed:
             if not self.prep_mode:
                 self.logger.info(f"  add record: {record.data[self.source_identifier]}")
             elif (
-                self.prep_mode and self.review_manager.verbose_mode
+                self.prep_mode and self.verbose_mode
             ):  # pragma: no cover
                 self.logger.info(
                     f"  link record: {record.data[self.source_identifier]}"
