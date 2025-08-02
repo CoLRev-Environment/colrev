@@ -98,7 +98,6 @@ class SearchAPIFeed:
             raise ValueError("source_identifier must be at least 2 characters")
         self._source_identifier = value
 
-
     def _load_feed(self) -> None:
         if not self.feed_file.is_file():
             self._available_ids = {}
@@ -177,9 +176,7 @@ class SearchAPIFeed:
         if added_new:
             if not self.prep_mode:
                 self.logger.info(f"  add record: {record.data[self.source_identifier]}")
-            elif (
-                self.prep_mode and self.verbose_mode
-            ):  # pragma: no cover
+            elif self.prep_mode and self.verbose_mode:  # pragma: no cover
                 self.logger.info(
                     f"  link record: {record.data[self.source_identifier]}"
                 )
