@@ -21,6 +21,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldSet
@@ -558,7 +559,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                         + f": {Colors.GREEN}{values[0][1]}{Colors.END}"
                     )
                 else:
-                    self.review_manager.p_printer.pprint(change_item)
+                    colrev.utils.pprint(change_item)
             selected_changes.append(item)
         return selected_changes
 

@@ -11,6 +11,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
 import colrev.record.record_pdf
+import colrev.utils
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -74,9 +75,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
             conditions=[{Fields.STATUS: RecordState.pdf_needs_manual_preparation}]
         )
         pdf_prep_man_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
-        self.review_manager.logger.debug(
-            self.review_manager.p_printer.pformat(pdf_prep_man_data)
-        )
+        self.review_manager.logger.debug(colrev.utils.pformat(pdf_prep_man_data))
         return pdf_prep_man_data
 
     def pdfs_prepared_manually(self) -> bool:

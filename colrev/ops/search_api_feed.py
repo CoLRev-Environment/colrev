@@ -12,6 +12,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.loader.load_utils_formatter
 import colrev.record.record_merger
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
@@ -385,9 +386,7 @@ class SearchAPIFeed:
                     f"({similarity_score}) in {main_record.data['ID']}:{Colors.END}"
                 )
                 self.review_manager.logger.info(
-                    self.review_manager.p_printer.pformat(
-                        [x for x in dict_diff if "change" == x[0]]
-                    )
+                    colrev.utils.pformat([x for x in dict_diff if "change" == x[0]])
                 )
             return True
         return False

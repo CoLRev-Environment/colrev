@@ -9,6 +9,7 @@ from pathlib import Path
 import colrev.env.tei_parser
 import colrev.process.operation
 import colrev.settings
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import SearchType
@@ -91,7 +92,7 @@ class Distribute(colrev.process.operation.Operation):
                 shutil.copyfile(path, target_pdf_path)
 
                 self.review_manager.logger.info(
-                    f"append {self.review_manager.p_printer.pformat(record)} "
+                    f"append {colrev.utils.pformat(record)} "
                     "to data/search/local_import.bib"
                 )
                 target_bib_file = target / Path("data/search/local_import.bib")
