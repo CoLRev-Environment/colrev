@@ -115,12 +115,15 @@ class TablePrescreen(base_classes.PrescreenPackageBaseClass):
             self.logger.info("Created prescreen.xlsx")
 
         self.logger.info(
-            f"To prescreen records, {Colors.ORANGE}enter [in|out] "
-            f"in the presceen_inclusion column.{Colors.END}"
+            "To prescreen records, %senter [in|out] in the presceen_inclusion column.%s",
+            Colors.ORANGE,
+            Colors.END,
         )
         self.logger.info(
-            f"Afterwards, run {Colors.ORANGE}colrev prescreen --import_table "
-            f"prescreen.{export_table_format.lower()}{Colors.END}"
+            "Afterwards, run %scolrev prescreen --import_table prescreen.%s%s",
+            Colors.ORANGE,
+            export_table_format.lower(),
+            Colors.END,
         )
 
     def import_table(
@@ -133,11 +136,11 @@ class TablePrescreen(base_classes.PrescreenPackageBaseClass):
 
         # pylint: disable=too-many-branches
 
-        self.logger.info(f"Load {import_table_path}")
+        self.logger.info("Load %s", import_table_path)
 
         # pylint: disable=duplicate-code
         if not Path(import_table_path).is_file():
-            self.logger.error(f"Did not find {import_table_path} - exiting.")
+            self.logger.error("Did not find %s - exiting.", import_table_path)
             return
 
         if import_table_path.endswith(".csv"):
@@ -185,24 +188,36 @@ class TablePrescreen(base_classes.PrescreenPackageBaseClass):
                     nr_todo += 1
                 else:
                     self.logger.warning(
-                        "Invalid value in prescreen_inclusion: "
-                        f"{prescreened_record.get('presceen_inclusion', '')} "
-                        f"({prescreened_record.get('ID', 'NO_ID')})"
+                        "Invalid value in prescreen_inclusion: %s (%s)",
+                        prescreened_record.get("presceen_inclusion", ""),
+                        prescreened_record.get("ID", "NO_ID"),
                     )
 
             else:
                 self.logger.warning(
-                    f"ID not in records: {prescreened_record.get('ID', '')}"
+                    "ID not in records: %s",
+                    prescreened_record.get("ID", ""),
                 )
 
         self.logger.info(
-            f" {Colors.GREEN}{prescreen_included} records prescreen_included{Colors.END}"
+            " %s%d records prescreen_included%s",
+            Colors.GREEN,
+            prescreen_included,
+            Colors.END,
         )
         self.logger.info(
-            f" {Colors.RED}{prescreen_excluded} records prescreen_excluded{Colors.END}"
+            " %s%d records prescreen_excluded%s",
+            Colors.RED,
+            prescreen_excluded,
+            Colors.END,
         )
 
-        self.logger.info(f" {Colors.ORANGE}{nr_todo} records to prescreen{Colors.END}")
+        self.logger.info(
+            " %s%d records to prescreen%s",
+            Colors.ORANGE,
+            nr_todo,
+            Colors.END,
+        )
 
         self.review_manager.dataset.save_records_dict(records)
         self.logger.info("Completed import")

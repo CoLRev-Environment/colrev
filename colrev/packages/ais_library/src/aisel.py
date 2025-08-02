@@ -221,7 +221,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 # if "search_terms" not in source.search_parameters["query"]:
                 raise colrev_exceptions.InvalidQueryException("query parameter missing")
 
-        self.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.filename)
 
     def _get_ais_query_return(self) -> list:
         def query_from_params(params: dict) -> str:

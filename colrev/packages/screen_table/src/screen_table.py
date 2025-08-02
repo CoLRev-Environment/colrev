@@ -142,7 +142,7 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
                 index=False,
                 sheet_name="screen",
             )
-            self.logger.info(f"Created {self.screen_table_path.with_suffix('.xlsx')}")
+            self.logger.info("Created %s", self.screen_table_path.with_suffix(".xlsx"))
 
         return
 

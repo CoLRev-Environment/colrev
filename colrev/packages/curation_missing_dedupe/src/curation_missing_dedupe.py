@@ -74,13 +74,19 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
             records_df = pd.DataFrame.from_records(list(selected_records))
             if records_df.shape[0] == 0:
                 self.logger.info(
-                    f"{Colors.GREEN}Source {source_origin} fully merged{Colors.END}"
+                    "%sSource %s fully merged%s",
+                    Colors.GREEN,
+                    source_origin,
+                    Colors.END,
                 )
             else:
                 self.logger.info(
-                    f"{Colors.ORANGE}Source {source_origin} not fully merged{Colors.END}"
+                    "%sSource %s not fully merged%s",
+                    Colors.ORANGE,
+                    source_origin,
+                    Colors.END,
                 )
-                self.logger.info(f"Exporting details to dedupe/{source_origin}.xlsx")
+                self.logger.info("Exporting details to dedupe/%s.xlsx", source_origin)
 
                 records_df = records_df[
                     records_df.columns.intersection(

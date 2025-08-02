@@ -105,7 +105,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
                     "search_parameters/scope/colrev_status must be rev_included|rev_synthesized"
                 )
 
-        self.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.filename)
 
     def _bw_search_condition(self, *, record: dict) -> bool:
         # rev_included/rev_synthesized required, but record not in rev_included/rev_synthesized
@@ -379,11 +379,11 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         min_intext_citations = self.search_source.search_parameters[
             "min_intext_citations"
         ]
-        self.logger.info(f"Set min_intext_citations={min_intext_citations}")
+        self.logger.info("Set min_intext_citations=%s", min_intext_citations)
         nr_references_threshold = self.search_source.search_parameters.get(
             "min_ref_freq", 1
         )
-        self.logger.info(f"Set nr_references_threshold={nr_references_threshold}")
+        self.logger.info("Set nr_references_threshold=%s", nr_references_threshold)
 
         selected_records = {
             rid: record

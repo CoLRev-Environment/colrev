@@ -407,7 +407,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             raise colrev_exceptions.InvalidQueryException(
                 "path required in search_parameters/scope"
             )
-        self.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.filename)
 
     def _add_md_string(self, *, record_dict: dict) -> dict:
         # To identify potential duplicates
@@ -541,7 +541,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                 return new_record
         # otherwise: reindex all
 
-        self.logger.info(f" extract metadata from {file_path}")
+        self.logger.info(" extract metadata from %s", file_path)
         try:
             if not self.review_manager.settings.is_curated_masterdata_repo():
                 # retrieve_based_on_colrev_pdf_id
@@ -558,7 +558,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             else:
                 new_record = self._get_grobid_metadata(file_path=file_path)
         except FileNotFoundError:
-            self.logger.error(f"File not found: {file_path} (skipping)")
+            self.logger.error("File not found: %s (skipping)", file_path)
             return {}
         except (
             colrev_exceptions.PDFHashError,
@@ -581,9 +581,11 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         ]
         if potential_duplicates:
             self.logger.warning(
-                f" {Colors.RED}skip record (PDF potential duplicate): "
-                f"{new_record['file']} {Colors.END} "
-                f"({','.join([r['file'] for r in potential_duplicates])})"
+                " %sskip record (PDF potential duplicate): %s %s (%s)",
+                Colors.RED,
+                new_record["file"],
+                Colors.END,
+                ",".join([r["file"] for r in potential_duplicates]),
             )
 
         return new_record

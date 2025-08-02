@@ -185,7 +185,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             # if "query_file" in source.search_parameters:
             # ...
 
-        self.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.filename)
 
     def check_availability(
         self, *, source_operation: colrev.process.operation.Operation

@@ -192,14 +192,16 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
                         )
                         self.review_manager.save_settings()
                         self.logger.info(
-                            f"{Colors.GREEN}Added {source_missing_in_dedupe} "
-                            f"to dedupe.scripts{Colors.END}"
+                            "%sAdded %s to dedupe.scripts%s",
+                            Colors.GREEN,
+                            source_missing_in_dedupe,
+                            Colors.END,
                         )
 
     def _add_first_source_if_deduplicated(self, *, records: dict) -> None:
         self.logger.info(
-            f"Starting with records from {self.settings.selected_source}"
-            " (setting to md_processed as the initial records)"
+            "Starting with records from %s (setting to md_processed as the initial records)",
+            self.settings.selected_source,
         )
 
         source_records = [
@@ -286,7 +288,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
                 ),
             )
         else:
-            self.logger.info(f"{Colors.GREEN}No duplicates found{Colors.END}")
+            self.logger.info("%sNo duplicates found%s", Colors.GREEN, Colors.END)
 
     def _prep_records(self, *, records: dict) -> dict:
         required_fields = [
@@ -554,11 +556,13 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         # thereby discards previous changes
         if len(decision_list) == 0:
             self.logger.info(
-                f"{Colors.GREEN}No merge-candidates identified between sets{Colors.END}"
+                "%sNo merge-candidates identified between sets%s",
+                Colors.GREEN,
+                Colors.END,
             )
             return
 
-        self.logger.info(f"{Colors.GREEN}Duplicates identified{Colors.END}")
+        self.logger.info("%sDuplicates identified%s", Colors.GREEN, Colors.END)
 
         preferred_masterdata_sources = [
             s

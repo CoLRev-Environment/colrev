@@ -179,7 +179,7 @@ class Profile(base_classes.DataPackageBaseClass):
         self.logger.info("Generate output/ENTRYTYPES.csv")
         tabulated.to_csv(output_dir / Path("ENTRYTYPES.csv"))
 
-        self.logger.info(f"Files are available in {output_dir.name}")
+        self.logger.info("Files are available in %s", output_dir.name)
 
     def update_data(
         self,

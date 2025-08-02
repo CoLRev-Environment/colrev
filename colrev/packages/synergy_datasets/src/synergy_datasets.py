@@ -173,11 +173,13 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         missing_metadata_percentage = missing_metadata.sum() / dataset_df.shape[0]
         if missing_metadata_percentage > 0.1:
             self.logger.error(
-                f"Missing metadata percentage: {missing_metadata_percentage}"
+                "Missing metadata percentage: %s", missing_metadata_percentage
             )
             input("ENTER to continue anyway")
         else:
-            self.logger.info(f"Missing metadata: {missing_metadata_percentage:.2%}")
+            self.logger.info(
+                "Missing metadata: %s", f"{missing_metadata_percentage:.2%}"
+            )
         return dataset_df
 
     def _update_decisions(self, *, decisions: dict, record: dict) -> None:
@@ -333,8 +335,8 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
             # The linking of doi/... should happen in the prep operation
 
         self._check_quality(decisions=decisions)
-        self.logger.info(f"Dropped {empty_records} empty records")
-        self.logger.info(f"Dropped {duplicates} duplicate records")
+        self.logger.info("Dropped %s empty records", empty_records)
+        self.logger.info("Dropped %s duplicate records", duplicates)
         self.review_manager.dataset.load_records_dict()
         synergy_feed.save()
 

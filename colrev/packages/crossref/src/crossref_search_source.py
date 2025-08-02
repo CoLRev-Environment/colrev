@@ -343,7 +343,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         if source.search_type == SearchType.API:
             self._validate_api_params()
 
-        self.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.filename)
 
     def _restore_url(
         self,
@@ -429,14 +429,15 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger.info(f"Total: {nrecs:,} records")
         if not rerun:
             self.logger.info(
-                f"Retrieve papers indexed since {self.api.last_updated.split('T', maxsplit=1)[0]}"
+                "Retrieve papers indexed since %s",
+                self.api.last_updated.split("T", maxsplit=1)[0],
             )
             nrecs = self.api.get_number_of_records()
 
-        self.logger.info(f"Retrieve {nrecs:,} records")
+        self.logger.info("Retrieve %s records", f"{nrecs:,}")
         estimated_time = nrecs * 0.5
         estimated_time_formatted = str(datetime.timedelta(seconds=int(estimated_time)))
-        self.logger.info(f"Estimated time: {estimated_time_formatted}")
+        self.logger.info("Estimated time: %s", estimated_time_formatted)
 
         try:
             for retrieved_record in self.api.get_records():

@@ -152,7 +152,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
         for record_dict in prospero_api.get_next_record():
-            self.logger.info(f"retrieve record: {record_dict[Fields.URL]}")
+            self.logger.info("retrieve record: %s", record_dict[Fields.URL])
 
             try:
                 if not record_dict.get(Fields.AUTHOR, "") and not record_dict.get(

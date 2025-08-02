@@ -264,9 +264,10 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
                 if v["note"] != ""
             )
             self.logger.info(
-                f" {Colors.ORANGE}{original_record.data['ID']}".ljust(46)
-                + f"{man_prep_note}"
-                + f"{Colors.END}"
+                " %s%s%s",
+                f"{Colors.ORANGE}{original_record.data['ID']}".ljust(46),
+                man_prep_note,
+                Colors.END,
             )
 
     def _import_record(

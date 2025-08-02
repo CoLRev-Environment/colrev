@@ -71,11 +71,12 @@ class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
                         with open(pdf_filepath, "wb") as pdf_file:
                             pdf_file.write(pdf_response.content)
                         self.logger.debug(
-                            f"PDF downloaded successfully as {pdf_filepath}"
+                            "PDF downloaded successfully as %s", pdf_filepath
                         )
                     else:
                         self.logger.debug(
-                            f"Failed to download PDF. Status code: {pdf_response.status_code}"
+                            "Failed to download PDF. Status code: %s",
+                            pdf_response.status_code,
                         )
                 else:
                     self.logger.debug("Paper title not found on the page.")
@@ -83,7 +84,8 @@ class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
                 self.logger.debug("PDF link not found on the page.")
         else:
             self.logger.debug(
-                f"Failed to retrieve the article page. Status code: {response.status_code}"
+                "Failed to retrieve the article page. Status code: %s",
+                response.status_code,
             )
 
     def _download_from_bmj_open_science(
@@ -111,11 +113,12 @@ class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
                             pdf_file.write(pdf_response.content)
 
                         self.logger.debug(
-                            f"PDF downloaded successfully as {pdf_filepath}"
+                            "PDF downloaded successfully as %s", pdf_filepath
                         )
                     else:
                         self.logger.debug(
-                            f"Failed to download PDF. Status code: {pdf_response.status_code}"
+                            "Failed to download PDF. Status code: %s",
+                            pdf_response.status_code,
                         )
                 else:
                     self.logger.debug("PDF URL not found on the page.")
@@ -123,7 +126,8 @@ class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
                 self.logger.debug("PDF link not found on the page.")
         else:
             self.logger.debug(
-                f"Failed to retrieve the article page. Status code: {response.status_code}"
+                "Failed to retrieve the article page. Status code: %s",
+                response.status_code,
             )
 
     def _download_unknown(
@@ -155,11 +159,12 @@ class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
                             pdf_file.write(pdf_response.content)
 
                         self.logger.debug(
-                            f"PDF downloaded successfully as {pdf_filepath}"
+                            "PDF downloaded successfully as %s", pdf_filepath
                         )
                     else:
                         self.logger.debug(
-                            f"Failed to download PDF. Status code: {pdf_response.status_code}"
+                            "Failed to download PDF. Status code: %s",
+                            pdf_response.status_code,
                         )
                 else:
                     self.logger.debug("PDF URL not found on the page.")
@@ -167,7 +172,8 @@ class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
                 self.logger.debug("PDF link not found on the page.")
         else:
             self.logger.debug(
-                f"Failed to retrieve the Minerva Medica page. Status code: {response.status_code}"
+                "Failed to retrieve the Minerva Medica page. Status code: %s",
+                response.status_code,
             )
 
     def get_pdf(

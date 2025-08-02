@@ -220,8 +220,9 @@ class StructuredData(base_classes.DataPackageBaseClass):
                 )
                 data_df = pd.concat([data_df, add_record], axis=0, ignore_index=True)
                 self.logger.info(
-                    f" {Colors.GREEN}{record_id}".ljust(45)
-                    + f"add to structured_data{Colors.END}"
+                    " %sadd to structured_data%s",
+                    f"{Colors.GREEN}{record_id}".ljust(45),
+                    Colors.END,
                 )
                 nr_records_added = nr_records_added + 1
 
@@ -231,15 +232,15 @@ class StructuredData(base_classes.DataPackageBaseClass):
 
             if not (0 == nr_records_added and silent_mode):
                 self.logger.info(
-                    f"Added to {self.settings.data_path_relative}".ljust(24)
-                    + f"{nr_records_added}".rjust(15, " ")
-                    + " records"
+                    "%s%s records",
+                    f"Added to {self.settings.data_path_relative}".ljust(24),
+                    f"{nr_records_added}".rjust(15, " "),
                 )
 
                 self.logger.info(
-                    f"Added to {self.settings.data_path_relative}".ljust(24)
-                    + f"{nr_records_added}".rjust(15, " ")
-                    + " records"
+                    "%s%s records",
+                    f"Added to {self.settings.data_path_relative}".ljust(24),
+                    f"{nr_records_added}".rjust(15, " "),
                 )
             return records
 
