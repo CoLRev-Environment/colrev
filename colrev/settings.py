@@ -168,6 +168,7 @@ class SearchSource(BaseModel):
             source_identifier=source_identifier,
             search_source=self,
             update_only=update_only,
+            logger=review_manager.logger,
             prep_mode=prep_mode,
         )
 
