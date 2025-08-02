@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from pathlib import Path
+from typing import Optional
 
 import pymupdf
 import requests
@@ -36,7 +38,9 @@ class Unpaywall(base_classes.PDFGetPackageBaseClass):
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = pdf_get_operation.review_manager
         self.pdf_get_operation = pdf_get_operation
@@ -132,7 +136,7 @@ class Unpaywall(base_classes.PDFGetPackageBaseClass):
                 if Fields.FULLTEXT not in record.data:
                     record.data[Fields.FULLTEXT] = url
                 if self.review_manager.verbose_mode:
-                    self.review_manager.logger.info(
+                    self.logger.info(
                         "Unpaywall retrieval error " f"{res.status_code} - {url}"
                     )
         except (

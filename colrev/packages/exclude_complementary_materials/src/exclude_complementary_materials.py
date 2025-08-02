@@ -2,6 +2,9 @@
 """Exclude complementary materials as a prep operation"""
 from __future__ import annotations
 
+import logging
+from typing import Optional
+
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
@@ -32,7 +35,9 @@ class ExcludeComplementaryMaterialsPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
 
         self.complementary_materials_keywords = (

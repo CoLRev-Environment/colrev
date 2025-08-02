@@ -6,6 +6,7 @@ import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 
 import requests
 from pydantic import Field
@@ -43,7 +44,9 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         # Note: not yet implemented
         # Note : once this is implemented, add "colrev.open_alex" to the default settings

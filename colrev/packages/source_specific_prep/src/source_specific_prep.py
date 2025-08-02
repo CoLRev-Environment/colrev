@@ -2,7 +2,9 @@
 """Source-specific preparation as a prep operation"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
@@ -34,7 +36,9 @@ class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = prep_operation.review_manager
 
@@ -73,7 +77,7 @@ class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
                 else:
                     print(f"error: {source.endpoint}")
             except colrev_exceptions.MissingDependencyError as exc:
-                self.review_manager.logger.warn(exc)
+                self.logger.warn(exc)
 
         if "howpublished" in record.data and Fields.URL not in record.data:
             if Fields.URL in record.data["howpublished"]:

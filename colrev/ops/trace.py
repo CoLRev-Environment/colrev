@@ -8,6 +8,7 @@ import typing
 import dictdiffer
 
 import colrev.process.operation
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import OperationsType
 
@@ -27,7 +28,7 @@ class Trace(colrev.process.operation.Operation):
         )
 
     def _print_diff(self, *, diff: dict, color: str, lpad: int = 5) -> None:
-        formatted_diff = self.review_manager.p_printer.pformat(diff)
+        formatted_diff = colrev.utils.pformat(diff)
         lines = formatted_diff.splitlines()
         print(
             color

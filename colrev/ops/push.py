@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import colrev.process.operation
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
@@ -134,7 +135,7 @@ class Push(colrev.process.operation.Operation):
                 }
             )
 
-        corrections = self.review_manager.p_printer.pformat(prepared_change_list)
+        corrections = colrev.utils.pformat(prepared_change_list)
 
         text = (
             "Dear Sir or Madam,\n\nwe have noticed potential corrections and "

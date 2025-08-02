@@ -1,5 +1,8 @@
 #! /usr/bin/env python
 """Qualitative systematic review"""
+import logging
+from typing import Optional
+
 from pydantic import Field
 
 import colrev.ops.search
@@ -27,8 +30,13 @@ class QualitativeSystematicReview(base_classes.ReviewTypePackageBaseClass):
     ci_supported: bool = Field(default=True)
 
     def __init__(
-        self, *, operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        operation: colrev.process.operation.Operation,
+        settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
 
     def __str__(self) -> str:

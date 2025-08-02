@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 import typing
 from copy import deepcopy
@@ -12,6 +13,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.loader.load_utils_formatter
 import colrev.record.record_merger
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
@@ -43,7 +45,10 @@ class SearchAPIFeed:
         source_identifier: str,
         search_source: colrev.settings.SearchSource,
         update_only: bool,
+        logger: logging.Logger,
         prep_mode: bool = False,
+        verbose_mode: bool = False,
+        records: typing.Optional[dict] = None,
     ):
         self.source = search_source
         self.feed_file = search_source.filename
@@ -65,16 +70,18 @@ class SearchAPIFeed:
         # (otherwise, fields in recent records would be more up-to-date)
 
         self.review_manager = review_manager
-        self.logger = review_manager.logger
+        self.logger = logger
         self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
 
         self.origin_prefix = self.source.get_origin_prefix()
 
         self._load_feed()
 
+        if prep_mode:
+            assert records is not None
+        self.verbose_mode = verbose_mode
         self.prep_mode = prep_mode
-        if not prep_mode:
-            self.records = self.review_manager.dataset.load_records_dict()
+        self.records = records or {}
 
     @property
     def source_identifier(self) -> str:
@@ -91,13 +98,6 @@ class SearchAPIFeed:
             raise ValueError("source_identifier must be at least 2 characters")
         self._source_identifier = value
 
-    def get_last_updated(self) -> str:
-        """Returns the date of the last update (if available) in YYYY-MM-DD format"""
-        file = self.feed_file
-        if not file.is_file():
-            return ""
-        return self.review_manager.dataset.get_last_commit_date(self.feed_file)
-
     def _load_feed(self) -> None:
         if not self.feed_file.is_file():
             self._available_ids = {}
@@ -107,7 +107,7 @@ class SearchAPIFeed:
         self.feed_records = colrev.loader.load_utils.loads(
             load_string=self.feed_file.read_text(encoding="utf8"),
             implementation="bib",
-            logger=self.review_manager.logger,
+            logger=self.logger,
         )
         self._available_ids = {
             x[self.source_identifier]: x[Fields.ID]
@@ -176,9 +176,7 @@ class SearchAPIFeed:
         if added_new:
             if not self.prep_mode:
                 self.logger.info(f"  add record: {record.data[self.source_identifier]}")
-            elif (
-                self.prep_mode and self.review_manager.verbose_mode
-            ):  # pragma: no cover
+            elif self.prep_mode and self.verbose_mode:  # pragma: no cover
                 self.logger.info(
                     f"  link record: {record.data[self.source_identifier]}"
                 )
@@ -199,7 +197,7 @@ class SearchAPIFeed:
                 colrev.loader.load_utils.loads(
                     load_string=bibtex_str,
                     implementation="bib",
-                    logger=self.review_manager.logger,
+                    logger=self.logger,
                 ).values()
             )[0]
             return record_dict
@@ -225,7 +223,7 @@ class SearchAPIFeed:
         main_record: colrev.record.record.Record,
     ) -> bool:
         if record.is_retracted():
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"{Colors.RED}Found paper retract: "
                 f"{main_record.data['ID']}{Colors.END}"
             )
@@ -244,7 +242,7 @@ class SearchAPIFeed:
     ) -> None:
 
         if self._forthcoming_published(record=record, prev_record=prev_feed_record):
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"{Colors.GREEN}Update published forthcoming paper: "
                 f"{record.data['ID']}{Colors.END}"
             )
@@ -377,17 +375,15 @@ class SearchAPIFeed:
             )
             self._nr_changed += 1
             if similarity_score > 0.98:
-                self.review_manager.logger.info(f" check/update {colrev_origin}")
+                self.logger.info(f" check/update {colrev_origin}")
             else:
                 dict_diff = retrieved_record.get_diff(prev_feed_record)
-                self.review_manager.logger.info(
+                self.logger.info(
                     f" {Colors.RED} check/update {colrev_origin} leads to substantial changes "
                     f"({similarity_score}) in {main_record.data['ID']}:{Colors.END}"
                 )
-                self.review_manager.logger.info(
-                    self.review_manager.p_printer.pformat(
-                        [x for x in dict_diff if "change" == x[0]]
-                    )
+                self.logger.info(
+                    colrev.utils.pformat([x for x in dict_diff if "change" == x[0]])
                 )
             return True
         return False
@@ -395,11 +391,11 @@ class SearchAPIFeed:
     def _print_post_run_search_infos(self) -> None:
         """Print the search infos (after running the search)"""
         if self._nr_added > 0:
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"{Colors.GREEN}Retrieved {self._nr_added} records{Colors.END}"
             )
         else:
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"{Colors.GREEN}No additional records retrieved{Colors.END}"
             )
 
@@ -409,15 +405,12 @@ class SearchAPIFeed:
             return
 
         if self._nr_changed > 0:  # pragma: no cover
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"{Colors.GREEN}Updated {self._nr_changed} records{Colors.END}"
             )
         else:
             if self.records:
-                self.review_manager.logger.info(
-                    f"{Colors.GREEN}Records ({self.review_manager.paths.RECORDS_FILE})"
-                    f" up-to-date{Colors.END}"
-                )
+                self.logger.info(f"{Colors.GREEN}Records up-to-date{Colors.END}")
 
     def get_prev_feed_record(
         self, record: colrev.record.record.Record
@@ -486,7 +479,7 @@ class SearchAPIFeed:
                     OSError,
                     json.decoder.JSONDecodeError,
                 ):  # pragma: no cover
-                    self.review_manager.logger.debug("Wait for git")
+                    self.logger.debug("Wait for git")
                     time.sleep(randint(1, 15))  # nosec
 
         if not self.prep_mode:

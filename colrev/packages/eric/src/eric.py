@@ -6,6 +6,7 @@ import logging
 import typing
 import urllib.parse
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
@@ -44,7 +45,9 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         self.source_operation = source_operation
         if settings:

@@ -8,6 +8,7 @@ import typing
 import webbrowser
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urlparse
 
 import git
@@ -20,6 +21,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldSet
@@ -66,7 +68,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         if settings:
             # LocalIndex as a search_source
@@ -101,7 +105,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         assert source.search_type in self.search_types
 
@@ -129,7 +133,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             #         f"Source missing query/query search_parameter ({source.filename})"
             #     )
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.filename)
 
     def _retrieve_from_index(self) -> typing.List[dict]:
         params = self.search_source.search_parameters
@@ -514,7 +518,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         selected_changes = []
         print()
-        self.review_manager.logger.info(f"Base repository: {local_base_repo}")
+        self.logger.info(f"Base repository: {local_base_repo}")
         for item in change_itemsets:
             repo_path = colrev.record.record.Record(
                 item["original_record"]
@@ -555,7 +559,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                         + f": {Colors.GREEN}{values[0][1]}{Colors.END}"
                     )
                 else:
-                    self.review_manager.p_printer.pprint(change_item)
+                    colrev.utils.p_print(change_item)
             selected_changes.append(item)
         return selected_changes
 
@@ -598,9 +602,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             origin = git_repo.remotes.origin
             origin.pull()
             if not check_operation.review_manager.dataset.behind_remote():
-                self.review_manager.logger.info("Pulled changes")
+                self.logger.info("Pulled changes")
             else:
-                self.review_manager.logger.error(
+                self.logger.error(
                     "Repo behind remote. Pull first to avoid conflicts.\n"
                     "colrev env --pull"
                 )
@@ -683,7 +687,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                 record_dict = matching_url_rec_l[0]
                 return record_dict
 
-        self.review_manager.logger.error(
+        self.logger.error(
             f"{Colors.RED}Record not found: {original_record[Fields.ID]}{Colors.END}"
         )
         raise colrev_exceptions.RecordNotInIndexException(original_record[Fields.ID])
@@ -746,7 +750,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         git_repo.remotes.origin.push(
             refspec=f"{record_branch_name}:{record_branch_name}"
         )
-        self.review_manager.logger.info("Pushed corrections")
+        self.logger.info("Pushed corrections")
 
         for head in git_repo.heads:
             if head.name == prev_branch_name:
@@ -755,7 +759,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         git_repo = git.Git(source_url)
         git_repo.execute(["git", "branch", "-D", record_branch_name])
 
-        self.review_manager.logger.info("Removed local corrections branch")
+        self.logger.info("Removed local corrections branch")
 
     def _reset_record_after_correction(
         self, *, record_dict: dict, rec_for_reset: dict, change_item: dict
@@ -869,11 +873,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         if check_review_manager.dataset.behind_remote():
             git_repo = check_review_manager.dataset.get_repo()
             origin = git_repo.remotes.origin
-            self.review_manager.logger.info(
-                f"Pull project changes from {git_repo.remotes.origin}"
-            )
+            self.logger.info(f"Pull project changes from {git_repo.remotes.origin}")
             res = origin.pull()
-            self.review_manager.logger.info(res)
+            self.logger.info(res)
 
         try:
             if not self._apply_corrections_precondition(
@@ -884,9 +886,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             print(exc)
             return
 
-        check_review_manager.logger.info(
-            "Precondition for correction (pull-request) checked."
-        )
+        self.logger.info("Precondition for correction (pull-request) checked.")
 
         success = self._apply_change_item_correction(
             check_operation=check_operation,

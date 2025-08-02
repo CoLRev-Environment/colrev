@@ -7,6 +7,7 @@ import re
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 
 import inquirer
 from github import Auth
@@ -61,7 +62,9 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
         if settings:
             # GitHub as a search source
