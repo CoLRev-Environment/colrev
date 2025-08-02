@@ -460,7 +460,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         for record in tqdm(selected_records.values()):
             try:
 
-                self.logger.info(f" run backward search for {record[Fields.ID]}")
+                print(f" run backward search for {record[Fields.ID]}")
 
                 pdf_path = review_manager.path / Path(record[Fields.FILE])
                 tei = colrev.env.tei_parser.TEIParser(
@@ -479,9 +479,9 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
                 all_references[record[Fields.ID]] = references
 
             except colrev_exceptions.TEIException:
-                self.logger.info("Error accessing TEI")
+                print("Error accessing TEI")
             except KeyError as exc:
-                self.logger.info(exc)
+                print(exc)
         return all_references
 
     @classmethod
