@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import logging
 import os
-import pprint
 import typing
 from datetime import timedelta
 from pathlib import Path
@@ -97,7 +96,6 @@ class ReviewManager:
 
             self.environment_manager = self.get_environment_manager()
 
-            self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             # run update before settings/data (which may require changes/fail without update)
             if not skip_upgrade:  # pragma: no cover
                 self._check_update()

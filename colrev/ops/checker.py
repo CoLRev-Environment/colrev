@@ -13,6 +13,7 @@ import yaml
 from git.exc import InvalidGitRepositoryError
 
 import colrev.exceptions as colrev_exceptions
+import colrev.utils
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
 from colrev.constants import OperationsType
@@ -687,9 +688,7 @@ class Checker:
             ):
                 prior = self._retrieve_prior()
                 self.review_manager.logger.debug("prior")
-                self.review_manager.logger.debug(
-                    self.review_manager.p_printer.pformat(prior)
-                )
+                self.review_manager.logger.debug(colrev.utils.pformat(prior))
             else:  # if RECORDS_FILE not yet in git history
                 prior = {}
 

@@ -27,6 +27,7 @@ import colrev.ui_cli.add_package_to_settings
 import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
@@ -561,7 +562,7 @@ def search(
 
     if view:
         for source in search_operation.sources:
-            search_operation.review_manager.p_printer.pprint(source)
+            colrev.utils.pprint(source)
         return
 
     if add:
@@ -2058,12 +2059,12 @@ def data(
             data_operation.review_manager.settings.data.data_package_endpoints
         )
         for data_endpoint in data_endpoints:
-            data_operation.review_manager.p_printer.pprint(data_endpoint)
+            colrev.utils.pprint(data_endpoint)
         return
 
     if reading_heuristics:
         heuristic_results = data_operation.reading_heuristics()
-        review_manager.p_printer.pprint(heuristic_results)
+        colrev.utils.pprint(heuristic_results)
         return
     if setup_custom_script:
         data_operation.setup_custom_script()

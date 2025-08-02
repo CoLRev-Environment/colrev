@@ -8,6 +8,7 @@ from dictdiffer import diff
 from git.exc import GitCommandError
 
 import colrev.process.operation
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import OperationsType
@@ -73,7 +74,7 @@ class Merge(colrev.process.operation.Operation):
             del comparison_other_record[Fields.STATUS]
 
             if comparison_current_record != comparison_other_record:
-                comparison_diff = self.review_manager.p_printer.pformat(
+                comparison_diff = colrev.utils.pformat(
                     list(diff(comparison_current_record, comparison_other_record))
                 )
                 changed_records.append(f"{current_record_id}: " f"{comparison_diff}")
@@ -242,7 +243,7 @@ class Merge(colrev.process.operation.Operation):
             records_reconciled=current_branch_records,
         )
         print("Statistics:")
-        self.review_manager.p_printer.pprint(validation_details["statistics"])
+        colrev.utils.pprint(validation_details["statistics"])
 
         print(
             f"\n{Colors.ORANGE}Please add (git add .) and commit (git commit){Colors.END}"
