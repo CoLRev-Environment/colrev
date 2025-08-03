@@ -440,6 +440,9 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     source_identifier=self.source_identifier,
                     update_only=False,
                     prep_mode=True,
+                    records=self.review_manager.dataset.load_records_dict(),
+                    logger=self.review_manager.logger,
+                    verbose_mode=self.review_manager.verbose_mode,
                 )
 
                 dblp_feed.add_update_record(retrieved_record)
@@ -464,6 +467,9 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     record.prescreen_exclude(reason=FieldValues.RETRACTED)
                     # record.remove_field(key="warning")
 
+                self.review_manager.dataset.save_records_dict(
+                    dblp_feed.get_records(),
+                )
                 dblp_feed.save()
                 self.dblp_lock.release()
 

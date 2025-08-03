@@ -404,6 +404,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                 source_identifier=self.source_identifier,
                 update_only=False,
                 prep_mode=True,
+                records=self.review_manager.dataset.load_records_dict(),
+                logger=self.review_manager.logger,
+                verbose_mode=self.review_manager.verbose_mode,
             )
 
             local_index_feed.add_update_record(retrieved_record)
@@ -445,6 +448,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                     break
 
             try:
+                self.review_manager.dataset.save_records_dict(
+                    local_index_feed.get_records(),
+                )
                 local_index_feed.save()
                 # extend fields_to_keep (to retrieve all fields from the index)
                 for key in record.data.keys():

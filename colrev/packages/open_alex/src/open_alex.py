@@ -117,6 +117,9 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
                 source_identifier=self.source_identifier,
                 update_only=False,
                 prep_mode=True,
+                records=self.review_manager.dataset.load_records_dict(),
+                logger=self.review_manager.logger,
+                verbose_mode=self.review_manager.verbose_mode,
             )
 
             open_alex_feed.add_update_record(retrieved_record)
@@ -128,6 +131,9 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
             record.merge(
                 retrieved_record,
                 default_source=retrieved_record.data[Fields.ORIGIN][0],
+            )
+            self.review_manager.dataset.save_records_dict(
+                open_alex_feed.get_records(),
             )
             open_alex_feed.save()
         except (

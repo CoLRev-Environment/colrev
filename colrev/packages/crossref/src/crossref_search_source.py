@@ -577,9 +577,8 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
 
                 if save_feed:
-                    records = crossref_feed.get_records()
                     self.review_manager.dataset.save_records_dict(
-                        records,
+                        crossref_feed.get_records(),
                     )
                     crossref_feed.save()
 
