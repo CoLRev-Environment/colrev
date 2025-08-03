@@ -2,12 +2,9 @@
 """CoLRev search feed: store and update origin records and update main records."""
 from __future__ import annotations
 
-import json
 import logging
-import time
 import typing
 from copy import deepcopy
-from random import randint
 
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
@@ -24,7 +21,6 @@ from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
 
 if typing.TYPE_CHECKING:
-    import colrev.review_manager
     import colrev.settings
 
 
@@ -41,7 +37,6 @@ class SearchAPIFeed:
     def __init__(
         self,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         source_identifier: str,
         search_source: colrev.settings.SearchSource,
         update_only: bool,
@@ -69,7 +64,6 @@ class SearchAPIFeed:
         # if update_only, we do not update time_variant_fields
         # (otherwise, fields in recent records would be more up-to-date)
 
-        self.review_manager = review_manager
         self.logger = logger
         self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
 
@@ -81,6 +75,7 @@ class SearchAPIFeed:
             assert records is not None
         self.verbose_mode = verbose_mode
         self.prep_mode = prep_mode
+        self._retrieved_records_for_saving = False
         self.records = records or {}
 
     @property
@@ -453,8 +448,21 @@ class SearchAPIFeed:
             ]
         return added or updated
 
+    def get_records(self) -> dict:
+        """Get the prepared (primary) records"""
+
+        self._retrieved_records_for_saving = True
+
+        return self.records
+
     def save(self, *, skip_print: bool = False) -> None:
         """Save the feed file and records, printing post-run search infos."""
+
+        if self.prep_mode:
+            assert self._retrieved_records_for_saving, (
+                "You must call get_records() before calling save() "
+                "to ensure that the prepared (primary) records are saved."
+            )
 
         if not skip_print and not self.prep_mode:
             self._print_post_run_search_infos()
@@ -463,27 +471,8 @@ class SearchAPIFeed:
             self.feed_file.parents[0].mkdir(parents=True, exist_ok=True)
             write_file(records_dict=self.feed_records, filename=self.feed_file)
 
-            while True:
-                try:
-                    self.review_manager.load_settings()
-                    if self.source.filename.name not in [
-                        s.filename.name for s in self.review_manager.settings.sources
-                    ]:
-                        self.review_manager.settings.sources.append(self.source)
-                        self.review_manager.save_settings()
-
-                    self.review_manager.dataset.add_changes(self.feed_file)
-                    break
-                except (
-                    FileExistsError,
-                    OSError,
-                    json.decoder.JSONDecodeError,
-                ):  # pragma: no cover
-                    self.logger.debug("Wait for git")
-                    time.sleep(randint(1, 15))  # nosec
-
-        if not self.prep_mode:
-            self.review_manager.dataset.save_records_dict(self.records)
         if not skip_print:
             self._nr_added = 0
             self._nr_changed = 0
+
+        self._retrieved_records_for_saving = False

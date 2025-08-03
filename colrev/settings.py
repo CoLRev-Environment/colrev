@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import typing
 from pathlib import Path
 
@@ -156,22 +157,22 @@ class SearchSource(BaseModel):
 
     def get_api_feed(
         self,
-        review_manager: colrev.review_manager.ReviewManager,
         source_identifier: str,
         update_only: bool,
         prep_mode: bool = False,
         records: typing.Optional[dict] = None,
+        logger: typing.Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> colrev.ops.search_api_feed.SearchAPIFeed:
         """Get a feed to add and update records"""
 
         return colrev.ops.search_api_feed.SearchAPIFeed(
-            review_manager=review_manager,
             source_identifier=source_identifier,
             search_source=self,
             update_only=update_only,
-            logger=review_manager.logger,
+            logger=logger,
             prep_mode=prep_mode,
-            verbose_mode=review_manager.verbose_mode,
+            verbose_mode=verbose_mode,
             records=records,
         )
 

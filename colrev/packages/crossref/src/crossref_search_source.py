@@ -556,11 +556,12 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
 
                 # Note : need to reload file because the object is not shared between processes
                 crossref_feed = self.search_source.get_api_feed(
-                    review_manager=self.review_manager,
                     source_identifier=self.source_identifier,
                     update_only=False,
                     prep_mode=True,
                     records=self.review_manager.dataset.load_records_dict(),
+                    logger=self.review_manager.logger,
+                    verbose_mode=self.review_manager.verbose_mode,
                 )
 
                 crossref_feed.add_update_record(retrieved_record)
@@ -576,6 +577,10 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
 
                 if save_feed:
+                    records = crossref_feed.get_records()
+                    self.review_manager.dataset.save_records_dict(
+                        records,
+                    )
                     crossref_feed.save()
 
             except colrev_exceptions.NotFeedIdentifiableException:
