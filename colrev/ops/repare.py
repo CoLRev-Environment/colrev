@@ -138,9 +138,10 @@ class Repare(colrev.process.operation.Operation):
         ]
         for search_source in file_search_sources:
             files_dir_feed = search_source.get_api_feed(
-                review_manager=self.review_manager,
                 source_identifier="UNKNOWN",
                 update_only=True,
+                logger=self.review_manager.logger,
+                verbose_mode=self.review_manager.verbose_mode,
             )
             prefix = search_source.get_origin_prefix()
             for record_dict in records.values():
@@ -164,9 +165,10 @@ class Repare(colrev.process.operation.Operation):
         for source in self.review_manager.settings.sources:
             source_feeds[str(source.filename).replace("data/search/", "")] = (
                 source.get_api_feed(
-                    review_manager=self.review_manager,
                     source_identifier="NA",
                     update_only=False,
+                    logger=self.review_manager.logger,
+                    verbose_mode=self.review_manager.verbose_mode,
                 ).feed_records
             )
         return source_feeds

@@ -43,9 +43,10 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
         comment="",
     )
     feed = search_source.get_api_feed(
-        review_manager=search_operation.review_manager,
         source_identifier="bws_id",
         update_only=False,
+        logger=search_operation.review_manager.logger,
+        verbose_mode=search_operation.review_manager.verbose_mode,
     )
 
     # print list

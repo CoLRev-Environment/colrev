@@ -35,9 +35,10 @@ def fixture_search_feed(
     )
     base_repo_review_manager.get_search_operation()
     feed = source.get_api_feed(
-        review_manager=base_repo_review_manager,
         source_identifier="doi",
         update_only=True,
+        logger=base_repo_review_manager.logger,
+        verbose_mode=base_repo_review_manager.verbose_mode,
     )
 
     prev_sources = base_repo_review_manager.settings.sources
@@ -81,9 +82,10 @@ def test_search_feed_update(  # type: ignore
     )
     # base_repo_review_manager.get_search_operation()
     search_feed = source.get_api_feed(
-        review_manager=base_repo_review_manager,
         source_identifier="doi",
         update_only=True,
+        logger=base_repo_review_manager.logger,
+        verbose_mode=base_repo_review_manager.verbose_mode,
     )
     assert search_feed._available_ids == {"10.111/2222": "000001"}
     assert search_feed._next_incremental_id == 2

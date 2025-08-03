@@ -268,9 +268,10 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         dataset_df = self._load_dataset()
 
         synergy_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=False,
+            logger=self.review_manager.logger,
+            verbose_mode=self.review_manager.verbose_mode,
         )
         existing_keys = {
             Fields.DOI: [

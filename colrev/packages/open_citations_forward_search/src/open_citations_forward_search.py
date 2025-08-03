@@ -145,9 +145,10 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
             return
 
         forward_search_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            logger=self.review_manager.logger,
+            verbose_mode=self.review_manager.verbose_mode,
         )
 
         for record in records.values():

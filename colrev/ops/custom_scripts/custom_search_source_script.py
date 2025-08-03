@@ -34,9 +34,10 @@ class CustomSearch(base_classes.SearchSourcePackageBaseClass):
         """Run the search"""
 
         feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            logger=self.review_manager.logger,
+            verbose_mode=self.review_manager.verbose_mode,
         )
         retrieved_record = {
             Fields.ID: "ID00001",

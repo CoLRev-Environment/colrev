@@ -326,9 +326,10 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         self._validate_source()
 
         dblp_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            logger=self.review_manager.logger,
+            verbose_mode=self.review_manager.verbose_mode,
         )
         if self.search_source.search_type == SearchType.MD:
             self._run_md_search(dblp_feed=dblp_feed)
@@ -436,7 +437,6 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 # Note : need to reload file
                 # because the object is not shared between processes
                 dblp_feed = self.search_source.get_api_feed(
-                    review_manager=self.review_manager,
                     source_identifier=self.source_identifier,
                     update_only=False,
                     prep_mode=True,

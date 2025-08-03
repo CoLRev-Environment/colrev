@@ -412,9 +412,10 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         selected_references = df_all_references[df_all_references["meets_criteria"]]
         pdf_backward_search_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            logger=self.review_manager.logger,
+            verbose_mode=self.review_manager.verbose_mode,
         )
 
         for item in selected_references.to_dict(orient="records"):

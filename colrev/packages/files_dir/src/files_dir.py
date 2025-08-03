@@ -708,9 +708,10 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         records = self.review_manager.dataset.load_records_dict()
         files_dir_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            logger=self.review_manager.logger,
+            verbose_mode=self.review_manager.verbose_mode,
         )
 
         linked_file_paths = [

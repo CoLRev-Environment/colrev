@@ -212,9 +212,10 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         self._validate_source()
 
         local_index_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            logger=self.review_manager.logger,
+            verbose_mode=self.review_manager.verbose_mode,
         )
 
         if self.search_source.search_type == SearchType.MD:
@@ -400,7 +401,6 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             # Note : need to reload file because the object is not shared between processes
             local_index_feed = self.search_source.get_api_feed(
-                review_manager=self.review_manager,
                 source_identifier=self.source_identifier,
                 update_only=False,
                 prep_mode=True,
@@ -652,9 +652,10 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         original_record = change_item["original_record"]
 
         local_index_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=True,
+            logger=self.review_manager.logger,
+            verbose_mode=self.review_manager.verbose_mode,
         )
 
         try:
