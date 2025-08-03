@@ -1,4 +1,7 @@
 # pylint: disable=missing-module-docstring
-from importlib.metadata import version
+from importlib.metadata import PackageNotFoundError, version
 
-__version__ = version("colrev")
+try:
+    __version__ = version("colrev")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
