@@ -46,9 +46,7 @@ class LocalIndexPDFGet(base_classes.PDFGetPackageBaseClass):
     ) -> colrev.record.record.Record:
         """Get PDFs from the local-index"""
 
-        local_index = colrev.env.local_index.LocalIndex(
-            verbose_mode=self.verbose_mode
-        )
+        local_index = colrev.env.local_index.LocalIndex(verbose_mode=self.verbose_mode)
 
         try:
             retrieved_record = local_index.retrieve(record.data, include_file=True)

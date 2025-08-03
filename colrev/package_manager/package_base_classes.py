@@ -293,12 +293,12 @@ class PDFGetManPackageBaseClass(ABC):
     def __init__(
         self,
         *,
-       pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
-       settings: dict,
+        pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
+        settings: dict,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
-   ) -> None:
-       pass
+    ) -> None:
+        pass
 
     @abstractmethod
     def pdf_get_man(self, records: dict) -> dict:
