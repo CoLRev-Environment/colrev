@@ -159,12 +159,15 @@ class SearchSource(BaseModel):
         self,
         source_identifier: str,
         update_only: bool,
+        logger: typing.Optional[logging.Logger] = None,
         prep_mode: bool = False,
         records: typing.Optional[dict] = None,
-        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> colrev.ops.search_api_feed.SearchAPIFeed:
         """Get a feed to add and update records"""
+
+        if logger is None:
+            logger = logging.getLogger(__name__)
 
         return colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=source_identifier,

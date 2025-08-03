@@ -219,7 +219,7 @@ def test_search_feed_save(search_feed, caplog) -> None:  # type: ignore
     )
     search_feed.save()
 
-    search_feed.review_manager.logger.propagate = True
+    search_feed.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.save()
         assert "No additional records retrieved" in caplog.text
@@ -255,7 +255,7 @@ def test_search_feed_published_forthcoming_1(search_feed, caplog) -> None:  # ty
         Fields.YEAR: "2002",
     }
 
-    search_feed.review_manager.logger.propagate = True
+    search_feed.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
             retrieved_record=colrev.record.record.Record(record_dict)
@@ -292,7 +292,7 @@ def test_search_feed_published_forthcoming_2(search_feed, caplog) -> None:  # ty
         Fields.NUMBER: "2",
     }
 
-    search_feed.review_manager.logger.propagate = True
+    search_feed.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
             retrieved_record=colrev.record.record.Record(record_dict)
@@ -335,7 +335,7 @@ def test_search_feed_minor_change(search_feed, caplog) -> None:  # type: ignore
         Fields.NUMBER: "2",
     }
 
-    search_feed.review_manager.logger.propagate = True
+    search_feed.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
             retrieved_record=colrev.record.record.Record(record_dict)
@@ -372,7 +372,7 @@ def test_search_feed_retracted(search_feed, caplog) -> None:  # type: ignore
     main_record[Fields.ORIGIN] = ["test.bib/000001"]  # type: ignore
     search_feed.records = {main_record[Fields.ID]: main_record}
 
-    search_feed.review_manager.logger.propagate = True
+    search_feed.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
             retrieved_record=colrev.record.record.Record(record_dict)
@@ -409,7 +409,7 @@ def test_search_feed_substantial_change(search_feed, caplog) -> None:  # type: i
         Fields.YEAR: "2002",
     }
 
-    search_feed.review_manager.logger.propagate = True
+    search_feed.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
             retrieved_record=colrev.record.record.Record(record_dict)
@@ -457,7 +457,7 @@ def test_search_feed_missing_ignored_fields(search_feed, caplog) -> None:  # typ
         Fields.VOLUME: "12",
     }
 
-    search_feed.review_manager.logger.propagate = True
+    search_feed.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
             retrieved_record=colrev.record.record.Record(record_dict)
