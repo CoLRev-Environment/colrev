@@ -258,7 +258,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                     records=self.review_manager.dataset.load_records_dict(),
                     logger=self.review_manager.logger,
                     verbose_mode=self.review_manager.verbose_mode,
-    )
+                )
 
                 pubmed_feed.add_update_record(retrieved_record)
 
