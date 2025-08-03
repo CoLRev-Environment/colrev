@@ -39,8 +39,10 @@ class Unpaywall(base_classes.PDFGetPackageBaseClass):
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,
         settings: dict,
         logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.settings = self.settings_class(**settings)
         self.review_manager = pdf_get_operation.review_manager
         self.pdf_get_operation = pdf_get_operation
@@ -135,7 +137,7 @@ class Unpaywall(base_classes.PDFGetPackageBaseClass):
             else:
                 if Fields.FULLTEXT not in record.data:
                     record.data[Fields.FULLTEXT] = url
-                if self.review_manager.verbose_mode:
+                if self.verbose_mode:
                     self.logger.info(
                         "Unpaywall retrieval error " f"{res.status_code} - {url}"
                     )

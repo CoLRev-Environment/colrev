@@ -45,8 +45,10 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         source_operation: colrev.process.operation.Operation,
         settings: dict,
         logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.search_source = self.settings_class(**settings)
         self.review_manager = source_operation.review_manager
         self.crossref_api = crossref_api.CrossrefAPI(params={})
@@ -147,8 +149,8 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         forward_search_feed = self.search_source.get_api_feed(
             source_identifier=self.source_identifier,
             update_only=(not rerun),
-            logger=self.review_manager.logger,
-            verbose_mode=self.review_manager.verbose_mode,
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         for record in records.values():

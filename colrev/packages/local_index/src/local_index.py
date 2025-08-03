@@ -69,8 +69,10 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
         logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
         if settings:
             # LocalIndex as a search_source
@@ -99,7 +101,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.origin_prefix = self.search_source.get_origin_prefix()
 
         self.local_index = colrev.env.local_index.LocalIndex(
-            verbose_mode=self.review_manager.verbose_mode
+            verbose_mode=self.verbose_mode
         )
 
     def _validate_source(self) -> None:
@@ -214,8 +216,8 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         local_index_feed = self.search_source.get_api_feed(
             source_identifier=self.source_identifier,
             update_only=(not rerun),
-            logger=self.review_manager.logger,
-            verbose_mode=self.review_manager.verbose_mode,
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         if self.search_source.search_type == SearchType.MD:
@@ -405,8 +407,8 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                 update_only=False,
                 prep_mode=True,
                 records=self.review_manager.dataset.load_records_dict(),
-                logger=self.review_manager.logger,
-                verbose_mode=self.review_manager.verbose_mode,
+                logger=self.logger,
+                verbose_mode=self.verbose_mode,
             )
 
             local_index_feed.add_update_record(retrieved_record)
@@ -654,8 +656,8 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         local_index_feed = self.search_source.get_api_feed(
             source_identifier=self.source_identifier,
             update_only=True,
-            logger=self.review_manager.logger,
-            verbose_mode=self.review_manager.verbose_mode,
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         try:
