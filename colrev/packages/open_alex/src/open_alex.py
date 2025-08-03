@@ -113,7 +113,6 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             # Note : need to reload file because the object is not shared between processes
             open_alex_feed = self.search_source.get_api_feed(
-                review_manager=self.review_manager,
                 source_identifier=self.source_identifier,
                 update_only=False,
                 prep_mode=True,

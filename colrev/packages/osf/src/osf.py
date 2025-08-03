@@ -148,9 +148,10 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     def search(self, rerun: bool) -> None:
         """Run a search of OSF"""
         osf_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            logger=self.review_manager.logger,
+            verbose_mode=self.review_manager.verbose_mode,
         )
         self._run_api_search(osf_feed=osf_feed, rerun=rerun)
 

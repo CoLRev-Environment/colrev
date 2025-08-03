@@ -131,9 +131,10 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if self.search_source.search_type == SearchType.API:
             springer_feed = self.search_source.get_api_feed(
-                review_manager=self.review_manager,
                 source_identifier=self.source_identifier,
                 update_only=(not rerun),
+                logger=self.review_manager.logger,
+                verbose_mode=self.review_manager.verbose_mode,
             )
             self._run_api_search(springer_feed=springer_feed, rerun=rerun)
             return

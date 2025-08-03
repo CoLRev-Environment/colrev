@@ -172,9 +172,10 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         self._validate_source()
 
         prospero_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=False,
+            logger=self.review_manager.logger,
+            verbose_mode=self.review_manager.verbose_mode,
         )
 
         self.run_api_search(prospero_feed=prospero_feed, rerun=rerun)
