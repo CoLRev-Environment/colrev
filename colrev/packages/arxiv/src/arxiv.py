@@ -48,8 +48,10 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
         logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
         if settings:
             # arXiv as a search_source
@@ -348,8 +350,8 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         arxiv_feed = self.search_source.get_api_feed(
             source_identifier=self.source_identifier,
             update_only=(not rerun),
-            logger=self.review_manager.logger,
-            verbose_mode=self.review_manager.verbose_mode,
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         # if self.search_source.search_type == SearchType.MD:

@@ -46,8 +46,10 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
         logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         """Initialize the ProsperoSearchSource plugin."""
 
         self.search_source = self._get_search_source(settings)
@@ -174,8 +176,8 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         prospero_feed = self.search_source.get_api_feed(
             source_identifier=self.source_identifier,
             update_only=False,
-            logger=self.review_manager.logger,
-            verbose_mode=self.review_manager.verbose_mode,
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         self.run_api_search(prospero_feed=prospero_feed, rerun=rerun)

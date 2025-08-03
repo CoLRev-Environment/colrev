@@ -45,8 +45,10 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
         logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
         # Note: not yet implemented
         # Note : once this is implemented, add "colrev.open_alex" to the default settings
@@ -117,8 +119,8 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
                 update_only=False,
                 prep_mode=True,
                 records=self.review_manager.dataset.load_records_dict(),
-                logger=self.review_manager.logger,
-                verbose_mode=self.review_manager.verbose_mode,
+                logger=self.logger,
+                verbose_mode=self.verbose_mode,
             )
 
             open_alex_feed.add_update_record(retrieved_record)

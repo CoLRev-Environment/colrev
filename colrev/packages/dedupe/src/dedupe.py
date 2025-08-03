@@ -38,8 +38,10 @@ class Dedupe(base_classes.DedupePackageBaseClass):
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
         logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ):
         self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.settings = self.settings_class(**settings)
         self.dedupe_operation = dedupe_operation
         self.review_manager = dedupe_operation.review_manager
@@ -72,7 +74,7 @@ class Dedupe(base_classes.DedupePackageBaseClass):
             )
         ]
         verbosity_level = 0
-        if self.review_manager.verbose_mode:
+        if self.verbose_mode:
             verbosity_level = 1
         records_df.loc[
             records_df[Fields.STATUS].isin(

@@ -94,8 +94,10 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         data_operation: colrev.ops.data.Data,
         settings: dict,
         logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.data_operation = data_operation
         self.review_manager = data_operation.review_manager
 
@@ -737,7 +739,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             self.logger.debug("Skipping paper build (no changes)")
             return
 
-        if self.review_manager.verbose_mode:
+        if self.verbose_mode:
             self.logger.info("Build paper")
 
         script = (

@@ -57,8 +57,10 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         source_operation: colrev.process.operation.Operation,
         settings: dict,
         logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
         self.search_source = self.settings_class(**settings)
         self.quality_model = self.review_manager.get_qm()
@@ -270,8 +272,8 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         synergy_feed = self.search_source.get_api_feed(
             source_identifier=self.source_identifier,
             update_only=False,
-            logger=self.review_manager.logger,
-            verbose_mode=self.review_manager.verbose_mode,
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
         existing_keys = {
             Fields.DOI: [

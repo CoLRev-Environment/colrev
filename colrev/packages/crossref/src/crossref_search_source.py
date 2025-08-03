@@ -60,8 +60,10 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
         logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
 
         self.review_manager = source_operation.review_manager
         self.search_source = self._get_search_source(settings)
@@ -470,8 +472,8 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         crossref_feed = self.search_source.get_api_feed(
             source_identifier=self.source_identifier,
             update_only=(not rerun),
-            logger=self.review_manager.logger,
-            verbose_mode=self.review_manager.verbose_mode,
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         if self.search_source.search_type in [
@@ -561,8 +563,8 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                     update_only=False,
                     prep_mode=True,
                     records=self.review_manager.dataset.load_records_dict(),
-                    logger=self.review_manager.logger,
-                    verbose_mode=self.review_manager.verbose_mode,
+                    logger=self.logger,
+                    verbose_mode=self.verbose_mode,
                 )
 
                 crossref_feed.add_update_record(retrieved_record)
@@ -600,7 +602,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
             colrev_exceptions.RecordNotFoundInPrepSourceException,
             colrev_exceptions.RecordNotParsableException,
         ) as exc:
-            if prep_operation.review_manager.verbose_mode:
+            if self.verbose_mode:
                 print(exc)
 
         return record

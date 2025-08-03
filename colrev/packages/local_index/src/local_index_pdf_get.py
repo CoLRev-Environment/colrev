@@ -33,8 +33,10 @@ class LocalIndexPDFGet(base_classes.PDFGetPackageBaseClass):
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
         settings: dict,
         logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.settings = self.settings_class(**settings)
         self.pdf_get_operation = pdf_get_operation
         self.review_manager = pdf_get_operation.review_manager
@@ -45,7 +47,7 @@ class LocalIndexPDFGet(base_classes.PDFGetPackageBaseClass):
         """Get PDFs from the local-index"""
 
         local_index = colrev.env.local_index.LocalIndex(
-            verbose_mode=self.review_manager.verbose_mode
+            verbose_mode=self.verbose_mode
         )
 
         try:
