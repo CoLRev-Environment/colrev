@@ -570,6 +570,7 @@ class SearchType(Enum, metaclass=SortedEnumMeta):
             return self.value < other.value
         return NotImplemented
 
+
 class SearchSourceHeuristicStatus(Enum):
     """Status of the SearchSource heuristic"""
 
