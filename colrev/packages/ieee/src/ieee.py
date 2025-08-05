@@ -31,8 +31,6 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     flag = True
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
     search_types = [SearchType.API]
@@ -59,7 +57,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.review_manager = source_operation.review_manager
 
         if settings:
-            self.search_source = self.settings_class(**settings)
+            self.search_source = settings
         else:
             self.search_source = colrev.settings.SearchSource(
                 endpoint=self.endpoint,

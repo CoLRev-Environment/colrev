@@ -13,8 +13,6 @@ from colrev.package_manager.package_base_classes import DataPackageBaseClass
 class RefCheck(DataPackageBaseClass):
     """RefCheck Class"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     def __init__(
         self,
         *,

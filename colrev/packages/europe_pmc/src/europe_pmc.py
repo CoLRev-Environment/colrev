@@ -56,7 +56,6 @@ class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, BaseModel):
 class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Europe PMC"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     #
     source_identifier = Fields.EUROPE_PMC_ID
     search_types = [
@@ -87,7 +86,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.review_manager = source_operation.review_manager
         if settings:
             # EuropePMC as a search_source
-            self.search_source = self.settings_class(**settings)
+            self.search_source = settings
         else:
             # EuropePMC as an md-prep source
             europe_pmc_md_source_l = [

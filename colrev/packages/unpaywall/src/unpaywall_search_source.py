@@ -25,8 +25,6 @@ from colrev.packages.unpaywall.src.api import UnpaywallAPI
 class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Unpaywall Search Source"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     source_identifier = "doi"
     search_types = [SearchType.API]
     endpoint = "colrev.unpaywall"
@@ -51,7 +49,7 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.review_manager = source_operation.review_manager
         if settings:
             # Unpaywall as a search_source
-            self.search_source = self.settings_class(**settings)
+            self.search_source = settings
         else:
             self.search_source = colrev.settings.SearchSource(
                 endpoint=self.endpoint,

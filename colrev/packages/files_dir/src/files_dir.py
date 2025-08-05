@@ -42,8 +42,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     # pylint: disable=too-many-instance-attributes
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     endpoint = "colrev.files_dir"
     source_identifier = Fields.FILE
     search_types = [SearchType.FILES]

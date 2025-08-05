@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import json
-import logging
 import typing
 from pathlib import Path
 
+import search_query
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import model_validator
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -17,7 +17,6 @@ import colrev.ops.search_api_feed
 from colrev.constants import IDPattern
 from colrev.constants import PDFPathType
 from colrev.constants import ScreenCriterionType
-from colrev.constants import SearchType
 from colrev.constants import ShareStatReq
 
 if typing.TYPE_CHECKING:
@@ -79,116 +78,117 @@ class ProjectSettings(BaseModel):
 # Search
 
 
-class SearchSource(BaseModel):
-    """Search source settings"""
+# # TODO : extract / replace with SearchFile?
+# class SearchSource(BaseModel):
+#     """Search source settings"""
 
-    # pylint: disable=too-many-instance-attributes
-    endpoint: str
-    filename: Path
-    search_type: SearchType
-    search_parameters: dict
-    comment: typing.Optional[str]
+#     # pylint: disable=too-many-instance-attributes
+#     endpoint: str
+#     filename: Path
+#     search_type: SearchType
+#     search_parameters: dict
+#     comment: typing.Optional[str]
 
-    to_import: int = 0
-    imported_origins: typing.List[str] = []
-    len_before: int = 0
-    source_records_list: typing.List[typing.Dict] = []
+#     to_import: int = 0
+#     imported_origins: typing.List[str] = []
+#     len_before: int = 0
+#     source_records_list: typing.List[typing.Dict] = []
 
-    # pylint: disable=no-self-argument
-    @model_validator(mode="before")
-    def validate_filename(cls, values):  # type: ignore
-        """Validate the filename"""
-        filename = values.get("filename")
-        if filename and not str(filename).replace("\\", "/").startswith("data/search"):
-            raise colrev_exceptions.InvalidSettingsError(
-                msg=f"Source filename does not start with data/search: {filename}"
-            )
-        return values
+#     # pylint: disable=no-self-argument
+#     @model_validator(mode="before")
+#     def validate_filename(cls, values):  # type: ignore
+#         """Validate the filename"""
+#         filename = values.get("filename")
+#         if filename and not str(filename).replace("\\", "/").startswith("data/search"):
+#             raise colrev_exceptions.InvalidSettingsError(
+#                 msg=f"Source filename does not start with data/search: {filename}"
+#             )
+#         return values
 
-    def model_dump(self, **kwargs) -> dict:  # type: ignore
-        exclude = set(kwargs.pop("exclude", set()))
-        exclude.add("to_import")
-        exclude.add("imported_origins")
-        exclude.add("len_before")
-        exclude.add("source_records_list")
-        return super().model_dump(exclude=exclude, **kwargs)
+#     def model_dump(self, **kwargs) -> dict:  # type: ignore
+#         exclude = set(kwargs.pop("exclude", set()))
+#         exclude.add("to_import")
+#         exclude.add("imported_origins")
+#         exclude.add("len_before")
+#         exclude.add("source_records_list")
+#         return super().model_dump(exclude=exclude, **kwargs)
 
-    def setup_for_load(
-        self,
-        *,
-        source_records_list: typing.List[typing.Dict],
-        imported_origins: typing.List[str],
-    ) -> None:
-        """Set the SearchSource up for the load process (initialize statistics)"""
-        # pylint: disable=attribute-defined-outside-init
-        # Note : define outside init because the following
-        # attributes are temporary. They should not be
-        # saved to SETTINGS_FILE.
+#     def setup_for_load(
+#         self,
+#         *,
+#         source_records_list: typing.List[typing.Dict],
+#         imported_origins: typing.List[str],
+#     ) -> None:
+#         """Set the SearchSource up for the load process (initialize statistics)"""
+#         # pylint: disable=attribute-defined-outside-init
+#         # Note : define outside init because the following
+#         # attributes are temporary. They should not be
+#         # saved to SETTINGS_FILE.
 
-        self.to_import = len(source_records_list)
-        self.imported_origins: typing.List[str] = imported_origins
-        self.len_before = len(imported_origins)
-        self.source_records_list: typing.List[typing.Dict] = source_records_list
+#         self.to_import = len(source_records_list)
+#         self.imported_origins: typing.List[str] = imported_origins
+#         self.len_before = len(imported_origins)
+#         self.source_records_list: typing.List[typing.Dict] = source_records_list
 
-    def get_origin_prefix(self) -> str:
-        """Get the corresponding origin prefix"""
-        assert not any(x in str(self.filename.name) for x in [";", "/"])
-        return str(self.filename.name).lstrip("/")
+#     def get_origin_prefix(self) -> str:
+#         """Get the corresponding origin prefix"""
+#         assert not any(x in str(self.filename.name) for x in [";", "/"])
+#         return str(self.filename.name).lstrip("/")
 
-    def is_md_source(self) -> bool:
-        """Check whether the source is a metadata source (for preparation)"""
+#     def is_md_source(self) -> bool:
+#         """Check whether the source is a metadata source (for preparation)"""
 
-        return str(self.filename.name).startswith("md_")
+#         return str(self.filename.name).startswith("md_")
 
-    def is_curated_source(self) -> bool:
-        """Check whether the source is a curated source (for preparation)"""
+#     def is_curated_source(self) -> bool:
+#         """Check whether the source is a curated source (for preparation)"""
 
-        return self.get_origin_prefix() == "md_curated.bib"
+#         return self.get_origin_prefix() == "md_curated.bib"
 
-    def get_query(self) -> str:
-        """Get the query filepath"""
-        assert self.search_type == SearchType.DB
-        # Note : save API queries in SETTINGS_FILE
-        if "query_file" not in self.search_parameters:
-            raise KeyError
-        if not Path(self.search_parameters["query_file"]).is_file():
-            raise FileNotFoundError
-        return Path(self.search_parameters["query_file"]).read_text(encoding="utf-8")
+#     def get_query(self) -> str:
+#         """Get the query filepath"""
+#         assert self.search_type == SearchType.DB
+#         # Note : save API queries in SETTINGS_FILE
+#         if "query_file" not in self.search_parameters:
+#             raise KeyError
+#         if not Path(self.search_parameters["query_file"]).is_file():
+#             raise FileNotFoundError
+#         return Path(self.search_parameters["query_file"]).read_text(encoding="utf-8")
 
-    def get_api_feed(
-        self,
-        source_identifier: str,
-        update_only: bool,
-        logger: typing.Optional[logging.Logger] = None,
-        prep_mode: bool = False,
-        records: typing.Optional[dict] = None,
-        verbose_mode: bool = False,
-    ) -> colrev.ops.search_api_feed.SearchAPIFeed:
-        """Get a feed to add and update records"""
+#     def get_api_feed(
+#         self,
+#         source_identifier: str,
+#         update_only: bool,
+#         logger: typing.Optional[logging.Logger] = None,
+#         prep_mode: bool = False,
+#         records: typing.Optional[dict] = None,
+#         verbose_mode: bool = False,
+#     ) -> colrev.ops.search_api_feed.SearchAPIFeed:
+#         """Get a feed to add and update records"""
 
-        if logger is None:
-            logger = logging.getLogger(__name__)
+#         if logger is None:
+#             logger = logging.getLogger(__name__)
 
-        return colrev.ops.search_api_feed.SearchAPIFeed(
-            source_identifier=source_identifier,
-            search_source=self,
-            update_only=update_only,
-            logger=logger,
-            prep_mode=prep_mode,
-            verbose_mode=verbose_mode,
-            records=records,
-        )
+#         return colrev.ops.search_api_feed.SearchAPIFeed(
+#             source_identifier=source_identifier,
+#             search_source=self,
+#             update_only=update_only,
+#             logger=logger,
+#             prep_mode=prep_mode,
+#             verbose_mode=verbose_mode,
+#             records=records,
+#         )
 
-    def __str__(self) -> str:
-        formatted_str = (
-            f"{str(self.search_type).lower()}: {self.endpoint} >> {self.filename}"
-        )
-        if self.search_parameters:
-            formatted_str += f"\n   search parameters:   {self.search_parameters}"
-        if self.comment:
-            formatted_str += f"\n   comment:             {self.comment}"
+#     def __str__(self) -> str:
+#         formatted_str = (
+#             f"{str(self.search_type).lower()}: {self.endpoint} >> {self.filename}"
+#         )
+#         if self.search_parameters:
+#             formatted_str += f"\n   search parameters:   {self.search_parameters}"
+#         if self.comment:
+#             formatted_str += f"\n   comment:             {self.comment}"
 
-        return formatted_str
+#         return formatted_str
 
 
 class SearchSettings(BaseModel):
@@ -374,10 +374,12 @@ class DataSettings(BaseModel):
 class Settings(BaseModel):
     """CoLRev project settings"""
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     # pylint: disable=too-many-instance-attributes
 
     project: ProjectSettings
-    sources: typing.List[SearchSource]
+    sources: typing.List[search_query.SearchFile]
     search: SearchSettings
     prep: PrepSettings
     dedupe: DedupeSettings

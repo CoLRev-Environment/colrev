@@ -25,8 +25,6 @@ from colrev.constants import SearchType
 class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
     """EBSCOHost"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     endpoint = "colrev.ebsco_host"
     # https://connect.ebsco.com/s/article/
     # What-is-the-Accession-Number-AN-in-EBSCOhost-records?language=en_US
@@ -47,7 +45,7 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.review_manager = source_operation.review_manager
         self.source_operation = source_operation
 

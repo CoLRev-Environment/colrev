@@ -31,7 +31,6 @@ from colrev.settings import SearchSource
 class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Prospero Search Source for retrieving protocol data"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.prospero"
     source_identifier = Fields.PROSPERO_ID
 

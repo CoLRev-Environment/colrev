@@ -33,8 +33,6 @@ from colrev.constants import SearchType
 class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
     """CoLRev projects"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     source_identifier = "colrev_project_identifier"
     search_types = [SearchType.API]
     endpoint = "colrev.colrev_project"
@@ -52,7 +50,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.review_manager = source_operation.review_manager
 
     # pylint: disable=colrev-missed-constant-usage

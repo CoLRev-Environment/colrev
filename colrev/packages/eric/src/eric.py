@@ -28,8 +28,6 @@ from colrev.packages.eric.src import eric_api
 class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
     """ERIC API"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
     search_types = [SearchType.API]
@@ -54,7 +52,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.source_operation = source_operation
         if settings:
             # ERIC as a search_source
-            self.search_source = self.settings_class(**settings)
+            self.search_source = settings
         else:
             self.search_source = colrev.settings.SearchSource(
                 endpoint=self.endpoint,

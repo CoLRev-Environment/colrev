@@ -23,8 +23,6 @@ from colrev.constants import SearchType
 class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Web of Science"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     endpoint = "colrev.web_of_science"
     source_identifier = (
         "https://www.webofscience.com/wos/woscc/full-record/" + "{{unique-id}}"
@@ -44,7 +42,7 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.source_operation = source_operation
         self.review_manager = source_operation.review_manager
 

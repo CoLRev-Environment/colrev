@@ -31,7 +31,6 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.open_citations_forward_search"
     source_identifier = "fwsearch_ref"
     search_types = [SearchType.FORWARD_SEARCH]
@@ -49,7 +48,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.review_manager = source_operation.review_manager
         self.crossref_api = crossref_api.CrossrefAPI(params={})
 

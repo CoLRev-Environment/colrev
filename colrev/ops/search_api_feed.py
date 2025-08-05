@@ -5,6 +5,9 @@ from __future__ import annotations
 import logging
 import typing
 from copy import deepcopy
+from pathlib import Path
+
+import search_query
 
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
@@ -19,9 +22,6 @@ from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
-
-if typing.TYPE_CHECKING:
-    import colrev.settings
 
 
 # Keep in mind the need for lock-mechanisms, e.g., in concurrent prep operations
@@ -38,7 +38,7 @@ class SearchAPIFeed:
         self,
         *,
         source_identifier: str,
-        search_source: colrev.settings.SearchSource,
+        search_source: search_query.SearchFile,
         update_only: bool,
         logger: logging.Logger,
         prep_mode: bool = False,
@@ -46,7 +46,7 @@ class SearchAPIFeed:
         records: typing.Optional[dict] = None,
     ):
         self.source = search_source
-        self.feed_file = search_source.filename
+        self.feed_file = Path(search_source.search_results_path)
 
         # Note: the source_identifier identifies records in the search feed.
         # This could be a doi or link or database-specific ID (like WOS accession numbers)

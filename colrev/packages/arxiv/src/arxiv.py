@@ -31,8 +31,6 @@ from colrev.packages.arxiv.src import record_transformer
 class ArXivSource(base_classes.SearchSourcePackageBaseClass):
     """arXiv"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     endpoint = "colrev.arxiv"
     source_identifier = "arxivid"
     search_types = [SearchType.API]
@@ -55,7 +53,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         self.review_manager = source_operation.review_manager
         if settings:
             # arXiv as a search_source
-            self.search_source = self.settings_class(**settings)
+            self.search_source = settings
         else:
             # arXiv as an md-prep source
             arxiv_md_source_l = [

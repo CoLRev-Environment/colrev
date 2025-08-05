@@ -44,7 +44,6 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     _api_url = "https://opencitations.net/index/coci/api/v1/references/"
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.pdf_backward_search"
     source_identifier = Fields.ID
     search_types = [SearchType.BACKWARD_SEARCH]
@@ -66,7 +65,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         if "min_intext_citations" not in settings["search_parameters"]:
             settings["search_parameters"]["min_intext_citations"] = 3
 
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.crossref_api = crossref_api.CrossrefAPI(params={})
 
     @classmethod

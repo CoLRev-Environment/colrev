@@ -27,8 +27,6 @@ class TransportResearchInternationalDocumentation(
 ):
     """Transport Research International Documentation"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     endpoint = "colrev.trid"
     source_identifier = "biburl"
     search_types = [SearchType.DB]
@@ -46,7 +44,7 @@ class TransportResearchInternationalDocumentation(
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.source_operation = source_operation
         self.review_manager = source_operation.review_manager
 

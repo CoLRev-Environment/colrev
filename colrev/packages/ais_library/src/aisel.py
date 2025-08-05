@@ -31,8 +31,6 @@ from colrev.packages.ais_library.src import ais_load_utils
 class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """AIS electronic Library (AISeL)"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
     search_types = [
@@ -77,7 +75,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.review_manager = source_operation.review_manager
         self.quality_model = self.review_manager.get_qm()
         self.source_operation = source_operation

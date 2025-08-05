@@ -16,7 +16,6 @@ from colrev.constants import Fields
 class CustomSearch(base_classes.SearchSourcePackageBaseClass):
     """Class for custom search scripts"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = "custom"
 
     def __init__(

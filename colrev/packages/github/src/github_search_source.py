@@ -38,7 +38,6 @@ def is_github_api_key(previous: dict, answer: str) -> bool:
 class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
     """GitHub API"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     search_types = [SearchType.API]
     endpoint = "colrev.github"
     source_identifier = Fields.URL
@@ -70,7 +69,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.review_manager = source_operation.review_manager
         if settings:
             # GitHub as a search source
-            self.search_source = self.settings_class(**settings)
+            self.search_source = settings
         else:
             # GitHub as a md-prep source
             github_md_source_l = [

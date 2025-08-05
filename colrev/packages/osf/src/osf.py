@@ -36,8 +36,6 @@ from colrev.packages.osf.src.osf_api import OSFApiQuery
 class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     """OSF"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     source_identifier = Fields.ID
     search_types = [SearchType.API]
     endpoint = "colrev.osf"
@@ -63,7 +61,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.review_manager = source_operation.review_manager
 
         if settings:
-            self.search_source = self.settings_class(**settings)
+            self.search_source = settings
         else:
             self.search_source = colrev.settings.SearchSource(
                 endpoint=self.endpoint,

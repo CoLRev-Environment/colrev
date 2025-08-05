@@ -42,7 +42,6 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     """
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.synergy_datasets"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
@@ -62,7 +61,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.quality_model = self.review_manager.get_qm()
 
     @classmethod

@@ -44,7 +44,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Semantic Scholar API Search Source"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     # Provide objects with classes
     _s2: SemanticScholar
     _search_return: PaginatedResults
@@ -83,7 +82,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.review_manager = source_operation.review_manager
         if settings:
             # Semantic Scholar as a search source
-            self.search_source = self.settings_class(**settings)
+            self.search_source = settings
         else:
             self.search_source = colrev.settings.SearchSource(
                 endpoint="colrev.semanticscholar",

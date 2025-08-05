@@ -36,8 +36,6 @@ from colrev.constants import SearchType
 class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Springer Link"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     endpoint = "colrev.springer_link"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
@@ -62,7 +60,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.quality_model = self.review_manager.get_qm()
         self.source_operation = source_operation
         self.language_service = colrev.env.language_service.LanguageService()

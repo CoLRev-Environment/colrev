@@ -29,7 +29,6 @@ from colrev.packages.open_alex.src import open_alex_api
 class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
     """OpenAlex API"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.open_alex"
     source_identifier = "openalex_id"
     search_types = [SearchType.MD]
@@ -54,7 +53,7 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
         # Note : once this is implemented, add "colrev.open_alex" to the default settings
         # if settings:
         #     # OpenAlex as a search_source
-        #     self.search_source = self.settings_class(**settings)
+        #     self.search_source = settings
         # else:
         # OpenAlex as an md-prep source
         open_alex_md_source_l = [

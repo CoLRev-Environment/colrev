@@ -23,7 +23,6 @@ from colrev.constants import SearchType
 class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """ACM digital Library"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.acm_digital_library"
     # Note : the ID contains the doi
     # "https://dl.acm.org/doi/{{ID}}"
@@ -42,7 +41,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.review_manager = source_operation.review_manager
         self.operation = source_operation
 

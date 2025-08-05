@@ -34,7 +34,6 @@ from colrev.packages.pubmed.src import pubmed_api
 class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Pubmed"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = "pubmedid"
     search_types = [
         SearchType.DB,
@@ -62,7 +61,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.review_manager = source_operation.review_manager
         if settings:
             # Pubmed as a search_source
-            self.search_source = self.settings_class(**settings)
+            self.search_source = settings
         else:
             # Pubmed as an md-prep source
             pubmed_md_source_l = [

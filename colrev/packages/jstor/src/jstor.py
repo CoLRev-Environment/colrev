@@ -9,8 +9,6 @@ from typing import Optional
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -24,7 +22,6 @@ from colrev.constants import SearchType
 class JSTORSearchSource(base_classes.SearchSourcePackageBaseClass):
     """JSTOR"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.jstor"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
@@ -43,7 +40,7 @@ class JSTORSearchSource(base_classes.SearchSourcePackageBaseClass):
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.operation = source_operation
         self.review_manager = source_operation.review_manager
 

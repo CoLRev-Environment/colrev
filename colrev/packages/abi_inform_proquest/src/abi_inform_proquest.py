@@ -26,7 +26,6 @@ from colrev.writer.write_utils import write_file
 class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
     """ABI/INFORM (ProQuest)"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.abi_inform_proquest"
     source_identifier = "{{ID}}"
     search_types = [SearchType.DB]
@@ -45,7 +44,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.source_operation = source_operation
         self.quality_model = self.review_manager.get_qm()
 

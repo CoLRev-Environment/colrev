@@ -24,7 +24,6 @@ from colrev.constants import SearchType
 class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Taylor and Francis"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.taylor_and_francis"
     source_identifier = "{{doi}}"
     search_types = [SearchType.DB]
@@ -39,7 +38,7 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.review_manager = source_operation.review_manager
         self.source_operation = source_operation
 

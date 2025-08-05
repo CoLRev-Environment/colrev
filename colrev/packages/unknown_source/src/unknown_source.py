@@ -33,7 +33,6 @@ from colrev.constants import SearchType
 class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Unknown SearchSource"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.unknown_source"
 
     source_identifier = "colrev.unknown_source"
@@ -61,7 +60,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.review_manager = source_operation.review_manager
         self.language_service = colrev.env.language_service.LanguageService()
         self.operation = source_operation

@@ -39,7 +39,6 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     # pylint: disable=too-many-instance-attributes
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = Fields.CURATION_ID
     search_types = [SearchType.API, SearchType.MD]
     endpoint = "colrev.local_index"
@@ -76,7 +75,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.review_manager = source_operation.review_manager
         if settings:
             # LocalIndex as a search_source
-            self.search_source = self.settings_class(**settings)
+            self.search_source = settings
 
         else:
             # LocalIndex as an md-prep source

@@ -35,7 +35,6 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     """PLOS API"""
 
     endpoint = "colrev.plos"
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = Fields.DOI
     search_types = [SearchType.API]
     heuristic_status = SearchSourceHeuristicStatus.oni
@@ -68,7 +67,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.settings.SearchSource:
         if settings:
             # plos as a search_source
-            return self.settings_class(**settings)
+            return settings
 
         raise NotImplementedError
         # # plos as an .-prep source

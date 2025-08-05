@@ -25,7 +25,6 @@ from colrev.constants import SearchType
 class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Scopus"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.scopus"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
@@ -45,7 +44,7 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
-        self.search_source = self.settings_class(**settings)
+        self.search_source = settings
         self.quality_model = self.review_manager.get_qm()
         self.operation = source_operation
 
