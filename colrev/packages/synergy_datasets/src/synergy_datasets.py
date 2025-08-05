@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: SYNERGY-datasets"""
 from __future__ import annotations
-import search_query
 
 import datetime
 import logging
@@ -12,6 +11,7 @@ from typing import Optional
 
 import inquirer
 import pandas as pd
+import search_query
 from git import Repo
 from pydantic import Field
 

@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: AIS electronic Library"""
 from __future__ import annotations
-import search_query
 
 import logging
 import re
@@ -11,6 +10,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import requests
+import search_query
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions

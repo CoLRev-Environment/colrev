@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: ERIC"""
 from __future__ import annotations
-import search_query
 
 import logging
 import typing
@@ -9,6 +8,7 @@ import urllib.parse
 from pathlib import Path
 from typing import Optional
 
+import search_query
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions

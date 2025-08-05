@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: Europe PMC"""
 from __future__ import annotations
-import search_query
 
 import json
 import logging
@@ -14,6 +13,7 @@ from urllib.parse import quote
 from urllib.parse import urlparse
 
 import requests
+import search_query
 from pydantic import BaseModel
 from pydantic import Field
 from rapidfuzz import fuzz

@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: IEEEXplore"""
 from __future__ import annotations
-import search_query
 
 import logging
 import typing
@@ -9,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 import pandas as pd
+import search_query
 from pydantic import Field
 
 import colrev.ops.prep

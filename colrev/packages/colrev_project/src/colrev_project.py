@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: CoLRev project"""
 from __future__ import annotations
-import search_query
 
 import logging
 import shutil
@@ -12,6 +11,7 @@ from typing import Optional
 
 import pandas as pd
 import pandasql as ps
+import search_query
 from git import Repo
 from pandasql.sqldf import PandaSQLException
 from pydantic import Field

@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: OpenCitations"""
 from __future__ import annotations
-import search_query
 
 import json
 import logging
@@ -10,6 +9,7 @@ from pathlib import Path
 from typing import Optional
 
 import requests
+import search_query
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
@@ -60,9 +60,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
             platform="colrev.open_citations_forward_search",
             filepath=Path("data/search/forward_search.bib"),
             search_type=SearchType.FORWARD_SEARCH,
-            search_string={
-                "scope": {Fields.STATUS: "rev_included|rev_synthesized"}
-            },
+            search_string={"scope": {Fields.STATUS: "rev_included|rev_synthesized"}},
             comment="",
         )
 

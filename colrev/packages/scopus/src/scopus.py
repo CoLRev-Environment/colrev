@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 """SearchSource: Scopus"""
 from __future__ import annotations
-import search_query
 
 import logging
 from pathlib import Path
 from typing import Optional
 
+import search_query
 from pydantic import Field
 
 import colrev.loader.bib

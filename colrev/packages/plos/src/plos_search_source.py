@@ -6,6 +6,7 @@ import typing
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
+
 import search_query
 
 import colrev.env.language_service
@@ -272,9 +273,9 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         ):
             return False
 
-        year_from, year_to = self.search_source.search_string["scope"][
-            "years"
-        ].split("-")
+        year_from, year_to = self.search_source.search_string["scope"]["years"].split(
+            "-"
+        )
 
         if not retrieved_record_dict.get(Fields.YEAR, -1000).isdigit():
             return True

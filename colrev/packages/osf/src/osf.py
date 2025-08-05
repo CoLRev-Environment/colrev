@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Searchsource:OSF"""
 from __future__ import annotations
-import search_query
 
 import logging
 import typing
 from pathlib import Path
 from typing import Optional
 
+import search_query
 from pydantic import Field
 
 import colrev.env.environment_manager

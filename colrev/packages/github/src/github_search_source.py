@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: GitHub"""
 from __future__ import annotations
-import search_query
 
 import logging
 import re
@@ -11,6 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 import inquirer
+import search_query
 from github import Auth
 from github import Github
 from pydantic import Field

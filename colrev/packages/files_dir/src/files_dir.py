@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: directory containing PDF files (based on GROBID)"""
 from __future__ import annotations
-import search_query
 
 import logging
 import re
@@ -11,6 +10,7 @@ from typing import Optional
 
 import pymupdf
 import requests
+import search_query
 from pydantic import Field
 
 import colrev.env.local_index

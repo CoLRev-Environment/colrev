@@ -72,9 +72,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
     @classmethod
-    def add_endpoint(
-        cls, operation: Search, params: str
-    ) -> search_query.SearchFile:
+    def add_endpoint(cls, operation: Search, params: str) -> search_query.SearchFile:
         """Adds Prospero as a search source endpoint based on user-provided parameters."""
         if len(params) == 0:
             search_source = operation.create_api_source(platform=cls.endpoint)

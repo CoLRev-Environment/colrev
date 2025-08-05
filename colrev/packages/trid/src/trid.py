@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 """SearchSource: Transport Research International Documentation"""
 from __future__ import annotations
-import search_query
 
 import logging
 import re
 from pathlib import Path
 from typing import Optional
 
+import search_query
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes

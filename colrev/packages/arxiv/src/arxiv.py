@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: arXiv"""
 from __future__ import annotations
-import search_query
 
 import logging
 import typing
@@ -12,6 +11,7 @@ from urllib.parse import urlparse
 
 import feedparser
 import requests
+import search_query
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions

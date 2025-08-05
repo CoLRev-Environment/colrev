@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: DBLP"""
 from __future__ import annotations
-import search_query
 
 import logging
 import re
@@ -11,6 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 import requests
+import search_query
 from pydantic import BaseModel
 from pydantic import Field
 

@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: Unknown source (default for all other sources)"""
 from __future__ import annotations
-import search_query
 
 import logging
 import re
@@ -9,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 import pandas as pd
+import search_query
 from pydantic import Field
 from rapidfuzz import fuzz
 

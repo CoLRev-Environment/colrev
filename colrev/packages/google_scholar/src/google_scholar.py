@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 """SearchSource: GoogleScholar"""
 from __future__ import annotations
-import search_query
 
 import logging
 from pathlib import Path
 from typing import Optional
 
+import search_query
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes

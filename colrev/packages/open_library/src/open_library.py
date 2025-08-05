@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 """Connector to OpenLibrary (API)"""
 from __future__ import annotations
-import search_query
 
 import json
 import logging
@@ -11,6 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 import requests
+import search_query
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
