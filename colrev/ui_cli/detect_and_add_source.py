@@ -93,7 +93,7 @@ class CLISourceAdder:
 
         for filename in new_search_files:
             self.search_operation.review_manager.logger.info(
-                f"Discover and add new DB source: {filename}"
+                f"Detect and add new DB source: {filename}"
             )
             heuristic_list = self.search_operation.get_new_source_heuristic(filename)
             for source_candidates in heuristic_list:
