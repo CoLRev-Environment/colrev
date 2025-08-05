@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
+import search_query
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
@@ -67,7 +68,7 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint"""
 
         params_dict = {params.split("=")[0]: params.split("=")[1]}
@@ -127,7 +128,7 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: search_query.SearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for EBSCOHost"""
 

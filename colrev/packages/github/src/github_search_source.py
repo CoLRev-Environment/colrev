@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 import inquirer
+import search_query
 from github import Auth
 from github import Github
 from pydantic import Field
@@ -80,11 +81,11 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
             if github_md_source_l:
                 self.search_source = github_md_source_l[0]
             else:
-                self.search_source = colrev.settings.SearchSource(
-                    endpoint=self.endpoint,
-                    filename=self._github_md_filename,
+                self.search_source = search_query.SearchFile(
+                    platform=self.endpoint,
+                    filepath=self._github_md_filename,
                     search_type=SearchType.MD,
-                    search_parameters={},
+                    search_string={},
                     comment="",
                 )
             self.github_lock = Lock()
@@ -113,7 +114,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls, operation: colrev.ops.search.Search, params: str
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         cls._get_api_key()
@@ -132,10 +133,10 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
                     print("Invalid search parameter format")
 
         if len(params_dict) == 0:
-            search_source = operation.create_api_source(endpoint="colrev.github")
+            search_source = operation.create_api_source(platform="colrev.github")
 
             # Checking where to search
-            search_source.search_parameters["scope"] = cls._choice_scope()
+            search_source.search_string["scope"] = cls._choice_scope()
 
         else:
             if Fields.URL in params_dict:
@@ -152,11 +153,11 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
                 query = params_dict
 
             filename = operation.get_unique_filename(file_path_string="github")
-            search_source = colrev.settings.SearchSource(
-                endpoint="colrev.github",
-                filename=filename,
+            search_source = search_query.SearchFile(
+                platform="colrev.github",
+                filepath=filename,
                 search_type=SearchType.API,
-                search_parameters=query,
+                search_string=query,
                 comment="",
             )
 
@@ -187,11 +188,11 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         self, github_feed: colrev.ops.search_api_feed.SearchAPIFeed
     ) -> None:
 
-        if not self.search_source.search_parameters:
+        if not self.search_source.search_string:
             raise ValueError("No search parameters defined for GitHub search source")
 
-        keywords = self.search_source.search_parameters.get("query", "")
-        scope = self.search_source.search_parameters.get("scope", "")
+        keywords = self.search_source.search_string.get("query", "")
+        scope = self.search_source.search_string.get("scope", "")
         query = f"{keywords} in:{scope}"
 
         # Getting API key
@@ -237,7 +238,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.record.Record, source: search_query.SearchFile
     ) -> colrev.record.record.Record:
         """Source-specific preparation for GitHub"""
         return record

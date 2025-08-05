@@ -8,6 +8,7 @@ import urllib.parse
 from pathlib import Path
 from typing import Optional
 
+import search_query
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
@@ -54,11 +55,11 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
             # ERIC as a search_source
             self.search_source = settings
         else:
-            self.search_source = colrev.settings.SearchSource(
-                endpoint=self.endpoint,
-                filename=Path("data/search/eric.bib"),
+            self.search_source = search_query.SearchFile(
+                platform=self.endpoint,
+                filepath=Path("data/search/eric.bib"),
                 search_type=SearchType.OTHER,
-                search_parameters={},
+                search_string={},
                 comment="",
             )
 
@@ -100,7 +101,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
 
         params_dict = {}
@@ -129,11 +130,11 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
             if ":" in search:
                 search = ERICSearchSource._search_split(search)
             filename = operation.get_unique_filename(file_path_string=f"eric_{search}")
-            search_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
+            search_source = search_query.SearchFile(
+                platform=cls.endpoint,
+                filepath=filename,
                 search_type=SearchType.API,
-                search_parameters={"query": search, "start": start, "rows": rows},
+                search_string={"query": search, "start": start, "rows": rows},
                 comment="",
             )
 
@@ -149,7 +150,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         self, *, eric_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
 
-        api = eric_api.ERICAPI(params=self.search_source.search_parameters)
+        api = eric_api.ERICAPI(params=self.search_source.search_string)
         for record in api.get_query_return():
             eric_feed.add_update_record(record)
 
@@ -268,7 +269,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.record.Record, source: search_query.SearchFile
     ) -> colrev.record.record.Record:
         """Source-specific preparation for ERIC"""
 

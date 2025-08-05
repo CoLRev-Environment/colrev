@@ -13,6 +13,7 @@ from urllib.parse import quote
 from urllib.parse import urlparse
 
 import requests
+import search_query
 from pydantic import BaseModel
 from pydantic import Field
 from rapidfuzz import fuzz
@@ -24,7 +25,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
-import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
@@ -35,18 +35,19 @@ from colrev.packages.europe_pmc.src import europe_pmc_api
 # pylint: disable=unused-argument
 
 
-class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, BaseModel):
+class EuropePMCSearchSourceSettings(search_query.SearchFile, BaseModel):
     """Settings for EuropePMCSearchSource"""
 
     # pylint: disable=too-many-instance-attributes
-    endpoint: str
-    filename: Path
+    platform: str
+    filepath: Path
     search_type: SearchType
-    search_parameters: dict
+    search_string: dict
+    version: typing.Optional[str]
     comment: typing.Optional[str]
 
     _details = {
-        "search_parameters": {
+        "search_string": {
             "tooltip": "Currently supports a scope item "
             "with venue_key and journal_abbreviated fields."
         },
@@ -97,11 +98,11 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
             if europe_pmc_md_source_l:
                 self.search_source = europe_pmc_md_source_l[0]
             else:
-                self.search_source = colrev.settings.SearchSource(
-                    endpoint=self.endpoint,
-                    filename=self._europe_pmc_md_filename,
+                self.search_source = search_query.SearchFile(
+                    platform=self.endpoint,
+                    filepath=self._europe_pmc_md_filename,
                     search_type=SearchType.MD,
-                    search_parameters={},
+                    search_string={},
                     comment="",
                 )
 
@@ -276,7 +277,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         assert source.search_type in self.search_types
 
-        if "query" not in source.search_parameters:
+        if "query" not in source.search_string:
             raise colrev_exceptions.InvalidQueryException(
                 "Query required in search_parameters"
             )
@@ -308,7 +309,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 source=self.search_source,
             )
 
-        # if self.search_source.search_type == colrev.settings.SearchSource.MD:
+        # if self.search_source.search_type == search_query.SearchFile.MD:
         # self._run_md_search_update(
         #     search_operation=search_operation,
         #     europe_pmc_feed=europe_pmc_feed,
@@ -327,7 +328,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         try:
             _, email = self.review_manager.get_committer()
             api = europe_pmc_api.EPMCAPI(
-                params=self.search_source.search_parameters,
+                params=self.search_source.search_string,
                 email=email,
                 session=self.review_manager.get_cached_session(),
             )
@@ -377,7 +378,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -390,7 +391,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                     params_dict[key] = value
 
         if len(params_dict) == 0:
-            search_source = operation.create_api_source(endpoint=cls.endpoint)
+            search_source = operation.create_api_source(platform=cls.endpoint)
 
         # pylint: disable=colrev-missed-constant-usage
         elif "url" in params_dict:
@@ -401,11 +402,11 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                     "https://europepmc.org/search?query=", ""
                 )
                 filename = operation.get_unique_filename(file_path_string="europepmc")
-                search_source = colrev.settings.SearchSource(
-                    endpoint=cls.endpoint,
-                    filename=filename,
+                search_source = search_query.SearchFile(
+                    platform=cls.endpoint,
+                    filepath=filename,
                     search_type=SearchType.API,
-                    search_parameters={"query": query},
+                    search_string={"query": query},
                     comment="",
                 )
             else:
@@ -441,7 +442,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.record.Record, source: search_query.SearchFile
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Europe PMC"""
         record.data[Fields.AUTHOR].rstrip(".")

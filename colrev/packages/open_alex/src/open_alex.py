@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Optional
 
 import requests
+import search_query
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
@@ -64,11 +65,11 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
         if open_alex_md_source_l:
             self.search_source = open_alex_md_source_l[0]
         else:
-            self.search_source = colrev.settings.SearchSource(
-                endpoint="colrev.open_alex",
-                filename=self._open_alex_md_filename,
+            self.search_source = search_query.SearchFile(
+                platform="colrev.open_alex",
+                filepath=self._open_alex_md_filename,
                 search_type=SearchType.MD,
-                search_parameters={},
+                search_string={},
                 comment="",
             )
 
@@ -87,7 +88,7 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         raise colrev_exceptions.PackageParameterError(
@@ -191,7 +192,7 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.record.Record, source: search_query.SearchFile
     ) -> colrev.record.record.Record:
         """Source-specific preparation for OpenAlex"""
 

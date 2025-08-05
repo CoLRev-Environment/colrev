@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """SearchSource: PROSPERO
+import search_query
 
 A CoLRev SearchSource plugin to scrape and import records from PROSPERO.
 """
@@ -20,12 +21,10 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.packages.prospero.src.prospero_api
 import colrev.process
-import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search import Search
-from colrev.settings import SearchSource
 
 
 class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
@@ -58,42 +57,40 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def _get_search_source(
         self, settings: typing.Optional[dict]
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Retrieve and configure the search source based on provided settings."""
         if settings:
             return self.settings_class(**settings)
 
         fallback_filename = Path("data/search/prospero.bib")
-        return SearchSource(
-            endpoint="colrev.prospero",
-            filename=fallback_filename,
+        return search_query.SearchFile(
+            platform="colrev.prospero",
+            filepath=fallback_filename,
             search_type=SearchType.API,
-            search_parameters={},
+            search_string={},
             comment="fallback search_source",
         )
 
     @classmethod
-    def add_endpoint(
-        cls, operation: Search, params: str
-    ) -> colrev.settings.SearchSource:
+    def add_endpoint(cls, operation: Search, params: str) -> search_query.SearchFile:
         """Adds Prospero as a search source endpoint based on user-provided parameters."""
         if len(params) == 0:
-            search_source = operation.create_api_source(endpoint=cls.endpoint)
-            search_source.search_parameters[Fields.URL] = (
+            search_source = operation.create_api_source(platform=cls.endpoint)
+            search_source.search_string[Fields.URL] = (
                 cls.db_url + "search?" + "#searchadvanced"
             )
-            search_source.search_parameters["version"] = "0.1.0"
+            search_source.search_string["version"] = "0.1.0"
             operation.add_source_and_search(search_source)
             return search_source
 
         query = {"query": params}
         filename = operation.get_unique_filename(file_path_string="prospero_results")
 
-        new_search_source = SearchSource(
-            endpoint=cls.endpoint,
-            filename=filename,
+        new_search_source = search_query.SearchFile(
+            platform=cls.endpoint,
+            filepath=filename,
             search_type=SearchType.API,
-            search_parameters=query,
+            search_string=query,
             comment="Search source for Prospero protocols",
         )
         operation.add_source_and_search(new_search_source)
@@ -117,7 +114,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
                 f"not {self.search_source.search_type}"
             )
         if self.logger:
-            self.logger.debug("Validate SearchSource %s", self.search_source.filename)
+            self.logger.debug("Validate SearchFile %s", self.search_source.filename)
 
     def get_search_word(self) -> str:
         """
@@ -127,8 +124,8 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         if self.search_word is not None:
             return self.search_word
 
-        if "query" in (self.search_source.search_parameters or {}):
-            self.search_word = self.search_source.search_parameters["query"]
+        if "query" in (self.search_source.search_string or {}):
+            self.search_word = self.search_source.search_string["query"]
             self.logger.debug(
                 "Using query from search_parameters: %s", self.search_word
             )
@@ -219,7 +216,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: search_query.SearchFile,
     ) -> colrev.record.record_prep.PrepRecord:
         """Map fields to standardized fields for CoLRev (matching interface signature)."""
         return record

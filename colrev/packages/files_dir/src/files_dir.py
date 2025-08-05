@@ -10,6 +10,7 @@ from typing import Optional
 
 import pymupdf
 import requests
+import search_query
 from pydantic import Field
 
 import colrev.env.local_index
@@ -76,13 +77,13 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
         self.pdfs_path = self.review_manager.path / Path(
-            self.search_source.search_parameters["scope"]["path"]
+            self.search_source.search_string["scope"]["path"]
         )
 
         self.subdir_pattern: re.Pattern = re.compile("")
         self.r_subdir_pattern: re.Pattern = re.compile("")
-        if "subdir_pattern" in self.search_source.search_parameters.get("scope", {}):
-            self.subdir_pattern = self.search_source.search_parameters["scope"][
+        if "subdir_pattern" in self.search_source.search_string.get("scope", {}):
+            self.subdir_pattern = self.search_source.search_string["scope"][
                 "subdir_pattern"
             ]
             self.logger.info(f"Activate subdir_pattern: {self.subdir_pattern}")
@@ -143,7 +144,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             return
 
         search_rd = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
+            filepath=self.search_source.filename,
             logger=self.logger,
             unique_id_field="ID",
         )
@@ -176,7 +177,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if len(search_rd.values()) != 0:
 
-            write_file(records_dict=search_rd, filename=self.search_source.filename)
+            write_file(records_dict=search_rd, filepath=self.search_source.filename)
 
         if records:
             for record_dict in records.values():
@@ -347,7 +348,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
                 # add details based on path
                 record_dict = self._update_fields_based_on_pdf_dirs(
-                    record_dict=record_dict, params=self.search_source.search_parameters
+                    record_dict=record_dict, params=self.search_source.search_string
                 )
 
         except colrev_exceptions.TEIException:
@@ -383,8 +384,8 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         assert source.search_type == SearchType.FILES
 
-        if "subdir_pattern" in source.search_parameters:
-            if source.search_parameters["subdir_pattern"] != [
+        if "subdir_pattern" in source.search_string:
+            if source.search_string["subdir_pattern"] != [
                 "NA",
                 "volume_number",
                 Fields.YEAR,
@@ -394,16 +395,16 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                     "subdir_pattern not in [NA, volume_number, year, volume]"
                 )
 
-        if "sub_dir_pattern" in source.search_parameters:
+        if "sub_dir_pattern" in source.search_string:
             raise colrev_exceptions.InvalidQueryException(
                 "sub_dir_pattern: deprecated. use subdir_pattern"
             )
 
-        if "scope" not in source.search_parameters:
+        if "scope" not in source.search_string:
             raise colrev_exceptions.InvalidQueryException(
                 "scope required in search_parameters"
             )
-        if "path" not in source.search_parameters["scope"]:
+        if "path" not in source.search_string["scope"]:
             raise colrev_exceptions.InvalidQueryException(
                 "path required in search_parameters/scope"
             )
@@ -742,16 +743,16 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         filename = operation.get_unique_filename(file_path_string="files")
         # pylint: disable=no-value-for-parameter
-        search_source = colrev.settings.SearchSource(
-            endpoint="colrev.files_dir",
-            filename=filename,
+        search_source = search_query.SearchFile(
+            platform="colrev.files_dir",
+            filepath=filename,
             search_type=SearchType.FILES,
-            search_parameters={"scope": {"path": "data/pdfs"}},
+            search_string={"scope": {"path": "data/pdfs"}},
             comment="",
         )
         operation.add_source_and_search(search_source)
@@ -876,7 +877,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: search_query.SearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for files"""
 

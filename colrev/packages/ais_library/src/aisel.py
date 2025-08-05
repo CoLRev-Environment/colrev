@@ -10,6 +10,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import requests
+import search_query
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
@@ -163,7 +164,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         params_dict = {}
         if params:
@@ -191,16 +192,16 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 assert host and host.endswith("aisel.aisnet.org")
                 q_params = cls._parse_query(query=params_dict["url"])
                 filename = operation.get_unique_filename(file_path_string="ais")
-                search_source = colrev.settings.SearchSource(
-                    endpoint=cls.endpoint,
-                    filename=filename,
+                search_source = search_query.SearchFile(
+                    platform=cls.endpoint,
+                    filepath=filename,
                     search_type=SearchType.API,
-                    search_parameters=q_params,
+                    search_string=q_params,
                     comment="",
                 )
             else:
                 # Add API search without params
-                search_source = operation.create_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(platform=cls.endpoint)
 
         # elif search_type == SearchType.TOC:
         else:
@@ -217,8 +218,8 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger.debug(f"Validate SearchSource {source.filename}")
 
         if source.search_type == SearchType.API:
-            if "query" not in source.search_parameters:
-                # if "search_terms" not in source.search_parameters["query"]:
+            if "query" not in source.search_string:
+                # if "search_terms" not in source.search_string["query"]:
                 raise colrev_exceptions.InvalidQueryException("query parameter missing")
 
         self.logger.debug("SearchSource %s validated", source.filename)
@@ -245,7 +246,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
             return urllib.parse.quote(final)
 
-        params = self.search_source.search_parameters
+        params = self.search_source.search_string
         final_q = query_from_params(params)
 
         query_string = (
@@ -504,7 +505,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: search_query.SearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for the AIS electronic Library (AISeL)"""
 

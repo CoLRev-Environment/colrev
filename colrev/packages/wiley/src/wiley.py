@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+import search_query
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
@@ -62,7 +63,7 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {params.split("=")[0]: params.split("=")[1]}
@@ -115,7 +116,7 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.record.Record, source: search_query.SearchFile
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Wiley"""
 
