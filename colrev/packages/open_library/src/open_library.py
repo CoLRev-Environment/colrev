@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Connector to OpenLibrary (API)"""
 from __future__ import annotations
+import search_query
 
 import json
 import logging
@@ -72,11 +73,11 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
             if open_library_md_source_l:
                 self.search_source = open_library_md_source_l[0]
             else:
-                self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev.open_library",
-                    filename=self._open_library_md_filename,
+                self.search_source = search_query.SearchFile(
+                    platform="colrev.open_library",
+                    filepath=self._open_library_md_filename,
                     search_type=SearchType.MD,
-                    search_parameters={},
+                    search_string={},
                     comment="",
                 )
 
@@ -247,7 +248,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         raise NotImplementedError
 
@@ -324,7 +325,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.record.Record, source: search_query.SearchFile
     ) -> colrev.record.record.Record:
         """Source-specific preparation for OpenLibrary"""
 

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: Web of Science"""
 from __future__ import annotations
+import search_query
 
 import logging
 from pathlib import Path
@@ -79,7 +80,7 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {params.split("=")[0]: params.split("=")[1]}
@@ -168,7 +169,7 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: search_query.SearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Web of Science"""
 

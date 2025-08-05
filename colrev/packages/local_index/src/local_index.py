@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: LocalIndex"""
 from __future__ import annotations
+import search_query
 
 import difflib
 import logging
@@ -87,11 +88,11 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             if li_md_source_l:
                 self.search_source = li_md_source_l[0]
             else:
-                self.search_source = colrev.settings.SearchSource(
-                    endpoint=self.endpoint,
-                    filename=self._local_index_md_filename,
+                self.search_source = search_query.SearchFile(
+                    platform=self.endpoint,
+                    filepath=self._local_index_md_filename,
                     search_type=SearchType.MD,
-                    search_parameters={},
+                    search_string={},
                     comment="",
                 )
 
@@ -110,16 +111,16 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         assert source.search_type in self.search_types
 
-        # if "query" not in source.search_parameters:
+        # if "query" not in source.search_string:
         # Note :  for md-sources, there is no query parameter.
         #     raise colrev_exceptions.InvalidQueryException(
         #         f"Source missing query search_parameter ({source.filename})"
         #     )
 
-        if "query" in source.search_parameters:
+        if "query" in source.search_string:
             pass
-            # if "simple_query_string" in source.search_parameters["query"]:
-            #     if "query" in source.search_parameters["query"]["simple_query_string"]:
+            # if "simple_query_string" in source.search_string["query"]:
+            #     if "query" in source.search_string["query"]["simple_query_string"]:
             #         pass
             #     else:
             #         raise colrev_exceptions.InvalidQueryException(
@@ -127,7 +128,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             #             f"search_parameter ({source.filename})"
             #         )
 
-            # elif "url" in source.search_parameters["query"]:
+            # elif "url" in source.search_string["query"]:
             #     pass
             # # else:
             #     raise colrev_exceptions.InvalidQueryException(
@@ -137,7 +138,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger.debug("SearchSource %s validated", source.filename)
 
     def _retrieve_from_index(self) -> typing.List[dict]:
-        params = self.search_source.search_parameters
+        params = self.search_source.search_string
         query = params["query"]
 
         if not any(x in query for x in [Fields.TITLE, Fields.ABSTRACT]):
@@ -247,24 +248,24 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         # always API search
 
         if len(params) == 0:
-            search_source = operation.create_api_source(endpoint=cls.endpoint)
+            search_source = operation.create_api_source(platform=cls.endpoint)
         else:
             filename = operation.get_unique_filename(
                 file_path_string=f"local_index_{params}".replace("%", "").replace(
                     "'", ""
                 )
             )
-            search_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
+            search_source = search_query.SearchFile(
+                platform=cls.endpoint,
+                filepath=filename,
                 search_type=SearchType.API,
-                search_parameters={"query": params},
+                search_string={"query": params},
                 comment="",
             )
         operation.add_source_and_search(search_source)
@@ -313,7 +314,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.record.Record, source: search_query.SearchFile
     ) -> colrev.record.record.Record:
         """Source-specific preparation for local-index"""
 

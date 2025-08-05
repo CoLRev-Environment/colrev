@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: Semantic Scholar"""
 from __future__ import annotations
+import search_query
 
 import logging
 import typing
@@ -24,7 +25,6 @@ import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.process.operation
 import colrev.record.record
-import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
@@ -84,11 +84,11 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             # Semantic Scholar as a search source
             self.search_source = settings
         else:
-            self.search_source = colrev.settings.SearchSource(
-                endpoint="colrev.semanticscholar",
-                filename=self._s2_filename,
+            self.search_source = search_query.SearchFile(
+                platform="colrev.semanticscholar",
+                filepath=self._s2_filename,
                 search_type=SearchType.API,
-                search_parameters={},
+                search_string={},
                 comment="",
             )
             self.s2_lock = Lock()
@@ -293,7 +293,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         if rerun:
             self.logger.info("Performing a search of the full history (may take time)")
         try:
-            params = self.search_source.search_parameters
+            params = self.search_source.search_string
             _search_return = self._get_semantic_scholar_api(params=params, rerun=rerun)
 
         except SemanticScholarException.BadQueryParametersException as exc:
@@ -331,7 +331,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         # get search parameters from the user interface
@@ -363,11 +363,11 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         filename = operation.get_unique_filename(file_path_string="semanticscholar")
 
-        search_source = colrev.settings.SearchSource(
-            endpoint="colrev.semanticscholar",
-            filename=filename,
+        search_source = search_query.SearchFile(
+            platform="colrev.semanticscholar",
+            filepath=filename,
             search_type=SearchType.API,
-            search_parameters=search_params,
+            search_string=search_params,
             comment="",
         )
         operation.add_source_and_search(search_source)
@@ -410,7 +410,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: search_query.SearchFile,
     ) -> colrev.record.record_prep.PrepRecord:
         """Source-specific preparation for Semantic Scholar"""
         # Not yet implemented

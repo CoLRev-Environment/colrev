@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: Springer Link"""
 from __future__ import annotations
+import search_query
 
 import logging
 import re
@@ -19,7 +20,6 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
-import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -85,7 +85,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {params.split("=")[0]: params.split("=")[1]}
@@ -101,17 +101,17 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         elif search_type == SearchType.API:
             filename = operation.get_unique_filename(file_path_string="springer_link")
-            search_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
+            search_source = search_query.SearchFile(
+                platform=cls.endpoint,
+                filepath=filename,
                 search_type=SearchType.API,
-                search_parameters={},
+                search_string={},
                 comment="",
             )
             params_dict.update(vars(search_source))
             instance = cls(source_operation=operation, settings=params_dict)
             instance.api_ui()
-            search_source.search_parameters = instance._add_constraints()
+            search_source.search_string = instance._add_constraints()
 
         else:
             raise NotImplementedError
@@ -284,7 +284,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
         """Get the records from a API search"""
-        query = self.build_query(self.search_source.search_parameters)
+        query = self.build_query(self.search_source.search_string)
         api_key = self.get_api_key()
         start = 1
 
@@ -546,7 +546,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.record.Record, source: search_query.SearchFile
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Springer Link"""
 

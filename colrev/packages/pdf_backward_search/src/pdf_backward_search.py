@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: backward search (based on PDFs and GROBID)"""
 from __future__ import annotations
+import search_query
 
 import json
 import logging
@@ -62,21 +63,21 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        if "min_intext_citations" not in settings["search_parameters"]:
-            settings["search_parameters"]["min_intext_citations"] = 3
+        if "min_intext_citations" not in settings["search_string"]:
+            settings["search_string"]["min_intext_citations"] = 3
 
         self.search_source = settings
         self.crossref_api = crossref_api.CrossrefAPI(params={})
 
     @classmethod
-    def get_default_source(cls) -> colrev.settings.SearchSource:
+    def get_default_source(cls) -> search_query.SearchFile:
         """Get the default SearchSource settings"""
 
-        return colrev.settings.SearchSource(
-            endpoint="colrev.pdf_backward_search",
-            filename=Path("data/search/pdf_backward_search.bib"),
+        return search_query.SearchFile(
+            platform="colrev.pdf_backward_search",
+            filepath=Path("data/search/pdf_backward_search.bib"),
             search_type=SearchType.BACKWARD_SEARCH,
-            search_parameters={
+            search_string={
                 "scope": {"colrev_status": "rev_included|rev_synthesized"},
                 "min_intext_citations": 3,
             },
@@ -90,16 +91,16 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         assert source.search_type == SearchType.BACKWARD_SEARCH
 
-        if "scope" not in source.search_parameters:
+        if "scope" not in source.search_string:
             raise colrev_exceptions.InvalidQueryException(
                 "Scope required in the search_parameters"
             )
 
-        if source.search_parameters["scope"].get("file", "") == "paper.md":
+        if source.search_string["scope"].get("file", "") == "paper.md":
             pass
         else:
             if (
-                source.search_parameters["scope"]["colrev_status"]
+                source.search_string["scope"]["colrev_status"]
                 != "rev_included|rev_synthesized"
             ):
                 raise colrev_exceptions.InvalidQueryException(
@@ -111,8 +112,8 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _bw_search_condition(self, *, record: dict) -> bool:
         # rev_included/rev_synthesized required, but record not in rev_included/rev_synthesized
         if (
-            "colrev_status" in self.search_source.search_parameters["scope"]
-            and self.search_source.search_parameters["scope"]["colrev_status"]
+            "colrev_status" in self.search_source.search_string["scope"]
+            and self.search_source.search_string["scope"]["colrev_status"]
             == "rev_included|rev_synthesized"
             and record[Fields.STATUS]
             not in [
@@ -123,9 +124,9 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
             return False
 
         # Note: this is for peer_reviews
-        if "file" in self.search_source.search_parameters["scope"]:
+        if "file" in self.search_source.search_string["scope"]:
             if (
-                self.search_source.search_parameters["scope"]["file"] == "paper.pdf"
+                self.search_source.search_string["scope"]["file"] == "paper.pdf"
             ) and "data/pdfs/paper.pdf" != record.get(Fields.FILE, ""):
                 return False
 
@@ -377,11 +378,11 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         if not records:
             self.logger.info("No records imported. Cannot run backward search yet.")
             return
-        min_intext_citations = self.search_source.search_parameters[
+        min_intext_citations = self.search_source.search_string[
             "min_intext_citations"
         ]
         self.logger.info("Set min_intext_citations=%s", min_intext_citations)
-        nr_references_threshold = self.search_source.search_parameters.get(
+        nr_references_threshold = self.search_source.search_string.get(
             "min_ref_freq", 1
         )
         self.logger.info("Set nr_references_threshold=%s", nr_references_threshold)
@@ -544,7 +545,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -563,11 +564,11 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         search_source = cls.get_default_source()
         if "min_intext_citations" in params_dict:
-            search_source.search_parameters["min_intext_citations"] = int(
+            search_source.search_string["min_intext_citations"] = int(
                 params_dict["min_intext_citations"]
             )
         if "min_ref_freq" in params_dict:
-            search_source.search_parameters["min_ref_freq"] = int(
+            search_source.search_string["min_ref_freq"] = int(
                 params_dict["min_ref_freq"]
             )
 
@@ -602,7 +603,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: search_query.SearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for PDF backward searches (GROBID)"""
 

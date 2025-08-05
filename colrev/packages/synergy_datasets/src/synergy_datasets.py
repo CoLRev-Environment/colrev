@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: SYNERGY-datasets"""
 from __future__ import annotations
+import search_query
 
 import datetime
 import logging
@@ -123,7 +124,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -141,11 +142,11 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         filename = operation.get_unique_filename(
             file_path_string=f"SYNERGY_{dataset.replace('/', '_').replace('_ids.csv', '')}"
         )
-        search_source = colrev.settings.SearchSource(
-            endpoint="colrev.synergy_datasets",
-            filename=filename,
+        search_source = search_query.SearchFile(
+            platform="colrev.synergy_datasets",
+            filepath=filename,
             search_type=SearchType.API,
-            search_parameters={"dataset": dataset},
+            search_string={"dataset": dataset},
             comment="",
         )
         operation.add_source_and_search(search_source)
@@ -158,7 +159,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         Repo.clone_from(
             "https://github.com/asreview/synergy-dataset", temp_path, depth=1
         )
-        dataset_name = self.search_source.search_parameters["dataset"]
+        dataset_name = self.search_source.search_string["dataset"]
         dataset_df = pd.read_csv(temp_path / Path("datasets") / dataset_name)
 
         # check data structure
@@ -372,7 +373,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.record.Record, source: search_query.SearchFile
     ) -> colrev.record.record.Record:
         """Source-specific preparation for SYNERGY-datasets"""
 

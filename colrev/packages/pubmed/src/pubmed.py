@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: Pubmed"""
 from __future__ import annotations
+import search_query
 
 import logging
 import typing
@@ -72,11 +73,11 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             if pubmed_md_source_l:
                 self.search_source = pubmed_md_source_l[0]
             else:
-                self.search_source = colrev.settings.SearchSource(
-                    endpoint=self.endpoint,
-                    filename=self._pubmed_md_filename,
+                self.search_source = search_query.SearchFile(
+                    platform=self.endpoint,
+                    filepath=self._pubmed_md_filename,
                     search_type=SearchType.MD,
-                    search_parameters={},
+                    search_string={},
                     comment="",
                 )
 
@@ -111,7 +112,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -135,7 +136,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         elif search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.create_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(platform=cls.endpoint)
 
             # pylint: disable=colrev-missed-constant-usage
             elif "url" in params_dict:
@@ -153,11 +154,11 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                     # "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
                     #     + params
                     # )
-                    search_source = colrev.settings.SearchSource(
-                        endpoint=cls.endpoint,
-                        filename=filename,
+                    search_source = search_query.SearchFile(
+                        platform=cls.endpoint,
+                        filepath=filename,
                         search_type=SearchType.API,
-                        search_parameters=query,
+                        search_string=query,
                         comment="",
                     )
                 else:
@@ -178,12 +179,12 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger.debug(f"Validate SearchSource {source.filename}")
 
         if source.filename.name != self._pubmed_md_filename.name:
-            if "query" not in source.search_parameters:
+            if "query" not in source.search_string:
                 raise colrev_exceptions.InvalidQueryException(
                     f"Source missing query search_parameter ({source.filename})"
                 )
 
-            # if "query_file" in source.search_parameters:
+            # if "query_file" in source.search_string:
             # ...
 
         self.logger.debug("SearchSource %s validated", source.filename)
@@ -205,7 +206,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             }
 
             api = pubmed_api.PubmedAPI(
-                parameters=self.search_source.search_parameters,
+                parameters=self.search_source.search_string,
                 email=self.email,
                 session=self.review_manager.get_cached_session(),
             )
@@ -231,7 +232,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.record.record.Record:
         try:
             api = pubmed_api.PubmedAPI(
-                parameters=self.search_source.search_parameters,
+                parameters=self.search_source.search_string,
                 email=self.email,
                 session=self.review_manager.get_cached_session(),
                 logger=self.logger,
@@ -346,7 +347,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.logger.info("Performing a search of the full history (may take time)")
 
         api = pubmed_api.PubmedAPI(
-            parameters=self.search_source.search_parameters,
+            parameters=self.search_source.search_string,
             email=self.email,
             session=self.review_manager.get_cached_session(),
             logger=self.logger,
@@ -385,7 +386,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
 
         api = pubmed_api.PubmedAPI(
-            parameters=self.search_source.search_parameters,
+            parameters=self.search_source.search_string,
             email=self.email,
             session=self.review_manager.get_cached_session(),
             logger=self.logger,
@@ -516,7 +517,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.record.Record, source: search_query.SearchFile
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Pubmed"""
 

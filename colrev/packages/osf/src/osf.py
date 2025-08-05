@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Searchsource:OSF"""
 from __future__ import annotations
+import search_query
 
 import logging
 import typing
@@ -23,7 +24,6 @@ import colrev.process.operation
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.review_manager
-import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -63,11 +63,11 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         if settings:
             self.search_source = settings
         else:
-            self.search_source = colrev.settings.SearchSource(
-                endpoint=self.endpoint,
-                filename=Path("data/search/osf.bib"),
+            self.search_source = search_query.SearchFile(
+                platform=self.endpoint,
+                filepath=Path("data/search/osf.bib"),
                 search_type=SearchType.API,
-                search_parameters={},
+                search_string={},
                 comment="",
             )
             self.source_operation = source_operation
@@ -83,7 +83,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls, operation: colrev.ops.search.Search, params: str
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
 
         params_dict: typing.Dict[str, str] = {}
@@ -99,10 +99,10 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         if search_type == SearchType.API:
             # Check for params being empty and initialize if needed
             if len(params_dict) == 0:
-                search_source = operation.create_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(platform=cls.endpoint)
                 # Search title per default (other fields may be supported later)
-                search_source.search_parameters["query"] = {
-                    "title": search_source.search_parameters["query"]
+                search_source.search_string["query"] = {
+                    "title": search_source.search_string["query"]
                 }
             elif "https://api.osf.io/v2/nodes/?filter" in params_dict.get("url", ""):
                 query = (
@@ -120,11 +120,11 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
                 filename = operation.get_unique_filename(
                     file_path_string=f"osf_{last_value}"
                 )
-                search_source = colrev.settings.SearchSource(
-                    endpoint=cls.endpoint,
-                    filename=filename,
+                search_source = search_query.SearchFile(
+                    platform=cls.endpoint,
+                    filepath=filename,
                     search_type=SearchType.API,
-                    search_parameters={"query": search_parameters},
+                    search_string={"query": search_parameters},
                     comment="",
                 )
         else:
@@ -160,7 +160,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
 
         api = OSFApiQuery(
-            parameters=self.search_source.search_parameters["query"],
+            parameters=self.search_source.search_string["query"],
             api_key=self._get_api_key(),
         )
         self.logger.info(f"Retrieve {api.overall()} records")
@@ -189,7 +189,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: search_query.SearchFile,
     ) -> colrev.record.record.Record:
         """Needs manual preparation"""
 

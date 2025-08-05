@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: arXiv"""
 from __future__ import annotations
+import search_query
 
 import logging
 import typing
@@ -64,11 +65,11 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
             if arxiv_md_source_l:
                 self.search_source = arxiv_md_source_l[0]
             else:
-                self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev.arxiv",
-                    filename=self._arxiv_md_filename,
+                self.search_source = search_query.SearchFile(
+                    platform="colrev.arxiv",
+                    filepath=self._arxiv_md_filename,
                     search_type=SearchType.API,
-                    search_parameters={},
+                    search_string={},
                     comment="",
                 )
 
@@ -91,7 +92,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -105,7 +106,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
 
         # Note : always API search
         if len(params_dict) == 0:
-            search_source = operation.create_api_source(endpoint=cls.endpoint)
+            search_source = operation.create_api_source(platform=cls.endpoint)
 
         # pylint: disable=colrev-missed-constant-usage
         else:
@@ -118,11 +119,11 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
 
             filename = operation.get_unique_filename(file_path_string="arxiv")
 
-            search_source = colrev.settings.SearchSource(
-                endpoint="colrev.arxiv",
-                filename=filename,
+            search_source = search_query.SearchFile(
+                platform="colrev.arxiv",
+                filepath=filename,
                 search_type=SearchType.API,
-                search_parameters={"query": query},
+                search_string={"query": query},
                 comment="",
             )
 
@@ -132,19 +133,19 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
     def validate_source(
         self,
         search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
+        source: search_query.SearchFile,
     ) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
         self.logger.debug(f"Validate SearchSource {source.filename}")
 
         if source.filename.name != self._arxiv_md_filename.name:
-            if "query" not in source.search_parameters:
+            if "query" not in source.search_string:
                 raise colrev_exceptions.InvalidQueryException(
                     f"Source missing query search_parameter ({source.filename})"
                 )
 
-            # if "query_file" in source.search_parameters:
+            # if "query_file" in source.search_string:
             # ...
 
         self.logger.debug(f"SearchSource {source.filename} validated")
@@ -245,7 +246,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         return feed["entries"]
 
     def _get_arxiv_query_return(self) -> typing.Iterator[dict]:
-        params = self.search_source.search_parameters
+        params = self.search_source.search_string
         retstart = 0
         while True:
             entries = self._get_arxiv_ids(query=params["query"], retstart=retstart)
@@ -382,14 +383,14 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
     def load_fixes(
         self,
         load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
+        source: search_query.SearchFile,
         records: typing.Dict,
     ) -> dict:
         """Load fixes for ArXiv"""
         return records
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.record.Record, source: search_query.SearchFile
     ) -> colrev.record.record.Record:
         """Source-specific preparation for ArXiv"""
 

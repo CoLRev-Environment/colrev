@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: OpenCitations"""
 from __future__ import annotations
+import search_query
 
 import json
 import logging
@@ -53,13 +54,13 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.crossref_api = crossref_api.CrossrefAPI(params={})
 
     @classmethod
-    def get_default_source(cls) -> colrev.settings.SearchSource:
+    def get_default_source(cls) -> search_query.SearchFile:
         """Get the default SearchSource settings"""
-        return colrev.settings.SearchSource(
-            endpoint="colrev.open_citations_forward_search",
-            filename=Path("data/search/forward_search.bib"),
+        return search_query.SearchFile(
+            platform="colrev.open_citations_forward_search",
+            filepath=Path("data/search/forward_search.bib"),
             search_type=SearchType.FORWARD_SEARCH,
-            search_parameters={
+            search_string={
                 "scope": {Fields.STATUS: "rev_included|rev_synthesized"}
             },
             comment="",
@@ -74,13 +75,13 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         assert source.search_type == SearchType.FORWARD_SEARCH
 
-        if "scope" not in source.search_parameters:
+        if "scope" not in source.search_string:
             raise colrev_exceptions.InvalidQueryException(
                 "Scope required in the search_parameters"
             )
 
         if (
-            source.search_parameters["scope"][Fields.STATUS]
+            source.search_string["scope"][Fields.STATUS]
             != "rev_included|rev_synthesized"
         ):
             raise colrev_exceptions.InvalidQueryException(
@@ -95,8 +96,8 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         # rev_included/rev_synthesized required, but record not in rev_included/rev_synthesized
         if (
-            Fields.STATUS in self.search_source.search_parameters["scope"]
-            and self.search_source.search_parameters["scope"][Fields.STATUS]
+            Fields.STATUS in self.search_source.search_string["scope"]
+            and self.search_source.search_string["scope"][Fields.STATUS]
             == "rev_included|rev_synthesized"
             and record[Fields.STATUS]
             not in [
@@ -194,7 +195,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint"""
 
         search_source = cls.get_default_source()
@@ -225,7 +226,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.record.Record, source: search_query.SearchFile
     ) -> colrev.record.record.Record:
         """Source-specific preparation for forward searches (OpenCitations)"""
         return record

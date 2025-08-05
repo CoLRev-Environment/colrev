@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: ABI/INFORM (ProQuest)"""
 from __future__ import annotations
+import search_query
 
 import logging
 import re
@@ -67,7 +68,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint"""
 
         params_dict = {params.split("=")[0]: params.split("=")[1]}
@@ -270,7 +271,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.record.Record, source: search_query.SearchFile
     ) -> colrev.record.record.Record:
         """Source-specific preparation for ABI/INFORM (ProQuest)"""
 

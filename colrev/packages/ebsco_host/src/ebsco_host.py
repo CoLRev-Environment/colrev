@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: EBSCOHost"""
 from __future__ import annotations
+import search_query
 
 import logging
 import re
@@ -67,7 +68,7 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint"""
 
         params_dict = {params.split("=")[0]: params.split("=")[1]}
@@ -127,7 +128,7 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: search_query.SearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for EBSCOHost"""
 

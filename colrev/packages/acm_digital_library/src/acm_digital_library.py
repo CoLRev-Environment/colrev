@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: ACM Digital Library"""
 from __future__ import annotations
+import search_query
 
 import logging
 from pathlib import Path
@@ -62,7 +63,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -146,7 +147,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
     # pylint: disable=colrev-missed-constant-usage
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.record.Record, source: search_query.SearchFile
     ) -> colrev.record.record.Record:
         """Source-specific preparation for ACM Digital Library"""
 

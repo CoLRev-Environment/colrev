@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """SearchSource: DBLP"""
 from __future__ import annotations
+import search_query
 
 import logging
 import re
@@ -20,7 +21,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
-import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
@@ -32,19 +32,20 @@ from colrev.packages.dblp.src import dblp_api
 # pylint: disable=duplicate-code
 
 
-class DBLPSearchSourceSettings(colrev.settings.SearchSource, BaseModel):
+class DBLPSearchSourceSettings(search_query.SearchFile, BaseModel):
     """Settings for DBLPSearchSource"""
 
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-instance-attributes
-    endpoint: str
-    filename: Path
+    platform: str
+    filepath: Path
     search_type: SearchType
-    search_parameters: dict
+    search_string: dict
+    version: typing.Optional[str]
     comment: typing.Optional[str]
 
     _details = {
-        "search_parameters": {
+        "search_string": {
             "tooltip": "Currently supports a scope item "
             "with venue_key and journal_abbreviated fields."
         },
@@ -87,7 +88,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def _get_search_source(
         self, settings: typing.Optional[dict]
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
 
         # DBLP as a search_source
         if settings:
@@ -103,11 +104,11 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         if dblp_md_source_l:
             return dblp_md_source_l[0]
 
-        return colrev.settings.SearchSource(
-            endpoint=self.endpoint,
-            filename=dblp_md_filename,
+        return search_query.SearchFile(
+            platform=self.endpoint,
+            filepath=dblp_md_filename,
             search_type=SearchType.MD,
-            search_parameters={},
+            search_string={},
             comment="",
         )
 
@@ -133,7 +134,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> search_query.SearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -151,7 +152,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.create_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(platform=cls.endpoint)
 
             # pylint: disable=colrev-missed-constant-usage
             elif "url" in params_dict:
@@ -163,11 +164,11 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
 
                 filename = operation.get_unique_filename(file_path_string="dblp")
-                search_source = colrev.settings.SearchSource(
-                    endpoint=cls.endpoint,
-                    filename=filename,
+                search_source = search_query.SearchFile(
+                    platform=cls.endpoint,
+                    filepath=filename,
                     search_type=SearchType.API,
-                    search_parameters={"query": query},
+                    search_string={"query": query},
                     comment="",
                 )
             else:
@@ -238,7 +239,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
 
         api = dblp_api.DBLPAPI(
-            params=self.search_source.search_parameters,
+            params=self.search_source.search_string,
             email=self.email,
             session=self.review_manager.get_cached_session(),
             rerun=(len(dblp_feed.feed_records) < 100 or rerun),
@@ -270,8 +271,8 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
             for retrieved_record in api.retrieve_records():
                 try:
 
-                    if "scope" in self.search_source.search_parameters and (
-                        f"{self.search_source.search_parameters['scope']['venue_key']}/"
+                    if "scope" in self.search_source.search_string and (
+                        f"{self.search_source.search_string['scope']['venue_key']}/"
                         not in retrieved_record.data["dblp_key"]
                         or retrieved_record.data.get(Fields.ENTRYTYPE, "")
                         not in [
@@ -301,17 +302,17 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         # maybe : validate/assert that the venue_key is available
         if source.search_type == SearchType.TOC:
-            assert "scope" in source.search_parameters
-            if "venue_key" not in source.search_parameters["scope"]:
+            assert "scope" in source.search_string
+            if "venue_key" not in source.search_string["scope"]:
                 raise colrev_exceptions.InvalidQueryException(
                     "venue_key required in search_parameters/scope"
                 )
-            if "journal_abbreviated" not in source.search_parameters["scope"]:
+            if "journal_abbreviated" not in source.search_string["scope"]:
                 raise colrev_exceptions.InvalidQueryException(
                     "journal_abbreviated required in search_parameters/scope"
                 )
         elif source.search_type == SearchType.API:
-            assert "query" in source.search_parameters
+            assert "query" in source.search_string
 
         elif source.search_type == SearchType.MD:
             pass  # No parameters required
@@ -378,7 +379,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: search_query.SearchFile,
     ) -> colrev.record.record_prep.PrepRecord:
         """Source-specific preparation for DBLP"""
 
