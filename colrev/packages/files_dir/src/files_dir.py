@@ -10,21 +10,19 @@ from typing import Optional
 
 import pymupdf
 import requests
-import search_query
 from pydantic import Field
 
 import colrev.env.local_index
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.packages.pdf_backward_search.src.pdf_backward_search as bws
-import colrev.record.qm.checkers.missing_field
 import colrev.record.record
 import colrev.record.record_pdf
 import colrev.record.record_prep
 import colrev.record.record_similarity
+import colrev.search_file
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -58,7 +56,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: dict,
+        settings: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
@@ -67,9 +65,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.review_manager = source_operation.review_manager
         self.source_operation = source_operation
 
-        self.search_source = (
-            colrev.package_manager.package_settings.DefaultSourceSettings(**settings)
-        )
+        self.search_source = settings
 
         if not self.review_manager.in_ci_environment():
             self.pdf_preparation_operation = self.review_manager.get_pdf_prep_operation(
@@ -94,7 +90,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             if self.subdir_pattern == Fields.VOLUME:
                 self.r_subdir_pattern = re.compile("([0-9]{1,4})")
 
-        self.crossref_api = crossref_api.CrossrefAPI(params={})
+        self.crossref_api = crossref_api.CrossrefAPI(url="")
         self.local_index = colrev.env.local_index.LocalIndex()
 
     def _update_if_pdf_renamed(
@@ -144,7 +140,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             return
 
         search_rd = colrev.loader.load_utils.load(
-            filepath=self.search_source.filename,
+            filename=self.search_source.search_results_path,
             logger=self.logger,
             unique_id_field="ID",
         )
@@ -177,7 +173,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if len(search_rd.values()) != 0:
 
-            write_file(records_dict=search_rd, filepath=self.search_source.filename)
+            write_file(records_dict=search_rd, filename=self.search_source.filename)
 
         if records:
             for record_dict in records.values():
@@ -708,8 +704,9 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             self._remove_records_if_pdf_no_longer_exists()
 
         records = self.review_manager.dataset.load_records_dict()
-        files_dir_feed = self.search_source.get_api_feed(
+        files_dir_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
             logger=self.logger,
             verbose_mode=self.verbose_mode,
@@ -743,14 +740,14 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> search_query.SearchFile:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         filename = operation.get_unique_filename(file_path_string="files")
         # pylint: disable=no-value-for-parameter
-        search_source = search_query.SearchFile(
+        search_source = colrev.search_file.ExtendedSearchFile(
             platform="colrev.files_dir",
-            filepath=filename,
+            search_results_path=filename,
             search_type=SearchType.FILES,
             search_string={"scope": {"path": "data/pdfs"}},
             comment="",
@@ -763,7 +760,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         if Fields.DOI not in record_dict:
             return
         try:
-            api = crossref_api.CrossrefAPI(params={})
+            api = crossref_api.CrossrefAPI(url="")
             retrieved_record = api.query_doi(
                 doi=record_dict[Fields.DOI],
             )
@@ -877,7 +874,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: search_query.SearchFile,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for files"""
 

@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Optional
 
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.crossref.src.crossref_search_source as crossref_connector
 import colrev.record.record
+import colrev.search_file
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 
 # pylint: disable=too-few-public-methods
@@ -43,8 +45,28 @@ class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
+
+        # Crossref as an md-prep source
+        crossref_md_filename = Path("data/search/md_crossref.bib")
+        crossref_md_source_l = [
+            s
+            for s in self.prep_operation.review_manager.settings.sources
+            if s.search_history_path == crossref_md_filename
+        ]
+        if crossref_md_source_l:
+            settings = crossref_md_source_l[0]
+        else:
+            settings = colrev.search_file.ExtendedSearchFile(
+                platform="colrev.crossref",
+                search_results_path=crossref_md_filename,
+                search_type=SearchType.MD,
+                search_string="",
+                comment="",
+            )
+
         self.crossref_source = crossref_connector.CrossrefSearchSource(
-            source_operation=prep_operation
+            source_operation=prep_operation,
+            settings=settings,
         )
 
         self.crossref_prefixes = [

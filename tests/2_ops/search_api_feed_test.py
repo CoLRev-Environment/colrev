@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
+import colrev.ops.search_api_feed
 import colrev.record.record
 import colrev.review_manager
-import colrev.settings
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
@@ -26,16 +26,17 @@ def fixture_search_feed(
 ) -> typing.Generator:
     """General search feed"""
 
-    source = colrev.settings.SearchSource(
-        endpoint="colrev.crossref",
-        filename=Path("data/search/test.bib"),
+    source = colrev.search_file.ExtendedSearchFile(
+        platform="colrev.crossref",
+        search_results_path=Path("data/search/test.bib"),
         search_type=SearchType.DB,
-        search_parameters={"query": "query"},
+        search_string="query",
         comment="",
     )
     base_repo_review_manager.get_search_operation()
-    feed = source.get_api_feed(
+    feed = colrev.ops.search_api_feed.SearchAPIFeed(
         source_identifier="doi",
+        search_source=source,
         update_only=True,
         logger=base_repo_review_manager.logger,
         verbose_mode=base_repo_review_manager.verbose_mode,
@@ -73,16 +74,17 @@ def test_search_feed_update(  # type: ignore
     search_feed.save()
 
     # Second "iteration"
-    source = colrev.settings.SearchSource(
-        endpoint="colrev.crossref",
-        filename=Path("data/search/test.bib"),
+    source = colrev.search_file.ExtendedSearchFile(
+        platform="colrev.crossref",
+        search_results_path=Path("data/search/test.bib"),
         search_type=SearchType.DB,
-        search_parameters={"query": "query"},
+        search_string="query",
         comment="",
     )
     # base_repo_review_manager.get_search_operation()
-    search_feed = source.get_api_feed(
+    search_feed = colrev.ops.search_api_feed.SearchAPIFeed(
         source_identifier="doi",
+        search_source=source,
         update_only=True,
         logger=base_repo_review_manager.logger,
         verbose_mode=base_repo_review_manager.verbose_mode,

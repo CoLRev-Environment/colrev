@@ -13,7 +13,6 @@ import colrev.loader.load_utils_formatter
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.process.operation
 import colrev.record.record
-import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
@@ -223,45 +222,49 @@ class Load(colrev.process.operation.Operation):
     def _rename_erroneous_extensions(
         self, source: base_classes.SearchSourcePackageBaseClass
     ) -> None:
-        if source.search_source.filename.suffix in [".xls", ".xlsx"]:
+        if source.search_source.search_results_path.suffix in [".xls", ".xlsx"]:
             return
-        data = source.search_source.filename.read_text(encoding="utf-8")
+        data = source.search_source.search_results_path.read_text(encoding="utf-8")
         # # Correct the file extension if necessary
         if re.findall(
             r"^%0", data, re.MULTILINE
-        ) and source.search_source.filename.suffix not in [".enl"]:
-            new_filename = source.search_source.filename.with_suffix(".enl")
+        ) and source.search_source.search_results_path.suffix not in [".enl"]:
+            new_filename = source.search_source.search_results_path.with_suffix(".enl")
             self.review_manager.logger.info(
                 f"{Colors.GREEN}Rename to {new_filename} "
                 f"(because the format is .enl){Colors.END}"
             )
-            shutil.move(str(source.search_source.filename), str(new_filename))
-            self.review_manager.dataset.add_changes(
-                source.search_source.filename, remove=True
+            shutil.move(
+                str(source.search_source.search_results_path), str(new_filename)
             )
-            source.search_source.filename = new_filename
+            self.review_manager.dataset.add_changes(
+                source.search_source.search_results_path, remove=True
+            )
+            source.search_source.search_results_path = new_filename
             self.review_manager.dataset.add_changes(new_filename)
             self.review_manager.dataset.create_commit(
-                msg=f"Rename {source.search_source.filename}"
+                msg=f"Rename {source.search_source.search_results_path}"
             )
             return
 
         if re.findall(
             r"^TI ", data, re.MULTILINE
-        ) and source.search_source.filename.suffix not in [".ris"]:
-            new_filename = source.search_source.filename.with_suffix(".ris")
+        ) and source.search_source.search_history_path.suffix not in [".ris"]:
+            new_filename = source.search_source.search_history_path.with_suffix(".ris")
             self.review_manager.logger.info(
                 f"{Colors.GREEN}Rename to {new_filename} "
                 f"(because the format is .ris){Colors.END}"
             )
-            shutil.move(str(source.search_source.filename), str(new_filename))
-            self.review_manager.dataset.add_changes(
-                source.search_source.filename, remove=True
+            shutil.move(
+                str(source.search_source.search_history_path), str(new_filename)
             )
-            source.search_source.filename = new_filename
+            self.review_manager.dataset.add_changes(
+                source.search_source.search_history_path, remove=True
+            )
+            source.search_source.search_history_path = new_filename
             self.review_manager.dataset.add_changes(new_filename)
             self.review_manager.dataset.create_commit(
-                msg=f"Rename {source.search_source.filename}"
+                msg=f"Rename {source.search_source.search_history_path}"
             )
 
     def setup_source_for_load(
@@ -282,14 +285,15 @@ class Load(colrev.process.operation.Operation):
             select_new_records: A boolean flag indicating whether to filter out records
                                 that have already been imported. Defaults to True.
         """
-        if "unknown_source" in source.search_source.endpoint:
+        if "unknown_source" in source.search_source.platform:
             self._rename_erroneous_extensions(source)
 
-        if source.ensure_append_only(filename=source.search_source.filename):
-            self.ensure_append_only(filename=source.search_source.filename)
+        if source.ensure_append_only(filename=source.search_source.search_results_path):
+            self.ensure_append_only(filename=source.search_source.search_results_path)
 
         source_records = source.load(
-            filename=source.search_source.filename, logger=self.review_manager.logger
+            filename=source.search_source.search_results_path,
+            logger=self.review_manager.logger,
         )
         source_records_list = list(source_records.values())  # type: ignore
         self._validate_source_records(source_records_list, source=source)
@@ -333,14 +337,14 @@ class Load(colrev.process.operation.Operation):
             keep_ids: A boolean flag indicating whether to keep the original IDs of the records.
         """
         self.review_manager.logger.debug(
-            f"Load source records {source.search_source.filename}"
+            f"Load source records {source.search_source.search_history_path}"
         )
 
         self.setup_source_for_load(source)
         records = self.review_manager.dataset.load_records_dict()
 
         self.review_manager.logger.debug(
-            f"Import individual source records {source.search_source.filename}"
+            f"Import individual source records {source.search_source.search_history_path}"
         )
         for source_record in source.search_source.source_records_list:
             source_record = self._import_record(record_dict=source_record)
@@ -367,7 +371,7 @@ class Load(colrev.process.operation.Operation):
             )
 
         self.review_manager.logger.debug(
-            f"Save records {source.search_source.filename}"
+            f"Save records {source.search_source.search_history_path}"
         )
         self.review_manager.dataset.save_records_dict(records)
         self._validate_load(source=source)
@@ -386,7 +390,9 @@ class Load(colrev.process.operation.Operation):
             "New records loaded".ljust(38) + f"{source.search_source.to_import} records"
         )
         self.review_manager.dataset.add_setting_changes()
-        self.review_manager.dataset.add_changes(source.search_source.filename)
+        self.review_manager.dataset.add_changes(
+            source.search_source.search_results_path
+        )
 
     def _add_source_to_settings(
         self,
@@ -394,20 +400,20 @@ class Load(colrev.process.operation.Operation):
     ) -> None:
 
         # Add to settings (if new filename)
-        if source.search_source.filename in [
-            s.filename for s in self.review_manager.settings.sources
+        if source.search_source.search_history_path in [
+            s.search_history_path for s in self.review_manager.settings.sources
         ]:
             return
 
         self.review_manager.logger.debug(
-            f"Add source to settings {source.search_source.filename}"
+            f"Add source to settings {source.search_source.search_history_path}"
         )
         git_repo = self.review_manager.dataset.get_repo()
         self.review_manager.settings.sources.append(source.search_source)
         self.review_manager.save_settings()
         # Add files that were renamed (removed)
         for obj in git_repo.index.diff(None).iter_change_type("D"):
-            if source.search_source.filename.stem in obj.b_path:
+            if source.search_source.search_history_path.stem in obj.b_path:
                 self.review_manager.dataset.add_changes(Path(obj.b_path), remove=True)
 
     def load_active_sources(self, *, include_md: bool = False) -> list:
@@ -421,21 +427,23 @@ class Load(colrev.process.operation.Operation):
         checker.check_sources()
         sources_settings = []
         for source in self.review_manager.settings.sources:
-            assert isinstance(source, colrev.settings.SearchSource)
+            assert isinstance(source, colrev.search_file.ExtendedSearchFile)
+            source.search_type = SearchType(source.search_type)
+            source.search_results_path = Path(source.search_results_path)
             sources_settings.append(source)
         sources = []
         for source in sources_settings:
             try:
                 search_source_class = self.package_manager.get_package_endpoint_class(
                     package_type=EndpointType.search_source,
-                    package_identifier=source.endpoint,
+                    package_identifier=source.platform,
                 )
                 endpoint = search_source_class(
                     source_operation=self,
-                    settings=source.model_dump(),
+                    settings=source,
                 )
 
-                s_type = endpoint.search_source.search_type  # type: ignore
+                s_type = source.search_type  # type: ignore
                 if s_type == SearchType.MD and not include_md:
                     continue
                 sources.append(endpoint)
@@ -443,7 +451,7 @@ class Load(colrev.process.operation.Operation):
             except colrev_exceptions.MissingDependencyError as exc:
                 self.review_manager.logger.error(exc)
                 self.review_manager.logger.error(
-                    f"Cannot load records for {source.filename}"
+                    f"Cannot load records for {source.search_history_path}"
                 )
                 print()
 
@@ -494,17 +502,19 @@ class Load(colrev.process.operation.Operation):
                 f"{Colors.RED}Records additionally imported: {additional_origins}{Colors.END}"
             )
 
-    def _create_load_commit(self, source: colrev.settings.SearchSource) -> None:
+    def _create_load_commit(
+        self, source: colrev.search_file.ExtendedSearchFile
+    ) -> None:
         git_repo = self.review_manager.dataset.get_repo()
         stashed = "No local changes to save" != git_repo.git.stash(
             "push", "--keep-index"
         )
         # part_exact_call = self.review_manager.exact_call
         # self.review_manager.exact_call = (
-        #     f"{part_exact_call} -s {source.search_source.filename.name}"
+        #     f"{part_exact_call} -s {source.search_source.search_results_path.name}"
         # )
         self.review_manager.dataset.create_commit(
-            msg=f"Load: data/search/{source.search_source.filename.name} → "
+            msg=f"Load: data/search/{source.search_source.search_results_path.name} → "
             f"{self.review_manager.paths.RECORDS_FILE_GIT}",
             skip_hooks=True,
         )
@@ -526,7 +536,9 @@ class Load(colrev.process.operation.Operation):
 
         for source in self.load_active_sources():
             try:
-                self.review_manager.logger.info(f"Load {source.search_source.filename}")
+                self.review_manager.logger.info(
+                    f"Load {source.search_source.search_history_path}"
+                )
                 self._add_source_to_settings(source)
                 self.load_source_records(source, keep_ids=keep_ids)
                 self._create_load_commit(source)

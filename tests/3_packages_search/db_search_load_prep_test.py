@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 import colrev.review_manager
-import colrev.settings
+import colrev.search_file
 from colrev.constants import SearchType
 
 # pylint: disable=line-too-long
@@ -16,12 +16,12 @@ NO_CUSTOM_SOURCE = None
 
 
 # To create new test datasets, it is sufficient to extend the pytest.mark.parametrize
-# and create the filenamepath in tests/data/built_in_search_sources.
+# and create the search_results_path in tests/data/built_in_search_sources.
 # The first test run will create the expected_file and fail on the first run.
 # To test an individual case, run:
 # pytest tests/3_built_in/source_specific_load_prep_test.py -vv -k crossref
 @pytest.mark.parametrize(
-    "filenamepath, expected_source_identifier, custom_source, expected_file",
+    "search_results_path, expected_source_identifier, custom_source, expected_file",
     [
         (
             Path("google_scholar.json"),
@@ -44,13 +44,11 @@ NO_CUSTOM_SOURCE = None
         (
             Path("crossref_bib.bib"),
             "colrev.crossref",
-            colrev.settings.SearchSource(
-                endpoint="colrev.crossref",
-                filename=Path("data/search/crossref_bib.bib"),
+            colrev.search_file.ExtendedSearchFile(
+                platform="colrev.crossref",
+                search_results_path=Path("data/search/crossref_bib.bib"),
                 search_type=SearchType.API,
-                search_parameters={
-                    "url": "https://api.crossref.org/works?query.bibliographic=test"
-                },
+                search_string="https://api.crossref.org/works?query.bibliographic=test",
                 comment="",
             ),
             Path("crossref_bib_result.bib"),
@@ -130,11 +128,11 @@ NO_CUSTOM_SOURCE = None
         (
             Path("files_dir_bib.bib"),
             "colrev.files_dir",
-            colrev.settings.SearchSource(
-                endpoint="colrev.files_dir",
-                filename=Path("data/search/files_dir_bib.bib"),
+            colrev.search_file.ExtendedSearchFile(
+                platform="colrev.files_dir",
+                search_results_path=Path("data/search/files_dir_bib.bib"),
                 search_type=SearchType.FILES,
-                search_parameters={"scope": {"path": "test"}},
+                search_string={"scope": {"path": "test"}},
                 comment="",
             ),
             Path("files_dir_bib_result.bib"),
@@ -142,11 +140,11 @@ NO_CUSTOM_SOURCE = None
         (
             Path("ieee_ris.ris"),
             "colrev.ieee",
-            colrev.settings.SearchSource(
-                endpoint="colrev.ieee",
-                filename=Path("data/search/ieee_ris.ris"),
+            colrev.search_file.ExtendedSearchFile(
+                platform="colrev.ieee",
+                search_results_path=Path("data/search/ieee_ris.ris"),
                 search_type=SearchType.DB,
-                search_parameters={"scope": {"path": "test"}},
+                search_string={"scope": {"path": "test"}},
                 comment="",
             ),
             Path("ieee_ris_result.bib"),
@@ -154,11 +152,11 @@ NO_CUSTOM_SOURCE = None
         (
             Path("ieee_csv.csv"),
             "colrev.ieee",
-            colrev.settings.SearchSource(
-                endpoint="colrev.ieee",
-                filename=Path("data/search/ieee_csv.csv"),
+            colrev.search_file.ExtendedSearchFile(
+                platform="colrev.ieee",
+                search_results_path=Path("data/search/ieee_csv.csv"),
                 search_type=SearchType.DB,
-                search_parameters={"scope": {"path": "test"}},
+                search_string={"scope": {"path": "test"}},
                 comment="",
             ),
             Path("ieee_csv_result.bib"),
@@ -190,9 +188,9 @@ NO_CUSTOM_SOURCE = None
     ],
 )
 def test_source(  # type: ignore
-    filenamepath: Path,
+    search_results_path: Path,
     expected_source_identifier: str,
-    custom_source: colrev.settings.SearchSource,
+    custom_source: colrev.search_file.ExtendedSearchFile,
     expected_file: Path,
     base_repo_review_manager: colrev.review_manager.ReviewManager,
     helpers,
@@ -204,8 +202,8 @@ def test_source(  # type: ignore
     print(Path.cwd())  # To facilitate debugging
 
     helpers.retrieve_test_file(
-        source=Path("3_packages_search/data/") / filenamepath,
-        target=Path("data/search/") / filenamepath,
+        source=Path("3_packages_search/data/") / search_results_path,
+        target=Path("data/search/") / search_results_path,
     )
 
     base_repo_review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
@@ -230,7 +228,7 @@ def test_source(  # type: ignore
     load_operation = base_repo_review_manager.get_load_operation()
     load_operation.main()
 
-    actual_source_identifier = base_repo_review_manager.settings.sources[0].endpoint
+    actual_source_identifier = base_repo_review_manager.settings.sources[0].platform
     # Note: fail if the heuristics are inadequate/do not create an erroneous expected_file
     assert expected_source_identifier == actual_source_identifier
 

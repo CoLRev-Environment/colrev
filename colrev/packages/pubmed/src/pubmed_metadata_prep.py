@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Optional
 
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.pubmed.src.pubmed as pubmed_connector
 import colrev.record.record
+import colrev.search_file
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 # pylint: disable=duplicate-code
 
@@ -30,6 +32,7 @@ class PubmedMetadataPrep(base_classes.PrepPackageBaseClass):
 
     source_correction_hint = "ask the publisher to correct the metadata"
     always_apply_changes = False
+    _pubmed_md_filename = Path("data/search/md_pubmed.bib")
 
     def __init__(
         self,
@@ -42,8 +45,24 @@ class PubmedMetadataPrep(base_classes.PrepPackageBaseClass):
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
 
+        pubmed_md_source_l = [
+            s
+            for s in self.prep_operation.review_manager.settings.sources
+            if s.filename == self._pubmed_md_filename
+        ]
+        if pubmed_md_source_l:
+            settings = pubmed_md_source_l[0]
+        else:
+            settings = colrev.search_file.ExtendedSearchFile(
+                platform="colrev.pubmed",
+                search_results_path=self._pubmed_md_filename,
+                search_type=SearchType.MD,
+                search_string="",
+                comment="",
+            )
+
         self.pubmed_source = pubmed_connector.PubMedSearchSource(
-            source_operation=prep_operation
+            source_operation=prep_operation, settings=settings
         )
 
         self.pubmed_prefixes = [

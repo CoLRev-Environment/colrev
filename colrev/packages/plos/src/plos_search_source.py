@@ -7,22 +7,18 @@ from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
 
-import search_query
-
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
-import colrev.ops.load
 import colrev.ops.prep
 import colrev.ops.search
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_settings
 import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.process.operation
 import colrev.record.record
 import colrev.record.record_prep
-import colrev.record.record_similarity
+import colrev.search_file
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
@@ -46,7 +42,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        settings: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
@@ -65,7 +61,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     #   If it does not exist, create new one (.bib)
     def _get_search_source(
         self, settings: typing.Optional[dict]
-    ) -> search_query.SearchFile:
+    ) -> colrev.search_file.ExtendedSearchFile:
         if settings:
             # plos as a search_source
             return settings
@@ -81,11 +77,11 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         # if plos_md_source_l:
         #     return plos_md_source_l[0]
 
-        # return search_query.SearchFile(
+        # return colrev.search_file.ExtendedSearchFile(
         #     platform="colrev.plos",
         #     filepath=plos_md_filename,
         #     search_type=SearchType.MD,
-        #     search_string={},
+        #     search_string="",
         #     comment="",
         # )
 
@@ -116,7 +112,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> search_query.SearchFile:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)
         params:
         - search_file="..." to add a DB search
@@ -149,9 +145,9 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             filename = operation.get_unique_filename(file_path_string="plos")
 
-            search_source = search_query.SearchFile(
+            search_source = colrev.search_file.ExtendedSearchFile(
                 platform="colrev.plos",
-                filepath=filename,
+                search_results_path=filename,
                 search_type=SearchType.API,
                 search_string=query,
                 comment="",
@@ -310,8 +306,9 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         self._validate_source()
         # Create the Object SearchAPIFeed which mange the search on the API
 
-        plos_feed = self.search_source.get_api_feed(
+        plos_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
             logger=self.logger,
             verbose_mode=self.verbose_mode,
@@ -342,7 +339,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: search_query.SearchFile,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Run the custom source-prep operation"""
         source_item = [

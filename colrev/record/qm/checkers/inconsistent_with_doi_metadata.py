@@ -32,7 +32,7 @@ class InconsistentWithDOIMetadataChecker:
     ) -> None:
         self.quality_model = quality_model
 
-        self.crossref_api = crossref_api.CrossrefAPI(params={})
+        self.crossref_api = crossref_api.CrossrefAPI(url="")
 
     def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the inconsistent-with-doi-metadata checks"""

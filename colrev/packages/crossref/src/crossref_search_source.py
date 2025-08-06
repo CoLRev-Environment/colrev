@@ -4,24 +4,23 @@ from __future__ import annotations
 
 import datetime
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
 
 import inquirer
 import requests
-import search_query
 from pydantic import Field
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_settings
 import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
+import colrev.search_file
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
@@ -55,7 +54,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        settings: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
@@ -123,7 +122,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     # def _get_search_source(
     #     self, settings: typing.Optional[dict]
-    # ) -> search_query.SearchFile:
+    # ) -> colrev.search_file.ExtendedSearchFile:
     #     if settings:
     #         # Crossref as a search_source
     #         return settings
@@ -138,7 +137,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     #     if crossref_md_source_l:
     #         return crossref_md_source_l[0]
 
-    #     return search_query.SearchFile(
+    #     return colrev.search_file.ExtendedSearchFile(
     #         platform="colrev.crossref",
     #         filepath=crossref_md_filename,
     #         search_type=SearchType.MD,
@@ -189,7 +188,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def _add_toc_interactively(
         cls, *, operation: colrev.ops.search.Search
-    ) -> search_query.SearchFile:
+    ) -> colrev.search_file.ExtendedSearchFile:
 
         j_name = input("Enter journal name to lookup the ISSN:")
 
@@ -208,9 +207,9 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         issn = list(answers[Fields.JOURNAL].values())[0][0]
 
         filename = operation.get_unique_filename(f"crossref_issn_{issn}")
-        add_source = search_query.SearchFile(
+        add_source = colrev.search_file.ExtendedSearchFile(
             platform="colrev.crossref",
-            filepath=filename,
+            search_results_path=filename,
             search_type=SearchType.TOC,
             search_string=f"https://api.crossref.org/journals/{issn.replace('-', '')}/works",
             version="1.0.0",
@@ -223,7 +222,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> search_query.SearchFile:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint"""
 
         params_dict = cls._parse_params(params)
@@ -231,7 +230,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.create_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(platform=cls.endpoint)
                 # pylint: disable=colrev-missed-constant-usage
                 search_source.search_string = (
                     cls._api_url
@@ -247,9 +246,9 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                     query = params_dict
 
                 filename = operation.get_unique_filename(file_path_string="crossref")
-                search_source = search_query.SearchFile(
+                search_source = colrev.search_file.ExtendedSearchFile(
                     platform="colrev.crossref",
-                    filepath=filename,
+                    search_results_path=filename,
                     search_type=SearchType.API,
                     search_string=query,
                     comment="",
@@ -260,9 +259,9 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                 search_source = cls._add_toc_interactively(operation=operation)
             else:
                 filename = operation.get_unique_filename(file_path_string="crossref")
-                search_source = search_query.SearchFile(
+                search_source = colrev.search_file.ExtendedSearchFile(
                     platform="colrev.crossref",
-                    filepath=filename,
+                    search_results_path=filename,
                     search_type=SearchType.TOC,
                     search_string=params_dict,
                     comment="",
@@ -323,7 +322,8 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
             record.set_status(RecordState.md_prepared)
 
     def _validate_api_params(self) -> None:
-        self.search_source
+        pass
+        # self.search_source
 
         # if not all(x in ["url", "version"] for x in source.search_string):
         #     raise colrev_exceptions.InvalidQueryException(
@@ -506,7 +506,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: search_query.SearchFile,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record_prep.PrepRecord:
         """Source-specific preparation for Crossref"""
         source_item = [
@@ -558,8 +558,9 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                 self.crossref_lock.acquire(timeout=120)
 
                 # Note : need to reload file because the object is not shared between processes
-                crossref_feed = self.search_source.get_api_feed(
+                crossref_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                     source_identifier=self.source_identifier,
+                    search_source=self.search_source,
                     update_only=False,
                     prep_mode=True,
                     records=self.review_manager.dataset.load_records_dict(),

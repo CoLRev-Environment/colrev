@@ -9,22 +9,17 @@ from pathlib import Path
 from typing import Optional
 
 import requests
-import search_query
 from pydantic import Field
 from semanticscholar import SemanticScholar
 from semanticscholar import SemanticScholarException
 from semanticscholar.PaginatedResults import PaginatedResults
 
-import colrev.constants
-import colrev.env.environment_manager
-import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.process.operation
 import colrev.record.record
+import colrev.search_file
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
@@ -73,7 +68,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        settings: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
@@ -84,11 +79,11 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             # Semantic Scholar as a search source
             self.search_source = settings
         else:
-            self.search_source = search_query.SearchFile(
+            self.search_source = colrev.search_file.ExtendedSearchFile(
                 platform="colrev.semanticscholar",
-                filepath=self._s2_filename,
+                search_results_path=self._s2_filename,
                 search_type=SearchType.API,
-                search_string={},
+                search_string="",
                 comment="",
             )
             self.s2_lock = Lock()
@@ -283,8 +278,9 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             self._s2 = SemanticScholar()
 
         # load file because the object is not shared between processes
-        s2_feed = self.search_source.get_api_feed(
+        s2_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
             logger=self.logger,
             verbose_mode=self.verbose_mode,
@@ -331,7 +327,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> search_query.SearchFile:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         # get search parameters from the user interface
@@ -363,9 +359,9 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         filename = operation.get_unique_filename(file_path_string="semanticscholar")
 
-        search_source = search_query.SearchFile(
+        search_source = colrev.search_file.ExtendedSearchFile(
             platform="colrev.semanticscholar",
-            filepath=filename,
+            search_results_path=filename,
             search_type=SearchType.API,
             search_string=search_params,
             comment="",
@@ -410,7 +406,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: search_query.SearchFile,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record_prep.PrepRecord:
         """Source-specific preparation for Semantic Scholar"""
         # Not yet implemented

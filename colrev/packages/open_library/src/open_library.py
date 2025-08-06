@@ -4,20 +4,19 @@ from __future__ import annotations
 
 import json
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
 
 import requests
-import search_query
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
+import colrev.search_file
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -41,8 +40,6 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.na
 
-    _open_library_md_filename = Path("data/search/md_open_library.bib")
-
     requests_headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
@@ -52,36 +49,16 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        settings: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        if settings:
-            # OpenLibrary as a search_source
-            self.search_source = settings
+        self.search_source = settings
 
-        else:
-            # OpenLibrary as an md-prep source
-            open_library_md_source_l = [
-                s
-                for s in self.review_manager.settings.sources
-                if s.filename == self._open_library_md_filename
-            ]
-            if open_library_md_source_l:
-                self.search_source = open_library_md_source_l[0]
-            else:
-                self.search_source = search_query.SearchFile(
-                    platform="colrev.open_library",
-                    filepath=self._open_library_md_filename,
-                    search_type=SearchType.MD,
-                    search_string={},
-                    comment="",
-                )
-
-            self.open_library_lock = Lock()
+        self.open_library_lock = Lock()
 
         self.origin_prefix = self.search_source.get_origin_prefix()
 
@@ -248,7 +225,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> search_query.SearchFile:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         raise NotImplementedError
 
@@ -280,8 +257,9 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
             self.open_library_lock.acquire(timeout=60)
-            open_library_feed = self.search_source.get_api_feed(
+            open_library_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier=self.source_identifier,
+                search_source=self.search_source,
                 update_only=False,
                 prep_mode=True,
                 records=self.review_manager.dataset.load_records_dict(),
@@ -325,7 +303,9 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: search_query.SearchFile
+        self,
+        record: colrev.record.record.Record,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for OpenLibrary"""
 

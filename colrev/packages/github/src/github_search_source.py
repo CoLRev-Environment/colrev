@@ -4,22 +4,20 @@ from __future__ import annotations
 
 import logging
 import re
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
 
 import inquirer
-import search_query
 from github import Auth
 from github import Github
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
+import colrev.search_file
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -55,40 +53,20 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
     SETTINGS = {
         "api_key": "packages.search_source.colrev.github.api_key",
     }
-    _github_md_filename = Path("data/search/md_github.bib")
 
     def __init__(
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        settings: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        if settings:
-            # GitHub as a search source
-            self.search_source = settings
-        else:
-            # GitHub as a md-prep source
-            github_md_source_l = [
-                s
-                for s in source_operation.review_manager.settings.sources
-                if s.filename == self._github_md_filename
-            ]
-            if github_md_source_l:
-                self.search_source = github_md_source_l[0]
-            else:
-                self.search_source = search_query.SearchFile(
-                    platform=self.endpoint,
-                    filepath=self._github_md_filename,
-                    search_type=SearchType.MD,
-                    search_string={},
-                    comment="",
-                )
-            self.github_lock = Lock()
+        self.search_source = settings
+        self.github_lock = Lock()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -114,7 +92,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls, operation: colrev.ops.search.Search, params: str
-    ) -> search_query.SearchFile:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         cls._get_api_key()
@@ -153,9 +131,9 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
                 query = params_dict
 
             filename = operation.get_unique_filename(file_path_string="github")
-            search_source = search_query.SearchFile(
+            search_source = colrev.search_file.ExtendedSearchFile(
                 platform="colrev.github",
-                filepath=filename,
+                search_results_path=filename,
                 search_type=SearchType.API,
                 search_string=query,
                 comment="",
@@ -216,8 +194,9 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Run a search on GitHub"""
 
         if self.search_source.search_type == SearchType.API:
-            github_feed = self.search_source.get_api_feed(
+            github_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier=self.source_identifier,
+                search_source=self.search_source,
                 update_only=(not rerun),
                 logger=self.logger,
                 verbose_mode=self.verbose_mode,
@@ -238,7 +217,9 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: search_query.SearchFile
+        self,
+        record: colrev.record.record.Record,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for GitHub"""
         return record

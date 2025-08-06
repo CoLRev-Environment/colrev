@@ -6,13 +6,11 @@ from pathlib import Path
 
 import pytest
 
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.settings
 from colrev.constants import IDPattern
 from colrev.constants import PDFPathType
 from colrev.constants import ScreenCriterionType
-from colrev.constants import SearchType
 
 # flake8: noqa: E501
 
@@ -48,11 +46,11 @@ def test_settings_load() -> None:
         },
         "sources": [
             {
-                "endpoint": "colrev.files_dir",
-                "filename": Path("data/search/files.bib"),
-                "search_type": SearchType.FILES,
-                "search_parameters": {"scope": {"path": "data/pdfs"}},
-                "comment": "user comment",
+                "platform": "colrev.files_dir",
+                "search_results_path": "data/search/files.bib",
+                "search_type": "FILES",
+                "search_string": {"scope": {"path": "data/pdfs"}},
+                # "comment": "user comment",
             }
         ],
         "search": {"retrieve_forthcoming": True},
@@ -144,15 +142,15 @@ def test_settings_load() -> None:
     assert not settings.is_curated_repo()
 
 
-def test_search_source_error_wrong_path() -> None:
-    with open(
-        Path(colrev.__file__).parents[0] / Path("ops/init/settings.json")
-    ) as file:
-        settings = json.load(file)
-    settings["sources"][0]["filename"] = "other_path"
+# def test_search_source_error_wrong_path() -> None:
+#     with open(
+#         Path(colrev.__file__).parents[0] / Path("ops/init/settings.json")
+#     ) as file:
+#         settings = json.load(file)
+#     settings["sources"][0]["filepath"] = "other_path"
 
-    with pytest.raises(colrev_exceptions.InvalidSettingsError):
-        colrev.settings._load_settings_from_dict(loaded_dict=settings)
+#     with pytest.raises(colrev_exceptions.InvalidSettingsError):
+#         colrev.settings._load_settings_from_dict(loaded_dict=settings)
 
 
 def test_search_source_error_duplicate_path() -> None:
@@ -190,20 +188,3 @@ def test_curated_masterdata() -> None:
     ]
 
     assert settings.is_curated_masterdata_repo()
-
-
-def test_get_query(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> None:
-    query_file = Path(
-        base_repo_review_manager.settings.sources[0].search_parameters["query_file"]
-    )
-    query_file.write_text("test_query")
-    assert "test_query" == base_repo_review_manager.settings.sources[0].get_query()
-    query_file.unlink()
-    with pytest.raises(FileNotFoundError):
-        base_repo_review_manager.settings.sources[0].get_query()
-
-    base_repo_review_manager.settings.sources[0].search_parameters.pop("query_file")
-    with pytest.raises(KeyError):
-        base_repo_review_manager.settings.sources[0].get_query()

@@ -5,8 +5,7 @@ from pathlib import Path
 import pytest
 import requests_mock
 
-import colrev.ops.prep
-import colrev.packages.crossref.src.crossref_search_source
+import colrev.record.record_prep
 from colrev.packages.crossref.src import crossref_api
 
 # pylint: disable=line-too-long
@@ -124,7 +123,7 @@ def test_crossref_query(  # type: ignore
 ) -> None:
     """Test the crossref query_doi()"""
 
-    api = crossref_api.CrossrefAPI(params={})
+    api = crossref_api.CrossrefAPI(url="")
 
     # replace the / in filenames by _
     filename = Path(__file__).parent / f"data/{doi.replace('/', '_')}.json"

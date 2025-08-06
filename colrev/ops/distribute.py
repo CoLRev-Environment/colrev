@@ -8,7 +8,7 @@ from pathlib import Path
 
 import colrev.env.tei_parser
 import colrev.process.operation
-import colrev.settings
+import colrev.search_file
 import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import OperationsType
@@ -108,11 +108,11 @@ class Distribute(colrev.process.operation.Operation):
                 else:
                     import_records = []
 
-                    new_source = colrev.settings.SearchSource(
-                        endpoint="colrev.unknown_source",
-                        filename=Path("search") / target_bib_file.name,
+                    new_source = colrev.search_file.ExtendedSearchFile(
+                        platform="colrev.unknown_source",
+                        search_results_path=Path("search") / target_bib_file.name,
                         search_type=SearchType.OTHER,
-                        search_parameters={},
+                        search_string="",
                         comment="",
                     )
 

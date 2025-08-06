@@ -10,15 +10,14 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import requests
-import search_query
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
+import colrev.search_file
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import SearchSourceHeuristicStatus
@@ -164,7 +163,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> search_query.SearchFile:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         params_dict = {}
         if params:
@@ -192,9 +191,9 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 assert host and host.endswith("aisel.aisnet.org")
                 q_params = cls._parse_query(query=params_dict["url"])
                 filename = operation.get_unique_filename(file_path_string="ais")
-                search_source = search_query.SearchFile(
+                search_source = colrev.search_file.ExtendedSearchFile(
                     platform=cls.endpoint,
-                    filepath=filename,
+                    search_results_path=filename,
                     search_type=SearchType.API,
                     search_string=q_params,
                     comment="",
@@ -319,8 +318,9 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self._validate_source()
 
         if self.search_source.search_type == SearchType.API:
-            ais_feed = self.search_source.get_api_feed(
+            ais_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier=self.source_identifier,
+                search_source=self.search_source,
                 update_only=(not rerun),
                 logger=self.logger,
                 verbose_mode=self.verbose_mode,
@@ -505,7 +505,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: search_query.SearchFile,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for the AIS electronic Library (AISeL)"""
 

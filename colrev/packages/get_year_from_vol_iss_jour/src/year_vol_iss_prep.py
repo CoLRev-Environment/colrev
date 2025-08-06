@@ -11,7 +11,6 @@ from pydantic import Field
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
@@ -54,7 +53,7 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
         )
         self.vol_nr_dict = self._get_vol_nr_dict()
         self.quality_model = self.review_manager.get_qm()
-        self.api = crossref_api.CrossrefAPI(params={})
+        self.api = crossref_api.CrossrefAPI(url="")
 
     def _get_vol_nr_dict(self) -> dict:
         vol_nr_dict: dict = {}

@@ -124,7 +124,7 @@ class Push(colrev.process.operation.Operation):
                 self._share_correction(source=source, change_list=change_itemsets)
 
     def _share_correction(
-        self, *, source: colrev.settings.SearchSource, change_list: list
+        self, *, source: colrev.search_file.ExtendedSearchFile, change_list: list
     ) -> None:
         prepared_change_list = []
         for change in change_list:
@@ -143,7 +143,7 @@ class Push(colrev.process.operation.Operation):
             + f"{corrections}\n\nBest regards\n\n"
         )
 
-        if source.endpoint == "colrev.dblp":
+        if source.platform == "colrev.dblp":
             file_path = Path("dblp-corrections-mail.txt")
             dblp_header = (
                 "Send to: dblp@dagstuhl.de\n\n"

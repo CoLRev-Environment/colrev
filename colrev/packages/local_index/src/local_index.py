@@ -12,16 +12,15 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import git
-import search_query
 from pydantic import Field
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.search_file
 import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -47,8 +46,6 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
     ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
-    _local_index_md_filename = Path("data/search/md_curated.bib")
-
     essential_md_keys = [
         Fields.TITLE,
         Fields.AUTHOR,
@@ -67,36 +64,16 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        settings: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        if settings:
-            # LocalIndex as a search_source
-            self.search_source = settings
+        self.search_source = settings
 
-        else:
-            # LocalIndex as an md-prep source
-            li_md_source_l = [
-                s
-                for s in self.review_manager.settings.sources
-                if s.filename == self._local_index_md_filename
-            ]
-            if li_md_source_l:
-                self.search_source = li_md_source_l[0]
-            else:
-                self.search_source = search_query.SearchFile(
-                    platform=self.endpoint,
-                    filepath=self._local_index_md_filename,
-                    search_type=SearchType.MD,
-                    search_string={},
-                    comment="",
-                )
-
-            self.local_index_lock = Lock()
+        self.local_index_lock = Lock()
 
         self.origin_prefix = self.search_source.get_origin_prefix()
 
@@ -213,8 +190,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self._validate_source()
 
-        local_index_feed = self.search_source.get_api_feed(
+        local_index_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
             logger=self.logger,
             verbose_mode=self.verbose_mode,
@@ -248,7 +226,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> search_query.SearchFile:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         # always API search
@@ -261,9 +239,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                     "'", ""
                 )
             )
-            search_source = search_query.SearchFile(
+            search_source = colrev.search_file.ExtendedSearchFile(
                 platform=cls.endpoint,
-                filepath=filename,
+                search_results_path=filename,
                 search_type=SearchType.API,
                 search_string={"query": params},
                 comment="",
@@ -314,7 +292,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: search_query.SearchFile
+        self,
+        record: colrev.record.record.Record,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for local-index"""
 
@@ -402,8 +382,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.local_index_lock.acquire(timeout=60)
 
             # Note : need to reload file because the object is not shared between processes
-            local_index_feed = self.search_source.get_api_feed(
+            local_index_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier=self.source_identifier,
+                search_source=self.search_source,
                 update_only=False,
                 prep_mode=True,
                 records=self.review_manager.dataset.load_records_dict(),
@@ -653,8 +634,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> dict:
         original_record = change_item["original_record"]
 
-        local_index_feed = self.search_source.get_api_feed(
+        local_index_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=True,
             logger=self.logger,
             verbose_mode=self.verbose_mode,

@@ -387,7 +387,7 @@ class Initializer:
                 if x["endpoint"] not in ["colrev.paper_md"]
             ]
             settings.sources = [
-                x for x in settings.sources if x.endpoint not in ["colrev.files_dir"]
+                x for x in settings.sources if x.platform not in ["colrev.files_dir"]
             ]
 
             settings.pdf_prep.pdf_prep_package_endpoints = [
@@ -411,7 +411,7 @@ class Initializer:
 
         for source in settings.sources:
             self.review_manager.logger.info(
-                " add search %s", source.endpoint.replace("colrev.", "")
+                " add search %s", source.platform.replace("colrev.", "")
             )
 
         for data_package_endpoint in settings.data.data_package_endpoints:
@@ -498,12 +498,10 @@ class Initializer:
         settings["dedupe"]["dedupe_package_endpoints"] = [{"endpoint": "colrev.dedupe"}]
         settings["sources"] = [
             {
-                "endpoint": "colrev.unknown_source",
-                "filename": str(Path("data/search/30_example_records.bib")),
+                "platform": "colrev.unknown_source",
+                "search_results_path": "data/search/30_example_records.bib",
                 "search_type": "DB",
-                "search_parameters": {
-                    "query_file": str(Path("data/search/30_example_records_query.txt"))
-                },
+                "search_string": "",
                 "comment": "",
             }
         ]

@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Optional
 
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.dblp.src.dblp as dblp_connector
 import colrev.record.record
+import colrev.search_file
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 
 # pylint: disable=too-few-public-methods
@@ -41,8 +43,27 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
+
+        # DBLP as an md-prep source
+        dblp_md_filename = Path("data/search/md_dblp.bib")
+        dblp_md_source_l = [
+            s
+            for s in self.prep_operation.review_manager.settings.sources
+            if s.filename == dblp_md_filename
+        ]
+        if dblp_md_source_l:
+            settings = dblp_md_source_l[0]
+        else:
+            settings = colrev.search_file.ExtendedSearchFile(
+                platform="colrev.dblp",
+                search_results_path=dblp_md_filename,
+                search_type=SearchType.MD,
+                search_string="",
+                comment="",
+            )
+
         self.dblp_source = dblp_connector.DBLPSearchSource(
-            source_operation=prep_operation
+            source_operation=prep_operation, settings=settings
         )
 
         self.dblp_prefixes = [

@@ -2,10 +2,8 @@
 """Tests of the CoLRev checks"""
 import platform
 import typing
-from pathlib import Path
 
 import colrev.review_manager
-from colrev.constants import SearchType
 
 
 def test_checks(  # type: ignore
@@ -56,13 +54,10 @@ def test_checks(  # type: ignore
             #     "comment": "",
             # },
             {  # type: ignore
-                "endpoint": "colrev.unknown_source",
-                "filename": Path("data/search/test_records.bib"),
-                "search_type": SearchType.DB,
-                "search_parameters": {
-                    "query_file": "data/search/test_records_query.txt"
-                },
-                "comment": "",
+                "platform": "colrev.unknown_source",
+                "search_results_path": "data/search/test_records.bib",
+                "search_type": "DB",
+                "search_string": "",
             },
         ]
         assert expected == actual

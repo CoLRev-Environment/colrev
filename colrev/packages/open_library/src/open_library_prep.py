@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
+from anyio import Path
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
@@ -13,6 +14,7 @@ import colrev.package_manager.package_settings
 import colrev.packages.open_library.src.open_library as open_library_connector
 import colrev.record.record
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -26,6 +28,7 @@ class OpenLibraryMetadataPrep(base_classes.PrepPackageBaseClass):
 
     source_correction_hint = "ask the publisher to correct the metadata"
     always_apply_changes = False
+    _open_library_md_filename = Path("data/search/md_open_library.bib")
 
     def __init__(
         self,
@@ -37,8 +40,26 @@ class OpenLibraryMetadataPrep(base_classes.PrepPackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
+
+        # OpenLibrary as an md-prep source
+        open_library_md_source_l = [
+            s
+            for s in self.prep_operation.review_manager.settings.sources
+            if s.filename == self._open_library_md_filename
+        ]
+        if open_library_md_source_l:
+            search_source = open_library_md_source_l[0]
+        else:
+            search_source = colrev.search_file.ExtendedSearchFile(
+                platform="colrev.open_library",
+                search_results_path=self._open_library_md_filename,
+                search_type=SearchType.MD,
+                search_string="",
+                comment="",
+            )
+
         self.open_library_connector = open_library_connector.OpenLibrarySearchSource(
-            source_operation=prep_operation
+            source_operation=prep_operation, settings=search_source
         )
 
     def check_availability(

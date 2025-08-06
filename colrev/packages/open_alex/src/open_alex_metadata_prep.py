@@ -5,14 +5,16 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
+from anyio import Path
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.open_alex.src.open_alex as open_alex_connector
 import colrev.record.record
+import colrev.search_file
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 
 # pylint: disable=too-few-public-methods
@@ -27,6 +29,7 @@ class OpenAlexMetadataPrep(base_classes.PrepPackageBaseClass):
 
     source_correction_hint = "TBD"
     always_apply_changes = False
+    _open_alex_md_filename = Path("data/search/md_open_alex.bib")
 
     def __init__(
         self,
@@ -39,8 +42,24 @@ class OpenAlexMetadataPrep(base_classes.PrepPackageBaseClass):
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
 
+        open_alex_md_source_l = [
+            s
+            for s in self.prep_operation.review_manager.settings.sources
+            if s.filename == self._open_alex_md_filename
+        ]
+        if open_alex_md_source_l:
+            settings = open_alex_md_source_l[0]
+        else:
+            settings = colrev.search_file.ExtendedSearchFile(
+                platform="colrev.open_alex",
+                search_results_path=self._open_alex_md_filename,
+                search_type=SearchType.MD,
+                search_string="",
+                comment="",
+            )
+
         self.open_alex_source = open_alex_connector.OpenAlexSearchSource(
-            source_operation=prep_operation
+            source_operation=prep_operation, settings=settings
         )
 
         self.open_alex_prefixes = [

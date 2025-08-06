@@ -228,7 +228,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     )
 
     search_operation = review_manager.get_search_operation()
-    search_operation.add_most_likely_sources(create_query_files=True)
+    search_operation.add_most_likely_sources()
 
     load_operation = review_manager.get_load_operation()
     load_operation.main(keep_ids=False)

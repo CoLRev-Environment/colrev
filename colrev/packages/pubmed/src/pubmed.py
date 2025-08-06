@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
@@ -11,16 +10,15 @@ from urllib.parse import urlparse
 
 import pandas as pd
 import requests
-import search_query
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
+import colrev.search_file
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -47,41 +45,21 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     db_url = "https://pubmed.ncbi.nlm.nih.gov/"
-    _pubmed_md_filename = Path("data/search/md_pubmed.bib")
 
     def __init__(
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        settings: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        if settings:
-            # Pubmed as a search_source
-            self.search_source = settings
-        else:
-            # Pubmed as an md-prep source
-            pubmed_md_source_l = [
-                s
-                for s in self.review_manager.settings.sources
-                if s.filename == self._pubmed_md_filename
-            ]
-            if pubmed_md_source_l:
-                self.search_source = pubmed_md_source_l[0]
-            else:
-                self.search_source = search_query.SearchFile(
-                    platform=self.endpoint,
-                    filepath=self._pubmed_md_filename,
-                    search_type=SearchType.MD,
-                    search_string={},
-                    comment="",
-                )
+        self.search_source = settings
 
-            self.pubmed_lock = Lock()
+        self.pubmed_lock = Lock()
 
         self.source_operation = source_operation
         self.quality_model = self.review_manager.get_qm()
@@ -112,7 +90,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> search_query.SearchFile:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -154,9 +132,9 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                     # "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
                     #     + params
                     # )
-                    search_source = search_query.SearchFile(
+                    search_source = colrev.search_file.ExtendedSearchFile(
                         platform=cls.endpoint,
-                        filepath=filename,
+                        search_results_path=filename,
                         search_type=SearchType.API,
                         search_string=query,
                         comment="",
@@ -178,14 +156,14 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         source = self.search_source
         self.logger.debug(f"Validate SearchSource {source.filename}")
 
-        if source.filename.name != self._pubmed_md_filename.name:
-            if "query" not in source.search_string:
-                raise colrev_exceptions.InvalidQueryException(
-                    f"Source missing query search_parameter ({source.filename})"
-                )
+        # if source.filename.name != self._pubmed_md_filename.name:
+        #     if "query" not in source.search_string:
+        #         raise colrev_exceptions.InvalidQueryException(
+        #             f"Source missing query search_parameter ({source.filename})"
+        #         )
 
-            # if "query_file" in source.search_string:
-            # ...
+        # if "query_file" in source.search_string:
+        # ...
 
         self.logger.debug("SearchSource %s validated", source.filename)
 
@@ -252,8 +230,9 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 self.pubmed_lock.acquire(timeout=60)
 
                 # Note : need to reload file because the object is not shared between processes
-                pubmed_feed = self.search_source.get_api_feed(
+                pubmed_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                     source_identifier=self.source_identifier,
+                    search_source=self.search_source,
                     update_only=False,
                     prep_mode=True,
                     records=self.review_manager.dataset.load_records_dict(),
@@ -415,8 +394,9 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self._validate_source()
 
-        pubmed_feed = self.search_source.get_api_feed(
+        pubmed_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
             logger=self.logger,
             verbose_mode=self.verbose_mode,
@@ -517,7 +497,9 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: search_query.SearchFile
+        self,
+        record: colrev.record.record.Record,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Pubmed"""
 

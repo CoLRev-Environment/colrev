@@ -731,7 +731,6 @@ class Prep(colrev.process.operation.Operation):
 
         self.prep_package_endpoints: dict[str, typing.Any] = {}
         for prep_package_endpoint in prep_round.prep_package_endpoints:
-
             prep_class = self.package_manager.get_package_endpoint_class(
                 package_type=EndpointType.prep,
                 package_identifier=prep_package_endpoint["endpoint"],

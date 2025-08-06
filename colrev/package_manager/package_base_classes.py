@@ -68,18 +68,18 @@ class SearchSourcePackageBaseClass(ABC):
     """
 
     ci_supported: bool
-    settings_class: Type[colrev.package_manager.package_settings.DefaultSourceSettings]
+    settings_class: Type[colrev.search_file.ExtendedSearchFile]
     source_identifier: str
     search_types: list[SearchType]
     heuristic_status: SearchSourceHeuristicStatus
-    search_source: colrev.package_manager.package_settings.DefaultSourceSettings
+    search_source: colrev.search_file.ExtendedSearchFile
 
     @abstractmethod
     def __init__(
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: dict,
+        settings: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
@@ -94,7 +94,7 @@ class SearchSourcePackageBaseClass(ABC):
     @abstractmethod
     def add_endpoint(
         cls, operation: colrev.ops.search.Search, params: str
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add the SearchSource as an endpoint."""
 
     @abstractmethod
@@ -126,7 +126,7 @@ class SearchSourcePackageBaseClass(ABC):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Run the custom source-prep operation."""
 

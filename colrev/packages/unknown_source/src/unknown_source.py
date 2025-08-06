@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Optional
 
 import pandas as pd
-import search_query
 from pydantic import Field
 from rapidfuzz import fuzz
 
@@ -16,8 +15,6 @@ import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
@@ -57,7 +54,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: dict,
+        settings: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
@@ -79,7 +76,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> search_query.SearchFile:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -541,7 +538,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
                 record.remove_field(key=Fields.SERIES)
 
-        if self.search_source.filename.suffix == ".md":
+        if self.search_source.search_history_path.suffix == ".md":
             if (
                 record.data[Fields.ENTRYTYPE] == "misc"
                 and Fields.PUBLISHER in record.data
@@ -770,7 +767,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: search_query.SearchFile,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for unknown sources"""
 

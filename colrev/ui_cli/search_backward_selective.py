@@ -6,8 +6,9 @@ import typing
 from pathlib import Path
 
 import colrev.env.tei_parser
+import colrev.ops.search_api_feed
 import colrev.record.record
-import colrev.settings
+import colrev.search_file
 from colrev.constants import Fields
 from colrev.constants import SearchType
 
@@ -35,15 +36,16 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
         tei_path=record.get_tei_filename(),
     )
 
-    search_source = colrev.settings.SearchSource(
-        endpoint="colrev.unknown_source",
-        filename=Path("data/search/complementary_backward_search.bib"),
+    search_source = colrev.search_file.ExtendedSearchFile(
+        platform="colrev.unknown_source",
+        search_results_path=Path("data/search/complementary_backward_search.bib"),
         search_type=SearchType.OTHER,
-        search_parameters={},
+        search_string="",
         comment="",
     )
-    feed = search_source.get_api_feed(
+    feed = colrev.ops.search_api_feed.SearchAPIFeed(
         source_identifier="bws_id",
+        search_source=search_source,
         update_only=False,
         logger=search_operation.review_manager.logger,
         verbose_mode=search_operation.review_manager.verbose_mode,

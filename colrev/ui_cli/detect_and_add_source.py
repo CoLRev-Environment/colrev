@@ -11,7 +11,6 @@ from colrev.constants import Colors
 from colrev.constants import EndpointType
 
 if typing.TYPE_CHECKING:
-    import colrev.settings
     import colrev.ops.search
 
 # pylint: disable=too-few-public-methods
@@ -52,7 +51,7 @@ class CLISourceAdder:
 
     def _select_source_from_heuristics(
         self, *, filename: Path, source_candidates: list
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         if 1 == len(source_candidates):
             heuristic_source_dict = source_candidates[0]
             self.search_operation.review_manager.logger.info(
@@ -66,7 +65,7 @@ class CLISourceAdder:
                 f"Selected {heuristic_source_dict['source_candidate'].endpoint}"
             )
 
-        candidate: colrev.settings.SearchSource = heuristic_source_dict[
+        candidate: colrev.search_file.ExtendedSearchFile = heuristic_source_dict[
             "source_candidate"
         ]
         search_source_class = self.package_manager.get_package_endpoint_class(
@@ -85,7 +84,7 @@ class CLISourceAdder:
         )
         return source
 
-    def add_new_sources(self) -> typing.List[colrev.settings.SearchSource]:
+    def add_new_sources(self) -> typing.List[colrev.search_file.ExtendedSearchFile]:
         """Select the new source from the heuristic_result_list."""
 
         new_search_files = self.search_operation.get_new_search_files()

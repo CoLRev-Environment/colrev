@@ -11,7 +11,6 @@ from typing import Optional
 import inquirer
 import pandas as pd
 import requests
-import search_query
 from bib_dedupe.bib_dedupe import block
 from bib_dedupe.bib_dedupe import cluster
 from bib_dedupe.bib_dedupe import match
@@ -23,10 +22,11 @@ from tqdm import tqdm
 
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
+import colrev.search_file
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -56,7 +56,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: dict,
+        settings: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
@@ -67,15 +67,15 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
             settings["search_string"]["min_intext_citations"] = 3
 
         self.search_source = settings
-        self.crossref_api = crossref_api.CrossrefAPI(params={})
+        self.crossref_api = crossref_api.CrossrefAPI(url="")
 
     @classmethod
-    def get_default_source(cls) -> search_query.SearchFile:
+    def get_default_source(cls) -> colrev.search_file.ExtendedSearchFile:
         """Get the default SearchSource settings"""
 
-        return search_query.SearchFile(
+        return colrev.search_file.ExtendedSearchFile(
             platform="colrev.pdf_backward_search",
-            filepath=Path("data/search/pdf_backward_search.bib"),
+            search_results_path=Path("data/search/pdf_backward_search.bib"),
             search_type=SearchType.BACKWARD_SEARCH,
             search_string={
                 "scope": {"colrev_status": "rev_included|rev_synthesized"},
@@ -411,8 +411,9 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
         selected_references = df_all_references[df_all_references["meets_criteria"]]
-        pdf_backward_search_feed = self.search_source.get_api_feed(
+        pdf_backward_search_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
             logger=self.logger,
             verbose_mode=self.verbose_mode,
@@ -543,7 +544,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> search_query.SearchFile:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -601,7 +602,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: search_query.SearchFile,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for PDF backward searches (GROBID)"""
 

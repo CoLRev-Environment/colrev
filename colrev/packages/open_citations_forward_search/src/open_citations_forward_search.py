@@ -9,14 +9,13 @@ from pathlib import Path
 from typing import Optional
 
 import requests
-import search_query
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.search_file
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
@@ -43,7 +42,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: dict,
+        settings: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
@@ -51,14 +50,14 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.verbose_mode = verbose_mode
         self.search_source = settings
         self.review_manager = source_operation.review_manager
-        self.crossref_api = crossref_api.CrossrefAPI(params={})
+        self.crossref_api = crossref_api.CrossrefAPI(url="")
 
     @classmethod
-    def get_default_source(cls) -> search_query.SearchFile:
+    def get_default_source(cls) -> colrev.search_file.ExtendedSearchFile:
         """Get the default SearchSource settings"""
-        return search_query.SearchFile(
+        return colrev.search_file.ExtendedSearchFile(
             platform="colrev.open_citations_forward_search",
-            filepath=Path("data/search/forward_search.bib"),
+            search_results_path=Path("data/search/forward_search.bib"),
             search_type=SearchType.FORWARD_SEARCH,
             search_string={"scope": {Fields.STATUS: "rev_included|rev_synthesized"}},
             comment="",
@@ -144,8 +143,9 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
             print("No records imported. Cannot run forward search yet.")
             return
 
-        forward_search_feed = self.search_source.get_api_feed(
+        forward_search_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
             logger=self.logger,
             verbose_mode=self.verbose_mode,
@@ -193,7 +193,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> search_query.SearchFile:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint"""
 
         search_source = cls.get_default_source()
@@ -224,7 +224,9 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: search_query.SearchFile
+        self,
+        record: colrev.record.record.Record,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for forward searches (OpenCitations)"""
         return record

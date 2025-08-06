@@ -7,7 +7,6 @@ import pytest
 
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
-import colrev.settings
 from colrev.constants import EndpointType
 from colrev.constants import SearchType
 
@@ -47,13 +46,11 @@ def test_search_add_source(  # type: ignore
     """Test the search add_source"""
 
     search_operation = base_repo_review_manager.get_search_operation()
-    add_source = colrev.settings.SearchSource(
-        endpoint="colrev.crossref",
-        filename=Path("data/search/crossref_search.bib"),
+    add_source = colrev.search_file.ExtendedSearchFile(
+        platform="colrev.crossref",
+        search_results_path=Path("data/search/crossref_search.bib"),
         search_type=SearchType.DB,
-        search_parameters={
-            "url": "https://api.crossref.org/works?query.bibliographic=test"
-        },
+        search_string="https://api.crossref.org/works?query.bibliographic=test",
         comment="",
     )
 
@@ -61,11 +58,11 @@ def test_search_add_source(  # type: ignore
 
     search_source_class = package_manager.get_package_endpoint_class(
         package_type=EndpointType.search_source,
-        package_identifier=add_source.endpoint,
+        package_identifier=add_source.platform,
     )
 
     endpoint = search_source_class(
-        source_operation=search_operation, settings=add_source.model_dump()
+        source_operation=search_operation, settings=add_source
     )
     query = "issn=1234-5678"
     endpoint.add_endpoint(search_operation, query)  # type: ignore

@@ -10,7 +10,6 @@ from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import EndpointType
@@ -56,26 +55,24 @@ class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
         sources = [
             s
             for s in self.review_manager.settings.sources
-            if s.filename == Path("data/search") / Path(origin_source)
+            if s.search_history_path == Path("data/search") / Path(origin_source)
         ]
 
         for source in sources:
             try:
-                # if source.endpoint not in self.search_sources.packages:
+                # if source.platform not in self.search_sources.packages:
                 #     continue
-                # endpoint = self.search_sources.packages[source.endpoint]
+                # endpoint = self.search_sources.packages[source.platform]
                 search_source_class = self.package_manager.get_package_endpoint_class(
                     package_type=EndpointType.search_source,
-                    package_identifier=source.endpoint,
+                    package_identifier=source.platform,
                 )
-                endpoint = search_source_class(
-                    source_operation=self, settings=source.model_dump()
-                )
+                endpoint = search_source_class(source_operation=self, settings=source)
 
                 if callable(endpoint.prepare):
                     record = endpoint.prepare(record, source)
                 else:
-                    print(f"error: {source.endpoint}")
+                    print(f"error: {source.platform}")
             except colrev_exceptions.MissingDependencyError as exc:
                 self.logger.warn(exc)
 

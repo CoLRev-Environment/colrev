@@ -7,8 +7,6 @@ import typing
 from copy import deepcopy
 from pathlib import Path
 
-import search_query
-
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.loader.load_utils_formatter
@@ -38,7 +36,7 @@ class SearchAPIFeed:
         self,
         *,
         source_identifier: str,
-        search_source: search_query.SearchFile,
+        search_source: colrev.search_file.ExtendedSearchFile,
         update_only: bool,
         logger: logging.Logger,
         prep_mode: bool = False,

@@ -6,18 +6,19 @@ import json
 import typing
 from pathlib import Path
 
-import search_query
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_validator
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.search_api_feed
+import colrev.search_file
 from colrev.constants import IDPattern
 from colrev.constants import PDFPathType
 from colrev.constants import ScreenCriterionType
 from colrev.constants import ShareStatReq
+
 
 if typing.TYPE_CHECKING:
     import colrev.review_manager
@@ -130,15 +131,6 @@ class ProjectSettings(BaseModel):
 #         self.len_before = len(imported_origins)
 #         self.source_records_list: typing.List[typing.Dict] = source_records_list
 
-#     def get_origin_prefix(self) -> str:
-#         """Get the corresponding origin prefix"""
-#         assert not any(x in str(self.filename.name) for x in [";", "/"])
-#         return str(self.filename.name).lstrip("/")
-
-#     def is_md_source(self) -> bool:
-#         """Check whether the source is a metadata source (for preparation)"""
-
-#         return str(self.filename.name).startswith("md_")
 
 #     def is_curated_source(self) -> bool:
 #         """Check whether the source is a curated source (for preparation)"""
@@ -155,29 +147,6 @@ class ProjectSettings(BaseModel):
 #             raise FileNotFoundError
 #         return Path(self.search_parameters["query_file"]).read_text(encoding="utf-8")
 
-#     def get_api_feed(
-#         self,
-#         source_identifier: str,
-#         update_only: bool,
-#         logger: typing.Optional[logging.Logger] = None,
-#         prep_mode: bool = False,
-#         records: typing.Optional[dict] = None,
-#         verbose_mode: bool = False,
-#     ) -> colrev.ops.search_api_feed.SearchAPIFeed:
-#         """Get a feed to add and update records"""
-
-#         if logger is None:
-#             logger = logging.getLogger(__name__)
-
-#         return colrev.ops.search_api_feed.SearchAPIFeed(
-#             source_identifier=source_identifier,
-#             search_source=self,
-#             update_only=update_only,
-#             logger=logger,
-#             prep_mode=prep_mode,
-#             verbose_mode=verbose_mode,
-#             records=records,
-#         )
 
 #     def __str__(self) -> str:
 #         formatted_str = (
@@ -379,7 +348,7 @@ class Settings(BaseModel):
     # pylint: disable=too-many-instance-attributes
 
     project: ProjectSettings
-    sources: typing.List[search_query.SearchFile]
+    sources: typing.List[colrev.search_file.ExtendedSearchFile]
     search: SearchSettings
     prep: PrepSettings
     dedupe: DedupeSettings
@@ -389,10 +358,21 @@ class Settings(BaseModel):
     screen: ScreenSettings
     data: DataSettings
 
+    @field_validator("sources", mode="before")
+    @classmethod
+    def validate_sources(
+        cls, value: typing.List[colrev.search_file.ExtendedSearchFile]
+    ) -> typing.List[colrev.search_file.ExtendedSearchFile]:
+        """Validate the sources"""
+        return [
+            colrev.search_file.ExtendedSearchFile(**v) if isinstance(v, dict) else v
+            for v in value
+        ]
+
     def model_dump(self, **kwargs) -> dict:  # type: ignore
         """Dump the settings model with recursive handling of SearchSource."""
 
-        sources_dump = [source.model_dump(**kwargs) for source in self.sources]
+        sources_dump = [source.model_dump(**kwargs) for source in self.sources]  # type: ignore
         data = super().model_dump(**kwargs)
         data["sources"] = sources_dump
         return data
@@ -460,7 +440,7 @@ class Settings(BaseModel):
 
         all_packages = (
             [self.project.review_type]
-            + [s.endpoint for s in self.sources]
+            + [s.platform for s in self.sources]
             + extract_endpoints(self.prep.prep_man_package_endpoints)
             + extract_endpoints(self.dedupe.dedupe_package_endpoints)
             + extract_endpoints(self.prescreen.prescreen_package_endpoints)
@@ -484,17 +464,26 @@ def _add_missing_attributes(loaded_dict: dict) -> None:  # pragma: no cover
 
 
 def _load_settings_from_dict(loaded_dict: dict) -> Settings:
-    try:
-        _add_missing_attributes(loaded_dict)
-        settings = Settings(**loaded_dict)
-        filenames = [x.filename for x in settings.sources]
-        if not len(filenames) == len(set(filenames)):
-            non_unique = list({str(x) for x in filenames if filenames.count(x) > 1})
-            msg = f"Non-unique source filename(s): {', '.join(non_unique)}"
-            raise colrev_exceptions.InvalidSettingsError(msg=msg, fix_per_upgrade=False)
 
-    except (Exception,) as exc:  # pragma: no cover
-        raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
+    _add_missing_attributes(loaded_dict)
+    settings = Settings(**loaded_dict)
+    filenames = [x.search_results_path for x in settings.sources]
+    if not len(filenames) == len(set(filenames)):
+        non_unique = list({str(x) for x in filenames if filenames.count(x) > 1})
+        msg = f"Non-unique source filename(s): {', '.join(non_unique)}"
+        raise colrev_exceptions.InvalidSettingsError(msg=msg, fix_per_upgrade=False)
+
+    # try:
+    #     _add_missing_attributes(loaded_dict)
+    #     settings = Settings(**loaded_dict)
+    #     filenames = [x.search_results_path for x in settings.sources]
+    #     if not len(filenames) == len(set(filenames)):
+    #         non_unique = list({str(x) for x in filenames if filenames.count(x) > 1})
+    #         msg = f"Non-unique source filename(s): {', '.join(non_unique)}"
+    #         raise colrev_exceptions.InvalidSettingsError(msg=msg, fix_per_upgrade=False)
+
+    # except (Exception,) as exc:  # pragma: no cover
+    #     raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
 
     return settings
 
