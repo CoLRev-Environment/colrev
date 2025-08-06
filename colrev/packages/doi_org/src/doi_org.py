@@ -5,11 +5,11 @@ from __future__ import annotations
 import json
 import logging
 import re
+import typing
 from sqlite3 import OperationalError
 from urllib.parse import unquote
 
 import requests
-from flask import typing
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
