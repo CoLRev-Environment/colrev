@@ -17,6 +17,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -132,7 +133,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.record.Record,
     ) -> colrev.record.record.Record:
-        session = prep_operation.review_manager.get_cached_session()
+        session = colrev.utils.get_cached_session()
 
         url = "NA"
         if Fields.ISBN in record.data:

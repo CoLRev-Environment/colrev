@@ -111,39 +111,8 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.search_source.search_string = url
         self.search_source.version = "1.0.0"
 
-        # for position, source in enumerate(self.review_manager.settings.sources):
-        #     if str(self.search_source.filename).endswith(str(source.filename)):
-        #         self.review_manager.settings.sources[position] = self.search_source
-        #         break
-
-        # self.review_manager.save_settings()
         self.search_source.save()
         # TODO : add to git
-
-    # def _get_search_source(
-    #     self, settings: typing.Optional[dict]
-    # ) -> colrev.search_file.ExtendedSearchFile:
-    #     if settings:
-    #         # Crossref as a search_source
-    #         return settings
-
-    #     # Crossref as an md-prep source
-    #     crossref_md_filename = Path("data/search/md_crossref.bib")
-    #     crossref_md_source_l = [
-    #         s
-    #         for s in self.review_manager.settings.sources
-    #         if s.filename == crossref_md_filename
-    #     ]
-    #     if crossref_md_source_l:
-    #         return crossref_md_source_l[0]
-
-    #     return colrev.search_file.ExtendedSearchFile(
-    #         platform="colrev.crossref",
-    #         filepath=crossref_md_filename,
-    #         search_type=SearchType.MD,
-    #         search_string="",
-    #         comment="",
-    #     )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -295,7 +264,6 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                 del record.data[Fields.LANGUAGE]
 
         doi_connector.DOIConnector.get_link_from_doi(
-            review_manager=self.review_manager,
             record=record,
         )
 

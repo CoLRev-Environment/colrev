@@ -24,6 +24,7 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
@@ -126,7 +127,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
             api = europe_pmc_api.EPMCAPI(
                 params={"query": quote(record_input.data[Fields.TITLE])},
                 email=self.review_manager.get_committer()[1],
-                session=self.review_manager.get_cached_session(),
+                session=colrev.utils.get_cached_session(),
             )
 
             record = record_input.copy_prep_rec()
@@ -311,7 +312,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
             api = europe_pmc_api.EPMCAPI(
                 params=self.search_source.search_string,
                 email=email,
-                session=self.review_manager.get_cached_session(),
+                session=colrev.utils.get_cached_session(),
             )
 
             while api.url:

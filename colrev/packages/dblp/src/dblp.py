@@ -20,6 +20,7 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
@@ -166,7 +167,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         api = dblp_api.DBLPAPI(
             params={},
             email=self.email,
-            session=self.review_manager.get_cached_session(),
+            session=colrev.utils.get_cached_session(),
             timeout=self._timeout,
         )
         api.check_availability()
@@ -180,7 +181,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         api = dblp_api.DBLPAPI(
             params={},
             email=self.email,
-            session=self.review_manager.get_cached_session(),
+            session=colrev.utils.get_cached_session(),
             rerun=True,
             timeout=self._timeout,
         )
@@ -214,7 +215,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         api = dblp_api.DBLPAPI(
             params=self.search_source.search_string,
             email=self.email,
-            session=self.review_manager.get_cached_session(),
+            session=colrev.utils.get_cached_session(),
             rerun=(len(dblp_feed.feed_records) < 100 or rerun),
             timeout=self._timeout,
         )
@@ -393,7 +394,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
             api = dblp_api.DBLPAPI(
                 params={"query": record.data[Fields.TITLE]},
                 email=self.email,
-                session=self.review_manager.get_cached_session(),
+                session=colrev.utils.get_cached_session(),
                 timeout=timeout,
             )
 

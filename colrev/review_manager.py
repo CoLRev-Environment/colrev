@@ -15,11 +15,9 @@ from __future__ import annotations
 import logging
 import os
 import typing
-from datetime import timedelta
 from pathlib import Path
 
 import git
-import requests_cache
 import yaml
 
 import colrev.dataset
@@ -29,7 +27,6 @@ import colrev.ops.checker
 import colrev.record.qm.quality_model
 import colrev.settings
 from colrev.constants import Colors
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.paths import PathManager
 
@@ -332,16 +329,6 @@ class ReviewManager:
         import colrev.env.environment_manager
 
         return colrev.env.environment_manager.EnvironmentManager()
-
-    @classmethod
-    def get_cached_session(cls) -> requests_cache.CachedSession:  # pragma: no cover
-        """Get a cached session"""
-
-        return requests_cache.CachedSession(
-            str(Filepaths.PREP_REQUESTS_CACHE_FILE),
-            backend="sqlite",
-            expire_after=timedelta(days=30),
-        )
 
     @classmethod
     def get_resources(cls) -> colrev.env.resources.Resources:  # pragma: no cover

@@ -49,26 +49,26 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.verbose_mode = verbose_mode
         """Initialize the ProsperoSearchSource plugin."""
 
-        self.search_source = self._get_search_source(settings)
+        self.search_source = settings
         self.review_manager = source_operation.review_manager
         self.operation = source_operation
         self.search_word: typing.Optional[str] = None
 
-    def _get_search_source(
-        self, settings: typing.Optional[dict]
-    ) -> colrev.search_file.ExtendedSearchFile:
-        """Retrieve and configure the search source based on provided settings."""
-        if settings:
-            return self.settings_class(**settings)
+    # def _get_search_source(
+    #     self, settings: typing.Optional[dict]
+    # ) -> colrev.search_file.ExtendedSearchFile:
+    #     """Retrieve and configure the search source based on provided settings."""
+    #     if settings:
+    #         return self.settings_class(**settings)
 
-        fallback_filename = Path("data/search/prospero.bib")
-        return colrev.search_file.ExtendedSearchFile(
-            platform="colrev.prospero",
-            search_results_path=fallback_filename,
-            search_type=SearchType.API,
-            search_string="",
-            comment="fallback search_source",
-        )
+    #     fallback_filename = Path("data/search/prospero.bib")
+    #     return colrev.search_file.ExtendedSearchFile(
+    #         platform="colrev.prospero",
+    #         search_results_path=fallback_filename,
+    #         search_type=SearchType.API,
+    #         search_string="",
+    #         comment="fallback search_source",
+    #     )
 
     @classmethod
     def add_endpoint(

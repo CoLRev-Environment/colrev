@@ -174,7 +174,6 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
                 del record.data[Fields.LANGUAGE]
 
         doi_connector.DOIConnector.get_link_from_doi(
-            review_manager=self.review_manager,
             record=record,
         )
 

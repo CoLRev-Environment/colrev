@@ -19,6 +19,7 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
 import colrev.search_file
+import colrev.utils
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -186,7 +187,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             api = pubmed_api.PubmedAPI(
                 parameters=self.search_source.search_string,
                 email=self.email,
-                session=self.review_manager.get_cached_session(),
+                session=colrev.utils.get_cached_session(),
             )
             returned_record = api.query_id(pubmed_id=test_rec["pubmedid"])
 
@@ -212,7 +213,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             api = pubmed_api.PubmedAPI(
                 parameters=self.search_source.search_string,
                 email=self.email,
-                session=self.review_manager.get_cached_session(),
+                session=colrev.utils.get_cached_session(),
                 logger=self.logger,
             )
 
@@ -328,7 +329,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         api = pubmed_api.PubmedAPI(
             parameters=self.search_source.search_string,
             email=self.email,
-            session=self.review_manager.get_cached_session(),
+            session=colrev.utils.get_cached_session(),
             logger=self.logger,
         )
 
@@ -367,7 +368,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         api = pubmed_api.PubmedAPI(
             parameters=self.search_source.search_string,
             email=self.email,
-            session=self.review_manager.get_cached_session(),
+            session=colrev.utils.get_cached_session(),
             logger=self.logger,
         )
 

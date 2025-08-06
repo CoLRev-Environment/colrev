@@ -68,7 +68,6 @@ class SearchSourcePackageBaseClass(ABC):
     """
 
     ci_supported: bool
-    settings_class: Type[colrev.search_file.ExtendedSearchFile]
     source_identifier: str
     search_types: list[SearchType]
     heuristic_status: SearchSourceHeuristicStatus

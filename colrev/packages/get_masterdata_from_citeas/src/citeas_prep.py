@@ -10,11 +10,11 @@ import requests
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
+import colrev.utils
 from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
@@ -49,7 +49,7 @@ class CiteAsPrep(base_classes.PrepPackageBaseClass):
         self.same_record_type_required = (
             prep_operation.review_manager.settings.is_curated_masterdata_repo()
         )
-        self.session = prep_operation.review_manager.get_cached_session()
+        self.session = colrev.utils.get_cached_session()
         _, self.email = prep_operation.review_manager.get_committer()
 
     def _cite_as_json_to_record(

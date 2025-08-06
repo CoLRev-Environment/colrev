@@ -9,9 +9,9 @@ import requests
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.utils
 from colrev.constants import Fields
 
 
@@ -51,7 +51,7 @@ class RemoveError500URLsPrep(base_classes.PrepPackageBaseClass):
     ) -> colrev.record.record.Record:
         """Prepare the record by removing URLs with 500 errors"""
 
-        session = self.review_manager.get_cached_session()
+        session = colrev.utils.get_cached_session()
 
         try:
             if Fields.URL in record.data:

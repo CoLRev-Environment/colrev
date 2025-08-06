@@ -8,7 +8,6 @@ from typing import Optional
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.record.record
@@ -52,12 +51,12 @@ class DOIMetadataPrep(base_classes.PrepPackageBaseClass):
         if Fields.DOI not in record.data:
             return record
         doi_connector.DOIConnector.retrieve_doi_metadata(
-            review_manager=self.review_manager,
             record=record,
+            is_curated_repo=self.review_manager.settings.is_curated_masterdata_repo(),
+            logger=self.logger,
             timeout=self.prep_operation.timeout,
         )
         doi_connector.DOIConnector.get_link_from_doi(
             record=record,
-            review_manager=self.review_manager,
         )
         return record

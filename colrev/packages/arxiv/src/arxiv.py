@@ -178,7 +178,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
     #         )
 
     #         headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
-    #         session = self.review_manager.get_cached_session()
+    #         session = colrev.utils.get_cached_session()
 
     #         # self.logger.debug(url)
     #         ret = session.request("GET", url, headers=headers, timeout=timeout)
