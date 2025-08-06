@@ -503,6 +503,18 @@ def load_settings(*, settings_path: Path) -> Settings:
             f"Failed to load settings: {exc}"
         ) from exc
 
+    search_path = settings_path.parent / Path("data/search")
+    search_source_paths = search_path.glob(
+        "**/*_search_history.json"
+    )
+
+    loaded_dict["sources"] = []
+    for search_source_path in search_source_paths:
+        with open(search_source_path, "r", encoding="utf-8") as file:
+            source_dict = json.load(file)
+            loaded_dict["sources"].append(source_dict)
+
+
     return _load_settings_from_dict(loaded_dict)
 
 

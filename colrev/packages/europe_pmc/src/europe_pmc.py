@@ -47,13 +47,6 @@ class EuropePMCSearchSourceSettings(colrev.search_file.ExtendedSearchFile, BaseM
     version: typing.Optional[str]
     comment: typing.Optional[str]
 
-    _details = {
-        "search_string": {
-            "tooltip": "Currently supports a scope item "
-            "with venue_key and journal_abbreviated fields."
-        },
-    }
-
 
 class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Europe PMC"""
