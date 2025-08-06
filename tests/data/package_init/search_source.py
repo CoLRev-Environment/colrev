@@ -4,7 +4,6 @@ import logging
 from typing import Optional
 
 from pathlib import Path
-
 import colrev.search_file
 import colrev.process.operation
 from colrev.package_manager.package_base_classes import SearchSourcePackageBaseClass

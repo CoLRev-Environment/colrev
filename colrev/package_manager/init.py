@@ -365,6 +365,7 @@ def _get_package_imports(plugin: str) -> str:
         return "import colrev.ops.data"
     if plugin == "search_source":
         return """from pathlib import Path
+import colrev.search_file
 import colrev.process.operation"""
     if plugin == "prep":
         return "import colrev.ops.prep"
