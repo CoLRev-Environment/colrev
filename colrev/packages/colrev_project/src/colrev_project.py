@@ -86,7 +86,8 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
             platform=cls.endpoint,
             search_results_path=filename,
             search_type=SearchType.OTHER,
-            search_string={"scope": {"url": params}},
+            search_string="",
+            search_parameters={"scope": {"url": params}},
             comment="",
         )
         operation.add_source_and_search(search_source)

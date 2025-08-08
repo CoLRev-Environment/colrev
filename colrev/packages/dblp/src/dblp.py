@@ -40,12 +40,12 @@ class DBLPSearchSourceSettings(colrev.search_file.ExtendedSearchFile, BaseModel)
     platform: str
     filepath: Path
     search_type: SearchType
-    search_string: dict
+    search_parameters: dict
     version: typing.Optional[str]
     comment: typing.Optional[str]
 
     _details = {
-        "search_string": {
+        "search_parameters": {
             "tooltip": "Currently supports a scope item "
             "with venue_key and journal_abbreviated fields."
         },
@@ -142,7 +142,8 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     platform=cls.endpoint,
                     search_results_path=filename,
                     search_type=SearchType.API,
-                    search_string={"query": query},
+                    search_string="",
+                    search_parameters={"query": query},
                     comment="",
                 )
             else:
@@ -213,7 +214,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
 
         api = dblp_api.DBLPAPI(
-            params=self.search_source.search_string,
+            params=self.search_source.search_parameters,
             email=self.email,
             session=colrev.utils.get_cached_session(),
             rerun=(len(dblp_feed.feed_records) < 100 or rerun),
@@ -245,8 +246,8 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
             for retrieved_record in api.retrieve_records():
                 try:
 
-                    if "scope" in self.search_source.search_string and (
-                        f"{self.search_source.search_string['scope']['venue_key']}/"
+                    if "scope" in self.search_source.search_parameters and (
+                        f"{self.search_source.search_parameters['scope']['venue_key']}/"
                         not in retrieved_record.data["dblp_key"]
                         or retrieved_record.data.get(Fields.ENTRYTYPE, "")
                         not in [
@@ -270,23 +271,23 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
-        self.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
         assert source.search_type in self.search_types
 
         # maybe : validate/assert that the venue_key is available
         if source.search_type == SearchType.TOC:
-            assert "scope" in source.search_string
-            if "venue_key" not in source.search_string["scope"]:
+            assert "scope" in source.search_parameters
+            if "venue_key" not in source.search_parameters["scope"]:
                 raise colrev_exceptions.InvalidQueryException(
                     "venue_key required in search_parameters/scope"
                 )
-            if "journal_abbreviated" not in source.search_string["scope"]:
+            if "journal_abbreviated" not in source.search_parameters["scope"]:
                 raise colrev_exceptions.InvalidQueryException(
                     "journal_abbreviated required in search_parameters/scope"
                 )
         elif source.search_type == SearchType.API:
-            assert "query" in source.search_string
+            assert "query" in source.search_parameters
 
         elif source.search_type == SearchType.MD:
             pass  # No parameters required
@@ -295,7 +296,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "scope or query required in search_parameters"
             )
 
-        self.logger.debug("SearchSource %s validated", source.filename)
+        self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def search(self, rerun: bool) -> None:
         """Run a search of DBLP"""

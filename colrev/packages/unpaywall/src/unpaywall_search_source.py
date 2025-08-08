@@ -109,7 +109,8 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
                 platform=cls.endpoint,
                 search_results_path=filename,
                 search_type=SearchType.API,
-                search_string=search_parameters,
+                search_string="",
+                search_parameters=search_parameters,
                 comment="",
             )
         else:

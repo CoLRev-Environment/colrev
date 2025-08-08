@@ -251,8 +251,8 @@ class Search(colrev.process.operation.Operation):
         if self.review_manager.settings.search.retrieve_forthcoming:
             return
 
-        if source.filename.suffix != ".bib":
-            print(f"{source.filename.suffix} not yet supported")
+        if source.search_results_path.suffix != ".bib":
+            print(f"{source.search_results_path.suffix} not yet supported")
             return
 
         records = colrev.loader.load_utils.load(
@@ -271,7 +271,7 @@ class Search(colrev.process.operation.Operation):
         )
         records = {r[Fields.ID]: r for r in record_list}
 
-        write_file(records_dict=records, filename=source.filename)
+        write_file(records_dict=records, filename=source.search_results_path)
 
     # pylint: disable=no-self-argument
     def _check_source_selection_exists(var_name: str) -> typing.Callable:  # type: ignore
@@ -315,7 +315,8 @@ class Search(colrev.process.operation.Operation):
         files = [
             f
             for f in files
-            if f not in [s.filename for s in self.review_manager.settings.sources]
+            if f
+            not in [s.search_results_path for s in self.review_manager.settings.sources]
             and f.suffix
             in [
                 ".bib",

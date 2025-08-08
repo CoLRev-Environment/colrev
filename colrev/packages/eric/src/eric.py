@@ -132,7 +132,8 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
                 platform=cls.endpoint,
                 search_results_path=filename,
                 search_type=SearchType.API,
-                search_string={"query": search, "start": start, "rows": rows},
+                search_string="",
+                search_parameters={"query": search, "start": start, "rows": rows},
                 comment="",
             )
 

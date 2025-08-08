@@ -54,44 +54,28 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.operation = source_operation
         self.search_word: typing.Optional[str] = None
 
-    # def _get_search_source(
-    #     self, settings: typing.Optional[dict]
-    # ) -> colrev.search_file.ExtendedSearchFile:
-    #     """Retrieve and configure the search source based on provided settings."""
-    #     if settings:
-    #         return self.settings_class(**settings)
-
-    #     fallback_filename = Path("data/search/prospero.bib")
-    #     return colrev.search_file.ExtendedSearchFile(
-    #         platform="colrev.prospero",
-    #         search_results_path=fallback_filename,
-    #         search_type=SearchType.API,
-    #         search_string="",
-    #         comment="fallback search_source",
-    #     )
-
     @classmethod
     def add_endpoint(
         cls, operation: Search, params: str
     ) -> colrev.search_file.ExtendedSearchFile:
         """Adds Prospero as a search source endpoint based on user-provided parameters."""
         if len(params) == 0:
+            # TODO : test prospero search
             search_source = operation.create_api_source(platform=cls.endpoint)
             search_source.search_string[Fields.URL] = (
-                cls.db_url + "search?" + "#searchadvanced"
+                cls.db_url + "search?" + search_source.search_string + "#searchadvanced"
             )
-            search_source.search_string["version"] = "0.1.0"
+            search_source.version = "0.1.0"
             operation.add_source_and_search(search_source)
             return search_source
 
-        query = {"query": params}
         filename = operation.get_unique_filename(file_path_string="prospero_results")
 
         new_search_source = colrev.search_file.ExtendedSearchFile(
             platform=cls.endpoint,
             search_results_path=filename,
             search_type=SearchType.API,
-            search_string=query,
+            search_string=params,
             comment="Search source for Prospero protocols",
         )
         operation.add_source_and_search(new_search_source)

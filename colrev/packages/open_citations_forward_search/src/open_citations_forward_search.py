@@ -59,7 +59,10 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
             platform="colrev.open_citations_forward_search",
             search_results_path=Path("data/search/forward_search.bib"),
             search_type=SearchType.FORWARD_SEARCH,
-            search_string={"scope": {Fields.STATUS: "rev_included|rev_synthesized"}},
+            search_string="",
+            search_parameters={
+                "scope": {Fields.STATUS: "rev_included|rev_synthesized"}
+            },
             comment="",
         )
 

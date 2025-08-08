@@ -36,6 +36,8 @@ from colrev.packages.crossref.src import crossref_api
 class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Crossref API"""
 
+    # TODO : CURRENT_SYNTAX_VERSION = "1.0.0"
+
     endpoint = "colrev.crossref"
     source_identifier = Fields.DOI
 
@@ -62,57 +64,11 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.verbose_mode = verbose_mode
 
         self.review_manager = source_operation.review_manager
-        # self.search_source = self._get_search_source(settings)
         self.search_source = settings
         self.crossref_lock = Lock()
         self.language_service = colrev.env.language_service.LanguageService()
 
-        self._update_params()
-
         self.api = crossref_api.CrossrefAPI(url=self.search_source.search_string)
-
-    def _update_params(self) -> None:
-
-        if not self.search_source.search_string:
-            # md-source
-            return
-
-        if self.search_source.search_string.startswith("https://api.crossref.org/"):
-            return
-
-        # TODO : is the rest still needed?
-        # convert params to crossref url
-        if (
-            "scope" in self.search_source.search_string
-            and "issn" in self.search_source.search_string["scope"]
-        ):
-
-            url = (
-                self._api_url
-                + "journals/"
-                + self.search_source.search_string["scope"]["issn"][0]
-                + "/works"
-            )
-            self.search_source.search_string.pop("scope")
-
-        elif "query" in self.search_source.search_string:
-            url = (
-                self._api_url
-                + "works?"
-                + "query.bibliographic="
-                + self.search_source.search_string.replace(" ", "+")
-            )
-            # self.search_source.search_string.pop("query")
-
-        else:
-            raise NotImplementedError
-
-        # pylint: disable=colrev-missed-constant-usage
-        self.search_source.search_string = url
-        self.search_source.version = "1.0.0"
-
-        self.search_source.save()
-        # TODO : add to git
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -161,9 +117,8 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         j_name = input("Enter journal name to lookup the ISSN:")
 
-        endpoint = crossref_api.Endpoint(
-            "https://api.crossref.org/journals?query=" + j_name.replace(" ", "+")
-        )
+        url = "https://api.crossref.org/journals?query=" + j_name.replace(" ", "+")
+        endpoint = crossref_api.Endpoint(url)
 
         questions = [
             inquirer.List(
@@ -219,7 +174,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                     platform="colrev.crossref",
                     search_results_path=filename,
                     search_type=SearchType.API,
-                    search_string=query,
+                    search_string=query["url"],
                     comment="",
                 )
 
@@ -232,7 +187,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                     platform="colrev.crossref",
                     search_results_path=filename,
                     search_type=SearchType.TOC,
-                    search_string=params_dict,
+                    search_string=params_dict["url"],
                     comment="",
                 )
 

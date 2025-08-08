@@ -363,7 +363,8 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             platform="colrev.semanticscholar",
             search_results_path=filename,
             search_type=SearchType.API,
-            search_string=search_params,
+            search_string="",
+            search_parameters=search_params,
             comment="",
         )
         operation.add_source_and_search(search_source)

@@ -135,7 +135,8 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
                 platform="colrev.github",
                 search_results_path=filename,
                 search_type=SearchType.API,
-                search_string=query,
+                search_string="",
+                search_parameters=query,
                 comment="",
             )
 

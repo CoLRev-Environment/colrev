@@ -65,6 +65,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.review_manager = source_operation.review_manager
         self.source_operation = source_operation
 
+        # TODO : files_dir: subdir_pattern etc. should be prep_parameters
         self.search_source = settings
 
         if not self.review_manager.in_ci_environment():
@@ -73,13 +74,13 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
         self.pdfs_path = self.review_manager.path / Path(
-            self.search_source.search_string["scope"]["path"]
+            self.search_source.search_parameters["scope"]["path"]
         )
 
         self.subdir_pattern: re.Pattern = re.compile("")
         self.r_subdir_pattern: re.Pattern = re.compile("")
-        if "subdir_pattern" in self.search_source.search_string.get("scope", {}):
-            self.subdir_pattern = self.search_source.search_string["scope"][
+        if "subdir_pattern" in self.search_source.search_parameters.get("scope", {}):
+            self.subdir_pattern = self.search_source.search_parameters["scope"][
                 "subdir_pattern"
             ]
             self.logger.info(f"Activate subdir_pattern: {self.subdir_pattern}")
@@ -98,7 +99,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         record_dict: dict,
         records: dict,
-        search_source: Path,
+        search_results_path: Path,
     ) -> bool:
         updated = True
         not_updated = False
@@ -106,7 +107,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         c_rec_l = [
             r
             for r in records.values()
-            if f"{search_source}/{record_dict['ID']}" in r[Fields.ORIGIN]
+            if f"{search_results_path}/{record_dict['ID']}" in r[Fields.ORIGIN]
         ]
         if len(c_rec_l) == 1:
             c_rec = c_rec_l.pop()
@@ -136,7 +137,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         #     "Checking for PDFs that no longer exist"
         # )
 
-        if not self.search_source.filename.is_file():
+        if not self.search_source.search_results_path.is_file():
             return
 
         search_rd = colrev.loader.load_utils.load(
@@ -156,12 +157,12 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                     updated = self._update_if_pdf_renamed(
                         record_dict=record_dict,
                         records=records,
-                        search_source=self.search_source.filename,
+                        search_results_path=self.search_source.search_results_path,
                     )
                     if updated:
                         continue
                 to_remove.append(
-                    f"{self.search_source.filename.name}/{record_dict['ID']}"
+                    f"{self.search_source.search_results_path.name}/{record_dict['ID']}"
                 )
                 files_removed.append(record_dict[Fields.FILE])
 
@@ -173,7 +174,9 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if len(search_rd.values()) != 0:
 
-            write_file(records_dict=search_rd, filename=self.search_source.filename)
+            write_file(
+                records_dict=search_rd, filename=self.search_source.search_results_path
+            )
 
         if records:
             for record_dict in records.values():
@@ -344,7 +347,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
                 # add details based on path
                 record_dict = self._update_fields_based_on_pdf_dirs(
-                    record_dict=record_dict, params=self.search_source.search_string
+                    record_dict=record_dict, params=self.search_source.search_parameters
                 )
 
         except colrev_exceptions.TEIException:
@@ -376,12 +379,12 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         source = self.search_source
 
-        self.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
         assert source.search_type == SearchType.FILES
 
-        if "subdir_pattern" in source.search_string:
-            if source.search_string["subdir_pattern"] != [
+        if "subdir_pattern" in source.search_parameters:
+            if source.search_parameters["subdir_pattern"] != [
                 "NA",
                 "volume_number",
                 Fields.YEAR,
@@ -391,20 +394,20 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                     "subdir_pattern not in [NA, volume_number, year, volume]"
                 )
 
-        if "sub_dir_pattern" in source.search_string:
+        if "sub_dir_pattern" in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "sub_dir_pattern: deprecated. use subdir_pattern"
             )
 
-        if "scope" not in source.search_string:
+        if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "scope required in search_parameters"
             )
-        if "path" not in source.search_string["scope"]:
+        if "path" not in source.search_parameters["scope"]:
             raise colrev_exceptions.InvalidQueryException(
                 "path required in search_parameters/scope"
             )
-        self.logger.debug("SearchSource %s validated", source.filename)
+        self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def _add_md_string(self, *, record_dict: dict) -> dict:
         # To identify potential duplicates
@@ -749,7 +752,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             platform="colrev.files_dir",
             search_results_path=filename,
             search_type=SearchType.FILES,
-            search_string={"scope": {"path": "data/pdfs"}},
+            search_string="",
             comment="",
         )
         operation.add_source_and_search(search_source)

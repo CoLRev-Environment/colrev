@@ -22,7 +22,6 @@ def test_settings_load() -> None:
     settings = colrev.settings.load_settings(
         settings_path=Path(colrev.__file__).parents[0] / Path("ops/init/settings.json")
     )
-    settings.sources[0].comment = "user comment"
     settings.screen.criteria = {  # type: ignore
         "test": colrev.settings.ScreenCriterion(
             explanation="Explanation of test",

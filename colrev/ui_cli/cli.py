@@ -85,10 +85,12 @@ def _select_source_interactively(
     selected: str, review_manager: colrev.review_manager.ReviewManager
 ) -> str:
     """Select a source interactively"""
+    sources = [str(s.search_results_path) for s in review_manager.settings.sources]
+    if selected is None:
+        return ",".join(sources)
     if selected != "select_interactively":
         return selected
 
-    sources = [str(s.filename) for s in review_manager.settings.sources]
     questions = [
         inquirer.Checkbox(
             "source",

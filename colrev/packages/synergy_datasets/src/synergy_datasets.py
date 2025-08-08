@@ -145,7 +145,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
             platform="colrev.synergy_datasets",
             search_results_path=filename,
             search_type=SearchType.API,
-            search_string={"dataset": dataset},
+            search_string=f"dataset={dataset}",
             comment="",
         )
         operation.add_source_and_search(search_source)
@@ -158,7 +158,12 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         Repo.clone_from(
             "https://github.com/asreview/synergy-dataset", temp_path, depth=1
         )
-        dataset_name = self.search_source.search_string["dataset"]
+        param_dict = {}
+        for item in self.search_source.search_string.split(";"):
+            key, value = item.split("=")
+            param_dict[key] = value
+
+        dataset_name = param_dict["dataset"]
         dataset_df = pd.read_csv(temp_path / Path("datasets") / dataset_name)
 
         # check data structure

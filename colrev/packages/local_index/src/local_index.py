@@ -243,7 +243,8 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                 platform=cls.endpoint,
                 search_results_path=filename,
                 search_type=SearchType.API,
-                search_string={"query": params},
+                search_string="",
+                search_parameters={"query": params},
                 comment="",
             )
         operation.add_source_and_search(search_source)

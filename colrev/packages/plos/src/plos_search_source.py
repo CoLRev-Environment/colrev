@@ -2,7 +2,6 @@
 """SearchSource: plos"""
 import datetime
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
@@ -49,41 +48,11 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        self.search_source = self._get_search_source(settings)
+        self.search_source = settings
         self.plos_lock = Lock()
         self.language_service = colrev.env.language_service.LanguageService()
 
         self.api = plos_api.PlosAPI(params=self.search_source.search_string)
-
-    # Function to define the search source.
-    #   If setting exist, use that settings
-    #   If not, return the .bib
-    #   If it does not exist, create new one (.bib)
-    def _get_search_source(
-        self, settings: typing.Optional[dict]
-    ) -> colrev.search_file.ExtendedSearchFile:
-        if settings:
-            # plos as a search_source
-            return settings
-
-        raise NotImplementedError
-        # # plos as an .-prep source
-        # plos_md_filename = Path("data/search/md_plos.bib")
-        # plos_md_source_l = [
-        #     s
-        #     for s in self.review_manager.settings.sources
-        #     if s.filename == plos_md_filename
-        # ]
-        # if plos_md_source_l:
-        #     return plos_md_source_l[0]
-
-        # return colrev.search_file.ExtendedSearchFile(
-        #     platform="colrev.plos",
-        #     filepath=plos_md_filename,
-        #     search_type=SearchType.MD,
-        #     search_string="",
-        #     comment="",
-        # )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -149,7 +118,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
                 platform="colrev.plos",
                 search_results_path=filename,
                 search_type=SearchType.API,
-                search_string=query,
+                search_string=query["url"],
                 comment="",
             )
 

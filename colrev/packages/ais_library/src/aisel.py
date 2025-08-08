@@ -69,7 +69,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: dict,
+        settings: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
@@ -195,7 +195,8 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                     platform=cls.endpoint,
                     search_results_path=filename,
                     search_type=SearchType.API,
-                    search_string=q_params,
+                    search_string="",
+                    search_parameters=q_params,
                     comment="",
                 )
             else:

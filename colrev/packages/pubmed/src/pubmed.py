@@ -122,11 +122,6 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 host = urlparse(params_dict["url"]).hostname
 
                 if host and host.endswith("pubmed.ncbi.nlm.nih.gov"):
-                    query = {
-                        "query": params_dict["url"].replace(
-                            "https://pubmed.ncbi.nlm.nih.gov/?term=", ""
-                        )
-                    }
 
                     filename = operation.get_unique_filename(file_path_string="pubmed")
                     # params = (
@@ -137,7 +132,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                         platform=cls.endpoint,
                         search_results_path=filename,
                         search_type=SearchType.API,
-                        search_string=query,
+                        search_string=params_dict["url"],
                         comment="",
                     )
                 else:

@@ -381,7 +381,8 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                     platform=cls.endpoint,
                     search_results_path=filename,
                     search_type=SearchType.API,
-                    search_string={"query": query},
+                    search_string="",
+                    search_parameters={"query": query},
                     comment="",
                 )
             else:

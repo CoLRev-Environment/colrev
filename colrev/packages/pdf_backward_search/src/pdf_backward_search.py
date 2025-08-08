@@ -77,7 +77,8 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
             platform="colrev.pdf_backward_search",
             search_results_path=Path("data/search/pdf_backward_search.bib"),
             search_type=SearchType.BACKWARD_SEARCH,
-            search_string={
+            search_string="",
+            search_parameters={
                 "scope": {"colrev_status": "rev_included|rev_synthesized"},
                 "min_intext_citations": 3,
             },
