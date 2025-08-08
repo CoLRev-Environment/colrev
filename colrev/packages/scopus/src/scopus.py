@@ -40,6 +40,10 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.operation = source_operation
 
     def _simple_api_search(self, query: str) -> None:
+
+        # Note: run the following in the command line to set the API key:
+        # export SCOPUS_API_KEY='your_api_key_here'
+
         api_key = os.getenv("SCOPUS_API_KEY")
         if not api_key:
             self.review_manager.logger.info(
@@ -49,9 +53,18 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         try:
             url = "https://api.elsevier.com/content/search/scopus"
-            params = {"query": query, "count": 50, "apiKey": api_key}
+            params = {
+                "query": query,
+                # The response.text showed that the count was too high.
+                # To retrieve all results, you might need to paginate (using 'start' and 'count').
+                "count": 10,
+                "start": 0,
+                "apiKey": api_key,
+            }
 
             response = requests.get(url, params=params, timeout=30)
+            # For debugging purposes, you can uncomment the next line to see the raw response
+            # print(response.json())
 
             if response.status_code == 200:
                 data = response.json()
@@ -140,6 +153,8 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         operation: colrev.ops.search.Search,
         params: str,
     ) -> colrev.settings.SearchSource:
+        # TODO: users should have the option to add a DB or API search here.
+        # the pubmed SearchSource could be used as an example
         search_source = operation.create_db_source(
             search_source_cls=cls,
             params={},
@@ -149,6 +164,7 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def search(self, rerun: bool) -> None:
         query = self.search_source.search_parameters.get("query", "")
+        # TODO : make sure the query variable is set correctly (based on the search source settings)
 
         if query and self.search_source.search_type == SearchType.API:
             self.review_manager.logger.info("Attempting API search...")
