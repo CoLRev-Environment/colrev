@@ -41,9 +41,6 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def _simple_api_search(self, query: str) -> None:
 
-        # Note: run the following in the command line to set the API key:
-        # export SCOPUS_API_KEY='your_api_key_here'
-
         api_key = os.getenv("SCOPUS_API_KEY")
         if not api_key:
             self.review_manager.logger.info(
@@ -63,8 +60,7 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
             }
 
             response = requests.get(url, params=params, timeout=30)
-            # For debugging purposes, you can uncomment the next line to see the raw response
-            # print(response.json())
+            print(response.json())
 
             if response.status_code == 200:
                 data = response.json()
