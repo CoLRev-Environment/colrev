@@ -40,7 +40,6 @@ class XPLORE:
         "publisher",
         "pubtype",
         "d-year",
-        "end_page",
         "facet",
         "full_name",
         "html_url",

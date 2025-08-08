@@ -1,4 +1,5 @@
 import requests
+
 from colrev.env.package_manager import BaseSearchSource
 from colrev.record import Record
 from colrev.search import SearchFeed
@@ -44,7 +45,7 @@ class ScopusSearchSource(BaseSearchSource):
                 "title": title,
                 "doi": doi,
                 "year": year,
-                "source": "Scopus"
+                "source": "Scopus",
             }
 
             record = Record(data=record_dict)
