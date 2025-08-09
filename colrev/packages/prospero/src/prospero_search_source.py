@@ -50,8 +50,6 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Initialize the ProsperoSearchSource plugin."""
 
         self.search_source = settings
-        self.review_manager = source_operation.review_manager
-        self.operation = source_operation
         self.search_word: typing.Optional[str] = None
 
     @classmethod
@@ -124,7 +122,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         self, *, prospero_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
         """Add newly scraped records to the feed."""
-        if rerun and self.review_manager:
+        if rerun:
             self.logger.info("Performing a search of the full history (may take time)")
 
         search_word = self.get_search_word()

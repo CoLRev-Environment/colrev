@@ -64,7 +64,6 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.pubmed_lock = Lock()
 
         self.source_operation = source_operation
-        self.quality_model = self.review_manager.get_qm()
         _, self.email = self.review_manager.get_committer()
 
     @classmethod
