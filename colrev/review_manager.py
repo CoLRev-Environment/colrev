@@ -312,7 +312,6 @@ class ReviewManager:
         status_stats = self.get_status_stats()
         return status_stats.completeness_condition
 
-    @classmethod
     def get_search_operation(
         self, *, notify_state_transition_operation: bool = True
     ) -> colrev.ops.search.Search:  # pragma: no cover
