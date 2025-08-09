@@ -1,6 +1,6 @@
-import colrev.process.operation
+
 import colrev.process.status
-from colrev.constants import Fields
+from colrev.constants import Colors, Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
@@ -21,6 +21,8 @@ def compare(
 def test_check_status_stats_attributes(  # type: ignore
     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> None:
+
+    print(f"{Colors.RED}{base_repo_review_manager.path}{Colors.END}")
 
     helpers.reset_commit(base_repo_review_manager, commit="changed_settings_commit")
     expected_stats = base_repo_review_manager.get_status_stats()
