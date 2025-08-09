@@ -3,19 +3,19 @@
 from __future__ import annotations
 
 import logging
-import typing
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import Field
 
 import colrev.ops.prep
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.packages.ieee.src.ieee_api
 import colrev.record.record
 import colrev.record.record_prep
+import colrev.search_file
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
@@ -29,8 +29,6 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
     """IEEEXplore"""
 
     flag = True
-
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
 
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
@@ -49,18 +47,22 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        search_file: Optional[colrev.search_file.ExtendedSearchFile] = None,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
 
-        if settings:
-            self.search_source = self.settings_class(**settings)
+        if search_file:
+            self.search_source = search_file
         else:
-            self.search_source = colrev.settings.SearchSource(
-                endpoint=self.endpoint,
-                filename=Path("data/search/ieee.bib"),
+            self.search_source = colrev.search_file.ExtendedSearchFile(
+                platform=self.endpoint,
+                search_results_path=Path("data/search/ieee.bib"),
                 search_type=SearchType.OTHER,
-                search_parameters={},
+                search_string="",
                 comment="",
             )
         self.source_operation = source_operation
@@ -83,7 +85,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls, operation: colrev.ops.search.Search, params: str
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -101,7 +103,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.create_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(platform=cls.endpoint)
 
             # pylint: disable=colrev-missed-constant-usage
             elif (
@@ -128,10 +130,11 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
                     file_path_string=f"ieee_{last_value}"
                 )
 
-                search_source = colrev.settings.SearchSource(
-                    endpoint=cls.endpoint,
-                    filename=filename,
+                search_source = colrev.search_file.ExtendedSearchFile(
+                    platform=cls.endpoint,
+                    search_results_path=filename,
                     search_type=SearchType.API,
+                    search_string="",
                     search_parameters=search_parameters,
                     comment="",
                 )
@@ -153,10 +156,12 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Run a search of IEEEXplore"""
 
         if self.search_source.search_type == SearchType.API:
-            ieee_feed = self.search_source.get_api_feed(
-                review_manager=self.review_manager,
+            ieee_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier=self.source_identifier,
+                search_source=self.search_source,
                 update_only=(not rerun),
+                logger=self.logger,
+                verbose_mode=self.verbose_mode,
             )
             self._run_api_search(ieee_feed=ieee_feed, rerun=rerun)
 
@@ -186,7 +191,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         api_key = self._get_api_key()
 
         api = colrev.packages.ieee.src.ieee_api.XPLORE(
-            parameters=self.search_source.search_parameters, api_key=api_key
+            parameters=self.search_source.search_string, api_key=api_key
         )
         while True:
             retrieved_records = api.get_records()
@@ -359,7 +364,9 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record.Record,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for IEEEXplore"""
 

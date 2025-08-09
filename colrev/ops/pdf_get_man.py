@@ -11,10 +11,12 @@ import pandas as pd
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
+from colrev import utils
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 
 
 class PDFGetMan(colrev.process.operation.Operation):
@@ -116,9 +118,7 @@ class PDFGetMan(colrev.process.operation.Operation):
             conditions=[{Fields.STATUS: RecordState.pdf_needs_manual_retrieval}]
         )
         pdf_get_man_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
-        self.review_manager.logger.debug(
-            self.review_manager.p_printer.pformat(pdf_get_man_data)
-        )
+        self.review_manager.logger.debug(utils.pformat(pdf_get_man_data))
         return pdf_get_man_data
 
     def pdfs_retrieved_manually(self) -> bool:
@@ -180,10 +180,7 @@ class PDFGetMan(colrev.process.operation.Operation):
     def main(self) -> None:
         """Get PDFs manually (main entrypoint)"""
 
-        if (
-            self.review_manager.in_ci_environment()
-            and not self.review_manager.in_test_environment()
-        ):
+        if utils.in_ci_environment() and not self.review_manager.in_test_environment():
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev pdf-get-man",
                 detailed_trace="pdf-get-man not available in ci environment",
@@ -194,7 +191,7 @@ class PDFGetMan(colrev.process.operation.Operation):
             self.review_manager.settings.pdf_get.pdf_get_man_package_endpoints
         )
 
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
 
         for pdf_get_man_package_endpoint in pdf_get_man_package_endpoints:
             pdf_get_man_class = package_manager.get_package_endpoint_class(

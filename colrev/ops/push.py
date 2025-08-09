@@ -6,10 +6,12 @@ import json
 from pathlib import Path
 
 import colrev.process.operation
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
+from colrev.package_manager.package_manager import PackageManager
 
 
 class Push(colrev.process.operation.Operation):
@@ -84,7 +86,7 @@ class Push(colrev.process.operation.Operation):
         """Push corrections of records"""
 
         change_sets = self._get_change_sets()
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
 
         for source_prefix, change_itemsets in change_sets.items():
             source_l = [
@@ -102,7 +104,7 @@ class Push(colrev.process.operation.Operation):
                 package_identifier=source.endpoint,
             )
             endpoint = search_source_class(
-                source_operation=self, settings=source.get_dict()
+                source_operation=self, search_file=source.get_dict()
             )
 
             correct_function = getattr(endpoint, "apply_correction", None)
@@ -123,7 +125,7 @@ class Push(colrev.process.operation.Operation):
                 self._share_correction(source=source, change_list=change_itemsets)
 
     def _share_correction(
-        self, *, source: colrev.settings.SearchSource, change_list: list
+        self, *, source: colrev.search_file.ExtendedSearchFile, change_list: list
     ) -> None:
         prepared_change_list = []
         for change in change_list:
@@ -134,7 +136,7 @@ class Push(colrev.process.operation.Operation):
                 }
             )
 
-        corrections = self.review_manager.p_printer.pformat(prepared_change_list)
+        corrections = colrev.utils.pformat(prepared_change_list)
 
         text = (
             "Dear Sir or Madam,\n\nwe have noticed potential corrections and "
@@ -142,7 +144,7 @@ class Push(colrev.process.operation.Operation):
             + f"{corrections}\n\nBest regards\n\n"
         )
 
-        if source.endpoint == "colrev.dblp":
+        if source.platform == "colrev.dblp":
             file_path = Path("dblp-corrections-mail.txt")
             dblp_header = (
                 "Send to: dblp@dagstuhl.de\n\n"

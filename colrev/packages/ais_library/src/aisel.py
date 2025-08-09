@@ -6,17 +6,18 @@ import logging
 import re
 import urllib.parse
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urlparse
 
 import requests
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
+import colrev.search_file
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import SearchSourceHeuristicStatus
@@ -29,8 +30,6 @@ from colrev.packages.ais_library.src import ais_load_utils
 
 class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """AIS electronic Library (AISeL)"""
-
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
 
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
@@ -67,9 +66,16 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     }
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
-        self.search_source = self.settings_class(**settings)
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
+        self.search_source = search_file
         self.review_manager = source_operation.review_manager
         self.quality_model = self.review_manager.get_qm()
         self.source_operation = source_operation
@@ -157,7 +163,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         params_dict = {}
         if params:
@@ -185,16 +191,17 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 assert host and host.endswith("aisel.aisnet.org")
                 q_params = cls._parse_query(query=params_dict["url"])
                 filename = operation.get_unique_filename(file_path_string="ais")
-                search_source = colrev.settings.SearchSource(
-                    endpoint=cls.endpoint,
-                    filename=filename,
+                search_source = colrev.search_file.ExtendedSearchFile(
+                    platform=cls.endpoint,
+                    search_results_path=filename,
                     search_type=SearchType.API,
+                    search_string="",
                     search_parameters=q_params,
                     comment="",
                 )
             else:
                 # Add API search without params
-                search_source = operation.create_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(platform=cls.endpoint)
 
         # elif search_type == SearchType.TOC:
         else:
@@ -208,14 +215,14 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
         source = self.search_source
 
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         if source.search_type == SearchType.API:
-            if "query" not in source.search_parameters:
-                # if "search_terms" not in source.search_parameters["query"]:
+            if "query" not in source.search_string:
+                # if "search_terms" not in source.search_string["query"]:
                 raise colrev_exceptions.InvalidQueryException("query parameter missing")
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.filename)
 
     def _get_ais_query_return(self) -> list:
         def query_from_params(params: dict) -> str:
@@ -239,7 +246,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
             return urllib.parse.quote(final)
 
-        params = self.search_source.search_parameters
+        params = self.search_source.search_string
         final_q = query_from_params(params)
 
         query_string = (
@@ -260,7 +267,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
             id_labeler=ais_load_utils.enl_id_labeler,
             entrytype_setter=ais_load_utils.enl_entrytype_setter,
             field_mapper=ais_load_utils.enl_field_mapper,
-            logger=self.review_manager.logger,
+            logger=self.logger,
         )
 
         return list(records.values())
@@ -274,9 +281,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         # pylint: disable=too-many-branches
 
         if rerun:
-            self.review_manager.logger.info(
-                "Performing a search of the full history (may take time)"
-            )
+            self.logger.info("Performing a search of the full history (may take time)")
 
         try:
             for record_dict in self._get_ais_query_return():
@@ -314,10 +319,12 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self._validate_source()
 
         if self.search_source.search_type == SearchType.API:
-            ais_feed = self.search_source.get_api_feed(
-                review_manager=self.review_manager,
+            ais_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier=self.source_identifier,
+                search_source=self.search_source,
                 update_only=(not rerun),
+                logger=self.logger,
+                verbose_mode=self.verbose_mode,
             )
             self._run_api_search(
                 ais_feed=ais_feed,
@@ -499,7 +506,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for the AIS electronic Library (AISeL)"""
 

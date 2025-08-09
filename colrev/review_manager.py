@@ -14,13 +14,10 @@ from __future__ import annotations
 
 import logging
 import os
-import pprint
 import typing
-from datetime import timedelta
 from pathlib import Path
 
 import git
-import requests_cache
 import yaml
 
 import colrev.dataset
@@ -30,8 +27,8 @@ import colrev.ops.checker
 import colrev.record.qm.quality_model
 import colrev.settings
 from colrev.constants import Colors
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
+from colrev.env.environment_manager import EnvironmentManager
 from colrev.paths import PathManager
 
 
@@ -95,9 +92,8 @@ class ReviewManager:
             self.report_logger = report_logger
             self.logger = logger
 
-            self.environment_manager = self.get_environment_manager()
+            self.environment_manager = EnvironmentManager()
 
-            self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             # run update before settings/data (which may require changes/fail without update)
             if not skip_upgrade:  # pragma: no cover
                 self._check_update()
@@ -316,42 +312,6 @@ class ReviewManager:
         status_stats = self.get_status_stats()
         return status_stats.completeness_condition
 
-    @classmethod
-    def get_package_manager(
-        cls,
-    ) -> colrev.package_manager.package_manager.PackageManager:  # pragma: no cover
-        """Get a package manager object"""
-
-        import colrev.package_manager.package_manager
-
-        return colrev.package_manager.package_manager.PackageManager()
-
-    @classmethod
-    def get_environment_manager(
-        cls,
-    ) -> colrev.env.environment_manager.EnvironmentManager:  # pragma: no cover
-        """Get an environment manager"""
-        import colrev.env.environment_manager
-
-        return colrev.env.environment_manager.EnvironmentManager()
-
-    @classmethod
-    def get_cached_session(cls) -> requests_cache.CachedSession:  # pragma: no cover
-        """Get a cached session"""
-
-        return requests_cache.CachedSession(
-            str(Filepaths.PREP_REQUESTS_CACHE_FILE),
-            backend="sqlite",
-            expire_after=timedelta(days=30),
-        )
-
-    @classmethod
-    def get_resources(cls) -> colrev.env.resources.Resources:  # pragma: no cover
-        """Get a resources object"""
-        import colrev.env.resources
-
-        return colrev.env.resources.Resources()
-
     def get_search_operation(
         self, *, notify_state_transition_operation: bool = True
     ) -> colrev.ops.search.Search:  # pragma: no cover
@@ -567,17 +527,3 @@ class ReviewManager:
         """Check whether CoLRev runs in a test environment"""
 
         return "pytest" in os.getcwd()
-
-    @classmethod
-    def in_ci_environment(
-        cls,
-    ) -> bool:
-        """Check whether CoLRev runs in a continuous-integration environment"""
-
-        identifier_list = [
-            "GITHUB_ACTIONS",
-            "CIRCLECI",
-            "TRAVIS",
-            "GITLAB_CI",
-        ]
-        return any("true" == os.getenv(x) for x in identifier_list)

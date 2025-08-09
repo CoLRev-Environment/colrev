@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 import colrev.review_manager
-import colrev.settings
+from colrev import utils
 from colrev.constants import SearchType
 
 
@@ -33,14 +33,14 @@ def test_load_md(  # type: ignore
             empty_if_file_not_exists=False,
         )
 
-    if base_repo_review_manager.in_ci_environment():
+    if utils.in_ci_environment():
         return
 
-    search_source = colrev.settings.SearchSource(
-        endpoint="colrev.unknown_source",
-        filename=Path("data/search/md_data.md"),
+    search_source = colrev.search_file.ExtendedSearchFile(
+        platform="colrev.unknown_source",
+        search_results_path=Path("data/search/md_data.md"),
         search_type=SearchType.OTHER,
-        search_parameters={},
+        search_string="",
         comment="",
     )
 
@@ -50,7 +50,7 @@ def test_load_md(  # type: ignore
     )
 
     records = colrev.loader.load_utils.load(
-        filename=search_source.filename,
+        filename=search_source.search_results_path,
         logger=logging.getLogger(__name__),
     )
 

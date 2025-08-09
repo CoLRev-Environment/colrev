@@ -6,6 +6,7 @@ import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 
 import requests
 from pydantic import Field
@@ -13,17 +14,12 @@ from semanticscholar import SemanticScholar
 from semanticscholar import SemanticScholarException
 from semanticscholar.PaginatedResults import PaginatedResults
 
-import colrev.constants
-import colrev.env.environment_manager
-import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.process.operation
 import colrev.record.record
-import colrev.settings
+import colrev.search_file
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
@@ -43,7 +39,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Semantic Scholar API Search Source"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     # Provide objects with classes
     _s2: SemanticScholar
     _search_return: PaginatedResults
@@ -73,25 +68,27 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        search_file: Optional[colrev.search_file.ExtendedSearchFile] = None,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        if settings:
+        if search_file:
             # Semantic Scholar as a search source
-            self.search_source = self.settings_class(**settings)
+            self.search_source = search_file
         else:
-            self.search_source = colrev.settings.SearchSource(
-                endpoint="colrev.semanticscholar",
-                filename=self._s2_filename,
+            self.search_source = colrev.search_file.ExtendedSearchFile(
+                platform="colrev.semanticscholar",
+                search_results_path=self._s2_filename,
                 search_type=SearchType.API,
-                search_parameters={},
+                search_string="",
                 comment="",
             )
             self.s2_lock = Lock()
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check the availability of the Semantic Scholar API"""
 
         try:
@@ -110,16 +107,13 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
                 assert returned_record[Fields.TITLE] == test_record[Fields.TITLE]
                 assert returned_record[Fields.URL] == test_record[Fields.URL]
             else:
-                if not self.review_manager.force_mode:
-                    raise colrev_exceptions.ServiceNotAvailableException(
-                        self._availability_exception_message
-                    )
-        except (requests.exceptions.RequestException, IndexError) as exc:
-            print(exc)
-            if not self.review_manager.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message
-                ) from exc
+                )
+        except (requests.exceptions.RequestException, IndexError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                self._availability_exception_message
+            ) from exc
 
     def _get_semantic_scholar_api(
         self, *, params: dict, rerun: bool
@@ -134,7 +128,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         elif subject == "author":
             _search_return = self.author_search(params=params, rerun=rerun)
         else:
-            self.review_manager.logger.info("No search parameters were found.")
+            self.logger.info("No search parameters were found.")
             raise NotImplementedError
 
         return _search_return
@@ -173,19 +167,17 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             SemanticScholarException.SemanticScholarException,
             SemanticScholarException.BadQueryParametersException,
         ) as exc:
-            self.review_manager.logger.error(
+            self.logger.error(
                 "Error: Something went wrong during the search with the Python Client."
                 + " This program will close."
             )
             print(exc)
             raise colrev_exceptions.ServiceNotAvailableException(exc)
 
-        self.review_manager.logger.info(
-            str(record_return.total) + " records have been found.\n"
-        )
+        self.logger.info("%s records have been found.\n", record_return.total)
 
         if record_return.total == 0:
-            self.review_manager.logger.info(
+            self.logger.info(
                 "Search aborted because no records were found. This program will close."
             )
             raise colrev_exceptions.ServiceNotAvailableException(
@@ -204,17 +196,17 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
                 SemanticScholarException.SemanticScholarException,
                 SemanticScholarException.BadQueryParametersException,
             ) as exc:
-                self.review_manager.logger.error(
+                self.logger.error(
                     "Error: Something went wrong during the search with the Python Client."
                     + " This program will close."
                 )
                 print(exc)
                 raise colrev_exceptions.ServiceNotAvailableException(exc)
         else:
-            self.review_manager.logger.error(
-                'Error: Search type "Search for paper" is not available with your parameters.\n'
-                + "Search parameter: "
-                + str(params.get("paper_ids"))
+            self.logger.error(
+                'Error: Search type "Search for paper"'
+                + " is not available with your parameters.\nSearch parameter: %s",
+                params.get("paper_ids"),
             )
             raise colrev_exceptions.ServiceNotAvailableException(
                 "Search parameter error."
@@ -231,17 +223,17 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
                 SemanticScholarException.SemanticScholarException,
                 SemanticScholarException.BadQueryParametersException,
             ) as exc:
-                self.review_manager.logger.error(
+                self.logger.error(
                     "Error: Something went wrong during the search with the Python Client."
                     + " This program will close."
                 )
                 print(exc)
                 raise colrev_exceptions.ServiceNotAvailableException(exc)
         else:
-            self.review_manager.logger.error(
-                '\nError: Search type "Search for author" is not available with your parameters.\n'
-                + "Search parameter: "
-                + str(params.get("author_ids"))
+            self.logger.error(
+                '\nError: Search type "Search for author"'
+                + " is not available with your parameters.\nSearch parameter: %s",
+                params.get("author_ids"),
             )
             raise colrev_exceptions.ServiceNotAvailableException(
                 "Search parameter error."
@@ -281,29 +273,29 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             self._s2 = SemanticScholar()
 
         # load file because the object is not shared between processes
-        s2_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        s2_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
         # rerun not implemented yet
         if rerun:
-            self.review_manager.logger.info(
-                "Performing a search of the full history (may take time)"
-            )
+            self.logger.info("Performing a search of the full history (may take time)")
         try:
-            params = self.search_source.search_parameters
+            params = self.search_source.search_string
             _search_return = self._get_semantic_scholar_api(params=params, rerun=rerun)
 
         except SemanticScholarException.BadQueryParametersException as exc:
-            self.review_manager.logger.error(
+            self.logger.error(
                 "Error: Invalid Search Parameters. The Program will close."
             )
             print(exc)
             raise colrev_exceptions.ServiceNotAvailableException(exc)
             # KeyError  # error in semanticscholar package:
         except (KeyError, PermissionError) as exc:
-            self.review_manager.logger.error(
+            self.logger.error(
                 "Error: Search could not be conducted. Please check your Parameters and API key."
             )
             print(exc)
@@ -318,7 +310,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             colrev_exceptions.RecordNotParsableException,
             colrev_exceptions.NotFeedIdentifiableException,
         ) as exc:
-            self.review_manager.logger.error(
+            self.logger.error(
                 "Error: Retrieved records were not parsable into feed and result file."
             )
             print(exc)
@@ -330,7 +322,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         # get search parameters from the user interface
@@ -362,10 +354,11 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         filename = operation.get_unique_filename(file_path_string="semanticscholar")
 
-        search_source = colrev.settings.SearchSource(
-            endpoint="colrev.semanticscholar",
-            filename=filename,
+        search_source = colrev.search_file.ExtendedSearchFile(
+            platform="colrev.semanticscholar",
+            search_results_path=filename,
             search_type=SearchType.API,
+            search_string="",
             search_parameters=search_params,
             comment="",
         )
@@ -409,7 +402,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record_prep.PrepRecord:
         """Source-specific preparation for Semantic Scholar"""
         # Not yet implemented

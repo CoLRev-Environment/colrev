@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import copy
+import logging
 from enum import Enum
 from pathlib import Path
+from typing import Optional
 
 import inquirer
 from pydantic import BaseModel
@@ -64,7 +66,9 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = data_operation.review_manager
 
         if "bib_format" not in settings:
@@ -77,7 +81,7 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
         self.endpoint_path = self.review_manager.paths.output
 
     def _export(self, *, selected_records: dict) -> None:
-        self.review_manager.logger.info(f"Export {self.settings.bib_format.name}")
+        self.logger.info(f"Export {self.settings.bib_format.name}")
 
         if self.settings.bib_format is BibFormats.zotero:
             export_filepath = self.endpoint_path / Path("zotero.bib")
@@ -189,9 +193,7 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
             self._export(selected_records=selected_records)
 
         except NotImplementedError:
-            self.review_manager.logger.info(
-                f"Not yet implemented ({self.settings.bib_format})"
-            )
+            self.logger.info(f"Not yet implemented ({self.settings.bib_format})")
 
     def update_record_status_matrix(
         self,

@@ -14,6 +14,7 @@ from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 
 ConditionalPrescreen = (
     colrev.packages.conditional_prescreen.src.conditional_prescreen.ConditionalPrescreen
@@ -335,7 +336,7 @@ class Prescreen(colrev.process.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
 
         prescreen_package_endpoints = (
             self.review_manager.settings.prescreen.prescreen_package_endpoints

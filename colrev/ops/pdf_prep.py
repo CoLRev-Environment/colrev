@@ -14,11 +14,13 @@ import colrev.exceptions as colrev_exceptions
 import colrev.packages.grobid_tei.src.grobid_tei
 import colrev.process.operation
 import colrev.record.record_pdf
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 
 
 class PDFPrep(colrev.process.operation.Operation):
@@ -397,10 +399,7 @@ class PDFPrep(colrev.process.operation.Operation):
     ) -> None:
         """Prepare PDFs (main entrypoint)"""
 
-        if (
-            self.review_manager.in_ci_environment()
-            and not self.review_manager.in_test_environment()
-        ):
+        if utils.in_ci_environment() and not self.review_manager.in_test_environment():
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev pdf-prep",
                 detailed_trace="pdf-prep not available in ci environment",
@@ -426,7 +425,7 @@ class PDFPrep(colrev.process.operation.Operation):
 
         pdf_prep_data = self._get_data(batch_size=batch_size)
 
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
         self.pdf_prep_package_endpoints = {}
         for (
             pdf_prep_package_endpoint

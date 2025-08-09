@@ -7,6 +7,7 @@ import logging
 import tempfile
 import typing
 from pathlib import Path
+from typing import Optional
 
 import inquirer
 import pandas as pd
@@ -14,10 +15,10 @@ from git import Repo
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.search_file
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
@@ -41,7 +42,6 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     """
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.synergy_datasets"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
@@ -51,11 +51,17 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        self.search_source = self.settings_class(**settings)
-        self.quality_model = self.review_manager.get_qm()
+        self.search_source = search_file
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -116,7 +122,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -126,7 +132,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
                 params_dict[key] = value
 
         if len(params_dict) == 0:
-            operation.review_manager.logger.info("Retrieving available datasets")
+            print("Retrieving available datasets")
             params_dict = cls.__select_datset_interactively()
 
         assert "dataset" in params_dict
@@ -134,11 +140,11 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         filename = operation.get_unique_filename(
             file_path_string=f"SYNERGY_{dataset.replace('/', '_').replace('_ids.csv', '')}"
         )
-        search_source = colrev.settings.SearchSource(
-            endpoint="colrev.synergy_datasets",
-            filename=filename,
+        search_source = colrev.search_file.ExtendedSearchFile(
+            platform="colrev.synergy_datasets",
+            search_results_path=filename,
             search_type=SearchType.API,
-            search_parameters={"dataset": dataset},
+            search_string=f"dataset={dataset}",
             comment="",
         )
         operation.add_source_and_search(search_source)
@@ -151,7 +157,12 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         Repo.clone_from(
             "https://github.com/asreview/synergy-dataset", temp_path, depth=1
         )
-        dataset_name = self.search_source.search_parameters["dataset"]
+        param_dict = {}
+        for item in self.search_source.search_string.split(";"):
+            key, value = item.split("=")
+            param_dict[key] = value
+
+        dataset_name = param_dict["dataset"]
         dataset_df = pd.read_csv(temp_path / Path("datasets") / dataset_name)
 
         # check data structure
@@ -166,13 +177,13 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
         missing_metadata_percentage = missing_metadata.sum() / dataset_df.shape[0]
         if missing_metadata_percentage > 0.1:
-            self.review_manager.logger.error(
-                f"Missing metadata percentage: {missing_metadata_percentage}"
+            self.logger.error(
+                "Missing metadata percentage: %s", missing_metadata_percentage
             )
             input("ENTER to continue anyway")
         else:
-            self.review_manager.logger.info(
-                f"Missing metadata: {missing_metadata_percentage:.2%}"
+            self.logger.info(
+                "Missing metadata: %s", f"{missing_metadata_percentage:.2%}"
             )
         return dataset_df
 
@@ -215,9 +226,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
             if len(v) > 1 and len(set(v)) != 1
         }
         if decisions[Fields.DOI] or decisions["pmid"] or decisions["openalex_id"]:
-            self.review_manager.logger.error(
-                "Errors in dataset: ambiguous inclusion decisions:"
-            )
+            self.logger.error("Errors in dataset: ambiguous inclusion decisions:")
             msg = (
                 f"{Colors.RED}"
                 + f"- dois: {', '.join(decisions['doi'])}"
@@ -253,7 +262,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def _validate_source(self) -> None:
         source = self.search_source
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
         assert source.search_type == SearchType.API
 
     def search(self, rerun: bool) -> None:
@@ -263,10 +272,12 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         dataset_df = self._load_dataset()
 
-        synergy_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        synergy_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=False,
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
         existing_keys = {
             Fields.DOI: [
@@ -331,8 +342,8 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
             # The linking of doi/... should happen in the prep operation
 
         self._check_quality(decisions=decisions)
-        self.review_manager.logger.info(f"Dropped {empty_records} empty records")
-        self.review_manager.logger.info(f"Dropped {duplicates} duplicate records")
+        self.logger.info("Dropped %s empty records", empty_records)
+        self.logger.info("Dropped %s duplicate records", duplicates)
         self.review_manager.dataset.load_records_dict()
         synergy_feed.save()
 
@@ -366,7 +377,9 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record.Record,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for SYNERGY-datasets"""
 

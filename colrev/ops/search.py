@@ -9,12 +9,14 @@ import inquirer
 
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
-import colrev.settings
+import colrev.search_file
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import SearchType
+from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import write_file
 
 
@@ -36,7 +38,7 @@ class Search(colrev.process.operation.Operation):
         )
         self.review_manager = review_manager
         self.sources = review_manager.settings.sources
-        self.package_manager = self.review_manager.get_package_manager()
+        self.package_manager = PackageManager()
 
     def get_unique_filename(self, file_path_string: str, suffix: str = ".bib") -> Path:
         """Get a unique filename for a (new) SearchSource"""
@@ -51,7 +53,7 @@ class Search(colrev.process.operation.Operation):
         if file_path_string.endswith(suffix):
             file_path_string = file_path_string.rstrip(suffix)
         filename = Path(f"data/search/{file_path_string}{suffix}")
-        existing_filenames = [x.filename for x in self.sources]
+        existing_filenames = [x.search_results_path for x in self.sources]
         if all(x != filename for x in existing_filenames):
             return filename
 
@@ -80,7 +82,7 @@ class Search(colrev.process.operation.Operation):
 
     def create_db_source(  # type: ignore
         self, *, search_source_cls, params: dict
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Interactively add a DB SearchSource"""
 
         if not all(x in ["search_file"] for x in list(params)):
@@ -118,32 +120,35 @@ class Search(colrev.process.operation.Operation):
         self.review_manager.dataset.add_changes(filename, ignore_missing=True)
         self.review_manager.dataset.add_changes(query_file)
 
-        add_source = colrev.settings.SearchSource(
-            endpoint=search_source_cls.endpoint,
-            filename=filename,
+        add_source = colrev.search_file.ExtendedSearchFile(
+            platform=search_source_cls.endpoint,
+            search_results_path=filename,
             search_type=SearchType.DB,
-            search_parameters={"query_file": str(query_file)},
+            # TODO : save in json instead of separate text file
+            search_string="TODO",
             comment="",
         )
         print()
         return add_source
 
-    def create_api_source(self, *, endpoint: str) -> colrev.settings.SearchSource:
+    def create_api_source(
+        self, *, platform: str
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Interactively add an API SearchSource"""
 
-        print(f"Add {endpoint} as an API SearchSource")
+        print(f"Add {platform} as an API SearchSource")
         print()
 
         keywords = input("Enter the keywords:")
 
         filename = self.get_unique_filename(
-            file_path_string=f"{endpoint.replace('colrev.', '')}"
+            file_path_string=f"{platform.replace('colrev.', '')}"
         )
-        add_source = colrev.settings.SearchSource(
-            endpoint=endpoint,
-            filename=filename,
+        add_source = colrev.search_file.ExtendedSearchFile(
+            platform=platform,
+            search_results_path=filename,
             search_type=SearchType.API,
-            search_parameters={"query": keywords},
+            search_string=keywords,
             comment="",
         )
         return add_source
@@ -174,11 +179,11 @@ class Search(colrev.process.operation.Operation):
         self,
         *,
         search_source_cls,
-        source: colrev.settings.SearchSource,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> None:
         """Interactively run a DB search"""
 
-        if self.review_manager.in_ci_environment():
+        if utils.in_ci_environment():
             raise colrev_exceptions.SearchNotAutomated("DB search not automated.")
 
         print("DB search (update)")
@@ -194,40 +199,66 @@ class Search(colrev.process.operation.Operation):
             pass
         print(
             f"- Replace search results in {Colors.ORANGE}"
-            + str(source.filename)
+            + str(source.search_results_path)
             + Colors.END
         )
         input("Press enter to continue")
-        if source.filename.is_file():
-            self.review_manager.dataset.add_changes(source.filename)
+        if source.search_results_path.is_file():
+            self.review_manager.dataset.add_changes(source.search_results_path)
         else:
             print("Search results not found.")
 
     def _get_search_sources(
-        self, *, selection_str: typing.Optional[str] = None
-    ) -> list[colrev.settings.SearchSource]:
-        sources_selected = self.sources
-        if selection_str and selection_str != "all":
+        self, *, selection_str: str
+    ) -> list[colrev.search_file.ExtendedSearchFile]:
+        # search_history_paths = self.review_manager.paths.search.glob(
+        #     "**/*_search_history.json"
+        # )
+        # search_histories = []
+        # print(list(search_history_paths))
+        # for search_history_path in search_history_paths:
+        #     print(search_history_path)
+        #     if search_history_path.is_file():
+        #         search_history = colrev.search_file.load_search_file(
+        #             search_history_path
+        #         )
+        #         search_history.search_type = SearchType(search_history.search_type)
+        #         search_history.search_results_path = Path(
+        #             search_history.search_results_path
+        #         )
+        #         search_histories.append(search_history)
+
+        search_histories = self.review_manager.settings.sources
+        sources_selected = search_histories
+        # print(sources_selected)
+        # print(selection_str)
+        # print('DONE')
+        if selection_str != "all":
+            # print('CAL')
             selected_filenames = {Path(f).name for f in selection_str.split(",")}
             sources_selected = [
-                s for s in self.sources if s.filename.name in selected_filenames
+                s
+                for s in self.sources
+                if s.search_results_path.name in selected_filenames
             ]
 
         assert len(sources_selected) != 0
         return sources_selected
 
-    def _remove_forthcoming(self, source: colrev.settings.SearchSource) -> None:
+    def _remove_forthcoming(
+        self, source: colrev.search_file.ExtendedSearchFile
+    ) -> None:
         """Remove forthcoming papers from a SearchSource"""
 
         if self.review_manager.settings.search.retrieve_forthcoming:
             return
 
-        if source.filename.suffix != ".bib":
-            print(f"{source.filename.suffix} not yet supported")
+        if source.search_results_path.suffix != ".bib":
+            print(f"{source.search_results_path.suffix} not yet supported")
             return
 
         records = colrev.loader.load_utils.load(
-            filename=source.filename,
+            filename=source.search_results_path,
             logger=self.review_manager.logger,
         )
 
@@ -242,7 +273,7 @@ class Search(colrev.process.operation.Operation):
         )
         records = {r[Fields.ID]: r for r in record_list}
 
-        write_file(records_dict=records, filename=source.filename)
+        write_file(records_dict=records, filename=source.search_results_path)
 
     # pylint: disable=no-self-argument
     def _check_source_selection_exists(var_name: str) -> typing.Callable:  # type: ignore
@@ -255,13 +286,14 @@ class Search(colrev.process.operation.Operation):
                     return func_in(self, *args, **kwds)
                 for search_source in kwds[var_name].split(","):
                     if Path(search_source) not in [
-                        s.filename for s in self.review_manager.settings.sources
+                        s.search_results_path
+                        for s in self.review_manager.settings.sources
                     ]:
                         raise colrev_exceptions.ParameterError(
                             parameter="select",
                             value=kwds[var_name],
                             options=[
-                                str(s.filename)
+                                str(s.search_results_path)
                                 for s in self.review_manager.settings.sources
                             ],
                         )
@@ -285,7 +317,8 @@ class Search(colrev.process.operation.Operation):
         files = [
             f
             for f in files
-            if f not in [s.filename for s in self.review_manager.settings.sources]
+            if f
+            not in [s.search_results_path for s in self.review_manager.settings.sources]
             and f.suffix
             in [
                 ".bib",
@@ -301,6 +334,7 @@ class Search(colrev.process.operation.Operation):
             ]
             # Note: do not cover .Identifier, ".~lock" etc.
             and not f.name.startswith(".")
+            and not f.name.endswith("_search_history.json")
         ]
 
         return sorted(list(set(files)))
@@ -331,11 +365,11 @@ class Search(colrev.process.operation.Operation):
                 # Note : as the identifier, we use the filename
                 # (if search results are added by file/not via the API)
 
-                source_candidate = colrev.settings.SearchSource(
-                    endpoint=endpoint,
-                    filename=filepath,
+                source_candidate = colrev.search_file.ExtendedSearchFile(
+                    platform=endpoint,
+                    search_results_path=filepath,
                     search_type=search_type,
-                    search_parameters={},
+                    search_string="",
                     comment="",
                 )
 
@@ -373,7 +407,7 @@ class Search(colrev.process.operation.Operation):
 
         return results_list
 
-    def add_most_likely_sources(self, *, create_query_files: bool = True) -> None:
+    def add_most_likely_sources(self) -> None:
         """Get the most likely SearchSources
 
         returns a dictionary:
@@ -396,21 +430,11 @@ class Search(colrev.process.operation.Operation):
                     source = [
                         x
                         for x in results_list
-                        if "unknown_source" in x["source_candidate"].endpoint
+                        if "unknown_source" in x["source_candidate"].platform
                     ][0]
                 else:
                     selection = str(best_candidate_pos)
                     source = results_list[int(selection) - 1]
-
-                if create_query_files:
-                    query_path = self.get_query_filename(
-                        filename=source["source_candidate"].filename
-                    )
-                    source["source_candidate"].search_parameters["query_file"] = str(
-                        query_path
-                    )
-                    query_path.write_text("", encoding="utf-8")
-                    self.review_manager.dataset.add_changes(query_path)
 
                 self.review_manager.settings.sources.append(source["source_candidate"])
         self.review_manager.save_settings()
@@ -442,19 +466,21 @@ class Search(colrev.process.operation.Operation):
         return heuristic_results
 
     def add_source_and_search(
-        self, search_source: colrev.settings.SearchSource
+        self, search_file: colrev.search_file.ExtendedSearchFile
     ) -> None:
         """Add a SearchSource and run the search"""
 
-        self.review_manager.settings.sources.append(search_source)
-        self.review_manager.save_settings()
+        search_file.save()
+        # TODO : get_filepath()?
+        self.review_manager.dataset.add_changes(search_file.search_history_path)
+
         self.review_manager.dataset.create_commit(
-            msg=f"Search: add {search_source.endpoint}:{search_source.search_type} → "
-            f"data/search/{search_source.filename.name}"
+            msg=f"Search: add {search_file.platform}:{search_file.search_type} → "
+            f"data/search/{search_file.search_history_path.name}"
         )
-        if not search_source.filename.is_file():
+        if not search_file.search_history_path.is_file():
             print()
-            self.main(selection_str=str(search_source.filename), rerun=True)
+            self.main(selection_str=str(search_file.search_history_path), rerun=True)
 
     @_check_source_selection_exists(  # pylint: disable=too-many-function-args
         "selection_str"
@@ -463,7 +489,7 @@ class Search(colrev.process.operation.Operation):
     def main(
         self,
         *,
-        selection_str: typing.Optional[str] = None,
+        selection_str: str = "all",
         rerun: bool,
         skip_commit: bool = False,
     ) -> None:
@@ -482,32 +508,30 @@ class Search(colrev.process.operation.Operation):
         self.review_manager.settings = self.review_manager.load_settings()
         for source in self._get_search_sources(selection_str=selection_str):
             try:
+
                 if not self.review_manager.high_level_operation:
                     print()
                 self.review_manager.logger.info(
-                    f"search: {source.endpoint}:{source.search_type} → "
-                    f"data/search/{source.filename.name}"
+                    f"search: {source.platform}:{source.search_type} → "
+                    f"data/search/{source.search_results_path}"
                 )
 
                 search_source_class = self.package_manager.get_package_endpoint_class(
                     package_type=EndpointType.search_source,
-                    package_identifier=source.endpoint,
+                    package_identifier=source.platform,
                 )
                 endpoint = search_source_class(
-                    source_operation=self, settings=source.model_dump()
+                    source_operation=self, search_file=source
                 )
 
                 endpoint.search(rerun=rerun)  # type: ignore
 
-                if not source.filename.is_file():
-                    continue
-
                 self._remove_forthcoming(source)
-                self.review_manager.dataset.add_changes(source.filename)
+                self.review_manager.dataset.add_changes(source.search_results_path)
                 if not skip_commit:
                     self.review_manager.dataset.create_commit(
-                        msg=f"Search: run {source.endpoint}:{source.search_type} → "
-                        f"data/search/{source.filename.name}"
+                        msg=f"Search: run {source.platform}:{source.search_type} → "
+                        f"data/search/{source.search_results_path.name}"
                     )
             except colrev_exceptions.ServiceNotAvailableException:
                 self.review_manager.logger.warning("ServiceNotAvailableException")
@@ -518,5 +542,5 @@ class Search(colrev.process.operation.Operation):
             except ModuleNotFoundError as exc:
                 self.review_manager.logger.warning(exc)
 
-        if self.review_manager.in_ci_environment():
+        if utils.in_ci_environment():
             print("\n\n")

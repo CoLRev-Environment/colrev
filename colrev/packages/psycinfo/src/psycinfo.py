@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -23,7 +22,6 @@ from colrev.constants import SearchType
 class PsycINFOSearchSource(base_classes.SearchSourcePackageBaseClass):
     """PsycINFO"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.psycinfo"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
@@ -35,11 +33,15 @@ class PsycINFOSearchSource(base_classes.SearchSourcePackageBaseClass):
     db_url = "https://www.apa.org/search"
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
-        self.search_source = self.settings_class(**settings)
+        self.logger = logger or logging.getLogger(__name__)
+        self.search_source = search_file
         self.source_operation = source_operation
-        self.review_manager = source_operation.review_manager
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -61,7 +63,7 @@ class PsycINFOSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {params.split("=")[0]: params.split("=")[1]}
@@ -184,7 +186,9 @@ class PsycINFOSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record.Record,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for PsycINFO"""
 

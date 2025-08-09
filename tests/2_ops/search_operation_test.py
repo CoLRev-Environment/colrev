@@ -7,12 +7,12 @@ import pytest
 
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
-import colrev.settings
 from colrev.constants import EndpointType
 from colrev.constants import SearchType
+from colrev.package_manager.package_manager import PackageManager
 
 
-@patch("colrev.review_manager.ReviewManager.in_ci_environment")
+@patch("colrev.utils.in_ci_environment")
 def test_search(  # type: ignore
     ci_env_patcher, base_repo_review_manager: colrev.review_manager.ReviewManager
 ) -> None:
@@ -47,25 +47,23 @@ def test_search_add_source(  # type: ignore
     """Test the search add_source"""
 
     search_operation = base_repo_review_manager.get_search_operation()
-    add_source = colrev.settings.SearchSource(
-        endpoint="colrev.crossref",
-        filename=Path("data/search/crossref_search.bib"),
+    add_source = colrev.search_file.ExtendedSearchFile(
+        platform="colrev.crossref",
+        search_results_path=Path("data/search/crossref_search.bib"),
         search_type=SearchType.DB,
-        search_parameters={
-            "url": "https://api.crossref.org/works?query.bibliographic=test"
-        },
+        search_string="https://api.crossref.org/works?query.bibliographic=test",
         comment="",
     )
 
-    package_manager = search_operation.review_manager.get_package_manager()
+    package_manager = PackageManager()
 
     search_source_class = package_manager.get_package_endpoint_class(
         package_type=EndpointType.search_source,
-        package_identifier=add_source.endpoint,
+        package_identifier=add_source.platform,
     )
 
     endpoint = search_source_class(
-        source_operation=search_operation, settings=add_source.model_dump()
+        source_operation=search_operation, search_file=add_source
     )
     query = "issn=1234-5678"
     endpoint.add_endpoint(search_operation, query)  # type: ignore
@@ -108,7 +106,7 @@ def test_search_get_unique_filename(
 #     search_operation = base_repo_review_manager.get_search_operation()
 
 #     base_repo_review_manager.settings.search.retrieve_forthcoming = False
-#     package_manager = search_operation.review_manager.get_package_manager()
+#     package_manager = PackageManager()
 
 #     search_source = package_manager.load_packages(
 #         package_type=EndpointType.search_source,

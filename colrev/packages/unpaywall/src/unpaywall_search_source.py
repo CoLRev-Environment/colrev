@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 import logging
-import typing
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.search_file
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -23,8 +23,6 @@ from colrev.packages.unpaywall.src.api import UnpaywallAPI
 
 class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Unpaywall Search Source"""
-
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
 
     source_identifier = "doi"
     search_types = [SearchType.API]
@@ -41,18 +39,22 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        search_file: Optional[colrev.search_file.ExtendedSearchFile] = None,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
-        self.review_manager = source_operation.review_manager
-        if settings:
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
+
+        if search_file:
             # Unpaywall as a search_source
-            self.search_source = self.settings_class(**settings)
+            self.search_source = search_file
         else:
-            self.search_source = colrev.settings.SearchSource(
-                endpoint=self.endpoint,
-                filename=Path("data/search/unpaywall.bib"),
+            self.search_source = colrev.search_file.ExtendedSearchFile(
+                platform=self.endpoint,
+                search_results_path=Path("data/search/unpaywall.bib"),
                 search_type=SearchType.API,
-                search_parameters={},
+                search_string="",
                 comment="",
             )
 
@@ -65,7 +67,7 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls, operation: colrev.ops.search.Search, params: str
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         params_dict = {}
@@ -78,7 +80,7 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
                     params_dict[key] = value
 
         if len(params_dict) == 0:
-            search_source = operation.create_api_source(endpoint=cls.endpoint)
+            search_source = operation.create_api_source(platform=cls.endpoint)
 
         # pylint: disable=colrev-missed-constant-usage
         elif "https://api.unpaywall.org/v2/search" in params_dict["url"]:
@@ -103,10 +105,11 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
             )
 
-            search_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
+            search_source = colrev.search_file.ExtendedSearchFile(
+                platform=cls.endpoint,
+                search_results_path=filename,
                 search_type=SearchType.API,
+                search_string="",
                 search_parameters=search_parameters,
                 comment="",
             )
@@ -122,7 +125,7 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
         self, *, unpaywall_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
 
-        api = UnpaywallAPI(self.search_source.search_parameters)
+        api = UnpaywallAPI(self.search_source.search_string)
         for record in api.get_query_records():
             unpaywall_feed.add_update_record(record)
 
@@ -131,10 +134,12 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
     def search(self, rerun: bool) -> None:
         """Run a search of Unpaywall"""
 
-        unpaywall_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        unpaywall_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         if self.search_source.search_type == SearchType.API:
@@ -166,7 +171,9 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record.Record,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Unpaywall"""
         return record

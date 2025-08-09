@@ -16,6 +16,8 @@ from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
+from colrev.env.environment_manager import EnvironmentManager
+from colrev.package_manager.package_manager import PackageManager
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
@@ -49,7 +51,7 @@ class Advisor:
         colrev.ops.check.CheckOperation(self.review_manager)
         self.records = self.review_manager.dataset.load_records_dict()
         self.status_stats = review_manager.get_status_stats(records=self.records)
-        self.environment_manager = self.review_manager.get_environment_manager()
+        self.environment_manager = EnvironmentManager()
 
     def _append_merge_conflict_warning(
         self, collaboration_instructions: dict, *, git_repo: git.Repo
@@ -387,7 +389,7 @@ class Advisor:
                         review_instructions.remove(item)
                         break
 
-                package_manager = self.review_manager.get_package_manager()
+                package_manager = PackageManager()
                 check_operation = colrev.ops.check.CheckOperation(self.review_manager)
                 for (
                     data_package_endpoint

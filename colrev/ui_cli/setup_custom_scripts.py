@@ -4,7 +4,7 @@ import typing
 from pathlib import Path
 
 import colrev.env.utils
-import colrev.settings
+import colrev.search_file
 from colrev.constants import SearchType
 
 if typing.TYPE_CHECKING:  # pragma: no cover
@@ -27,11 +27,11 @@ def setup_custom_search_script(
 
     review_manager.dataset.add_changes(Path("custom_search_source_script.py"))
 
-    new_source = colrev.settings.SearchSource(
-        endpoint="custom_search_source_script",
-        filename=Path("data/search/custom_search.bib"),
+    new_source = colrev.search_file.ExtendedSearchFile(
+        platform="custom_search_source_script",
+        search_results_path=Path("data/search/custom_search.bib"),
         search_type=SearchType.DB,
-        search_parameters={},
+        search_string="",
         comment="",
     )
 

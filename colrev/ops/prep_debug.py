@@ -13,6 +13,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.prep
 import colrev.process.operation
 import colrev.record.record_prep
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 
@@ -62,7 +63,7 @@ class PrepDebug(colrev.ops.prep.Prep):
         if diffs:
             change_report = (
                 f"{prep_package_endpoint} changed:\n"
-                f"{Colors.ORANGE}{self.review_manager.p_printer.pformat(diffs)}{Colors.END}\n"
+                f"{Colors.ORANGE}{colrev.utils.pformat(diffs)}{Colors.END}\n"
             )
 
             self.review_manager.logger.info(change_report)
@@ -154,7 +155,7 @@ class PrepDebug(colrev.ops.prep.Prep):
                 for item in preparation_data:
                     record = self.prepare(item)
                     self.review_manager.logger.info(
-                        f"Result:\n" f"{self.review_manager.p_printer.pformat(record)}"
+                        f"Result:\n" f"{colrev.utils.pformat(record)}"
                     )
         except requests_ConnectionError as exc:
             if "OSError(24, 'Too many open files" in str(exc):

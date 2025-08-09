@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
+import colrev.ops.search_api_feed
 import colrev.record.record
 import colrev.review_manager
-import colrev.settings
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
@@ -26,18 +26,20 @@ def fixture_search_feed(
 ) -> typing.Generator:
     """General search feed"""
 
-    source = colrev.settings.SearchSource(
-        endpoint="colrev.crossref",
-        filename=Path("data/search/test.bib"),
+    source = colrev.search_file.ExtendedSearchFile(
+        platform="colrev.crossref",
+        search_results_path=Path("data/search/test.bib"),
         search_type=SearchType.DB,
-        search_parameters={"query": "query"},
+        search_string="query",
         comment="",
     )
     base_repo_review_manager.get_search_operation()
-    feed = source.get_api_feed(
-        review_manager=base_repo_review_manager,
+    feed = colrev.ops.search_api_feed.SearchAPIFeed(
         source_identifier="doi",
+        search_source=source,
         update_only=True,
+        logger=base_repo_review_manager.logger,
+        verbose_mode=base_repo_review_manager.verbose_mode,
     )
 
     prev_sources = base_repo_review_manager.settings.sources
@@ -72,18 +74,20 @@ def test_search_feed_update(  # type: ignore
     search_feed.save()
 
     # Second "iteration"
-    source = colrev.settings.SearchSource(
-        endpoint="colrev.crossref",
-        filename=Path("data/search/test.bib"),
+    source = colrev.search_file.ExtendedSearchFile(
+        platform="colrev.crossref",
+        search_results_path=Path("data/search/test.bib"),
         search_type=SearchType.DB,
-        search_parameters={"query": "query"},
+        search_string="query",
         comment="",
     )
     # base_repo_review_manager.get_search_operation()
-    search_feed = source.get_api_feed(
-        review_manager=base_repo_review_manager,
+    search_feed = colrev.ops.search_api_feed.SearchAPIFeed(
         source_identifier="doi",
+        search_source=source,
         update_only=True,
+        logger=base_repo_review_manager.logger,
+        verbose_mode=base_repo_review_manager.verbose_mode,
     )
     assert search_feed._available_ids == {"10.111/2222": "000001"}
     assert search_feed._next_incremental_id == 2
@@ -217,7 +221,7 @@ def test_search_feed_save(search_feed, caplog) -> None:  # type: ignore
     )
     search_feed.save()
 
-    search_feed.review_manager.logger.propagate = True
+    search_feed.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.save()
         assert "No additional records retrieved" in caplog.text
@@ -253,7 +257,7 @@ def test_search_feed_published_forthcoming_1(search_feed, caplog) -> None:  # ty
         Fields.YEAR: "2002",
     }
 
-    search_feed.review_manager.logger.propagate = True
+    search_feed.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
             retrieved_record=colrev.record.record.Record(record_dict)
@@ -290,7 +294,7 @@ def test_search_feed_published_forthcoming_2(search_feed, caplog) -> None:  # ty
         Fields.NUMBER: "2",
     }
 
-    search_feed.review_manager.logger.propagate = True
+    search_feed.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
             retrieved_record=colrev.record.record.Record(record_dict)
@@ -333,7 +337,7 @@ def test_search_feed_minor_change(search_feed, caplog) -> None:  # type: ignore
         Fields.NUMBER: "2",
     }
 
-    search_feed.review_manager.logger.propagate = True
+    search_feed.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
             retrieved_record=colrev.record.record.Record(record_dict)
@@ -370,7 +374,7 @@ def test_search_feed_retracted(search_feed, caplog) -> None:  # type: ignore
     main_record[Fields.ORIGIN] = ["test.bib/000001"]  # type: ignore
     search_feed.records = {main_record[Fields.ID]: main_record}
 
-    search_feed.review_manager.logger.propagate = True
+    search_feed.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
             retrieved_record=colrev.record.record.Record(record_dict)
@@ -407,7 +411,7 @@ def test_search_feed_substantial_change(search_feed, caplog) -> None:  # type: i
         Fields.YEAR: "2002",
     }
 
-    search_feed.review_manager.logger.propagate = True
+    search_feed.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
             retrieved_record=colrev.record.record.Record(record_dict)
@@ -455,7 +459,7 @@ def test_search_feed_missing_ignored_fields(search_feed, caplog) -> None:  # typ
         Fields.VOLUME: "12",
     }
 
-    search_feed.review_manager.logger.propagate = True
+    search_feed.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
             retrieved_record=colrev.record.record.Record(record_dict)

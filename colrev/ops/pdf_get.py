@@ -11,12 +11,14 @@ import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record_pdf
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import PDFPathType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import write_file
 
 
@@ -41,7 +43,7 @@ class PDFGet(colrev.process.operation.Operation):
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
-        self.package_manager = self.review_manager.get_package_manager()
+        self.package_manager = PackageManager()
 
         pdf_dir = self.review_manager.paths.pdf
         pdf_dir.mkdir(exist_ok=True, parents=True)
@@ -52,7 +54,7 @@ class PDFGet(colrev.process.operation.Operation):
         pdf_endpoints = [
             s
             for s in self.review_manager.settings.sources
-            if s.endpoint == "colrev.files_dir"
+            if s.platform == "colrev.files_dir"
         ]
         if pdf_endpoints:
             self.filepath_directory_pattern = (
@@ -244,13 +246,15 @@ class PDFGet(colrev.process.operation.Operation):
                 broken_symlink.unlink()
                 broken_symlink.symlink_to(new_file)
 
-    def _relink_pdfs_in_source(self, source: colrev.settings.SearchSource) -> None:
+    def _relink_pdfs_in_source(
+        self, source: colrev.search_file.ExtendedSearchFile
+    ) -> None:
 
         # pylint: disable=too-many-locals
 
         self.review_manager.logger.info(
             "Checking PDFs in same directory to reassign when "
-            f"the cpid is identical {source.filename}"
+            f"the cpid is identical {source.search_history_path}"
         )
 
         pdf_dir = self.review_manager.paths.pdf
@@ -263,11 +267,11 @@ class PDFGet(colrev.process.operation.Operation):
             pdf_candidates[relative_path] = colrev_pdf_id
 
         source_records_dict = colrev.loader.load_utils.load(
-            filename=source.filename,
+            filename=source.search_results_path,
             logger=self.review_manager.logger,
         )
         source_records = list(source_records_dict.values())
-        corresponding_origin = str(source.filename)
+        corresponding_origin = str(source.search_history_path)
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():
             if Fields.FILE not in record:
@@ -317,10 +321,12 @@ class PDFGet(colrev.process.operation.Operation):
 
         if len(source_records) > 0:
             source_records_dict = {r[Fields.ID]: r for r in source_records}
-            write_file(records_dict=source_records_dict, filename=source.filename)
+            write_file(
+                records_dict=source_records_dict, filename=source.search_history_path
+            )
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.add_changes(source.filename)
+        self.review_manager.dataset.add_changes(source.search_history_path)
 
     def relink_pdfs(self) -> None:
         """Relink record files to the corresponding PDFs (if available)"""
@@ -330,7 +336,7 @@ class PDFGet(colrev.process.operation.Operation):
         sources = [
             s
             for s in self.review_manager.settings.sources
-            if s.endpoint == "colrev.files_dir" and s.filename.is_file()
+            if s.platform == "colrev.files_dir" and s.search_history_path.is_file()
         ]
         for source in sources:
             self._relink_pdfs_in_source(source)
@@ -624,10 +630,7 @@ class PDFGet(colrev.process.operation.Operation):
     def main(self) -> None:
         """Get PDFs (main entrypoint)"""
 
-        if (
-            self.review_manager.in_ci_environment()
-            and not self.review_manager.in_test_environment()
-        ):
+        if utils.in_ci_environment() and not self.review_manager.in_test_environment():
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev pdf-prep",
                 detailed_trace="pdf-prep not available in ci environment",

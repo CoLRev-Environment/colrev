@@ -8,6 +8,7 @@ import typing
 import webbrowser
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urlparse
 
 import git
@@ -16,10 +17,11 @@ from pydantic import Field
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.search_file
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldSet
@@ -37,15 +39,12 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     # pylint: disable=too-many-instance-attributes
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = Fields.CURATION_ID
     search_types = [SearchType.API, SearchType.MD]
     endpoint = "colrev.local_index"
 
     ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported
-
-    _local_index_md_filename = Path("data/search/md_curated.bib")
 
     essential_md_keys = [
         Fields.TITLE,
@@ -65,56 +64,40 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        if settings:
-            # LocalIndex as a search_source
-            self.search_source = self.settings_class(**settings)
+        self.search_source = search_file
 
-        else:
-            # LocalIndex as an md-prep source
-            li_md_source_l = [
-                s
-                for s in self.review_manager.settings.sources
-                if s.filename == self._local_index_md_filename
-            ]
-            if li_md_source_l:
-                self.search_source = li_md_source_l[0]
-            else:
-                self.search_source = colrev.settings.SearchSource(
-                    endpoint=self.endpoint,
-                    filename=self._local_index_md_filename,
-                    search_type=SearchType.MD,
-                    search_parameters={},
-                    comment="",
-                )
-
-            self.local_index_lock = Lock()
+        self.local_index_lock = Lock()
 
         self.origin_prefix = self.search_source.get_origin_prefix()
 
         self.local_index = colrev.env.local_index.LocalIndex(
-            verbose_mode=self.review_manager.verbose_mode
+            verbose_mode=self.verbose_mode
         )
 
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         assert source.search_type in self.search_types
 
-        # if "query" not in source.search_parameters:
+        # if "query" not in source.search_string:
         # Note :  for md-sources, there is no query parameter.
         #     raise colrev_exceptions.InvalidQueryException(
         #         f"Source missing query search_parameter ({source.filename})"
         #     )
 
-        if "query" in source.search_parameters:
+        if "query" in source.search_string:
             pass
-            # if "simple_query_string" in source.search_parameters["query"]:
-            #     if "query" in source.search_parameters["query"]["simple_query_string"]:
+            # if "simple_query_string" in source.search_string["query"]:
+            #     if "query" in source.search_string["query"]["simple_query_string"]:
             #         pass
             #     else:
             #         raise colrev_exceptions.InvalidQueryException(
@@ -122,17 +105,17 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             #             f"search_parameter ({source.filename})"
             #         )
 
-            # elif "url" in source.search_parameters["query"]:
+            # elif "url" in source.search_string["query"]:
             #     pass
             # # else:
             #     raise colrev_exceptions.InvalidQueryException(
             #         f"Source missing query/query search_parameter ({source.filename})"
             #     )
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.filename)
 
     def _retrieve_from_index(self) -> typing.List[dict]:
-        params = self.search_source.search_parameters
+        params = self.search_source.search_string
         query = params["query"]
 
         if not any(x in query for x in [Fields.TITLE, Fields.ABSTRACT]):
@@ -207,10 +190,12 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self._validate_source()
 
-        local_index_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        local_index_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         if self.search_source.search_type == SearchType.MD:
@@ -241,23 +226,24 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         # always API search
 
         if len(params) == 0:
-            search_source = operation.create_api_source(endpoint=cls.endpoint)
+            search_source = operation.create_api_source(platform=cls.endpoint)
         else:
             filename = operation.get_unique_filename(
                 file_path_string=f"local_index_{params}".replace("%", "").replace(
                     "'", ""
                 )
             )
-            search_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
+            search_source = colrev.search_file.ExtendedSearchFile(
+                platform=cls.endpoint,
+                search_results_path=filename,
                 search_type=SearchType.API,
+                search_string="",
                 search_parameters={"query": params},
                 comment="",
             )
@@ -307,7 +293,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record.Record,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for local-index"""
 
@@ -395,11 +383,14 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.local_index_lock.acquire(timeout=60)
 
             # Note : need to reload file because the object is not shared between processes
-            local_index_feed = self.search_source.get_api_feed(
-                review_manager=self.review_manager,
+            local_index_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier=self.source_identifier,
+                search_source=self.search_source,
                 update_only=False,
                 prep_mode=True,
+                records=self.review_manager.dataset.load_records_dict(),
+                logger=self.logger,
+                verbose_mode=self.verbose_mode,
             )
 
             local_index_feed.add_update_record(retrieved_record)
@@ -441,6 +432,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                     break
 
             try:
+                self.review_manager.dataset.save_records_dict(
+                    local_index_feed.get_records(),
+                )
                 local_index_feed.save()
                 # extend fields_to_keep (to retrieve all fields from the index)
                 for key in record.data.keys():
@@ -514,7 +508,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         selected_changes = []
         print()
-        self.review_manager.logger.info(f"Base repository: {local_base_repo}")
+        self.logger.info(f"Base repository: {local_base_repo}")
         for item in change_itemsets:
             repo_path = colrev.record.record.Record(
                 item["original_record"]
@@ -555,7 +549,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                         + f": {Colors.GREEN}{values[0][1]}{Colors.END}"
                     )
                 else:
-                    self.review_manager.p_printer.pprint(change_item)
+                    colrev.utils.p_print(change_item)
             selected_changes.append(item)
         return selected_changes
 
@@ -598,9 +592,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             origin = git_repo.remotes.origin
             origin.pull()
             if not check_operation.review_manager.dataset.behind_remote():
-                self.review_manager.logger.info("Pulled changes")
+                self.logger.info("Pulled changes")
             else:
-                self.review_manager.logger.error(
+                self.logger.error(
                     "Repo behind remote. Pull first to avoid conflicts.\n"
                     "colrev env --pull"
                 )
@@ -641,10 +635,12 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> dict:
         original_record = change_item["original_record"]
 
-        local_index_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        local_index_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=True,
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         try:
@@ -683,7 +679,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                 record_dict = matching_url_rec_l[0]
                 return record_dict
 
-        self.review_manager.logger.error(
+        self.logger.error(
             f"{Colors.RED}Record not found: {original_record[Fields.ID]}{Colors.END}"
         )
         raise colrev_exceptions.RecordNotInIndexException(original_record[Fields.ID])
@@ -746,7 +742,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         git_repo.remotes.origin.push(
             refspec=f"{record_branch_name}:{record_branch_name}"
         )
-        self.review_manager.logger.info("Pushed corrections")
+        self.logger.info("Pushed corrections")
 
         for head in git_repo.heads:
             if head.name == prev_branch_name:
@@ -755,7 +751,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         git_repo = git.Git(source_url)
         git_repo.execute(["git", "branch", "-D", record_branch_name])
 
-        self.review_manager.logger.info("Removed local corrections branch")
+        self.logger.info("Removed local corrections branch")
 
     def _reset_record_after_correction(
         self, *, record_dict: dict, rec_for_reset: dict, change_item: dict
@@ -869,11 +865,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         if check_review_manager.dataset.behind_remote():
             git_repo = check_review_manager.dataset.get_repo()
             origin = git_repo.remotes.origin
-            self.review_manager.logger.info(
-                f"Pull project changes from {git_repo.remotes.origin}"
-            )
+            self.logger.info(f"Pull project changes from {git_repo.remotes.origin}")
             res = origin.pull()
-            self.review_manager.logger.info(res)
+            self.logger.info(res)
 
         try:
             if not self._apply_corrections_precondition(
@@ -884,9 +878,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             print(exc)
             return
 
-        check_review_manager.logger.info(
-            "Precondition for correction (pull-request) checked."
-        )
+        self.logger.info("Precondition for correction (pull-request) checked.")
 
         success = self._apply_change_item_correction(
             check_operation=check_operation,

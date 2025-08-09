@@ -5,24 +5,19 @@ from __future__ import annotations
 import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
-import colrev.env.environment_manager
 import colrev.loader.load_utils
-import colrev.ops.load
 import colrev.ops.prep
 import colrev.ops.search
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
-import colrev.packages.osf.src.osf_api
 import colrev.process.operation
 import colrev.record.record
 import colrev.record.record_prep
-import colrev.review_manager
-import colrev.settings
+import colrev.search_file
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -34,8 +29,6 @@ from colrev.packages.osf.src.osf_api import OSFApiQuery
 
 class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     """OSF"""
-
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
 
     source_identifier = Fields.ID
     search_types = [SearchType.API]
@@ -53,21 +46,25 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        search_file: Optional[colrev.search_file.ExtendedSearchFile] = None,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
 
-        if settings:
-            self.search_source = self.settings_class(**settings)
+        if search_file:
+            self.search_source = search_file
         else:
-            self.search_source = colrev.settings.SearchSource(
-                endpoint=self.endpoint,
-                filename=Path("data/search/osf.bib"),
+            self.search_source = colrev.search_file.ExtendedSearchFile(
+                platform=self.endpoint,
+                search_results_path=Path("data/search/osf.bib"),
                 search_type=SearchType.API,
-                search_parameters={},
+                search_string="",
                 comment="",
             )
-            self.source_operation = source_operation
+        self.source_operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -80,7 +77,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls, operation: colrev.ops.search.Search, params: str
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
 
         params_dict: typing.Dict[str, str] = {}
@@ -96,10 +93,10 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         if search_type == SearchType.API:
             # Check for params being empty and initialize if needed
             if len(params_dict) == 0:
-                search_source = operation.create_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(platform=cls.endpoint)
                 # Search title per default (other fields may be supported later)
-                search_source.search_parameters["query"] = {
-                    "title": search_source.search_parameters["query"]
+                search_source.search_string["query"] = {
+                    "title": search_source.search_string["query"]
                 }
             elif "https://api.osf.io/v2/nodes/?filter" in params_dict.get("url", ""):
                 query = (
@@ -117,10 +114,11 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
                 filename = operation.get_unique_filename(
                     file_path_string=f"osf_{last_value}"
                 )
-                search_source = colrev.settings.SearchSource(
-                    endpoint=cls.endpoint,
-                    filename=filename,
+                search_source = colrev.search_file.ExtendedSearchFile(
+                    platform=cls.endpoint,
+                    search_results_path=filename,
                     search_type=SearchType.API,
+                    search_string="",
                     search_parameters={"query": search_parameters},
                     comment="",
                 )
@@ -144,10 +142,12 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def search(self, rerun: bool) -> None:
         """Run a search of OSF"""
-        osf_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        osf_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
         self._run_api_search(osf_feed=osf_feed, rerun=rerun)
 
@@ -156,10 +156,10 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
 
         api = OSFApiQuery(
-            parameters=self.search_source.search_parameters["query"],
+            parameters=self.search_source.search_string["query"],
             api_key=self._get_api_key(),
         )
-        self.review_manager.logger.info(f"Retrieve {api.overall()} records")
+        self.logger.info(f"Retrieve {api.overall()} records")
 
         while True:
             for record_dict in api.retrieve_records():
@@ -185,7 +185,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Needs manual preparation"""
 

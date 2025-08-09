@@ -2,25 +2,22 @@
 """SearchSource: plos"""
 import datetime
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
-import colrev.ops.load
 import colrev.ops.prep
 import colrev.ops.search
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_settings
 import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.process.operation
 import colrev.record.record
 import colrev.record.record_prep
-import colrev.record.record_similarity
-import colrev.settings
+import colrev.search_file
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
@@ -34,7 +31,6 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     """PLOS API"""
 
     endpoint = "colrev.plos"
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = Fields.DOI
     search_types = [SearchType.API]
     heuristic_status = SearchSourceHeuristicStatus.oni
@@ -45,44 +41,18 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        self.search_source = self._get_search_source(settings)
+        self.search_source = search_file
         self.plos_lock = Lock()
         self.language_service = colrev.env.language_service.LanguageService()
 
-        self.api = plos_api.PlosAPI(params=self.search_source.search_parameters)
-
-    # Function to define the search source.
-    #   If setting exist, use that settings
-    #   If not, return the .bib
-    #   If it does not exist, create new one (.bib)
-    def _get_search_source(
-        self, settings: typing.Optional[dict]
-    ) -> colrev.settings.SearchSource:
-        if settings:
-            # plos as a search_source
-            return self.settings_class(**settings)
-
-        raise NotImplementedError
-        # # plos as an .-prep source
-        # plos_md_filename = Path("data/search/md_plos.bib")
-        # plos_md_source_l = [
-        #     s
-        #     for s in self.review_manager.settings.sources
-        #     if s.filename == plos_md_filename
-        # ]
-        # if plos_md_source_l:
-        #     return plos_md_source_l[0]
-
-        # return colrev.settings.SearchSource(
-        #     endpoint="colrev.plos",
-        #     filename=plos_md_filename,
-        #     search_type=SearchType.MD,
-        #     search_parameters={},
-        #     comment="",
-        # )
+        self.api = plos_api.PlosAPI(params=self.search_source.search_string)
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -111,7 +81,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)
         params:
         - search_file="..." to add a DB search
@@ -120,18 +90,18 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         search_type = cls._select_search_type(operation, params_dict)
         if search_type == SearchType.API:
             if len(params) == 0:
-                search_source = operation.create_api_source(endpoint=cls.endpoint)
+                search_source = operation.create_api_source(platform=cls.endpoint)
 
-                search_source.search_parameters[Fields.URL] = (
+                search_source.search_string[Fields.URL] = (
                     cls._api_url
                     + "search?"
                     + "q="
-                    + search_source.search_parameters.pop("query", "").replace(" ", "+")
+                    + search_source.search_string.pop("query", "").replace(" ", "+")
                     + "&fl=id,abstract,author_display,title_display,"
                     + "journal,publication_date,volume,issue"
                 )
 
-                search_source.search_parameters["version"] = "0.1.0"
+                search_source.search_string["version"] = "0.1.0"
 
                 operation.add_source_and_search(search_source)
 
@@ -144,11 +114,11 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             filename = operation.get_unique_filename(file_path_string="plos")
 
-            search_source = colrev.settings.SearchSource(
-                endpoint="colrev.plos",
-                filename=filename,
+            search_source = colrev.search_file.ExtendedSearchFile(
+                platform="colrev.plos",
+                search_results_path=filename,
                 search_type=SearchType.API,
-                search_parameters=query,
+                search_string=query["url"],
                 comment="",
             )
 
@@ -173,7 +143,6 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
                 del record.data[Fields.LANGUAGE]
 
         doi_connector.DOIConnector.get_link_from_doi(
-            review_manager=self.review_manager,
             record=record,
         )
 
@@ -221,23 +190,26 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         rerun: bool,
     ) -> None:
         self.api.rerun = rerun
-        self.api.last_updated = plos_feed.get_last_updated()
+        self.api.last_updated = self.review_manager.dataset.get_last_updated(
+            plos_feed.feed_file
+        )
 
         num_records = self.api.get_len_total()
-        self.review_manager.logger.info(f"Total: {num_records:,} records")
+        self.logger.info("Total: %s records", f"{num_records:,}")
 
         # It retrieves only new records added since the last sync, avoiding a full download.
         if not rerun:
-            self.review_manager.logger.info(
-                f"Retrieve papers indexed since {self.api.last_updated.split('T', maxsplit=1)[0]}"
+            self.logger.info(
+                "Retrieve papers indexed since %s",
+                self.api.last_updated.split("T", maxsplit=1)[0],
             )
             num_records = self.api.get_len()
 
-        self.review_manager.logger.info(f"Retrieve {num_records:,} records")
+        self.logger.info("Retrieve %s records", f"{num_records:,}")
 
         estimated_time = num_records * 0.5
         estimated_time_formatted = str(datetime.timedelta(seconds=int(estimated_time)))
-        self.review_manager.logger.info(f"Estimated time: {estimated_time_formatted}")
+        self.logger.info("Estimated time: %s", estimated_time_formatted)
 
         try:
             for record in self.api.get_records():
@@ -260,14 +232,14 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _scope_excluded(self, retrieved_record_dict: dict) -> bool:
 
         if (
-            "scope" not in self.search_source.search_parameters
-            or "years" not in self.search_source.search_parameters["scope"]
+            "scope" not in self.search_source.search_string
+            or "years" not in self.search_source.search_string["scope"]
         ):
             return False
 
-        year_from, year_to = self.search_source.search_parameters["scope"][
-            "years"
-        ].split("-")
+        year_from, year_to = self.search_source.search_string["scope"]["years"].split(
+            "-"
+        )
 
         if not retrieved_record_dict.get(Fields.YEAR, -1000).isdigit():
             return True
@@ -291,7 +263,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         if source.search_type == SearchType.API:
             self._validate_api_params()
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug(f"SearchSource {source.filename} validated")
 
     # pylint: disable=pointless-statement
     def _validate_api_params(self) -> None:
@@ -302,10 +274,12 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         self._validate_source()
         # Create the Object SearchAPIFeed which mange the search on the API
 
-        plos_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        plos_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         if self.search_source.search_type == SearchType.API:
@@ -333,7 +307,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Run the custom source-prep operation"""
         source_item = [

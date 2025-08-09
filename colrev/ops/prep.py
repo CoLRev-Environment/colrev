@@ -24,6 +24,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.process.operation
 import colrev.record.record_prep
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import EndpointType
@@ -31,6 +32,7 @@ from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
 
@@ -105,7 +107,7 @@ class Prep(colrev.process.operation.Operation):
         self.temp_records = self.review_manager.path / (Path(".colrev/temp_recs.bib"))
 
         self.quality_model = review_manager.get_qm()
-        self.package_manager = self.review_manager.get_package_manager()
+        self.package_manager = PackageManager()
 
         self.polish = polish
         self._cpu = cpu
@@ -620,11 +622,7 @@ class Prep(colrev.process.operation.Operation):
                 conditions=[{Fields.STATUS: s} for s in r_states_to_prepare]
             )
         )
-        if (
-            self.polish
-            and self.review_manager.in_ci_environment()
-            and len(items) > 2000
-        ):
+        if self.polish and utils.in_ci_environment() and len(items) > 2000:
             items = random.choices(items, k=2000)  # nosec
 
         prep_data = {
@@ -731,7 +729,6 @@ class Prep(colrev.process.operation.Operation):
 
         self.prep_package_endpoints: dict[str, typing.Any] = {}
         for prep_package_endpoint in prep_round.prep_package_endpoints:
-
             prep_class = self.package_manager.get_package_endpoint_class(
                 package_type=EndpointType.prep,
                 package_identifier=prep_package_endpoint["endpoint"],
@@ -746,7 +743,7 @@ class Prep(colrev.process.operation.Operation):
             if x["endpoint"].lower() not in self.prep_package_endpoints
         ]
         if non_available_endpoints:
-            if self.review_manager.in_ci_environment():
+            if utils.in_ci_environment():
                 raise colrev_exceptions.ServiceNotAvailableException(
                     dep=f"colrev prep ({','.join(non_available_endpoints)})",
                     detailed_trace="prep not available in ci environment",
@@ -761,7 +758,10 @@ class Prep(colrev.process.operation.Operation):
                 self.review_manager.logger.debug(
                     f"Check availability of {endpoint_name}"
                 )
-                endpoint.check_availability(source_operation=self)  # type: ignore
+                try:
+                    endpoint.check_availability()
+                except colrev_exceptions.ServiceNotAvailableException as exc:
+                    print(exc)
 
     def _log_record_change_scores(
         self, *, preparation_data: list, prepared_records: list
@@ -916,7 +916,7 @@ class Prep(colrev.process.operation.Operation):
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed prep operation{Colors.END}"
         )
-        if self.review_manager.in_ci_environment():
+        if utils.in_ci_environment():
             print("\n\n")
 
     def _nothing_to_prepare_condition(self, preparation_data: list) -> bool:

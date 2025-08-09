@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import json
+import logging
+from typing import Optional
 
 import requests
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
+import colrev.utils
 from colrev.constants import Fields
 from colrev.packages.semanticscholar.src import record_transformer
 
@@ -37,13 +39,15 @@ class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
         _, email = prep_operation.review_manager.get_committer()
         self.headers = {"user-agent": f"{__name__} (mailto:{email})"}
-        self.session = prep_operation.review_manager.get_cached_session()
+        self.session = colrev.utils.get_cached_session()
 
     def _retrieve_record_from_semantic_scholar(
         self,
@@ -54,7 +58,7 @@ class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
         search_api_url = "https://api.semanticscholar.org/graph/v1/paper/search?query="
         url = search_api_url + record_in.data.get(Fields.TITLE, "").replace(" ", "+")
 
-        # prep_operation.review_manager.logger.debug(url)
+        # self.logger.debug(url)
         ret = self.session.request(
             "GET", url, headers=self.headers, timeout=self.prep_operation.timeout
         )
@@ -69,7 +73,7 @@ class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
 
         paper_id = items[0]["paperId"]
         record_retrieval_url = "https://api.semanticscholar.org/v1/paper/" + paper_id
-        # prep_operation.review_manager.logger.debug(record_retrieval_url)
+        # self.logger.debug(record_retrieval_url)
         ret_ent = self.session.request(
             "GET",
             record_retrieval_url,

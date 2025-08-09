@@ -2,8 +2,10 @@
 """Exclude records based on language as a prep operation"""
 from __future__ import annotations
 
+import logging
 import re
 import statistics
+from typing import Optional
 
 from pydantic import Field
 
@@ -30,14 +32,21 @@ class ExcludeLanguagesPrep(base_classes.PrepPackageBaseClass):
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.ops.prep.Prep,
+        settings: dict,
+        logger: Optional[logging.Logger] = None,
+    ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
 
         # Note : the following objects have heavy memory footprints and should be
         # class (not object) properties to keep parallel processing as
         # efficient as possible (the object is passed to each thread)
         languages_to_include = ["eng"]
-        # if not prep_operation.review_manager.in_ci_environment():
+        # if not utils.in_ci_environment():
         self.language_service = colrev.env.language_service.LanguageService()
 
         prescreen_package_endpoints = (

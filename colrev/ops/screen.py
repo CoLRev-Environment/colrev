@@ -14,6 +14,7 @@ from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 
 
 class Screen(colrev.process.operation.Operation):
@@ -468,7 +469,7 @@ class Screen(colrev.process.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
 
         if not self.review_manager.settings.screen.screen_package_endpoints:
             self._screen_include_all(records)

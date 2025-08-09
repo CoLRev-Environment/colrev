@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import re
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import Field
@@ -14,8 +15,6 @@ import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
@@ -32,7 +31,6 @@ from colrev.constants import SearchType
 class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Unknown SearchSource"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.unknown_source"
 
     source_identifier = "colrev.unknown_source"
@@ -53,9 +51,14 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     _padding = 40
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
-        self.search_source = self.settings_class(**settings)
+        self.logger = logger or logging.getLogger(__name__)
+        self.search_source = search_file
         self.review_manager = source_operation.review_manager
         self.language_service = colrev.env.language_service.LanguageService()
         self.operation = source_operation
@@ -73,7 +76,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -535,7 +538,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
                 record.remove_field(key=Fields.SERIES)
 
-        if self.search_source.filename.suffix == ".md":
+        if self.search_source.search_history_path.suffix == ".md":
             if (
                 record.data[Fields.ENTRYTYPE] == "misc"
                 and Fields.PUBLISHER in record.data
@@ -764,7 +767,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for unknown sources"""
 

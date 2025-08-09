@@ -563,7 +563,7 @@ class SearchType(Enum, metaclass=SortedEnumMeta):
         return cls._member_names_
 
     def __str__(self) -> str:
-        return f"{self.name}"
+        return self.name
 
     def __lt__(self, other: "SearchType") -> bool:
         if isinstance(other, SearchType):

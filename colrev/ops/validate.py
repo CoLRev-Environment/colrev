@@ -139,7 +139,7 @@ class Validate(colrev.process.operation.Operation):
         )
         origin_records = {}
         for source in load_operation.load_active_sources(include_md=True):
-            if not source.search_source.filename.is_file():
+            if not source.search_source.search_results_path.is_file():
                 continue
             load_operation.setup_source_for_load(source, select_new_records=False)
             for origin_record in source.search_source.source_records_list:

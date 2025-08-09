@@ -27,6 +27,7 @@ import colrev.ui_cli.add_package_to_settings
 import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
@@ -34,6 +35,8 @@ from colrev.constants import Filepaths
 from colrev.constants import IDPattern
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
+from colrev.env.environment_manager import EnvironmentManager
+from colrev.env.resources import Resources
 
 # pylint: disable=too-many-lines
 # pylint: disable=redefined-outer-name
@@ -84,10 +87,12 @@ def _select_source_interactively(
     selected: str, review_manager: colrev.review_manager.ReviewManager
 ) -> str:
     """Select a source interactively"""
+    sources = [str(s.search_results_path) for s in review_manager.settings.sources]
+    if selected is None:
+        return ",".join(sources)
     if selected != "select_interactively":
         return selected
 
-    sources = [str(s.filename) for s in review_manager.settings.sources]
     questions = [
         inquirer.Checkbox(
             "source",
@@ -561,7 +566,7 @@ def search(
 
     if view:
         for source in search_operation.sources:
-            search_operation.review_manager.p_printer.pprint(source)
+            utils.p_print(source)
         return
 
     if add:
@@ -2058,12 +2063,12 @@ def data(
             data_operation.review_manager.settings.data.data_package_endpoints
         )
         for data_endpoint in data_endpoints:
-            data_operation.review_manager.p_printer.pprint(data_endpoint)
+            utils.p_print(data_endpoint)
         return
 
     if reading_heuristics:
         heuristic_results = data_operation.reading_heuristics()
-        review_manager.p_printer.pprint(heuristic_results)
+        utils.p_print(heuristic_results)
         return
     if setup_custom_script:
         data_operation.setup_custom_script()
@@ -2084,7 +2089,7 @@ def data(
         return
 
     ret = data_operation.main()
-    if data_operation.review_manager.in_ci_environment():
+    if utils.in_ci_environment():
         if ret["ask_to_commit"]:
             review_manager.dataset.create_commit(
                 msg="Data and synthesis", manual_author=True
@@ -2279,7 +2284,7 @@ def distribute(ctx: click.core.Context, path: Path, verbose: bool, force: bool) 
 def _print_environment_status(
     review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    environment_manager = review_manager.get_environment_manager()
+    environment_manager = EnvironmentManager()
     environment_details = environment_manager.get_environment_details()
 
     print("\nCoLRev environment status\n")
@@ -2434,7 +2439,7 @@ def env(
     )
 
     if install:
-        env_resources = review_manager.get_resources()
+        env_resources = Resources()
         if env_resources.install_curated_resource(curated_resource=install):
             print("Successfully installed curated resource.")
             print("To make it available to other projects, run")
@@ -2442,7 +2447,7 @@ def env(
         return
 
     if pull:
-        environment_manager = review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         for curated_resource in environment_manager.local_repos():
             try:
                 curated_resource_path = curated_resource["repo_source_path"]
@@ -2469,12 +2474,12 @@ def env(
         return
 
     if register:
-        environment_manager = review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         environment_manager.register_repo(Path.cwd())
         return
 
     if unregister is not None:
-        environment_manager = review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
 
         local_repos = environment_manager.local_repos()
         if str(unregister) not in [x["source_url"] for x in local_repos]:

@@ -211,7 +211,9 @@ def _get_md_retrieved(sources: list) -> int:
     md_retrieved = 0
     for source in sources:
         if not source.is_md_source():
-            nr_in_file = colrev.loader.load_utils.get_nr_records(source.filename)
+            nr_in_file = colrev.loader.load_utils.get_nr_records(
+                source.search_results_path
+            )
             md_retrieved += nr_in_file
     return md_retrieved
 

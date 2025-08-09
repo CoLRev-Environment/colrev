@@ -18,16 +18,17 @@ import git
 from git.exc import InvalidGitRepositoryError
 
 import colrev.env.docker_manager
-import colrev.env.environment_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
-import colrev.package_manager.package_manager
 import colrev.review_manager
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
+from colrev.constants import SearchType
+from colrev.env.environment_manager import EnvironmentManager
+from colrev.package_manager.package_manager import PackageManager
 
 # pylint: disable=too-few-public-methods
 
@@ -48,7 +49,7 @@ class Initializer:
         light: bool = False,
         exact_call: str = "",
     ) -> None:
-        p_man = colrev.package_manager.package_manager.PackageManager()
+        p_man = PackageManager()
         self.review_type = self._format_review_type(review_type)
         if not p_man.is_installed(self.review_type):
             print(
@@ -198,7 +199,7 @@ class Initializer:
                 filepath=self.target_path, content=cur_content
             )
 
-        environment_manager = colrev.env.environment_manager.EnvironmentManager()
+        environment_manager = EnvironmentManager()
         environment_manager.get_name_mail_from_git()
 
         try:
@@ -219,7 +220,7 @@ class Initializer:
         git.Repo.init()
 
         # To check if git actors are set
-        environment_manager = colrev.env.environment_manager.EnvironmentManager()
+        environment_manager = EnvironmentManager()
         environment_manager.get_name_mail_from_git()
 
         logging.info("Install latest pre-commmit hooks")
@@ -323,6 +324,17 @@ class Initializer:
             colrev.env.utils.retrieve_package_file(
                 template_file=retrieval_path, target=target_path
             )
+        files_dir_search_history = colrev.search_file.ExtendedSearchFile(
+            platform="colrev.files_dir",
+            search_results_path=Path("data/search/files.bib"),
+            search_type=SearchType.FILES,
+            search_string="",
+            search_parameters={"scope": {"path": "data/pdfs"}},
+            comment="",
+        )
+        files_dir_search_history.save(
+            filepath=Path("data/search/files_search_history.json")
+        )
 
     def _setup_settings(self) -> None:
 
@@ -348,7 +360,7 @@ class Initializer:
 
         # Principle: adapt values provided by the default SETTINGS_FILE
         # instead of creating a new SETTINGS_FILE
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
         review_type_class = package_manager.get_package_endpoint_class(
             package_type=EndpointType.review_type,
             package_identifier=self.review_type,
@@ -370,7 +382,7 @@ class Initializer:
                 new_string=project_title.rstrip(" ").capitalize(),
             )
         else:
-            package_manager = self.review_manager.get_package_manager()
+            package_manager = PackageManager()
             r_type_suffix = str(review_type_object)
 
             colrev.env.utils.inplace_change(
@@ -387,7 +399,7 @@ class Initializer:
                 if x["endpoint"] not in ["colrev.paper_md"]
             ]
             settings.sources = [
-                x for x in settings.sources if x.endpoint not in ["colrev.files_dir"]
+                x for x in settings.sources if x.platform not in ["colrev.files_dir"]
             ]
 
             settings.pdf_prep.pdf_prep_package_endpoints = [
@@ -411,7 +423,7 @@ class Initializer:
 
         for source in settings.sources:
             self.review_manager.logger.info(
-                " add search %s", source.endpoint.replace("colrev.", "")
+                " add search %s", source.platform.replace("colrev.", "")
             )
 
         for data_package_endpoint in settings.data.data_package_endpoints:
@@ -434,7 +446,7 @@ class Initializer:
         if example or "pytest" in os.getcwd():
             return
         self.review_manager.logger.info("Register CoLRev repository")
-        environment_manager = self.review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         environment_manager.register_repo(
             self.target_path, logger=self.review_manager.logger
         )
@@ -498,12 +510,10 @@ class Initializer:
         settings["dedupe"]["dedupe_package_endpoints"] = [{"endpoint": "colrev.dedupe"}]
         settings["sources"] = [
             {
-                "endpoint": "colrev.unknown_source",
-                "filename": str(Path("data/search/30_example_records.bib")),
+                "platform": "colrev.unknown_source",
+                "search_results_path": "data/search/30_example_records.bib",
                 "search_type": "DB",
-                "search_parameters": {
-                    "query_file": str(Path("data/search/30_example_records_query.txt"))
-                },
+                "search_string": "",
                 "comment": "",
             }
         ]

@@ -5,12 +5,11 @@ from __future__ import annotations
 import logging
 import re
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
@@ -23,7 +22,6 @@ from colrev.constants import SearchType
 class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Taylor and Francis"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.taylor_and_francis"
     source_identifier = "{{doi}}"
     search_types = [SearchType.DB]
@@ -31,10 +29,14 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        source_operation: colrev.process.operation.Operation,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
-        self.search_source = self.settings_class(**settings)
-        self.review_manager = source_operation.review_manager
+        self.logger = logger or logging.getLogger(__name__)
+        self.search_source = search_file
         self.source_operation = source_operation
 
     @classmethod
@@ -54,7 +56,7 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {params.split("=")[0]: params.split("=")[1]}
@@ -119,7 +121,9 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record.Record,
+        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Taylor and Francis"""
 

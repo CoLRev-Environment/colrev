@@ -2,9 +2,11 @@
 """Creation of a PRISMA chart as part of the data operations"""
 from __future__ import annotations
 
+import logging
 import os
 import typing
 from pathlib import Path
+from typing import Optional
 
 import docker
 import pandas as pd
@@ -17,6 +19,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
+from colrev import utils
 from colrev.constants import Colors
 
 if typing.TYPE_CHECKING:
@@ -47,7 +50,9 @@ class PRISMA(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = data_operation.review_manager
         self.data_operation = data_operation
 
@@ -69,7 +74,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
             output_dir / path for path in self.settings.diagram_path
         ]
 
-        if not self.review_manager.in_ci_environment():
+        if not utils.in_ci_environment():
             colrev.env.docker_manager.DockerManager.build_docker_image(
                 imagename=self.PRISMA_IMAGE
             )
@@ -140,15 +145,15 @@ class PRISMA(base_classes.DataPackageBaseClass):
         )
 
         prisma_data.to_csv(self.csv_path, index=False)
-        self.review_manager.logger.debug(f"Exported {self.csv_path}")
+        self.logger.debug(f"Exported {self.csv_path}")
 
         if not status_stats.completeness_condition and not silent_mode:
-            self.review_manager.logger.info("Review not (yet) complete")
+            self.logger.info("Review not (yet) complete")
 
     def _export_diagram(self, silent_mode: bool) -> None:
         if not self.csv_path.is_file():
-            self.review_manager.logger.error("File %s does not exist.", self.csv_path)
-            self.review_manager.logger.info("Complete processing and use colrev data")
+            self.logger.error("File %s does not exist.", self.csv_path)
+            self.logger.info("Complete processing and use colrev data")
             return
 
         csv_relative_path = self.csv_path.relative_to(
@@ -156,7 +161,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
         ).as_posix()
 
         if not silent_mode:
-            self.review_manager.logger.info("Create PRISMA diagram")
+            self.logger.info("Create PRISMA diagram")
 
         for diagram_path in self.settings.diagram_path:
             diagram_relative_path = diagram_path.relative_to(
@@ -211,7 +216,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
             container.remove()
 
         except docker.errors.ImageNotFound:
-            self.review_manager.logger.error("Docker image not found")
+            self.logger.error("Docker image not found")
         except docker.errors.ContainerError as exc:
             if "Temporary failure in name resolution" in str(exc):
                 raise colrev_exceptions.ServiceNotAvailableException(

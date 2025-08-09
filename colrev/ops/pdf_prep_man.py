@@ -11,11 +11,13 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
 import colrev.record.record_pdf
+from colrev import utils
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import write_file
 
 
@@ -74,9 +76,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
             conditions=[{Fields.STATUS: RecordState.pdf_needs_manual_preparation}]
         )
         pdf_prep_man_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
-        self.review_manager.logger.debug(
-            self.review_manager.p_printer.pformat(pdf_prep_man_data)
-        )
+        self.review_manager.logger.debug(utils.pformat(pdf_prep_man_data))
         return pdf_prep_man_data
 
     def pdfs_prepared_manually(self) -> bool:
@@ -290,10 +290,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
     def main(self) -> None:
         """Prepare PDFs manually (main entrypoint)"""
 
-        if (
-            self.review_manager.in_ci_environment()
-            and not self.review_manager.in_test_environment()
-        ):
+        if utils.in_ci_environment() and not self.review_manager.in_test_environment():
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev pdf-prep-man",
                 detailed_trace="pdf-prep-man not available in ci environment",
@@ -301,7 +298,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
 
         pdf_prep_man_package_endpoints = (
             self.review_manager.settings.pdf_prep.pdf_prep_man_package_endpoints

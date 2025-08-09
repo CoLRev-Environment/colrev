@@ -2,13 +2,15 @@
 """Completion of metadata based on year-volume-issue dependency as a prep operation"""
 from __future__ import annotations
 
+import logging
+from typing import Optional
+
 import requests
 from pydantic import Field
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
@@ -38,16 +40,20 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
         self.local_index = colrev.env.local_index.LocalIndex(
-            verbose_mode=self.review_manager.verbose_mode
+            verbose_mode=self.verbose_mode
         )
         self.vol_nr_dict = self._get_vol_nr_dict()
         self.quality_model = self.review_manager.get_qm()
-        self.api = crossref_api.CrossrefAPI(params={})
+        self.api = crossref_api.CrossrefAPI(url="")
 
     def _get_vol_nr_dict(self) -> dict:
         vol_nr_dict: dict = {}
