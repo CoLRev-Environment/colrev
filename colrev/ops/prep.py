@@ -621,11 +621,7 @@ class Prep(colrev.process.operation.Operation):
                 conditions=[{Fields.STATUS: s} for s in r_states_to_prepare]
             )
         )
-        if (
-            self.polish
-            and utils.in_ci_environment()
-            and len(items) > 2000
-        ):
+        if self.polish and utils.in_ci_environment() and len(items) > 2000:
             items = random.choices(items, k=2000)  # nosec
 
         prep_data = {

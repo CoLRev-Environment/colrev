@@ -179,10 +179,7 @@ class PDFGetMan(colrev.process.operation.Operation):
     def main(self) -> None:
         """Get PDFs manually (main entrypoint)"""
 
-        if (
-            utils.in_ci_environment()
-            and not self.review_manager.in_test_environment()
-        ):
+        if utils.in_ci_environment() and not self.review_manager.in_test_environment():
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev pdf-get-man",
                 detailed_trace="pdf-get-man not available in ci environment",

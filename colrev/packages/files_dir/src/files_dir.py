@@ -23,6 +23,7 @@ import colrev.record.record_pdf
 import colrev.record.record_prep
 import colrev.record.record_similarity
 import colrev.search_file
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -31,7 +32,6 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.crossref.src import crossref_api
 from colrev.writer.write_utils import write_file
-from colrev import utils
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code

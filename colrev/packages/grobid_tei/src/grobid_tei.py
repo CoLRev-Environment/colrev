@@ -12,8 +12,8 @@ from pydantic import Field
 import colrev.env.tei_parser
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
-from colrev.constants import Fields
 from colrev import utils
+from colrev.constants import Fields
 
 if typing.TYPE_CHECKING:
     import colrev.record.record_pdf

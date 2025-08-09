@@ -289,10 +289,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
     def main(self) -> None:
         """Prepare PDFs manually (main entrypoint)"""
 
-        if (
-            utils.in_ci_environment()
-            and not self.review_manager.in_test_environment()
-        ):
+        if utils.in_ci_environment() and not self.review_manager.in_test_environment():
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev pdf-prep-man",
                 detailed_trace="pdf-prep-man not available in ci environment",
