@@ -78,7 +78,9 @@ class Obsidian(base_classes.DataPackageBaseClass):
             self.review_manager.path / self.OBSIDIAN_INBOX_PATH_RELATIVE
         )
         if hasattr(self.review_manager, "dataset"):
-            self.review_manager.dataset.git_repo.update_gitignore(add=self.GITIGNORE_LIST)
+            self.review_manager.dataset.git_repo.update_gitignore(
+                add=self.GITIGNORE_LIST
+            )
 
     # pylint: disable=unused-argument
     @classmethod

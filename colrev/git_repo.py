@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from pathlib import Path
-from random import randint
 import time
 import typing
+from pathlib import Path
+from random import randint
 
 import git
-from git import GitCommandError, InvalidGitRepositoryError
+from git import GitCommandError
+from git import InvalidGitRepositoryError
 
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import FileSets
@@ -44,11 +45,17 @@ class GitRepo:
 
     def has_record_changes(self, *, change_type: str = "all") -> bool:
         """Check whether the records have changes"""
-        return self.has_changes(Path(self.review_manager.paths.RECORDS_FILE_GIT), change_type=change_type)
+        return self.has_changes(
+            Path(self.review_manager.paths.RECORDS_FILE_GIT), change_type=change_type
+        )
 
     def has_changes(self, relative_path: Path, *, change_type: str = "all") -> bool:
         """Check whether the relative path (or the git repository) has changes"""
-        assert change_type in ["all", "staged", "unstaged"], "Invalid change_type specified"
+        assert change_type in [
+            "all",
+            "staged",
+            "unstaged",
+        ], "Invalid change_type specified"
         try:
             bool(self.repo.head.commit)
         except ValueError:
@@ -90,7 +97,9 @@ class GitRepo:
 
     def _sleep_util_git_unlocked(self) -> None:
         i = 0
-        while (self.review_manager.path / Path(".git/index.lock")).is_file():  # pragma: no cover
+        while (
+            self.review_manager.path / Path(".git/index.lock")
+        ).is_file():  # pragma: no cover
             i += 1
             time.sleep(randint(1, 50) * 0.1)  # nosec
             if i > 5:
@@ -159,9 +168,7 @@ class GitRepo:
 
     def file_in_history(self, filepath: Path) -> bool:
         """Check whether a file is in the git history"""
-        return str(filepath) in [
-            o.path for o in self.repo.head.commit.tree.traverse()
-        ]
+        return str(filepath) in [o.path for o in self.repo.head.commit.tree.traverse()]
 
     def get_commit_message(self, *, commit_nr: int) -> str:
         """Get the commit message for commit #"""

@@ -896,7 +896,9 @@ class Prep(colrev.process.operation.Operation):
         self.review_manager.dataset.git_repo.create_commit(
             msg="Prep: improve record metadata",
         )
-        self._prep_commit_id = self.review_manager.dataset.git_repo.get_repo().head.commit.hexsha
+        self._prep_commit_id = (
+            self.review_manager.dataset.git_repo.get_repo().head.commit.hexsha
+        )
         if not self.review_manager.high_level_operation:
             print()
         self.review_manager.reset_report_logger()

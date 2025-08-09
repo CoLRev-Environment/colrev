@@ -284,7 +284,9 @@ class PDFPrepMan(colrev.process.operation.Operation):
         self.review_manager.dataset.save_records_dict(
             {record_dict[Fields.ID]: record_dict}, partial=True
         )
-        self.review_manager.dataset.git_repo.add_changes(self.review_manager.paths.RECORDS_FILE)
+        self.review_manager.dataset.git_repo.add_changes(
+            self.review_manager.paths.RECORDS_FILE
+        )
 
     @colrev.process.operation.Operation.decorate()
     def main(self) -> None:

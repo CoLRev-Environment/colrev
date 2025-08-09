@@ -472,7 +472,9 @@ class Search(colrev.process.operation.Operation):
 
         search_file.save()
         # TODO : get_filepath()?
-        self.review_manager.dataset.git_repo.add_changes(search_file.search_history_path)
+        self.review_manager.dataset.git_repo.add_changes(
+            search_file.search_history_path
+        )
 
         self.review_manager.dataset.git_repo.create_commit(
             msg=f"Search: add {search_file.platform}:{search_file.search_type} → "
@@ -527,7 +529,9 @@ class Search(colrev.process.operation.Operation):
                 endpoint.search(rerun=rerun)  # type: ignore
 
                 self._remove_forthcoming(source)
-                self.review_manager.dataset.git_repo.add_changes(source.search_results_path)
+                self.review_manager.dataset.git_repo.add_changes(
+                    source.search_results_path
+                )
                 if not skip_commit:
                     self.review_manager.dataset.git_repo.create_commit(
                         msg=f"Search: run {source.platform}:{source.search_type} → "

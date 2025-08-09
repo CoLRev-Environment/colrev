@@ -699,7 +699,9 @@ class Dedupe(colrev.process.operation.Operation):
             if not self.review_manager.high_level_operation:
                 print()
 
-        dedupe_commit_id = self.review_manager.dataset.git_repo.get_repo().head.commit.hexsha
+        dedupe_commit_id = (
+            self.review_manager.dataset.git_repo.get_repo().head.commit.hexsha
+        )
         self.review_manager.logger.info("To validate the changes, use")
 
         self.review_manager.logger.info(
@@ -720,4 +722,6 @@ class Dedupe(colrev.process.operation.Operation):
                     record.set_status(RecordState.rev_prescreen_included)
 
             self.review_manager.dataset.save_records_dict(records)
-            self.review_manager.dataset.git_repo.create_commit(msg="Skip prescreen/include all")
+            self.review_manager.dataset.git_repo.create_commit(
+                msg="Skip prescreen/include all"
+            )

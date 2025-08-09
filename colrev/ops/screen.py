@@ -282,7 +282,9 @@ class Screen(colrev.process.operation.Operation):
             with open("custom_screen_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.git_repo.add_changes(Path("custom_screen_script.py"))
+        self.review_manager.dataset.git_repo.add_changes(
+            Path("custom_screen_script.py")
+        )
 
         self.review_manager.settings.screen.screen_package_endpoints.append(
             {"endpoint": "custom_screen_script"}

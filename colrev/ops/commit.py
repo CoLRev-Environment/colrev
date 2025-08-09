@@ -174,7 +174,9 @@ class Commit:
         # to ensure that the git tree_hash is up-to-date.
         self.tree_hash = self.review_manager.dataset.git_repo.get_tree_hash()
         try:
-            self.last_commit_sha = self.review_manager.dataset.git_repo.get_last_commit_sha()
+            self.last_commit_sha = (
+                self.review_manager.dataset.git_repo.get_last_commit_sha()
+            )
         except ValueError:
             pass
 
