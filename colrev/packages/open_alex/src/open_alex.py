@@ -10,8 +10,8 @@ from typing import Optional
 import requests
 from pydantic import Field
 
-import colrev.exceptions as colrev_exceptions
 import colrev.env.environment_manager
+import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
