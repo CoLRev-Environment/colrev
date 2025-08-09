@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 """Test the colrev project settings"""
-import json
 import os
 from pathlib import Path
 
-import pytest
-
-import colrev.exceptions as colrev_exceptions
 import colrev.settings
 from colrev.constants import IDPattern
 from colrev.constants import PDFPathType
@@ -142,17 +138,6 @@ def test_settings_load() -> None:
 
 #     with pytest.raises(colrev_exceptions.InvalidSettingsError):
 #         colrev.settings._load_settings_from_dict(loaded_dict=settings)
-
-
-def test_search_source_error_duplicate_path() -> None:
-    with open(
-        Path(colrev.__file__).parents[0] / Path("ops/init/settings.json")
-    ) as file:
-        settings = json.load(file)
-    settings["sources"].append(settings["sources"][0])
-
-    with pytest.raises(colrev_exceptions.InvalidSettingsError):
-        colrev.settings._load_settings_from_dict(loaded_dict=settings)
 
 
 def test_curated_masterdata() -> None:

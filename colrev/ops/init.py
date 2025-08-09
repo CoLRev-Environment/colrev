@@ -28,6 +28,7 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 # pylint: disable=too-few-public-methods
 
@@ -323,6 +324,17 @@ class Initializer:
             colrev.env.utils.retrieve_package_file(
                 template_file=retrieval_path, target=target_path
             )
+        files_dir_search_history = colrev.search_file.ExtendedSearchFile(
+            platform="colrev.files_dir",
+            search_results_path=Path("data/search/files.bib"),
+            search_type=SearchType.FILES,
+            search_string="",
+            search_parameters={"scope": {"path": "data/pdfs"}},
+            comment="",
+        )
+        files_dir_search_history.save(
+            filepath=Path("data/search/files_search_history.json")
+        )
 
     def _setup_settings(self) -> None:
 

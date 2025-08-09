@@ -189,6 +189,22 @@ class Checker:
 
         return True
 
+    def _check_search_history_files(self) -> None:
+        search_files = self.review_manager.paths.search.glob("**/*.*")
+        # for every file that does not end with _search_history.json,
+        # require a corresponding search_history file
+        for search_file in search_files:
+            if str(search_file).endswith("_search_history.json"):
+                continue
+            if (
+                not Path(search_file)
+                .with_name(search_file.stem + "_search_history.json")
+                .is_file()
+            ):
+                raise colrev_exceptions.RepoSetupError(
+                    f"Missing search history file for {search_file.name}"
+                )
+
     def _retrieve_ids_from_bib(self, *, file_path: Path) -> list:
         assert file_path.suffix == ".bib"
         record_ids = []
@@ -681,6 +697,7 @@ class Checker:
             {"script": self._check_git_conflicts, "params": []},
             {"script": self.check_repository_setup, "params": []},
             {"script": self._check_software, "params": []},
+            {"script": self._check_search_history_files, "params": []},
         ]
 
         if self.review_manager.paths.records.is_file():

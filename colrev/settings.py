@@ -518,9 +518,14 @@ def load_settings(*, settings_path: Path) -> Settings:
 def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> None:
     """Save the settings"""
 
+    sources = review_manager.settings.sources
+    review_manager.settings.sources = []
     exported_dict = review_manager.settings.model_dump()
     exported_dict = colrev.env.utils.custom_asdict_factory(exported_dict)
 
     with open(review_manager.paths.settings, "w", encoding="utf-8") as outfile:
         json.dump(exported_dict, outfile, indent=4)
+    for source in sources:
+        source.save(filepath=review_manager.paths.search / source.search_history_path)
+    review_manager.settings.sources = sources
     review_manager.dataset.add_changes(review_manager.paths.settings)

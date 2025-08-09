@@ -223,6 +223,19 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         target=Path("data/search/test_records.bib"),
     )
     review_manager.dataset.add_changes(Path("data/search/test_records.bib"))
+    test_bib_source = colrev.search_file.ExtendedSearchFile(
+        platform="colrev.unknown_source",
+        search_results_path=Path("data/search/test_records.bib"),
+        search_type=SearchType.DB,
+        search_string="",
+        comment="",
+    )
+    review_manager.settings.sources = [test_bib_source]
+    # TODO : should the saving be done by settings.save()?
+    search_history_file_path = Path("data/search/test_records_search_history.json")
+    test_bib_source.save(search_history_file_path)
+    review_manager.dataset.add_changes(search_history_file_path)
+    review_manager.load_settings()
     review_manager.dataset.create_commit(msg="add test_records.bib", manual_author=True)
     review_manager.add_test_records_commit = (
         review_manager.dataset.get_last_commit_sha()
