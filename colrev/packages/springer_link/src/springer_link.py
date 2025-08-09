@@ -107,9 +107,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
                 comment="",
             )
             # params_dict.update(vars(search_source))
-            instance = cls(
-                source_operation=operation, search_file=search_source
-            )
+            instance = cls(source_operation=operation, search_file=search_source)
             instance.api_ui()
             search_source.search_string = instance._add_constraints()
 
