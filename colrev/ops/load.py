@@ -76,7 +76,7 @@ class Load(colrev.process.operation.Operation):
         This method must be called for all packages that work
         with an ex-post assignment of incremental IDs."""
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
 
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
         search_file_path = str(Path("data/search") / filename.name).replace("\\", "/")
@@ -238,12 +238,12 @@ class Load(colrev.process.operation.Operation):
             shutil.move(
                 str(source.search_source.search_results_path), str(new_filename)
             )
-            self.review_manager.dataset.add_changes(
+            self.review_manager.dataset.git_repo.add_changes(
                 source.search_source.search_results_path, remove=True
             )
             source.search_source.search_results_path = new_filename
-            self.review_manager.dataset.add_changes(new_filename)
-            self.review_manager.dataset.create_commit(
+            self.review_manager.dataset.git_repo.add_changes(new_filename)
+            self.review_manager.dataset.git_repo.create_commit(
                 msg=f"Rename {source.search_source.search_results_path}"
             )
             return
@@ -259,12 +259,12 @@ class Load(colrev.process.operation.Operation):
             shutil.move(
                 str(source.search_source.search_history_path), str(new_filename)
             )
-            self.review_manager.dataset.add_changes(
+            self.review_manager.dataset.git_repo.add_changes(
                 source.search_source.search_history_path, remove=True
             )
             source.search_source.search_history_path = new_filename
-            self.review_manager.dataset.add_changes(new_filename)
-            self.review_manager.dataset.create_commit(
+            self.review_manager.dataset.git_repo.add_changes(new_filename)
+            self.review_manager.dataset.git_repo.create_commit(
                 msg=f"Rename {source.search_source.search_history_path}"
             )
 
@@ -390,8 +390,8 @@ class Load(colrev.process.operation.Operation):
         self.review_manager.logger.info(
             "New records loaded".ljust(38) + f"{source.search_source.to_import} records"
         )
-        self.review_manager.dataset.add_setting_changes()
-        self.review_manager.dataset.add_changes(
+        self.review_manager.dataset.git_repo.add_setting_changes()
+        self.review_manager.dataset.git_repo.add_changes(
             source.search_source.search_results_path
         )
 
@@ -409,13 +409,15 @@ class Load(colrev.process.operation.Operation):
         self.review_manager.logger.debug(
             f"Add source to settings {source.search_source.search_history_path}"
         )
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
         self.review_manager.settings.sources.append(source.search_source)
         self.review_manager.save_settings()
         # Add files that were renamed (removed)
         for obj in git_repo.index.diff(None).iter_change_type("D"):
             if source.search_source.search_history_path.stem in obj.b_path:
-                self.review_manager.dataset.add_changes(Path(obj.b_path), remove=True)
+                self.review_manager.dataset.git_repo.add_changes(
+                    Path(obj.b_path), remove=True
+                )
 
     def load_active_sources(self, *, include_md: bool = False) -> list:
         """
@@ -506,7 +508,7 @@ class Load(colrev.process.operation.Operation):
     def _create_load_commit(
         self, source: colrev.search_file.ExtendedSearchFile
     ) -> None:
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
         stashed = "No local changes to save" != git_repo.git.stash(
             "push", "--keep-index"
         )
@@ -514,7 +516,7 @@ class Load(colrev.process.operation.Operation):
         # self.review_manager.exact_call = (
         #     f"{part_exact_call} -s {source.search_source.search_results_path.name}"
         # )
-        self.review_manager.dataset.create_commit(
+        self.review_manager.dataset.git_repo.create_commit(
             msg=f"Load: data/search/{source.search_source.search_results_path.name} → "
             f"{self.review_manager.paths.RECORDS_FILE_GIT}",
             skip_hooks=True,

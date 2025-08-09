@@ -90,7 +90,7 @@ class Merge(colrev.process.operation.Operation):
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-statements
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
         # our_index  = git_repo.index
 
         for remote in git_repo.remotes:

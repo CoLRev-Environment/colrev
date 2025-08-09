@@ -107,7 +107,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
                 f"Error retrieving records from colrev project {project_url} ({exc})"
             ) from exc
 
-        # remote_url = project_review_manager.dataset.get_remote_url()
+        # remote_url = project_review_manager.dataset.git_repo.get_remote_url()
         # if remote_url != "NA":
         #     project_identifier = remote_url.rstrip(".git")
 

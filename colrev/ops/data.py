@@ -106,7 +106,7 @@ class Data(colrev.process.operation.Operation):
             with open("custom_data_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(Path("custom_data_script.py"))
+        self.review_manager.dataset.git_repo.add_changes(Path("custom_data_script.py"))
 
         new_data_endpoint = {"endpoint": "custom_data_script"}
 
@@ -264,6 +264,6 @@ class Data(colrev.process.operation.Operation):
         )
 
         return {
-            "ask_to_commit": self.review_manager.dataset.has_record_changes(),
+            "ask_to_commit": self.review_manager.dataset.git_repo.has_record_changes(),
             "no_endpoints_registered": no_endpoints_registered,
         }

@@ -281,7 +281,7 @@ class CoLRevCLIScreen(base_classes.ScreenPackageBaseClass):
             if input("Create commit (y/n)?") != "y":
                 return records
 
-        self.review_manager.dataset.create_commit(
+        self.review_manager.dataset.git_repo.create_commit(
             msg="Screen: manual (cli)", manual_author=True
         )
         return records

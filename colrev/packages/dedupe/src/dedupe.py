@@ -103,7 +103,7 @@ class Dedupe(base_classes.DedupePackageBaseClass):
             id_sets=duplicate_id_sets, complete_dedupe=True
         )
 
-        self.review_manager.dataset.create_commit(
+        self.review_manager.dataset.git_repo.create_commit(
             msg="Dedupe: merge duplicate records",
         )
 

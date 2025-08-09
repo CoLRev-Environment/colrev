@@ -138,7 +138,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
     def _set_fields(self) -> None:
         self.logger.info("Add fields for data extraction")
         try:
-            _ = self.review_manager.dataset.get_repo()
+            _ = self.review_manager.dataset.git_repo.get_repo()
         except GitCommandError:
             return
 
@@ -247,7 +247,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
 
-        self.review_manager.dataset.add_changes(
+        self.review_manager.dataset.git_repo.add_changes(
             self.settings.data_path_relative, ignore_missing=True
         )
 

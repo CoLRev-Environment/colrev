@@ -165,4 +165,4 @@ class Operation:
         if state_transition:
             self.check_precondition()
         if hasattr(self.review_manager, "dataset"):
-            self.review_manager.dataset.reset_log_if_no_changes()
+            self.review_manager.dataset.git_repo.reset_log_if_no_changes()

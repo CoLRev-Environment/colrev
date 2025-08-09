@@ -209,9 +209,9 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
         if input("import screen table [y,n]?") == "y":
             self.import_table(records)
 
-        if self.review_manager.dataset.has_record_changes():
+        if self.review_manager.dataset.git_repo.has_record_changes():
             if input("create commit [y,n]?") == "y":
-                self.review_manager.dataset.create_commit(
+                self.review_manager.dataset.git_repo.create_commit(
                     msg="Screen", manual_author=True
                 )
         return records
