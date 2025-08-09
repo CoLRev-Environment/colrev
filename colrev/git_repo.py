@@ -18,6 +18,7 @@ if typing.TYPE_CHECKING:
 class GitRepo:
     """Wrapper for Git repository interactions"""
 
+    # TODO : extract review_manager
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager
         try:
