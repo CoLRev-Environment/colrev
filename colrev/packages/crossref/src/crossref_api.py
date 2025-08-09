@@ -332,7 +332,7 @@ class CrossrefAPI:
         )
         self.rerun = rerun
 
-    def check_availability(self, raise_service_not_available: bool = True) -> None:
+    def check_availability(self) -> None:
         """Check the availability of the API"""
 
         try:
@@ -357,16 +357,13 @@ class CrossrefAPI:
                 assert returned_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
                 assert returned_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
             else:
-                if raise_service_not_available:
-                    raise colrev_exceptions.ServiceNotAvailableException(
-                        self._availability_exception_message
-                    )
-        except (requests.exceptions.RequestException, IndexError) as exc:
-            print(exc)
-            if raise_service_not_available:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message
-                ) from exc
+                )
+        except (requests.exceptions.RequestException, IndexError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                self._availability_exception_message
+            ) from exc
 
     def get_url(self) -> str:
         """Get the url for the Crossref API"""

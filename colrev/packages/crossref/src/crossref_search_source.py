@@ -200,13 +200,9 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         operation.add_source_and_search(search_source)
         return search_source
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check status (availability) of the Crossref API"""
-        self.api.check_availability(
-            raise_service_not_available=(not self.review_manager.force_mode)
-        )
+        self.api.check_availability()
 
     def _prep_crossref_record(
         self,

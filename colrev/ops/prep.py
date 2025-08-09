@@ -760,7 +760,10 @@ class Prep(colrev.process.operation.Operation):
                 self.review_manager.logger.debug(
                     f"Check availability of {endpoint_name}"
                 )
-                endpoint.check_availability(source_operation=self)  # type: ignore
+                try:
+                    endpoint.check_availability()
+                except colrev_exceptions.ServiceNotAvailableException as exc:
+                    print(exc)
 
     def _log_record_change_scores(
         self, *, preparation_data: list, prepared_records: list
