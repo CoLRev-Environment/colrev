@@ -16,6 +16,7 @@ from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
+from colrev.package_manager.package_manager import PackageManager
 
 
 class Search(colrev.process.operation.Operation):
@@ -36,7 +37,7 @@ class Search(colrev.process.operation.Operation):
         )
         self.review_manager = review_manager
         self.sources = review_manager.settings.sources
-        self.package_manager = self.review_manager.get_package_manager()
+        self.package_manager = PackageManager()
 
     def get_unique_filename(self, file_path_string: str, suffix: str = ".bib") -> Path:
         """Get a unique filename for a (new) SearchSource"""

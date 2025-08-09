@@ -9,6 +9,7 @@ import inquirer
 
 from colrev.constants import Colors
 from colrev.constants import EndpointType
+from colrev.package_manager.package_manager import PackageManager
 
 if typing.TYPE_CHECKING:
     import colrev.ops.search
@@ -22,7 +23,7 @@ class CLISourceAdder:
     def __init__(self, *, search_operation: colrev.ops.search.Search) -> None:
         self.search_operation = search_operation
         self.review_manager = search_operation.review_manager
-        self.package_manager = self.review_manager.get_package_manager()
+        self.package_manager = PackageManager()
 
     def _select_source(
         self,

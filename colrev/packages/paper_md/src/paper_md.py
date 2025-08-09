@@ -382,7 +382,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
 
         review_type = self.review_manager.settings.project.review_type
 
-        # package_manager = self.review_manager.get_package_manager()
+        # package_manager = PackageManager()
         # check_operation = colrev.ops.check.CheckOperation(self.review_manager)
 
         # review_type_class = package_manager.get_package_endpoint_class(

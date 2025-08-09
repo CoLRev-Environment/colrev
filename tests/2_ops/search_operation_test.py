@@ -9,6 +9,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 from colrev.constants import EndpointType
 from colrev.constants import SearchType
+from colrev.package_manager.package_manager import PackageManager
 
 
 @patch("colrev.review_manager.ReviewManager.in_ci_environment")
@@ -54,7 +55,7 @@ def test_search_add_source(  # type: ignore
         comment="",
     )
 
-    package_manager = search_operation.review_manager.get_package_manager()
+    package_manager = PackageManager()
 
     search_source_class = package_manager.get_package_endpoint_class(
         package_type=EndpointType.search_source,
@@ -105,7 +106,7 @@ def test_search_get_unique_filename(
 #     search_operation = base_repo_review_manager.get_search_operation()
 
 #     base_repo_review_manager.settings.search.retrieve_forthcoming = False
-#     package_manager = search_operation.review_manager.get_package_manager()
+#     package_manager = PackageManager()
 
 #     search_source = package_manager.load_packages(
 #         package_type=EndpointType.search_source,

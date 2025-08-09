@@ -16,6 +16,7 @@ from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 
 
 class PDFGetMan(colrev.process.operation.Operation):
@@ -193,7 +194,7 @@ class PDFGetMan(colrev.process.operation.Operation):
             self.review_manager.settings.pdf_get.pdf_get_man_package_endpoints
         )
 
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
 
         for pdf_get_man_package_endpoint in pdf_get_man_package_endpoints:
             pdf_get_man_class = package_manager.get_package_endpoint_class(

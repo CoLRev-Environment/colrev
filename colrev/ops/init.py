@@ -18,17 +18,17 @@ import git
 from git.exc import InvalidGitRepositoryError
 
 import colrev.env.docker_manager
-import colrev.env.environment_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
-import colrev.package_manager.package_manager
 import colrev.review_manager
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import SearchType
+from colrev.env.environment_manager import EnvironmentManager
+from colrev.package_manager.package_manager import PackageManager
 
 # pylint: disable=too-few-public-methods
 
@@ -49,7 +49,7 @@ class Initializer:
         light: bool = False,
         exact_call: str = "",
     ) -> None:
-        p_man = colrev.package_manager.package_manager.PackageManager()
+        p_man = PackageManager()
         self.review_type = self._format_review_type(review_type)
         if not p_man.is_installed(self.review_type):
             print(
@@ -199,7 +199,7 @@ class Initializer:
                 filepath=self.target_path, content=cur_content
             )
 
-        environment_manager = colrev.env.environment_manager.EnvironmentManager()
+        environment_manager = EnvironmentManager()
         environment_manager.get_name_mail_from_git()
 
         try:
@@ -220,7 +220,7 @@ class Initializer:
         git.Repo.init()
 
         # To check if git actors are set
-        environment_manager = colrev.env.environment_manager.EnvironmentManager()
+        environment_manager = EnvironmentManager()
         environment_manager.get_name_mail_from_git()
 
         logging.info("Install latest pre-commmit hooks")
@@ -360,7 +360,7 @@ class Initializer:
 
         # Principle: adapt values provided by the default SETTINGS_FILE
         # instead of creating a new SETTINGS_FILE
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
         review_type_class = package_manager.get_package_endpoint_class(
             package_type=EndpointType.review_type,
             package_identifier=self.review_type,
@@ -382,7 +382,7 @@ class Initializer:
                 new_string=project_title.rstrip(" ").capitalize(),
             )
         else:
-            package_manager = self.review_manager.get_package_manager()
+            package_manager = PackageManager()
             r_type_suffix = str(review_type_object)
 
             colrev.env.utils.inplace_change(
@@ -446,7 +446,7 @@ class Initializer:
         if example or "pytest" in os.getcwd():
             return
         self.review_manager.logger.info("Register CoLRev repository")
-        environment_manager = self.review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         environment_manager.register_repo(
             self.target_path, logger=self.review_manager.logger
         )

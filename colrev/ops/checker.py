@@ -19,6 +19,7 @@ from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.process.model import ProcessModel
+from colrev.env.environment_manager import EnvironmentManager
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
@@ -688,7 +689,7 @@ class Checker:
         # We work with exceptions because each issue may be raised in different checks.
         # Currently, linting is limited for the scripts.
 
-        environment_manager = self.review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         check_scripts: list[dict[str, typing.Any]] = [
             {
                 "script": environment_manager.check_git_installed,

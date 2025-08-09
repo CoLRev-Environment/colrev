@@ -11,6 +11,7 @@ from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
+from colrev.package_manager.package_manager import PackageManager
 
 
 class Push(colrev.process.operation.Operation):
@@ -85,7 +86,7 @@ class Push(colrev.process.operation.Operation):
         """Push corrections of records"""
 
         change_sets = self._get_change_sets()
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
 
         for source_prefix, change_itemsets in change_sets.items():
             source_l = [

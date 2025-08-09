@@ -14,6 +14,7 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import EndpointType
 from colrev.constants import Fields
+from colrev.package_manager.package_manager import PackageManager
 
 # pylint: disable=duplicate-code
 
@@ -40,8 +41,7 @@ class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = prep_operation.review_manager
-
-        self.package_manager = prep_operation.review_manager.get_package_manager()
+        self.package_manager = PackageManager()
 
     def prepare(
         self, record: colrev.record.record_prep.PrepRecord

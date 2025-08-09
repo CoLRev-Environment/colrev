@@ -33,6 +33,7 @@ from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
+from colrev.package_manager.package_manager import PackageManager
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.package_manager.package_base_classes as base_classes
@@ -105,7 +106,7 @@ class Prep(colrev.process.operation.Operation):
         self.temp_records = self.review_manager.path / (Path(".colrev/temp_recs.bib"))
 
         self.quality_model = review_manager.get_qm()
-        self.package_manager = self.review_manager.get_package_manager()
+        self.package_manager = PackageManager()
 
         self.polish = polish
         self._cpu = cpu

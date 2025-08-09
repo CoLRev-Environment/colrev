@@ -35,6 +35,8 @@ from colrev.constants import Filepaths
 from colrev.constants import IDPattern
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
+from colrev.env.environment_manager import EnvironmentManager
+from colrev.env.resources import Resources
 
 # pylint: disable=too-many-lines
 # pylint: disable=redefined-outer-name
@@ -2282,7 +2284,7 @@ def distribute(ctx: click.core.Context, path: Path, verbose: bool, force: bool) 
 def _print_environment_status(
     review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    environment_manager = review_manager.get_environment_manager()
+    environment_manager = EnvironmentManager()
     environment_details = environment_manager.get_environment_details()
 
     print("\nCoLRev environment status\n")
@@ -2437,7 +2439,7 @@ def env(
     )
 
     if install:
-        env_resources = review_manager.get_resources()
+        env_resources = Resources()
         if env_resources.install_curated_resource(curated_resource=install):
             print("Successfully installed curated resource.")
             print("To make it available to other projects, run")
@@ -2445,7 +2447,7 @@ def env(
         return
 
     if pull:
-        environment_manager = review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         for curated_resource in environment_manager.local_repos():
             try:
                 curated_resource_path = curated_resource["repo_source_path"]
@@ -2472,12 +2474,12 @@ def env(
         return
 
     if register:
-        environment_manager = review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         environment_manager.register_repo(Path.cwd())
         return
 
     if unregister is not None:
-        environment_manager = review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
 
         local_repos = environment_manager.local_repos()
         if str(unregister) not in [x["source_url"] for x in local_repos]:
