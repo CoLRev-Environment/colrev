@@ -32,11 +32,11 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: colrev.search_file.ExtendedSearchFile,
+        search_file: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
-        self.search_source = settings
+        self.search_source = search_file
         self.source_operation = source_operation
 
     @classmethod

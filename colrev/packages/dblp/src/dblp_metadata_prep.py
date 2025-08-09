@@ -52,9 +52,9 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
             if s.filename == dblp_md_filename
         ]
         if dblp_md_source_l:
-            settings = dblp_md_source_l[0]
+            search_file = dblp_md_source_l[0]
         else:
-            settings = colrev.search_file.ExtendedSearchFile(
+            search_file = colrev.search_file.ExtendedSearchFile(
                 platform="colrev.dblp",
                 search_results_path=dblp_md_filename,
                 search_type=SearchType.MD,
@@ -63,7 +63,7 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
             )
 
         self.dblp_source = dblp_connector.DBLPSearchSource(
-            source_operation=prep_operation, settings=settings
+            source_operation=prep_operation, search_file=search_file
         )
 
         self.dblp_prefixes = [

@@ -37,12 +37,12 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: colrev.search_file.ExtendedSearchFile,
+        search_file: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.review_manager = source_operation.review_manager
-        self.search_source = settings
+        self.search_source = search_file
         self.source_operation = source_operation
         self.quality_model = self.review_manager.get_qm()
 
