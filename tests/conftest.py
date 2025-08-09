@@ -20,6 +20,7 @@ import colrev.review_manager
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import SearchType
 from colrev.process.model import ProcessModel
 
 # Note : the following produces different relative paths locally/on github.
