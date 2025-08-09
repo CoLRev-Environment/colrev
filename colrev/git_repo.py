@@ -15,6 +15,7 @@ from colrev.constants import FileSets
 if typing.TYPE_CHECKING:
     import colrev.review_manager
 
+
 class GitRepo:
     """Wrapper for Git repository interactions"""
 
