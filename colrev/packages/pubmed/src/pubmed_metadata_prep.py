@@ -51,9 +51,9 @@ class PubmedMetadataPrep(base_classes.PrepPackageBaseClass):
             if s.filename == self._pubmed_md_filename
         ]
         if pubmed_md_source_l:
-            settings = pubmed_md_source_l[0]
+            search_file = pubmed_md_source_l[0]
         else:
-            settings = colrev.search_file.ExtendedSearchFile(
+            search_file = colrev.search_file.ExtendedSearchFile(
                 platform="colrev.pubmed",
                 search_results_path=self._pubmed_md_filename,
                 search_type=SearchType.MD,
@@ -62,7 +62,7 @@ class PubmedMetadataPrep(base_classes.PrepPackageBaseClass):
             )
 
         self.pubmed_source = pubmed_connector.PubMedSearchSource(
-            source_operation=prep_operation, settings=settings
+            source_operation=prep_operation, search_file=search_file
         )
 
         self.pubmed_prefixes = [

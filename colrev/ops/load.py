@@ -440,7 +440,7 @@ class Load(colrev.process.operation.Operation):
                 )
                 endpoint = search_source_class(
                     source_operation=self,
-                    settings=source,
+                    search_file=source,
                 )
 
                 s_type = source.search_type  # type: ignore

@@ -41,7 +41,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: colrev.search_file.ExtendedSearchFile,
+        search_file: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
@@ -49,7 +49,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.search_source = settings
+        self.search_source = search_file
         self.search_word: typing.Optional[str] = None
 
     @classmethod

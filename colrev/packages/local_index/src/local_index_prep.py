@@ -54,9 +54,9 @@ class LocalIndexPrep(base_classes.PrepPackageBaseClass):
             if s.filename == self._local_index_md_filename
         ]
         if li_md_source_l:
-            settings = li_md_source_l[0]
+            search_file = li_md_source_l[0]
         else:
-            settings = colrev.search_file.ExtendedSearchFile(
+            search_file = colrev.search_file.ExtendedSearchFile(
                 platform="colrev.local_index",
                 search_results_path=self._local_index_md_filename,
                 search_type=SearchType.MD,
@@ -66,7 +66,7 @@ class LocalIndexPrep(base_classes.PrepPackageBaseClass):
 
         self.local_index_source = local_index_connector.LocalIndexSearchSource(
             source_operation=prep_operation,
-            settings=settings,
+            search_file=search_file,
         )
         self.prep_operation = prep_operation
 

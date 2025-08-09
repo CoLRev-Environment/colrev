@@ -54,9 +54,9 @@ class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
             if s.search_history_path == crossref_md_filename
         ]
         if crossref_md_source_l:
-            settings = crossref_md_source_l[0]
+            search_file = crossref_md_source_l[0]
         else:
-            settings = colrev.search_file.ExtendedSearchFile(
+            search_file = colrev.search_file.ExtendedSearchFile(
                 platform="colrev.crossref",
                 search_results_path=crossref_md_filename,
                 search_type=SearchType.MD,
@@ -66,7 +66,7 @@ class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
 
         self.crossref_source = crossref_connector.CrossrefSearchSource(
             source_operation=prep_operation,
-            settings=settings,
+            search_file=search_file,
         )
 
         self.crossref_prefixes = [

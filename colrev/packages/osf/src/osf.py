@@ -46,7 +46,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: colrev.search_file.ExtendedSearchFile,
+        search_file: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
@@ -55,7 +55,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.review_manager = source_operation.review_manager
 
         if settings:
-            self.search_source = settings
+            self.search_source = search_file
         else:
             self.search_source = colrev.search_file.ExtendedSearchFile(
                 platform=self.endpoint,

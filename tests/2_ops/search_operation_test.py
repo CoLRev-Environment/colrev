@@ -62,7 +62,7 @@ def test_search_add_source(  # type: ignore
     )
 
     endpoint = search_source_class(
-        source_operation=search_operation, settings=add_source
+        source_operation=search_operation, search_file=add_source
     )
     query = "issn=1234-5678"
     endpoint.add_endpoint(search_operation, query)  # type: ignore

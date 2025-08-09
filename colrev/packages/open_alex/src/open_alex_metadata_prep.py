@@ -48,9 +48,9 @@ class OpenAlexMetadataPrep(base_classes.PrepPackageBaseClass):
             if s.filename == self._open_alex_md_filename
         ]
         if open_alex_md_source_l:
-            settings = open_alex_md_source_l[0]
+            search_file = open_alex_md_source_l[0]
         else:
-            settings = colrev.search_file.ExtendedSearchFile(
+            search_file = colrev.search_file.ExtendedSearchFile(
                 platform="colrev.open_alex",
                 search_results_path=self._open_alex_md_filename,
                 search_type=SearchType.MD,
@@ -59,7 +59,7 @@ class OpenAlexMetadataPrep(base_classes.PrepPackageBaseClass):
             )
 
         self.open_alex_source = open_alex_connector.OpenAlexSearchSource(
-            source_operation=prep_operation, settings=settings
+            source_operation=prep_operation, search_file=search_file
         )
 
         self.open_alex_prefixes = [
