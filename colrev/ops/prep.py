@@ -24,6 +24,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.process.operation
 import colrev.record.record_prep
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import EndpointType
@@ -620,11 +621,7 @@ class Prep(colrev.process.operation.Operation):
                 conditions=[{Fields.STATUS: s} for s in r_states_to_prepare]
             )
         )
-        if (
-            self.polish
-            and self.review_manager.in_ci_environment()
-            and len(items) > 2000
-        ):
+        if self.polish and utils.in_ci_environment() and len(items) > 2000:
             items = random.choices(items, k=2000)  # nosec
 
         prep_data = {
@@ -745,7 +742,7 @@ class Prep(colrev.process.operation.Operation):
             if x["endpoint"].lower() not in self.prep_package_endpoints
         ]
         if non_available_endpoints:
-            if self.review_manager.in_ci_environment():
+            if utils.in_ci_environment():
                 raise colrev_exceptions.ServiceNotAvailableException(
                     dep=f"colrev prep ({','.join(non_available_endpoints)})",
                     detailed_trace="prep not available in ci environment",
@@ -918,7 +915,7 @@ class Prep(colrev.process.operation.Operation):
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed prep operation{Colors.END}"
         )
-        if self.review_manager.in_ci_environment():
+        if utils.in_ci_environment():
             print("\n\n")
 
     def _nothing_to_prepare_condition(self, preparation_data: list) -> bool:

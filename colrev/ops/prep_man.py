@@ -12,7 +12,7 @@ import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record_prep
-import colrev.utils
+from colrev import utils
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
@@ -93,10 +93,10 @@ class PrepMan(colrev.process.operation.Operation):
             )
 
         print("Entry type statistics overall:")
-        colrev.utils.p_print(overall_types[Fields.ENTRYTYPE])
+        utils.p_print(overall_types[Fields.ENTRYTYPE])
 
         print("Entry type statistics (needs_manual_preparation):")
-        colrev.utils.p_print(stats[Fields.ENTRYTYPE])
+        utils.p_print(stats[Fields.ENTRYTYPE])
 
         return pd.DataFrame(crosstab, columns=[Fields.ORIGIN, "hint"])
 
@@ -242,7 +242,7 @@ class PrepMan(colrev.process.operation.Operation):
             "all_ids": all_ids,
             "PAD": pad,
         }
-        self.review_manager.logger.debug(colrev.utils.pformat(md_prep_man_data))
+        self.review_manager.logger.debug(utils.pformat(md_prep_man_data))
         return md_prep_man_data
 
     def set_data(self, *, record_dict: dict) -> None:
@@ -266,10 +266,7 @@ class PrepMan(colrev.process.operation.Operation):
     def main(self) -> None:
         """Manually prepare records (main entrypoint)"""
 
-        if (
-            self.review_manager.in_ci_environment()
-            and not self.review_manager.in_test_environment()
-        ):
+        if utils.in_ci_environment() and not self.review_manager.in_test_environment():
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev prep-man",
                 detailed_trace="prep-man not available in ci environment",

@@ -11,7 +11,7 @@ from colrev.constants import EndpointType
 from colrev.constants import SearchType
 
 
-@patch("colrev.review_manager.ReviewManager.in_ci_environment")
+@patch("colrev.utils.in_ci_environment")
 def test_search(  # type: ignore
     ci_env_patcher, base_repo_review_manager: colrev.review_manager.ReviewManager
 ) -> None:

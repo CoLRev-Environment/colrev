@@ -19,6 +19,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
+from colrev import utils
 from colrev.constants import Colors
 
 if typing.TYPE_CHECKING:
@@ -73,7 +74,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
             output_dir / path for path in self.settings.diagram_path
         ]
 
-        if not self.review_manager.in_ci_environment():
+        if not utils.in_ci_environment():
             colrev.env.docker_manager.DockerManager.build_docker_image(
                 imagename=self.PRISMA_IMAGE
             )

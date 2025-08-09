@@ -23,6 +23,7 @@ import colrev.record.record_pdf
 import colrev.record.record_prep
 import colrev.record.record_similarity
 import colrev.search_file
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -68,7 +69,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         # TODO : files_dir: subdir_pattern etc. should be prep_parameters
         self.search_source = search_file
 
-        if not self.review_manager.in_ci_environment():
+        if not utils.in_ci_environment():
             self.pdf_preparation_operation = self.review_manager.get_pdf_prep_operation(
                 notify_state_transition_operation=False
             )
@@ -694,7 +695,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         self._validate_source()
 
         # Do not run in continuous-integration environment
-        if self.review_manager.in_ci_environment():
+        if utils.in_ci_environment():
             raise colrev_exceptions.SearchNotAutomated("PDFs Dir Search not automated.")
 
         if self.review_manager.force_mode:  # i.e., reindex all

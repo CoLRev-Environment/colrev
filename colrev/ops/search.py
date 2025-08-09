@@ -10,6 +10,7 @@ import inquirer
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.search_file
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
@@ -181,7 +182,7 @@ class Search(colrev.process.operation.Operation):
     ) -> None:
         """Interactively run a DB search"""
 
-        if self.review_manager.in_ci_environment():
+        if utils.in_ci_environment():
             raise colrev_exceptions.SearchNotAutomated("DB search not automated.")
 
         print("DB search (update)")
@@ -540,5 +541,5 @@ class Search(colrev.process.operation.Operation):
             except ModuleNotFoundError as exc:
                 self.review_manager.logger.warning(exc)
 
-        if self.review_manager.in_ci_environment():
+        if utils.in_ci_environment():
             print("\n\n")

@@ -13,7 +13,7 @@ import yaml
 from git.exc import InvalidGitRepositoryError
 
 import colrev.exceptions as colrev_exceptions
-import colrev.utils
+from colrev import utils
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
 from colrev.constants import OperationsType
@@ -146,7 +146,7 @@ class Checker:
                 f"missing hooks in .pre-commit-config.yaml ({', '.join(missing_hooks)})"
             )
 
-        if not self.review_manager.in_ci_environment():
+        if not utils.in_ci_environment():
             pch_file = Path(".git/hooks/pre-commit")
             if pch_file.is_file():
                 with open(pch_file, encoding="utf8") as file:
@@ -706,7 +706,7 @@ class Checker:
             ):
                 prior = self._retrieve_prior()
                 self.review_manager.logger.debug("prior")
-                self.review_manager.logger.debug(colrev.utils.pformat(prior))
+                self.review_manager.logger.debug(utils.pformat(prior))
             else:  # if RECORDS_FILE not yet in git history
                 prior = {}
 
