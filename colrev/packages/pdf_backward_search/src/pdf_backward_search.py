@@ -379,7 +379,9 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         if not records:
             self.logger.info("No records imported. Cannot run backward search yet.")
             return
-        min_intext_citations = self.search_source.search_sparameters["min_intext_citations"]
+        min_intext_citations = self.search_source.search_sparameters[
+            "min_intext_citations"
+        ]
         self.logger.info("Set min_intext_citations=%s", min_intext_citations)
         nr_references_threshold = self.search_source.search_parameters.get(
             "min_ref_freq", 1
