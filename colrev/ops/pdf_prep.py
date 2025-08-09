@@ -20,6 +20,7 @@ from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 
 
 class PDFPrep(colrev.process.operation.Operation):
@@ -424,7 +425,7 @@ class PDFPrep(colrev.process.operation.Operation):
 
         pdf_prep_data = self._get_data(batch_size=batch_size)
 
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
         self.pdf_prep_package_endpoints = {}
         for (
             pdf_prep_package_endpoint

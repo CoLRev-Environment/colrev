@@ -13,6 +13,7 @@ import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import SearchType
+from colrev.env.environment_manager import EnvironmentManager
 from colrev.writer.write_utils import write_file
 
 
@@ -32,7 +33,7 @@ class Distribute(colrev.process.operation.Operation):
 
     def get_environment_registry(self) -> list:
         """Get the environment registry (excluding curated_metadata)"""
-        environment_manager = self.review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         return [
             x
             for x in environment_manager.local_repos()

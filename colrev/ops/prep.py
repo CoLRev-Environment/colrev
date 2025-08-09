@@ -32,6 +32,7 @@ from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
 
@@ -106,7 +107,7 @@ class Prep(colrev.process.operation.Operation):
         self.temp_records = self.review_manager.path / (Path(".colrev/temp_recs.bib"))
 
         self.quality_model = review_manager.get_qm()
-        self.package_manager = self.review_manager.get_package_manager()
+        self.package_manager = PackageManager()
 
         self.polish = polish
         self._cpu = cpu

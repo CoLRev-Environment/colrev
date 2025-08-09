@@ -20,6 +20,7 @@ from colrev.constants import FieldSet
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.constants import SearchType
+from colrev.package_manager.package_manager import PackageManager
 
 
 class Load(colrev.process.operation.Operation):
@@ -41,7 +42,7 @@ class Load(colrev.process.operation.Operation):
         )
 
         self.quality_model = review_manager.get_qm()
-        self.package_manager = self.review_manager.get_package_manager()
+        self.package_manager = PackageManager()
 
         self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
 

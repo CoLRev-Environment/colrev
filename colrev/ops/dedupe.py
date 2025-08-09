@@ -20,6 +20,7 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 
 
 class Dedupe(colrev.process.operation.Operation):
@@ -679,7 +680,7 @@ class Dedupe(colrev.process.operation.Operation):
         if not self.review_manager.high_level_operation:
             print()
 
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
         for (
             dedupe_package_endpoint
         ) in self.review_manager.settings.dedupe.dedupe_package_endpoints:

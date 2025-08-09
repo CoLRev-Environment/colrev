@@ -18,6 +18,7 @@ from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import PDFPathType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import write_file
 
 
@@ -42,7 +43,7 @@ class PDFGet(colrev.process.operation.Operation):
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
-        self.package_manager = self.review_manager.get_package_manager()
+        self.package_manager = PackageManager()
 
         pdf_dir = self.review_manager.paths.pdf
         pdf_dir.mkdir(exist_ok=True, parents=True)

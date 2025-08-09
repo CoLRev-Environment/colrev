@@ -14,6 +14,7 @@ from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 
 
 class Data(colrev.process.operation.Operation):
@@ -35,7 +36,7 @@ class Data(colrev.process.operation.Operation):
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
-        self.package_manager = self.review_manager.get_package_manager()
+        self.package_manager = PackageManager()
 
     def get_record_ids_for_synthesis(self, records: dict) -> list:
         """Get the IDs of records for the synthesis"""

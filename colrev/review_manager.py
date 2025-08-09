@@ -28,6 +28,7 @@ import colrev.record.qm.quality_model
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import OperationsType
+from colrev.env.environment_manager import EnvironmentManager
 from colrev.paths import PathManager
 
 
@@ -91,7 +92,7 @@ class ReviewManager:
             self.report_logger = report_logger
             self.logger = logger
 
-            self.environment_manager = self.get_environment_manager()
+            self.environment_manager = EnvironmentManager()
 
             # run update before settings/data (which may require changes/fail without update)
             if not skip_upgrade:  # pragma: no cover
@@ -310,32 +311,6 @@ class ReviewManager:
         """Get the completeness condition"""
         status_stats = self.get_status_stats()
         return status_stats.completeness_condition
-
-    @classmethod
-    def get_package_manager(
-        cls,
-    ) -> colrev.package_manager.package_manager.PackageManager:  # pragma: no cover
-        """Get a package manager object"""
-
-        import colrev.package_manager.package_manager
-
-        return colrev.package_manager.package_manager.PackageManager()
-
-    @classmethod
-    def get_environment_manager(
-        cls,
-    ) -> colrev.env.environment_manager.EnvironmentManager:  # pragma: no cover
-        """Get an environment manager"""
-        import colrev.env.environment_manager
-
-        return colrev.env.environment_manager.EnvironmentManager()
-
-    @classmethod
-    def get_resources(cls) -> colrev.env.resources.Resources:  # pragma: no cover
-        """Get a resources object"""
-        import colrev.env.resources
-
-        return colrev.env.resources.Resources()
 
     def get_search_operation(
         self, *, notify_state_transition_operation: bool = True

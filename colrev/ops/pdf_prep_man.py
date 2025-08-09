@@ -17,6 +17,7 @@ from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import write_file
 
 
@@ -297,7 +298,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
 
         pdf_prep_man_package_endpoints = (
             self.review_manager.settings.pdf_prep.pdf_prep_man_package_endpoints
