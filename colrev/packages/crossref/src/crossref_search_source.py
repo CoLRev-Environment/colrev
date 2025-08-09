@@ -91,6 +91,9 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         if "issn" in params_dict:
             params_dict["scope"] = {Fields.ISSN: [params_dict["issn"]]}  # type: ignore
             del params_dict["issn"]
+        if "scope" in params_dict:
+            issn = params_dict["scope"][Fields.ISSN][0]  # type: ignore
+            params_dict["url"] = f"https://api.crossref.org/journals/{issn}/works"
         return params_dict
 
     @classmethod

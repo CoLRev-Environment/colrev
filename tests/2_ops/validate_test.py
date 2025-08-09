@@ -149,13 +149,6 @@ def test_contributor_validation(
                 "committer_email": "tester@email.de",
             },
             {
-                "msg": "Add new search sources",
-                "author": "script:",
-                "author_email": "tester@email.de",
-                "committer": "Tester Name",
-                "committer_email": "tester@email.de",
-            },
-            {
                 "msg": "add test_records.bib",
                 "author": "Tester Name",
                 "author_email": "tester@email.de",
