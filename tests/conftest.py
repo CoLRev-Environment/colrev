@@ -266,6 +266,9 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     data_operation.main()
     review_manager.dataset.create_commit(msg="Data and synthesis", manual_author=True)
     review_manager.data_commit = review_manager.dataset.get_last_commit_sha()
+    review_manager.logger.info(
+        f"{Colors.RED}Test repository in {test_repo_dir}{Colors.END}"
+    )
 
     return review_manager
 

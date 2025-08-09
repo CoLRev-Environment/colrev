@@ -5,11 +5,8 @@ from typing import Optional
 
 from pydantic import Field
 
-import colrev.ops.search
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
-import colrev.record.record
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code

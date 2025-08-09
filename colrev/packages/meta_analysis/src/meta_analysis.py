@@ -5,11 +5,8 @@ from typing import Optional
 
 from pydantic import Field
 
-import colrev.ops.search
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
-import colrev.record.record
 from colrev.packages.open_citations_forward_search.src.open_citations_forward_search import (
     OpenCitationsSearchSource,
 )

@@ -56,7 +56,7 @@ class PDFGet(colrev.process.operation.Operation):
         ]
         if pdf_endpoints:
             self.filepath_directory_pattern = (
-                pdf_endpoints[0].search_string["scope"].get("subdir_pattern", {})
+                pdf_endpoints[0].search_parameters["scope"].get("subdir_pattern", {})
             )
 
     def copy_pdfs_to_repo(self) -> None:

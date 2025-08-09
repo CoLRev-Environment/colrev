@@ -43,15 +43,7 @@ def test_settings_load() -> None:
             "colrev_version": "-",
             "auto_upgrade": True,
         },
-        "sources": [
-            {
-                "platform": "colrev.files_dir",
-                "search_results_path": "data/search/files.bib",
-                "search_type": "FILES",
-                "search_string": {"scope": {"path": "data/pdfs"}},
-                # "comment": "user comment",
-            }
-        ],
+        "sources": [],
         "search": {"retrieve_forthcoming": True},
         "prep": {
             "fields_to_keep": [],
