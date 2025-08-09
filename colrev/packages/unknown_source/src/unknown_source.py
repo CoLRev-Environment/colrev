@@ -54,11 +54,11 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: colrev.search_file.ExtendedSearchFile,
+        search_file: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
-        self.search_source = settings
+        self.search_source = search_file
         self.review_manager = source_operation.review_manager
         self.language_service = colrev.env.language_service.LanguageService()
         self.operation = source_operation

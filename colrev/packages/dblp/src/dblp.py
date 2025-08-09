@@ -74,14 +74,14 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: colrev.search_file.ExtendedSearchFile,
+        search_file: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        self.search_source = settings
+        self.search_source = search_file
         self.dblp_lock = Lock()
         self.origin_prefix = self.search_source.get_origin_prefix()
         _, self.email = self.review_manager.get_committer()

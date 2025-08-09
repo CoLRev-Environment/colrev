@@ -46,7 +46,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: colrev.search_file.ExtendedSearchFile,
+        search_file: Optional[colrev.search_file.ExtendedSearchFile] = None,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
@@ -54,8 +54,8 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
 
-        if settings:
-            self.search_source = settings
+        if search_file:
+            self.search_source = search_file
         else:
             self.search_source = colrev.search_file.ExtendedSearchFile(
                 platform=self.endpoint,
@@ -64,7 +64,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
                 search_string="",
                 comment="",
             )
-            self.source_operation = source_operation
+        self.source_operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

@@ -67,7 +67,7 @@ class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
                     package_type=EndpointType.search_source,
                     package_identifier=source.platform,
                 )
-                endpoint = search_source_class(source_operation=self, settings=source)
+                endpoint = search_source_class(source_operation=self, search_file=source)
 
                 if callable(endpoint.prepare):
                     record = endpoint.prepare(record, source)

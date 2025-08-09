@@ -56,7 +56,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: colrev.search_file.ExtendedSearchFile,
+        search_file: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
@@ -66,7 +66,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.source_operation = source_operation
 
         # TODO : files_dir: subdir_pattern etc. should be prep_parameters
-        self.search_source = settings
+        self.search_source = search_file
 
         if not self.review_manager.in_ci_environment():
             self.pdf_preparation_operation = self.review_manager.get_pdf_prep_operation(
