@@ -46,6 +46,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     db_url = "https://pubmed.ncbi.nlm.nih.gov/"
+    _availability_exception_message = "Pubmed"
 
     def __init__(
         self,
@@ -163,9 +164,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self.logger.debug("SearchSource %s validated", source.filename)
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check status (availability) of the Pubmed API"""
 
         try:
@@ -190,12 +189,13 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 assert returned_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
                 assert returned_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
             else:
-                if not self.review_manager.force_mode:
-                    raise colrev_exceptions.ServiceNotAvailableException("Pubmed")
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    self._availability_exception_message
+                )
         except (requests.exceptions.RequestException, IndexError, KeyError) as exc:
-            print(exc)
-            if not self.review_manager.force_mode:
-                raise colrev_exceptions.ServiceNotAvailableException("Pubmed") from exc
+            raise colrev_exceptions.ServiceNotAvailableException(
+                self._availability_exception_message
+            ) from exc
 
     def _get_masterdata_record(
         self,

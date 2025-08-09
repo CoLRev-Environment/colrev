@@ -39,6 +39,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
     db_url = "https://arxiv.org/"
     _arxiv_md_filename = Path("data/search/md_arxiv.bib")
+    _availability_exception_message = "ArXiv"
 
     def __init__(
         self,
@@ -131,36 +132,19 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
 
         self.logger.debug(f"SearchSource {source.filename} validated")
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check status (availability) of the ArXiv API"""
 
-        # try:
-        #     # pylint: disable=duplicate-code
-        #     test_rec = {
-        #         "author": "Wang, R E and Demszky, D ",
-        #         "title": "Is ChatGPT a Good Teacher Coach?"
-        #         "Measuring Zero-Shot Performance For Scoring and Providing "
-        #           + \ "Actionable Insights on Classroom Instruction ",
-        #         "ENTRYTYPE": "article",  # might not be needed in ArXiv
-        #         "arxivid": "arXiv:2306.03090",
-        #     }
-        #     returned_record_dict = self._arxiv_query_id(
-        #         arxiv_id=test_rec["arxivid"],
-        #         timeout=20,
-        #     )
-
-        #     if returned_record_dict:
-        #         assert returned_record_dict["title"] == test_rec["title"]
-        #         assert returned_record_dict["author"] == test_rec["author"]
-        #     else:
-        #         if not source_operation.force_mode:
-        #             raise colrev_exceptions.ServiceNotAvailableException("ArXiv")
-        # except (requests.exceptions.RequestException, IndexError) as exc:
-        #     print(exc)
-        #     if not source_operation.force_mode:
-        #         raise colrev_exceptions.ServiceNotAvailableException("ArXiv") from exc
+        try:
+            ret = requests.get(
+                "https://export.arxiv.org/api/query?search_query=all:electron&start=0&max_results=1",
+                timeout=30,
+            )
+            ret.raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                self._availability_exception_message
+            ) from exc
 
     # def _arxiv_query_id(
     #     self,

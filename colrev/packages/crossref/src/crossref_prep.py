@@ -75,11 +75,9 @@ class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
             if s.endpoint == "colrev.crossref"
         ]
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check status (availability) of the Crossref API"""
-        self.crossref_source.check_availability(source_operation=source_operation)
+        self.crossref_source.check_availability()
 
     def prepare(
         self, record: colrev.record.record_prep.PrepRecord

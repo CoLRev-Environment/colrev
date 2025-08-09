@@ -10,6 +10,7 @@ from typing import Optional
 import requests
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
@@ -32,6 +33,7 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.oni
+    _availability_exception_message = "OpenAlex"
 
     def __init__(
         self,
@@ -69,10 +71,23 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
             f"Cannot add OpenAlex endpoint with query {params}"
         )
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check status (availability) of the OpenAlex API"""
+
+        try:
+            _, email = (
+                colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+            )
+            api = open_alex_api.OpenAlexAPI(email=email)
+            retrieved_record = api.get_record(open_alex_id="W2741809807")
+            if not retrieved_record.data:
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    self._availability_exception_message
+                )
+        except (requests.exceptions.RequestException, KeyError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                self._availability_exception_message
+            ) from exc
 
     def _get_masterdata_record(
         self, *, record: colrev.record.record.Record

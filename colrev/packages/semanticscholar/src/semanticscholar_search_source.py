@@ -88,9 +88,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
             self.s2_lock = Lock()
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check the availability of the Semantic Scholar API"""
 
         try:
@@ -109,16 +107,13 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
                 assert returned_record[Fields.TITLE] == test_record[Fields.TITLE]
                 assert returned_record[Fields.URL] == test_record[Fields.URL]
             else:
-                if not self.review_manager.force_mode:
-                    raise colrev_exceptions.ServiceNotAvailableException(
-                        self._availability_exception_message
-                    )
-        except (requests.exceptions.RequestException, IndexError) as exc:
-            print(exc)
-            if not self.review_manager.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message
-                ) from exc
+                )
+        except (requests.exceptions.RequestException, IndexError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                self._availability_exception_message
+            ) from exc
 
     def _get_semantic_scholar_api(
         self, *, params: dict, rerun: bool

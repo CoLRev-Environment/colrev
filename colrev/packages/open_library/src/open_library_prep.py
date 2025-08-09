@@ -62,13 +62,9 @@ class OpenLibraryMetadataPrep(base_classes.PrepPackageBaseClass):
             source_operation=prep_operation, settings=search_source
         )
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
-        """Check status (availability) of the Crossref API"""
-        self.open_library_connector.check_availability(
-            source_operation=source_operation
-        )
+    def check_availability(self) -> None:
+        """Check status (availability) of the OpenLibrary API"""
+        self.open_library_connector.check_availability()
 
     def prepare(
         self, record: colrev.record.record_prep.PrepRecord
