@@ -17,8 +17,8 @@ from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import PDFPathType
 from colrev.constants import RecordState
-from colrev.writer.write_utils import write_file
 from colrev.package_manager.package_manager import PackageManager
+from colrev.writer.write_utils import write_file
 
 
 class PDFGet(colrev.process.operation.Operation):

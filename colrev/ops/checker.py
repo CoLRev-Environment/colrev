@@ -18,8 +18,8 @@ from colrev.constants import ExitCodes
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
-from colrev.process.model import ProcessModel
 from colrev.env.environment_manager import EnvironmentManager
+from colrev.process.model import ProcessModel
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager

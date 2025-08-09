@@ -13,8 +13,8 @@ import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import SearchType
-from colrev.writer.write_utils import write_file
 from colrev.env.environment_manager import EnvironmentManager
+from colrev.writer.write_utils import write_file
 
 
 class Distribute(colrev.process.operation.Operation):

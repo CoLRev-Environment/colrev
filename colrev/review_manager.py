@@ -28,8 +28,8 @@ import colrev.record.qm.quality_model
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import OperationsType
-from colrev.paths import PathManager
 from colrev.env.environment_manager import EnvironmentManager
+from colrev.paths import PathManager
 
 
 class ReviewManager:
@@ -313,7 +313,6 @@ class ReviewManager:
         return status_stats.completeness_condition
 
     @classmethod
-
     def get_search_operation(
         self, *, notify_state_transition_operation: bool = True
     ) -> colrev.ops.search.Search:  # pragma: no cover
