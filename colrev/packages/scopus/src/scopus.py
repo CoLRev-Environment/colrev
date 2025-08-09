@@ -43,9 +43,7 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
-        self.review_manager = source_operation.review_manager
         self.search_source = settings
-        self.quality_model = self.review_manager.get_qm()
         self.operation = source_operation
 
     @classmethod

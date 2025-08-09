@@ -40,7 +40,6 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.search_source = settings
-        self.review_manager = source_operation.review_manager
         self.operation = source_operation
 
     @classmethod

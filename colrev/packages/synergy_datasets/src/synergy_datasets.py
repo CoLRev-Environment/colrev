@@ -62,7 +62,6 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
         self.search_source = settings
-        self.quality_model = self.review_manager.get_qm()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

@@ -60,7 +60,6 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
         self.search_source = settings
-        self.quality_model = self.review_manager.get_qm()
         self.source_operation = source_operation
         self.language_service = colrev.env.language_service.LanguageService()
 
