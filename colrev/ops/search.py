@@ -198,12 +198,12 @@ class Search(colrev.process.operation.Operation):
             pass
         print(
             f"- Replace search results in {Colors.ORANGE}"
-            + str(source.filename)
+            + str(source.search_results_path)
             + Colors.END
         )
         input("Press enter to continue")
-        if source.filename.is_file():
-            self.review_manager.dataset.add_changes(source.filename)
+        if source.search_results_path.is_file():
+            self.review_manager.dataset.add_changes(source.search_results_path)
         else:
             print("Search results not found.")
 
