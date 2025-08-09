@@ -672,5 +672,5 @@ def test_stash_unstaged_changes(
     # Assert
     assert (
         Path(unstaged_file_path.name)
-        not in base_repo_review_manager.dataset.get_untracked_files()
+        not in base_repo_review_manager.dataset.git_repo.get_untracked_files()
     ), "The file should not be recognized as an unstaged change after stashing."
