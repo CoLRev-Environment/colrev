@@ -2,6 +2,7 @@
 """Utility helpers for CoLRev."""
 from __future__ import annotations
 
+import os
 import pprint
 import typing
 from datetime import timedelta
@@ -31,3 +32,10 @@ def get_cached_session() -> requests_cache.CachedSession:  # pragma: no cover
         backend="sqlite",
         expire_after=timedelta(days=30),
     )
+
+
+def in_ci_environment() -> bool:
+    """Return True if running in a CI environment (e.g., GitHub Actions)."""
+
+    identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
+    return any("true" == os.getenv(x) for x in identifier_list)

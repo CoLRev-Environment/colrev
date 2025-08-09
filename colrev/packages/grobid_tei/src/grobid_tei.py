@@ -13,6 +13,7 @@ import colrev.env.tei_parser
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 from colrev.constants import Fields
+from colrev import utils
 
 if typing.TYPE_CHECKING:
     import colrev.record.record_pdf
@@ -39,7 +40,7 @@ class GROBIDTEI(base_classes.PDFPrepPackageBaseClass):
         self.settings = self.settings_class(**settings)
         self.review_manager = pdf_prep_operation.review_manager
 
-        if not pdf_prep_operation.review_manager.in_ci_environment():
+        if not utils.in_ci_environment():
             self.tei_path = (
                 pdf_prep_operation.review_manager.path / self.TEI_PATH_RELATIVE
             )

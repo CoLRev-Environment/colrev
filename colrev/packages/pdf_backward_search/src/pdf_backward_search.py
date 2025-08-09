@@ -27,6 +27,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
+from colrev import utils
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -369,7 +370,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         self._validate_source()
 
         # Do not run in continuous-integration environment
-        if self.review_manager.in_ci_environment():
+        if utils.in_ci_environment():
             raise colrev_exceptions.SearchNotAutomated(
                 "PDF Backward Search not automated."
             )

@@ -17,6 +17,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.init
 import colrev.record.record_pdf
 import colrev.review_manager
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -137,7 +138,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
 
     review_manager.get_load_operation()
     git_repo = review_manager.dataset.get_repo()
-    if review_manager.in_ci_environment():
+    if utils.in_ci_environment():
         git_repo.config_writer().set_value("user", "name", "Tester").release()
         git_repo.config_writer().set_value("user", "email", "tester@mail.com").release()
 

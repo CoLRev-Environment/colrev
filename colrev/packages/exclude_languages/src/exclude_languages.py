@@ -46,7 +46,7 @@ class ExcludeLanguagesPrep(base_classes.PrepPackageBaseClass):
         # class (not object) properties to keep parallel processing as
         # efficient as possible (the object is passed to each thread)
         languages_to_include = ["eng"]
-        # if not prep_operation.review_manager.in_ci_environment():
+        # if not utils.in_ci_environment():
         self.language_service = colrev.env.language_service.LanguageService()
 
         prescreen_package_endpoints = (

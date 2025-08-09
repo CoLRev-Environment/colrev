@@ -15,6 +15,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -245,7 +246,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
 
         # pylint: disable=too-many-branches
 
-        if self.review_manager.in_ci_environment():
+        if utils.in_ci_environment():
             self.logger.error(
                 "Running in CI environment. Skipping github-pages generation."
             )

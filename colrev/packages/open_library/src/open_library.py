@@ -233,7 +233,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         """Run a search of OpenLibrary"""
 
         # if self.search_source.search_type == SearchType.DB:
-        #     if self.review_manager.in_ci_environment():
+        #     if utils.in_ci_environment():
         #         raise colrev_exceptions.SearchNotAutomated(
         #             "DB search for OpenLibrary not automated."
         #         )

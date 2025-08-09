@@ -27,7 +27,7 @@ import colrev.ui_cli.add_package_to_settings
 import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
-import colrev.utils
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
@@ -564,7 +564,7 @@ def search(
 
     if view:
         for source in search_operation.sources:
-            colrev.utils.p_print(source)
+            utils.p_print(source)
         return
 
     if add:
@@ -2061,12 +2061,12 @@ def data(
             data_operation.review_manager.settings.data.data_package_endpoints
         )
         for data_endpoint in data_endpoints:
-            colrev.utils.p_print(data_endpoint)
+            utils.p_print(data_endpoint)
         return
 
     if reading_heuristics:
         heuristic_results = data_operation.reading_heuristics()
-        colrev.utils.p_print(heuristic_results)
+        utils.p_print(heuristic_results)
         return
     if setup_custom_script:
         data_operation.setup_custom_script()
@@ -2087,7 +2087,7 @@ def data(
         return
 
     ret = data_operation.main()
-    if data_operation.review_manager.in_ci_environment():
+    if utils.in_ci_environment():
         if ret["ask_to_commit"]:
             review_manager.dataset.create_commit(
                 msg="Data and synthesis", manual_author=True

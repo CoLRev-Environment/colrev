@@ -31,6 +31,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.crossref.src import crossref_api
 from colrev.writer.write_utils import write_file
+from colrev import utils
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -68,7 +69,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         # TODO : files_dir: subdir_pattern etc. should be prep_parameters
         self.search_source = search_file
 
-        if not self.review_manager.in_ci_environment():
+        if not utils.in_ci_environment():
             self.pdf_preparation_operation = self.review_manager.get_pdf_prep_operation(
                 notify_state_transition_operation=False
             )
@@ -694,7 +695,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         self._validate_source()
 
         # Do not run in continuous-integration environment
-        if self.review_manager.in_ci_environment():
+        if utils.in_ci_environment():
             raise colrev_exceptions.SearchNotAutomated("PDFs Dir Search not automated.")
 
         if self.review_manager.force_mode:  # i.e., reindex all

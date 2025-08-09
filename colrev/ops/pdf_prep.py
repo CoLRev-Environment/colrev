@@ -14,6 +14,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.packages.grobid_tei.src.grobid_tei
 import colrev.process.operation
 import colrev.record.record_pdf
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
@@ -398,7 +399,7 @@ class PDFPrep(colrev.process.operation.Operation):
         """Prepare PDFs (main entrypoint)"""
 
         if (
-            self.review_manager.in_ci_environment()
+            utils.in_ci_environment()
             and not self.review_manager.in_test_environment()
         ):
             raise colrev_exceptions.ServiceNotAvailableException(

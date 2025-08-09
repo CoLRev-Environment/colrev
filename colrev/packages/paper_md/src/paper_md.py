@@ -27,6 +27,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -125,7 +126,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
 
         self._create_non_sample_references_bib()
 
-        if not self.review_manager.in_ci_environment():
+        if not utils.in_ci_environment():
             self.pandoc_image = "pandoc/latex:3.2.0"
             colrev.env.docker_manager.DockerManager.build_docker_image(
                 imagename=self.pandoc_image
@@ -779,7 +780,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 silent_mode=silent_mode,
             )
 
-        if not self.review_manager.in_ci_environment() and not silent_mode:
+        if not utils.in_ci_environment() and not silent_mode:
             self.build_paper()
 
     def _get_to_synthesize(self, *, paper: Path, records_for_synthesis: list) -> list:

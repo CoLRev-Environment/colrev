@@ -8,6 +8,7 @@ from pathlib import Path
 import colrev.env.tei_parser
 import colrev.packages.grobid_tei.src.grobid_tei
 import colrev.process.operation
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
@@ -188,7 +189,7 @@ class Data(colrev.process.operation.Operation):
             self.review_manager.logger.info(
                 f"{Colors.GREEN}Completed data operation{Colors.END}"
             )
-        if self.review_manager.in_ci_environment():
+        if utils.in_ci_environment():
             print("\n\n")
 
     @colrev.process.operation.Operation.decorate()
