@@ -40,6 +40,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
     ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.na
+    _availability_exception_message = "OPENLIBRARY"
 
     requests_headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
@@ -63,9 +64,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self.origin_prefix = self.search_source.get_origin_prefix()
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check the status (availability) of the OpenLibrary API"""
 
         test_rec = {
@@ -84,13 +83,13 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 timeout=30,
             )
             if ret.status_code != 200:
-                if not self.review_manager.force_mode:
-                    raise colrev_exceptions.ServiceNotAvailableException("OPENLIBRARY")
-        except requests.exceptions.RequestException as exc:
-            if not self.review_manager.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException(
-                    "OPENLIBRARY"
-                ) from exc
+                    self._availability_exception_message
+                )
+        except requests.exceptions.RequestException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                self._availability_exception_message
+            ) from exc
 
     # pylint: disable=colrev-missed-constant-usage
     @classmethod

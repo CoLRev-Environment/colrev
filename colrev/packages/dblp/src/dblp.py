@@ -158,13 +158,8 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         operation.add_source_and_search(search_source)
         return search_source
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check status (availability) of DBLP API"""
-        if self.review_manager.force_mode:
-            return
-
         api = dblp_api.DBLPAPI(
             params={},
             email=self.email,

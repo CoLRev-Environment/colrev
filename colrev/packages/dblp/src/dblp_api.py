@@ -26,6 +26,7 @@ class DBLPAPI:
 
     url = ""
     _batch_next = False
+    _availability_exception_message = "DBLP"
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -79,9 +80,13 @@ class DBLPAPI:
                 assert dblp_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
                 assert dblp_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
             else:
-                raise colrev_exceptions.ServiceNotAvailableException("DBLP")
-        except requests.exceptions.RequestException as exc:
-            raise colrev_exceptions.ServiceNotAvailableException("DBLP") from exc
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    self._availability_exception_message
+                )
+        except (requests.exceptions.RequestException, IndexError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                self._availability_exception_message
+            ) from exc
 
     def _get_dblp_venue(
         self,

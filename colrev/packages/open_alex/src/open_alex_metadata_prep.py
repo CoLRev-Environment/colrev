@@ -68,11 +68,9 @@ class OpenAlexMetadataPrep(base_classes.PrepPackageBaseClass):
             if s.endpoint == "colrev.open_alex"
         ]
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check status (availability) of the OpenAlex API"""
-        self.open_alex_source.check_availability(source_operation=source_operation)
+        self.open_alex_source.check_availability()
 
     def prepare(
         self, record: colrev.record.record_prep.PrepRecord

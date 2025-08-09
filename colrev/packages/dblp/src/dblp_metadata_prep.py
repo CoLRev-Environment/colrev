@@ -72,11 +72,9 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
             if s.endpoint == "colrev.dblp"
         ]
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
-        """Check status (availability) of the Crossref API"""
-        self.dblp_source.check_availability(source_operation=source_operation)
+    def check_availability(self) -> None:
+        """Check status (availability) of the DBLP API"""
+        self.dblp_source.check_availability()
 
     def prepare(
         self, record: colrev.record.record_prep.PrepRecord
