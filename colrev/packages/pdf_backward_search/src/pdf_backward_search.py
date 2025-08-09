@@ -63,8 +63,8 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        if "min_intext_citations" not in settings["search_string"]:
-            settings["search_string"]["min_intext_citations"] = 3
+        if "min_intext_citations" not in search_file.search_parameters:
+            search_file.search_parameters["min_intext_citations"] = 3
 
         self.search_source = search_file
         self.crossref_api = crossref_api.CrossrefAPI(url="")
@@ -379,9 +379,9 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         if not records:
             self.logger.info("No records imported. Cannot run backward search yet.")
             return
-        min_intext_citations = self.search_source.search_string["min_intext_citations"]
+        min_intext_citations = self.search_source.search_sparameters["min_intext_citations"]
         self.logger.info("Set min_intext_citations=%s", min_intext_citations)
-        nr_references_threshold = self.search_source.search_string.get(
+        nr_references_threshold = self.search_source.search_parameters.get(
             "min_ref_freq", 1
         )
         self.logger.info("Set nr_references_threshold=%s", nr_references_threshold)
@@ -564,11 +564,11 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         search_source = cls.get_default_source()
         if "min_intext_citations" in params_dict:
-            search_source.search_string["min_intext_citations"] = int(
+            search_source.search_parameters["min_intext_citations"] = int(
                 params_dict["min_intext_citations"]
             )
         if "min_ref_freq" in params_dict:
-            search_source.search_string["min_ref_freq"] = int(
+            search_source.search_parameters["min_ref_freq"] = int(
                 params_dict["min_ref_freq"]
             )
 
