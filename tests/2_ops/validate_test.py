@@ -210,11 +210,11 @@ def test_get_changed_records(
     base_repo_review_manager.dataset.save_records_dict(changed_record_dict)
     base_repo_review_manager.dataset._add_record_changes()
     commit_message = "Test commit for changed records"
-    base_repo_review_manager.dataset.create_commit(
+    base_repo_review_manager.dataset.git_repo.create_commit(
         msg=commit_message, manual_author=True
     )
     # Retrieve the last commit SHA
-    last_commit_sha = base_repo_review_manager.dataset.get_last_commit_sha()
+    last_commit_sha = base_repo_review_manager.dataset.git_repo.get_last_commit_sha()
 
     base_repo_review_manager.notified_next_operation = OperationsType.check
 

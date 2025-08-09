@@ -137,7 +137,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     )
 
     review_manager.get_load_operation()
-    git_repo = review_manager.dataset.get_repo()
+    git_repo = review_manager.dataset.git_repo.get_repo()
     if utils.in_ci_environment():
         git_repo.config_writer().set_value("user", "name", "Tester").release()
         git_repo.config_writer().set_value("user", "email", "tester@mail.com").release()
@@ -215,16 +215,16 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     review_manager.settings.data.data_package_endpoints = []
     review_manager.save_settings()
 
-    review_manager.dataset.create_commit(msg="change settings", manual_author=True)
+    review_manager.dataset.git_repo.create_commit(msg="change settings", manual_author=True)
     review_manager.changed_settings_commit = (
-        review_manager.dataset.get_last_commit_sha()
+        review_manager.dataset.git_repo.get_last_commit_sha()
     )
 
     helpers.retrieve_test_file(
         source=Path("data/search_files/test_records.bib"),
         target=Path("data/search/test_records.bib"),
     )
-    review_manager.dataset.add_changes(Path("data/search/test_records.bib"))
+    review_manager.dataset.git_repo.add_changes(Path("data/search/test_records.bib"))
     test_bib_source = colrev.search_file.ExtendedSearchFile(
         platform="colrev.unknown_source",
         search_results_path=Path("data/search/test_records.bib"),
@@ -236,11 +236,11 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     # TODO : should the saving be done by settings.save()?
     search_history_file_path = Path("data/search/test_records_search_history.json")
     test_bib_source.save(search_history_file_path)
-    review_manager.dataset.add_changes(search_history_file_path)
+    review_manager.dataset.git_repo.add_changes(search_history_file_path)
     review_manager.load_settings()
-    review_manager.dataset.create_commit(msg="add test_records.bib", manual_author=True)
+    review_manager.dataset.git_repo.create_commit(msg="add test_records.bib", manual_author=True)
     review_manager.add_test_records_commit = (
-        review_manager.dataset.get_last_commit_sha()
+        review_manager.dataset.git_repo.get_last_commit_sha()
     )
 
     search_operation = review_manager.get_search_operation()
@@ -248,40 +248,40 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
 
     load_operation = review_manager.get_load_operation()
     load_operation.main(keep_ids=False)
-    review_manager.load_commit = review_manager.dataset.get_last_commit_sha()
+    review_manager.load_commit = review_manager.dataset.git_repo.get_last_commit_sha()
 
     prep_operation = review_manager.get_prep_operation()
     prep_operation.main(keep_ids=True)
-    review_manager.prep_commit = review_manager.dataset.get_last_commit_sha()
+    review_manager.prep_commit = review_manager.dataset.git_repo.get_last_commit_sha()
 
     dedupe_operation = review_manager.get_dedupe_operation(
         notify_state_transition_operation=True
     )
     dedupe_operation.main()
-    review_manager.dedupe_commit = review_manager.dataset.get_last_commit_sha()
+    review_manager.dedupe_commit = review_manager.dataset.git_repo.get_last_commit_sha()
 
     prescreen_operation = review_manager.get_prescreen_operation()
     prescreen_operation.main(split_str="NA")
-    review_manager.prescreen_commit = review_manager.dataset.get_last_commit_sha()
+    review_manager.prescreen_commit = review_manager.dataset.git_repo.get_last_commit_sha()
 
     pdf_get_operation = review_manager.get_pdf_get_operation(
         notify_state_transition_operation=True
     )
     pdf_get_operation.main()
-    review_manager.pdf_get_commit = review_manager.dataset.get_last_commit_sha()
+    review_manager.pdf_get_commit = review_manager.dataset.git_repo.get_last_commit_sha()
 
     pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=False)
     pdf_prep_operation.main(batch_size=0)
-    review_manager.pdf_prep_commit = review_manager.dataset.get_last_commit_sha()
+    review_manager.pdf_prep_commit = review_manager.dataset.git_repo.get_last_commit_sha()
 
     screen_operation = review_manager.get_screen_operation()
     screen_operation.main(split_str="NA")
-    review_manager.screen_commit = review_manager.dataset.get_last_commit_sha()
+    review_manager.screen_commit = review_manager.dataset.git_repo.get_last_commit_sha()
 
     data_operation = review_manager.get_data_operation()
     data_operation.main()
-    review_manager.dataset.create_commit(msg="Data and synthesis", manual_author=True)
-    review_manager.data_commit = review_manager.dataset.get_last_commit_sha()
+    review_manager.dataset.git_repo.create_commit(msg="Data and synthesis", manual_author=True)
+    review_manager.data_commit = review_manager.dataset.git_repo.get_last_commit_sha()
     review_manager.logger.info(
         f"{Colors.RED}Test repository in {test_repo_dir}{Colors.END}"
     )

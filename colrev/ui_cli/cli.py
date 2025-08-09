@@ -2091,13 +2091,13 @@ def data(
     ret = data_operation.main()
     if utils.in_ci_environment():
         if ret["ask_to_commit"]:
-            review_manager.dataset.create_commit(
+            review_manager.dataset.git_repo.create_commit(
                 msg="Data and synthesis", manual_author=True
             )
     else:
         if ret["ask_to_commit"]:
             if input("Create commit (y/n)?") == "y":
-                review_manager.dataset.create_commit(
+                review_manager.dataset.git_repo.create_commit(
                     msg="Data and synthesis", manual_author=True
                 )
         if ret["no_endpoints_registered"]:
@@ -2463,7 +2463,7 @@ def env(
                     },
                 )
 
-                review_manager.dataset.pull_if_repo_clean()
+                review_manager.dataset.git_repo.pull_if_repo_clean()
                 print(f"Pulled {curated_resource_path}")
             except GitCommandError as exc:
                 print(exc)
@@ -2612,7 +2612,7 @@ def settings(
     if update_hooks:
         print("Update pre-commit hooks")
 
-        if review_manager.dataset.has_record_changes():
+        if review_manager.dataset.git_repo.has_record_changes():
             print("Clean repo required. Commit or stash changes.")
             ctx.exit(1)
 
@@ -2627,8 +2627,8 @@ def settings(
         for script_to_call in scripts_to_call:
             check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)  # nosec
 
-        review_manager.dataset.add_changes(review_manager.paths.PRE_COMMIT_CONFIG)
-        review_manager.dataset.create_commit(msg="Update pre-commit hooks")
+        review_manager.dataset.git_repo.add_changes(review_manager.paths.PRE_COMMIT_CONFIG)
+        review_manager.dataset.git_repo.create_commit(msg="Update pre-commit hooks")
         print("Successfully updated pre-commit hooks")
         return
 
@@ -2660,8 +2660,8 @@ def settings(
         with open(review_manager.paths.settings, "w", encoding="utf-8") as outfile:
             json.dump(project_settings, outfile, indent=4)
 
-        review_manager.dataset.add_changes(review_manager.paths.SETTINGS_FILE)
-        review_manager.dataset.create_commit(msg="Change settings", manual_author=True)
+        review_manager.dataset.git_repo.add_changes(review_manager.paths.SETTINGS_FILE)
+        review_manager.dataset.git_repo.create_commit(msg="Change settings", manual_author=True)
 
     # import colrev_ui.ui_web.settings_editor
 
@@ -2835,7 +2835,7 @@ def show(  # type: ignore
     elif keyword == "cmd_history":
         cmds = []
         colrev.ops.check.CheckOperation(review_manager)
-        revlist = review_manager.dataset.get_repo().iter_commits()
+        revlist = review_manager.dataset.git_repo.get_repo().iter_commits()
 
         for commit in reversed(list(revlist)):
             try:
@@ -2915,7 +2915,7 @@ def upgrade(
 
         review_manager.settings.project.auto_upgrade = False
         review_manager.save_settings()
-        review_manager.dataset.create_commit(msg="Disable auto-upgrade")
+        review_manager.dataset.git_repo.create_commit(msg="Disable auto-upgrade")
         return
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=True, verbose_mode=verbose
@@ -3060,7 +3060,7 @@ def merge(
 
     if not branch:
         colrev.ops.check.CheckOperation(review_manager)
-        git_repo = review_manager.dataset.get_repo()
+        git_repo = review_manager.dataset.git_repo.get_repo()
         print(f"possible branches: {','.join([b.name for b in git_repo.heads])}")
         return
 
@@ -3101,7 +3101,7 @@ def undo(
 
     if selection == "commit":
         colrev.ops.check.CheckOperation(review_manager)
-        git_repo = review_manager.dataset.get_repo()
+        git_repo = review_manager.dataset.git_repo.get_repo()
         git_repo.git.reset("--hard", "HEAD~1")
 
 

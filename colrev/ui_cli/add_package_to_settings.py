@@ -89,6 +89,6 @@ def add_package_to_settings(
         endpoints_in_settings.append(add_package)  # type: ignore
 
     operation.review_manager.save_settings()
-    operation.review_manager.dataset.create_commit(
+    operation.review_manager.dataset.git_repo.create_commit(
         msg=f"Add {operation.type} {package_identifier}",
     )

@@ -37,7 +37,7 @@ def test_load_records_from_history(  # type: ignore
     """Test loading records from git history."""
 
     helpers.reset_commit(base_repo_review_manager, commit="changed_settings_commit")
-    last_commit_sha = base_repo_review_manager.dataset.get_last_commit_sha()
+    last_commit_sha = base_repo_review_manager.dataset.git_repo.get_last_commit_sha()
 
     records_from_history = list(
         base_repo_review_manager.dataset.load_records_from_history(
@@ -48,7 +48,7 @@ def test_load_records_from_history(  # type: ignore
     helpers.reset_commit(base_repo_review_manager, commit="dedupe_commit")
 
     # Retrieve the last commit sha to use as a reference for loading history
-    last_commit_sha = base_repo_review_manager.dataset.get_last_commit_sha()
+    last_commit_sha = base_repo_review_manager.dataset.git_repo.get_last_commit_sha()
 
     helpers.reset_commit(base_repo_review_manager, commit="prescreen_commit")
 
@@ -313,9 +313,9 @@ def test_get_commit_message(
     trivial_file_path = base_repo_review_manager.path / "trivial_file.txt"
     with open(trivial_file_path, "w") as file:
         file.write("This is a trivial change.")
-    base_repo_review_manager.dataset.add_changes(trivial_file_path)
+    base_repo_review_manager.dataset.git_repo.add_changes(trivial_file_path)
 
-    base_repo_review_manager.dataset.create_commit(
+    base_repo_review_manager.dataset.git_repo.create_commit(
         msg=commit_message, manual_author=True
     )
 
@@ -365,7 +365,7 @@ def test_has_untracked_search_records(
         file.write("This is an untracked search record.")
 
     # Test
-    has_untracked = base_repo_review_manager.dataset.has_untracked_search_records()
+    has_untracked = base_repo_review_manager.dataset.git_repo.has_untracked_search_records()
 
     # Assert
     assert has_untracked, "Untracked search record was not detected."
@@ -387,7 +387,7 @@ def test_has_untracked_search_records_empty(
         search_dir_path.rmdir()
 
     # Test
-    has_untracked = base_repo_review_manager.dataset.has_untracked_search_records()
+    has_untracked = base_repo_review_manager.dataset.git_repo.has_untracked_search_records()
 
     # Assert
     assert not has_untracked, "Untracked search records were incorrectly detected."
@@ -409,7 +409,7 @@ def test_has_untracked_search_records_present(
         file.write("This is another untracked search record.")
 
     # Test
-    has_untracked = base_repo_review_manager.dataset.has_untracked_search_records()
+    has_untracked = base_repo_review_manager.dataset.git_repo.has_untracked_search_records()
 
     # Assert
     assert has_untracked, "Untracked search record was not detected."
@@ -424,12 +424,12 @@ def test_get_repo(
     """Test the get_repo method."""
     # Test
     with pytest.raises(colrev_exceptions.ReviewManagerNotNotifiedError):
-        base_repo_review_manager.dataset.get_repo()
+        base_repo_review_manager.dataset.git_repo.get_repo()
 
     base_repo_review_manager.notified_next_operation = OperationsType.check
 
     # Test
-    base_repo_review_manager.dataset.get_repo()
+    base_repo_review_manager.dataset.git_repo.get_repo()
 
 
 def test_has_changes_no_changes(
@@ -438,7 +438,7 @@ def test_has_changes_no_changes(
     """Test has_changes method when there are no changes."""
 
     # Test
-    has_changes = base_repo_review_manager.dataset.has_record_changes()
+    has_changes = base_repo_review_manager.dataset.git_repo.has_record_changes()
 
     # Assert
     assert not has_changes, "has_changes incorrectly detected changes."
@@ -452,10 +452,10 @@ def test_has_changes_with_changes(
     # Create a new file to simulate changes
     new_file_path = base_repo_review_manager.path / "new_file.txt"
     new_file_path.write_text("This is a new file.")
-    base_repo_review_manager.dataset._git_repo.git.add("-A")
+    base_repo_review_manager.dataset.git_repo.repo.git.add("-A")
 
     # Test
-    has_changes = base_repo_review_manager.dataset.has_changes(Path("new_file.txt"))
+    has_changes = base_repo_review_manager.dataset.git_repo.has_changes(Path("new_file.txt"))
 
     # Assert
     assert has_changes, "has_changes failed to detect changes."
@@ -469,10 +469,10 @@ def test_has_changes_with_relative_path_new_file(
     # Create a new file to simulate changes
     new_file_path = base_repo_review_manager.path / "new_file_relative.txt"
     new_file_path.write_text("This is a new file with relative path.")
-    base_repo_review_manager.dataset._git_repo.git.add("-A")
+    base_repo_review_manager.dataset.git_repo.repo.git.add("-A")
 
     # Test
-    has_changes = base_repo_review_manager.dataset.has_changes(
+    has_changes = base_repo_review_manager.dataset.git_repo.has_changes(
         Path("new_file_relative.txt")
     )
 
@@ -490,10 +490,10 @@ def test_has_changes_staged_changes(
     # Create a new file and stage it to simulate staged changes
     new_file_path = base_repo_review_manager.path / "staged_file.txt"
     new_file_path.write_text("This is a staged file.")
-    base_repo_review_manager.dataset._git_repo.git.add(new_file_path)
+    base_repo_review_manager.dataset.git_repo.repo.git.add(new_file_path)
 
     # Test
-    has_staged_changes = base_repo_review_manager.dataset.has_changes(
+    has_staged_changes = base_repo_review_manager.dataset.git_repo.has_changes(
         Path("staged_file.txt"), change_type="staged"
     )
 
@@ -509,7 +509,7 @@ def test_has_changes_staged_no_changes(
     base_repo_review_manager.notified_next_operation = OperationsType.check
 
     # Test
-    has_staged_changes = base_repo_review_manager.dataset.has_record_changes(
+    has_staged_changes = base_repo_review_manager.dataset.git_repo.has_record_changes(
         change_type="staged"
     )
 
@@ -530,7 +530,7 @@ def test_has_changes_unstaged_changes(
     base_repo_review_manager.notified_next_operation = OperationsType.check
 
     # Test
-    has_changes = base_repo_review_manager.dataset.has_changes(
+    has_changes = base_repo_review_manager.dataset.git_repo.has_changes(
         Path("unstaged_file.txt"), change_type="unstaged"
     )
 
@@ -544,12 +544,12 @@ def test_has_changes_unstaged_no_changes(
     """Test has_changes method with change_type 'unstaged' when there are no unstaged changes."""
     # Setup
     # Ensure there are no unstaged changes by staging any existing changes
-    base_repo_review_manager.dataset._git_repo.git.add("-A")
+    base_repo_review_manager.dataset.git_repo.repo.git.add("-A")
 
     base_repo_review_manager.notified_next_operation = OperationsType.check
 
     # Test
-    has_changes = base_repo_review_manager.dataset.has_record_changes(
+    has_changes = base_repo_review_manager.dataset.git_repo.has_record_changes(
         change_type="unstaged"
     )
 
@@ -563,7 +563,7 @@ def test_has_changes_with_relative_path_settings(
     """Test has_changes method with relative path for settings.json."""
 
     # Test
-    has_changes = base_repo_review_manager.dataset.has_changes(Path("settings.json"))
+    has_changes = base_repo_review_manager.dataset.git_repo.has_changes(Path("settings.json"))
 
     # Assert
     assert (
@@ -581,17 +581,17 @@ def test_add_changes(
     new_file_path.write_text("This file will be added.")
 
     # Test
-    base_repo_review_manager.dataset.add_changes(new_file_path)
+    base_repo_review_manager.dataset.git_repo.add_changes(new_file_path)
 
     # Assert
     assert (
-        new_file_path.name in base_repo_review_manager.dataset._git_repo.git.ls_files()
+        new_file_path.name in base_repo_review_manager.dataset.git_repo.repo.git.ls_files()
     ), "add_changes failed to add the new file to the repository."
 
     with pytest.raises(FileNotFoundError):
-        base_repo_review_manager.dataset.add_changes(Path("non_existsnt.file"))
+        base_repo_review_manager.dataset.git_repo.add_changes(Path("non_existsnt.file"))
 
-    base_repo_review_manager.dataset.add_changes(
+    base_repo_review_manager.dataset.git_repo.add_changes(
         Path("non_existsnt.file"), ignore_missing=True
     )
 
@@ -604,21 +604,21 @@ def test_add_changes_remove(
     # Create a new file and add it to simulate removal
     file_to_remove_path = base_repo_review_manager.path / "file_to_remove.txt"
     file_to_remove_path.write_text("This file will be removed.")
-    base_repo_review_manager.dataset.add_changes(file_to_remove_path)
+    base_repo_review_manager.dataset.git_repo.add_changes(file_to_remove_path)
 
     # Ensure file is added
     assert (
         file_to_remove_path.name
-        in base_repo_review_manager.dataset._git_repo.git.ls_files()
+        in base_repo_review_manager.dataset.git_repo.repo.git.ls_files()
     ), "Setup failed: file_to_remove.txt was not added to the repository."
 
     # Test removal
-    base_repo_review_manager.dataset.add_changes(file_to_remove_path, remove=True)
+    base_repo_review_manager.dataset.git_repo.add_changes(file_to_remove_path, remove=True)
 
     # Assert
     assert (
         file_to_remove_path.name
-        not in base_repo_review_manager.dataset._git_repo.git.ls_files()
+        not in base_repo_review_manager.dataset.git_repo.repo.git.ls_files()
     ), "add_changes failed to remove the file from the repository."
 
 
@@ -632,13 +632,13 @@ def test_add_changes_ignore_missing(
 
     # Test
     # This should not raise FileNotFoundError because of the ignore_missing flag
-    base_repo_review_manager.dataset.add_changes(missing_file_path, ignore_missing=True)
+    base_repo_review_manager.dataset.git_repo.add_changes(missing_file_path, ignore_missing=True)
 
     # Assert
     # Since the file does not exist, it should not be added, but also should not raise an error
     assert (
         missing_file_path.name
-        not in base_repo_review_manager.dataset._git_repo.git.ls_files()
+        not in base_repo_review_manager.dataset.git_repo.repo.git.ls_files()
     ), "add_changes incorrectly handled the missing file with ignore_missing flag."
 
 

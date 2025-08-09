@@ -169,7 +169,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         else:
             self.logger.error("Could not retrieve %s from the package", template_name)
             return False
-        self.review_manager.dataset.add_changes(template_name)
+        self.review_manager.dataset.git_repo.add_changes(template_name)
         return True
 
     def _retrieve_default_csl(self) -> None:
@@ -190,8 +190,8 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 old_string=f'csl: "{csl_link}"',
                 new_string=f'csl: "{csl_filename}"',
             )
-            self.review_manager.dataset.add_changes(self.settings.paper_path)
-            self.review_manager.dataset.add_changes(Path(csl_filename))
+            self.review_manager.dataset.git_repo.add_changes(self.settings.paper_path)
+            self.review_manager.dataset.git_repo.add_changes(Path(csl_filename))
             self.logger.debug("Downloaded csl file for offline use")
 
     def _check_new_record_source_tag(
@@ -206,7 +206,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         )
 
     def _authorship_heuristic(self) -> str:
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
         try:
             commits_list = list(git_repo.iter_commits())
             commits_authors = []
@@ -567,7 +567,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 records_dict=non_sample_records, filename=self.non_sample_references
             )
 
-            self.review_manager.dataset.add_changes(
+            self.review_manager.dataset.git_repo.add_changes(
                 Path("data/data/") / self.NON_SAMPLE_REFERENCES_RELATIVE
             )
 
@@ -640,7 +640,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
 
         self._add_prisma_if_available(silent_mode=silent_mode)
 
-        review_manager.dataset.add_changes(self.settings.paper_path)
+        review_manager.dataset.git_repo.add_changes(self.settings.paper_path)
 
         return records
 
@@ -655,7 +655,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                     template_file=retrieval_path,
                     target=self.non_sample_references,
                 )
-                self.review_manager.dataset.add_changes(self.non_sample_references)
+                self.review_manager.dataset.git_repo.add_changes(self.non_sample_references)
             except AttributeError:
                 pass
 
@@ -666,7 +666,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             records[record_id] = record_dict
 
         write_file(records_dict=records, filename=self.sample_references)
-        self.review_manager.dataset.add_changes(self.sample_references)
+        self.review_manager.dataset.git_repo.add_changes(self.sample_references)
 
     def _call_docker_build_process(self, *, script: str) -> None:
         try:
@@ -734,7 +734,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         )
 
         if (
-            not self.review_manager.dataset.has_changes(self.paper_relative_path)
+            not self.review_manager.dataset.git_repo.has_changes(self.paper_relative_path)
             and self.settings.paper_output.is_file()
         ):
             self.logger.debug("Skipping paper build (no changes)")
@@ -764,8 +764,8 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         """Update the data/paper"""
 
         if (
-            self.review_manager.dataset.repo_initialized()
-            and self.review_manager.dataset.has_changes(
+            self.review_manager.dataset.git_repo.repo_initialized()
+            and self.review_manager.dataset.git_repo.has_changes(
                 self.paper_relative_path, change_type="unstaged"
             )
         ):

@@ -410,7 +410,7 @@ class Repare(colrev.process.operation.Operation):
             write_file(
                 records_dict=curation_recs, filename=search_source.search_history_path
             )
-            self.review_manager.dataset.add_changes(search_source.search_history_path)
+            self.review_manager.dataset.git_repo.add_changes(search_source.search_history_path)
 
     def _update_field_names(self, records: dict) -> None:
         for record_dict in records.values():

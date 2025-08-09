@@ -38,7 +38,7 @@ def main() -> int:
 
     if (
         not review_manager.settings.is_curated_masterdata_repo()
-        and review_manager.dataset.records_changed()
+        and review_manager.dataset.git_repo.records_changed()
     ):  # pragma: no cover
         colrev.ops.check.CheckOperation(review_manager)  # to notify
         corrections_operation = colrev.ops.correct.Corrections(

@@ -30,7 +30,7 @@ class Pull(colrev.process.operation.Operation):
 
     def _pull_project(self) -> None:
         try:
-            git_repo = self.review_manager.dataset.get_repo()
+            git_repo = self.review_manager.dataset.git_repo.get_repo()
             origin = git_repo.remotes.origin
             self.review_manager.logger.info(
                 f"Pull project changes from {git_repo.remotes.origin}"

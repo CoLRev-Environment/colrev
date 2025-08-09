@@ -67,7 +67,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
 
         self.settings = self.settings_class(**settings)
         self.review_manager = data_operation.review_manager
-        self.git_repo = self.review_manager.dataset.get_repo()
+        self.git_repo = self.review_manager.dataset.git_repo.get_repo()
 
     # pylint: disable=unused-argument
     @classmethod
@@ -98,13 +98,13 @@ class GithubPages(base_classes.DataPackageBaseClass):
             old_string="{{project_title}}",
             new_string=project_title.rstrip(" ").capitalize(),
         )
-        self.review_manager.dataset.add_changes(Path("README.md"))
+        self.review_manager.dataset.git_repo.add_changes(Path("README.md"))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("packages/github_pages/github_pages/index.html"),
             target=Path("index.html"),
         )
-        self.review_manager.dataset.add_changes(Path("index.html"))
+        self.review_manager.dataset.git_repo.add_changes(Path("index.html"))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("packages/github_pages/github_pages/_config.yml"),
@@ -115,15 +115,15 @@ class GithubPages(base_classes.DataPackageBaseClass):
             old_string="{{project_title}}",
             new_string=project_title,
         )
-        self.review_manager.dataset.add_changes(Path("_config.yml"))
+        self.review_manager.dataset.git_repo.add_changes(Path("_config.yml"))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("packages/github_pages/github_pages/about.md"),
             target=Path("about.md"),
         )
-        self.review_manager.dataset.add_changes(Path("about.md"))
+        self.review_manager.dataset.git_repo.add_changes(Path("about.md"))
 
-        self.review_manager.dataset.create_commit(
+        self.review_manager.dataset.git_repo.create_commit(
             msg="Setup gh-pages branch", skip_status_yaml=True
         )
 
@@ -155,7 +155,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
                 ),
                 target=self.review_manager.paths.PRE_COMMIT_CONFIG,
             )
-            self.review_manager.dataset.add_changes(
+            self.review_manager.dataset.git_repo.add_changes(
                 self.review_manager.paths.PRE_COMMIT_CONFIG
             )
 
@@ -170,9 +170,9 @@ class GithubPages(base_classes.DataPackageBaseClass):
         data_file = Path("data.bib")
         write_file(records_dict=included_records, filename=data_file)
 
-        self.review_manager.dataset.add_changes(data_file)
+        self.review_manager.dataset.git_repo.add_changes(data_file)
 
-        self.review_manager.dataset.create_commit(
+        self.review_manager.dataset.git_repo.create_commit(
             msg="Update sample", skip_status_yaml=True
         )
 
@@ -252,7 +252,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
             )
             return
 
-        if self.review_manager.dataset.has_record_changes():
+        if self.review_manager.dataset.git_repo.has_record_changes():
             self.logger.error(
                 "Cannot update github pages because there are uncommitted changes."
             )
@@ -352,7 +352,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
         data_endpoint = "Data operation [github pages data endpoint]: "
 
         advice = {"msg": f"{data_endpoint}", "detailed_msg": "TODO"}
-        if self.review_manager.dataset.get_remote_url() == "NA":
+        if self.review_manager.dataset.git_repo.get_remote_url() == "NA":
             advice["msg"] += (
                 "\n    - To make the repository available on Github pages, "
                 + "push it to a Github repository\nhttps://github.com/new"

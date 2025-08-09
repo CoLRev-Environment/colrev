@@ -190,7 +190,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         rerun: bool,
     ) -> None:
         self.api.rerun = rerun
-        self.api.last_updated = self.review_manager.dataset.get_last_updated(
+        self.api.last_updated = self.review_manager.dataset.git_repo.get_last_updated(
             plos_feed.feed_file
         )
 

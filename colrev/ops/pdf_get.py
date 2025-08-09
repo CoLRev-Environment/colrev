@@ -326,7 +326,7 @@ class PDFGet(colrev.process.operation.Operation):
             )
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.add_changes(source.search_history_path)
+        self.review_manager.dataset.git_repo.add_changes(source.search_history_path)
 
     def relink_pdfs(self) -> None:
         """Relink record files to the corresponding PDFs (if available)"""
@@ -341,7 +341,7 @@ class PDFGet(colrev.process.operation.Operation):
         for source in sources:
             self._relink_pdfs_in_source(source)
 
-        self.review_manager.dataset.create_commit(msg="Relink PDFs")
+        self.review_manager.dataset.git_repo.create_commit(msg="Relink PDFs")
 
     def check_existing_unlinked_pdfs(
         self,
@@ -506,7 +506,7 @@ class PDFGet(colrev.process.operation.Operation):
         self.review_manager.dataset.save_records_dict(records)
 
         if pdfs_search_file.is_file():
-            self.review_manager.dataset.add_changes(pdfs_search_file)
+            self.review_manager.dataset.git_repo.add_changes(pdfs_search_file)
 
     def _get_data(self) -> dict:
         # pylint: disable=duplicate-code
@@ -618,7 +618,7 @@ class PDFGet(colrev.process.operation.Operation):
             with open("custom_pdf_get_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(Path("custom_pdf_get_script.py"))
+        self.review_manager.dataset.git_repo.add_changes(Path("custom_pdf_get_script.py"))
 
         self.review_manager.settings.pdf_get.pdf_get_man_package_endpoints.append(
             {"endpoint": "custom_pdf_get_script"}
@@ -677,7 +677,7 @@ class PDFGet(colrev.process.operation.Operation):
         if self.review_manager.settings.pdf_get.rename_pdfs:
             self.rename_pdfs()
 
-        self.review_manager.dataset.create_commit(msg="PDFs: get and prepare")
+        self.review_manager.dataset.git_repo.create_commit(msg="PDFs: get and prepare")
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed pdf-get operation{Colors.END}"
         )

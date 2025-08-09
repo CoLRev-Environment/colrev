@@ -570,7 +570,7 @@ class Prep(colrev.process.operation.Operation):
                     old_string=old_filename,
                     new_string=str(new_filename),
                 )
-                self.review_manager.dataset.add_changes(pdfs_origin_file)
+                self.review_manager.dataset.git_repo.add_changes(pdfs_origin_file)
 
     def set_ids(self) -> None:
         """Set IDs (regenerate). In force-mode, all IDs are regenerated and PDFs are renamed"""
@@ -580,7 +580,7 @@ class Prep(colrev.process.operation.Operation):
         records = self.review_manager.dataset.set_ids()
         self._rename_files(records)
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(msg="Set IDs")
+        self.review_manager.dataset.git_repo.create_commit(msg="Set IDs")
 
     def setup_custom_script(self) -> None:
         """Setup a custom prep script"""
@@ -592,7 +592,7 @@ class Prep(colrev.process.operation.Operation):
             with open("custom_prep_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(Path("custom_prep_script.py"))
+        self.review_manager.dataset.git_repo.add_changes(Path("custom_prep_script.py"))
 
         prep_round = self.review_manager.settings.prep.prep_rounds[-1]
         prep_round.prep_package_endpoints.append({"endpoint": "custom_prep_script"})
@@ -893,10 +893,10 @@ class Prep(colrev.process.operation.Operation):
             {r[Fields.ID]: r for r in prepared_records}, partial=True
         )
         self._log_commit_details(prepared_records)
-        self.review_manager.dataset.create_commit(
+        self.review_manager.dataset.git_repo.create_commit(
             msg="Prep: improve record metadata",
         )
-        self._prep_commit_id = self.review_manager.dataset.get_repo().head.commit.hexsha
+        self._prep_commit_id = self.review_manager.dataset.git_repo.get_repo().head.commit.hexsha
         if not self.review_manager.high_level_operation:
             print()
         self.review_manager.reset_report_logger()
@@ -990,6 +990,6 @@ class Prep(colrev.process.operation.Operation):
         if not keep_ids and not self.polish:
             self.review_manager.logger.info("Set record IDs")
             self.review_manager.dataset.set_ids()
-            self.review_manager.dataset.create_commit(msg="Set IDs")
+            self.review_manager.dataset.git_repo.create_commit(msg="Set IDs")
 
         self._post_prep()

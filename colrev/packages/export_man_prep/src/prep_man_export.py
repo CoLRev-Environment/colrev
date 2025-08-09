@@ -342,9 +342,9 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
             )
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(msg="Prep-man (ExportManPrep)")
+        self.review_manager.dataset.git_repo.create_commit(msg="Prep-man (ExportManPrep)")
         self.review_manager.dataset.set_ids(selected_ids=imported_records)
-        self.review_manager.dataset.create_commit(msg="Set IDs")
+        self.review_manager.dataset.git_repo.create_commit(msg="Set IDs")
 
     def _print_export_prep_man_instructions(self) -> None:
         print("Created two files:")
