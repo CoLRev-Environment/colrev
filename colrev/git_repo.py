@@ -12,6 +12,8 @@ from git import InvalidGitRepositoryError
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import FileSets
 
+if typing.TYPE_CHECKING:
+    import colrev.review_manager
 
 class GitRepo:
     """Wrapper for Git repository interactions"""

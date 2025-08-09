@@ -320,8 +320,8 @@ def test_get_commit_message(
     )
 
     # Test
-    retrieved_commit_message = base_repo_review_manager.dataset.get_commit_message(
-        commit_nr=0
+    retrieved_commit_message = (
+        base_repo_review_manager.dataset.git_repo.get_commit_message(commit_nr=0)
     )
 
     # Assert
@@ -340,7 +340,7 @@ def test_get_untracked_files(
         file.write("This is an untracked file.")
 
     # Test
-    untracked_files = base_repo_review_manager.dataset.get_untracked_files()
+    untracked_files = base_repo_review_manager.dataset.git_repo.get_untracked_files()
 
     # Assert
     assert (
@@ -667,7 +667,7 @@ def test_stash_unstaged_changes(
     unstaged_file_path.write_text("This is an unstaged file.")
 
     # Test
-    base_repo_review_manager.dataset.stash_unstaged_changes()
+    base_repo_review_manager.dataset.git_repo.stash_unstaged_changes()
 
     # Assert
     assert (
