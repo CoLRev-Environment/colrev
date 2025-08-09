@@ -52,14 +52,14 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: colrev.search_file.ExtendedSearchFile,
+        search_file: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.review_manager = source_operation.review_manager
-        self.search_source = settings
+        self.search_source = search_file
         self.source_operation = source_operation
         self.language_service = colrev.env.language_service.LanguageService()
 
@@ -107,7 +107,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
                 comment="",
             )
             # params_dict.update(vars(search_source))
-            instance = cls(source_operation=operation, settings=search_source)
+            instance = cls(source_operation=operation, search_file=search_source)
             instance.api_ui()
             search_source.search_string = instance._add_constraints()
 

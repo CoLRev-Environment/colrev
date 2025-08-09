@@ -518,7 +518,9 @@ class Search(colrev.process.operation.Operation):
                     package_type=EndpointType.search_source,
                     package_identifier=source.platform,
                 )
-                endpoint = search_source_class(source_operation=self, settings=source)
+                endpoint = search_source_class(
+                    source_operation=self, search_file=source
+                )
 
                 endpoint.search(rerun=rerun)  # type: ignore
 

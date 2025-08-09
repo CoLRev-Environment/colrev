@@ -56,7 +56,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: colrev.search_file.ExtendedSearchFile,
+        search_file: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
@@ -66,7 +66,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         if "min_intext_citations" not in settings["search_string"]:
             settings["search_string"]["min_intext_citations"] = 3
 
-        self.search_source = settings
+        self.search_source = search_file
         self.crossref_api = crossref_api.CrossrefAPI(url="")
 
     @classmethod
@@ -488,7 +488,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         return all_references
 
     @classmethod
-    def _get_settings_from_ui(
+    def _get_params_from_ui(
         cls, *, params: dict, review_manager: colrev.review_manager.ReviewManager
     ) -> None:
 
@@ -555,7 +555,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
                 params_dict[key] = value
 
         if "min_intext_citations" not in params_dict:
-            cls._get_settings_from_ui(
+            cls._get_params_from_ui(
                 params=params_dict, review_manager=operation.review_manager
             )
         else:

@@ -74,7 +74,7 @@ class CLISourceAdder:
         )
         endpoint = search_source_class(
             source_operation=self,
-            settings=candidate.model_dump(),
+            search_file=candidate.model_dump(),
         )
 
         params = f"search_file={filename}"

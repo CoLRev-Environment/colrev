@@ -48,9 +48,9 @@ class OpenLibraryMetadataPrep(base_classes.PrepPackageBaseClass):
             if s.filename == self._open_library_md_filename
         ]
         if open_library_md_source_l:
-            search_source = open_library_md_source_l[0]
+            search_file = open_library_md_source_l[0]
         else:
-            search_source = colrev.search_file.ExtendedSearchFile(
+            search_file = colrev.search_file.ExtendedSearchFile(
                 platform="colrev.open_library",
                 search_results_path=self._open_library_md_filename,
                 search_type=SearchType.MD,
@@ -59,7 +59,7 @@ class OpenLibraryMetadataPrep(base_classes.PrepPackageBaseClass):
             )
 
         self.open_library_connector = open_library_connector.OpenLibrarySearchSource(
-            source_operation=prep_operation, settings=search_source
+            source_operation=prep_operation, search_file=search_file
         )
 
     def check_availability(self) -> None:

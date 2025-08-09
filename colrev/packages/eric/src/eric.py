@@ -41,16 +41,16 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: colrev.search_file.ExtendedSearchFile,
+        search_file: Optional[colrev.search_file.ExtendedSearchFile] = None,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.source_operation = source_operation
-        if settings:
+        if search_file:
             # ERIC as a search_source
-            self.search_source = settings
+            self.search_source = search_file
         else:
             self.search_source = colrev.search_file.ExtendedSearchFile(
                 platform=self.endpoint,

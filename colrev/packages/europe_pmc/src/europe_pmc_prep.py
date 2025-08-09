@@ -49,9 +49,9 @@ class EuropePMCMetadataPrep(base_classes.PrepPackageBaseClass):
             if s.filename == self._europe_pmc_md_filename
         ]
         if europe_pmc_md_source_l:
-            settings = europe_pmc_md_source_l[0]
+            search_file = europe_pmc_md_source_l[0]
         else:
-            settings = colrev.search_file.ExtendedSearchFile(
+            search_file = colrev.search_file.ExtendedSearchFile(
                 platform="colrev.europe_pmc",
                 search_results_path=self._europe_pmc_md_filename,
                 search_type=SearchType.MD,
@@ -61,7 +61,7 @@ class EuropePMCMetadataPrep(base_classes.PrepPackageBaseClass):
 
         self.epmc_source = europe_pmc_connector.EuropePMCSearchSource(
             source_operation=self.prep_operation,
-            settings=settings,
+            search_file=search_file,
         )
 
     def prepare(
