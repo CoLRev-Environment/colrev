@@ -13,9 +13,11 @@ import colrev.loader.load_utils
 import colrev.ops.check
 import colrev.record.record_id_setter
 import colrev.record.record_prep
-from colrev.constants import ExitCodes, Fields, RecordState
-from colrev.writer.write_utils import to_string
+from colrev.constants import ExitCodes
+from colrev.constants import Fields
+from colrev.constants import RecordState
 from colrev.git_repo import GitRepo
+from colrev.writer.write_utils import to_string
 
 # pylint: disable=too-many-public-methods
 

@@ -415,7 +415,9 @@ class Load(colrev.process.operation.Operation):
         # Add files that were renamed (removed)
         for obj in git_repo.index.diff(None).iter_change_type("D"):
             if source.search_source.search_history_path.stem in obj.b_path:
-                self.review_manager.dataset.git_repo.add_changes(Path(obj.b_path), remove=True)
+                self.review_manager.dataset.git_repo.add_changes(
+                    Path(obj.b_path), remove=True
+                )
 
     def load_active_sources(self, *, include_md: bool = False) -> list:
         """

@@ -207,7 +207,9 @@ class Prescreen(colrev.process.operation.Operation):
             with open("custom_prescreen_script.py", "w", encoding="utf8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.git_repo.add_changes(Path("custom_prescreen_script.py"))
+        self.review_manager.dataset.git_repo.add_changes(
+            Path("custom_prescreen_script.py")
+        )
 
         self.review_manager.settings.prescreen.prescreen_package_endpoints.append(
             {"endpoint": "custom_prescreen_script"}

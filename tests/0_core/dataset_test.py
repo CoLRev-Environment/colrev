@@ -365,7 +365,9 @@ def test_has_untracked_search_records(
         file.write("This is an untracked search record.")
 
     # Test
-    has_untracked = base_repo_review_manager.dataset.git_repo.has_untracked_search_records()
+    has_untracked = (
+        base_repo_review_manager.dataset.git_repo.has_untracked_search_records()
+    )
 
     # Assert
     assert has_untracked, "Untracked search record was not detected."
@@ -387,7 +389,9 @@ def test_has_untracked_search_records_empty(
         search_dir_path.rmdir()
 
     # Test
-    has_untracked = base_repo_review_manager.dataset.git_repo.has_untracked_search_records()
+    has_untracked = (
+        base_repo_review_manager.dataset.git_repo.has_untracked_search_records()
+    )
 
     # Assert
     assert not has_untracked, "Untracked search records were incorrectly detected."
@@ -409,7 +413,9 @@ def test_has_untracked_search_records_present(
         file.write("This is another untracked search record.")
 
     # Test
-    has_untracked = base_repo_review_manager.dataset.git_repo.has_untracked_search_records()
+    has_untracked = (
+        base_repo_review_manager.dataset.git_repo.has_untracked_search_records()
+    )
 
     # Assert
     assert has_untracked, "Untracked search record was not detected."
@@ -455,7 +461,9 @@ def test_has_changes_with_changes(
     base_repo_review_manager.dataset.git_repo.repo.git.add("-A")
 
     # Test
-    has_changes = base_repo_review_manager.dataset.git_repo.has_changes(Path("new_file.txt"))
+    has_changes = base_repo_review_manager.dataset.git_repo.has_changes(
+        Path("new_file.txt")
+    )
 
     # Assert
     assert has_changes, "has_changes failed to detect changes."
@@ -563,7 +571,9 @@ def test_has_changes_with_relative_path_settings(
     """Test has_changes method with relative path for settings.json."""
 
     # Test
-    has_changes = base_repo_review_manager.dataset.git_repo.has_changes(Path("settings.json"))
+    has_changes = base_repo_review_manager.dataset.git_repo.has_changes(
+        Path("settings.json")
+    )
 
     # Assert
     assert (
@@ -585,7 +595,8 @@ def test_add_changes(
 
     # Assert
     assert (
-        new_file_path.name in base_repo_review_manager.dataset.git_repo.repo.git.ls_files()
+        new_file_path.name
+        in base_repo_review_manager.dataset.git_repo.repo.git.ls_files()
     ), "add_changes failed to add the new file to the repository."
 
     with pytest.raises(FileNotFoundError):
@@ -613,7 +624,9 @@ def test_add_changes_remove(
     ), "Setup failed: file_to_remove.txt was not added to the repository."
 
     # Test removal
-    base_repo_review_manager.dataset.git_repo.add_changes(file_to_remove_path, remove=True)
+    base_repo_review_manager.dataset.git_repo.add_changes(
+        file_to_remove_path, remove=True
+    )
 
     # Assert
     assert (
@@ -632,7 +645,9 @@ def test_add_changes_ignore_missing(
 
     # Test
     # This should not raise FileNotFoundError because of the ignore_missing flag
-    base_repo_review_manager.dataset.git_repo.add_changes(missing_file_path, ignore_missing=True)
+    base_repo_review_manager.dataset.git_repo.add_changes(
+        missing_file_path, ignore_missing=True
+    )
 
     # Assert
     # Since the file does not exist, it should not be added, but also should not raise an error

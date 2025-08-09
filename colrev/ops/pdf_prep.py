@@ -355,7 +355,9 @@ class PDFPrep(colrev.process.operation.Operation):
             with open("custom_pdf_prep_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.git_repo.add_changes(Path("custom_pdf_prep_script.py"))
+        self.review_manager.dataset.git_repo.add_changes(
+            Path("custom_pdf_prep_script.py")
+        )
 
         self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints.append(
             {"endpoint": "custom_pdf_prep_script"}

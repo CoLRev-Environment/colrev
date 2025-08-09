@@ -254,7 +254,9 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
         stats = self._get_stats(records=records, sources=sources)
         markdown_output = self._get_stats_markdown_table(stats=stats, sources=sources)
         self._update_table_in_readme(markdown_output=markdown_output)
-        self.review_manager.dataset.git_repo.add_changes(self.review_manager.paths.README_FILE)
+        self.review_manager.dataset.git_repo.add_changes(
+            self.review_manager.paths.README_FILE
+        )
 
     def _source_comparison(self, *, silent_mode: bool) -> None:
         """Exports a table to support analyses of records that are not

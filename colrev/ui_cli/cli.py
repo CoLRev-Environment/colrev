@@ -2627,7 +2627,9 @@ def settings(
         for script_to_call in scripts_to_call:
             check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)  # nosec
 
-        review_manager.dataset.git_repo.add_changes(review_manager.paths.PRE_COMMIT_CONFIG)
+        review_manager.dataset.git_repo.add_changes(
+            review_manager.paths.PRE_COMMIT_CONFIG
+        )
         review_manager.dataset.git_repo.create_commit(msg="Update pre-commit hooks")
         print("Successfully updated pre-commit hooks")
         return
@@ -2661,7 +2663,9 @@ def settings(
             json.dump(project_settings, outfile, indent=4)
 
         review_manager.dataset.git_repo.add_changes(review_manager.paths.SETTINGS_FILE)
-        review_manager.dataset.git_repo.create_commit(msg="Change settings", manual_author=True)
+        review_manager.dataset.git_repo.create_commit(
+            msg="Change settings", manual_author=True
+        )
 
     # import colrev_ui.ui_web.settings_editor
 

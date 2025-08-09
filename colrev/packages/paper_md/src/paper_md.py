@@ -655,7 +655,9 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                     template_file=retrieval_path,
                     target=self.non_sample_references,
                 )
-                self.review_manager.dataset.git_repo.add_changes(self.non_sample_references)
+                self.review_manager.dataset.git_repo.add_changes(
+                    self.non_sample_references
+                )
             except AttributeError:
                 pass
 
@@ -734,7 +736,9 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         )
 
         if (
-            not self.review_manager.dataset.git_repo.has_changes(self.paper_relative_path)
+            not self.review_manager.dataset.git_repo.has_changes(
+                self.paper_relative_path
+            )
             and self.settings.paper_output.is_file()
         ):
             self.logger.debug("Skipping paper build (no changes)")
