@@ -91,7 +91,7 @@ class PDFGetMan(colrev.process.operation.Operation):
             if record.data[Fields.STATUS] == RecordState.pdf_needs_manual_retrieval:
                 record.set_status(RecordState.pdf_not_available)
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(
+        self.review_manager.dataset.git_repo.create_commit(
             msg="Discard missing PDFs", manual_author=True
         )
 
@@ -123,7 +123,7 @@ class PDFGetMan(colrev.process.operation.Operation):
 
     def pdfs_retrieved_manually(self) -> bool:
         """Check whether PDFs were retrieved manually"""
-        return self.review_manager.dataset.has_record_changes()
+        return self.review_manager.dataset.git_repo.has_record_changes()
 
     def pdf_get_man_record(
         self,

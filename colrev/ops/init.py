@@ -101,13 +101,13 @@ class Initializer:
 
         self._git_rm_settings()
 
-        self.review_manager.dataset.create_commit(
+        self.review_manager.dataset.git_repo.create_commit(
             msg="Init: Create CoLRev repository",
             manual_author=True,
             skip_hooks=True,
         )
         self._add_colrev_project_details()
-        self.review_manager.dataset.create_commit(
+        self.review_manager.dataset.git_repo.create_commit(
             msg="Init: Create CoLRev project",
             manual_author=True,
             skip_hooks=True,
@@ -123,7 +123,7 @@ class Initializer:
 
     def _git_rm_settings(self) -> None:
         colrev.ops.check.CheckOperation(self.review_manager)
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
         git_repo.index.remove([self.review_manager.paths.settings])
 
     def _add_colrev_project_details(self) -> None:
@@ -134,7 +134,7 @@ class Initializer:
         )
         data_operation.main(silent_mode=True)
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
         git_repo.git.add(all=True)
 
     def _format_review_type(self, review_type: str) -> str:
@@ -439,7 +439,7 @@ class Initializer:
 
         self._fix_pre_commit_hooks_windows()
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
         git_repo.git.add(all=True)
 
     def _register_repo(self, *, example: bool) -> None:
@@ -501,7 +501,7 @@ class Initializer:
             target=Path("data/search/30_example_records.bib"),
         )
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
         git_repo.index.add(["data/search/30_example_records.bib"])
 
         with open(self.review_manager.paths.settings, encoding="utf-8") as file:

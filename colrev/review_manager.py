@@ -232,7 +232,7 @@ class ReviewManager:
         with open(self.paths.status, "w", encoding="utf8") as file:
             yaml.dump(exported_dict, file, allow_unicode=True)
         if add_to_git:
-            self.dataset.add_changes(self.paths.STATUS_FILE)
+            self.dataset.git_repo.add_changes(self.paths.STATUS_FILE)
 
     def get_upgrade(self) -> colrev.ops.upgrade.Upgrade:  # pragma: no cover
         """Get an upgrade object"""

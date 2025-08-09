@@ -20,7 +20,7 @@ def test_check_precondition_load(  # type: ignore
     with pytest.raises(colrev_exceptions.UnstagedGitChangesError):
         load_operation.check_precondition()
 
-    base_repo_review_manager.dataset.add_changes(base_repo_review_manager.paths.readme)
+    base_repo_review_manager.dataset.git_repo.add_changes(base_repo_review_manager.paths.readme)
     with pytest.raises(colrev_exceptions.CleanRepoRequiredError):
         load_operation.check_precondition()
 

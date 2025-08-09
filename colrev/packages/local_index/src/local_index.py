@@ -422,7 +422,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             ):
                 record.prescreen_exclude(reason=FieldValues.RETRACTED)
 
-            git_repo = self.review_manager.dataset.get_repo()
+            git_repo = self.review_manager.dataset.git_repo.get_repo()
             cur_project_source_paths = [str(self.review_manager.path)]
             for remote in git_repo.remotes:
                 if remote.url:
@@ -582,16 +582,16 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _apply_corrections_precondition(
         self, *, check_operation: colrev.process.operation.Operation, source_url: str
     ) -> bool:
-        git_repo = check_operation.review_manager.dataset.get_repo()
+        git_repo = check_operation.review_manager.dataset.git_repo.get_repo()
 
         if git_repo.is_dirty():
             msg = f"Repo not clean ({source_url}): commit or stash before updating records"
             raise colrev_exceptions.CorrectionPreconditionException(msg)
 
-        if check_operation.review_manager.dataset.behind_remote():
+        if check_operation.review_manager.dataset.git_repo.behind_remote():
             origin = git_repo.remotes.origin
             origin.pull()
-            if not check_operation.review_manager.dataset.behind_remote():
+            if not check_operation.review_manager.dataset.git_repo.behind_remote():
                 self.logger.info("Pulled changes")
             else:
                 self.logger.error(
@@ -727,7 +727,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             # deal with remove/merge
 
         check_operation.review_manager.dataset.save_records_dict(records)
-        check_operation.review_manager.dataset.create_commit(
+        check_operation.review_manager.dataset.git_repo.create_commit(
             msg=f"Update {record_dict['ID']}", script_call="colrev push"
         )
 
@@ -779,7 +779,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> bool:
         # pylint: disable=too-many-locals
 
-        git_repo = check_operation.review_manager.dataset.get_repo()
+        git_repo = check_operation.review_manager.dataset.git_repo.get_repo()
         records = check_operation.review_manager.dataset.load_records_dict()
 
         success = False
@@ -862,8 +862,8 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
         check_operation = colrev.ops.check.CheckOperation(check_review_manager)
 
-        if check_review_manager.dataset.behind_remote():
-            git_repo = check_review_manager.dataset.get_repo()
+        if check_review_manager.dataset.git_repo.behind_remote():
+            git_repo = check_review_manager.dataset.git_repo.get_repo()
             origin = git_repo.remotes.origin
             self.logger.info(f"Pull project changes from {git_repo.remotes.origin}")
             res = origin.pull()
