@@ -1,6 +1,6 @@
-
 import colrev.process.status
-from colrev.constants import Colors, Fields
+from colrev.constants import Colors
+from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType

@@ -20,7 +20,6 @@ import colrev.review_manager
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-from colrev.constants import SearchType
 from colrev.process.model import ProcessModel
 
 # Note : the following produces different relative paths locally/on github.
@@ -195,7 +194,6 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     with pytest.raises(colrev_exceptions.NoRecordsError):
         ProcessModel.check_operation_precondition(dedupe_operation)
     dedupe_operation.review_manager.settings.project.delay_automated_processing = False
-
 
     review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
         {"endpoint": "colrev.source_specific_prep"},
