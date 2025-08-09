@@ -581,8 +581,8 @@ class Dedupe(colrev.process.operation.Operation):
         self.unmerge_records(current_record_ids=false_positives)
         self.apply_merges(id_sets=false_negatives, complete_dedupe=False)
 
-        if self.review_manager.dataset.records_changed():
-            self.review_manager.dataset.create_commit(
+        if self.review_manager.dataset.git_repo.records_changed():
+            self.review_manager.dataset.git_repo.create_commit(
                 msg="Validate and correct duplicates",
                 manual_author=True,
             )
@@ -648,7 +648,7 @@ class Dedupe(colrev.process.operation.Operation):
 
         if apply:
             self.apply_merges(id_sets=id_sets)
-            self.review_manager.dataset.create_commit(
+            self.review_manager.dataset.git_repo.create_commit(
                 msg="Merge records (identical global IDs)"
             )
 
@@ -699,7 +699,9 @@ class Dedupe(colrev.process.operation.Operation):
             if not self.review_manager.high_level_operation:
                 print()
 
-        dedupe_commit_id = self.review_manager.dataset.get_repo().head.commit.hexsha
+        dedupe_commit_id = (
+            self.review_manager.dataset.git_repo.get_repo().head.commit.hexsha
+        )
         self.review_manager.logger.info("To validate the changes, use")
 
         self.review_manager.logger.info(
@@ -720,4 +722,6 @@ class Dedupe(colrev.process.operation.Operation):
                     record.set_status(RecordState.rev_prescreen_included)
 
             self.review_manager.dataset.save_records_dict(records)
-            self.review_manager.dataset.create_commit(msg="Skip prescreen/include all")
+            self.review_manager.dataset.git_repo.create_commit(
+                msg="Skip prescreen/include all"
+            )

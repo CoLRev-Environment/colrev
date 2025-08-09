@@ -438,8 +438,8 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         pdf_backward_search_feed.save()
 
-        if self.review_manager.dataset.has_record_changes():
-            self.review_manager.dataset.create_commit(
+        if self.review_manager.dataset.git_repo.has_record_changes():
+            self.review_manager.dataset.git_repo.create_commit(
                 msg="Backward search", script_call="colrev search"
             )
 

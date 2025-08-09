@@ -299,9 +299,9 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
 
             self._pdf_get_man_record_cli(record=record)
 
-        if self.review_manager.dataset.has_record_changes():
+        if self.review_manager.dataset.git_repo.has_record_changes():
             if input("Create commit (y/n)?") == "y":
-                self.review_manager.dataset.create_commit(
+                self.review_manager.dataset.git_repo.create_commit(
                     msg="Retrieve PDFs manually",
                     manual_author=True,
                 )

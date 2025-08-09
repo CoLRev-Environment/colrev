@@ -77,7 +77,7 @@ class Search(colrev.process.operation.Operation):
                     f"Created {Colors.ORANGE}{query_filename}{Colors.END}. "
                     "Please store your query in the file and press Enter to continue."
                 )
-            self.review_manager.dataset.add_changes(query_filename)
+            self.review_manager.dataset.git_repo.add_changes(query_filename)
         return query_filename
 
     def create_db_source(  # type: ignore
@@ -117,8 +117,8 @@ class Search(colrev.process.operation.Operation):
             )
             input("Press Enter to complete")
 
-        self.review_manager.dataset.add_changes(filename, ignore_missing=True)
-        self.review_manager.dataset.add_changes(query_file)
+        self.review_manager.dataset.git_repo.add_changes(filename, ignore_missing=True)
+        self.review_manager.dataset.git_repo.add_changes(query_file)
 
         add_source = colrev.search_file.ExtendedSearchFile(
             platform=search_source_cls.endpoint,
@@ -204,7 +204,7 @@ class Search(colrev.process.operation.Operation):
         )
         input("Press enter to continue")
         if source.search_results_path.is_file():
-            self.review_manager.dataset.add_changes(source.search_results_path)
+            self.review_manager.dataset.git_repo.add_changes(source.search_results_path)
         else:
             print("Search results not found.")
 
@@ -438,7 +438,7 @@ class Search(colrev.process.operation.Operation):
 
                 self.review_manager.settings.sources.append(source["source_candidate"])
         self.review_manager.save_settings()
-        self.review_manager.dataset.create_commit(msg="Add new search sources")
+        self.review_manager.dataset.git_repo.create_commit(msg="Add new search sources")
 
     def get_new_source_heuristic(self, filename: Path) -> list:
         """Get the heuristic result list of SearchSources candidates
@@ -472,9 +472,11 @@ class Search(colrev.process.operation.Operation):
 
         search_file.save()
         # TODO : get_filepath()?
-        self.review_manager.dataset.add_changes(search_file.search_history_path)
+        self.review_manager.dataset.git_repo.add_changes(
+            search_file.search_history_path
+        )
 
-        self.review_manager.dataset.create_commit(
+        self.review_manager.dataset.git_repo.create_commit(
             msg=f"Search: add {search_file.platform}:{search_file.search_type} → "
             f"data/search/{search_file.search_history_path.name}"
         )
@@ -527,9 +529,11 @@ class Search(colrev.process.operation.Operation):
                 endpoint.search(rerun=rerun)  # type: ignore
 
                 self._remove_forthcoming(source)
-                self.review_manager.dataset.add_changes(source.search_results_path)
+                self.review_manager.dataset.git_repo.add_changes(
+                    source.search_results_path
+                )
                 if not skip_commit:
-                    self.review_manager.dataset.create_commit(
+                    self.review_manager.dataset.git_repo.create_commit(
                         msg=f"Search: run {source.platform}:{source.search_type} → "
                         f"data/search/{source.search_results_path.name}"
                     )

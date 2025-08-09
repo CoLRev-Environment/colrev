@@ -346,7 +346,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
 
         self.api.rerun = rerun
-        self.api.last_updated = self.review_manager.dataset.get_last_updated(
+        self.api.last_updated = self.review_manager.dataset.git_repo.get_last_updated(
             crossref_feed.feed_file
         )
 

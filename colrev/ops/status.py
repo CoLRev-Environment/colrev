@@ -28,7 +28,7 @@ class Status(colrev.process.operation.Operation):
         """Get status analytics"""
 
         analytics_dict = {}
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
 
         revlist = list(
             (

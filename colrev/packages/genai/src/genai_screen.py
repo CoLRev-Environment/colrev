@@ -50,6 +50,6 @@ class GenAIScreen(base_classes.ScreenPackageBaseClass):
             # record.data[Fields.SCREENING_CRITERIA] = screening_criteria_field
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(msg="Screen (GenAI)")
+        self.review_manager.dataset.git_repo.create_commit(msg="Screen (GenAI)")
 
         return records

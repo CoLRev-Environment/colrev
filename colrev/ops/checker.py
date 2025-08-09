@@ -95,7 +95,7 @@ class Checker:
         # Note: when check is called directly from the command line.
         # pre-commit hooks automatically notify on merge conflicts
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
         unmerged_blobs = git_repo.index.unmerged_blobs()
 
         for path, list_of_blobs in unmerged_blobs.items():
@@ -107,7 +107,7 @@ class Checker:
         try:
             if not (self.review_manager.path / Path(".git")).is_dir():
                 return False
-            _ = self.review_manager.dataset.get_repo().git_dir
+            _ = self.review_manager.dataset.git_repo.get_repo().git_dir
             return True
         except InvalidGitRepositoryError:
             return False
@@ -228,7 +228,7 @@ class Checker:
             )
 
         # if (
-        #     self.review_manager.dataset.records_changed()
+        #     self.review_manager.dataset.git_repo.records_changed()
         #     or self.review_manager.verbose_mode
         # ):
         #     # Check for broken origins
@@ -702,7 +702,7 @@ class Checker:
         ]
 
         if self.review_manager.paths.records.is_file():
-            if self.review_manager.dataset.file_in_history(
+            if self.review_manager.dataset.git_repo.file_in_history(
                 self.review_manager.paths.RECORDS_FILE
             ):
                 prior = self._retrieve_prior()

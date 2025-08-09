@@ -42,7 +42,7 @@ class Push(colrev.process.operation.Operation):
             self._push_record_corrections(all_records)
 
     def _push_project(self) -> None:
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
         origin = git_repo.remotes.origin
         self.review_manager.logger.info(f"Push changes to {git_repo.remotes.origin}")
         origin.push()

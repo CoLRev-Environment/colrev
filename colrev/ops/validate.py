@@ -33,7 +33,7 @@ class Validate(colrev.process.operation.Operation):
 
     def _load_prior_records_dict(self, *, commit_sha: str) -> dict:
         """If commit is "": return the last committed version of records"""
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
         records_file_path = self.review_manager.paths.RECORDS_FILE_GIT
         revlist = (
@@ -280,7 +280,7 @@ class Validate(colrev.process.operation.Operation):
         """Get the records that changed in a selected commit"""
 
         dataset = self.review_manager.dataset
-        git_repo = dataset.get_repo()
+        git_repo = dataset.git_repo.get_repo()
         revlist = (
             (
                 commit.hexsha,
@@ -348,7 +348,7 @@ class Validate(colrev.process.operation.Operation):
 
         # option: --history: check all preceding commits (create a list...)
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
 
         cur_sha = git_repo.head.commit.hexsha
         cur_branch = git_repo.active_branch.name
@@ -397,9 +397,9 @@ class Validate(colrev.process.operation.Operation):
         # pylint: disable=too-many-branches
 
         if not commit_sha:
-            commit_sha = self.review_manager.dataset.get_last_commit_sha()
+            commit_sha = self.review_manager.dataset.git_repo.get_last_commit_sha()
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
 
         revlist = list(
             (
@@ -514,7 +514,7 @@ class Validate(colrev.process.operation.Operation):
 
         merge_validation = []
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
 
         revlist = git_repo.iter_commits(
             paths=str(self.review_manager.paths.RECORDS_FILE)
@@ -579,7 +579,7 @@ class Validate(colrev.process.operation.Operation):
         if filter_setting == "contributor":
             return commit
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
         if scope in ["HEAD", "."]:
             scope = "HEAD~0"
         if scope.startswith("HEAD~"):
@@ -628,7 +628,7 @@ class Validate(colrev.process.operation.Operation):
     def _get_contributor_validation(self, *, scope: str) -> dict:
         report: typing.Dict[str, typing.Any] = {"contributor_commits": []}
         valid_options = []
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
         for commit in git_repo.iter_commits():
             if any(
                 x == scope
@@ -670,7 +670,7 @@ class Validate(colrev.process.operation.Operation):
         return report
 
     def _get_relative_commit(self, commit_sha: str) -> str:
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
 
         relative_to_head = 0
         for commit_i in git_repo.iter_commits():
@@ -709,7 +709,7 @@ class Validate(colrev.process.operation.Operation):
                         origin_records.pop(identifier)
                 write_file(records_dict=origin_records, filename=filename)
 
-            self.review_manager.dataset.add_changes(filename)
+            self.review_manager.dataset.git_repo.add_changes(filename)
 
     @colrev.process.operation.Operation.decorate()
     def main(

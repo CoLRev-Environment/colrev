@@ -421,5 +421,5 @@ def validate(
             print("Not yet implemented")
             print(validation_details)
 
-    if validate_operation.review_manager.dataset.records_changed():
-        validate_operation.review_manager.dataset.create_commit(msg="validate")
+    if validate_operation.review_manager.dataset.git_repo.records_changed():
+        validate_operation.review_manager.dataset.git_repo.create_commit(msg="validate")
