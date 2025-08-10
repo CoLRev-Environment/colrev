@@ -55,7 +55,7 @@ class ConditionalPrescreen(base_classes.PrescreenPackageBaseClass):
             record.update(colrev_status=RecordState.rev_prescreen_included)
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(
+        self.review_manager.dataset.git_repo.create_commit(
             msg="Prescreen: include all",
             manual_author=False,
         )

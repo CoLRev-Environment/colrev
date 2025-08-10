@@ -276,7 +276,7 @@ class LocalIndexBuilder:
 
             check_operation = colrev.ops.check.CheckOperation(review_manager)
 
-            if review_manager.dataset.get_repo().active_branch.name != "main":
+            if review_manager.dataset.git_repo.get_repo().active_branch.name != "main":
                 print(
                     f"{Colors.ORANGE}Warning: {repo_source_path} not on main branch{Colors.END}"
                 )

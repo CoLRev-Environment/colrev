@@ -108,8 +108,8 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
 
         write_file(records_dict=selected_records, filename=export_filepath)
 
-        self.review_manager.dataset.add_changes(export_filepath)
-        self.review_manager.dataset.create_commit(
+        self.review_manager.dataset.git_repo.add_changes(export_filepath)
+        self.review_manager.dataset.git_repo.create_commit(
             msg=f"Create {self.settings.bib_format.name} bibliography",
         )
 
@@ -144,7 +144,7 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
             add_package
         )
         operation.review_manager.save_settings()
-        operation.review_manager.dataset.create_commit(
+        operation.review_manager.dataset.git_repo.create_commit(
             msg=f"Add colrev.bibliography_export: {add_package['bib_format']}"
         )
 

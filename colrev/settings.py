@@ -528,4 +528,4 @@ def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Non
     for source in sources:
         source.save(filepath=review_manager.paths.search / source.search_history_path)
     review_manager.settings.sources = sources
-    review_manager.dataset.add_changes(review_manager.paths.settings)
+    review_manager.dataset.git_repo.add_changes(review_manager.paths.settings)

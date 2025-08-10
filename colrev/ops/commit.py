@@ -145,7 +145,7 @@ class Commit:
     def create(self, *, skip_status_yaml: bool = False) -> bool:
         """Create a commit (including the commit message and details)"""
         status_operation = self.review_manager.get_status_operation()
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.get_repo()
         try:
             if not git_repo.index.diff("HEAD"):
                 self.review_manager.logger.debug(
@@ -161,7 +161,7 @@ class Commit:
         if not skip_status_yaml:
             status_yml = self.review_manager.paths.status
             self.review_manager.update_status_yaml()
-            self.review_manager.dataset.add_changes(status_yml)
+            self.review_manager.dataset.git_repo.add_changes(status_yml)
 
         committer, email = self.review_manager.get_committer()
 
@@ -172,9 +172,11 @@ class Commit:
 
         # Note : this should run as the last command before creating the commit
         # to ensure that the git tree_hash is up-to-date.
-        self.tree_hash = self.review_manager.dataset.get_tree_hash()
+        self.tree_hash = self.review_manager.dataset.git_repo.get_tree_hash()
         try:
-            self.last_commit_sha = self.review_manager.dataset.get_last_commit_sha()
+            self.last_commit_sha = (
+                self.review_manager.dataset.git_repo.get_last_commit_sha()
+            )
         except ValueError:
             pass
 
@@ -197,7 +199,7 @@ class Commit:
         self.review_manager.logger.info("Created commit")
         self.review_manager.reset_report_logger()
 
-        if self.review_manager.dataset.has_record_changes():
+        if self.review_manager.dataset.git_repo.has_record_changes():
             if not self.review_manager.force_mode:
                 raise colrev_exceptions.DirtyRepoAfterProcessingError(
                     "A clean repository is expected."
