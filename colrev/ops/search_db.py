@@ -103,7 +103,7 @@ def create_db_source(
     path: Path,
     params: dict,
     add_to_git: bool = True,
-    logger: typing.Optional[logging.Logger] = logging.getLogger(__name__),
+    logger: logging.Logger = logging.getLogger(__name__),
 ) -> colrev.search_file.ExtendedSearchFile:
     """Interactively add a DB SearchSource"""
 

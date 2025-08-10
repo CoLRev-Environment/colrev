@@ -23,7 +23,7 @@ class ExtendedSearchFile(search_query.SearchFile):
         platform: str,
         search_results_path: Path,
         search_type: SearchType,
-        path: typing.Optional[Path] = Path("data/search"),
+        path: Path = Path("data/search"),
         authors: Optional[list[dict]] = None,
         record_info: Optional[dict] = None,
         date: Optional[dict] = None,
