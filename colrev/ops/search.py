@@ -175,39 +175,6 @@ class Search(colrev.process.operation.Operation):
         answers = inquirer.prompt(questions)
         return SearchType[answers["search_type"]]
 
-    def run_db_search(  # type: ignore
-        self,
-        *,
-        search_source_cls,
-        source: colrev.search_file.ExtendedSearchFile,
-    ) -> None:
-        """Interactively run a DB search"""
-
-        if utils.in_ci_environment():
-            raise colrev_exceptions.SearchNotAutomated("DB search not automated.")
-
-        print("DB search (update)")
-        print(
-            f"- Go to {Colors.ORANGE}{search_source_cls.db_url}{Colors.END} "
-            "and run the following query:"
-        )
-        print()
-        try:
-            print(f"{Colors.ORANGE}{source.get_query()}{Colors.END}")
-            print()
-        except KeyError:
-            pass
-        print(
-            f"- Replace search results in {Colors.ORANGE}"
-            + str(source.search_results_path)
-            + Colors.END
-        )
-        input("Press enter to continue")
-        if source.search_results_path.is_file():
-            self.review_manager.dataset.git_repo.add_changes(source.search_results_path)
-        else:
-            print("Search results not found.")
-
     def _get_search_sources(
         self, *, selection_str: str
     ) -> list[colrev.search_file.ExtendedSearchFile]:

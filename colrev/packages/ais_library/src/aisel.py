@@ -23,6 +23,7 @@ from colrev.constants import FieldValues
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.ais_library.src import ais_load_utils
+from colrev.ops.search_db import run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -331,9 +332,10 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 rerun=rerun,
             )
         elif self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
+            run_db_search(
                 search_source_cls=self.__class__,
                 source=self.search_source,
+                add_to_git=True,
             )
 
     def prep_link_md(

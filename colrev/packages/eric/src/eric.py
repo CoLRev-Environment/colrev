@@ -19,6 +19,7 @@ from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.eric.src import eric_api
+from colrev.ops.search_db import run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -168,9 +169,10 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         if self.search_source.search_type == SearchType.API:
             self._run_api_search(eric_feed=eric_feed, rerun=rerun)
         elif self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
+            run_db_search(
                 search_source_cls=self.__class__,
                 source=self.search_source,
+                add_to_git=True,
             )
         else:
             raise NotImplementedError

@@ -14,6 +14,7 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_db import run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -72,9 +73,10 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Run a search of TaylorAndFrancis"""
 
         if self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
+            run_db_search(
                 search_source_cls=self.__class__,
                 source=self.search_source,
+                add_to_git=True,
             )
             return
 

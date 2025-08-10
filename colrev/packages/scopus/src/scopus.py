@@ -17,6 +17,7 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_db import run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -82,9 +83,10 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Run a search of Scopus"""
 
         if self.search_source.search_type == SearchType.DB:
-            self.operation.run_db_search(  # type: ignore
+            run_db_search(
                 search_source_cls=self.__class__,
                 source=self.search_source,
+                add_to_git=True,
             )
             return
 

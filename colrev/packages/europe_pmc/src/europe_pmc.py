@@ -30,6 +30,7 @@ from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.europe_pmc.src import europe_pmc_api
+from colrev.ops.search_db import run_db_search
 
 # pylint: disable=duplicate-code
 # pylint: disable=unused-argument
@@ -279,9 +280,10 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
         elif self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
+            run_db_search(
                 search_source_cls=self.__class__,
                 source=self.search_source,
+                add_to_git=True,
             )
 
         # if self.search_source.search_type == colrev.search_file.ExtendedSearchFile.MD:

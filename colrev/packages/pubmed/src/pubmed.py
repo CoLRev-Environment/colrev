@@ -26,6 +26,7 @@ from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.pubmed.src import pubmed_api
+from colrev.ops.search_db import run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -407,9 +408,10 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
         elif self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
+            run_db_search(
                 search_source_cls=self.__class__,
                 source=self.search_source,
+                add_to_git=True,
             )
             return
         else:

@@ -29,7 +29,6 @@ colrev.ops.search.Search
       ~Search.get_unique_filename
       ~Search.main
       ~Search.notify
-      ~Search.run_db_search
       ~Search.select_search_type
 
 
