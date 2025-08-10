@@ -39,7 +39,7 @@ def test_create(commit_fixture, mocker):  # type: ignore
         return True
 
     mocker.patch(
-        "colrev.dataset.Dataset.git_repo.has_record_changes",
+        "colrev.git_repo.GitRepo.has_record_changes",
         side_effect=patched_has_record_changes,
     )
     colrev.ops.check.CheckOperation(commit_fixture.review_manager)

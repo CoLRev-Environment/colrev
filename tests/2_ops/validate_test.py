@@ -208,7 +208,9 @@ def test_get_changed_records(
         }
     }
     base_repo_review_manager.dataset.save_records_dict(changed_record_dict)
-    base_repo_review_manager.dataset._add_record_changes()
+    base_repo_review_manager.dataset.git_repo.add_changes(
+        base_repo_review_manager.paths.RECORDS_FILE
+    )
     commit_message = "Test commit for changed records"
     base_repo_review_manager.dataset.git_repo.create_commit(
         msg=commit_message, manual_author=True
