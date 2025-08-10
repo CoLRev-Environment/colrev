@@ -139,7 +139,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         assert "dataset" in params_dict
         dataset = params_dict["dataset"]
         filename = colrev.utils.get_unique_filename(
-            review_manager=operation.review_manager,
+            base_path=operation.review_manager.path,
             file_path_string=f"SYNERGY_{dataset.replace('/', '_').replace('_ids.csv', '')}",
         )
         search_source = colrev.search_file.ExtendedSearchFile(

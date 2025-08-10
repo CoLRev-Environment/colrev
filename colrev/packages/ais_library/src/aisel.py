@@ -196,7 +196,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 assert host and host.endswith("aisel.aisnet.org")
                 q_params = cls._parse_query(query=params_dict["url"])
                 filename = colrev.utils.get_unique_filename(
-                    review_manager=operation.review_manager,
+                    base_path=operation.review_manager.path,
                     file_path_string="ais",
                 )
                 search_source = colrev.search_file.ExtendedSearchFile(

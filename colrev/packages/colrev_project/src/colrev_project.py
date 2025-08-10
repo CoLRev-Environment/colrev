@@ -83,7 +83,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
         # Always API search
 
         filename = colrev.utils.get_unique_filename(
-            review_manager=operation.review_manager,
+            base_path=operation.review_manager.path,
             file_path_string=params.split("/")[-1],
         )
         search_source = colrev.search_file.ExtendedSearchFile(

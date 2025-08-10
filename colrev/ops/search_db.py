@@ -111,7 +111,7 @@ def create_db_source(
         filename = Path(params["search_file"])
     else:
         filename = colrev.utils.get_unique_filename(
-            review_manager=review_manager,
+            base_path=review_manager.path,
             file_path_string=search_source_cls.endpoint.replace("colrev.", ""),
         )
     review_manager.logger.debug(f"Add new DB source: {filename}")

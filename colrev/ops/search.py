@@ -51,7 +51,7 @@ class Search(colrev.process.operation.Operation):
         keywords = input("Enter the keywords:")
 
         filename = utils.get_unique_filename(
-            review_manager=self.review_manager,
+            base_path=self.review_manager.path,
             file_path_string=f"{platform.replace('colrev.', '')}",
         )
         add_source = colrev.search_file.ExtendedSearchFile(

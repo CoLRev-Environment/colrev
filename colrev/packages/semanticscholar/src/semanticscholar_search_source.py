@@ -354,7 +354,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
                 short_search_params["query"] = short_search_params["query"][0:50]
 
         filename = colrev.utils.get_unique_filename(
-            review_manager=operation.review_manager,
+            base_path=operation.review_manager.path,
             file_path_string="semanticscholar",
         )
 

@@ -130,7 +130,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
                 last_value = list(search_parameters.values())[-1]
 
                 filename = colrev.utils.get_unique_filename(
-                    review_manager=operation.review_manager,
+                    base_path=operation.review_manager.path,
                     file_path_string=f"ieee_{last_value}",
                 )
 

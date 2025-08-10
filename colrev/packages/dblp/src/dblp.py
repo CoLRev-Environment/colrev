@@ -138,7 +138,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
 
                 filename = colrev.utils.get_unique_filename(
-                    review_manager=operation.review_manager,
+                    base_path=operation.review_manager.path,
                     file_path_string="dblp",
                 )
                 search_source = colrev.search_file.ExtendedSearchFile(

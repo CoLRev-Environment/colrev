@@ -133,7 +133,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
             if ":" in search:
                 search = ERICSearchSource._search_split(search)
             filename = colrev.utils.get_unique_filename(
-                review_manager=operation.review_manager,
+                base_path=operation.review_manager.path,
                 file_path_string=f"eric_{search}",
             )
             search_source = colrev.search_file.ExtendedSearchFile(

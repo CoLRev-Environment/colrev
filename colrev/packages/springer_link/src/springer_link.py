@@ -104,7 +104,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         elif search_type == SearchType.API:
             filename = colrev.utils.get_unique_filename(
-                review_manager=operation.review_manager,
+                base_path=operation.review_manager.path,
                 file_path_string="springer_link",
             )
             search_source = colrev.search_file.ExtendedSearchFile(

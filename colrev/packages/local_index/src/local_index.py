@@ -235,7 +235,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             search_source = operation.create_api_source(platform=cls.endpoint)
         else:
             filename = colrev.utils.get_unique_filename(
-                review_manager=operation.review_manager,
+                base_path=operation.review_manager.path,
                 file_path_string=f"local_index_{params}".replace("%", "").replace(
                     "'", ""
                 ),

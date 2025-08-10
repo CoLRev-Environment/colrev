@@ -748,7 +748,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         filename = utils.get_unique_filename(
-            review_manager=operation.review_manager,
+            base_path=operation.review_manager.path,
             file_path_string="files",
         )
         # pylint: disable=no-value-for-parameter

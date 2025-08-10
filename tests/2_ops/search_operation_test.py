@@ -78,11 +78,15 @@ def test_search_get_unique_filename(
     """Test the search.get_unique_filename()"""
 
     expected = Path("data/search/test_records_1.bib")
-    actual = colrev.utils.get_unique_filename(file_path_string="test_records.bib")
+    actual = colrev.utils.get_unique_filename(
+        base_path=base_repo_review_manager.path, file_path_string="test_records.bib"
+    )
     assert expected == actual
 
     expected = Path("data/search/dbs.bib")
-    actual = colrev.utils.get_unique_filename(file_path_string="dbs.bib")
+    actual = colrev.utils.get_unique_filename(
+        base_path=base_repo_review_manager.path, file_path_string="dbs.bib"
+    )
     assert expected == actual
 
 

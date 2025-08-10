@@ -99,7 +99,7 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
                 search_parameters[key] = value
 
             filename = colrev.utils.get_unique_filename(
-                review_manager=operation.review_manager,
+                base_path=operation.review_manager.path,
                 file_path_string="unpaywall",
             )
 

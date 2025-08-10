@@ -100,7 +100,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
             query = query[: query.find("&searchtype")]
 
             filename = colrev.utils.get_unique_filename(
-                review_manager=operation.review_manager,
+                base_path=operation.review_manager.path,
                 file_path_string="arxiv",
             )
 

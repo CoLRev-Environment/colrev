@@ -135,7 +135,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         issn = list(answers[Fields.JOURNAL].values())[0][0]
 
         filename = colrev.utils.get_unique_filename(
-            review_manager=operation.review_manager,
+            base_path=operation.review_manager.path,
             file_path_string=f"crossref_issn_{issn}",
         )
         add_source = colrev.search_file.ExtendedSearchFile(
@@ -177,7 +177,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                     query = params_dict
 
                 filename = colrev.utils.get_unique_filename(
-                    review_manager=operation.review_manager,
+                    base_path=operation.review_manager.path,
                     file_path_string="crossref",
                 )
                 search_source = colrev.search_file.ExtendedSearchFile(
@@ -193,7 +193,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                 search_source = cls._add_toc_interactively(operation=operation)
             else:
                 filename = colrev.utils.get_unique_filename(
-                    review_manager=operation.review_manager,
+                    base_path=operation.review_manager.path,
                     file_path_string="crossref",
                 )
                 search_source = colrev.search_file.ExtendedSearchFile(

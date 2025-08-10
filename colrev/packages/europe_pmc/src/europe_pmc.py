@@ -379,7 +379,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                     "https://europepmc.org/search?query=", ""
                 )
                 filename = colrev.utils.get_unique_filename(
-                    review_manager=operation.review_manager,
+                    base_path=operation.review_manager.path,
                     file_path_string="europepmc",
                 )
                 search_source = colrev.search_file.ExtendedSearchFile(

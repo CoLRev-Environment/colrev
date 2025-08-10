@@ -128,7 +128,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if host and host.endswith("pubmed.ncbi.nlm.nih.gov"):
 
                     filename = colrev.utils.get_unique_filename(
-                        review_manager=operation.review_manager,
+                        base_path=operation.review_manager.path,
                         file_path_string="pubmed",
                     )
                     # params = (

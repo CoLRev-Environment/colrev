@@ -131,7 +131,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
                 query = params_dict
 
             filename = colrev.utils.get_unique_filename(
-                review_manager=operation.review_manager,
+                base_path=operation.review_manager.path,
                 file_path_string="github",
             )
             search_source = colrev.search_file.ExtendedSearchFile(
