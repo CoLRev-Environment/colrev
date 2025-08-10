@@ -10,6 +10,7 @@ from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
+from colrev.ops.search_api_feed import create_api_source
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
@@ -81,7 +82,9 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
                     params_dict[key] = value
 
         if len(params_dict) == 0:
-            search_source = operation.create_api_source(platform=cls.endpoint)
+            search_source = create_api_source(
+                platform=cls.endpoint, path=operation.review_manager.path
+            )
 
         # pylint: disable=colrev-missed-constant-usage
         elif "https://api.unpaywall.org/v2/search" in params_dict["url"]:

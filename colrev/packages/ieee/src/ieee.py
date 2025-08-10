@@ -12,6 +12,7 @@ from pydantic import Field
 import colrev.env.environment_manager
 import colrev.ops.prep
 import colrev.ops.search_api_feed
+from colrev.ops.search_api_feed import create_api_source
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.packages.ieee.src.ieee_api
 import colrev.record.record
@@ -107,7 +108,9 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.create_api_source(platform=cls.endpoint)
+                search_source = create_api_source(
+                    platform=cls.endpoint, path=operation.review_manager.path
+                )
 
             # pylint: disable=colrev-missed-constant-usage
             elif (

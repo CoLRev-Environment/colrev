@@ -13,6 +13,7 @@ import colrev.loader.load_utils
 import colrev.ops.prep
 import colrev.ops.search
 import colrev.ops.search_api_feed
+from colrev.ops.search_api_feed import create_api_source
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.process.operation
 import colrev.record.record
@@ -92,7 +93,9 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         if search_type == SearchType.API:
             # Check for params being empty and initialize if needed
             if len(params_dict) == 0:
-                search_source = operation.create_api_source(platform=cls.endpoint)
+                search_source = create_api_source(
+                    platform=cls.endpoint, path=operation.review_manager.path
+                )
                 # Search title per default (other fields may be supported later)
                 search_source.search_string["query"] = {
                     "title": search_source.search_string["query"]

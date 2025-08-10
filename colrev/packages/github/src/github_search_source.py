@@ -16,6 +16,7 @@ from pydantic import Field
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.ops.search_api_feed
+from colrev.ops.search_api_feed import create_api_source
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.search_file
 import colrev.utils
@@ -111,7 +112,9 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
                     print("Invalid search parameter format")
 
         if len(params_dict) == 0:
-            search_source = operation.create_api_source(platform="colrev.github")
+            search_source = create_api_source(
+                platform="colrev.github", path=operation.review_manager.path
+            )
 
             # Checking where to search
             search_source.search_string["scope"] = cls._choice_scope()

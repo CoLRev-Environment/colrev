@@ -18,6 +18,7 @@ import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
 import colrev.ops.search_api_feed
+from colrev.ops.search_api_feed import create_api_source
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
@@ -232,7 +233,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         # always API search
 
         if len(params) == 0:
-            search_source = operation.create_api_source(platform=cls.endpoint)
+            search_source = create_api_source(
+                platform=cls.endpoint, path=operation.review_manager.path
+            )
         else:
             filename = colrev.utils.get_unique_filename(
                 base_path=operation.review_manager.path,
