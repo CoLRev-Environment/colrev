@@ -18,7 +18,6 @@ import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
 import colrev.ops.search_api_feed
-from colrev.ops.search_api_feed import create_api_source
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
@@ -30,6 +29,7 @@ from colrev.constants import FieldValues
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code

@@ -16,7 +16,6 @@ from pydantic import Field
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.ops.search_api_feed
-from colrev.ops.search_api_feed import create_api_source
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.packages.prospero.src.prospero_api
 import colrev.process
@@ -26,6 +25,7 @@ from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search import Search
+from colrev.ops.search_api_feed import create_api_source
 
 
 class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):

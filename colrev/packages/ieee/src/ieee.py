@@ -12,7 +12,6 @@ from pydantic import Field
 import colrev.env.environment_manager
 import colrev.ops.prep
 import colrev.ops.search_api_feed
-from colrev.ops.search_api_feed import create_api_source
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.packages.ieee.src.ieee_api
 import colrev.record.record
@@ -23,6 +22,7 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
 
