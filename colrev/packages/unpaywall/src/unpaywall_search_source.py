@@ -13,6 +13,7 @@ import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -97,7 +98,10 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
                 key, value = parameter.split("=")
                 search_parameters[key] = value
 
-            filename = operation.get_unique_filename(file_path_string="unpaywall")
+            filename = colrev.utils.get_unique_filename(
+                base_path=operation.review_manager.path,
+                file_path_string="unpaywall",
+            )
 
             search_parameters["query"] = (
                 UnpaywallAPI.decode_html_url_encoding_to_string(

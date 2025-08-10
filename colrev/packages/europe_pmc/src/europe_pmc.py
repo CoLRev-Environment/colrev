@@ -29,6 +29,7 @@ from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_db import run_db_search
 from colrev.packages.europe_pmc.src import europe_pmc_api
 
 # pylint: disable=duplicate-code
@@ -208,7 +209,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 search_source=self.search_source,
                 update_only=False,
                 prep_mode=True,
-                records=self.review_manager.dataset.load_records_dict(),
+                records=prep_operation.review_manager.dataset.load_records_dict(),
                 logger=self.logger,
                 verbose_mode=self.verbose_mode,
             )
@@ -221,11 +222,11 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             record.set_masterdata_complete(
                 source=retrieved_record.data[Fields.ORIGIN][0],
-                masterdata_repository=self.review_manager.settings.is_curated_repo(),
+                masterdata_repository=prep_operation.review_manager.settings.is_curated_repo(),
             )
             record.set_status(RecordState.md_prepared)
 
-            self.review_manager.dataset.save_records_dict(
+            prep_operation.review_manager.dataset.save_records_dict(
                 europe_pmc_feed.get_records(),
             )
             europe_pmc_feed.save()
@@ -279,9 +280,10 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
         elif self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
+            run_db_search(
                 search_source_cls=self.__class__,
                 source=self.search_source,
+                add_to_git=True,
             )
 
         # if self.search_source.search_type == colrev.search_file.ExtendedSearchFile.MD:
@@ -376,7 +378,10 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 query = params_dict["url"].replace(
                     "https://europepmc.org/search?query=", ""
                 )
-                filename = operation.get_unique_filename(file_path_string="europepmc")
+                filename = colrev.utils.get_unique_filename(
+                    base_path=operation.review_manager.path,
+                    file_path_string="europepmc",
+                )
                 search_source = colrev.search_file.ExtendedSearchFile(
                     platform=cls.endpoint,
                     search_results_path=filename,

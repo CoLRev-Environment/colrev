@@ -20,6 +20,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.process.operation
 import colrev.record.record
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
@@ -352,7 +353,10 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             if len(short_search_params["query"]) > 50:
                 short_search_params["query"] = short_search_params["query"][0:50]
 
-        filename = operation.get_unique_filename(file_path_string="semanticscholar")
+        filename = colrev.utils.get_unique_filename(
+            base_path=operation.review_manager.path,
+            file_path_string="semanticscholar",
+        )
 
         search_source = colrev.search_file.ExtendedSearchFile(
             platform="colrev.semanticscholar",

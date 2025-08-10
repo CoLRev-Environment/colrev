@@ -16,10 +16,13 @@ import colrev.packages.ieee.src.ieee_api
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
+import colrev.utils
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_db import create_db_source
+from colrev.ops.search_db import run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -126,8 +129,9 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
 
                 last_value = list(search_parameters.values())[-1]
 
-                filename = operation.get_unique_filename(
-                    file_path_string=f"ieee_{last_value}"
+                filename = colrev.utils.get_unique_filename(
+                    base_path=operation.review_manager.path,
+                    file_path_string=f"ieee_{last_value}",
                 )
 
                 search_source = colrev.search_file.ExtendedSearchFile(
@@ -142,9 +146,11 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
                 raise NotImplementedError
 
         elif search_type == SearchType.DB:
-            search_source = operation.create_db_source(
+            search_source = create_db_source(
+                review_manager=operation.review_manager,
                 search_source_cls=cls,
                 params=params_dict,
+                add_to_git=True,
             )
         else:
             raise NotImplementedError
@@ -166,9 +172,10 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
             self._run_api_search(ieee_feed=ieee_feed, rerun=rerun)
 
         elif self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
+            run_db_search(
                 search_source_cls=self.__class__,
                 source=self.search_source,
+                add_to_git=True,
             )
 
         else:

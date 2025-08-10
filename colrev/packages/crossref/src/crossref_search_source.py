@@ -21,6 +21,7 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
@@ -133,7 +134,10 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         answers = inquirer.prompt(questions)
         issn = list(answers[Fields.JOURNAL].values())[0][0]
 
-        filename = operation.get_unique_filename(f"crossref_issn_{issn}")
+        filename = colrev.utils.get_unique_filename(
+            base_path=operation.review_manager.path,
+            file_path_string=f"crossref_issn_{issn}",
+        )
         add_source = colrev.search_file.ExtendedSearchFile(
             platform="colrev.crossref",
             search_results_path=filename,
@@ -172,7 +176,10 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                 else:
                     query = params_dict
 
-                filename = operation.get_unique_filename(file_path_string="crossref")
+                filename = colrev.utils.get_unique_filename(
+                    base_path=operation.review_manager.path,
+                    file_path_string="crossref",
+                )
                 search_source = colrev.search_file.ExtendedSearchFile(
                     platform="colrev.crossref",
                     search_results_path=filename,
@@ -185,7 +192,10 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
             if len(params_dict) == 0:
                 search_source = cls._add_toc_interactively(operation=operation)
             else:
-                filename = operation.get_unique_filename(file_path_string="crossref")
+                filename = colrev.utils.get_unique_filename(
+                    base_path=operation.review_manager.path,
+                    file_path_string="crossref",
+                )
                 search_source = colrev.search_file.ExtendedSearchFile(
                     platform="colrev.crossref",
                     search_results_path=filename,

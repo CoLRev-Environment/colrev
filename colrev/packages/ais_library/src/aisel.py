@@ -18,10 +18,13 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_db import create_db_source
+from colrev.ops.search_db import run_db_search
 from colrev.packages.ais_library.src import ais_load_utils
 
 # pylint: disable=unused-argument
@@ -179,9 +182,11 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
         if search_type == SearchType.DB:
-            search_source = operation.create_db_source(
+            search_source = create_db_source(
+                review_manager=operation.review_manager,
                 search_source_cls=cls,
                 params=params_dict,
+                add_to_git=True,
             )
 
         # pylint: disable=colrev-missed-constant-usage
@@ -190,7 +195,10 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 host = urlparse(params_dict["url"]).hostname
                 assert host and host.endswith("aisel.aisnet.org")
                 q_params = cls._parse_query(query=params_dict["url"])
-                filename = operation.get_unique_filename(file_path_string="ais")
+                filename = colrev.utils.get_unique_filename(
+                    base_path=operation.review_manager.path,
+                    file_path_string="ais",
+                )
                 search_source = colrev.search_file.ExtendedSearchFile(
                     platform=cls.endpoint,
                     search_results_path=filename,
@@ -331,9 +339,10 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 rerun=rerun,
             )
         elif self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
+            run_db_search(
                 search_source_cls=self.__class__,
                 source=self.search_source,
+                add_to_git=True,
             )
 
     def prep_link_md(

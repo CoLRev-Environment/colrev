@@ -19,11 +19,14 @@ import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_db import create_db_source
+from colrev.ops.search_db import run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -92,13 +95,18 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
         if search_type == SearchType.DB:
-            search_source = operation.create_db_source(
+            search_source = create_db_source(
+                review_manager=operation.review_manager,
                 search_source_cls=cls,
                 params=params_dict,
+                add_to_git=True,
             )
 
         elif search_type == SearchType.API:
-            filename = operation.get_unique_filename(file_path_string="springer_link")
+            filename = colrev.utils.get_unique_filename(
+                base_path=operation.review_manager.path,
+                file_path_string="springer_link",
+            )
             search_source = colrev.search_file.ExtendedSearchFile(
                 platform=cls.endpoint,
                 search_results_path=filename,
@@ -121,9 +129,10 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Run a search of SpringerLink"""
 
         if self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
+            run_db_search(
                 search_source_cls=self.__class__,
                 source=self.search_source,
+                add_to_git=True,
             )
             return
 

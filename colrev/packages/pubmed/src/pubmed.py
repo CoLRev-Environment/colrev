@@ -25,6 +25,8 @@ from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_db import create_db_source
+from colrev.ops.search_db import run_db_search
 from colrev.packages.pubmed.src import pubmed_api
 
 # pylint: disable=unused-argument
@@ -108,9 +110,11 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
         if search_type == SearchType.DB:
-            search_source = operation.create_db_source(
+            search_source = create_db_source(
+                review_manager=operation.review_manager,
                 search_source_cls=cls,
                 params=params_dict,
+                add_to_git=True,
             )
 
         elif search_type == SearchType.API:
@@ -123,7 +127,10 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
 
                 if host and host.endswith("pubmed.ncbi.nlm.nih.gov"):
 
-                    filename = operation.get_unique_filename(file_path_string="pubmed")
+                    filename = colrev.utils.get_unique_filename(
+                        base_path=operation.review_manager.path,
+                        file_path_string="pubmed",
+                    )
                     # params = (
                     # "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
                     #     + params
@@ -407,9 +414,10 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
         elif self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
+            run_db_search(
                 search_source_cls=self.__class__,
                 source=self.search_source,
+                add_to_git=True,
             )
             return
         else:

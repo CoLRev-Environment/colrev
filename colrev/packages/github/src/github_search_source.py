@@ -18,6 +18,7 @@ import colrev.ops.search
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -129,7 +130,10 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
             else:
                 query = params_dict
 
-            filename = operation.get_unique_filename(file_path_string="github")
+            filename = colrev.utils.get_unique_filename(
+                base_path=operation.review_manager.path,
+                file_path_string="github",
+            )
             search_source = colrev.search_file.ExtendedSearchFile(
                 platform="colrev.github",
                 search_results_path=filename,
