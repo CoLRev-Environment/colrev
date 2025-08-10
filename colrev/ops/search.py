@@ -211,30 +211,10 @@ class Search(colrev.process.operation.Operation):
     def _get_search_sources(
         self, *, selection_str: str
     ) -> list[colrev.search_file.ExtendedSearchFile]:
-        # search_history_paths = self.review_manager.paths.search.glob(
-        #     "**/*_search_history.json"
-        # )
-        # search_histories = []
-        # print(list(search_history_paths))
-        # for search_history_path in search_history_paths:
-        #     print(search_history_path)
-        #     if search_history_path.is_file():
-        #         search_history = colrev.search_file.load_search_file(
-        #             search_history_path
-        #         )
-        #         search_history.search_type = SearchType(search_history.search_type)
-        #         search_history.search_results_path = Path(
-        #             search_history.search_results_path
-        #         )
-        #         search_histories.append(search_history)
 
         search_histories = self.review_manager.settings.sources
         sources_selected = search_histories
-        # print(sources_selected)
-        # print(selection_str)
-        # print('DONE')
         if selection_str != "all":
-            # print('CAL')
             selected_filenames = {Path(f).name for f in selection_str.split(",")}
             sources_selected = [
                 s
