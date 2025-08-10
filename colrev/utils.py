@@ -51,9 +51,7 @@ def get_unique_filename(
     sources = review_manager.settings.sources
 
     file_path_string = (
-        file_path_string.replace("+", "_")
-        .replace(" ", "_")
-        .replace(";", "_")
+        file_path_string.replace("+", "_").replace(" ", "_").replace(";", "_")
     )
 
     if file_path_string.endswith(suffix):

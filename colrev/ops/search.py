@@ -40,7 +40,6 @@ class Search(colrev.process.operation.Operation):
         self.sources = review_manager.settings.sources
         self.package_manager = PackageManager()
 
-
     def create_api_source(
         self, *, platform: str
     ) -> colrev.search_file.ExtendedSearchFile:

@@ -20,11 +20,11 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.packages.prospero.src.prospero_api
 import colrev.process
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search import Search
-import colrev.utils
 
 
 class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
