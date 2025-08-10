@@ -53,7 +53,6 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.review_manager = source_operation.review_manager
 
         if search_file:
             self.search_source = search_file
@@ -65,7 +64,6 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
                 search_string="",
                 comment="",
             )
-        self.source_operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -132,14 +130,11 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def _get_api_key(self) -> str:
-        api_key = self.review_manager.environment_manager.get_settings_by_key(
-            self.SETTINGS["api_key"]
-        )
+        env_man = colrev.env.environment_manager.EnvironmentManager()
+        api_key = env_man.get_settings_by_key(self.SETTINGS["api_key"])
         if api_key is None or len(api_key) == 0:
             api_key = input("Please enter api key: ")
-            self.review_manager.environment_manager.update_registry(
-                self.SETTINGS["api_key"], api_key
-            )
+            env_man.update_registry(self.SETTINGS["api_key"], api_key)
         return api_key
 
     def search(self, rerun: bool) -> None:
