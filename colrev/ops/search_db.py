@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import typing
 from pathlib import Path
 from typing import Any
@@ -101,10 +102,11 @@ def get_query_filename(
 
 def create_db_source(
     *,
-    review_manager: colrev.review_manager.ReviewManager,
+    path: Path,
     search_source_cls,
     params: dict,
     add_to_git: bool = True,
+    logger: typing.Optional[logging.Logger] = None,
 ) -> colrev.search_file.ExtendedSearchFile:
     """Interactively add a DB SearchSource"""
 
@@ -115,42 +117,38 @@ def create_db_source(
         filename = Path(params["search_file"])
     else:
         filename = colrev.utils.get_unique_filename(
-            base_path=review_manager.path,
+            base_path=path,
             file_path_string=search_source_cls.endpoint.replace("colrev.", ""),
         )
-    review_manager.logger.debug(f"Add new DB source: {filename}")
+    logger.debug(f"Add new DB source: {filename}")
 
     query_file = get_query_filename(
         filename=filename,
         instantiate=True,
         add_to_git=add_to_git,
-        project_root=review_manager.path,
+        project_root=path,
     )
-    review_manager.logger.info(f"Created query-file: {query_file}")
+    logger.info(f"Created query-file: {query_file}")
     input(
         f"{Colors.ORANGE}Store query in query-file and press Enter to continue{Colors.END}"
     )
 
     if not filename.is_file():
-        review_manager.logger.info(
-            f"- Go to {Colors.ORANGE}{search_source_cls.db_url}{Colors.END}"
-        )
+        logger.info(f"- Go to {Colors.ORANGE}{search_source_cls.db_url}{Colors.END}")
         query_file = get_query_filename(
             filename=filename,
             instantiate=True,
             interactive=False,
             add_to_git=add_to_git,
-            project_root=review_manager.path,
+            project_root=path,
         )
-        review_manager.logger.info(
+        logger.info(
             f"- Search for your query and store it in {Colors.ORANGE}{query_file}{Colors.END}"
         )
-        review_manager.logger.info(
-            f"- Save search results in {Colors.ORANGE}{filename}{Colors.END}"
-        )
+        logger.info(f"- Save search results in {Colors.ORANGE}{filename}{Colors.END}")
         input("Press Enter to complete")
 
-    git = GitRepo(path=review_manager.path)
+    git = GitRepo(path=path)
     if add_to_git:
         git.add_changes(filename, ignore_missing=True)
 
