@@ -24,6 +24,7 @@ from colrev.constants import FieldValues
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.plos.src import plos_api
 
 
@@ -71,7 +72,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         elif Fields.URL in params_dict:
             search_type = SearchType.API
         else:
-            search_type = operation.select_search_type(
+            search_type = colrev.utils.select_search_type(
                 search_types=cls.search_types, params=params_dict
             )
 
@@ -91,7 +92,9 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         search_type = cls._select_search_type(operation, params_dict)
         if search_type == SearchType.API:
             if len(params) == 0:
-                search_source = operation.create_api_source(platform=cls.endpoint)
+                search_source = create_api_source(
+                    platform=cls.endpoint, path=operation.review_manager.path
+                )
 
                 search_source.search_string[Fields.URL] = (
                     cls._api_url

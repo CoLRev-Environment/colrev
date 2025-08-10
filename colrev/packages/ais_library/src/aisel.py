@@ -23,6 +23,7 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
 from colrev.packages.ais_library.src import ais_load_utils
@@ -177,7 +178,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                     key, value = item.split("=")
                     params_dict[key] = value
 
-        search_type = operation.select_search_type(
+        search_type = colrev.utils.select_search_type(
             search_types=cls.search_types, params=params_dict
         )
 
@@ -210,7 +211,9 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
             else:
                 # Add API search without params
-                search_source = operation.create_api_source(platform=cls.endpoint)
+                search_source = create_api_source(
+                    platform=cls.endpoint, path=operation.review_manager.path
+                )
 
         # elif search_type == SearchType.TOC:
         else:

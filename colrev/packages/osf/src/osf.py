@@ -22,6 +22,7 @@ import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.osf.src.osf_api import OSFApiQuery
 
 # pylint: disable=unused-argument
@@ -84,7 +85,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
             params_dict = {Fields.URL: params}
 
         # Select the search type based on the provided parameters
-        search_type = operation.select_search_type(
+        search_type = colrev.utils.select_search_type(
             search_types=cls.search_types, params={"query": params_dict}
         )
 
@@ -92,7 +93,9 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         if search_type == SearchType.API:
             # Check for params being empty and initialize if needed
             if len(params_dict) == 0:
-                search_source = operation.create_api_source(platform=cls.endpoint)
+                search_source = create_api_source(
+                    platform=cls.endpoint, path=operation.review_manager.path
+                )
                 # Search title per default (other fields may be supported later)
                 search_source.search_string["query"] = {
                     "title": search_source.search_string["query"]

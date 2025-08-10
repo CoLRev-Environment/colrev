@@ -25,6 +25,7 @@ from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search import Search
+from colrev.ops.search_api_feed import create_api_source
 
 
 class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
@@ -60,7 +61,9 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Adds Prospero as a search source endpoint based on user-provided parameters."""
         if len(params) == 0:
             # TODO : test prospero search
-            search_source = operation.create_api_source(platform=cls.endpoint)
+            search_source = create_api_source(
+                platform=cls.endpoint, path=operation.review_manager.path
+            )
             search_source.search_string[Fields.URL] = (
                 cls.db_url + "search?" + search_source.search_string + "#searchadvanced"
             )

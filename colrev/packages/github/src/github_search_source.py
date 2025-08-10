@@ -22,6 +22,7 @@ import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.github.src import record_transformer
 
 # pylint: disable=unused-argument
@@ -111,7 +112,9 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
                     print("Invalid search parameter format")
 
         if len(params_dict) == 0:
-            search_source = operation.create_api_source(platform="colrev.github")
+            search_source = create_api_source(
+                platform="colrev.github", path=operation.review_manager.path
+            )
 
             # Checking where to search
             search_source.search_string["scope"] = cls._choice_scope()

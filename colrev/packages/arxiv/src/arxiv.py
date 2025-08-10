@@ -23,6 +23,7 @@ import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.arxiv.src import record_transformer
 
 # pylint: disable=unused-argument
@@ -88,7 +89,9 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
 
         # Note : always API search
         if len(params_dict) == 0:
-            search_source = operation.create_api_source(platform=cls.endpoint)
+            search_source = create_api_source(
+                platform=cls.endpoint, path=operation.review_manager.path
+            )
 
         # pylint: disable=colrev-missed-constant-usage
         else:

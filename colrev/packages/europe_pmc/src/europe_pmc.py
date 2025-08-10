@@ -29,6 +29,7 @@ from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 from colrev.ops.search_db import run_db_search
 from colrev.packages.europe_pmc.src import europe_pmc_api
 
@@ -367,7 +368,9 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                     params_dict[key] = value
 
         if len(params_dict) == 0:
-            search_source = operation.create_api_source(platform=cls.endpoint)
+            search_source = create_api_source(
+                platform=cls.endpoint, path=operation.review_manager.path
+            )
 
         # pylint: disable=colrev-missed-constant-usage
         elif "url" in params_dict:
