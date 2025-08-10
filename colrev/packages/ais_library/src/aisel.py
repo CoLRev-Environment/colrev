@@ -22,8 +22,8 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
-from colrev.packages.ais_library.src import ais_load_utils
 from colrev.ops.search_db import run_db_search
+from colrev.packages.ais_library.src import ais_load_utils
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code

@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
+from typing import Optional
 
 import colrev.exceptions as colrev_exceptions
 import colrev.search_file

@@ -29,8 +29,8 @@ from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
-from colrev.packages.europe_pmc.src import europe_pmc_api
 from colrev.ops.search_db import run_db_search
+from colrev.packages.europe_pmc.src import europe_pmc_api
 
 # pylint: disable=duplicate-code
 # pylint: disable=unused-argument

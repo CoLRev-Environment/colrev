@@ -15,8 +15,8 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
-from colrev.writer.write_utils import write_file
 from colrev.ops.search_db import run_db_search
+from colrev.writer.write_utils import write_file
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
