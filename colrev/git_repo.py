@@ -126,7 +126,7 @@ class GitRepo:
 
     def records_changed(self) -> bool:
         """Check whether the records were changed"""
-        main_recs_changed = self.path / "data" / "records.bib" in [
+        main_recs_changed = "data/records.bib" in [
             item.a_path for item in self.repo.index.diff(None)
         ] + [x.a_path for x in self.repo.head.commit.diff()]
         return main_recs_changed
@@ -183,7 +183,7 @@ class GitRepo:
     def has_untracked_search_records(self) -> bool:
         """Check whether there are untracked search records"""
         return any(
-            str(self.path / "data" / "search") in str(untracked_file)
+            str(Path("data/search")) in str(untracked_file)
             for untracked_file in self.get_untracked_files()
         )
 
