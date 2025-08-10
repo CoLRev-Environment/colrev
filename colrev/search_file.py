@@ -2,6 +2,7 @@
 """Extended SearchFile with search_results_path and derived search_history_path."""
 from __future__ import annotations
 
+import json
 import typing
 from pathlib import Path
 from typing import Any
@@ -9,6 +10,7 @@ from typing import Optional
 
 import search_query
 
+import colrev.git_repo
 from colrev.constants import SearchType
 
 
@@ -21,6 +23,7 @@ class ExtendedSearchFile(search_query.SearchFile):
         platform: str,
         search_results_path: Path,
         search_type: SearchType,
+        path: typing.Optional[Path] = Path("data/search"),
         authors: Optional[list[dict]] = None,
         record_info: Optional[dict] = None,
         date: Optional[dict] = None,
@@ -34,8 +37,9 @@ class ExtendedSearchFile(search_query.SearchFile):
         assert not str(search_results_path).endswith(
             "_search_history.json"
         ), "search_results_path should not end with _search_history.json"
+
         # Derived attribute
-        self.search_history_path = Path(
+        self.search_history_path = Path(path) / Path(
             Path(search_results_path).stem + "_search_history.json"
         )
 
@@ -106,6 +110,22 @@ class ExtendedSearchFile(search_query.SearchFile):
         """Check whether the source is a curated source (for preparation)"""
 
         return self.get_origin_prefix() == "md_curated.bib"
+
+    def save(
+        self,
+        filepath: Optional[str | Path] = None,
+        git_repo: typing.Optional[colrev.git_repo.GitRepo] = None,
+    ) -> None:
+        """Save the search file to a JSON file."""
+        path = Path(filepath) if filepath else self._filepath
+        if path is None:
+            raise ValueError("No filepath provided and no previous filepath stored.")
+        with open(path, "w", encoding="utf-8") as f:
+            mod_dict = self.to_dict()
+            mod_dict.pop("search_history_path", None)
+            json.dump(mod_dict, f, indent=4, ensure_ascii=False)
+        if git_repo:
+            git_repo.add_changes(path)
 
 
 load_search_file = search_query.load_search_file

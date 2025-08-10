@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import typing
 from pathlib import Path
 from typing import Optional
 
@@ -16,6 +17,9 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
+
+if typing.TYPE_CHECKING:
+    import colrev.search_file
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -64,6 +68,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
+        path = operation.review_manager.path
         params_dict = {}
         if params:
             for item in params.split(";"):
@@ -76,8 +81,8 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if search_type == SearchType.DB:
             search_source = create_db_source(
-                path=operation.review_manager.path,
-                search_source_cls=cls,
+                path=path,
+                platform=cls.endpoint,
                 params=params_dict,
                 add_to_git=True,
                 logger=operation.review_manager.logger,
@@ -85,7 +90,8 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         else:
             raise NotImplementedError
 
-        operation.add_source_and_search(search_source)
+        # operation.add_source_and_search(search_source)
+        # search_source.save()
         return search_source
 
     def search(self, rerun: bool) -> None:
@@ -94,7 +100,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         if self.search_source.search_type == SearchType.DB:
             if self.search_source.filename.suffix in [".bib"]:
                 run_db_search(
-                    search_source_cls=self.__class__,
+                    db_url=self.db_url,
                     source=self.search_source,
                     add_to_git=True,
                 )

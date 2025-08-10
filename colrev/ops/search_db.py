@@ -30,7 +30,7 @@ class _ReviewManagerStub:
 
 def run_db_search(
     *,
-    search_source_cls,
+    db_url: str,
     source: colrev.search_file.ExtendedSearchFile,
     add_to_git: bool = False,
     project_root: Optional[Path] = None,
@@ -50,8 +50,7 @@ def run_db_search(
 
     print("DB search (update)")
     print(
-        f"- Go to {Colors.ORANGE}{search_source_cls.db_url}{Colors.END} "
-        "and run the following query:"
+        f"- Go to {Colors.ORANGE}{db_url}{Colors.END} and run the following query:"
     )
     print()
     try:
@@ -102,11 +101,11 @@ def get_query_filename(
 
 def create_db_source(
     *,
+    platform: str,
     path: Path,
-    search_source_cls,
     params: dict,
     add_to_git: bool = True,
-    logger: typing.Optional[logging.Logger] = None,
+    logger: typing.Optional[logging.Logger] = logging.getLogger(__name__),
 ) -> colrev.search_file.ExtendedSearchFile:
     """Interactively add a DB SearchSource"""
 
@@ -118,47 +117,26 @@ def create_db_source(
     else:
         filename = colrev.utils.get_unique_filename(
             base_path=path,
-            file_path_string=search_source_cls.endpoint.replace("colrev.", ""),
+            file_path_string=platform.replace("colrev.", ""),
         )
     logger.debug(f"Add new DB source: {filename}")
 
-    query_file = get_query_filename(
-        filename=filename,
-        instantiate=True,
-        add_to_git=add_to_git,
-        project_root=path,
-    )
-    logger.info(f"Created query-file: {query_file}")
-    input(
-        f"{Colors.ORANGE}Store query in query-file and press Enter to continue{Colors.END}"
-    )
+    logger.info(f"- Save search results in {Colors.ORANGE}{filename}{Colors.END}")
+    input("Press Enter to complete")
 
-    if not filename.is_file():
-        logger.info(f"- Go to {Colors.ORANGE}{search_source_cls.db_url}{Colors.END}")
-        query_file = get_query_filename(
-            filename=filename,
-            instantiate=True,
-            interactive=False,
-            add_to_git=add_to_git,
-            project_root=path,
-        )
-        logger.info(
-            f"- Search for your query and store it in {Colors.ORANGE}{query_file}{Colors.END}"
-        )
-        logger.info(f"- Save search results in {Colors.ORANGE}{filename}{Colors.END}")
-        input("Press Enter to complete")
-
-    git = GitRepo(path=path)
+    git_repo = GitRepo(path=path)
     if add_to_git:
-        git.add_changes(filename, ignore_missing=True)
+        git_repo.add_changes(filename, ignore_missing=True)
 
+    search_string = input("Enter search string: ")
     add_source = colrev.search_file.ExtendedSearchFile(
-        platform=search_source_cls.endpoint,
+        platform=platform,
         search_results_path=filename,
         search_type=SearchType.DB,
         # TODO : save in json instead of separate text file
-        search_string="TODO",
+        search_string=search_string,
         comment="",
     )
-    print()
+    add_source.save(git_repo=git_repo)
+
     return add_source

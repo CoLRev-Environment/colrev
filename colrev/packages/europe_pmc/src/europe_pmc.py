@@ -66,6 +66,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     _SOURCE_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
+    db_url = "https://europepmc.org/"
 
     settings_class = EuropePMCSearchSourceSettings
 
@@ -281,7 +282,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         elif self.search_source.search_type == SearchType.DB:
             run_db_search(
-                search_source_cls=self.__class__,
+                db_url=self.db_url,
                 source=self.search_source,
                 add_to_git=True,
             )

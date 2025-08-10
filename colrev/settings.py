@@ -526,6 +526,6 @@ def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Non
     with open(review_manager.paths.settings, "w", encoding="utf-8") as outfile:
         json.dump(exported_dict, outfile, indent=4)
     for source in sources:
-        source.save(filepath=review_manager.paths.search / source.search_history_path)
+        source.save()
     review_manager.settings.sources = sources
     review_manager.dataset.git_repo.add_changes(review_manager.paths.settings)

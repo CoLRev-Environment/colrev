@@ -185,7 +185,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         if search_type == SearchType.DB:
             search_source = create_db_source(
                 path=operation.review_manager.path,
-                search_source_cls=cls,
+                platform=cls.endpoint,
                 params=params_dict,
                 add_to_git=True,
                 logger=operation.review_manager.logger,
@@ -344,7 +344,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
             )
         elif self.search_source.search_type == SearchType.DB:
             run_db_search(
-                search_source_cls=self.__class__,
+                db_url=self.db_url,
                 source=self.search_source,
                 add_to_git=True,
             )
