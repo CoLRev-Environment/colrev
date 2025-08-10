@@ -7,6 +7,7 @@ import pytest
 
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
+import colrev.utils
 from colrev.constants import EndpointType
 from colrev.constants import SearchType
 from colrev.package_manager.package_manager import PackageManager
@@ -76,13 +77,12 @@ def test_search_get_unique_filename(
 ) -> None:
     """Test the search.get_unique_filename()"""
 
-    search_operation = base_repo_review_manager.get_search_operation()
     expected = Path("data/search/test_records_1.bib")
-    actual = search_operation.get_unique_filename(file_path_string="test_records.bib")
+    actual = colrev.utils.get_unique_filename(file_path_string="test_records.bib")
     assert expected == actual
 
     expected = Path("data/search/dbs.bib")
-    actual = search_operation.get_unique_filename(file_path_string="dbs.bib")
+    actual = colrev.utils.get_unique_filename(file_path_string="dbs.bib")
     assert expected == actual
 
 
