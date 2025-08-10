@@ -15,6 +15,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
+import colrev.utils
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -69,7 +70,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 key, value = item.split("=")
                 params_dict[key] = value
 
-        search_type = operation.select_search_type(
+        search_type = colrev.utils.select_search_type(
             search_types=cls.search_types, params=params_dict
         )
 

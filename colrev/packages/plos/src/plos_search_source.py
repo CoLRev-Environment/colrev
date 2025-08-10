@@ -12,6 +12,7 @@ import colrev.loader.load_utils
 import colrev.ops.prep
 import colrev.ops.search
 import colrev.ops.search_api_feed
+from colrev.ops.search_api_feed import create_api_source
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.process.operation
@@ -71,7 +72,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         elif Fields.URL in params_dict:
             search_type = SearchType.API
         else:
-            search_type = operation.select_search_type(
+            search_type = colrev.utils.select_search_type(
                 search_types=cls.search_types, params=params_dict
             )
 
@@ -91,7 +92,9 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         search_type = cls._select_search_type(operation, params_dict)
         if search_type == SearchType.API:
             if len(params) == 0:
-                search_source = operation.create_api_source(platform=cls.endpoint)
+                search_source = create_api_source(
+                    platform=cls.endpoint, path=operation.review_manager.path
+                )
 
                 search_source.search_string[Fields.URL] = (
                     cls._api_url

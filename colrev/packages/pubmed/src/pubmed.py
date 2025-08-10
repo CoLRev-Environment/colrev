@@ -14,6 +14,7 @@ from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
+from colrev.ops.search_api_feed import create_api_source
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.record.record_prep
@@ -105,7 +106,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                     key, value = item.split("=")
                     params_dict[key] = value
 
-        search_type = operation.select_search_type(
+        search_type = colrev.utils.select_search_type(
             search_types=cls.search_types, params=params_dict
         )
 
@@ -120,7 +121,9 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         elif search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.create_api_source(platform=cls.endpoint)
+                search_source = create_api_source(
+                    platform=cls.endpoint, path=operation.review_manager.path
+                )
 
             # pylint: disable=colrev-missed-constant-usage
             elif "url" in params_dict:

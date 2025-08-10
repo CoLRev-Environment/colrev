@@ -19,6 +19,7 @@ from rapidfuzz import fuzz
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
+from colrev.ops.search_api_feed import create_api_source
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.record.record_prep
@@ -367,7 +368,9 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                     params_dict[key] = value
 
         if len(params_dict) == 0:
-            search_source = operation.create_api_source(platform=cls.endpoint)
+            search_source = create_api_source(
+                platform=cls.endpoint, path=operation.review_manager.path
+            )
 
         # pylint: disable=colrev-missed-constant-usage
         elif "url" in params_dict:
