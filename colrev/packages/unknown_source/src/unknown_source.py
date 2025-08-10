@@ -87,10 +87,11 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
                 key, value = item.split("=")
                 params_dict[key] = value
         search_source = create_db_source(
-            review_manager=operation.review_manager,
+            path=operation.review_manager.path,
             search_source_cls=cls,
             params=params_dict,
             add_to_git=True,
+            logger=operation.review_manager.logger,
         )
         operation.add_source_and_search(search_source)
         return search_source
