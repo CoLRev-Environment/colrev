@@ -209,7 +209,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 search_source=self.search_source,
                 update_only=False,
                 prep_mode=True,
-                records=self.review_manager.dataset.load_records_dict(),
+                records=prep_operation.review_manager.dataset.load_records_dict(),
                 logger=self.logger,
                 verbose_mode=self.verbose_mode,
             )
@@ -222,11 +222,11 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             record.set_masterdata_complete(
                 source=retrieved_record.data[Fields.ORIGIN][0],
-                masterdata_repository=self.review_manager.settings.is_curated_repo(),
+                masterdata_repository=prep_operation.review_manager.settings.is_curated_repo(),
             )
             record.set_status(RecordState.md_prepared)
 
-            self.review_manager.dataset.save_records_dict(
+            prep_operation.review_manager.dataset.save_records_dict(
                 europe_pmc_feed.get_records(),
             )
             europe_pmc_feed.save()
