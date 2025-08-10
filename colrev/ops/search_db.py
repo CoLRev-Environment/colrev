@@ -49,9 +49,7 @@ def run_db_search(
         raise colrev_exceptions.SearchNotAutomated("DB search not automated.")
 
     print("DB search (update)")
-    print(
-        f"- Go to {Colors.ORANGE}{db_url}{Colors.END} and run the following query:"
-    )
+    print(f"- Go to {Colors.ORANGE}{db_url}{Colors.END} and run the following query:")
     print()
     try:
         print(f"{Colors.ORANGE}{source.get_query()}{Colors.END}")
