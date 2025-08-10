@@ -23,6 +23,7 @@ from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_db import create_db_source, run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -84,9 +85,11 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             for item in params.split(";"):
                 key, value = item.split("=")
                 params_dict[key] = value
-        search_source = operation.create_db_source(
+        search_source = create_db_source(
+            review_manager=operation.review_manager,
             search_source_cls=cls,
             params=params_dict,
+            add_to_git=True,
         )
         operation.add_source_and_search(search_source)
         return search_source
@@ -95,8 +98,10 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Run a search of Crossref"""
 
         if self.search_source.search_type == SearchType.DB:
-            self.operation.run_db_search(  # type: ignore
-                search_source_cls=self.__class__, source=self.search_source
+            run_db_search(
+                search_source_cls=self.__class__,
+                source=self.search_source,
+                add_to_git=True,
             )
 
     def prep_link_md(

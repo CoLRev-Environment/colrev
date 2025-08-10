@@ -19,6 +19,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -98,7 +99,10 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
             query = params_dict["url"].replace("https://arxiv.org/search/?query=", "")
             query = query[: query.find("&searchtype")]
 
-            filename = operation.get_unique_filename(file_path_string="arxiv")
+            filename = colrev.utils.get_unique_filename(
+                review_manager=operation.review_manager,
+                file_path_string="arxiv",
+            )
 
             search_source = colrev.search_file.ExtendedSearchFile(
                 platform="colrev.arxiv",

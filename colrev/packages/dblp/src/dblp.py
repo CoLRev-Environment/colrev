@@ -137,7 +137,10 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     .replace("https://dblp.org/search/publ?q=", api_url)
                 )
 
-                filename = operation.get_unique_filename(file_path_string="dblp")
+                filename = colrev.utils.get_unique_filename(
+                    review_manager=operation.review_manager,
+                    file_path_string="dblp",
+                )
                 search_source = colrev.search_file.ExtendedSearchFile(
                     platform=cls.endpoint,
                     search_results_path=filename,

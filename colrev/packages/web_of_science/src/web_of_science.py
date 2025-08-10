@@ -13,6 +13,7 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_db import create_db_source, run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -81,9 +82,11 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         params_dict = {params.split("=")[0]: params.split("=")[1]}
 
-        search_source = operation.create_db_source(
+        search_source = create_db_source(
+            review_manager=operation.review_manager,
             search_source_cls=cls,
             params=params_dict,
+            add_to_git=True,
         )
         operation.add_source_and_search(search_source)
         return search_source
@@ -92,9 +95,10 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Run a search of WebOfScience"""
 
         if self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
+            run_db_search(
                 search_source_cls=self.__class__,
                 source=self.search_source,
+                add_to_git=True,
             )
             return
 

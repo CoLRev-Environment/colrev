@@ -20,6 +20,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import SearchSourceHeuristicStatus
@@ -81,7 +82,10 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         # Always API search
 
-        filename = operation.get_unique_filename(file_path_string=params.split("/")[-1])
+        filename = colrev.utils.get_unique_filename(
+            review_manager=operation.review_manager,
+            file_path_string=params.split("/")[-1],
+        )
         search_source = colrev.search_file.ExtendedSearchFile(
             platform=cls.endpoint,
             search_results_path=filename,

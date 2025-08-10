@@ -6,6 +6,7 @@ import os
 import pprint
 import typing
 from datetime import timedelta
+from pathlib import Path
 
 import requests_cache
 
@@ -39,3 +40,32 @@ def in_ci_environment() -> bool:
 
     identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
     return any("true" == os.getenv(x) for x in identifier_list)
+
+
+def get_unique_filename(
+    *, review_manager, file_path_string: str, suffix: str = ".bib"
+) -> Path:
+    """Get a unique filename for a (new) SearchSource"""
+
+    review_manager.load_settings()
+    sources = review_manager.settings.sources
+
+    file_path_string = (
+        file_path_string.replace("+", "_")
+        .replace(" ", "_")
+        .replace(";", "_")
+    )
+
+    if file_path_string.endswith(suffix):
+        file_path_string = file_path_string.rstrip(suffix)
+    filename = Path(f"data/search/{file_path_string}{suffix}")
+    existing_filenames = [x.search_results_path for x in sources]
+    if all(x != filename for x in existing_filenames):
+        return filename
+
+    i = 1
+    while not all(x != filename for x in existing_filenames):
+        filename = Path(f"data/search/{file_path_string}_{i}{suffix}")
+        i += 1
+
+    return filename

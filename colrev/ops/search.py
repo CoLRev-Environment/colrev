@@ -40,96 +40,6 @@ class Search(colrev.process.operation.Operation):
         self.sources = review_manager.settings.sources
         self.package_manager = PackageManager()
 
-    def get_unique_filename(self, file_path_string: str, suffix: str = ".bib") -> Path:
-        """Get a unique filename for a (new) SearchSource"""
-
-        self.review_manager.load_settings()
-        self.sources = self.review_manager.settings.sources
-
-        file_path_string = (
-            file_path_string.replace("+", "_").replace(" ", "_").replace(";", "_")
-        )
-
-        if file_path_string.endswith(suffix):
-            file_path_string = file_path_string.rstrip(suffix)
-        filename = Path(f"data/search/{file_path_string}{suffix}")
-        existing_filenames = [x.search_results_path for x in self.sources]
-        if all(x != filename for x in existing_filenames):
-            return filename
-
-        i = 1
-        while not all(x != filename for x in existing_filenames):
-            filename = Path(f"data/search/{file_path_string}_{i}{suffix}")
-            i += 1
-
-        return filename
-
-    def get_query_filename(
-        self, *, filename: Path, instantiate: bool = False, interactive: bool = False
-    ) -> Path:
-        """Get the corresponding filename for the search query"""
-        query_filename = Path("data/search/") / Path(str(filename.stem) + "_query.txt")
-        if instantiate:
-            with open(query_filename, "w", encoding="utf-8") as file:
-                file.write("")
-            if interactive:
-                input(
-                    f"Created {Colors.ORANGE}{query_filename}{Colors.END}. "
-                    "Please store your query in the file and press Enter to continue."
-                )
-            self.review_manager.dataset.git_repo.add_changes(query_filename)
-        return query_filename
-
-    def create_db_source(  # type: ignore
-        self, *, search_source_cls, params: dict
-    ) -> colrev.search_file.ExtendedSearchFile:
-        """Interactively add a DB SearchSource"""
-
-        if not all(x in ["search_file"] for x in list(params)):
-            raise NotImplementedError  # or parameter error
-
-        if "search_file" in params:
-            filename = Path(params["search_file"])
-        else:
-            filename = self.get_unique_filename(
-                file_path_string=search_source_cls.endpoint.replace("colrev.", "")
-            )
-        self.review_manager.logger.debug(f"Add new DB source: {filename}")
-
-        query_file = self.get_query_filename(filename=filename, instantiate=True)
-        self.review_manager.logger.info(f"Created query-file: {query_file}")
-        input(
-            f"{Colors.ORANGE}Store query in query-file and press Enter to continue{Colors.END}"
-        )
-
-        if not filename.is_file():
-            self.review_manager.logger.info(
-                f"- Go to {Colors.ORANGE}{search_source_cls.db_url}{Colors.END}"
-            )
-            query_file = self.get_query_filename(
-                filename=filename, instantiate=True, interactive=False
-            )
-            self.review_manager.logger.info(
-                f"- Search for your query and store it in {Colors.ORANGE}{query_file}{Colors.END}"
-            )
-            self.review_manager.logger.info(
-                f"- Save search results in {Colors.ORANGE}{filename}{Colors.END}"
-            )
-            input("Press Enter to complete")
-
-        self.review_manager.dataset.git_repo.add_changes(filename, ignore_missing=True)
-        self.review_manager.dataset.git_repo.add_changes(query_file)
-
-        add_source = colrev.search_file.ExtendedSearchFile(
-            platform=search_source_cls.endpoint,
-            search_results_path=filename,
-            search_type=SearchType.DB,
-            # TODO : save in json instead of separate text file
-            search_string="TODO",
-            comment="",
-        )
-        print()
-        return add_source
 
     def create_api_source(
         self, *, platform: str
@@ -141,8 +51,9 @@ class Search(colrev.process.operation.Operation):
 
         keywords = input("Enter the keywords:")
 
-        filename = self.get_unique_filename(
-            file_path_string=f"{platform.replace('colrev.', '')}"
+        filename = utils.get_unique_filename(
+            review_manager=self.review_manager,
+            file_path_string=f"{platform.replace('colrev.', '')}",
         )
         add_source = colrev.search_file.ExtendedSearchFile(
             platform=platform,
@@ -174,39 +85,6 @@ class Search(colrev.process.operation.Operation):
         ]
         answers = inquirer.prompt(questions)
         return SearchType[answers["search_type"]]
-
-    def run_db_search(  # type: ignore
-        self,
-        *,
-        search_source_cls,
-        source: colrev.search_file.ExtendedSearchFile,
-    ) -> None:
-        """Interactively run a DB search"""
-
-        if utils.in_ci_environment():
-            raise colrev_exceptions.SearchNotAutomated("DB search not automated.")
-
-        print("DB search (update)")
-        print(
-            f"- Go to {Colors.ORANGE}{search_source_cls.db_url}{Colors.END} "
-            "and run the following query:"
-        )
-        print()
-        try:
-            print(f"{Colors.ORANGE}{source.get_query()}{Colors.END}")
-            print()
-        except KeyError:
-            pass
-        print(
-            f"- Replace search results in {Colors.ORANGE}"
-            + str(source.search_results_path)
-            + Colors.END
-        )
-        input("Press enter to continue")
-        if source.search_results_path.is_file():
-            self.review_manager.dataset.git_repo.add_changes(source.search_results_path)
-        else:
-            print("Search results not found.")
 
     def _get_search_sources(
         self, *, selection_str: str

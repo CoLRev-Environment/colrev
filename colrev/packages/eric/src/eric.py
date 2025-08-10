@@ -14,11 +14,13 @@ import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
+import colrev.utils
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.eric.src import eric_api
+from colrev.ops.search_db import create_db_source, run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -113,8 +115,11 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         # all API searches
 
         if len(params_dict) == 0:
-            search_source = operation.create_db_source(
-                search_source_cls=cls, params=params_dict
+            search_source = create_db_source(
+                review_manager=operation.review_manager,
+                search_source_cls=cls,
+                params=params_dict,
+                add_to_git=True,
             )
 
         # pylint: disable=colrev-missed-constant-usage
@@ -126,7 +131,10 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
             rows = new_query.get("rows", ["2000"])[0]
             if ":" in search:
                 search = ERICSearchSource._search_split(search)
-            filename = operation.get_unique_filename(file_path_string=f"eric_{search}")
+            filename = colrev.utils.get_unique_filename(
+                review_manager=operation.review_manager,
+                file_path_string=f"eric_{search}",
+            )
             search_source = colrev.search_file.ExtendedSearchFile(
                 platform=cls.endpoint,
                 search_results_path=filename,
@@ -168,9 +176,10 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         if self.search_source.search_type == SearchType.API:
             self._run_api_search(eric_feed=eric_feed, rerun=rerun)
         elif self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
+            run_db_search(
                 search_source_cls=self.__class__,
                 source=self.search_source,
+                add_to_git=True,
             )
         else:
             raise NotImplementedError

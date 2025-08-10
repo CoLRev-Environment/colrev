@@ -18,6 +18,7 @@ import colrev.process.operation
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -111,8 +112,9 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
                     for key, value in (pair.split("=") for pair in parameter_pairs)
                 }
                 last_value = list(search_parameters.values())[-1]
-                filename = operation.get_unique_filename(
-                    file_path_string=f"osf_{last_value}"
+                filename = colrev.utils.get_unique_filename(
+                    review_manager=operation.review_manager,
+                    file_path_string=f"osf_{last_value}",
                 )
                 search_source = colrev.search_file.ExtendedSearchFile(
                     platform=cls.endpoint,

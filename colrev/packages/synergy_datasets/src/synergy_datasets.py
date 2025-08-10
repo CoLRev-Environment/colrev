@@ -19,6 +19,7 @@ import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
@@ -137,8 +138,9 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         assert "dataset" in params_dict
         dataset = params_dict["dataset"]
-        filename = operation.get_unique_filename(
-            file_path_string=f"SYNERGY_{dataset.replace('/', '_').replace('_ids.csv', '')}"
+        filename = colrev.utils.get_unique_filename(
+            review_manager=operation.review_manager,
+            file_path_string=f"SYNERGY_{dataset.replace('/', '_').replace('_ids.csv', '')}",
         )
         search_source = colrev.search_file.ExtendedSearchFile(
             platform="colrev.synergy_datasets",

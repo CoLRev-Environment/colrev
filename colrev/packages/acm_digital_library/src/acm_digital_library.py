@@ -13,6 +13,7 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_db import create_db_source, run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -73,9 +74,11 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
         if search_type == SearchType.DB:
-            search_source = operation.create_db_source(
+            search_source = create_db_source(
+                review_manager=operation.review_manager,
                 search_source_cls=cls,
                 params=params_dict,
+                add_to_git=True,
             )
         else:
             raise NotImplementedError
@@ -88,9 +91,10 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if self.search_source.search_type == SearchType.DB:
             if self.search_source.filename.suffix in [".bib"]:
-                self.operation.run_db_search(  # type: ignore
+                run_db_search(
                     search_source_cls=self.__class__,
                     source=self.search_source,
+                    add_to_git=True,
                 )
                 return
 

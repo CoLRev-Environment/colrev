@@ -18,6 +18,7 @@ import colrev.process.operation
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
@@ -112,7 +113,10 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
             else:
                 query = params_dict
 
-            filename = operation.get_unique_filename(file_path_string="plos")
+            filename = colrev.utils.get_unique_filename(
+                review_manager=operation.review_manager,
+                file_path_string="plos",
+            )
 
             search_source = colrev.search_file.ExtendedSearchFile(
                 platform="colrev.plos",

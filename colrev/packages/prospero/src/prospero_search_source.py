@@ -24,6 +24,7 @@ from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search import Search
+import colrev.utils
 
 
 class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
@@ -67,7 +68,10 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
             operation.add_source_and_search(search_source)
             return search_source
 
-        filename = operation.get_unique_filename(file_path_string="prospero_results")
+        filename = colrev.utils.get_unique_filename(
+            review_manager=operation.review_manager,
+            file_path_string="prospero_results",
+        )
 
         new_search_source = colrev.search_file.ExtendedSearchFile(
             platform=cls.endpoint,
