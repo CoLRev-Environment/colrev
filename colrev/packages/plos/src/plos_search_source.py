@@ -12,7 +12,6 @@ import colrev.loader.load_utils
 import colrev.ops.prep
 import colrev.ops.search
 import colrev.ops.search_api_feed
-from colrev.ops.search_api_feed import create_api_source
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.process.operation
@@ -25,6 +24,7 @@ from colrev.constants import FieldValues
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.plos.src import plos_api
 
 

@@ -14,7 +14,6 @@ from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
-from colrev.ops.search_api_feed import create_api_source
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.record.record_prep
@@ -24,6 +23,7 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
 from colrev.packages.ais_library.src import ais_load_utils

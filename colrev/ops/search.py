@@ -5,7 +5,6 @@ from __future__ import annotations
 import typing
 from pathlib import Path
 
-
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.search_file

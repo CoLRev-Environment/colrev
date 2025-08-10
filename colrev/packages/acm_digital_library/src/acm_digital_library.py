@@ -10,12 +10,12 @@ from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
-import colrev.utils
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
