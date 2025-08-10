@@ -111,10 +111,11 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if search_type == SearchType.DB:
             search_source = create_db_source(
-                review_manager=operation.review_manager,
+                path=operation.review_manager.path,
                 search_source_cls=cls,
                 params=params_dict,
                 add_to_git=True,
+                logger=operation.review_manager.logger,
             )
 
         elif search_type == SearchType.API:

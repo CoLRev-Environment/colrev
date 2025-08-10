@@ -74,6 +74,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
             search_source_cls=cls,
             params=params_dict,
             add_to_git=True,
+            logger=operation.review_manager.logger,
         )
         operation.add_source_and_search(search_source)
         return search_source

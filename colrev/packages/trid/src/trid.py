@@ -47,7 +47,6 @@ class TransportResearchInternationalDocumentation(
         self.logger = logger or logging.getLogger(__name__)
         self.search_source = search_file
         self.source_operation = source_operation
-        self.review_manager = source_operation.review_manager
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -71,10 +70,11 @@ class TransportResearchInternationalDocumentation(
         params_dict = {params.split("=")[0]: params.split("=")[1]}
 
         search_source = create_db_source(
-            review_manager=operation.review_manager,
+            path=operation.review_manager.path,
             search_source_cls=cls,
             params=params_dict,
             add_to_git=True,
+            logger=operation.review_manager.logger,
         )
         operation.add_source_and_search(search_source)
         return search_source
