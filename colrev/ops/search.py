@@ -40,51 +40,6 @@ class Search(colrev.process.operation.Operation):
         self.sources = review_manager.settings.sources
         self.package_manager = PackageManager()
 
-    def create_api_source(
-        self, *, platform: str
-    ) -> colrev.search_file.ExtendedSearchFile:
-        """Interactively add an API SearchSource"""
-
-        print(f"Add {platform} as an API SearchSource")
-        print()
-
-        keywords = input("Enter the keywords:")
-
-        filename = utils.get_unique_filename(
-            base_path=self.review_manager.path,
-            file_path_string=f"{platform.replace('colrev.', '')}",
-        )
-        add_source = colrev.search_file.ExtendedSearchFile(
-            platform=platform,
-            search_results_path=filename,
-            search_type=SearchType.API,
-            search_string=keywords,
-            comment="",
-        )
-        return add_source
-
-    def select_search_type(self, *, search_types: list, params: dict) -> SearchType:
-        """Select the SearchType (interactively if neccessary)"""
-
-        if Fields.URL in params:
-            return SearchType.API
-        if "search_file" in params:
-            return SearchType.DB
-
-        choices = [x for x in search_types if x != SearchType.MD]
-        if len(choices) == 1:
-            return choices[0]
-        choices.sort()
-        questions = [
-            inquirer.List(
-                "search_type",
-                message="Select SearchType:",
-                choices=choices,
-            ),
-        ]
-        answers = inquirer.prompt(questions)
-        return SearchType[answers["search_type"]]
-
     def _get_search_sources(
         self, *, selection_str: str
     ) -> list[colrev.search_file.ExtendedSearchFile]:

@@ -27,8 +27,8 @@ from colrev.constants import FieldValues
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.crossref.src import crossref_api
-
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -98,9 +98,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         return params_dict
 
     @classmethod
-    def _select_search_type(
-        cls, operation: colrev.ops.search.Search, params_dict: dict
-    ) -> SearchType:
+    def _select_search_type(cls, params_dict: dict) -> SearchType:
         if list(params_dict) == ["scope"]:
             search_type = SearchType.TOC
         elif "query" in params_dict:
@@ -108,7 +106,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         elif Fields.URL in params_dict:
             search_type = SearchType.API
         else:
-            search_type = operation.select_search_type(
+            search_type = colrev.utils.select_search_type(
                 search_types=cls.search_types, params=params_dict
             )
 
@@ -157,11 +155,11 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Add SearchSource as an endpoint"""
 
         params_dict = cls._parse_params(params)
-        search_type = cls._select_search_type(operation, params_dict)
+        search_type = cls._select_search_type(params_dict)
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.create_api_source(platform=cls.endpoint)
+                search_source = create_api_source(platform=cls.endpoint)
                 # pylint: disable=colrev-missed-constant-usage
                 search_source.search_string = (
                     cls._api_url

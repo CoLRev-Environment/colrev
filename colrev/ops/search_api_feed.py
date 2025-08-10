@@ -18,8 +18,33 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
+from colrev.constants import SearchType
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
+
+
+def create_api_source(
+    *, platform: str, path: Path
+) -> colrev.search_file.ExtendedSearchFile:
+    """Interactively add an API SearchSource"""
+
+    print(f"Add {platform} as an API SearchSource")
+    print()
+
+    keywords = input("Enter the keywords:")
+
+    filename = colrev.utils.get_unique_filename(
+        base_path=path,
+        file_path_string=f"{platform.replace('colrev.', '')}",
+    )
+    add_source = colrev.search_file.ExtendedSearchFile(
+        platform=platform,
+        search_results_path=filename,
+        search_type=SearchType.API,
+        search_string=keywords,
+        comment="",
+    )
+    return add_source
 
 
 # Keep in mind the need for lock-mechanisms, e.g., in concurrent prep operations

@@ -8,9 +8,12 @@ import typing
 from datetime import timedelta
 from pathlib import Path
 
+import inquirer
 import requests_cache
 
+from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import SearchType
 from colrev.search_file import load_search_file
 
 _p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
@@ -76,3 +79,26 @@ def get_unique_filename(
         i += 1
 
     return Path(prefix) / filename.name
+
+
+def select_search_type(*, search_types: list, params: dict) -> SearchType:
+    """Select the SearchType (interactively if neccessary)"""
+
+    if Fields.URL in params:
+        return SearchType.API
+    if "search_file" in params:
+        return SearchType.DB
+
+    choices = [x for x in search_types if x != SearchType.MD]
+    if len(choices) == 1:
+        return choices[0]
+    choices.sort()
+    questions = [
+        inquirer.List(
+            "search_type",
+            message="Select SearchType:",
+            choices=choices,
+        ),
+    ]
+    answers = inquirer.prompt(questions)
+    return SearchType[answers["search_type"]]
