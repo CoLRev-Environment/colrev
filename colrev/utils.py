@@ -56,7 +56,7 @@ def get_unique_filename(
     existing_filenames = []
     for search_file_path in base_path.glob("*_search_history.json"):
         search_file = load_search_file(search_file_path)
-        existing_filenames.append(search_file.filepath)
+        existing_filenames.append(search_file._filepath)
     for existing_file in base_path.glob("*"):
         existing_filenames.append(existing_file)
 
@@ -68,11 +68,11 @@ def get_unique_filename(
         file_path_string = file_path_string.rstrip(suffix)
     filename = base_path / Path(f"{file_path_string}{suffix}")
     if all(x != filename for x in existing_filenames):
-        return Path(prefix) / filename
+        return Path(prefix) / filename.name
 
     i = 1
     while not all(x != filename for x in existing_filenames):
         filename = Path(f"{file_path_string}_{i}{suffix}")
         i += 1
 
-    return Path(prefix) / filename
+    return Path(prefix) / filename.name

@@ -50,7 +50,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.source_operation = source_operation
+
         if search_file:
             # ERIC as a search_source
             self.search_source = search_file
