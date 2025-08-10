@@ -295,7 +295,7 @@ class Search(colrev.process.operation.Operation):
 
                 self.review_manager.settings.sources.append(source["source_candidate"])
         self.review_manager.save_settings()
-        self.review_manager.dataset.git_repo.create_commit(msg="Add new search sources")
+        self.review_manager.create_commit(msg="Add new search sources")
 
     def get_new_source_heuristic(self, filename: Path) -> list:
         """Get the heuristic result list of SearchSources candidates
@@ -333,9 +333,9 @@ class Search(colrev.process.operation.Operation):
             search_file.search_history_path
         )
 
-        self.review_manager.dataset.git_repo.create_commit(
+        self.review_manager.create_commit(
             msg=f"Search: add {search_file.platform}:{search_file.search_type} → "
-            f"data/search/{search_file.search_history_path.name}"
+            f"data/search/{search_file.search_history_path.name}",
         )
         if not search_file.search_history_path.is_file():
             print()
@@ -390,9 +390,9 @@ class Search(colrev.process.operation.Operation):
                     source.search_results_path
                 )
                 if not skip_commit:
-                    self.review_manager.dataset.git_repo.create_commit(
+                    self.review_manager.create_commit(
                         msg=f"Search: run {source.platform}:{source.search_type} → "
-                        f"data/search/{source.search_results_path.name}"
+                        f"data/search/{source.search_results_path.name}",
                     )
             except colrev_exceptions.ServiceNotAvailableException:
                 self.review_manager.logger.warning("ServiceNotAvailableException")

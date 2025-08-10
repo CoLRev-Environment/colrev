@@ -143,7 +143,7 @@ class Prescreen(colrev.process.operation.Operation):
         if include:
             msg = f"Prescreen: include {ids}"
 
-        self.review_manager.dataset.git_repo.create_commit(
+        self.review_manager.create_commit(
             msg=msg,
             manual_author=False,
         )
@@ -224,7 +224,7 @@ class Prescreen(colrev.process.operation.Operation):
                 record = colrev.record.record.Record(record_dict)
                 record.set_status(RecordState.rev_prescreen_included)
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.git_repo.create_commit(
+        self.review_manager.create_commit(
             msg="Prescreen: include all",
             manual_author=False,
         )

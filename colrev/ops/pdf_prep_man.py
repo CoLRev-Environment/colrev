@@ -49,8 +49,9 @@ class PDFPrepMan(colrev.process.operation.Operation):
                 record = colrev.record.record.Record(record_dict)
                 record.set_status(RecordState.pdf_not_available)
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.git_repo.create_commit(
-            msg="Discard man-prep PDFs", manual_author=True
+        self.review_manager.create_commit(
+            msg="Discard man-prep PDFs",
+            manual_author=True,
         )
 
     def get_data(self) -> dict:

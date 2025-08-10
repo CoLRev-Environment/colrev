@@ -67,7 +67,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
 
         self.settings = self.settings_class(**settings)
         self.review_manager = data_operation.review_manager
-        self.git_repo = self.review_manager.dataset.git_repo.get_repo()
+        self.git_repo = self.review_manager.dataset.git_repo.repo
 
     # pylint: disable=unused-argument
     @classmethod
@@ -123,7 +123,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
         )
         self.review_manager.dataset.git_repo.add_changes(Path("about.md"))
 
-        self.review_manager.dataset.git_repo.create_commit(
+        self.review_manager.create_commit(
             msg="Setup gh-pages branch", skip_status_yaml=True
         )
 
@@ -172,9 +172,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
 
         self.review_manager.dataset.git_repo.add_changes(data_file)
 
-        self.review_manager.dataset.git_repo.create_commit(
-            msg="Update sample", skip_status_yaml=True
-        )
+        self.review_manager.create_commit(msg="Update sample", skip_status_yaml=True)
 
     def _push_branch(
         self,
@@ -258,31 +256,31 @@ class GithubPages(base_classes.DataPackageBaseClass):
             )
             return
 
-        active_branch = self.git_repo.active_branch
+        active_branch = self.git_repo.repo.active_branch
 
         # check if there is an "origin" remote
 
-        if "origin" in self.git_repo.remotes:
+        if "origin" in self.git_repo.repo.remotes:
             # check if remote.origin has a gh-pages branch
-            self.git_repo.remotes.origin.fetch()
+            self.git_repo.repo.remotes.origin.fetch()
             if f"origin/{self.GH_PAGES_BRANCH_NAME}" in [
-                r.name for r in self.git_repo.remotes.origin.refs
+                r.name for r in self.git_repo.repo.remotes.origin.refs
             ]:
                 try:
                     if "origin/gh-pages" not in [
-                        r.name for r in self.git_repo.remotes.origin.refs
+                        r.name for r in self.git_repo.repo.remotes.origin.refs
                     ]:
-                        self.git_repo.git.push(
+                        self.git_repo.repo.git.push(
                             "--set-upstream",
                             "origin",
                             self.GH_PAGES_BRANCH_NAME,
                             "--no-verify",
                         )
                     else:
-                        self.git_repo.remotes.origin.pull(ff_only=True)
+                        self.git_repo.repo.remotes.origin.pull(ff_only=True)
 
                     # update
-                    self.git_repo.git.checkout(active_branch)
+                    self.git_repo.repo.git.checkout(active_branch)
                     self._update_data(
                         silent_mode=silent_mode,
                     )
@@ -299,12 +297,12 @@ class GithubPages(base_classes.DataPackageBaseClass):
             else:
                 # create branch
                 if self.GH_PAGES_BRANCH_NAME not in [
-                    h.name for h in self.git_repo.heads
+                    h.name for h in self.git_repo.repo.heads
                 ]:
                     self._setup_github_pages_branch()
 
                 # update
-                self.git_repo.git.checkout(active_branch)
+                self.git_repo.repo.git.checkout(active_branch)
                 self._update_data(
                     silent_mode=silent_mode,
                 )
@@ -314,7 +312,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
                     self._push_branch(
                         silent_mode=silent_mode,
                     )
-            self.git_repo.git.checkout(active_branch)
+            self.git_repo.repo.git.checkout(active_branch)
             self._check_gh_pages_setup()
         else:
             self.logger.warning(
@@ -322,16 +320,18 @@ class GithubPages(base_classes.DataPackageBaseClass):
                 "gh-pages branch will only be created locally."
             )
             # create branch
-            if self.GH_PAGES_BRANCH_NAME not in [h.name for h in self.git_repo.heads]:
+            if self.GH_PAGES_BRANCH_NAME not in [
+                h.name for h in self.git_repo.repo.heads
+            ]:
                 self._setup_github_pages_branch()
 
             # update
-            self.git_repo.git.checkout(active_branch)
+            self.git_repo.repo.git.checkout(active_branch)
             self._update_data(
                 silent_mode=silent_mode,
             )
 
-        self.git_repo.git.checkout(active_branch)
+        self.git_repo.repo.git.checkout(active_branch)
 
     def update_record_status_matrix(
         self,

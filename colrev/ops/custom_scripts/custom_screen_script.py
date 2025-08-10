@@ -70,7 +70,7 @@ class CustomScreen(base_classes.ScreenPackageBaseClass):
 
         self.screen_operation.review_manager.dataset.save_records_dict(records)
         self.screen_operation.review_manager.dataset.git_repo.add_record_changes()
-        self.screen_operation.review_manager.dataset.git_repo.create_commit(
+        self.screen_operation.review_manager.create_commit(
             msg="Screen (random)", manual_author=False, script_call="colrev screen"
         )
         return records

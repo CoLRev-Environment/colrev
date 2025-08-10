@@ -197,7 +197,7 @@ class Advisor:
         """Get instructions related to collaboration"""
 
         collaboration_instructions: dict = {"items": []}
-        git_repo = self.review_manager.dataset.git_repo.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
 
         remote_connected = 0 != len(git_repo.remotes)
         if remote_connected:
@@ -499,7 +499,7 @@ class Advisor:
             return nr_commits_behind > 0 and nr_commits_ahead > 0
 
         try:
-            # Note : registered_path are other repositories (don't load from dataset.git_repo.get_repo())
+            # Note : registered_path are other repositories (don't load from dataset.git_repo)
             git_repo = git.Repo(registered_path)
             # https://github.com/gitpython-developers/GitPython/issues/652#issuecomment-610511311
             origin = git_repo.remotes.origin

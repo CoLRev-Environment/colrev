@@ -27,7 +27,7 @@ class Dataset:
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager
-        self.git_repo = GitRepo(review_manager=review_manager)
+        self.git_repo = GitRepo(path=review_manager.path)
 
     def get_origin_state_dict(self, records_string: str = "") -> dict:
         """Get the origin_state_dict (to determine state transitions efficiently)
@@ -296,6 +296,11 @@ class Dataset:
             return {"status": ExitCodes.FAIL, "msg": "Records formatted"}
 
         return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
+
+    def reset_log_if_no_changes(self) -> None:
+        """Reset the report log file if there are not changes"""
+        if not self.git_repo.repo.is_dirty():
+            self.review_manager.reset_report_logger()
 
     # ID creation, update and lookup ---------------------------------------
 

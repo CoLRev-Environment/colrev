@@ -341,7 +341,7 @@ class PDFGet(colrev.process.operation.Operation):
         for source in sources:
             self._relink_pdfs_in_source(source)
 
-        self.review_manager.dataset.git_repo.create_commit(msg="Relink PDFs")
+        self.review_manager.create_commit(msg="Relink PDFs")
 
     def check_existing_unlinked_pdfs(
         self,
@@ -679,7 +679,7 @@ class PDFGet(colrev.process.operation.Operation):
         if self.review_manager.settings.pdf_get.rename_pdfs:
             self.rename_pdfs()
 
-        self.review_manager.dataset.git_repo.create_commit(msg="PDFs: get and prepare")
+        self.review_manager.create_commit(msg="PDFs: get and prepare")
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed pdf-get operation{Colors.END}"
         )

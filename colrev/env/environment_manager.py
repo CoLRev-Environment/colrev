@@ -196,7 +196,7 @@ class EnvironmentManager:
                         2,
                     )
 
-                git_repo = check_operation.review_manager.dataset.git_repo.get_repo()
+                git_repo = check_operation.review_manager.dataset.git_repo.repo
                 repo["remote"] = bool(git_repo.remotes)
                 repo["behind_remote"] = (
                     check_operation.review_manager.dataset.git_repo.behind_remote()

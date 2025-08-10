@@ -334,7 +334,7 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
             self.review_manager.dataset.save_records_dict(records)
 
         if len(ret["decision_list"]) > 0 or len(ret["records_to_prepare"]) > 0:
-            self.review_manager.dataset.git_repo.create_commit(
+            self.review_manager.create_commit(
                 msg="Merge duplicate records",
             )
 
@@ -353,7 +353,7 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
             self.review_manager.dataset.save_records_dict(records)
             input("Edit records (if any), add to git, and press Enter")
 
-            self.review_manager.dataset.git_repo.create_commit(
+            self.review_manager.create_commit(
                 msg="Add non-duplicate records",
             )
 

@@ -580,7 +580,7 @@ class Prep(colrev.process.operation.Operation):
         records = self.review_manager.dataset.set_ids()
         self._rename_files(records)
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.git_repo.create_commit(msg="Set IDs")
+        self.review_manager.create_commit(msg="Set IDs")
 
     def setup_custom_script(self) -> None:
         """Setup a custom prep script"""
@@ -893,11 +893,11 @@ class Prep(colrev.process.operation.Operation):
             {r[Fields.ID]: r for r in prepared_records}, partial=True
         )
         self._log_commit_details(prepared_records)
-        self.review_manager.dataset.git_repo.create_commit(
+        self.review_manager.create_commit(
             msg="Prep: improve record metadata",
         )
         self._prep_commit_id = (
-            self.review_manager.dataset.git_repo.get_repo().head.commit.hexsha
+            self.review_manager.dataset.git_repo.repo.head.commit.hexsha
         )
         if not self.review_manager.high_level_operation:
             print()
@@ -992,6 +992,6 @@ class Prep(colrev.process.operation.Operation):
         if not keep_ids and not self.polish:
             self.review_manager.logger.info("Set record IDs")
             self.review_manager.dataset.set_ids()
-            self.review_manager.dataset.git_repo.create_commit(msg="Set IDs")
+            self.review_manager.create_commit(msg="Set IDs")
 
         self._post_prep()

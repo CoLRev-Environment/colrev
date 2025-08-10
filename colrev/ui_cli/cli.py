@@ -2091,13 +2091,11 @@ def data(
     ret = data_operation.main()
     if utils.in_ci_environment():
         if ret["ask_to_commit"]:
-            review_manager.dataset.git_repo.create_commit(
-                msg="Data and synthesis", manual_author=True
-            )
+            review_manager.create_commit(msg="Data and synthesis", manual_author=True)
     else:
         if ret["ask_to_commit"]:
             if input("Create commit (y/n)?") == "y":
-                review_manager.dataset.git_repo.create_commit(
+                review_manager.create_commit(
                     msg="Data and synthesis", manual_author=True
                 )
         if ret["no_endpoints_registered"]:
@@ -2630,7 +2628,7 @@ def settings(
         review_manager.dataset.git_repo.add_changes(
             review_manager.paths.PRE_COMMIT_CONFIG
         )
-        review_manager.dataset.git_repo.create_commit(msg="Update pre-commit hooks")
+        review_manager.create_commit(msg="Update pre-commit hooks")
         print("Successfully updated pre-commit hooks")
         return
 
@@ -2663,9 +2661,7 @@ def settings(
             json.dump(project_settings, outfile, indent=4)
 
         review_manager.dataset.git_repo.add_changes(review_manager.paths.SETTINGS_FILE)
-        review_manager.dataset.git_repo.create_commit(
-            msg="Change settings", manual_author=True
-        )
+        review_manager.create_commit(msg="Change settings", manual_author=True)
 
     # import colrev_ui.ui_web.settings_editor
 
@@ -2839,7 +2835,7 @@ def show(  # type: ignore
     elif keyword == "cmd_history":
         cmds = []
         colrev.ops.check.CheckOperation(review_manager)
-        revlist = review_manager.dataset.git_repo.get_repo().iter_commits()
+        revlist = review_manager.dataset.git_repo.repo.iter_commits()
 
         for commit in reversed(list(revlist)):
             try:
@@ -2919,7 +2915,7 @@ def upgrade(
 
         review_manager.settings.project.auto_upgrade = False
         review_manager.save_settings()
-        review_manager.dataset.git_repo.create_commit(msg="Disable auto-upgrade")
+        review_manager.create_commit(msg="Disable auto-upgrade")
         return
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=True, verbose_mode=verbose
@@ -3064,7 +3060,7 @@ def merge(
 
     if not branch:
         colrev.ops.check.CheckOperation(review_manager)
-        git_repo = review_manager.dataset.git_repo.get_repo()
+        git_repo = review_manager.dataset.git_repo.repo
         print(f"possible branches: {','.join([b.name for b in git_repo.heads])}")
         return
 
@@ -3105,7 +3101,7 @@ def undo(
 
     if selection == "commit":
         colrev.ops.check.CheckOperation(review_manager)
-        git_repo = review_manager.dataset.git_repo.get_repo()
+        git_repo = review_manager.dataset.git_repo.repo
         git_repo.git.reset("--hard", "HEAD~1")
 
 

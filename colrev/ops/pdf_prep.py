@@ -299,7 +299,7 @@ class PDFPrep(colrev.process.operation.Operation):
         pool.join()
         records = {r[Fields.ID]: r for r in records_list}
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.git_repo.create_commit(msg="Update colrev_pdf_ids")
+        self.review_manager.create_commit(msg="Update colrev_pdf_ids")
 
     def _print_stats(self, *, pdf_prep_record_list: list) -> None:
         self.pdf_prepared = len(
@@ -474,7 +474,7 @@ class PDFPrep(colrev.process.operation.Operation):
 
             self._print_stats(pdf_prep_record_list=pdf_prep_record_list)
 
-        self.review_manager.dataset.git_repo.create_commit(msg="PDFs: prepare")
+        self.review_manager.create_commit(msg="PDFs: prepare")
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed pdf-prep operation{Colors.END}"
         )

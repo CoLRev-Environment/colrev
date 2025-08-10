@@ -212,9 +212,7 @@ def test_get_changed_records(
         base_repo_review_manager.paths.RECORDS_FILE
     )
     commit_message = "Test commit for changed records"
-    base_repo_review_manager.dataset.git_repo.create_commit(
-        msg=commit_message, manual_author=True
-    )
+    base_repo_review_manager.create_commit(msg=commit_message, manual_author=True)
     # Retrieve the last commit SHA
     last_commit_sha = base_repo_review_manager.dataset.git_repo.get_last_commit_sha()
 

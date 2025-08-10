@@ -179,7 +179,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         forward_search_feed.save()
 
         if self.review_manager.dataset.git_repo.has_record_changes():
-            self.review_manager.dataset.git_repo.create_commit(
+            self.review_manager.create_commit(
                 msg="Forward search", script_call="colrev search"
             )
 

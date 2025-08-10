@@ -19,11 +19,10 @@ if typing.TYPE_CHECKING:
 class GitRepo:
     """Wrapper for Git repository interactions"""
 
-    # TODO : extract review_manager
-    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-        self.review_manager = review_manager
+    def __init__(self, path: typing.Optional[Path]) -> None:
+        self.path = path if path else Path.cwd()
         try:
-            self.repo = git.Repo(self.review_manager.path)
+            self.repo = git.Repo(self.path)
         except InvalidGitRepositoryError as exc:
             msg = "Not a CoLRev/git repository. Run\n    colrev init"
             raise colrev_exceptions.RepoSetupError(msg) from exc
@@ -32,12 +31,6 @@ class GitRepo:
             add=FileSets.DEFAULT_GIT_IGNORE_ITEMS,
             remove=FileSets.DEPRECATED_GIT_IGNORE_ITEMS,
         )
-
-    def get_repo(self) -> git.Repo:
-        """Get the git repository object"""
-        if self.review_manager.notified_next_operation is None:
-            raise colrev_exceptions.ReviewManagerNotNotifiedError()
-        return self.repo
 
     def repo_initialized(self) -> bool:
         """Check whether the repository is initialized"""
@@ -50,7 +43,7 @@ class GitRepo:
     def has_record_changes(self, *, change_type: str = "all") -> bool:
         """Check whether the records have changes"""
         return self.has_changes(
-            Path(self.review_manager.paths.RECORDS_FILE_GIT), change_type=change_type
+            Path(self.path / "data" / "records.bib"), change_type=change_type
         )
 
     def has_changes(self, relative_path: Path, *, change_type: str = "all") -> bool:
@@ -85,7 +78,7 @@ class GitRepo:
         self, *, add: typing.Optional[list] = None, remove: typing.Optional[list] = None
     ) -> None:
         """Update the gitignore file by adding or removing particular paths"""
-        git_ignore_file = self.review_manager.paths.git_ignore
+        git_ignore_file = self.path / Path(".gitignore")
         if git_ignore_file.is_file():
             gitignore_content = git_ignore_file.read_text(encoding="utf-8")
         else:
@@ -101,9 +94,7 @@ class GitRepo:
 
     def _sleep_util_git_unlocked(self) -> None:
         i = 0
-        while (
-            self.review_manager.path / Path(".git/index.lock")
-        ).is_file():  # pragma: no cover
+        while (self.path / Path(".git/index.lock")).is_file():  # pragma: no cover
             i += 1
             time.sleep(randint(1, 50) * 0.1)  # nosec
             if i > 5:
@@ -116,7 +107,7 @@ class GitRepo:
     ) -> None:
         """Add changed file to git"""
         if path.is_absolute():
-            path = path.relative_to(self.review_manager.path)
+            path = path.relative_to(self.path)
         path_str = str(path).replace("\\", "/")
 
         self._sleep_util_git_unlocked()
@@ -135,7 +126,7 @@ class GitRepo:
 
     def records_changed(self) -> bool:
         """Check whether the records were changed"""
-        main_recs_changed = self.review_manager.paths.RECORDS_FILE_GIT in [
+        main_recs_changed = self.path / "data" / "records.bib" in [
             item.a_path for item in self.repo.index.diff(None)
         ] + [x.a_path for x in self.repo.head.commit.diff()]
         return main_recs_changed
@@ -145,6 +136,7 @@ class GitRepo:
         self,
         *,
         msg: str,
+        review_manager: colrev.review_manager.ReviewManager,
         manual_author: bool = False,
         script_call: str = "",
         saved_args: typing.Optional[dict] = None,
@@ -156,11 +148,11 @@ class GitRepo:
         # pylint: disable=redefined-outer-name
         import colrev.ops.commit
 
-        if self.review_manager.exact_call and script_call == "":
-            script_call = self.review_manager.exact_call
+        if review_manager.exact_call and script_call == "":
+            script_call = review_manager.exact_call
 
         commit = colrev.ops.commit.Commit(
-            review_manager=self.review_manager,
+            review_manager=review_manager,
             msg=msg,
             manual_author=manual_author,
             script_name=script_call,
@@ -186,12 +178,12 @@ class GitRepo:
     def add_setting_changes(self) -> None:
         """Add changes in settings to git"""
         self._sleep_util_git_unlocked()
-        self.repo.index.add([str(self.review_manager.paths.SETTINGS_FILE)])
+        self.repo.index.add([str(self.path / "settings.json")])
 
     def has_untracked_search_records(self) -> bool:
         """Check whether there are untracked search records"""
         return any(
-            str(self.review_manager.paths.SEARCH_DIR) in str(untracked_file)
+            str(self.path / "data" / "search") in str(untracked_file)
             for untracked_file in self.get_untracked_files()
         )
 
@@ -199,11 +191,6 @@ class GitRepo:
         """Stash unstaged changes"""
         ret = self.repo.git.stash("push", "--keep-index")
         return "No local changes to save" != ret
-
-    def reset_log_if_no_changes(self) -> None:
-        """Reset the report log file if there are not changes"""
-        if not self.repo.is_dirty():
-            self.review_manager.reset_report_logger()
 
     def get_last_commit_sha(self) -> str:  # pragma: no cover
         """Get the last commit sha"""

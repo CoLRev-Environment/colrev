@@ -137,7 +137,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     )
 
     review_manager.get_load_operation()
-    git_repo = review_manager.dataset.git_repo.get_repo()
+    git_repo = review_manager.dataset.git_repo
     if utils.in_ci_environment():
         git_repo.config_writer().set_value("user", "name", "Tester").release()
         git_repo.config_writer().set_value("user", "email", "tester@mail.com").release()
@@ -215,9 +215,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     review_manager.settings.data.data_package_endpoints = []
     review_manager.save_settings()
 
-    review_manager.dataset.git_repo.create_commit(
-        msg="change settings", manual_author=True
-    )
+    review_manager.create_commit(msg="change settings", manual_author=True)
     review_manager.changed_settings_commit = (
         review_manager.dataset.git_repo.get_last_commit_sha()
     )
@@ -240,9 +238,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     test_bib_source.save(search_history_file_path)
     review_manager.dataset.git_repo.add_changes(search_history_file_path)
     review_manager.load_settings()
-    review_manager.dataset.git_repo.create_commit(
-        msg="add test_records.bib", manual_author=True
-    )
+    review_manager.create_commit(msg="add test_records.bib", manual_author=True)
     review_manager.add_test_records_commit = (
         review_manager.dataset.git_repo.get_last_commit_sha()
     )
@@ -290,9 +286,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
 
     data_operation = review_manager.get_data_operation()
     data_operation.main()
-    review_manager.dataset.git_repo.create_commit(
-        msg="Data and synthesis", manual_author=True
-    )
+    review_manager.create_commit(msg="Data and synthesis", manual_author=True)
     review_manager.data_commit = review_manager.dataset.git_repo.get_last_commit_sha()
     review_manager.logger.info(
         f"{Colors.RED}Test repository in {test_repo_dir}{Colors.END}"

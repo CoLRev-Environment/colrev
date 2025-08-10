@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import typing
 from pathlib import Path
 from typing import Any
 from typing import Optional
@@ -10,6 +11,9 @@ import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import SearchType
 from colrev.git_repo import GitRepo
+
+if typing.TYPE_CHECKING:
+    import colrev.review_manager
 
 
 class _Paths:
@@ -38,7 +42,7 @@ def run_db_search(
     """
     root = project_root or source.search_results_path.resolve().parents[2]
     review_manager = _ReviewManagerStub(root)
-    git = GitRepo(review_manager=review_manager)
+    git = GitRepo(path=review_manager.path)
 
     if colrev.utils.in_ci_environment():
         raise colrev_exceptions.SearchNotAutomated("DB search not automated.")
@@ -80,7 +84,7 @@ def get_query_filename(
     query_filename = Path("data/search/") / Path(f"{filename.stem}_query.txt")
     root = project_root or filename.resolve().parents[2]
     review_manager = _ReviewManagerStub(root)
-    git = GitRepo(review_manager=review_manager)
+    git = GitRepo(path=review_manager.path)
 
     if instantiate:
         with open(query_filename, "w", encoding="utf-8") as file:
@@ -97,7 +101,7 @@ def get_query_filename(
 
 def create_db_source(
     *,
-    review_manager,
+    review_manager: colrev.review_manager.ReviewManager,
     search_source_cls,
     params: dict,
     add_to_git: bool = True,
@@ -146,7 +150,7 @@ def create_db_source(
         )
         input("Press Enter to complete")
 
-    git = GitRepo(review_manager=review_manager)
+    git = GitRepo(path=review_manager.path)
     if add_to_git:
         git.add_changes(filename, ignore_missing=True)
 

@@ -237,7 +237,7 @@ class TablePrescreen(base_classes.PrescreenPackageBaseClass):
 
         if self.review_manager.dataset.git_repo.has_record_changes():
             if input("create commit [y,n]?") == "y":
-                self.review_manager.dataset.git_repo.create_commit(
+                self.review_manager.create_commit(
                     msg="Pre-screen (table)",
                     manual_author=True,
                 )

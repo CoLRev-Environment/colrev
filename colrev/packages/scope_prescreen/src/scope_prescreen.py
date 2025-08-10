@@ -341,7 +341,7 @@ class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
             )
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.git_repo.create_commit(
+        self.review_manager.create_commit(
             msg="Pre-screen (scope)",
             manual_author=False,
         )

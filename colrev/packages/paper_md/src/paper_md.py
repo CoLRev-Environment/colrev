@@ -190,8 +190,10 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 old_string=f'csl: "{csl_link}"',
                 new_string=f'csl: "{csl_filename}"',
             )
-            self.review_manager.dataset.git_repo.add_changes(self.settings.paper_path)
-            self.review_manager.dataset.git_repo.add_changes(Path(csl_filename))
+            self.review_manager.dataset.git_repo.repo.add_changes(
+                self.settings.paper_path
+            )
+            self.review_manager.dataset.git_repo.repo.add_changes(Path(csl_filename))
             self.logger.debug("Downloaded csl file for offline use")
 
     def _check_new_record_source_tag(
@@ -206,7 +208,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         )
 
     def _authorship_heuristic(self) -> str:
-        git_repo = self.review_manager.dataset.git_repo.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
         try:
             commits_list = list(git_repo.iter_commits())
             commits_authors = []

@@ -22,7 +22,7 @@ def get_correction_fixture(base_repo_review_manager):  # type: ignore
         "CURATED": {"source": "url...", "note": ""}
     }
     base_repo_review_manager.dataset.save_records_dict(records)
-    base_repo_review_manager.dataset.git_repo.create_commit(msg="switch to curated")
+    base_repo_review_manager.create_commit(msg="switch to curated")
 
     records["SrivastavaShainesh2015"]["title"] = "Changed-title"
     base_repo_review_manager.dataset.save_records_dict(records)
@@ -50,7 +50,7 @@ def test_corrections_pre_commit_hooks(  # type: ignore
         ["git", "commit", "-m", "test"]
     )
     print(ret)
-    base_repo_review_manager.dataset.git_repo.get_repo().git.log(p=True)
+    base_repo_review_manager.dataset.git_repo.repo.git.log(p=True)
     corrections_path = base_repo_review_manager.paths.corrections
 
     expected = (

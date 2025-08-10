@@ -82,7 +82,7 @@ class PrepDebug(colrev.ops.prep.Prep):
         print("\n")
 
     def _retrieve_records_from_history(self, original_records: list[dict]) -> list:
-        git_repo = self.review_manager.dataset.git_repo.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
 
         if self.commit_sha == "":
             self.commit_sha = git_repo.git.rev_parse("HEAD")

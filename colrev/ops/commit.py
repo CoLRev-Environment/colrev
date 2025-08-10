@@ -145,7 +145,7 @@ class Commit:
     def create(self, *, skip_status_yaml: bool = False) -> bool:
         """Create a commit (including the commit message and details)"""
         status_operation = self.review_manager.get_status_operation()
-        git_repo = self.review_manager.dataset.git_repo.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
         try:
             if not git_repo.index.diff("HEAD"):
                 self.review_manager.logger.debug(

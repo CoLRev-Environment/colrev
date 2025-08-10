@@ -183,6 +183,27 @@ class ReviewManager:
         """Save the settings"""
         colrev.settings.save_settings(review_manager=self)
 
+    # pylint: disable=too-many-arguments
+    def create_commit(
+        self,
+        *,
+        msg: str,
+        manual_author: bool = False,
+        script_call: str = "",
+        saved_args: typing.Optional[dict] = None,
+        skip_status_yaml: bool = False,
+        skip_hooks: bool = True,
+    ) -> bool:
+        return self.dataset.git_repo.create_commit(
+            msg=msg,
+            review_manager=self,
+            manual_author=manual_author,
+            script_call=script_call,
+            saved_args=saved_args,
+            skip_status_yaml=skip_status_yaml,
+            skip_hooks=skip_hooks,
+        )
+
     def reset_report_logger(self) -> None:
         """Reset the report logger"""
 

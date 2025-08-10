@@ -109,7 +109,7 @@ class Screen(colrev.process.operation.Operation):
 
         self.review_manager.dataset.save_records_dict(records)
         self._print_stats(selected_record_ids)
-        self.review_manager.dataset.git_repo.create_commit(
+        self.review_manager.create_commit(
             msg="Screen: include all",
             manual_author=False,
         )
@@ -193,7 +193,7 @@ class Screen(colrev.process.operation.Operation):
         print()
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.git_repo.create_commit(
+        self.review_manager.create_commit(
             msg=f"Screen: add criterion: {criterion_name}",
         )
         print()
@@ -246,7 +246,7 @@ class Screen(colrev.process.operation.Operation):
                     record.set_status(RecordState.rev_included)
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.git_repo.create_commit(
+        self.review_manager.create_commit(
             msg=f"Screen: remove criterion {criterion_to_delete}",
         )
 
@@ -298,7 +298,7 @@ class Screen(colrev.process.operation.Operation):
                 record = colrev.record.record.Record(record_dict)
                 record.set_status(RecordState.rev_included)
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.git_repo.create_commit(
+        self.review_manager.create_commit(
             msg="Screen: include all",
             manual_author=False,
         )
@@ -417,7 +417,7 @@ class Screen(colrev.process.operation.Operation):
             )
             record.remove_field(key="include_flag")
 
-        self.review_manager.dataset.git_repo.create_commit(
+        self.review_manager.create_commit(
             msg=f"Screen: include records {','.join(selected_auto_include_ids)}",
             manual_author=True,
         )
@@ -447,7 +447,7 @@ class Screen(colrev.process.operation.Operation):
             except colrev_exceptions.TEIException:
                 pass
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.git_repo.create_commit(msg="Add abstracts from TEI")
+        self.review_manager.create_commit(msg="Add abstracts from TEI")
 
     @colrev.process.operation.Operation.decorate()
     def main(self, *, split_str: str = "NA") -> None:

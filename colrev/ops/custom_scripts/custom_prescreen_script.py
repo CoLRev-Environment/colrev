@@ -47,7 +47,7 @@ class CustomPrescreen(base_classes.PrescreenPackageBaseClass):
                 )
 
         self.prescreen_operation.review_manager.dataset.save_records_dict(records)
-        self.prescreen_operation.review_manager.dataset.git_repo.create_commit(
+        self.prescreen_operation.review_manager.create_commit(
             msg="Pre-screen (random)",
             manual_author=False,
             script_call="colrev prescreen",

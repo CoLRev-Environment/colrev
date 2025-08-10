@@ -138,7 +138,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
     def _set_fields(self) -> None:
         self.logger.info("Add fields for data extraction")
         try:
-            _ = self.review_manager.dataset.git_repo.get_repo()
+            _ = self.review_manager.dataset.git_repo
         except GitCommandError:
             return
 

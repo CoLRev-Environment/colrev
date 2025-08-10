@@ -79,7 +79,7 @@ class Trace(colrev.process.operation.Operation):
         self.review_manager.logger.info(f"Trace record by ID: {record_id}")
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
 
-        revlist = self.review_manager.dataset.git_repo.get_repo().iter_commits(
+        revlist = self.review_manager.dataset.git_repo.repo.iter_commits(
             paths=self.review_manager.paths.RECORDS_FILE_GIT
         )
 

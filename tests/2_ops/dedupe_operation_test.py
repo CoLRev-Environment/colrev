@@ -21,7 +21,7 @@ def fixture_dedupe_test_setup(  # type: ignore
         target=Path("data/records.bib"),
     )
     base_repo_review_manager.dataset.git_repo.add_changes(Path("data/records.bib"))
-    base_repo_review_manager.dataset.git_repo.create_commit(
+    base_repo_review_manager.create_commit(
         msg="Import dedupe test cases", manual_author=True
     )
 
@@ -48,12 +48,18 @@ def test_dedupe_utilities(  # type: ignore
 
     dedupe_test_setup.dataset.git_repo.add_changes(Path("data/records.bib"))
     dedupe_test_setup.dataset.git_repo.create_commit(
-        msg="Unmerge Staehr2010-Staehr2010a", manual_author=True, skip_hooks=True
+        msg="Unmerge Staehr2010-Staehr2010a",
+        manual_author=True,
+        skip_hooks=True,
+        review_manager=dedupe_operation.review_manager,
     )
     dedupe_operation.merge_records(merge=[["Staehr2010", "Staehr2010a"]])
     dedupe_test_setup.dataset.git_repo.add_changes(Path("data/records.bib"))
     dedupe_test_setup.dataset.git_repo.create_commit(
-        msg="Merge Staehr2010-Staehr2010a", manual_author=True, skip_hooks=True
+        msg="Merge Staehr2010-Staehr2010a",
+        manual_author=True,
+        skip_hooks=True,
+        review_manager=dedupe_operation.review_manager,
     )
     records = dedupe_test_setup.dataset.load_records_dict()
     assert "Staehr2010" in records.keys()

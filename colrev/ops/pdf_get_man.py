@@ -91,8 +91,9 @@ class PDFGetMan(colrev.process.operation.Operation):
             if record.data[Fields.STATUS] == RecordState.pdf_needs_manual_retrieval:
                 record.set_status(RecordState.pdf_not_available)
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.git_repo.create_commit(
-            msg="Discard missing PDFs", manual_author=True
+        self.review_manager.create_commit(
+            msg="Discard missing PDFs",
+            manual_author=True,
         )
 
     def get_data(self) -> dict:

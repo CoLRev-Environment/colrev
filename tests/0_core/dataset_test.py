@@ -315,9 +315,7 @@ def test_get_commit_message(
         file.write("This is a trivial change.")
     base_repo_review_manager.dataset.git_repo.add_changes(trivial_file_path)
 
-    base_repo_review_manager.dataset.git_repo.create_commit(
-        msg=commit_message, manual_author=True
-    )
+    base_repo_review_manager.create_commit(msg=commit_message, manual_author=True)
 
     # Test
     retrieved_commit_message = (
@@ -430,12 +428,12 @@ def test_get_repo(
     """Test the get_repo method."""
     # Test
     with pytest.raises(colrev_exceptions.ReviewManagerNotNotifiedError):
-        base_repo_review_manager.dataset.git_repo.get_repo()
+        base_repo_review_manager.dataset.git_repo
 
     base_repo_review_manager.notified_next_operation = OperationsType.check
 
     # Test
-    base_repo_review_manager.dataset.git_repo.get_repo()
+    base_repo_review_manager.dataset.git_repo
 
 
 def test_has_changes_no_changes(

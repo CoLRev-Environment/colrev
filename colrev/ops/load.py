@@ -76,7 +76,7 @@ class Load(colrev.process.operation.Operation):
         This method must be called for all packages that work
         with an ex-post assignment of incremental IDs."""
 
-        git_repo = self.review_manager.dataset.git_repo.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
 
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
         search_file_path = str(Path("data/search") / filename.name).replace("\\", "/")
@@ -243,8 +243,8 @@ class Load(colrev.process.operation.Operation):
             )
             source.search_source.search_results_path = new_filename
             self.review_manager.dataset.git_repo.add_changes(new_filename)
-            self.review_manager.dataset.git_repo.create_commit(
-                msg=f"Rename {source.search_source.search_results_path}"
+            self.review_manager.create_commit(
+                msg=f"Rename {source.search_source.search_results_path}",
             )
             return
 
@@ -264,8 +264,8 @@ class Load(colrev.process.operation.Operation):
             )
             source.search_source.search_history_path = new_filename
             self.review_manager.dataset.git_repo.add_changes(new_filename)
-            self.review_manager.dataset.git_repo.create_commit(
-                msg=f"Rename {source.search_source.search_history_path}"
+            self.review_manager.create_commit(
+                msg=f"Rename {source.search_source.search_history_path}",
             )
 
     def setup_source_for_load(
@@ -409,7 +409,7 @@ class Load(colrev.process.operation.Operation):
         self.review_manager.logger.debug(
             f"Add source to settings {source.search_source.search_history_path}"
         )
-        git_repo = self.review_manager.dataset.git_repo.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
         self.review_manager.settings.sources.append(source.search_source)
         self.review_manager.save_settings()
         # Add files that were renamed (removed)
@@ -508,7 +508,7 @@ class Load(colrev.process.operation.Operation):
     def _create_load_commit(
         self, source: colrev.search_file.ExtendedSearchFile
     ) -> None:
-        git_repo = self.review_manager.dataset.git_repo.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
         stashed = "No local changes to save" != git_repo.git.stash(
             "push", "--keep-index"
         )
@@ -516,7 +516,7 @@ class Load(colrev.process.operation.Operation):
         # self.review_manager.exact_call = (
         #     f"{part_exact_call} -s {source.search_source.search_results_path.name}"
         # )
-        self.review_manager.dataset.git_repo.create_commit(
+        self.review_manager.create_commit(
             msg=f"Load: data/search/{source.search_source.search_results_path.name} → "
             f"{self.review_manager.paths.RECORDS_FILE_GIT}",
             skip_hooks=True,
