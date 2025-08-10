@@ -370,16 +370,13 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record.Record,
-        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for IEEEXplore"""
 
-        if source.filename.suffix == ".csv":
-            if Fields.AUTHOR in record.data:
-                record.data[Fields.AUTHOR] = (
-                    colrev.record.record_prep.PrepRecord.format_author_field(
-                        record.data[Fields.AUTHOR]
-                    )
+        if Fields.AUTHOR in record.data:
+            record.data[Fields.AUTHOR] = (
+                colrev.record.record_prep.PrepRecord.format_author_field(
+                    record.data[Fields.AUTHOR]
                 )
-            return record
+            )
         return record

@@ -272,8 +272,6 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record.Record,
-        source: colrev.search_file.ExtendedSearchFile,
-        quality_model: colrev.record.qm.quality_model.QualityModel,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for ABI/INFORM (ProQuest)"""
 
@@ -282,7 +280,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
             .lower()
             .endswith("conference proceedings.")
         ):
-            record.change_entrytype(new_entrytype="inproceedings", qm=quality_model)
+            record.change_entrytype(new_entrytype="inproceedings")
 
         if Fields.LANGUAGE in record.data:
             if record.data[Fields.LANGUAGE] in ["ENG", "English"]:

@@ -81,7 +81,6 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.review_manager = source_operation.review_manager
         self.search_source = search_file
         self.europe_pmc_lock = Lock()
-        self.source_operation = source_operation
 
     # @classmethod
     # def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
@@ -425,7 +424,6 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record.Record,
-        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Europe PMC"""
         record.data[Fields.AUTHOR].rstrip(".")

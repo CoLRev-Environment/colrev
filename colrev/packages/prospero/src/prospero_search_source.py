@@ -204,7 +204,6 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record_prep.PrepRecord:
         """Map fields to standardized fields for CoLRev (matching interface signature)."""
         return record

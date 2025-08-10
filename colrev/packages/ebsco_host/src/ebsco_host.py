@@ -129,7 +129,6 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for EBSCOHost"""
 

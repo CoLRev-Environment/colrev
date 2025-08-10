@@ -229,7 +229,6 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record.Record,
-        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for forward searches (OpenCitations)"""
         return record

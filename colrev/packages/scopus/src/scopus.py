@@ -185,7 +185,6 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record.Record,
-        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Scopus"""
 

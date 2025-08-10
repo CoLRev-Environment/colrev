@@ -125,8 +125,6 @@ class SearchSourcePackageBaseClass(ABC):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        *,
-        quality_model: colrev.record.qm.quality_model.QualityModel,
     ) -> colrev.record.record.Record:
         """Run the custom source-prep operation."""
 

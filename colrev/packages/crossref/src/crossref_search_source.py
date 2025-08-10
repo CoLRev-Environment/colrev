@@ -438,19 +438,19 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.search_file.ExtendedSearchFile,
     ) -> colrev.record.record_prep.PrepRecord:
         """Source-specific preparation for Crossref"""
-        source_item = [
-            x
-            for x in record.data[Fields.ORIGIN]
-            if str(source.filename).replace("data/search/", "") in x
-        ]
-        if source_item:
-            record.set_masterdata_complete(
-                source=source_item[0],
-                masterdata_repository=self.review_manager.settings.is_curated_repo(),
-            )
+        # TODO: cover in colrev.curation
+        # source_item = [
+        #     x
+        #     for x in record.data[Fields.ORIGIN]
+        #     if str(source.filename).replace("data/search/", "") in x
+        # ]
+        # if source_item:
+        #     record.set_masterdata_complete(
+        #         source=source_item[0],
+        #         masterdata_repository=self.review_manager.settings.is_curated_repo(),
+        #     )
         return record
 
     def _get_masterdata_record(
