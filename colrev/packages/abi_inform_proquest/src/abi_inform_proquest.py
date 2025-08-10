@@ -43,10 +43,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
-        self.review_manager = source_operation.review_manager
         self.search_source = search_file
-        self.source_operation = source_operation
-        self.quality_model = self.review_manager.get_qm()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -276,6 +273,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record.Record,
         source: colrev.search_file.ExtendedSearchFile,
+        quality_model: colrev.record.qm.quality_model.QualityModel,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for ABI/INFORM (ProQuest)"""
 
@@ -284,9 +282,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
             .lower()
             .endswith("conference proceedings.")
         ):
-            record.change_entrytype(
-                new_entrytype="inproceedings", qm=self.quality_model
-            )
+            record.change_entrytype(new_entrytype="inproceedings", qm=quality_model)
 
         if Fields.LANGUAGE in record.data:
             if record.data[Fields.LANGUAGE] in ["ENG", "English"]:
