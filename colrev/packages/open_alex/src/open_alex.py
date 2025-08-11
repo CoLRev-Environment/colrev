@@ -45,7 +45,6 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.review_manager = source_operation.review_manager
 
         self.search_source = search_file
 
@@ -91,7 +90,10 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
             ) from exc
 
     def _get_masterdata_record(
-        self, *, record: colrev.record.record.Record
+        self,
+        *,
+        record: colrev.record.record.Record,
+        prep_operation: colrev.ops.prep.Prep,
     ) -> colrev.record.record.Record:
         try:
 
@@ -111,7 +113,7 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
                 search_source=self.search_source,
                 update_only=False,
                 prep_mode=True,
-                records=self.review_manager.dataset.load_records_dict(),
+                records=prep_operation.review_manager.dataset.load_records_dict(),
                 logger=self.logger,
                 verbose_mode=self.verbose_mode,
             )
@@ -119,14 +121,14 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
             open_alex_feed.add_update_record(retrieved_record)
             record.change_entrytype(
                 new_entrytype=retrieved_record.data[Fields.ENTRYTYPE],
-                qm=self.review_manager.get_qm(),
+                qm=prep_operation.review_manager.get_qm(),
             )
 
             record.merge(
                 retrieved_record,
                 default_source=retrieved_record.data[Fields.ORIGIN][0],
             )
-            self.review_manager.dataset.save_records_dict(
+            prep_operation.review_manager.dataset.save_records_dict(
                 open_alex_feed.get_records(),
             )
             open_alex_feed.save()
@@ -160,7 +162,9 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
             # if len(record.data.get(Fields.TITLE, "")) < 35 and Fields.DOI not in record.data:
             #     return record
             # record = self._check_doi_masterdata(record=record)
-            record = self._get_masterdata_record(record=record)
+            record = self._get_masterdata_record(
+                record=record, prep_operation=prep_operation
+            )
 
         return record
 

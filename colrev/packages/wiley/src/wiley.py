@@ -41,7 +41,6 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.search_source = search_file
-        self.source_operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

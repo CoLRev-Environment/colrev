@@ -64,7 +64,6 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
 
-        self.review_manager = source_operation.review_manager
         self.search_source = search_file
         self.crossref_lock = Lock()
         self.language_service = colrev.env.language_service.LanguageService()
@@ -343,9 +342,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
 
         self.api.rerun = rerun
-        self.api.last_updated = self.review_manager.dataset.git_repo.get_last_updated(
-            crossref_feed.feed_file
-        )
+        self.api.last_updated = crossref_feed.get_last_updated()
 
         nrecs = self.api.get_len_total()
         self.logger.info(f"Total: {nrecs:,} records")
@@ -472,7 +469,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                     search_source=self.search_source,
                     update_only=False,
                     prep_mode=True,
-                    records=self.review_manager.dataset.load_records_dict(),
+                    records=prep_operation.review_manager.dataset.load_records_dict(),
                     logger=self.logger,
                     verbose_mode=self.verbose_mode,
                 )
@@ -490,7 +487,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
 
                 if save_feed:
-                    self.review_manager.dataset.save_records_dict(
+                    prep_operation.review_manager.dataset.save_records_dict(
                         crossref_feed.get_records(),
                     )
                     crossref_feed.save()

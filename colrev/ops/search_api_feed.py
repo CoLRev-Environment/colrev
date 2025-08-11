@@ -8,6 +8,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
+import colrev.git_repo
 import colrev.loader.load_utils
 import colrev.loader.load_utils_formatter
 import colrev.record.record_merger
@@ -499,3 +500,8 @@ class SearchAPIFeed:
             self._nr_changed = 0
 
         self._retrieved_records_for_saving = False
+
+    def get_last_updated(self) -> str:
+        """Get the last updated timestamp."""
+        repo = colrev.git_repo.GitRepo(self.feed_file.parent)
+        return repo.get_last_updated(self.feed_file)

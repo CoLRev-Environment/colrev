@@ -84,8 +84,6 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.verbose_mode = verbose_mode
         self.search_source = search_file
 
-        self.review_manager = source_operation.review_manager
-
         self.dblp_lock = Lock()
         self.origin_prefix = self.search_source.get_origin_prefix()
         _, self.email = (
@@ -422,7 +420,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     search_source=self.search_source,
                     update_only=False,
                     prep_mode=True,
-                    records=self.review_manager.dataset.load_records_dict(),
+                    records=prep_operation.review_manager.dataset.load_records_dict(),
                     logger=self.logger,
                     verbose_mode=self.verbose_mode,
                 )
@@ -445,7 +443,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     record.prescreen_exclude(reason=FieldValues.RETRACTED)
                     # record.remove_field(key="warning")
 
-                self.review_manager.dataset.save_records_dict(
+                prep_operation.review_manager.dataset.save_records_dict(
                     dblp_feed.get_records(),
                 )
                 dblp_feed.save()
@@ -457,7 +455,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         except requests.exceptions.RequestException:
             pass
         except colrev_exceptions.ServiceNotAvailableException:
-            if self.review_manager.force_mode:
+            if prep_operation.review_manager.force_mode:
                 self.logger.error("Service not available: DBLP")
 
         return record

@@ -57,11 +57,9 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.review_manager = source_operation.review_manager
         self.search_source = search_file
 
         self.open_library_lock = Lock()
-
         self.origin_prefix = self.search_source.get_origin_prefix()
 
     def check_availability(self) -> None:
@@ -263,7 +261,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 search_source=self.search_source,
                 update_only=False,
                 prep_mode=True,
-                records=self.review_manager.dataset.load_records_dict(),
+                records=prep_operation.review_manager.dataset.load_records_dict(),
                 logger=self.logger,
                 verbose_mode=self.verbose_mode,
             )
@@ -274,7 +272,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 retrieved_record,
                 default_source=retrieved_record.data[Fields.ORIGIN][0],
             )
-            self.review_manager.dataset.save_records_dict(
+            prep_operation.review_manager.dataset.save_records_dict(
                 open_library_feed.get_records(),
             )
             open_library_feed.save()

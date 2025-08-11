@@ -61,9 +61,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.search_source = search_file
-        self.review_manager = source_operation.review_manager
         self.language_service = colrev.env.language_service.LanguageService()
-        self.operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -572,7 +570,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             record.update_field(
                 key=Fields.ENTRYTYPE, value="phdthesis", source="unkown_source_prep"
             )
-            self.review_manager.report_logger.info(
+            self.logger.info(
                 f" {record.data[Fields.ID]}".ljust(self._padding, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("dissertation" in fulltext link)'
@@ -586,7 +584,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             record.update_field(
                 key=Fields.ENTRYTYPE, value="phdthesis", source="unkown_source_prep"
             )
-            self.review_manager.report_logger.info(
+            self.logger.info(
                 f" {record.data[Fields.ID]}".ljust(self._padding, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("thesis" in fulltext link)'
@@ -600,7 +598,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             record.update_field(
                 key=Fields.ENTRYTYPE, value="phdthesis", source="unkown_source_prep"
             )
-            self.review_manager.report_logger.info(
+            self.logger.info(
                 f" {record.data[Fields.ID]}".ljust(self._padding, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("thesis" in abstract)'
@@ -695,7 +693,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
                 and not re.match(r"^\d*--\d*$", record.data[Fields.PAGES])
                 and not re.match(r"^[xivXIV]*--[xivXIV]*$", record.data[Fields.PAGES])
             ):
-                self.review_manager.report_logger.info(
+                self.logger.info(
                     f" {record.data[Fields.ID]}:".ljust(self._padding, " ")
                     + f"Unusual pages: {record.data[Fields.PAGES]}"
                 )

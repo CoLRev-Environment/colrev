@@ -49,7 +49,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.review_manager = source_operation.review_manager
+
         self.search_source = search_file
         self.plos_lock = Lock()
         self.language_service = colrev.env.language_service.LanguageService()
@@ -181,10 +181,8 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         rerun: bool,
     ) -> None:
         self.api.rerun = rerun
-        # TODO : move get_last_updated() to the feed?
-        self.api.last_updated = self.review_manager.dataset.git_repo.get_last_updated(
-            plos_feed.feed_file
-        )
+
+        self.api.last_updated = plos_feed.get_last_updated()
 
         num_records = self.api.get_len_total()
         self.logger.info("Total: %s records", f"{num_records:,}")

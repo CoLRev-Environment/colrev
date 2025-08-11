@@ -302,10 +302,10 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         return record
 
-    def _add_cpid(self, *, record: colrev.record.record.Record) -> bool:
+    def _add_cpid(self, *, record: colrev.record.record.Record, path: Path) -> bool:
         # To enable retrieval based on colrev_pdf_id (as part of the global_ids)
         if Fields.FILE in record.data and "colrev_pdf_id" not in record.data:
-            pdf_path = Path(self.review_manager.path / Path(record.data[Fields.FILE]))
+            pdf_path = Path(path / Path(record.data[Fields.FILE]))
             if pdf_path.is_file():
                 try:
                     record.data.update(
@@ -319,11 +319,10 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         return False
 
     def _retrieve_record_from_local_index(
-        self,
-        record: colrev.record.record.Record,
+        self, record: colrev.record.record.Record, *, path: Path
     ) -> colrev.record.record.Record:
         # add colrev_pdf_id
-        added_colrev_pdf_id = self._add_cpid(record=record)
+        added_colrev_pdf_id = self._add_cpid(record=record, path=path)
 
         try:
             retrieved_record = self.local_index.retrieve(
@@ -389,7 +388,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                 search_source=self.search_source,
                 update_only=False,
                 prep_mode=True,
-                records=self.review_manager.dataset.load_records_dict(),
+                records=prep_operation.review_manager.dataset.load_records_dict(),
                 logger=self.logger,
                 verbose_mode=self.verbose_mode,
             )
@@ -423,8 +422,8 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             ):
                 record.prescreen_exclude(reason=FieldValues.RETRACTED)
 
-            git_repo = self.review_manager.dataset.git_repo.repo
-            cur_project_source_paths = [str(self.review_manager.path)]
+            git_repo = prep_operation.review_manager.dataset.git_repo.repo
+            cur_project_source_paths = [str(prep_operation.review_manager.path)]
             for remote in git_repo.remotes:
                 if remote.url:
                     shared_url = remote.url
@@ -433,7 +432,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                     break
 
             try:
-                self.review_manager.dataset.save_records_dict(
+                prep_operation.review_manager.dataset.save_records_dict(
                     local_index_feed.get_records(),
                 )
                 local_index_feed.save()
@@ -458,7 +457,9 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.record.record.Record:
         """Retrieve masterdata from LocalIndex based on similarity with the record provided"""
 
-        retrieved_record = self._retrieve_record_from_local_index(record)
+        retrieved_record = self._retrieve_record_from_local_index(
+            record, path=prep_operation.review_manager.path
+        )
 
         # restriction: if we don't restrict to CURATED,
         # we may have to rethink the LocalIndexSearchFeed.set_ids()
@@ -519,7 +520,6 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             if repo_path != local_base_repo:
                 continue
 
-            # self.review_manager.p_printer.pprint(item["original_record"])
             colrev.record.record.Record(item["original_record"]).print_citation_format()
             for change_item in item["changes"]:
                 if change_item[0] == "change":
