@@ -75,7 +75,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.review_manager = source_operation.review_manager
+
         if search_file:
             # Semantic Scholar as a search source
             self.search_source = search_file
@@ -243,8 +243,10 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def _get_api_key(self) -> str:
         """Method to request an API key from the settings file - or, if empty, from user input"""
-        api_key = self.review_manager.environment_manager.get_settings_by_key(
-            self.SETTINGS["api_key"]
+        api_key = (
+            colrev.env.environment_manager.EnvironmentManager().get_settings_by_key(
+                self.SETTINGS["api_key"]
+            )
         )
 
         if api_key:
@@ -253,11 +255,11 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             api_key = self._s2_UI.get_api_key()
 
         if api_key:
-            self.review_manager.environment_manager.update_registry(
+            colrev.env.environment_manager.EnvironmentManager().update_registry(
                 self.SETTINGS["api_key"], api_key
             )
         else:
-            self.review_manager.environment_manager.update_registry(
+            colrev.env.environment_manager.EnvironmentManager().update_registry(
                 self.SETTINGS["api_key"], ""
             )
 

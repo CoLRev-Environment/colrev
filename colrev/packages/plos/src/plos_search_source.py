@@ -146,11 +146,6 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
             record=record,
         )
 
-        if (
-            self.review_manager.settings.is_curated_masterdata_repo()
-        ) and Fields.CITED_BY in record.data:
-            del record.data[Fields.CITED_BY]
-
         if not prep_main_record:
             # Skip steps for feed records
             return
@@ -186,6 +181,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         rerun: bool,
     ) -> None:
         self.api.rerun = rerun
+        # TODO : move get_last_updated() to the feed?
         self.api.last_updated = self.review_manager.dataset.git_repo.get_last_updated(
             plos_feed.feed_file
         )

@@ -58,8 +58,6 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
 
         self.arxiv_lock = Lock()
 
-        self.review_manager = source_operation.review_manager
-
         _, self.email = (
             colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
         )

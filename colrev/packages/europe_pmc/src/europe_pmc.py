@@ -81,7 +81,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.review_manager = source_operation.review_manager
+
         self.search_source = search_file
         self.europe_pmc_lock = Lock()
         _, email = (

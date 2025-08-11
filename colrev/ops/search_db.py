@@ -117,9 +117,9 @@ def create_db_source(
             base_path=path,
             file_path_string=platform.replace("colrev.", ""),
         )
-    logger.debug(f"Add new DB source: {filename}")
+    logger.debug(f"Add new DB source: {filename}")  # type: ignore
 
-    logger.info(f"- Save search results in {Colors.ORANGE}{filename}{Colors.END}")
+    logger.info(f"- Save search results in {Colors.ORANGE}{filename}{Colors.END}")  # type: ignore
     input("Press Enter to complete")
 
     git_repo = GitRepo(path=path)

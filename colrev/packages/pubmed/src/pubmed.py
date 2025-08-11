@@ -67,7 +67,6 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self.pubmed_lock = Lock()
 
-        self.source_operation = source_operation
         _, self.email = (
             colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
         )
