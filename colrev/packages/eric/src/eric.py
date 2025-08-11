@@ -2,9 +2,8 @@
 """SearchSource: ERIC"""
 from __future__ import annotations
 
-import typing
-
 import logging
+import typing
 import urllib.parse
 from pathlib import Path
 from typing import Optional

@@ -2,9 +2,8 @@
 """SearchSource: JSTOR"""
 from __future__ import annotations
 
-import typing
-
 import logging
+import typing
 from pathlib import Path
 from typing import Optional
 

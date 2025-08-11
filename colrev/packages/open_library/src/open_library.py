@@ -2,10 +2,9 @@
 """Connector to OpenLibrary (API)"""
 from __future__ import annotations
 
-import typing
-
 import json
 import logging
+import typing
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional

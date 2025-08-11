@@ -2,10 +2,9 @@
 """SearchSource: Crossref"""
 from __future__ import annotations
 
-import typing
-
 import datetime
 import logging
+import typing
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional

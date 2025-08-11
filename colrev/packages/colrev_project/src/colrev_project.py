@@ -2,11 +2,10 @@
 """SearchSource: CoLRev project"""
 from __future__ import annotations
 
-import typing
-
 import logging
 import shutil
 import tempfile
+import typing
 from copy import deepcopy
 from pathlib import Path
 from typing import Optional

@@ -1,8 +1,6 @@
-import typing
-#! /usr/bin/env python
-"""SearchSource: plos"""
 import datetime
 import logging
+import typing
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
@@ -27,6 +25,8 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.plos.src import plos_api
+#! /usr/bin/env python
+"""SearchSource: plos"""
 
 
 # pylint: disable=unused-argument
