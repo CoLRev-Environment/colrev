@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import logging
 import re
+import typing
 import urllib.parse
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
 import requests
-import typing
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions

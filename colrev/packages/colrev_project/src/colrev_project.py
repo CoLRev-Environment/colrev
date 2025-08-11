@@ -103,6 +103,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         try:
             import colrev.review_manager
+
             project_review_manager = colrev.review_manager.ReviewManager(
                 path_str=str(temp_path)
             )
