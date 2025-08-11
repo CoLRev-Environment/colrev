@@ -153,7 +153,8 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     # pylint: disable=colrev-missed-constant-usage
     def prepare(
         self,
-        record: colrev.record.record.Record,
+        record: colrev.record.record_prep.PrepRecord,
+        quality_model: typing.Optional[colrev.ops.quality_model.QualityModel] = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for ACM Digital Library"""
 

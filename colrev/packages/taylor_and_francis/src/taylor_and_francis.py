@@ -2,6 +2,8 @@
 """SearchSource: Taylor and Francis"""
 from __future__ import annotations
 
+import typing
+
 import logging
 import re
 from pathlib import Path
@@ -128,7 +130,8 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def prepare(
         self,
-        record: colrev.record.record.Record,
+        record: colrev.record.record_prep.PrepRecord,
+        quality_model: typing.Optional[colrev.ops.quality_model.QualityModel] = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Taylor and Francis"""
 
