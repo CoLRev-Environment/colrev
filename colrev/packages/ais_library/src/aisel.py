@@ -10,6 +10,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import requests
+import typing
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
@@ -80,9 +81,6 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.search_source = search_file
-
-        self.review_manager = source_operation.review_manager
-        self.quality_model = self.review_manager.get_qm()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -393,7 +391,12 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
         raise NotImplementedError
 
-    def _fix_entrytype(self, *, record: colrev.record.record.Record) -> None:
+    def _fix_entrytype(
+        self,
+        *,
+        record: colrev.record.record.Record,
+        quality_model: typing.Optional[colrev.ops.quality_model.QualityModel] = None,
+    ) -> None:
         # Note : simple heuristic
         # but at the moment, AISeLibrary only indexes articles and conference papers
         if (
@@ -421,7 +424,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 record.rename_field(key=Fields.CHAPTER, new_key=Fields.TITLE)
                 record.remove_field(key=Fields.PUBLISHER)
 
-            record.change_entrytype("article", qm=self.quality_model)
+            record.change_entrytype("article", qm=quality_model)
         else:
             # Inproceedings
 
@@ -435,9 +438,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 record.rename_field(key=Fields.TITLE, new_key=Fields.BOOKTITLE)
                 record.rename_field(key=Fields.CHAPTER, new_key=Fields.TITLE)
 
-            record.change_entrytype(
-                new_entrytype="inproceedings", qm=self.quality_model
-            )
+            record.change_entrytype(new_entrytype="inproceedings", qm=quality_model)
 
             if record.data.get(Fields.BOOKTITLE, "") in [
                 "Research-in-Progress Papers",
@@ -516,10 +517,11 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
+        quality_model: typing.Optional[colrev.ops.quality_model.QualityModel] = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for the AIS electronic Library (AISeL)"""
 
-        self._fix_entrytype(record=record)
+        self._fix_entrytype(record=record, quality_model=quality_model)
         self._unify_container_titles(record=record)
         self._format_fields(record=record)
         self._exclude_complementary_material(record=record)
