@@ -212,9 +212,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
             else:
                 # Add API search without params
-                search_source = create_api_source(
-                    platform=cls.endpoint, path=path
-                )
+                search_source = create_api_source(platform=cls.endpoint, path=path)
 
         # elif search_type == SearchType.TOC:
         else:

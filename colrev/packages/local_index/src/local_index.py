@@ -234,9 +234,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         # always API search
 
         if len(params) == 0:
-            search_source = create_api_source(
-                platform=cls.endpoint, path=path
-            )
+            search_source = create_api_source(platform=cls.endpoint, path=path)
         else:
             filename = colrev.utils.get_unique_filename(
                 base_path=path,

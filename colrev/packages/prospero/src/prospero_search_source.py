@@ -24,7 +24,6 @@ import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
-from colrev.ops.search import Search
 from colrev.ops.search_api_feed import create_api_source
 
 

@@ -96,9 +96,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         if search_type == SearchType.API:
             # Check for params being empty and initialize if needed
             if len(params_dict) == 0:
-                search_source = create_api_source(
-                    platform=cls.endpoint, path=path
-                )
+                search_source = create_api_source(platform=cls.endpoint, path=path)
                 # Search title per default (other fields may be supported later)
                 search_source.search_string["query"] = {
                     "title": search_source.search_string["query"]

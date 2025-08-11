@@ -115,9 +115,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
                     print("Invalid search parameter format")
 
         if len(params_dict) == 0:
-            search_source = create_api_source(
-                platform="colrev.github", path=path
-            )
+            search_source = create_api_source(platform="colrev.github", path=path)
 
             # Checking where to search
             search_source.search_string["scope"] = cls._choice_scope()

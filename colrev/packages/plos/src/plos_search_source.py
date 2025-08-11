@@ -64,9 +64,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         return result
 
     @classmethod
-    def _select_search_type(
-        cls, params_dict: dict
-    ) -> SearchType:
+    def _select_search_type(cls, params_dict: dict) -> SearchType:
         if "query" in params_dict:
             search_type = SearchType.API
         elif Fields.URL in params_dict:

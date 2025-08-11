@@ -85,9 +85,7 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
                     params_dict[key] = value
 
         if len(params_dict) == 0:
-            search_source = create_api_source(
-                platform=cls.endpoint, path=path
-            )
+            search_source = create_api_source(platform=cls.endpoint, path=path)
 
         # pylint: disable=colrev-missed-constant-usage
         elif "https://api.unpaywall.org/v2/search" in params_dict["url"]:

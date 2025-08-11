@@ -90,9 +90,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
 
         # Note : always API search
         if len(params_dict) == 0:
-            search_source = create_api_source(
-                platform=cls.endpoint, path=path
-            )
+            search_source = create_api_source(platform=cls.endpoint, path=path)
 
         # pylint: disable=colrev-missed-constant-usage
         else:
