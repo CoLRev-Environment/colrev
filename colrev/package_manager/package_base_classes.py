@@ -92,7 +92,7 @@ class SearchSourcePackageBaseClass(ABC):
     @classmethod
     @abstractmethod
     def add_endpoint(
-        cls, operation: colrev.ops.search.Search, params: str
+        cls, params: str, path: Path, logger: Optional[logging.Logger] = None
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add the SearchSource as an endpoint."""
 

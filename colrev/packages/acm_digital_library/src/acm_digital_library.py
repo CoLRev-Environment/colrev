@@ -63,12 +63,12 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        path = operation.review_manager.path
         params_dict = {}
         if params:
             for item in params.split(";"):
@@ -85,7 +85,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 platform=cls.endpoint,
                 params=params_dict,
                 add_to_git=True,
-                logger=operation.review_manager.logger,
+                logger=logger,
             )
         else:
             raise NotImplementedError
