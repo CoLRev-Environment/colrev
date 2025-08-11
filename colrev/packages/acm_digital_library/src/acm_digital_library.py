@@ -62,10 +62,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def add_endpoint(
-        cls,
-        params: str,
-        path: Path,
-        logger: Optional[logging.Logger] = None
+        cls, params: str, path: Path, logger: Optional[logging.Logger] = None
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
