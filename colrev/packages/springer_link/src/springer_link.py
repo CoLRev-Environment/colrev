@@ -14,6 +14,7 @@ import pandas as pd
 import requests
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
@@ -61,9 +62,8 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.review_manager = source_operation.review_manager
         self.search_source = search_file
-        self.source_operation = source_operation
+
         self.language_service = colrev.env.language_service.LanguageService()
 
     @classmethod
@@ -84,8 +84,9 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
@@ -96,16 +97,16 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if search_type == SearchType.DB:
             search_source = create_db_source(
-                path=operation.review_manager.path,
+                path=path,
                 platform=cls.endpoint,
                 params=params_dict,
                 add_to_git=True,
-                logger=operation.review_manager.logger,
+                logger=logger,
             )
 
         elif search_type == SearchType.API:
             filename = colrev.utils.get_unique_filename(
-                base_path=operation.review_manager.path,
+                base_path=path,
                 file_path_string="springer_link",
             )
             search_source = colrev.search_file.ExtendedSearchFile(
@@ -116,14 +117,15 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
                 comment="",
             )
             # params_dict.update(vars(search_source))
-            instance = cls(source_operation=operation, search_file=search_source)
-            instance.api_ui()
-            search_source.search_string = instance._add_constraints()
+
+            # TODO : reactivate the following once the base-class is updated
+            # (no longer contains the operation as a parameter)
+            # instance = cls(search_file=search_source)
+            # instance.api_ui()
+            # search_source.search_string = instance._add_constraints()
 
         else:
             raise NotImplementedError
-
-        operation.add_source_and_search(search_source)
         return search_source
 
     def search(self, rerun: bool) -> None:
@@ -482,8 +484,10 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def get_api_key(self) -> str:
         """Get API key from settings"""
-        api_key = self.review_manager.environment_manager.get_settings_by_key(
-            self.SETTINGS["api_key"]
+        api_key = (
+            colrev.env.environment_manager.EnvironmentManager().get_settings_by_key(
+                key="springer_api_key"
+            )
         )
         if api_key:
             return api_key
@@ -520,15 +524,15 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         questions = [
             inquirer.Text(
-                "github_api_key",
+                "springer_api_key",
                 message="Enter your Springer Link API key",
                 validate=self._is_springer_link_api_key,
             ),
         ]
         answers = inquirer.prompt(questions)
-        input_key = answers["github_api_key"]
-        self.review_manager.environment_manager.update_registry(
-            self.SETTINGS["api_key"], input_key
+        input_key = answers["springer_api_key"]
+        colrev.env.environment_manager.EnvironmentManager().update_registry(
+            key="springer_api_key", value=input_key
         )
 
     @classmethod

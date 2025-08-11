@@ -742,13 +742,14 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         filename = utils.get_unique_filename(
-            base_path=operation.review_manager.path,
+            base_path=path,
             file_path_string="files",
         )
         # pylint: disable=no-value-for-parameter
@@ -759,7 +760,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             search_string="",
             comment="",
         )
-        operation.add_source_and_search(search_source)
         return search_source
 
     @classmethod

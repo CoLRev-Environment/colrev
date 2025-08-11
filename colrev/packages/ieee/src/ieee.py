@@ -89,7 +89,10 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def add_endpoint(
-        cls, operation: colrev.ops.search.Search, params: str
+        cls,
+        params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
@@ -108,9 +111,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = create_api_source(
-                    platform=cls.endpoint, path=operation.review_manager.path
-                )
+                search_source = create_api_source(platform=cls.endpoint, path=path)
 
             # pylint: disable=colrev-missed-constant-usage
             elif (
@@ -134,7 +135,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
                 last_value = list(search_parameters.values())[-1]
 
                 filename = colrev.utils.get_unique_filename(
-                    base_path=operation.review_manager.path,
+                    base_path=path,
                     file_path_string=f"ieee_{last_value}",
                 )
 
@@ -151,16 +152,14 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         elif search_type == SearchType.DB:
             search_source = create_db_source(
-                path=operation.review_manager.path,
+                path=path,
                 platform=cls.endpoint,
                 params=params_dict,
                 add_to_git=True,
-                logger=operation.review_manager.logger,
+                logger=logger,
             )
         else:
             raise NotImplementedError
-
-        operation.add_source_and_search(search_source)
         return search_source
 
     def search(self, rerun: bool) -> None:

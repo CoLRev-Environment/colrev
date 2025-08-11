@@ -75,15 +75,16 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         # Always API search
 
         filename = colrev.utils.get_unique_filename(
-            base_path=operation.review_manager.path,
+            base_path=path,
             file_path_string=params.split("/")[-1],
         )
         search_source = colrev.search_file.ExtendedSearchFile(
@@ -94,7 +95,6 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
             search_parameters={"scope": {"url": params}},
             comment="",
         )
-        operation.add_source_and_search(search_source)
         return search_source
 
     def _load_records_to_import(self, *, project_url: str, project_name: str) -> dict:

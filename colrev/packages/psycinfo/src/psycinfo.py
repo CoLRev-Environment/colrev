@@ -63,21 +63,21 @@ class PsycINFOSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {params.split("=")[0]: params.split("=")[1]}
 
         search_source = create_db_source(
-            path=operation.review_manager.path,
+            path=path,
             platform=cls.endpoint,
             params=params_dict,
             add_to_git=True,
-            logger=operation.review_manager.logger,
+            logger=logger,
         )
-        operation.add_source_and_search(search_source)
         return search_source
 
     def search(self, rerun: bool) -> None:

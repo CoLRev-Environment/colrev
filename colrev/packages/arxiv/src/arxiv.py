@@ -73,8 +73,9 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
@@ -89,9 +90,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
 
         # Note : always API search
         if len(params_dict) == 0:
-            search_source = create_api_source(
-                platform=cls.endpoint, path=operation.review_manager.path
-            )
+            search_source = create_api_source(platform=cls.endpoint, path=path)
 
         # pylint: disable=colrev-missed-constant-usage
         else:
@@ -103,7 +102,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
             query = query[: query.find("&searchtype")]
 
             filename = colrev.utils.get_unique_filename(
-                base_path=operation.review_manager.path,
+                base_path=path,
                 file_path_string="arxiv",
             )
 
@@ -115,8 +114,6 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
                 search_parameters={"query": query},
                 comment="",
             )
-
-        operation.add_source_and_search(search_source)
         return search_source
 
     def validate_source(

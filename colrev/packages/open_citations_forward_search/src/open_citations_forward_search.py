@@ -194,13 +194,13 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint"""
 
         search_source = cls.get_default_source()
-        operation.add_source_and_search(search_source)
         return search_source
 
     def prep_link_md(

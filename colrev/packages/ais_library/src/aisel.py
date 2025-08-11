@@ -165,8 +165,9 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         params_dict = {}
@@ -184,11 +185,11 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if search_type == SearchType.DB:
             search_source = create_db_source(
-                path=operation.review_manager.path,
+                path=path,
                 platform=cls.endpoint,
                 params=params_dict,
                 add_to_git=True,
-                logger=operation.review_manager.logger,
+                logger=logger,
             )
 
         # pylint: disable=colrev-missed-constant-usage
@@ -198,7 +199,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 assert host and host.endswith("aisel.aisnet.org")
                 q_params = cls._parse_query(query=params_dict["url"])
                 filename = colrev.utils.get_unique_filename(
-                    base_path=operation.review_manager.path,
+                    base_path=path,
                     file_path_string="ais",
                 )
                 search_source = colrev.search_file.ExtendedSearchFile(
@@ -211,15 +212,11 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
             else:
                 # Add API search without params
-                search_source = create_api_source(
-                    platform=cls.endpoint, path=operation.review_manager.path
-                )
+                search_source = create_api_source(platform=cls.endpoint, path=path)
 
         # elif search_type == SearchType.TOC:
         else:
             raise NotImplementedError
-
-        operation.add_source_and_search(search_source)
         return search_source
 
     def _validate_source(self) -> None:

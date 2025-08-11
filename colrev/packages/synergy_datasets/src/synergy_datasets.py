@@ -121,8 +121,9 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
@@ -139,7 +140,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         assert "dataset" in params_dict
         dataset = params_dict["dataset"]
         filename = colrev.utils.get_unique_filename(
-            base_path=operation.review_manager.path,
+            base_path=path,
             file_path_string=f"SYNERGY_{dataset.replace('/', '_').replace('_ids.csv', '')}",
         )
         search_source = colrev.search_file.ExtendedSearchFile(
@@ -149,7 +150,6 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
             search_string=f"dataset={dataset}",
             comment="",
         )
-        operation.add_source_and_search(search_source)
         return search_source
 
     def _load_dataset(self) -> pd.DataFrame:
