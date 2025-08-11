@@ -51,7 +51,6 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.search_source = search_file
-        self.review_manager = source_operation.review_manager
 
     # pylint: disable=colrev-missed-constant-usage
     def _validate_source(self) -> None:
@@ -103,7 +102,8 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
         Repo.clone_from(project_url, temp_path, depth=1)
 
         try:
-            project_review_manager = self.review_manager.get_connecting_review_manager(
+            import colrev.review_manager
+            project_review_manager = colrev.review_manager.ReviewManager(
                 path_str=str(temp_path)
             )
         except colrev_exceptions.RepoSetupError as exc:
@@ -175,8 +175,6 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Run a search of a CoLRev project"""
 
         # pylint: disable=too-many-locals
-        # pdf_get_operation =
-        # self.review_manager.get_pdf_get_operation(notify_state_transition_operation=False)
 
         self._validate_source()
 

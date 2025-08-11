@@ -71,13 +71,10 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.review_manager = source_operation.review_manager
         self.search_source = search_file
 
         self.local_index_lock = Lock()
-
         self.origin_prefix = self.search_source.get_origin_prefix()
-
         self.local_index = colrev.env.local_index.LocalIndex(
             verbose_mode=self.verbose_mode
         )
@@ -858,7 +855,8 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         # TBD: other modes of accepting changes?
         # e.g., only-metadata, no-changes, all(including optional fields)
-        check_review_manager = self.review_manager.get_connecting_review_manager(
+        import colrev.review_manager
+        check_review_manager = colrev.review_manager.ReviewManager(
             path_str=source_url
         )
         check_operation = colrev.ops.check.CheckOperation(check_review_manager)
