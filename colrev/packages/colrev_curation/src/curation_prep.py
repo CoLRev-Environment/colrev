@@ -139,6 +139,8 @@ class CurationPrep(base_classes.PrepPackageBaseClass):
     ) -> colrev.record.record.Record:
         """Prepare records in a CoLRev curation"""
 
+        record.data.pop(Fields.CITED_BY, None)
+
         if record.data[Fields.STATUS] == RecordState.rev_prescreen_excluded:
             return record
 

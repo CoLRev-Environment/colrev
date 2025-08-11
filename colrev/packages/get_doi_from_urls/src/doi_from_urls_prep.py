@@ -101,7 +101,6 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
             )
             doi_connector.DOIConnector.retrieve_doi_metadata(
                 record=retrieved_record,
-                is_curated_repo=self.review_manager.settings.is_curated_masterdata_repo(),
                 logger=self.logger,
                 timeout=self.prep_operation.timeout,
             )

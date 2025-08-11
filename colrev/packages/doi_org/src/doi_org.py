@@ -36,7 +36,6 @@ class DOIConnector:
         cls,
         *,
         record: colrev.record.record_prep.PrepRecord,
-        is_curated_repo: bool,
         timeout: int = 60,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.record.record.Record:
@@ -78,10 +77,6 @@ class DOIConnector:
             retrieved_record = record_transformer.json_to_record(item=retrieved_json)
             retrieved_record.add_provenance_all(source=url)
             record.merge(retrieved_record, default_source=url)
-            record.set_masterdata_complete(
-                source=url,
-                masterdata_repository=is_curated_repo,
-            )
             record.set_status(RecordState.md_prepared)
             if FieldValues.RETRACTED in record.data.get("warning", ""):
                 record.prescreen_exclude(reason=FieldValues.RETRACTED)

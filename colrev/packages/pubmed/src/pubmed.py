@@ -250,11 +250,8 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                     default_source=retrieved_record.data[Fields.ORIGIN][0],
                 )
 
-                record.set_masterdata_complete(
-                    source=retrieved_record.data[Fields.ORIGIN][0],
-                    masterdata_repository=self.review_manager.settings.is_curated_repo(),
-                )
                 record.set_status(RecordState.md_prepared)
+
                 if save_feed:
                     self.review_manager.dataset.save_records_dict(
                         pubmed_feed.get_records(),

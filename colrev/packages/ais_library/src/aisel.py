@@ -80,9 +80,9 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.search_source = search_file
+
         self.review_manager = source_operation.review_manager
         self.quality_model = self.review_manager.get_qm()
-        self.source_operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

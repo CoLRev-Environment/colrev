@@ -162,10 +162,6 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
             record.remove_field(key="warning")
         else:
             assert "" != plos_source
-            record.set_masterdata_complete(
-                source=plos_source,
-                masterdata_repository=self.review_manager.settings.is_curated_repo(),
-            )
             record.set_status(RecordState.md_prepared)
 
     def _restore_url(

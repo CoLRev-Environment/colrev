@@ -112,6 +112,19 @@ class Prep(colrev.process.operation.Operation):
         self.polish = polish
         self._cpu = cpu
 
+        self.source_prefix_masterdata_complete = [
+            s.get_origin_prefix()
+            for s in self.review_manager.settings.sources
+            if s.platform
+            in [
+                "colrev.crossref",
+                "colrev.pubmed",
+                "colrev.dblp",
+                "colrev.europe_pmc",
+                "colrev.plos",
+            ]
+        ]
+
         # Note: for unit testing, we use a simple loop (instead of parallel)
         # to ensure that the IDs of feed records don't change
         unit_testing = "test_prep" == inspect.stack()[1][3]
@@ -504,6 +517,17 @@ class Prep(colrev.process.operation.Operation):
         preparation_record.change_entrytype(
             new_entrytype=record.data[Fields.ENTRYTYPE], qm=self.quality_model
         )
+        complete_sources = [
+            o
+            for o in preparation_record.data[Fields.ORIGIN]
+            if o.split("/")[0] in self.source_prefix_masterdata_complete
+        ]
+        if complete_sources:
+            preparation_record.set_masterdata_complete(
+                source=complete_sources[0],
+                masterdata_repository=self.review_manager.settings.is_curated_repo(),
+            )
+
         preparation_record.run_quality_model(
             self.quality_model, set_prepared=not self.polish
         )

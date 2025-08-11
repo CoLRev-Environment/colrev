@@ -228,11 +228,6 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
             record=record,
         )
 
-        if (
-            self.review_manager.settings.is_curated_masterdata_repo()
-        ) and Fields.CITED_BY in record.data:
-            del record.data[Fields.CITED_BY]
-
         if not prep_main_record:
             # Skip steps for feed records
             return
@@ -243,11 +238,6 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
             record.prescreen_exclude(reason=FieldValues.RETRACTED)
             record.remove_field(key="warning")
         else:
-            assert "" != crossref_source
-            record.set_masterdata_complete(
-                source=crossref_source,
-                masterdata_repository=self.review_manager.settings.is_curated_repo(),
-            )
             record.set_status(RecordState.md_prepared)
 
     def _validate_api_params(self) -> None:
@@ -437,17 +427,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record_prep.PrepRecord:
         """Source-specific preparation for Crossref"""
-        # TODO: cover in colrev.curation
-        # source_item = [
-        #     x
-        #     for x in record.data[Fields.ORIGIN]
-        #     if str(source.filename).replace("data/search/", "") in x
-        # ]
-        # if source_item:
-        #     record.set_masterdata_complete(
-        #         source=source_item[0],
-        #         masterdata_repository=self.review_manager.settings.is_curated_repo(),
-        #     )
+
         return record
 
     def _get_masterdata_record(

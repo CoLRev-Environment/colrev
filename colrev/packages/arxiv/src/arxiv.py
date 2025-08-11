@@ -53,12 +53,12 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.review_manager = source_operation.review_manager
         self.search_source = search_file
 
         self.arxiv_lock = Lock()
 
-        self.operation = source_operation
+        self.review_manager = source_operation.review_manager
+
         self.quality_model = self.review_manager.get_qm()
         _, self.email = self.review_manager.get_committer()
 

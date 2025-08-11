@@ -81,7 +81,9 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
+
         self.review_manager = source_operation.review_manager
+
         self.search_source = search_file
         self.dblp_lock = Lock()
         self.origin_prefix = self.search_source.get_origin_prefix()
@@ -432,10 +434,6 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 record.merge(
                     retrieved_record,
                     default_source=retrieved_record.data[Fields.ORIGIN][0],
-                )
-                record.set_masterdata_complete(
-                    source=retrieved_record.data[Fields.ORIGIN][0],
-                    masterdata_repository=self.review_manager.settings.is_curated_repo(),
                 )
                 record.set_status(RecordState.md_prepared)
                 if "Withdrawn (according to DBLP)" in record.data.get(

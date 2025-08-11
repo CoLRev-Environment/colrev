@@ -140,14 +140,6 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                     record=record, retrieved_record=retrieved_record
                 )
 
-                source = (
-                    f"{self._SOURCE_URL}{retrieved_record.data[Fields.EUROPE_PMC_ID]}"
-                )
-                retrieved_record.set_masterdata_complete(
-                    source=source,
-                    masterdata_repository=self.review_manager.settings.is_curated_repo(),
-                )
-
                 if not most_similar_only:
                     record_list.append(retrieved_record)
 
@@ -221,10 +213,6 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 default_source=retrieved_record.data[Fields.ORIGIN][0],
             )
 
-            record.set_masterdata_complete(
-                source=retrieved_record.data[Fields.ORIGIN][0],
-                masterdata_repository=prep_operation.review_manager.settings.is_curated_repo(),
-            )
             record.set_status(RecordState.md_prepared)
 
             prep_operation.review_manager.dataset.save_records_dict(
@@ -317,12 +305,6 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                     if Fields.TITLE not in retrieved_record.data:
                         self.logger.warning(f"Skipped record: {retrieved_record.data}")
                         continue
-
-                    source = f"{self._SOURCE_URL}{retrieved_record.data[Fields.EUROPE_PMC_ID]}"
-                    retrieved_record.set_masterdata_complete(
-                        source=source,
-                        masterdata_repository=self.review_manager.settings.is_curated_repo(),
-                    )
 
                     europe_pmc_feed.add_update_record(retrieved_record)
 
