@@ -9,6 +9,7 @@ from typing import Optional
 import requests
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -50,7 +51,9 @@ class CiteAsPrep(base_classes.PrepPackageBaseClass):
             prep_operation.review_manager.settings.is_curated_masterdata_repo()
         )
         self.session = colrev.utils.get_cached_session()
-        _, self.email = prep_operation.review_manager.get_committer()
+        _, self.email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
 
     def _cite_as_json_to_record(
         self, *, json_str: str, url: str

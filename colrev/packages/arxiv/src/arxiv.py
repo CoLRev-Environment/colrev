@@ -13,6 +13,7 @@ import feedparser
 import requests
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
@@ -59,8 +60,9 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
 
         self.review_manager = source_operation.review_manager
 
-        self.quality_model = self.review_manager.get_qm()
-        _, self.email = self.review_manager.get_committer()
+        _, self.email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

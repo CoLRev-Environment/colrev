@@ -18,6 +18,7 @@ import git
 from git.exc import InvalidGitRepositoryError
 
 import colrev.env.docker_manager
+import colrev.env.environment_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
@@ -341,7 +342,9 @@ class Initializer:
         self.review_manager = colrev.review_manager.ReviewManager()
         settings = self.review_manager.settings
 
-        committer, email = self.review_manager.get_committer()
+        committer, email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
         settings.project.authors = [
             colrev.settings.Author(
                 name=committer,

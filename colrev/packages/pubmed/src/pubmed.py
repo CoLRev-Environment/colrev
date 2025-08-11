@@ -12,6 +12,7 @@ import pandas as pd
 import requests
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
@@ -67,7 +68,9 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.pubmed_lock = Lock()
 
         self.source_operation = source_operation
-        _, self.email = self.review_manager.get_committer()
+        _, self.email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

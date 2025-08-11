@@ -9,6 +9,7 @@ from typing import Optional
 import requests
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
@@ -45,7 +46,10 @@ class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
-        _, email = prep_operation.review_manager.get_committer()
+
+        _, email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
         self.headers = {"user-agent": f"{__name__} (mailto:{email})"}
         self.session = colrev.utils.get_cached_session()
 

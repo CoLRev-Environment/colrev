@@ -13,6 +13,7 @@ import requests
 from pydantic import BaseModel
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
@@ -81,13 +82,15 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
+        self.search_source = search_file
 
         self.review_manager = source_operation.review_manager
 
-        self.search_source = search_file
         self.dblp_lock = Lock()
         self.origin_prefix = self.search_source.get_origin_prefix()
-        _, self.email = self.review_manager.get_committer()
+        _, self.email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

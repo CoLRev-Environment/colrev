@@ -20,12 +20,10 @@ from pydantic import BaseModel
 from pydantic import Field
 
 import colrev.env.docker_manager
+import colrev.env.environment_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.check
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev import utils
 from colrev.constants import Colors
@@ -222,7 +220,9 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 # mail = git_repo.git.show("-s", "--format=%ae", commit.hexsha)
             author = ", ".join(dict(Counter(commits_authors)))
         except ValueError:
-            author, _ = self.review_manager.get_committer()
+            author, _ = (
+                colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+            )
         return author
 
     def _get_data_page_missing(self, *, paper: Path, record_id_list: list) -> list:

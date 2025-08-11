@@ -10,16 +10,14 @@ from typing import Optional
 
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.env.utils
-import colrev.ops.pdf_get
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
-
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=unused-argument
@@ -66,7 +64,9 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
         subject = f"Copy of a PDF ({record.data['ID']})"
 
         author_name = record.data.get(Fields.AUTHOR, "").split(",")[0]
-        signed, _ = self.review_manager.get_committer()
+        signed, _ = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
 
         template = colrev.env.utils.get_template(
             "packages/colrev_cli_pdf_get_man/src/pdf_get_man_mail.txt"

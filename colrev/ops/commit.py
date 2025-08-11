@@ -12,6 +12,7 @@ from pathlib import Path
 import git
 import gitdb.exc
 
+import colrev.env.environment_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 
@@ -163,7 +164,9 @@ class Commit:
             self.review_manager.update_status_yaml()
             self.review_manager.dataset.git_repo.add_changes(status_yml)
 
-        committer, email = self.review_manager.get_committer()
+        committer, email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
 
         if self.manual_author:
             git_author = git.Actor(committer, email)

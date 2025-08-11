@@ -95,7 +95,9 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.record.record.Record:
         try:
 
-            _, email = self.review_manager.get_committer()
+            _, email = (
+                colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+            )
             api = open_alex_api.OpenAlexAPI(email=email)
             retrieved_record = api.get_record(
                 open_alex_id=record.data["colrev.open_alex.id"]

@@ -11,6 +11,7 @@ from typing import Optional
 import requests
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
@@ -58,7 +59,9 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="sqlite-requests-cache"
             ) from exc
-        _, self.email = prep_operation.review_manager.get_committer()
+        _, self.email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
 
     def prepare(
         self, record: colrev.record.record_prep.PrepRecord

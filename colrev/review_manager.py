@@ -150,10 +150,6 @@ class ReviewManager:
         upgrade_operation = self.get_upgrade()
         upgrade_operation.main()
 
-    def get_committer(self) -> typing.Tuple[str, str]:
-        """Get the committer name and email"""
-        return self.environment_manager.get_name_mail_from_git()
-
     def _get_project_home_dir(self, *, path_str: typing.Optional[str] = None) -> Path:
         if path_str:
             original_dir = Path(path_str)

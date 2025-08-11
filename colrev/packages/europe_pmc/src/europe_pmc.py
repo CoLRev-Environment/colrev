@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from pydantic import Field
 from rapidfuzz import fuzz
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
@@ -83,6 +84,10 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.review_manager = source_operation.review_manager
         self.search_source = search_file
         self.europe_pmc_lock = Lock()
+        _, email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
+        self.email = email
 
     # @classmethod
     # def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
@@ -121,7 +126,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         try:
             api = europe_pmc_api.EPMCAPI(
                 params={"query": quote(record_input.data[Fields.TITLE])},
-                email=self.review_manager.get_committer()[1],
+                email=self.email,
                 session=colrev.utils.get_cached_session(),
             )
 
@@ -292,10 +297,9 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
 
         try:
-            _, email = self.review_manager.get_committer()
             api = europe_pmc_api.EPMCAPI(
                 params=self.search_source.search_string,
-                email=email,
+                email=self.email,
                 session=colrev.utils.get_cached_session(),
             )
 
