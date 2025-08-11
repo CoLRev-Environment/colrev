@@ -67,7 +67,7 @@ def test_search_add_source(  # type: ignore
         source_operation=search_operation, search_file=add_source
     )
     query = "issn=1234-5678"
-    endpoint.add_endpoint(search_operation, query)  # type: ignore
+    endpoint.add_endpoint(query, path=base_repo_review_manager.path)
 
     search_operation.review_manager.settings.sources.pop()
 

@@ -375,7 +375,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "PDF Backward Search not automated."
             )
 
-        records = self.review_manager.dataset.load_records_dict()
+        records = colrev.loader.load_utils.load(filename=Path("data/records.bib"))
 
         if not records:
             self.logger.info("No records imported. Cannot run backward search yet.")
@@ -396,7 +396,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         }
 
         all_references = self._get_all_references(
-            selected_records=selected_records, review_manager=self.review_manager
+            selected_records=selected_records, path=self.review_manager.path
         )
 
         df_all_references = self._deduplicate_all_references(all_references)
@@ -454,12 +454,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         return result
 
     @classmethod
-    def _get_all_references(
-        cls,
-        *,
-        selected_records: dict,
-        review_manager: colrev.review_manager.ReviewManager,
-    ) -> dict:
+    def _get_all_references(cls, *, selected_records: dict, path: Path) -> dict:
 
         all_references = {}
 
@@ -468,7 +463,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
                 print(f" run backward search for {record[Fields.ID]}")
 
-                pdf_path = review_manager.path / Path(record[Fields.FILE])
+                pdf_path = path / Path(record[Fields.FILE])
                 tei = colrev.env.tei_parser.TEIParser(
                     pdf_path=pdf_path,
                     tei_path=colrev.record.record.Record(record).get_tei_filename(),
@@ -491,9 +486,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         return all_references
 
     @classmethod
-    def _get_params_from_ui(
-        cls, *, params: dict, review_manager: colrev.review_manager.ReviewManager
-    ) -> None:
+    def _get_params_from_ui(cls, *, params: dict, path: Path) -> None:
 
         question = "Do you want to create an overview for min_ref_freq and min_intext_citations?"
         create_overview = inquirer.confirm(question)
@@ -507,7 +500,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         # Assuming there's a function to create an overview, it would be called here.
         # For example: cls.create_min_intext_citations_overview(params)
 
-        records = review_manager.dataset.load_records_dict()
+        records = colrev.loader.load_utils.load(filename=Path("data/records.bib"))
         selected_records = {
             record_id: record
             for record_id, record in records.items()
@@ -519,7 +512,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         }
 
         all_references = cls._get_all_references(
-            selected_records=selected_records, review_manager=review_manager
+            selected_records=selected_records, path=path
         )
 
         df_all_references = cls._deduplicate_all_references(all_references)
@@ -559,9 +552,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
                 params_dict[key] = value
 
         if "min_intext_citations" not in params_dict:
-            cls._get_params_from_ui(
-                params=params_dict, review_manager=operation.review_manager
-            )
+            cls._get_params_from_ui(params=params_dict, path=path)
         else:
             assert params_dict["min_intext_citations"].isdigit()
             assert params_dict["min_ref_freq"].isdigit()

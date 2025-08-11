@@ -114,7 +114,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def _add_toc_interactively(
-        cls, *, operation: colrev.ops.search.Search
+        cls, *, path: Path
     ) -> colrev.search_file.ExtendedSearchFile:
 
         j_name = input("Enter journal name to lookup the ISSN:")
@@ -189,7 +189,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         elif search_type == SearchType.TOC:
             if len(params_dict) == 0:
-                search_source = cls._add_toc_interactively(operation=operation)
+                search_source = cls._add_toc_interactively(path=path)
             else:
                 filename = colrev.utils.get_unique_filename(
                     base_path=path,
