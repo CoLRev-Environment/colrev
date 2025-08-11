@@ -2,6 +2,8 @@
 """SearchSource: Crossref"""
 from __future__ import annotations
 
+import typing
+
 import datetime
 import logging
 from multiprocessing import Lock
@@ -422,7 +424,8 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-    ) -> colrev.record.record_prep.PrepRecord:
+        quality_model: typing.Optional[colrev.ops.quality_model.QualityModel] = None,
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for Crossref"""
 
         return record

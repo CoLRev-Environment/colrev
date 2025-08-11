@@ -356,7 +356,8 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-    ) -> colrev.record.record_prep.PrepRecord:
+        quality_model: typing.Optional[colrev.ops.quality_model.QualityModel] = None,
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for DBLP"""
 
         if record.data.get(Fields.AUTHOR, FieldValues.UNKNOWN) != FieldValues.UNKNOWN:

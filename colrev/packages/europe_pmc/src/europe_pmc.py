@@ -410,7 +410,8 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def prepare(
         self,
-        record: colrev.record.record.Record,
+        record: colrev.record.record_prep.PrepRecord,
+        quality_model: typing.Optional[colrev.ops.quality_model.QualityModel] = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Europe PMC"""
         record.data[Fields.AUTHOR].rstrip(".")
