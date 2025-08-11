@@ -56,23 +56,23 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def add_endpoint(
-        cls, operation: Search, params: str
+        cls,
+        params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Adds Prospero as a search source endpoint based on user-provided parameters."""
         if len(params) == 0:
             # TODO : test prospero search
-            search_source = create_api_source(
-                platform=cls.endpoint, path=operation.review_manager.path
-            )
+            search_source = create_api_source(platform=cls.endpoint, path=path)
             search_source.search_string[Fields.URL] = (
                 cls.db_url + "search?" + search_source.search_string + "#searchadvanced"
             )
             search_source.version = "0.1.0"
-            operation.add_source_and_search(search_source)
             return search_source
 
         filename = colrev.utils.get_unique_filename(
-            base_path=operation.review_manager.path,
+            base_path=path,
             file_path_string="prospero_results",
         )
 
@@ -83,7 +83,6 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
             search_string=params,
             comment="Search source for Prospero protocols",
         )
-        operation.add_source_and_search(new_search_source)
         return new_search_source
 
     # pylint: disable=unused-argument

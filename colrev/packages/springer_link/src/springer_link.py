@@ -84,8 +84,9 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
@@ -96,16 +97,16 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if search_type == SearchType.DB:
             search_source = create_db_source(
-                path=operation.review_manager.path,
+                path=path,
                 platform=cls.endpoint,
                 params=params_dict,
                 add_to_git=True,
-                logger=operation.review_manager.logger,
+                logger=logger,
             )
 
         elif search_type == SearchType.API:
             filename = colrev.utils.get_unique_filename(
-                base_path=operation.review_manager.path,
+                base_path=path,
                 file_path_string="springer_link",
             )
             search_source = colrev.search_file.ExtendedSearchFile(
@@ -122,8 +123,6 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         else:
             raise NotImplementedError
-
-        operation.add_source_and_search(search_source)
         return search_source
 
     def search(self, rerun: bool) -> None:

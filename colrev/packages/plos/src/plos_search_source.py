@@ -65,7 +65,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def _select_search_type(
-        cls, operation: colrev.ops.search.Search, params_dict: dict
+        cls, params_dict: dict
     ) -> SearchType:
         if "query" in params_dict:
             search_type = SearchType.API
@@ -81,20 +81,19 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)
         params:
         - search_file="..." to add a DB search
         """
         params_dict: dict = {}
-        search_type = cls._select_search_type(operation, params_dict)
+        search_type = cls._select_search_type(params_dict)
         if search_type == SearchType.API:
             if len(params) == 0:
-                search_source = create_api_source(
-                    platform=cls.endpoint, path=operation.review_manager.path
-                )
+                search_source = create_api_source(platform=cls.endpoint, path=path)
 
                 search_source.search_string[Fields.URL] = (
                     cls._api_url
@@ -107,8 +106,6 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
 
                 search_source.search_string["version"] = "0.1.0"
 
-                operation.add_source_and_search(search_source)
-
                 return search_source
 
             if Fields.URL in params_dict:
@@ -117,7 +114,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
                 query = params_dict
 
             filename = colrev.utils.get_unique_filename(
-                base_path=operation.review_manager.path,
+                base_path=path,
                 file_path_string="plos",
             )
 
@@ -128,8 +125,6 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
                 search_string=query["url"],
                 comment="",
             )
-
-            operation.add_source_and_search(search_source)
 
             return search_source
 

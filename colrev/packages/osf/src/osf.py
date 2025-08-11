@@ -76,7 +76,10 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def add_endpoint(
-        cls, operation: colrev.ops.search.Search, params: str
+        cls,
+        params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
 
@@ -94,7 +97,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
             # Check for params being empty and initialize if needed
             if len(params_dict) == 0:
                 search_source = create_api_source(
-                    platform=cls.endpoint, path=operation.review_manager.path
+                    platform=cls.endpoint, path=path
                 )
                 # Search title per default (other fields may be supported later)
                 search_source.search_string["query"] = {
@@ -114,7 +117,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
                 }
                 last_value = list(search_parameters.values())[-1]
                 filename = colrev.utils.get_unique_filename(
-                    base_path=operation.review_manager.path,
+                    base_path=path,
                     file_path_string=f"osf_{last_value}",
                 )
                 search_source = colrev.search_file.ExtendedSearchFile(
@@ -129,7 +132,6 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
             raise NotImplementedError("Unsupported search type.")
 
         # Adding the source and performing the search
-        operation.add_source_and_search(search_source)
         return search_source
 
     def _get_api_key(self) -> str:
