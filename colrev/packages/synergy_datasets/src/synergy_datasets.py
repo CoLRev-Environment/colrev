@@ -61,7 +61,6 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.review_manager = source_operation.review_manager
         self.search_source = search_file
 
     @classmethod
@@ -236,11 +235,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
                 + f"- openalex_id: {', '.join(decisions['openalex_id'])}"
                 + f"{Colors.END}"
             )
-            if self.review_manager.force_mode:
-                print(msg)
-            else:
-                print("Exiting. Use force-mode to retrieve anyway.")
-                raise colrev_exceptions.SearchSourceException(msg)
+            print(msg)
 
     def _prep_record(self, *, record: dict, ind: int) -> None:
         record[Fields.ID] = ind
@@ -346,7 +341,6 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         self._check_quality(decisions=decisions)
         self.logger.info("Dropped %s empty records", empty_records)
         self.logger.info("Dropped %s duplicate records", duplicates)
-        self.review_manager.dataset.load_records_dict()
         synergy_feed.save()
 
     def prep_link_md(
