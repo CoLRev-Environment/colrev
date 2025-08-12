@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+"""SearchSource: plos"""
 import datetime
 import logging
 import typing
@@ -9,7 +11,6 @@ import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.ops.prep
-import colrev.ops.search
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.packages.doi_org.src.doi_org as doi_connector
@@ -25,8 +26,6 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.plos.src import plos_api
-#! /usr/bin/env python
-"""SearchSource: plos"""
 
 
 # pylint: disable=unused-argument
@@ -298,7 +297,9 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[colrev.ops.quality_model.QualityModel] = None,
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
     ) -> colrev.record.record.Record:
         """Run the custom source-prep operation"""
 

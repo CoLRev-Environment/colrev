@@ -201,7 +201,9 @@ class Prep(colrev.process.operation.Operation):
             prior = preparation_record.copy_prep_rec()
 
             start_time = datetime.now()
-            preparation_record = endpoint.prepare(preparation_record)
+            preparation_record = endpoint.prepare(
+                preparation_record, self.quality_model
+            )
             self._add_stats(
                 start_time=start_time,
                 prep_round_package_endpoint=prep_round_package_endpoint,

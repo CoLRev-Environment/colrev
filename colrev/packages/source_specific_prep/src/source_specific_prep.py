@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import typing
 from pathlib import Path
 from typing import Optional
 
@@ -44,7 +45,11 @@ class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
         self.package_manager = PackageManager()
 
     def prepare(
-        self, record: colrev.record.record_prep.PrepRecord
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
     ) -> colrev.record.record.Record:
         """Prepare the record by applying source-specific fixes"""
 

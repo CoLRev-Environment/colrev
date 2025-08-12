@@ -381,7 +381,9 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[colrev.ops.quality_model.QualityModel] = None,
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for SYNERGY-datasets"""
 
