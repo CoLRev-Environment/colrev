@@ -63,8 +63,11 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.review_manager = source_operation.review_manager
-        self.source_operation = source_operation
+
+        # TODO / TBD: replace review_manager?
+        import colrev.review_manager
+
+        self.review_manager = colrev.review_manager.ReviewManager()
 
         # TODO : files_dir: subdir_pattern etc. should be prep_parameters
         self.search_source = search_file
