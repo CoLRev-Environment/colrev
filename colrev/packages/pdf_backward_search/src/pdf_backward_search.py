@@ -63,7 +63,13 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-        self.review_manager = source_operation.review_manager
+
+        # TODO / TBD: replace review_manager?
+        import colrev.review_manager
+
+        self.review_manager = colrev.review_manager.ReviewManager()
+
+
         if "min_intext_citations" not in search_file.search_parameters:
             search_file.search_parameters["min_intext_citations"] = 3
 

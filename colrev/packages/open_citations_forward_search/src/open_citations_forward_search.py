@@ -49,7 +49,13 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.search_source = search_file
-        self.review_manager = source_operation.review_manager
+
+
+        # TODO / TBD: replace review_manager?
+        import colrev.review_manager
+
+        self.review_manager = colrev.review_manager.ReviewManager()
+
         self.crossref_api = crossref_api.CrossrefAPI(url="")
 
     @classmethod
