@@ -21,11 +21,9 @@ class CustomSearch(base_classes.SearchSourcePackageBaseClass):
     def __init__(
         self,
         *,
-        source_operation: colrev.ops.search.Search,
         settings: colrev.search_file.ExtendedSearchFile,
     ) -> None:
         self.search_source: colrev.search_file.ExtendedSearchFile = settings
-        self.review_manager = source_operation.review_manager
 
     def search(self, rerun: bool) -> None:
         """Run the search"""
@@ -34,8 +32,8 @@ class CustomSearch(base_classes.SearchSourcePackageBaseClass):
             source_identifier=self.source_identifier,
             search_source=self.search_source,
             update_only=(not rerun),
-            logger=self.review_manager.logger,
-            verbose_mode=self.review_manager.verbose_mode,
+            logger=logging.getLogger(__name__),
+            verbose_mode=False,
         )
         retrieved_record = {
             Fields.ID: "ID00001",

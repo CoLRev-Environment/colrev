@@ -74,7 +74,6 @@ class CLISourceAdder:
             package_identifier=candidate.endpoint,
         )
         endpoint = search_source_class(
-            source_operation=self,
             search_file=candidate.model_dump(),
         )
 

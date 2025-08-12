@@ -56,7 +56,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     def __init__(
         self,
         *,
-        source_operation: colrev.process.operation.Operation,
         search_file: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,

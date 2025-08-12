@@ -59,7 +59,7 @@ class OpenAlexMetadataPrep(base_classes.PrepPackageBaseClass):
             )
 
         self.open_alex_source = open_alex_connector.OpenAlexSearchSource(
-            source_operation=prep_operation, search_file=search_file
+            search_file=search_file
         )
 
         self.open_alex_prefixes = [

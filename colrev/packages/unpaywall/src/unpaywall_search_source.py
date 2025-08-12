@@ -41,7 +41,6 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
     def __init__(
         self,
         *,
-        source_operation: colrev.process.operation.Operation,
         search_file: Optional[colrev.search_file.ExtendedSearchFile] = None,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,

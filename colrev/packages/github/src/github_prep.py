@@ -63,7 +63,7 @@ class GithubMetadataPrep(base_classes.PrepPackageBaseClass):
             )
 
         self.github_search_source = github_connector.GitHubSearchSource(
-            source_operation=self.prep_operation, search_file=search_file
+            search_file=search_file
         )
 
     def prepare(

@@ -59,7 +59,7 @@ class OpenLibraryMetadataPrep(base_classes.PrepPackageBaseClass):
             )
 
         self.open_library_connector = open_library_connector.OpenLibrarySearchSource(
-            source_operation=prep_operation, search_file=search_file
+            search_file=search_file
         )
 
     def check_availability(self) -> None:

@@ -65,7 +65,6 @@ class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
             )
 
         self.crossref_source = crossref_connector.CrossrefSearchSource(
-            source_operation=prep_operation,
             search_file=search_file,
         )
 

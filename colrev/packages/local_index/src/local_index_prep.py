@@ -65,7 +65,6 @@ class LocalIndexPrep(base_classes.PrepPackageBaseClass):
             )
 
         self.local_index_source = local_index_connector.LocalIndexSearchSource(
-            source_operation=prep_operation,
             search_file=search_file,
         )
         self.prep_operation = prep_operation

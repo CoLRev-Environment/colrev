@@ -103,9 +103,7 @@ class Push(colrev.process.operation.Operation):
                 package_type=EndpointType.search_source,
                 package_identifier=source.endpoint,
             )
-            endpoint = search_source_class(
-                source_operation=self, search_file=source.get_dict()
-            )
+            endpoint = search_source_class(search_file=source.get_dict())
 
             correct_function = getattr(endpoint, "apply_correction", None)
             if callable(correct_function):

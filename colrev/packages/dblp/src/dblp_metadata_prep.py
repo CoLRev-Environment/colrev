@@ -62,9 +62,7 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
                 comment="",
             )
 
-        self.dblp_source = dblp_connector.DBLPSearchSource(
-            source_operation=prep_operation, search_file=search_file
-        )
+        self.dblp_source = dblp_connector.DBLPSearchSource(search_file=search_file)
 
         self.dblp_prefixes = [
             s.get_origin_prefix()

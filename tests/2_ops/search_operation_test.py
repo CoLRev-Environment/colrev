@@ -63,9 +63,7 @@ def test_search_add_source(  # type: ignore
         package_identifier=add_source.platform,
     )
 
-    endpoint = search_source_class(
-        source_operation=search_operation, search_file=add_source
-    )
+    endpoint = search_source_class(search_file=add_source)
     query = "issn=1234-5678"
     endpoint.add_endpoint(query, path=base_repo_review_manager.path)
 

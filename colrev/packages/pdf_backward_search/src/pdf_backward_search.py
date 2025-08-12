@@ -56,7 +56,6 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
     def __init__(
         self,
         *,
-        source_operation: colrev.process.operation.Operation,
         search_file: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
         verbose_mode: bool = False,
@@ -68,7 +67,6 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         import colrev.review_manager
 
         self.review_manager = colrev.review_manager.ReviewManager()
-
 
         if "min_intext_citations" not in search_file.search_parameters:
             search_file.search_parameters["min_intext_citations"] = 3

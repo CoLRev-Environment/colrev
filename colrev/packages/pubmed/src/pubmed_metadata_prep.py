@@ -62,7 +62,7 @@ class PubmedMetadataPrep(base_classes.PrepPackageBaseClass):
             )
 
         self.pubmed_source = pubmed_connector.PubMedSearchSource(
-            source_operation=prep_operation, search_file=search_file
+            search_file=search_file
         )
 
         self.pubmed_prefixes = [

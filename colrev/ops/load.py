@@ -442,7 +442,6 @@ class Load(colrev.process.operation.Operation):
                     package_identifier=source.platform,
                 )
                 endpoint = search_source_class(
-                    source_operation=self,
                     search_file=source,
                 )
 

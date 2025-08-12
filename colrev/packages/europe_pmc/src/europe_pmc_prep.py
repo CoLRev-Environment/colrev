@@ -60,7 +60,6 @@ class EuropePMCMetadataPrep(base_classes.PrepPackageBaseClass):
             )
 
         self.epmc_source = europe_pmc_connector.EuropePMCSearchSource(
-            source_operation=self.prep_operation,
             search_file=search_file,
         )
 
