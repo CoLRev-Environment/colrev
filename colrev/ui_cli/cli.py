@@ -27,6 +27,7 @@ import colrev.ui_cli.add_package_to_settings
 import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
@@ -34,6 +35,8 @@ from colrev.constants import Filepaths
 from colrev.constants import IDPattern
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
+from colrev.env.environment_manager import EnvironmentManager
+from colrev.env.resources import Resources
 
 # pylint: disable=too-many-lines
 # pylint: disable=redefined-outer-name
@@ -84,10 +87,12 @@ def _select_source_interactively(
     selected: str, review_manager: colrev.review_manager.ReviewManager
 ) -> str:
     """Select a source interactively"""
+    sources = [str(s.search_results_path) for s in review_manager.settings.sources]
+    if selected is None:
+        return ",".join(sources)
     if selected != "select_interactively":
         return selected
 
-    sources = [str(s.filename) for s in review_manager.settings.sources]
     questions = [
         inquirer.Checkbox(
             "source",
@@ -561,7 +566,7 @@ def search(
 
     if view:
         for source in search_operation.sources:
-            search_operation.review_manager.p_printer.pprint(source)
+            utils.p_print(source)
         return
 
     if add:
@@ -2058,12 +2063,12 @@ def data(
             data_operation.review_manager.settings.data.data_package_endpoints
         )
         for data_endpoint in data_endpoints:
-            data_operation.review_manager.p_printer.pprint(data_endpoint)
+            utils.p_print(data_endpoint)
         return
 
     if reading_heuristics:
         heuristic_results = data_operation.reading_heuristics()
-        review_manager.p_printer.pprint(heuristic_results)
+        utils.p_print(heuristic_results)
         return
     if setup_custom_script:
         data_operation.setup_custom_script()
@@ -2084,15 +2089,13 @@ def data(
         return
 
     ret = data_operation.main()
-    if data_operation.review_manager.in_ci_environment():
+    if utils.in_ci_environment():
         if ret["ask_to_commit"]:
-            review_manager.dataset.create_commit(
-                msg="Data and synthesis", manual_author=True
-            )
+            review_manager.create_commit(msg="Data and synthesis", manual_author=True)
     else:
         if ret["ask_to_commit"]:
             if input("Create commit (y/n)?") == "y":
-                review_manager.dataset.create_commit(
+                review_manager.create_commit(
                     msg="Data and synthesis", manual_author=True
                 )
         if ret["no_endpoints_registered"]:
@@ -2279,7 +2282,7 @@ def distribute(ctx: click.core.Context, path: Path, verbose: bool, force: bool) 
 def _print_environment_status(
     review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    environment_manager = review_manager.get_environment_manager()
+    environment_manager = EnvironmentManager()
     environment_details = environment_manager.get_environment_details()
 
     print("\nCoLRev environment status\n")
@@ -2434,7 +2437,7 @@ def env(
     )
 
     if install:
-        env_resources = review_manager.get_resources()
+        env_resources = Resources()
         if env_resources.install_curated_resource(curated_resource=install):
             print("Successfully installed curated resource.")
             print("To make it available to other projects, run")
@@ -2442,7 +2445,7 @@ def env(
         return
 
     if pull:
-        environment_manager = review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         for curated_resource in environment_manager.local_repos():
             try:
                 curated_resource_path = curated_resource["repo_source_path"]
@@ -2458,7 +2461,7 @@ def env(
                     },
                 )
 
-                review_manager.dataset.pull_if_repo_clean()
+                review_manager.dataset.git_repo.pull_if_repo_clean()
                 print(f"Pulled {curated_resource_path}")
             except GitCommandError as exc:
                 print(exc)
@@ -2469,12 +2472,12 @@ def env(
         return
 
     if register:
-        environment_manager = review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         environment_manager.register_repo(Path.cwd())
         return
 
     if unregister is not None:
-        environment_manager = review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
 
         local_repos = environment_manager.local_repos()
         if str(unregister) not in [x["source_url"] for x in local_repos]:
@@ -2607,7 +2610,7 @@ def settings(
     if update_hooks:
         print("Update pre-commit hooks")
 
-        if review_manager.dataset.has_record_changes():
+        if review_manager.dataset.git_repo.has_record_changes():
             print("Clean repo required. Commit or stash changes.")
             ctx.exit(1)
 
@@ -2622,8 +2625,10 @@ def settings(
         for script_to_call in scripts_to_call:
             check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)  # nosec
 
-        review_manager.dataset.add_changes(review_manager.paths.PRE_COMMIT_CONFIG)
-        review_manager.dataset.create_commit(msg="Update pre-commit hooks")
+        review_manager.dataset.git_repo.add_changes(
+            review_manager.paths.PRE_COMMIT_CONFIG
+        )
+        review_manager.create_commit(msg="Update pre-commit hooks")
         print("Successfully updated pre-commit hooks")
         return
 
@@ -2655,8 +2660,8 @@ def settings(
         with open(review_manager.paths.settings, "w", encoding="utf-8") as outfile:
             json.dump(project_settings, outfile, indent=4)
 
-        review_manager.dataset.add_changes(review_manager.paths.SETTINGS_FILE)
-        review_manager.dataset.create_commit(msg="Change settings", manual_author=True)
+        review_manager.dataset.git_repo.add_changes(review_manager.paths.SETTINGS_FILE)
+        review_manager.create_commit(msg="Change settings", manual_author=True)
 
     # import colrev_ui.ui_web.settings_editor
 
@@ -2830,7 +2835,7 @@ def show(  # type: ignore
     elif keyword == "cmd_history":
         cmds = []
         colrev.ops.check.CheckOperation(review_manager)
-        revlist = review_manager.dataset.get_repo().iter_commits()
+        revlist = review_manager.dataset.git_repo.repo.iter_commits()
 
         for commit in reversed(list(revlist)):
             try:
@@ -2910,7 +2915,7 @@ def upgrade(
 
         review_manager.settings.project.auto_upgrade = False
         review_manager.save_settings()
-        review_manager.dataset.create_commit(msg="Disable auto-upgrade")
+        review_manager.create_commit(msg="Disable auto-upgrade")
         return
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=True, verbose_mode=verbose
@@ -3055,7 +3060,7 @@ def merge(
 
     if not branch:
         colrev.ops.check.CheckOperation(review_manager)
-        git_repo = review_manager.dataset.get_repo()
+        git_repo = review_manager.dataset.git_repo.repo
         print(f"possible branches: {','.join([b.name for b in git_repo.heads])}")
         return
 
@@ -3096,7 +3101,7 @@ def undo(
 
     if selection == "commit":
         colrev.ops.check.CheckOperation(review_manager)
-        git_repo = review_manager.dataset.get_repo()
+        git_repo = review_manager.dataset.git_repo.repo
         git_repo.git.reset("--hard", "HEAD~1")
 
 

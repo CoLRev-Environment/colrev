@@ -79,6 +79,7 @@ class GrobidService:
             auto_remove=True,
             tty=True,
             mem_limit="4g",
+            environment={"JAVA_TOOL_OPTIONS": "-XX:-UseContainerSupport"},
             ports={8070: 8070, 8071: 8071},
             detach=True,
         )

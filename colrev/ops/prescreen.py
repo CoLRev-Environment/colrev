@@ -14,6 +14,7 @@ from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 
 ConditionalPrescreen = (
     colrev.packages.conditional_prescreen.src.conditional_prescreen.ConditionalPrescreen
@@ -142,7 +143,7 @@ class Prescreen(colrev.process.operation.Operation):
         if include:
             msg = f"Prescreen: include {ids}"
 
-        self.review_manager.dataset.create_commit(
+        self.review_manager.create_commit(
             msg=msg,
             manual_author=False,
         )
@@ -206,7 +207,9 @@ class Prescreen(colrev.process.operation.Operation):
             with open("custom_prescreen_script.py", "w", encoding="utf8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(Path("custom_prescreen_script.py"))
+        self.review_manager.dataset.git_repo.add_changes(
+            Path("custom_prescreen_script.py")
+        )
 
         self.review_manager.settings.prescreen.prescreen_package_endpoints.append(
             {"endpoint": "custom_prescreen_script"}
@@ -221,7 +224,7 @@ class Prescreen(colrev.process.operation.Operation):
                 record = colrev.record.record.Record(record_dict)
                 record.set_status(RecordState.rev_prescreen_included)
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(
+        self.review_manager.create_commit(
             msg="Prescreen: include all",
             manual_author=False,
         )
@@ -335,7 +338,7 @@ class Prescreen(colrev.process.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
 
         prescreen_package_endpoints = (
             self.review_manager.settings.prescreen.prescreen_package_endpoints

@@ -2,6 +2,9 @@
 """Screen based on CLI"""
 from __future__ import annotations
 
+import logging
+from typing import Optional
+
 from inquirer import Checkbox
 from inquirer import prompt
 from pydantic import Field
@@ -32,7 +35,9 @@ class CoLRevCLIScreen(base_classes.ScreenPackageBaseClass):
         *,
         screen_operation: colrev.ops.screen.Screen,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = screen_operation.review_manager
         self.screen_operation = screen_operation
         self.settings = self.settings_class(**settings)
@@ -193,7 +198,7 @@ class CoLRevCLIScreen(base_classes.ScreenPackageBaseClass):
                 decision = ret
 
         if quit_pressed:
-            self.review_manager.logger.info("Stop screen")
+            self.logger.info("Stop screen")
             return "quit"
 
         if decision == "y":
@@ -243,7 +248,7 @@ class CoLRevCLIScreen(base_classes.ScreenPackageBaseClass):
         self._stat_len = screen_data["nr_tasks"]
 
         if 0 == self._stat_len:
-            self.review_manager.logger.info("No records to prescreen")
+            self.logger.info("No records to prescreen")
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -265,19 +270,20 @@ class CoLRevCLIScreen(base_classes.ScreenPackageBaseClass):
             if ret == "skip":
                 continue
             if ret == "quit":
-                self.review_manager.logger.info("Stop screen")
+                self.logger.info("Stop screen")
                 break
 
         if self._stat_len == 0:
-            self.review_manager.logger.info("No records to screen")
+            self.logger.info("No records to screen")
             return records
 
         if self._i < self._stat_len and split:  # if records remain for screening
             if input("Create commit (y/n)?") != "y":
                 return records
 
-        self.review_manager.dataset.create_commit(
-            msg="Screen: manual (cli)", manual_author=True
+        self.review_manager.create_commit(
+            msg="Screen: manual (cli)",
+            manual_author=True,
         )
         return records
 

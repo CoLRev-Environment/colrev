@@ -6,9 +6,8 @@ import logging
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_settings
-import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Fields
 
@@ -16,27 +15,24 @@ from colrev.constants import Fields
 class CustomSearch(base_classes.SearchSourcePackageBaseClass):
     """Class for custom search scripts"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = "custom"
 
     def __init__(
         self,
         *,
-        source_operation: colrev.ops.search.Search,
-        settings: dict,
+        settings: colrev.search_file.ExtendedSearchFile,
     ) -> None:
-        self.search_source: colrev.settings.SearchSource = self.settings_class(
-            **settings
-        )
-        self.review_manager = source_operation.review_manager
+        self.search_source: colrev.search_file.ExtendedSearchFile = settings
 
     def search(self, rerun: bool) -> None:
         """Run the search"""
 
-        feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
+            logger=logging.getLogger(__name__),
+            verbose_mode=False,
         )
         retrieved_record = {
             Fields.ID: "ID00001",
@@ -85,7 +81,6 @@ class CustomSearch(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record.Record,
-        source: colrev.settings.SearchSource,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for the custom source"""
 

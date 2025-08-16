@@ -2,14 +2,19 @@
 """Consolidation of metadata based on DBLP API as a prep operation"""
 from __future__ import annotations
 
+import logging
+from pathlib import Path
+from typing import Optional
+
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.dblp.src.dblp as dblp_connector
 import colrev.record.record
+import colrev.search_file
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 
 # pylint: disable=too-few-public-methods
@@ -33,12 +38,31 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
-        self.dblp_source = dblp_connector.DBLPSearchSource(
-            source_operation=prep_operation
-        )
+
+        # DBLP as an md-prep source
+        dblp_md_filename = Path("data/search/md_dblp.bib")
+        dblp_md_source_l = [
+            s
+            for s in self.prep_operation.review_manager.settings.sources
+            if s.filename == dblp_md_filename
+        ]
+        if dblp_md_source_l:
+            search_file = dblp_md_source_l[0]
+        else:
+            search_file = colrev.search_file.ExtendedSearchFile(
+                platform="colrev.dblp",
+                search_results_path=dblp_md_filename,
+                search_type=SearchType.MD,
+                search_string="",
+                comment="",
+            )
+
+        self.dblp_source = dblp_connector.DBLPSearchSource(search_file=search_file)
 
         self.dblp_prefixes = [
             s.get_origin_prefix()
@@ -46,11 +70,9 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
             if s.endpoint == "colrev.dblp"
         ]
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
-        """Check status (availability) of the Crossref API"""
-        self.dblp_source.check_availability(source_operation=source_operation)
+    def check_availability(self) -> None:
+        """Check status (availability) of the DBLP API"""
+        self.dblp_source.check_availability()
 
     def prepare(
         self, record: colrev.record.record_prep.PrepRecord

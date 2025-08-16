@@ -3,17 +3,23 @@
 from __future__ import annotations
 
 import logging
+import typing
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_db import create_db_source
+from colrev.ops.search_db import run_db_search
+
+if typing.TYPE_CHECKING:
+    import colrev.search_file
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -22,7 +28,6 @@ from colrev.constants import SearchType
 class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """ACM digital Library"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.acm_digital_library"
     # Note : the ID contains the doi
     # "https://dl.acm.org/doi/{{ID}}"
@@ -34,11 +39,13 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     db_url = "https://dl.acm.org/"
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
-        self.search_source = self.settings_class(**settings)
-        self.review_manager = source_operation.review_manager
-        self.operation = source_operation
+        self.logger = logger or logging.getLogger(__name__)
+        self.search_source = search_file
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -54,10 +61,8 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def add_endpoint(
-        cls,
-        operation: colrev.ops.search.Search,
-        params: str,
-    ) -> colrev.settings.SearchSource:
+        cls, params: str, path: Path, logger: Optional[logging.Logger] = None
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -66,19 +71,23 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 key, value = item.split("=")
                 params_dict[key] = value
 
-        search_type = operation.select_search_type(
+        search_type = colrev.utils.select_search_type(
             search_types=cls.search_types, params=params_dict
         )
 
         if search_type == SearchType.DB:
-            search_source = operation.create_db_source(
-                search_source_cls=cls,
+            search_source = create_db_source(
+                path=path,
+                platform=cls.endpoint,
                 params=params_dict,
+                add_to_git=True,
+                logger=logger,
             )
         else:
             raise NotImplementedError
 
-        operation.add_source_and_search(search_source)
+        # operation.add_source_and_search(search_source)
+        # search_source.save()
         return search_source
 
     def search(self, rerun: bool) -> None:
@@ -86,9 +95,10 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if self.search_source.search_type == SearchType.DB:
             if self.search_source.filename.suffix in [".bib"]:
-                self.operation.run_db_search(  # type: ignore
-                    search_source_cls=self.__class__,
+                run_db_search(
+                    db_url=self.db_url,
                     source=self.search_source,
+                    add_to_git=True,
                 )
                 return
 
@@ -141,7 +151,8 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
     # pylint: disable=colrev-missed-constant-usage
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for ACM Digital Library"""
 

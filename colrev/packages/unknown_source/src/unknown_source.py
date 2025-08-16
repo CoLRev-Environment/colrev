@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import logging
 import re
+import typing
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import Field
@@ -14,8 +16,6 @@ import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
@@ -24,6 +24,8 @@ from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_db import create_db_source
+from colrev.ops.search_db import run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -32,7 +34,6 @@ from colrev.constants import SearchType
 class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Unknown SearchSource"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.unknown_source"
 
     source_identifier = "colrev.unknown_source"
@@ -53,12 +54,14 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     _padding = 40
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
-        self.search_source = self.settings_class(**settings)
-        self.review_manager = source_operation.review_manager
+        self.logger = logger or logging.getLogger(__name__)
+        self.search_source = search_file
         self.language_service = colrev.env.language_service.LanguageService()
-        self.operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -71,9 +74,10 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+        path: Path,
+        logger: Optional[logging.Logger] = None,
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -81,19 +85,23 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             for item in params.split(";"):
                 key, value = item.split("=")
                 params_dict[key] = value
-        search_source = operation.create_db_source(
-            search_source_cls=cls,
+        search_source = create_db_source(
+            path=path,
+            platform=cls.endpoint,
             params=params_dict,
+            add_to_git=True,
+            logger=logger,
         )
-        operation.add_source_and_search(search_source)
         return search_source
 
     def search(self, rerun: bool) -> None:
         """Run a search of Crossref"""
 
         if self.search_source.search_type == SearchType.DB:
-            self.operation.run_db_search(  # type: ignore
-                search_source_cls=self.__class__, source=self.search_source
+            run_db_search(
+                db_url=self.db_url,
+                source=self.search_source,
+                add_to_git=True,
             )
 
     def prep_link_md(
@@ -535,7 +543,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
                 record.remove_field(key=Fields.SERIES)
 
-        if self.search_source.filename.suffix == ".md":
+        if self.search_source.search_history_path.suffix == ".md":
             if (
                 record.data[Fields.ENTRYTYPE] == "misc"
                 and Fields.PUBLISHER in record.data
@@ -562,7 +570,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             record.update_field(
                 key=Fields.ENTRYTYPE, value="phdthesis", source="unkown_source_prep"
             )
-            self.review_manager.report_logger.info(
+            self.logger.info(
                 f" {record.data[Fields.ID]}".ljust(self._padding, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("dissertation" in fulltext link)'
@@ -576,7 +584,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             record.update_field(
                 key=Fields.ENTRYTYPE, value="phdthesis", source="unkown_source_prep"
             )
-            self.review_manager.report_logger.info(
+            self.logger.info(
                 f" {record.data[Fields.ID]}".ljust(self._padding, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("thesis" in fulltext link)'
@@ -590,7 +598,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             record.update_field(
                 key=Fields.ENTRYTYPE, value="phdthesis", source="unkown_source_prep"
             )
-            self.review_manager.report_logger.info(
+            self.logger.info(
                 f" {record.data[Fields.ID]}".ljust(self._padding, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("thesis" in abstract)'
@@ -685,7 +693,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
                 and not re.match(r"^\d*--\d*$", record.data[Fields.PAGES])
                 and not re.match(r"^[xivXIV]*--[xivXIV]*$", record.data[Fields.PAGES])
             ):
-                self.review_manager.report_logger.info(
+                self.logger.info(
                     f" {record.data[Fields.ID]}:".ljust(self._padding, " ")
                     + f"Unusual pages: {record.data[Fields.PAGES]}"
                 )
@@ -764,7 +772,9 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for unknown sources"""
 

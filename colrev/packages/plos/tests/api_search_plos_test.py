@@ -5,9 +5,6 @@ from pathlib import Path
 import pytest
 import requests_mock
 
-import colrev.ops.prep
-import colrev.packages.plos.src.plos_search_source
-import colrev.record.record
 import colrev.record.record_prep
 from colrev.packages.plos.src import plos_api
 

@@ -2,9 +2,7 @@
 """Test the local_index"""
 import pytest
 
-import colrev.env.local_index
-import colrev.env.tei_parser
-import colrev.review_manager
+import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState

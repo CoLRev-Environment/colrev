@@ -2,8 +2,10 @@
 """Creation of an Obsidian database as part of the data operations"""
 from __future__ import annotations
 
+import logging
 from collections import Counter
 from pathlib import Path
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -54,7 +56,9 @@ class Obsidian(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = data_operation.review_manager
         self.data_operation = data_operation
 
@@ -74,7 +78,9 @@ class Obsidian(base_classes.DataPackageBaseClass):
             self.review_manager.path / self.OBSIDIAN_INBOX_PATH_RELATIVE
         )
         if hasattr(self.review_manager, "dataset"):
-            self.review_manager.dataset.update_gitignore(add=self.GITIGNORE_LIST)
+            self.review_manager.dataset.git_repo.update_gitignore(
+                add=self.GITIGNORE_LIST
+            )
 
     # pylint: disable=unused-argument
     @classmethod
@@ -105,7 +111,7 @@ class Obsidian(base_classes.DataPackageBaseClass):
                 self.review_manager.path
                 / colrev.record.record.Record(record_dict).get_tei_filename()
             )
-            self.review_manager.logger.info(f"  extract keywords for {tei_file.name}")
+            self.logger.info(f"  extract keywords for {tei_file.name}")
 
             if tei_file.is_file():
                 tei = colrev.env.tei_parser.TEIParser(tei_path=tei_file)
@@ -124,7 +130,7 @@ class Obsidian(base_classes.DataPackageBaseClass):
         included = self.data_operation.get_record_ids_for_synthesis(records)
         missing_records = self._get_obsidian_missing(included=included)
         if len(missing_records) == 0:
-            self.review_manager.logger.info("All records included. Nothing to export.")
+            self.logger.info("All records included. Nothing to export.")
             return
 
         inbox_text = ""
@@ -201,7 +207,7 @@ class Obsidian(base_classes.DataPackageBaseClass):
         # later : export to csl-json (based on bibliography_export)
         # (absolute PDF paths, read-only/hidden/gitignored, no provenance fields)
 
-        # self.review_manager.dataset.add_changes(self.OBSIDIAN_INBOX_PATH_RELATIVE)
+        # self.review_manager.dataset.git_repo.add_changes(self.OBSIDIAN_INBOX_PATH_RELATIVE)
 
     def update_data(
         self,
@@ -214,7 +220,7 @@ class Obsidian(base_classes.DataPackageBaseClass):
         if silent_mode:
             return
 
-        self.review_manager.logger.debug("Export to obsidian endpoint")
+        self.logger.debug("Export to obsidian endpoint")
 
         self._append_missing_records(records=records)
 

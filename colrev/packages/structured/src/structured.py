@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import csv
+import logging
 import typing
 from dataclasses import asdict
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from git.exc import GitCommandError
@@ -15,9 +17,6 @@ from pydantic import Field
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
-import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -72,7 +71,9 @@ class StructuredData(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = data_operation.review_manager
 
         if "version" not in settings:
@@ -135,9 +136,9 @@ class StructuredData(base_classes.DataPackageBaseClass):
         # Note : missing IDs are added through update_data
 
     def _set_fields(self) -> None:
-        self.review_manager.logger.info("Add fields for data extraction")
+        self.logger.info("Add fields for data extraction")
         try:
-            _ = self.review_manager.dataset.get_repo()
+            _ = self.review_manager.dataset.git_repo
         except GitCommandError:
             return
 
@@ -199,7 +200,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
 
             if not silent_mode:
                 self.review_manager.report_logger.info("Update structured data")
-                self.review_manager.logger.info(
+                self.logger.info(
                     f"Update structured data ({self.settings.data_path_relative})"
                 )
 
@@ -215,9 +216,10 @@ class StructuredData(base_classes.DataPackageBaseClass):
                     columns=data_df.columns, fill_value="TODO"
                 )
                 data_df = pd.concat([data_df, add_record], axis=0, ignore_index=True)
-                review_manager.logger.info(
-                    f" {Colors.GREEN}{record_id}".ljust(45)
-                    + f"add to structured_data{Colors.END}"
+                self.logger.info(
+                    " %sadd to structured_data%s",
+                    f"{Colors.GREEN}{record_id}".ljust(45),
+                    Colors.END,
                 )
                 nr_records_added = nr_records_added + 1
 
@@ -226,16 +228,16 @@ class StructuredData(base_classes.DataPackageBaseClass):
             data_df.to_csv(self.data_path, index=False, quoting=csv.QUOTE_ALL)
 
             if not (0 == nr_records_added and silent_mode):
-                review_manager.logger.info(
-                    f"Added to {self.settings.data_path_relative}".ljust(24)
-                    + f"{nr_records_added}".rjust(15, " ")
-                    + " records"
+                self.logger.info(
+                    "%s%s records",
+                    f"Added to {self.settings.data_path_relative}".ljust(24),
+                    f"{nr_records_added}".rjust(15, " "),
                 )
 
-                review_manager.logger.info(
-                    f"Added to {self.settings.data_path_relative}".ljust(24)
-                    + f"{nr_records_added}".rjust(15, " ")
-                    + " records"
+                self.logger.info(
+                    "%s%s records",
+                    f"Added to {self.settings.data_path_relative}".ljust(24),
+                    f"{nr_records_added}".rjust(15, " "),
                 )
             return records
 
@@ -245,7 +247,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
 
-        self.review_manager.dataset.add_changes(
+        self.review_manager.dataset.git_repo.add_changes(
             self.settings.data_path_relative, ignore_missing=True
         )
 
