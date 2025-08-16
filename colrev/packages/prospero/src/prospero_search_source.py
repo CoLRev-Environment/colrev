@@ -187,15 +187,14 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
     # pylint: disable=unused-argument
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """
         The interface requires a load method.
         We only handle .bib files here,
         so we raise NotImplementedError for other formats.
         """
-        if filename.suffix == ".bib":
-            return cls._load_bib(filename=filename, logger=logger)
+        if self.search_source.search_results_path.suffix == ".bib":
+            return self._load_bib(filename=self.search_source.search_results_path, logger=self.logger)
         raise NotImplementedError(
             "Only .bib loading is implemented for ProsperoSearchSource."
         )

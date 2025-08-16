@@ -115,11 +115,10 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented"""
         return record
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
                 record_dict.pop("url", None)
@@ -128,21 +127,21 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 record_dict.pop("month", None)
 
                 if "issue_date" in record_dict:
-                    record_dict[f"{cls.endpoint}.issue_date"] = record_dict.pop(
+                    record_dict[f"{self.endpoint}.issue_date"] = record_dict.pop(
                         "issue_date"
                     )
                 if "location" in record_dict:
                     record_dict[Fields.ADDRESS] = record_dict.pop("location", None)
                 if "articleno" in record_dict:
-                    record_dict[f"{cls.endpoint}.articleno"] = record_dict.pop(
+                    record_dict[f"{self.endpoint}.articleno"] = record_dict.pop(
                         "articleno"
                     )
 
             records = colrev.loader.load_utils.load(
-                filename=filename,
+                filename=self.search_source.search_results_path,
                 unique_id_field="ID",
                 field_mapper=field_mapper,
-                logger=logger,
+                logger=self.logger,
             )
 
             return records

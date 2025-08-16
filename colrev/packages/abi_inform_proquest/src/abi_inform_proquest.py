@@ -251,21 +251,20 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         return records
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=filename,
-                logger=logger,
+                filename=self.search_source.search_results_path,
+                logger=self.logger,
                 unique_id_field="ID",
             )
-            cls._remove_duplicates(records=records, filename=filename, logger=logger)
+            self._remove_duplicates(records=records, filename=self.search_source.search_results_path, logger=self.logger)
             return records
 
-        if filename.suffix == ".ris":
-            return cls._load_ris(filename, logger)
+        if self.search_source.search_results_path.suffix == ".ris":
+            return self._load_ris(self.search_source.search_results_path, self.logger)
 
         raise NotImplementedError
 
