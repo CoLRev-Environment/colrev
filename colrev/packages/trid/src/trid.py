@@ -208,7 +208,9 @@ class TransportResearchInternationalDocumentation(
         """Load the records from the SearchSource file"""
 
         if self.search_source.search_results_path.suffix == ".ris":
-            return self._load_ris(filename=self.search_source.search_results_path, logger=self.logger)
+            return self._load_ris(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
         raise NotImplementedError
 

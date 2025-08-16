@@ -177,7 +177,9 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Load the records from the SearchSource file"""
 
         if self.search_source.search_results_path.suffix == ".bib":
-            return self._load_bib(filename=self.search_source.search_results_path, logger=self.logger)
+            return self._load_bib(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
         raise NotImplementedError
 

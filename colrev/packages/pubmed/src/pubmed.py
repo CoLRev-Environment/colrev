@@ -487,7 +487,9 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Load the records from the SearchSource file"""
 
         if self.search_source.search_results_path.suffix == ".csv":
-            return self._load_csv(filename=self.search_source.search_results_path, logger=self.logger)
+            return self._load_csv(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
         if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(

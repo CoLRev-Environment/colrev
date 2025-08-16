@@ -260,7 +260,11 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
                 logger=self.logger,
                 unique_id_field="ID",
             )
-            self._remove_duplicates(records=records, filename=self.search_source.search_results_path, logger=self.logger)
+            self._remove_duplicates(
+                records=records,
+                filename=self.search_source.search_results_path,
+                logger=self.logger,
+            )
             return records
 
         if self.search_source.search_results_path.suffix == ".ris":

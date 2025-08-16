@@ -506,7 +506,9 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         if self.search_source.search_results_path.suffix not in __load_methods:
             raise NotImplementedError
 
-        records = __load_methods[self.search_source.search_results_path.suffix](filename=self.search_source.search_results_path, logger=self.logger)
+        records = __load_methods[self.search_source.search_results_path.suffix](
+            filename=self.search_source.search_results_path, logger=self.logger
+        )
         for record_id in records:
             records[record_id] = {
                 k: v

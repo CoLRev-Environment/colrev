@@ -380,11 +380,15 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
         # pylint: disable=colrev-missed-constant-usage
         if self.search_source.search_results_path.suffix in [".txt", ".enl"]:
-            return self._load_enl(filename=self.search_source.search_results_path, logger=self.logger)
+            return self._load_enl(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
         # for API-based searches
         if self.search_source.search_results_path.suffix == ".bib":
-            return self._load_bib(filename=self.search_source.search_results_path, logger=self.logger)
+            return self._load_bib(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
         raise NotImplementedError
 

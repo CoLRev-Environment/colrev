@@ -194,7 +194,9 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         so we raise NotImplementedError for other formats.
         """
         if self.search_source.search_results_path.suffix == ".bib":
-            return self._load_bib(filename=self.search_source.search_results_path, logger=self.logger)
+            return self._load_bib(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
         raise NotImplementedError(
             "Only .bib loading is implemented for ProsperoSearchSource."
         )
