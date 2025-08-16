@@ -4,14 +4,12 @@ from pathlib import Path
 
 import pytest
 
-import colrev.review_manager
+import colrev.loader.load_utils
 from colrev import utils
 from colrev.constants import SearchType
 
 
-def test_load_md(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
-) -> None:
+def test_load_md(helpers) -> None:  # type: ignore
     """Test the load utils for md files"""
 
     # only supports md

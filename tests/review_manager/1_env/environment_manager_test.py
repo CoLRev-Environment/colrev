@@ -9,7 +9,6 @@ import git
 import pytest
 
 import colrev.env.environment_manager
-import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 from colrev.constants import Filepaths
@@ -47,7 +46,7 @@ def prep_test(tmp_path, script_loc) -> EnvTestConf:  # type: ignore
     test_repo = long_path / Path("a_test_repo")
     dummy_origin = "https://example.com/repo"
 
-    base_path = script_loc.parents[1]
+    base_path = script_loc.parents[2]
     repo = git.Repo(base_path)
     origin = list(repo.remote("origin").urls)
 

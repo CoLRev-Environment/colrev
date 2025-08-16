@@ -32,11 +32,14 @@ def test_invalid_git_repository_error(
 
 
 def test_load_records_from_history(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    review_manager_helpers,
 ) -> None:
     """Test loading records from git history."""
 
-    helpers.reset_commit(base_repo_review_manager, commit="changed_settings_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="changed_settings_commit"
+    )
     last_commit_sha = base_repo_review_manager.dataset.git_repo.get_last_commit_sha()
 
     records_from_history = list(
@@ -45,12 +48,16 @@ def test_load_records_from_history(  # type: ignore
         )
     )
 
-    helpers.reset_commit(base_repo_review_manager, commit="dedupe_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="dedupe_commit"
+    )
 
     # Retrieve the last commit sha to use as a reference for loading history
     last_commit_sha = base_repo_review_manager.dataset.git_repo.get_last_commit_sha()
 
-    helpers.reset_commit(base_repo_review_manager, commit="prescreen_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="prescreen_commit"
+    )
 
     # Load records from history using the last commit sha
     records_from_history = list(

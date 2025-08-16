@@ -39,7 +39,6 @@ class CurationPrep(base_classes.PrepPackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
-        self.quality_model = prep_operation.review_manager.get_qm()
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
         self.curation_restrictions = self._load_curation_restrictions()
@@ -95,7 +94,6 @@ class CurationPrep(base_classes.PrepPackageBaseClass):
                         new_entrytype=applicable_curation_restrictions[
                             Fields.ENTRYTYPE
                         ],
-                        qm=self.quality_model,
                     )
                 except colrev_exceptions.MissingRecordQualityRuleSpecification as exc:
                     print(exc)

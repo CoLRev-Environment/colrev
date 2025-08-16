@@ -4,10 +4,8 @@ from pathlib import Path
 
 import pytest
 
-import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
-import colrev.record.record_prep
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -289,9 +287,7 @@ def test_diff() -> None:
     assert expected == actual
 
 
-def test_change_entrytype_inproceedings(
-    quality_model: colrev.record.qm.quality_model.QualityModel,
-) -> None:
+def test_change_entrytype_inproceedings() -> None:
     """Test record.change_entrytype(ENTRYTYPES.INPROCEEDINGS)"""
 
     r1_mod = r1.copy()
@@ -305,7 +301,7 @@ def test_change_entrytype_inproceedings(
         source="import.bib/id_0001",
         note="inconsistent-with-entrytype",
     )
-    r1_mod.change_entrytype(ENTRYTYPES.INPROCEEDINGS, qm=quality_model)
+    r1_mod.change_entrytype(ENTRYTYPES.INPROCEEDINGS)
     print(r1_mod.data)
     expected = {
         Fields.ID: "r1",
@@ -335,17 +331,15 @@ def test_change_entrytype_inproceedings(
     actual = r1_mod.data
     assert expected == actual
 
-    r1_mod.change_entrytype(ENTRYTYPES.MASTERSTHESIS, qm=quality_model)
+    r1_mod.change_entrytype(ENTRYTYPES.MASTERSTHESIS)
 
     with pytest.raises(
         colrev.exceptions.MissingRecordQualityRuleSpecification,
     ):
-        r1_mod.change_entrytype("dialoge", qm=quality_model)
+        r1_mod.change_entrytype("dialoge")
 
 
-def test_change_entrytype_inproceedings_2(
-    quality_model: colrev.record.qm.quality_model.QualityModel,
-) -> None:
+def test_change_entrytype_inproceedings_2() -> None:
 
     record_dict = {
         Fields.ID: "r2",
@@ -367,7 +361,7 @@ def test_change_entrytype_inproceedings_2(
         Fields.PAGES: "22--31",
     }
     record = colrev.record.record.Record(record_dict)
-    record.change_entrytype(ENTRYTYPES.INPROCEEDINGS, qm=quality_model)
+    record.change_entrytype(ENTRYTYPES.INPROCEEDINGS)
 
     expected = {
         Fields.ID: "r2",
@@ -392,10 +386,9 @@ def test_change_entrytype_inproceedings_2(
     assert record.data == expected
 
 
-def test_change_entrytype_article(
-    quality_model: colrev.record.qm.quality_model.QualityModel,
-) -> None:
+def test_change_entrytype_article() -> None:
     """Test record.change_entrytype(ENTRYTYPES.ARTICLE)"""
+
     input_value = {
         Fields.ID: "r1",
         Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
@@ -457,7 +450,7 @@ def test_change_entrytype_article(
         Fields.LANGUAGE: "eng",
     }
     rec = colrev.record.record.Record(input_value)
-    rec.change_entrytype(ENTRYTYPES.ARTICLE, qm=quality_model)
+    rec.change_entrytype(ENTRYTYPES.ARTICLE)
     actual = rec.data
     assert expected == actual
 
@@ -1488,7 +1481,7 @@ def test_is_retracted() -> None:
 
 
 def test_ignored_defect(
-    quality_model: colrev.record.qm.quality_model.QualityModel,
+    # quality_model: colrev.record.qm.quality_model.QualityModel,
 ) -> None:
     record_dict = {
         Fields.ID: "r1",
@@ -1510,7 +1503,5 @@ def test_ignored_defect(
     }
 
     record = colrev.record.record.Record(record_dict)
-    record.change_entrytype(
-        ENTRYTYPES.ARTICLE, qm=quality_model
-    )  # Should not change anything
+    record.change_entrytype(ENTRYTYPES.ARTICLE)  # Should not change anything
     assert record.ignored_defect(key=Fields.AUTHOR, defect=DefectCodes.MISSING)

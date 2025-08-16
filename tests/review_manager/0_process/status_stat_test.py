@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+"""Tests for the status stats"""
 import colrev.process.status
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -19,12 +21,15 @@ def compare(
 
 
 def test_check_status_stats_attributes(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    review_manager_helpers,
 ) -> None:
 
     print(f"{Colors.RED}{base_repo_review_manager.path}{Colors.END}")
 
-    helpers.reset_commit(base_repo_review_manager, commit="changed_settings_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="changed_settings_commit"
+    )
     expected_stats = base_repo_review_manager.get_status_stats()
 
     assert expected_stats.atomic_steps == 0
@@ -63,7 +68,7 @@ def test_check_status_stats_attributes(  # type: ignore
     assert expected_stats.completed_atomic_steps == 0
     assert expected_stats.completeness_condition
 
-    helpers.reset_commit(base_repo_review_manager, commit="load_commit")
+    review_manager_helpers.reset_commit(base_repo_review_manager, commit="load_commit")
     given_stats = base_repo_review_manager.get_status_stats()
     expected_stats.atomic_steps = 9  # Note: overall / does not change
     expected_stats.completed_atomic_steps = 2
@@ -83,7 +88,7 @@ def test_check_status_stats_attributes(  # type: ignore
     assert [OperationsType.prep] == given_stats.get_priority_operations()
     assert [OperationsType.prep] == given_stats.get_active_operations()
 
-    helpers.reset_commit(base_repo_review_manager, commit="prep_commit")
+    review_manager_helpers.reset_commit(base_repo_review_manager, commit="prep_commit")
     given_stats = base_repo_review_manager.get_status_stats()
     expected_stats.completed_atomic_steps = 3
     expected_stats.currently.md_imported = 0
@@ -98,7 +103,9 @@ def test_check_status_stats_attributes(  # type: ignore
     assert [OperationsType.dedupe] == given_stats.get_priority_operations()
     assert [OperationsType.dedupe] == given_stats.get_active_operations()
 
-    helpers.reset_commit(base_repo_review_manager, commit="dedupe_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="dedupe_commit"
+    )
     given_stats = base_repo_review_manager.get_status_stats()
     expected_stats.completed_atomic_steps = 4
     expected_stats.currently.md_prepared = 0
@@ -114,7 +121,9 @@ def test_check_status_stats_attributes(  # type: ignore
     assert [OperationsType.prescreen] == given_stats.get_priority_operations()
     assert [OperationsType.prescreen] == given_stats.get_active_operations()
 
-    helpers.reset_commit(base_repo_review_manager, commit="prescreen_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="prescreen_commit"
+    )
     given_stats = base_repo_review_manager.get_status_stats()
     expected_stats.completed_atomic_steps = 5
     expected_stats.currently.md_processed = 0
@@ -131,7 +140,9 @@ def test_check_status_stats_attributes(  # type: ignore
     assert [OperationsType.pdf_get] == given_stats.get_priority_operations()
     assert [OperationsType.pdf_get] == given_stats.get_active_operations()
 
-    helpers.reset_commit(base_repo_review_manager, commit="pdf_get_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="pdf_get_commit"
+    )
     given_stats = base_repo_review_manager.get_status_stats()
     expected_stats.completed_atomic_steps = 5
     expected_stats.currently.pdf_needs_retrieval = 0
@@ -146,7 +157,9 @@ def test_check_status_stats_attributes(  # type: ignore
     assert [OperationsType.pdf_get_man] == given_stats.get_priority_operations()
     assert [OperationsType.pdf_get_man] == given_stats.get_active_operations()
 
-    helpers.reset_commit(base_repo_review_manager, commit="pdf_prep_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="pdf_prep_commit"
+    )
     given_stats = base_repo_review_manager.get_status_stats()
     compare(expected_stats, given_stats)
     assert "" == given_stats.get_active_metadata_operation_info()
@@ -154,7 +167,9 @@ def test_check_status_stats_attributes(  # type: ignore
     assert [OperationsType.pdf_get_man] == given_stats.get_priority_operations()
     assert [OperationsType.pdf_get_man] == given_stats.get_active_operations()
 
-    helpers.reset_commit(base_repo_review_manager, commit="screen_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="screen_commit"
+    )
     given_stats = base_repo_review_manager.get_status_stats()
     compare(expected_stats, given_stats)
     assert "" == given_stats.get_active_metadata_operation_info()
@@ -162,7 +177,7 @@ def test_check_status_stats_attributes(  # type: ignore
     assert [OperationsType.pdf_get_man] == given_stats.get_priority_operations()
     assert [OperationsType.pdf_get_man] == given_stats.get_active_operations()
 
-    helpers.reset_commit(base_repo_review_manager, commit="data_commit")
+    review_manager_helpers.reset_commit(base_repo_review_manager, commit="data_commit")
     given_stats = base_repo_review_manager.get_status_stats()
     compare(expected_stats, given_stats)
     assert "" == given_stats.get_active_metadata_operation_info()
@@ -171,7 +186,7 @@ def test_check_status_stats_attributes(  # type: ignore
     assert [OperationsType.pdf_get_man] == given_stats.get_active_operations()
 
     # test screening statistics
-    helpers.reset_commit(base_repo_review_manager, commit="data_commit")
+    review_manager_helpers.reset_commit(base_repo_review_manager, commit="data_commit")
     records = base_repo_review_manager.dataset.load_records_dict()
     record_dict = records["SrivastavaShainesh2015"]
     screening_criteria_list = ["bc_1", "bc_2"]
@@ -198,9 +213,10 @@ def test_check_status_stats_attributes(  # type: ignore
 
 
 def test_get_transitioned_records(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    review_manager_helpers,
 ) -> None:
-    helpers.reset_commit(base_repo_review_manager, commit="prep_commit")
+    review_manager_helpers.reset_commit(base_repo_review_manager, commit="prep_commit")
     base_repo_review_manager.get_dedupe_operation()
     records = base_repo_review_manager.dataset.load_records_dict()
 

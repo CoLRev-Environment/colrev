@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+"""Test the colrev operation"""
 import pytest
 
 import colrev.exceptions as colrev_exceptions
@@ -6,7 +8,8 @@ from colrev.constants import OperationsType
 
 
 def test_check_precondition_load(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    review_manager_helpers,
 ) -> None:
 
     load_operation = colrev.process.operation.Operation(
@@ -26,7 +29,7 @@ def test_check_precondition_load(  # type: ignore
     with pytest.raises(colrev_exceptions.CleanRepoRequiredError):
         load_operation.check_precondition()
 
-    helpers.reset_commit(base_repo_review_manager, commit="prep_commit")
+    review_manager_helpers.reset_commit(base_repo_review_manager, commit="prep_commit")
     dedupe_operation = colrev.process.operation.Operation(
         review_manager=base_repo_review_manager, operations_type=OperationsType.dedupe
     )

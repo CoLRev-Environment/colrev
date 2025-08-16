@@ -4,8 +4,7 @@ from pathlib import Path
 
 import requests_mock
 
-import colrev.ops.prep
-import colrev.packages.eric.src.eric
+import colrev.record.record
 from colrev.packages.eric.src import eric_api
 
 # pylint: disable=line-too-long

@@ -516,9 +516,7 @@ class Prep(colrev.process.operation.Operation):
         prior_state = record.data[Fields.STATUS]
 
         # Rerun quality model (in case there are manual prep changes)
-        preparation_record.change_entrytype(
-            new_entrytype=record.data[Fields.ENTRYTYPE], qm=self.quality_model
-        )
+        preparation_record.change_entrytype(new_entrytype=record.data[Fields.ENTRYTYPE])
         complete_sources = [
             o
             for o in preparation_record.data[Fields.ORIGIN]

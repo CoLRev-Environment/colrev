@@ -21,17 +21,22 @@ def criterion_fixture() -> colrev.settings.ScreenCriterion:
 
 
 def test_screen(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    review_manager_helpers,
 ) -> None:
     """Test the screen operation"""
 
-    helpers.reset_commit(base_repo_review_manager, commit="screen_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="screen_commit"
+    )
     screen_operation = base_repo_review_manager.get_screen_operation()
     screen_operation.include_all_in_screen(persist=False)
     screen_operation.create_screen_split(create_split=2)
     screen_operation.setup_custom_script()
 
-    helpers.reset_commit(base_repo_review_manager, commit="screen_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="screen_commit"
+    )
 
 
 def test_add_criterion(  # type: ignore

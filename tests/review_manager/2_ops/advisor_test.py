@@ -6,11 +6,14 @@ import colrev.review_manager
 
 
 def test_check_operation_precondition(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    review_manager_helpers,
 ) -> None:
     """Test the check operation preconditions"""
 
-    helpers.reset_commit(base_repo_review_manager, commit="changed_settings_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="changed_settings_commit"
+    )
     advisor = base_repo_review_manager.get_advisor()
     actual = advisor.get_instructions()
     assert actual == {
@@ -38,7 +41,7 @@ def test_check_operation_precondition(  # type: ignore
         },
     }
 
-    helpers.reset_commit(base_repo_review_manager, commit="load_commit")
+    review_manager_helpers.reset_commit(base_repo_review_manager, commit="load_commit")
     advisor = base_repo_review_manager.get_advisor()
     actual = advisor.get_instructions()
     assert actual == {
@@ -62,7 +65,7 @@ def test_check_operation_precondition(  # type: ignore
         },
     }
 
-    helpers.reset_commit(base_repo_review_manager, commit="prep_commit")
+    review_manager_helpers.reset_commit(base_repo_review_manager, commit="prep_commit")
     advisor = base_repo_review_manager.get_advisor()
     actual = advisor.get_instructions()
     assert actual == {
@@ -86,7 +89,9 @@ def test_check_operation_precondition(  # type: ignore
         },
     }
 
-    helpers.reset_commit(base_repo_review_manager, commit="dedupe_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="dedupe_commit"
+    )
     advisor = base_repo_review_manager.get_advisor()
     actual = advisor.get_instructions()
     assert actual == {
@@ -110,7 +115,9 @@ def test_check_operation_precondition(  # type: ignore
         },
     }
 
-    helpers.reset_commit(base_repo_review_manager, commit="prescreen_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="prescreen_commit"
+    )
     advisor = base_repo_review_manager.get_advisor()
     actual = advisor.get_instructions()
     assert actual == {
@@ -134,7 +141,9 @@ def test_check_operation_precondition(  # type: ignore
         },
     }
 
-    helpers.reset_commit(base_repo_review_manager, commit="pdf_get_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="pdf_get_commit"
+    )
     advisor = base_repo_review_manager.get_advisor()
     actual = advisor.get_instructions()
     assert actual == {

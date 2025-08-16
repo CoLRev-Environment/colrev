@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+"""Tests of the CoLRev commit operation"""
 import pytest
 
 import colrev.exceptions as colrev_exceptions

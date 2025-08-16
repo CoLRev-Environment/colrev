@@ -294,6 +294,66 @@ class FieldSet:
     ]
 
 
+# Based on https://en.wikipedia.org/wiki/BibTeX
+ENTRYTYPE_FIELD_REQUIREMENTS = {
+    ENTRYTYPES.ARTICLE: [
+        Fields.AUTHOR,
+        Fields.TITLE,
+        Fields.JOURNAL,
+        Fields.YEAR,
+        Fields.VOLUME,
+        Fields.NUMBER,
+    ],
+    ENTRYTYPES.INPROCEEDINGS: [
+        Fields.AUTHOR,
+        Fields.TITLE,
+        Fields.BOOKTITLE,
+        Fields.YEAR,
+    ],
+    ENTRYTYPES.INCOLLECTION: [
+        Fields.AUTHOR,
+        Fields.TITLE,
+        Fields.BOOKTITLE,
+        Fields.PUBLISHER,
+        Fields.YEAR,
+    ],
+    ENTRYTYPES.INBOOK: [
+        Fields.AUTHOR,
+        Fields.TITLE,
+        Fields.CHAPTER,
+        Fields.PUBLISHER,
+        Fields.YEAR,
+    ],
+    ENTRYTYPES.PROCEEDINGS: [Fields.BOOKTITLE, Fields.EDITOR, Fields.YEAR],
+    ENTRYTYPES.CONFERENCE: [Fields.BOOKTITLE, Fields.EDITOR, Fields.YEAR],
+    ENTRYTYPES.BOOK: [Fields.AUTHOR, Fields.TITLE, Fields.PUBLISHER, Fields.YEAR],
+    ENTRYTYPES.PHDTHESIS: [Fields.AUTHOR, Fields.TITLE, Fields.SCHOOL, Fields.YEAR],
+    ENTRYTYPES.BACHELORTHESIS: [
+        Fields.AUTHOR,
+        Fields.TITLE,
+        Fields.SCHOOL,
+        Fields.YEAR,
+    ],
+    ENTRYTYPES.THESIS: [Fields.AUTHOR, Fields.TITLE, Fields.SCHOOL, Fields.YEAR],
+    ENTRYTYPES.MASTERSTHESIS: [
+        Fields.AUTHOR,
+        Fields.TITLE,
+        Fields.SCHOOL,
+        Fields.YEAR,
+    ],
+    ENTRYTYPES.TECHREPORT: [
+        Fields.AUTHOR,
+        Fields.TITLE,
+        Fields.INSTITUTION,
+        Fields.YEAR,
+    ],
+    ENTRYTYPES.UNPUBLISHED: [Fields.TITLE, Fields.AUTHOR, Fields.YEAR],
+    ENTRYTYPES.MISC: [Fields.AUTHOR, Fields.TITLE, Fields.YEAR],
+    ENTRYTYPES.SOFTWARE: [Fields.AUTHOR, Fields.TITLE, Fields.URL],
+    ENTRYTYPES.ONLINE: [Fields.AUTHOR, Fields.TITLE, Fields.URL],
+}
+
+
 class RecordState(Enum):
     """The possible RecordStates stored in the colrev_status field
     (corresponding to the ProcessModel)"""

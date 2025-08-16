@@ -215,7 +215,6 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
         ):
             original_record.change_entrytype(
                 new_entrytype=man_prepped_record_dict[Fields.ENTRYTYPE],
-                qm=self.quality_model,
             )
 
         if (

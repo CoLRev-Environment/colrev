@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 """Test the colrev upgrade"""
-import colrev.env.utils
 import colrev.ops.upgrade
-import colrev.review_manager
-import colrev.settings
 
 
 def test_colrev_version() -> None:

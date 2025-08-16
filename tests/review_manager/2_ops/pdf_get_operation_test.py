@@ -7,11 +7,11 @@ from colrev.constants import PDFPathType
 
 
 # def test_pdf_get(  # type: ignore
-#     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+#     base_repo_review_manager: colrev.review_manager.ReviewManager, review_manager_helpers
 # ) -> None:
 #     """Test the pdf-get operation"""
 
-#     helpers.reset_commit(
+#     review_manager_helpers.reset_commit(
 #         base_repo_review_manager, commit="prescreen_commit"
 #     )
 
@@ -22,11 +22,15 @@ from colrev.constants import PDFPathType
 
 
 def test_pdf_get_import_file(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    review_manager_helpers,
+    helpers,
 ) -> None:
     """Test the pdf-get import_file()"""
 
-    helpers.reset_commit(base_repo_review_manager, commit="prescreen_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="prescreen_commit"
+    )
 
     pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
         notify_state_transition_operation=True
@@ -43,7 +47,9 @@ def test_pdf_get_import_file(  # type: ignore
     )
     base_repo_review_manager.settings.pdf_get.pdf_path_type = PDFPathType.copy
 
-    helpers.reset_commit(base_repo_review_manager, commit="prescreen_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="prescreen_commit"
+    )
 
     pdf_get_operation.import_pdf(
         record=colrev.record.record.Record(
@@ -59,11 +65,14 @@ def test_pdf_get_import_file(  # type: ignore
 
 
 def test_pdf_get_setup_custom_script(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    review_manager_helpers,
 ) -> None:
     """Test the pdf-get setup_custom_script()"""
 
-    helpers.reset_commit(base_repo_review_manager, commit="prescreen_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="prescreen_commit"
+    )
 
     pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
         notify_state_transition_operation=True
@@ -72,11 +81,14 @@ def test_pdf_get_setup_custom_script(  # type: ignore
 
 
 def test_pdf_get_copy_pdfs_to_repo(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    review_manager_helpers,
 ) -> None:
     """Test the pdf-get copy_pdfs_to_repo()"""
 
-    helpers.reset_commit(base_repo_review_manager, commit="pdf_get_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="pdf_get_commit"
+    )
 
     pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
         notify_state_transition_operation=True
@@ -96,11 +108,14 @@ def test_pdf_get_copy_pdfs_to_repo(  # type: ignore
 
 
 def test_pdf_get_get_target_filepath(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    review_manager_helpers,
 ) -> None:
     """Test the pdf-get get_target_filepath()"""
 
-    helpers.reset_commit(base_repo_review_manager, commit="pdf_get_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="pdf_get_commit"
+    )
 
     pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
         notify_state_transition_operation=True
@@ -144,11 +159,11 @@ def test_pdf_get_get_target_filepath(  # type: ignore
 
 
 # def test_pdf_get_get_relink_pdfs(  # type: ignore
-#     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+#     base_repo_review_manager: colrev.review_manager.ReviewManager, review_manager_helpers
 # ) -> None:
 #     """Test the pdf-get get_relink_pdfs()"""
 
-#     helpers.reset_commit(
+#     review_manager_helpers.reset_commit(
 #         base_repo_review_manager, commit="pdf_get_commit"
 #     )
 

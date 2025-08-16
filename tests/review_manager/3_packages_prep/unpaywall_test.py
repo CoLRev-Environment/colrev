@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 import colrev.env.environment_manager
-import colrev.env.tei_parser
 import colrev.packages.unpaywall.src.unpaywall
 import colrev.review_manager
 from colrev.packages.unpaywall.src import utils

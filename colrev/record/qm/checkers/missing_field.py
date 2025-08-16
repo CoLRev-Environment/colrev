@@ -5,7 +5,7 @@ from __future__ import annotations
 import colrev.env.utils
 import colrev.record.qm.quality_model
 from colrev.constants import DefectCodes
-from colrev.constants import ENTRYTYPES
+from colrev.constants import ENTRYTYPE_FIELD_REQUIREMENTS
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
@@ -14,66 +14,6 @@ from colrev.constants import FieldValues
 
 class MissingFieldChecker:
     """The MissingFieldChecker"""
-
-    # Based on https://en.wikipedia.org/wiki/BibTeX
-    record_field_requirements = {
-        ENTRYTYPES.ARTICLE: [
-            Fields.AUTHOR,
-            Fields.TITLE,
-            Fields.JOURNAL,
-            Fields.YEAR,
-            Fields.VOLUME,
-            Fields.NUMBER,
-        ],
-        ENTRYTYPES.INPROCEEDINGS: [
-            Fields.AUTHOR,
-            Fields.TITLE,
-            Fields.BOOKTITLE,
-            Fields.YEAR,
-        ],
-        ENTRYTYPES.INCOLLECTION: [
-            Fields.AUTHOR,
-            Fields.TITLE,
-            Fields.BOOKTITLE,
-            Fields.PUBLISHER,
-            Fields.YEAR,
-        ],
-        ENTRYTYPES.INBOOK: [
-            Fields.AUTHOR,
-            Fields.TITLE,
-            Fields.CHAPTER,
-            Fields.PUBLISHER,
-            Fields.YEAR,
-        ],
-        ENTRYTYPES.PROCEEDINGS: [Fields.BOOKTITLE, Fields.EDITOR, Fields.YEAR],
-        ENTRYTYPES.CONFERENCE: [Fields.BOOKTITLE, Fields.EDITOR, Fields.YEAR],
-        ENTRYTYPES.BOOK: [Fields.AUTHOR, Fields.TITLE, Fields.PUBLISHER, Fields.YEAR],
-        ENTRYTYPES.PHDTHESIS: [Fields.AUTHOR, Fields.TITLE, Fields.SCHOOL, Fields.YEAR],
-        ENTRYTYPES.BACHELORTHESIS: [
-            Fields.AUTHOR,
-            Fields.TITLE,
-            Fields.SCHOOL,
-            Fields.YEAR,
-        ],
-        ENTRYTYPES.THESIS: [Fields.AUTHOR, Fields.TITLE, Fields.SCHOOL, Fields.YEAR],
-        ENTRYTYPES.MASTERSTHESIS: [
-            Fields.AUTHOR,
-            Fields.TITLE,
-            Fields.SCHOOL,
-            Fields.YEAR,
-        ],
-        ENTRYTYPES.TECHREPORT: [
-            Fields.AUTHOR,
-            Fields.TITLE,
-            Fields.INSTITUTION,
-            Fields.YEAR,
-        ],
-        ENTRYTYPES.UNPUBLISHED: [Fields.TITLE, Fields.AUTHOR, Fields.YEAR],
-        ENTRYTYPES.MISC: [Fields.AUTHOR, Fields.TITLE, Fields.YEAR],
-        ENTRYTYPES.SOFTWARE: [Fields.AUTHOR, Fields.TITLE, Fields.URL],
-        ENTRYTYPES.ONLINE: [Fields.AUTHOR, Fields.TITLE, Fields.URL],
-    }
-    """Fields requirements for respective ENTRYTYPE"""
 
     # book, inbook: author <- editor
 
@@ -87,13 +27,13 @@ class MissingFieldChecker:
     def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the missing-field checks"""
 
-        if record.data[Fields.ENTRYTYPE] not in self.record_field_requirements:
+        if record.data[Fields.ENTRYTYPE] not in ENTRYTYPE_FIELD_REQUIREMENTS:
             return
 
         if record.masterdata_is_curated():  # pragma: no cover
             return
 
-        required_fields_keys = self.record_field_requirements[
+        required_fields_keys = ENTRYTYPE_FIELD_REQUIREMENTS[
             record.data[Fields.ENTRYTYPE]
         ]
         for required_fields_key in required_fields_keys:

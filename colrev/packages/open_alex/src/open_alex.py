@@ -121,7 +121,6 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
             open_alex_feed.add_update_record(retrieved_record)
             record.change_entrytype(
                 new_entrytype=retrieved_record.data[Fields.ENTRYTYPE],
-                qm=prep_operation.review_manager.get_qm(),
             )
 
             record.merge(

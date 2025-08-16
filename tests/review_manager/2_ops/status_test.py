@@ -7,11 +7,14 @@ import colrev.review_manager
 
 
 def test_get_analytics(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    review_manager_helpers,
 ) -> None:
     """Test the prescreen operation"""
 
-    helpers.reset_commit(base_repo_review_manager, commit="dedupe_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="dedupe_commit"
+    )
 
     status_operation = base_repo_review_manager.get_status_operation()
     ret = status_operation.get_analytics()
@@ -76,11 +79,15 @@ def test_status_stats(  # type: ignore
 
 
 def test_get_review_status_report(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    review_manager_helpers,
+    helpers,
 ) -> None:
     """Test the prescreen operation"""
 
-    helpers.reset_commit(base_repo_review_manager, commit="dedupe_commit")
+    review_manager_helpers.reset_commit(
+        base_repo_review_manager, commit="dedupe_commit"
+    )
 
     status_operation = base_repo_review_manager.get_status_operation()
     ret = status_operation.get_review_status_report(colors=True)

@@ -18,10 +18,11 @@ ECMPrep = (
 
 @pytest.fixture(scope="package", name="elp_ecm")
 def elp(
-    prep_operation: colrev.ops.prep.Prep,
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> ECMPrep:
     """Fixture returning an ExcludeComplementaryMaterialsPrep instance"""
     settings = {"endpoint": "colrev.exclude_complementary_materials"}
+    prep_operation = base_repo_review_manager.get_prep_operation()
     elp_instance = ECMPrep(prep_operation=prep_operation, settings=settings)
     return elp_instance
 
