@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import typing
 import urllib.parse
 from pathlib import Path
 from typing import Optional
@@ -280,9 +279,6 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for ERIC"""
 

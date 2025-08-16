@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
@@ -304,9 +303,6 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for OpenLibrary"""
 

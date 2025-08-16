@@ -2,7 +2,6 @@
 """SearchSource: plos"""
 import datetime
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
@@ -296,9 +295,6 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
     ) -> colrev.record.record.Record:
         """Run the custom source-prep operation"""
 
