@@ -3,7 +3,6 @@
 import logging
 from typing import Optional
 
-from pathlib import Path
 import colrev.search_file
 from colrev.package_manager.package_base_classes import SearchSourcePackageBaseClass
 
@@ -21,5 +20,5 @@ class CustomName(SearchSourcePackageBaseClass):
     def search(self, rerun: 'bool') -> 'None':
         """Run a search of the SearchSource."""
 
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load records from the SearchSource."""
