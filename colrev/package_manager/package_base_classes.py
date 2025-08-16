@@ -115,9 +115,8 @@ class SearchSourcePackageBaseClass(ABC):
         """Ensure that the SearchSource is append-only."""
         return False
 
-    @classmethod
     @abstractmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load records from the SearchSource."""
 
     @abstractmethod
