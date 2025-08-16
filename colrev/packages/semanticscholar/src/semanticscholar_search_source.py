@@ -17,7 +17,6 @@ from semanticscholar.PaginatedResults import PaginatedResults
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.process.operation
 import colrev.record.record
 import colrev.search_file
 import colrev.utils
