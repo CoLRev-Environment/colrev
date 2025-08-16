@@ -248,11 +248,10 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
         return search_source
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
                 if "link" in record_dict:
@@ -262,13 +261,13 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                         record_dict[Fields.URL] = record_dict.pop("link")
                 for key in list(record_dict.keys()):
                     if key not in FieldSet.STANDARDIZED_FIELD_KEYS:
-                        logger.debug(f"Field {key} not in standard field set")
+                        self.logger.debug(f"Field {key} not in standard field set")
                         del record_dict[key]
 
             records = colrev.loader.load_utils.load(
-                filename=filename,
+                filename=self.search_source.search_results_path,
                 field_mapper=field_mapper,
-                logger=logger,
+                logger=self.logger,
             )
             for record_id in records:
                 record_dict = {

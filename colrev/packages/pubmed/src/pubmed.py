@@ -483,17 +483,18 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
         return records
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".csv":
-            return cls._load_csv(filename=filename, logger=logger)
+        if self.search_source.search_results_path.suffix == ".csv":
+            return self._load_csv(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=filename,
-                logger=logger,
+                filename=self.search_source.search_results_path,
+                logger=self.logger,
             )
             return records
 

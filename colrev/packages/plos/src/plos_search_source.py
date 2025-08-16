@@ -278,14 +278,13 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         else:
             raise NotImplementedError
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load records from the SearchSource (and convert to .bib)"""
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=filename,
-                logger=logger,
+                filename=self.search_source.search_results_path,
+                logger=self.logger,
                 unique_id_field="ID",
             )
             return records

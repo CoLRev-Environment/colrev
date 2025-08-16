@@ -322,31 +322,30 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         else:
             raise NotImplementedError
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
                 if "timestamp" in record_dict:
-                    record_dict[f"{cls.endpoint}.timestamp"] = record_dict.pop(
+                    record_dict[f"{self.endpoint}.timestamp"] = record_dict.pop(
                         "timestamp"
                     )
                 if "biburl" in record_dict:
-                    record_dict[f"{cls.endpoint}.biburl"] = record_dict.pop("biburl")
+                    record_dict[f"{self.endpoint}.biburl"] = record_dict.pop("biburl")
                 if "bibsource" in record_dict:
-                    record_dict[f"{cls.endpoint}.bibsource"] = record_dict.pop(
+                    record_dict[f"{self.endpoint}.bibsource"] = record_dict.pop(
                         "bibsource"
                     )
                 if "dblp_key" in record_dict:
                     record_dict[Fields.DBLP_KEY] = record_dict.pop("dblp_key")
 
             records = colrev.loader.load_utils.load(
-                filename=filename,
+                filename=self.search_source.search_results_path,
                 unique_id_field="ID",
                 field_mapper=field_mapper,
-                logger=logger,
+                logger=self.logger,
             )
             return records
 
