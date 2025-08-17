@@ -357,8 +357,7 @@ def _get_package_imports(plugin: str) -> str:
     if plugin == "review_type":
         return "import colrev.ops.data"
     if plugin == "search_source":
-        return """from pathlib import Path
-import colrev.search_file"""
+        return """import colrev.search_file"""
     if plugin == "prep":
         return "import colrev.ops.prep"
     if plugin == "prep_man":
