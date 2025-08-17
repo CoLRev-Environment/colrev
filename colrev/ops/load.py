@@ -292,10 +292,7 @@ class Load(colrev.process.operation.Operation):
         if source.ensure_append_only(filename=source.search_source.search_results_path):
             self.ensure_append_only(filename=source.search_source.search_results_path)
 
-        source_records = source.load(
-            filename=source.search_source.search_results_path,
-            logger=self.review_manager.logger,
-        )
+        source_records = source.load()
         source_records_list = list(source_records.values())  # type: ignore
         self._validate_source_records(source_records_list, source=source)
 
