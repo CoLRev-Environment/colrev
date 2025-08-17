@@ -348,13 +348,6 @@ def _generate_method_signatures(module_path: str, class_name: str) -> str:
         \"\"\"{docstring}\"\"\"\n"""
         )
 
-    # Temporary fix
-    if class_name == "SearchSourcePackageBaseClass":
-        method_signatures.append(
-            """    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        \"\"\"Load records from the SearchSource.\"\"\""""
-        )
-
     return "\n".join(method_signatures)
 
 
