@@ -284,6 +284,9 @@
     "colrev.genai": {
         "dev_status": "experimental"
     },
+    "colrev.importer": {
+        "dev_status": "experimental"
+    },
     "colrev.cli_prep_man": {
         "dev_status": "experimental"
     },
