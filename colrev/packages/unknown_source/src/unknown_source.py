@@ -487,27 +487,28 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Ensure that the SearchSource file is append-only"""
         return filename.suffix in [".ris", ".csv", ".xlsx", ".xls", ".md"]
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if not filename.is_file():
+        if not self.search_source.search_results_path.is_file():
             return {}
 
         __load_methods = {
-            ".ris": cls._load_ris,
-            ".bib": cls._load_bib,
-            ".csv": cls._load_table,
-            ".xls": cls._load_table,
-            ".xlsx": cls._load_table,
-            ".md": cls._load_md,
-            ".enl": cls._load_enl,
+            ".ris": self._load_ris,
+            ".bib": self._load_bib,
+            ".csv": self._load_table,
+            ".xls": self._load_table,
+            ".xlsx": self._load_table,
+            ".md": self._load_md,
+            ".enl": self._load_enl,
         }
 
-        if filename.suffix not in __load_methods:
+        if self.search_source.search_results_path.suffix not in __load_methods:
             raise NotImplementedError
 
-        records = __load_methods[filename.suffix](filename=filename, logger=logger)
+        records = __load_methods[self.search_source.search_results_path.suffix](
+            filename=self.search_source.search_results_path, logger=self.logger
+        )
         for record_id in records:
             records[record_id] = {
                 k: v

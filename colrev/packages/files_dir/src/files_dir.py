@@ -793,28 +793,27 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         except (colrev_exceptions.RecordNotFoundInPrepSourceException,):
             pass
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
                 if "note" in record_dict:
-                    record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
+                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
 
             records = colrev.loader.load_utils.load(
-                filename=filename,
+                filename=self.search_source.search_results_path,
                 unique_id_field="ID",
                 field_mapper=field_mapper,
-                logger=logger,
+                logger=self.logger,
             )
 
             for record_dict in records.values():
                 if Fields.GROBID_VERSION in record_dict:
                     del record_dict[Fields.GROBID_VERSION]
 
-                cls._update_based_on_doi(record_dict=record_dict)
+                self._update_based_on_doi(record_dict=record_dict)
 
             return records
 

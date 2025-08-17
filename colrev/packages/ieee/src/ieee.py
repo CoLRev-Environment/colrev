@@ -357,15 +357,18 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
         return records
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".ris":
-            return cls._load_ris(filename=filename, logger=logger)
+        if self.search_source.search_results_path.suffix == ".ris":
+            return self._load_ris(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
-        if filename.suffix == ".csv":
-            return cls._load_csv(filename=filename, logger=logger)
+        if self.search_source.search_results_path.suffix == ".csv":
+            return self._load_csv(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
         raise NotImplementedError
 

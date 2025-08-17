@@ -189,14 +189,13 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         return record
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records."""
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=filename,
-                logger=logger,
+                filename=self.search_source.search_results_path,
+                logger=self.logger,
                 unique_id_field="ID",
             )
             return records
