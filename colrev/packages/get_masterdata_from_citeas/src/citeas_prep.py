@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 import json
+import logging
+from typing import Optional
 
 import requests
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
+import colrev.utils
 from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
@@ -38,15 +41,19 @@ class CiteAsPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
         self.same_record_type_required = (
             prep_operation.review_manager.settings.is_curated_masterdata_repo()
         )
-        self.session = prep_operation.review_manager.get_cached_session()
-        _, self.email = prep_operation.review_manager.get_committer()
+        self.session = colrev.utils.get_cached_session()
+        _, self.email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
 
     def _cite_as_json_to_record(
         self, *, json_str: str, url: str
@@ -115,7 +122,7 @@ class CiteAsPrep(base_classes.PrepPackageBaseClass):
         except requests.exceptions.RequestException:
             pass
         except UnicodeEncodeError:
-            self.review_manager.logger.error(
+            self.logger.error(
                 "UnicodeEncodeError - this needs to be fixed at some time"
             )
 

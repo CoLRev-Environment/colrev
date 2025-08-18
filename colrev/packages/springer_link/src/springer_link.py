@@ -7,23 +7,27 @@ import re
 import typing
 import urllib.parse
 from pathlib import Path
+from typing import Optional
 
 import inquirer
 import pandas as pd
 import requests
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
-import colrev.settings
+import colrev.search_file
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_db import create_db_source
+from colrev.ops.search_db import run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -34,8 +38,6 @@ from colrev.constants import SearchType
 
 class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Springer Link"""
-
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
 
     endpoint = "colrev.springer_link"
     # pylint: disable=colrev-missed-constant-usage
@@ -51,12 +53,16 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     db_url = "https://link.springer.com/"
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
-        self.review_manager = source_operation.review_manager
-        self.search_source = self.settings_class(**settings)
-        self.quality_model = self.review_manager.get_qm()
-        self.source_operation = source_operation
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
+        self.search_source = search_file
+
         self.language_service = colrev.env.language_service.LanguageService()
 
     @classmethod
@@ -77,57 +83,68 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+        path: Path,
+        logger: Optional[logging.Logger] = None,
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {params.split("=")[0]: params.split("=")[1]}
-        search_type = operation.select_search_type(
+        search_type = colrev.utils.select_search_type(
             search_types=cls.search_types, params=params_dict
         )
 
         if search_type == SearchType.DB:
-            search_source = operation.create_db_source(
-                search_source_cls=cls,
+            search_source = create_db_source(
+                path=path,
+                platform=cls.endpoint,
                 params=params_dict,
+                add_to_git=True,
+                logger=logger,
             )
 
         elif search_type == SearchType.API:
-            filename = operation.get_unique_filename(file_path_string="springer_link")
-            search_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
+            filename = colrev.utils.get_unique_filename(
+                base_path=path,
+                file_path_string="springer_link",
+            )
+            search_source = colrev.search_file.ExtendedSearchFile(
+                platform=cls.endpoint,
+                search_results_path=filename,
                 search_type=SearchType.API,
-                search_parameters={},
+                search_string="",
                 comment="",
             )
-            params_dict.update(vars(search_source))
-            instance = cls(source_operation=operation, settings=params_dict)
-            instance.api_ui()
-            search_source.search_parameters = instance._add_constraints()
+            # params_dict.update(vars(search_source))
+
+            # TODO : reactivate the following once the base-class is updated
+            # (no longer contains the operation as a parameter)
+            # instance = cls(search_file=search_source)
+            # instance.api_ui()
+            # search_source.search_string = instance._add_constraints()
 
         else:
             raise NotImplementedError
-
-        operation.add_source_and_search(search_source)
         return search_source
 
     def search(self, rerun: bool) -> None:
         """Run a search of SpringerLink"""
 
         if self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
-                search_source_cls=self.__class__,
+            run_db_search(
+                db_url=self.db_url,
                 source=self.search_source,
+                add_to_git=True,
             )
             return
 
         if self.search_source.search_type == SearchType.API:
-            springer_feed = self.search_source.get_api_feed(
-                review_manager=self.review_manager,
+            springer_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier=self.source_identifier,
+                search_source=self.search_source,
                 update_only=(not rerun),
+                logger=self.logger,
+                verbose_mode=self.verbose_mode,
             )
             self._run_api_search(springer_feed=springer_feed, rerun=rerun)
             return
@@ -277,7 +294,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
         """Get the records from a API search"""
-        query = self.build_query(self.search_source.search_parameters)
+        query = self.build_query(self.search_source.search_string)
         api_key = self.get_api_key()
         start = 1
 
@@ -466,8 +483,10 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def get_api_key(self) -> str:
         """Get API key from settings"""
-        api_key = self.review_manager.environment_manager.get_settings_by_key(
-            self.SETTINGS["api_key"]
+        api_key = (
+            colrev.env.environment_manager.EnvironmentManager().get_settings_by_key(
+                key="springer_api_key"
+            )
         )
         if api_key:
             return api_key
@@ -504,15 +523,15 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         questions = [
             inquirer.Text(
-                "github_api_key",
+                "springer_api_key",
                 message="Enter your Springer Link API key",
                 validate=self._is_springer_link_api_key,
             ),
         ]
         answers = inquirer.prompt(questions)
-        input_key = answers["github_api_key"]
-        self.review_manager.environment_manager.update_registry(
-            self.SETTINGS["api_key"], input_key
+        input_key = answers["springer_api_key"]
+        colrev.env.environment_manager.EnvironmentManager().update_registry(
+            key="springer_api_key", value=input_key
         )
 
     @classmethod
@@ -526,20 +545,27 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
         return records
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".csv":
-            return cls._load_csv(filename=filename, logger=logger)
+        if self.search_source.search_results_path.suffix == ".csv":
+            return self._load_csv(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
-        if filename.suffix == ".bib":
-            return cls._load_bib(filename=filename, logger=logger)
+        if self.search_source.search_results_path.suffix == ".bib":
+            return self._load_bib(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Springer Link"""
 

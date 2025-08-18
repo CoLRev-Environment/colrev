@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import csv
+import logging
 from pathlib import Path
 from typing import ClassVar
+from typing import Optional
 
 import pandas as pd
 from litellm import completion
@@ -64,7 +66,9 @@ class GenAIPrescreen(base_classes.PrescreenPackageBaseClass):
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = prescreen_operation.review_manager
         self.settings = self.settings_class(**settings)
         self.prescreen_decision_explanation_path = (
@@ -138,12 +142,12 @@ class GenAIPrescreen(base_classes.PrescreenPackageBaseClass):
         screening_decisions_df.to_csv(
             self.prescreen_decision_explanation_path, index=False, quoting=csv.QUOTE_ALL
         )
-        self.review_manager.logger.info(
+        self.logger.info(
             f"Exported prescreening decisions to {self.prescreen_decision_explanation_path}"
         )
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(
+        self.review_manager.create_commit(
             msg="Pre-screen (GenAI)",
             manual_author=False,
         )

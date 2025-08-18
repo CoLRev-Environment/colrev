@@ -2,9 +2,11 @@
 """Export of bib/pdfs as a prep-man operation"""
 from __future__ import annotations
 
+import logging
 import platform
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 import pymupdf
@@ -75,7 +77,9 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
         *,
         prep_man_operation: colrev.ops.prep_man.PrepMan,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         if "pdf_handling_mode" not in settings:
             settings["pdf_handling_mode"] = "symlink"
         assert settings["pdf_handling_mode"] in ["symlink", "copy_first_page"]
@@ -211,7 +215,6 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
         ):
             original_record.change_entrytype(
                 new_entrytype=man_prepped_record_dict[Fields.ENTRYTYPE],
-                qm=self.quality_model,
             )
 
         if (
@@ -242,13 +245,13 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
 
     def _print_stats(self, *, original_record: colrev.record.record.Record) -> None:
         if original_record.data[Fields.STATUS] == RecordState.rev_prescreen_excluded:
-            self.review_manager.logger.info(
+            self.logger.info(
                 f" {Colors.RED}{original_record.data['ID']}".ljust(46)
                 + "md_needs_manual_preparation →  rev_prescreen_excluded"
                 + f"{Colors.END}"
             )
         elif original_record.data[Fields.STATUS] == RecordState.md_prepared:
-            self.review_manager.logger.info(
+            self.logger.info(
                 f" {Colors.GREEN}{original_record.data['ID']}".ljust(46)
                 + "md_needs_manual_preparation →  md_prepared"
                 + f"{Colors.END}"
@@ -259,10 +262,11 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
                 for k, v in original_record.data[Fields.MD_PROV].items()
                 if v["note"] != ""
             )
-            self.review_manager.logger.info(
-                f" {Colors.ORANGE}{original_record.data['ID']}".ljust(46)
-                + f"{man_prep_note}"
-                + f"{Colors.END}"
+            self.logger.info(
+                " %s%s%s",
+                f"{Colors.ORANGE}{original_record.data['ID']}".ljust(46),
+                man_prep_note,
+                Colors.END,
             )
 
     def _import_record(
@@ -296,14 +300,14 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
         self._print_stats(original_record=original_record)
 
     def _import_prep_man(self) -> None:
-        self.review_manager.logger.info(
+        self.logger.info(
             "Load import changes from "
             f"{self.prep_man_bib_path.relative_to(self.review_manager.path)}"
         )
 
         man_prep_recs = colrev.loader.load_utils.load(
             filename=self.prep_man_bib_path,
-            logger=self.review_manager.logger,
+            logger=self.logger,
         )
 
         imported_records: typing.List[dict] = []
@@ -317,7 +321,7 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
                 records[record_id][  # pylint: disable=colrev-direct-status-assign
                     Fields.STATUS
                 ] = RecordState.rev_prescreen_excluded
-                self.review_manager.logger.info(
+                self.logger.info(
                     f" {Colors.RED}{record_id}".ljust(46)
                     + "md_needs_manual_preparation →  rev_prescreen_excluded"
                     + f"{Colors.END}"
@@ -337,9 +341,11 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
             )
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(msg="Prep-man (ExportManPrep)")
+        self.review_manager.create_commit(
+            msg="Prep-man (ExportManPrep)",
+        )
         self.review_manager.dataset.set_ids(selected_ids=imported_records)
-        self.review_manager.dataset.create_commit(msg="Set IDs")
+        self.review_manager.create_commit(msg="Set IDs")
 
     def _print_export_prep_man_instructions(self) -> None:
         print("Created two files:")

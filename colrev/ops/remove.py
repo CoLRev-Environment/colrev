@@ -55,9 +55,7 @@ class Remove(colrev.process.operation.Operation):
 
                     write_file(records_dict=origin_records, filename=filepath)
 
-                    self.review_manager.dataset.add_changes(filepath)
+                    self.review_manager.dataset.git_repo.add_changes(filepath)
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(
-            msg="Remove records", manual_author=False
-        )
+        self.review_manager.create_commit(msg="Remove records", manual_author=False)

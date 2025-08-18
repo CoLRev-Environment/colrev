@@ -3,20 +3,23 @@
 from __future__ import annotations
 
 import collections
+import logging
 import re
 from sqlite3 import OperationalError
+from typing import Optional
 
 import requests
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
+import colrev.utils
 from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
@@ -41,7 +44,9 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
@@ -49,12 +54,14 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
             prep_operation.review_manager.settings.is_curated_masterdata_repo()
         )
         try:
-            self.session = prep_operation.review_manager.get_cached_session()
+            self.session = colrev.utils.get_cached_session()
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="sqlite-requests-cache"
             ) from exc
-        _, self.email = prep_operation.review_manager.get_committer()
+        _, self.email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
 
     def prepare(
         self, record: colrev.record.record_prep.PrepRecord
@@ -96,8 +103,8 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
                 retrieved_record_dict
             )
             doi_connector.DOIConnector.retrieve_doi_metadata(
-                review_manager=self.review_manager,
                 record=retrieved_record,
+                logger=self.logger,
                 timeout=self.prep_operation.timeout,
             )
 

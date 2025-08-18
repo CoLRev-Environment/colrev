@@ -30,6 +30,7 @@
    colrev.dataset
    colrev.env
    colrev.exceptions
+   colrev.git_repo
    colrev.hooks
    colrev.loader
    colrev.logger
@@ -40,6 +41,8 @@
    colrev.process
    colrev.record
    colrev.review_manager
+   colrev.search_file
    colrev.settings
    colrev.ui_cli
+   colrev.utils
    colrev.writer

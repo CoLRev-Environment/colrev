@@ -4,18 +4,20 @@ from __future__ import annotations
 
 import json
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 
 import requests
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
+import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -31,8 +33,6 @@ from colrev.constants import SearchType
 class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """OpenLibrary API"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     endpoint = "colrev.open_library"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "isbn"
@@ -40,8 +40,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
     ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.na
-
-    _open_library_md_filename = Path("data/search/md_open_library.bib")
+    _availability_exception_message = "OPENLIBRARY"
 
     requests_headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
@@ -51,39 +50,18 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     def __init__(
         self,
         *,
-        source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
-        self.review_manager = source_operation.review_manager
-        if settings:
-            # OpenLibrary as a search_source
-            self.search_source = self.settings_class(**settings)
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
+        self.search_source = search_file
 
-        else:
-            # OpenLibrary as an md-prep source
-            open_library_md_source_l = [
-                s
-                for s in self.review_manager.settings.sources
-                if s.filename == self._open_library_md_filename
-            ]
-            if open_library_md_source_l:
-                self.search_source = open_library_md_source_l[0]
-            else:
-                self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev.open_library",
-                    filename=self._open_library_md_filename,
-                    search_type=SearchType.MD,
-                    search_parameters={},
-                    comment="",
-                )
-
-            self.open_library_lock = Lock()
-
+        self.open_library_lock = Lock()
         self.origin_prefix = self.search_source.get_origin_prefix()
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check the status (availability) of the OpenLibrary API"""
 
         test_rec = {
@@ -102,13 +80,13 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 timeout=30,
             )
             if ret.status_code != 200:
-                if not self.review_manager.force_mode:
-                    raise colrev_exceptions.ServiceNotAvailableException("OPENLIBRARY")
-        except requests.exceptions.RequestException as exc:
-            if not self.review_manager.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException(
-                    "OPENLIBRARY"
-                ) from exc
+                    self._availability_exception_message
+                )
+        except requests.exceptions.RequestException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                self._availability_exception_message
+            ) from exc
 
     # pylint: disable=colrev-missed-constant-usage
     @classmethod
@@ -151,7 +129,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.record.Record,
     ) -> colrev.record.record.Record:
-        session = prep_operation.review_manager.get_cached_session()
+        session = colrev.utils.get_cached_session()
 
         url = "NA"
         if Fields.ISBN in record.data:
@@ -164,7 +142,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 timeout=prep_operation.timeout,
             )
             ret.raise_for_status()
-            # prep_operation.review_manager.logger.debug(url)
+            # self.logger.debug(url)
             if '"error": "notfound"' in ret.text:
                 record.remove_field(key=Fields.ISBN)
 
@@ -211,7 +189,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 timeout=prep_operation.timeout,
             )
             ret.raise_for_status()
-            # prep_operation.review_manager.logger.debug(url)
+            # self.logger.debug(url)
 
             # if we have an exact match, we don't need to check the similarity
             if '"numFoundExact": true,' not in ret.text:
@@ -242,9 +220,10 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+        path: Path,
+        logger: Optional[logging.Logger] = None,
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
         raise NotImplementedError
 
@@ -252,7 +231,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         """Run a search of OpenLibrary"""
 
         # if self.search_source.search_type == SearchType.DB:
-        #     if self.review_manager.in_ci_environment():
+        #     if utils.in_ci_environment():
         #         raise colrev_exceptions.SearchNotAutomated(
         #             "DB search for OpenLibrary not automated."
         #         )
@@ -276,11 +255,14 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
             self.open_library_lock.acquire(timeout=60)
-            open_library_feed = self.search_source.get_api_feed(
-                review_manager=prep_operation.review_manager,
+            open_library_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier=self.source_identifier,
+                search_source=self.search_source,
                 update_only=False,
                 prep_mode=True,
+                records=prep_operation.review_manager.dataset.load_records_dict(),
+                logger=self.logger,
+                verbose_mode=self.verbose_mode,
             )
 
             open_library_feed.add_update_record(retrieved_record)
@@ -288,6 +270,9 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
             record.merge(
                 retrieved_record,
                 default_source=retrieved_record.data[Fields.ORIGIN][0],
+            )
+            prep_operation.review_manager.dataset.save_records_dict(
+                open_library_feed.get_records(),
             )
             open_library_feed.save()
             self.open_library_lock.release()
@@ -302,21 +287,21 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
         return record
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=filename,
-                logger=logger,
+                filename=self.search_source.search_results_path,
+                logger=self.logger,
             )
             return records
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for OpenLibrary"""
 

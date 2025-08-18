@@ -2,14 +2,19 @@
 """Consolidation of metadata based on Crossref API as a prep operation"""
 from __future__ import annotations
 
+import logging
+from pathlib import Path
+from typing import Optional
+
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.crossref.src.crossref_search_source as crossref_connector
 import colrev.record.record
+import colrev.search_file
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 
 # pylint: disable=too-few-public-methods
@@ -35,11 +40,32 @@ class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
+
+        # Crossref as an md-prep source
+        crossref_md_filename = Path("data/search/md_crossref.bib")
+        crossref_md_source_l = [
+            s
+            for s in self.prep_operation.review_manager.settings.sources
+            if s.search_history_path == crossref_md_filename
+        ]
+        if crossref_md_source_l:
+            search_file = crossref_md_source_l[0]
+        else:
+            search_file = colrev.search_file.ExtendedSearchFile(
+                platform="colrev.crossref",
+                search_results_path=crossref_md_filename,
+                search_type=SearchType.MD,
+                search_string="",
+                comment="",
+            )
+
         self.crossref_source = crossref_connector.CrossrefSearchSource(
-            source_operation=prep_operation
+            search_file=search_file,
         )
 
         self.crossref_prefixes = [
@@ -48,11 +74,9 @@ class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
             if s.endpoint == "colrev.crossref"
         ]
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check status (availability) of the Crossref API"""
-        self.crossref_source.check_availability(source_operation=source_operation)
+        self.crossref_source.check_availability()
 
     def prepare(
         self, record: colrev.record.record_prep.PrepRecord

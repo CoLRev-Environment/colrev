@@ -6,15 +6,16 @@ import json
 import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 import requests
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.search_file
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
@@ -30,7 +31,6 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.open_citations_forward_search"
     source_identifier = "fwsearch_ref"
     search_types = [SearchType.FORWARD_SEARCH]
@@ -39,19 +39,31 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
-        self.search_source = self.settings_class(**settings)
-        self.review_manager = source_operation.review_manager
-        self.crossref_api = crossref_api.CrossrefAPI(params={})
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
+        self.search_source = search_file
+
+        # TODO / TBD: replace review_manager?
+        import colrev.review_manager
+
+        self.review_manager = colrev.review_manager.ReviewManager()
+
+        self.crossref_api = crossref_api.CrossrefAPI(url="")
 
     @classmethod
-    def get_default_source(cls) -> colrev.settings.SearchSource:
+    def get_default_source(cls) -> colrev.search_file.ExtendedSearchFile:
         """Get the default SearchSource settings"""
-        return colrev.settings.SearchSource(
-            endpoint="colrev.open_citations_forward_search",
-            filename=Path("data/search/forward_search.bib"),
+        return colrev.search_file.ExtendedSearchFile(
+            platform="colrev.open_citations_forward_search",
+            search_results_path=Path("data/search/forward_search.bib"),
             search_type=SearchType.FORWARD_SEARCH,
+            search_string="",
             search_parameters={
                 "scope": {Fields.STATUS: "rev_included|rev_synthesized"}
             },
@@ -63,24 +75,24 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         source = self.search_source
 
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.filename}")
 
         assert source.search_type == SearchType.FORWARD_SEARCH
 
-        if "scope" not in source.search_parameters:
+        if "scope" not in source.search_string:
             raise colrev_exceptions.InvalidQueryException(
                 "Scope required in the search_parameters"
             )
 
         if (
-            source.search_parameters["scope"][Fields.STATUS]
+            source.search_string["scope"][Fields.STATUS]
             != "rev_included|rev_synthesized"
         ):
             raise colrev_exceptions.InvalidQueryException(
                 "search_parameters/scope/colrev_status must be rev_included|rev_synthesized"
             )
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.filename)
 
     def _fw_search_condition(self, *, record: dict) -> bool:
         if Fields.DOI not in record:
@@ -88,8 +100,8 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         # rev_included/rev_synthesized required, but record not in rev_included/rev_synthesized
         if (
-            Fields.STATUS in self.search_source.search_parameters["scope"]
-            and self.search_source.search_parameters["scope"][Fields.STATUS]
+            Fields.STATUS in self.search_source.search_string["scope"]
+            and self.search_source.search_string["scope"][Fields.STATUS]
             == "rev_included|rev_synthesized"
             and record[Fields.STATUS]
             not in [
@@ -119,7 +131,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
                 retrieved_record.data[Fields.ID] = retrieved_record.data[Fields.DOI]
                 forward_citations.append(retrieved_record.data)
         except json.decoder.JSONDecodeError:
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"Error retrieving citations from Opencitations for {record_dict['ID']}"
             )
 
@@ -138,19 +150,19 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
             print("No records imported. Cannot run forward search yet.")
             return
 
-        forward_search_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        forward_search_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         for record in records.values():
             if not self._fw_search_condition(record=record):
                 continue
 
-            self.review_manager.logger.info(
-                f"Run forward search for {record[Fields.ID]}"
-            )
+            self.logger.info(f"Run forward search for {record[Fields.ID]}")
 
             new_records = self._get_forward_search_records(record_dict=record)
 
@@ -170,8 +182,8 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         forward_search_feed.save()
 
-        if self.review_manager.dataset.has_record_changes():
-            self.review_manager.dataset.create_commit(
+        if self.review_manager.dataset.git_repo.has_record_changes():
+            self.review_manager.create_commit(
                 msg="Forward search", script_call="colrev search"
             )
 
@@ -186,13 +198,13 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+        path: Path,
+        logger: Optional[logging.Logger] = None,
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint"""
 
         search_source = cls.get_default_source()
-        operation.add_source_and_search(search_source)
         return search_source
 
     def prep_link_md(
@@ -205,21 +217,21 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented"""
         return record
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=filename,
-                logger=logger,
+                filename=self.search_source.search_results_path,
+                logger=self.logger,
             )
             return records
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for forward searches (OpenCitations)"""
         return record

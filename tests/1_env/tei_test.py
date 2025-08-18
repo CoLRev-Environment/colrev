@@ -20,7 +20,7 @@ from colrev.constants import RecordState
 def script_loc(request) -> Path:  # type: ignore
     """Return the directory of the currently running test script"""
 
-    return Path(request.fspath).parent
+    return Path(request.fspath).parents[0]
 
 
 @pytest.mark.skipif(

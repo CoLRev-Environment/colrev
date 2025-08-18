@@ -14,7 +14,7 @@ from lxml import html
 from lxml.etree import XMLSyntaxError
 
 import colrev.exceptions as colrev_exceptions
-import colrev.record.record_prep
+import colrev.record.record
 from colrev.constants import Fields
 
 
@@ -202,8 +202,6 @@ class PubmedAPI:
 
     def _get_pubmed_ids(self, query: str, retstart: int, page: int) -> dict:
 
-        if not query.startswith("https://pubmed.ncbi.nlm.nih.gov/?term="):
-            query = "https://pubmed.ncbi.nlm.nih.gov/?term=" + query
         url = query + f"&retstart={retstart}&page={page}"
         ret = self.session.request("GET", url, headers=self.headers, timeout=30)
         ret.raise_for_status()

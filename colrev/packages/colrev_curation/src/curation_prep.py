@@ -2,6 +2,9 @@
 """Preparation of curations"""
 from __future__ import annotations
 
+import logging
+from typing import Optional
+
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
@@ -32,9 +35,10 @@ class CurationPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
-        self.quality_model = prep_operation.review_manager.get_qm()
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
         self.curation_restrictions = self._load_curation_restrictions()
@@ -90,7 +94,6 @@ class CurationPrep(base_classes.PrepPackageBaseClass):
                         new_entrytype=applicable_curation_restrictions[
                             Fields.ENTRYTYPE
                         ],
-                        qm=self.quality_model,
                     )
                 except colrev_exceptions.MissingRecordQualityRuleSpecification as exc:
                     print(exc)
@@ -133,6 +136,8 @@ class CurationPrep(base_classes.PrepPackageBaseClass):
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
         """Prepare records in a CoLRev curation"""
+
+        record.data.pop(Fields.CITED_BY, None)
 
         if record.data[Fields.STATUS] == RecordState.rev_prescreen_excluded:
             return record
