@@ -42,5 +42,4 @@ colrev.settings
       ScreenCriterion
       ScreenSettings
       SearchSettings
-      SearchSource
       Settings

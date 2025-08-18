@@ -42,5 +42,4 @@
       ScreenCriterion
       ScreenSettings
       SearchSettings
-      SearchSource
       Settings

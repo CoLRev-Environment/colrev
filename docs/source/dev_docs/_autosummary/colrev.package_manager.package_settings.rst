@@ -21,4 +21,3 @@ colrev.package\_manager.package\_settings
       :nosignatures:
 
       DefaultSettings
-      DefaultSourceSettings

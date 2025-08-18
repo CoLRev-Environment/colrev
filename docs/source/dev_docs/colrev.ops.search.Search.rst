@@ -20,13 +20,11 @@ colrev.ops.search.Search
       ~Search.add_source_and_search
       ~Search.check_precondition
       ~Search.conclude
-      ~Search.create_api_source
       ~Search.decorate
       ~Search.get_new_search_files
       ~Search.get_new_source_heuristic
       ~Search.main
       ~Search.notify
-      ~Search.select_search_type
 
 
 

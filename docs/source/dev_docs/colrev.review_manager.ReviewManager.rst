@@ -18,11 +18,10 @@ colrev.review\_manager.ReviewManager
 
       ~ReviewManager.check_repo
       ~ReviewManager.check_repository_setup
+      ~ReviewManager.create_commit
       ~ReviewManager.get_advisor
-      ~ReviewManager.get_cached_session
       ~ReviewManager.get_checker
       ~ReviewManager.get_colrev_versions
-      ~ReviewManager.get_committer
       ~ReviewManager.get_completeness_condition
       ~ReviewManager.get_connecting_review_manager
       ~ReviewManager.get_data_operation
@@ -51,7 +50,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_trace_operation
       ~ReviewManager.get_upgrade
       ~ReviewManager.get_validate_operation
-      ~ReviewManager.in_ci_environment
       ~ReviewManager.in_test_environment
       ~ReviewManager.in_virtualenv
       ~ReviewManager.load_settings

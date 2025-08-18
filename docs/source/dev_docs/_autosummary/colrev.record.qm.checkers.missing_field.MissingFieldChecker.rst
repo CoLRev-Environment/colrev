@@ -27,4 +27,3 @@ colrev.record.qm.checkers.missing\_field.MissingFieldChecker
    .. autosummary::
 
       ~MissingFieldChecker.msg
-      ~MissingFieldChecker.record_field_requirements
