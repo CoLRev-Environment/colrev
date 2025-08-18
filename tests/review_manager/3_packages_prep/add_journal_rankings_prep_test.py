@@ -8,6 +8,7 @@ import colrev.env.local_index_builder
 import colrev.ops.prep
 import colrev.packages.add_journal_ranking.src.add_journal_ranking
 from colrev.constants import Fields
+import warnings
 
 
 @pytest.fixture(scope="package", name="ajr_instance")
@@ -24,12 +25,19 @@ def elp(  # type: ignore
     temp_sqlite = prep_operation.review_manager.path.parent / Path(
         "sqlite_index_test.db"
     )
-    with session_mocker.patch.object(
-        colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
-    ):
-        local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder(
-            verbose_mode=True
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=".*pathlib\\.Path\\.__enter__.*",
+            category=DeprecationWarning,
         )
+        with session_mocker.patch.object(
+            colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
+        ):
+            local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder(
+                verbose_mode=True
+            )
     local_index_builder.index_journal_rankings()
 
     return ajr_instance

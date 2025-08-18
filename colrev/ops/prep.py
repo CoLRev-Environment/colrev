@@ -44,6 +44,19 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 # logging.getLogger("urllib3").setLevel(logging.ERROR)
 logging.getLogger("requests_cache").setLevel(logging.ERROR)
 
+# ---- start-method guard: avoid unsafe fork in multi-threaded parent ----
+_AVAILABLE = mp.get_all_start_methods()
+_PREFERRED = "forkserver" if "forkserver" in _AVAILABLE else "spawn"
+
+try:
+    if mp.get_start_method(allow_none=True) is None:
+        mp.set_start_method(_PREFERRED)
+except RuntimeError:
+    # Start method already set elsewhere; safe to ignore
+    pass
+# ------------------------------------------------------------------------
+
+
 PREP_COUNTER = Value("i", 0)
 
 
