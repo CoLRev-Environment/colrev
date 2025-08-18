@@ -71,8 +71,7 @@ class CustomSearch(base_classes.SearchSourcePackageBaseClass):
 
         return result
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load fixes for the custom source"""
         records = {"ID1": {"ID": "ID1", "title": "..."}}
 
