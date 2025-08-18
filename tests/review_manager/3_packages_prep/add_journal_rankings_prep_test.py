@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test the add_journal_ranking prep package"""
+import warnings
 from pathlib import Path
 
 import pytest
@@ -8,7 +9,6 @@ import colrev.env.local_index_builder
 import colrev.ops.prep
 import colrev.packages.add_journal_ranking.src.add_journal_ranking
 from colrev.constants import Fields
-import warnings
 
 
 @pytest.fixture(scope="package", name="ajr_instance")
