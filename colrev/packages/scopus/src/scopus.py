@@ -136,6 +136,7 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         operation: colrev.ops.search.Search,
         params: str,
     ) -> colrev.settings.SearchSource:
+        
         params_dict = {}
         search_type = operation.select_search_type (
             search_types=cls.search_types, params=params_dict
