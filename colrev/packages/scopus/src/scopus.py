@@ -141,19 +141,21 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         params: str,
     ) -> colrev.settings.SearchSource:
 
-        params_dict = {}
         search_type = operation.select_search_type(
-            search_types=cls.search_types, params=params_dict
+            search_types=cls.search_types, params={}
         )
 
         if search_type == SearchType.API:
-            search_source = operation.create_api_source(endpoint=cls.endpoint)    
-        
+            search_source = operation.create_api_source(endpoint=cls.endpoint)
+            if params:
+                search_source.search_parameters["query"] = params
+
         elif search_type == SearchType.DB:
             search_source = operation.create_db_source(
                 search_source_cls=cls,
                 params={},
             )
+
         operation.add_source_and_search(search_source)
         return search_source
 
@@ -161,8 +163,11 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         query = self.search_source.search_parameters.get("query", "")
         # TODO : make sure the query variable is set correctly (based on the search source settings)
 
-        if query and self.search_source.search_type == SearchType.API:
-            self.review_manager.logger.info("Attempting API search...")
+        if not query:
+            raise ValueError("No query provided. Use --query when adding source.")
+
+        if self.search_source.search_type == SearchType.API:
+            self.review_manager.logger.info(f"Running Scopus API search with: {query}")
             self._simple_api_search(query)
             return
 
