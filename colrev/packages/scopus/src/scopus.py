@@ -140,12 +140,20 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         operation: colrev.ops.search.Search,
         params: str,
     ) -> colrev.settings.SearchSource:
-        # TODO: users should have the option to add a DB or API search here.
-        # the pubmed SearchSource could be used as an example
-        search_source = operation.create_db_source(
-            search_source_cls=cls,
-            params={},
+
+        params_dict = {}
+        search_type = operation.select_search_type(
+            search_types=cls.search_types, params=params_dict
         )
+
+        if search_type == SearchType.API:
+            search_source = operation.create_api_source(endpoint=cls.endpoint)    
+        
+        elif search_type == SearchType.DB:
+            search_source = operation.create_db_source(
+                search_source_cls=cls,
+                params={},
+            )
         operation.add_source_and_search(search_source)
         return search_source
 
