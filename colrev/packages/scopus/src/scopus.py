@@ -196,7 +196,7 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         def field_mapper(record_dict: dict) -> None:
             if record_dict[Fields.ENTRYTYPE] in [
                 ENTRYTYPES.INPROCEEDINGS,
-                ENTRYTYPES.PROCEEDINGS, 
+                ENTRYTYPES.PROCEEDINGS,
             ]:
                 record_dict[Fields.BOOKTITLE] = record_dict.pop(Fields.JOURNAL, None)
 
