@@ -138,15 +138,14 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         operation: colrev.ops.search.Search,
         params: str,
     ) -> colrev.settings.SearchSource:
-
-        search_type = operation.select_search_type(
-            search_types=cls.search_types, params={}
+        
+        params_dict = {}
+        search_type = operation.select_search_type (
+            search_types=cls.search_types, params=params_dict
         )
 
         if search_type == SearchType.API:
             search_source = operation.create_api_source(endpoint=cls.endpoint)
-            if params:
-                search_source.search_parameters["query"] = params
 
         elif search_type == SearchType.DB:
             search_source = operation.create_db_source(
