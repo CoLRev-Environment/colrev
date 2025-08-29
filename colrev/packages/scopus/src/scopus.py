@@ -67,25 +67,20 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
                 entries = data.get("search-results", {}).get("entry", [])
                 self.review_manager.logger.info(f"Found {len(entries)} results via API")
 
-                output_json_path = Path(
-                    self.search_source.search_parameters.get(
-                        "output_json", "scopus_results.json"
-                    )
-                )
                 output_bib_path = Path(
                     self.search_source.search_parameters.get(
                         "output_bib", "scopus_results.bib"
                     )
                 )
 
-                self._save_simple_results(entries, output_json_path, output_bib_path)
+                self._save_simple_results(entries, output_bib_path)
             else:
                 self.review_manager.logger.info(f"API Error: {response.status_code}")
         except Exception as e:
             self.review_manager.logger.info(f"API search error: {str(e)}")
 
     def _save_simple_results(
-        self, entries: list, json_path: Path, bib_path: Path
+        self, entries: list, bib_path: Path
     ) -> None:
         results = []
 
@@ -104,10 +99,6 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "ENTRYTYPE": "article",
             }
             results.append(record)
-
-        with open(json_path, "w" , encoding= "utf-8") as f_json:
-            json.dump(results, f_json, indent=2)
-        self.review_manager.logger.info(f"Results saved to {json_path}")
 
         self._convert_to_bib(results, bib_path)
 
@@ -199,7 +190,7 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         def field_mapper(record_dict: dict) -> None:
             if record_dict[Fields.ENTRYTYPE] in [
                 ENTRYTYPES.INPROCEEDINGS,
-                ENTRYTYPES.PROCEEDINGS,
+                ENTRYTYPES.PROCEEDINGS, 
             ]:
                 record_dict[Fields.BOOKTITLE] = record_dict.pop(Fields.JOURNAL, None)
 
