@@ -52,8 +52,6 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
             url = "https://api.elsevier.com/content/search/scopus"
             params = {
                 "query": query,
-                # The response.text showed that the count was too high.
-                # To retrieve all results, you might need to paginate (using 'start' and 'count').
                 "count": 10,
                 "start": 0,
                 "apiKey": api_key,
@@ -161,7 +159,6 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def search(self, rerun: bool) -> None:
         query = self.search_source.search_parameters.get("query", "")
-        # TODO : make sure the query variable is set correctly (based on the search source settings)
 
         if not query:
             raise ValueError("No query provided. Use --query when adding source.")
