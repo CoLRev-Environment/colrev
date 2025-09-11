@@ -42,7 +42,7 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         api_key = os.getenv("SCOPUS_API_KEY")
         if not api_key:
             self.review_manager.logger.info(
-                "No API key found - using DB search instead"
+                "No API key found. Set API key using 'export SCOPUS_API_KEY=\"XXXXX\""
             )
             return
 
