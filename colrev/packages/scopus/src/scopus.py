@@ -62,21 +62,14 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
                 data = response.json()
                 entries = data.get("search-results", {}).get("entry", [])
                 self.review_manager.logger.info(f"Found {len(entries)} results via API")
-
-                output_bib_path = Path(
-                    self.search_source.search_parameters.get(
-                        "output_bib", "scopus_results.bib"
-                    )
-                )
-
-                self._save_simple_results(entries, output_bib_path)
+                self._save_simple_results(entries)
             else:
                 self.review_manager.logger.info(f"API Error: {response.status_code}")
         except Exception as e:
             self.review_manager.logger.info(f"API search error: {str(e)}")
 
     def _save_simple_results(
-        self, entries: list, bib_path: Path
+        self, entries: list,
     ) -> None:
         results = []
 
@@ -96,17 +89,17 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
             }
             results.append(record)
 
-        self._convert_to_bib(results, bib_path)
+        self._convert_to_bib(results)
 
-    def _convert_to_bib(self, records: list, bib_path: Path) -> None:
-        with open(bib_path, "w") as f:
+    def _convert_to_bib(self, records: list) -> None:
+        with open(self.search_source.filename, "w") as f:
             for record in records:
                 f.write(f"@{record['ENTRYTYPE']}{{{record['ID']},\n")
                 for key, value in record.items():
                     if key not in ["ENTRYTYPE", "ID"] and value:
                         f.write(f"  {key} = {{{value}}},\n")
                 f.write("}\n\n")
-        self.review_manager.logger.info(f"BibTeX file saved to {bib_path}")
+        self.review_manager.logger.info(f"BibTeX file saved to {self.search_source.filename}")
 
     def _simple_parse_authors(self, authors: list) -> str:
         if not isinstance(authors, list):
