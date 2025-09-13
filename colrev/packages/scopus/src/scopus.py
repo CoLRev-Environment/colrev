@@ -56,15 +56,15 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
             }
 
             response = requests.get(url, params=params, timeout=30)
-            print(response.json())
 
-            if response.status_code == 200:
-                data = response.json()
-                entries = data.get("search-results", {}).get("entry", [])
-                self.review_manager.logger.info(f"Found {len(entries)} results via API")
-                self._save_simple_results(entries)
-            else:
+            if response.status_code != 200:
                 self.review_manager.logger.info(f"API Error: {response.status_code}")
+
+            data = response.json()
+            entries = data.get("search-results", {}).get("entry", [])
+            self.review_manager.logger.info(f"Found {len(entries)} results via API")
+            self._save_simple_results(entries)
+
         except Exception as e:
             self.review_manager.logger.info(f"API search error: {str(e)}")
 
