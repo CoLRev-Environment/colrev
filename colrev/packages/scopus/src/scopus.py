@@ -1,7 +1,12 @@
+#! /usr/bin/env python
 """SearchSource: Scopus"""
 from __future__ import annotations
+
 import logging
 import os
+import time
+import typing
+import urllib.parse
 from pathlib import Path
 
 import requests
@@ -11,10 +16,12 @@ import colrev.loader.bib
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.packages.scopus.src import transformer
 
 
 class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
@@ -22,12 +29,20 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.scopus"
-    source_identifier = "url"
+    source_identifier = "scopus.eid"
     search_types = [SearchType.DB, SearchType.API]
     ci_supported: bool = Field(default=False)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     db_url = "https://www.scopus.com/search/form.uri?display=advanced"
+
+    # --- External API endpoints ---
+    _SCOPUS_SEARCH_URL = "https://api.elsevier.com/content/search/scopus"
+    _SCOPUS_ABSTRACT_BY_EID_URL = "https://api.elsevier.com/content/abstract/eid/"
+    _CROSSREF_WORKS_URL = "https://api.crossref.org/works/"
+
+    # Throttling to be gentle with APIs
+    _THROTTLE_S = 0.34
 
     def __init__(
         self, *, source_operation: colrev.process.operation.Operation, settings: dict
@@ -37,81 +52,206 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.quality_model = self.review_manager.get_qm()
         self.operation = source_operation
 
-    def _simple_api_search(self, query: str) -> None:
+    # ------------------------
+    # Author-resolution helpers
+    # ------------------------
+    def _scopus_headers(self) -> dict:
+        api_key = os.getenv("SCOPUS_API_KEY")
+        headers = {"Accept": "application/json"}
+        if api_key:
+            headers["X-ELS-APIKey"] = api_key
+        return headers
+
+    def _crossref_headers(self) -> dict:
+        return {
+            "User-Agent": "colrev-scopus-author-resolution/1.0",
+            "Accept": "application/json",
+        }
+
+    def _scopus_abstract_authors_by_eid(
+        self, *, eid: str
+    ) -> list[dict[str, typing.Optional[str]]]:
+        """Return [{'name': 'Given Family', 'scopus_author_id': '...'}, ...]
+        via Abstract Retrieval."""
+        url = self._SCOPUS_ABSTRACT_BY_EID_URL + urllib.parse.quote(eid)
+        r = requests.get(
+            url,
+            headers=self._scopus_headers(),
+            timeout=30,
+            params={"field": "authors"},
+        )
+        r.raise_for_status()
+        data = r.json()
+        arr = (
+            data.get("abstracts-retrieval-response", {})
+            .get("authors", {})
+            .get("author", [])
+        )
+        if not isinstance(arr, list):
+            arr = [arr] if arr else []
+        out: list[dict[str, typing.Optional[str]]] = []
+        for a in arr:
+            if not isinstance(a, dict):
+                continue
+            auid = a.get("@auid")
+            pref = a.get("preferred-name") or {}
+            if not isinstance(pref, dict):
+                pref = {}
+            given = pref.get("ce:given-name") or a.get("ce:given-name")
+            family = pref.get("ce:surname") or a.get("ce:surname")
+            name = " ".join([p for p in [given, family] if p])
+            out.append({"name": name if name else None, "scopus_author_id": auid})
+        return out
+
+    def _crossref_authors_by_doi(
+        self, *, doi: str
+    ) -> list[dict[str, typing.Optional[str]]]:
+        """Return [{'name': 'Given Family', 'scopus_author_id': None}, ...] via Crossref."""
+        url = self._CROSSREF_WORKS_URL + urllib.parse.quote(doi)
+        r = requests.get(url, headers=self._crossref_headers(), timeout=30)
+        r.raise_for_status()
+        msg = r.json().get("message", {})
+        authors = msg.get("author", []) or []
+        out: list[dict[str, typing.Optional[str]]] = []
+        for a in authors:
+            if not isinstance(a, dict):
+                continue
+            given = a.get("given")
+            family = a.get("family")
+            name = " ".join([p for p in [given, family] if p])
+            out.append({"name": name if name else None, "scopus_author_id": None})
+        return out
+
+    def _resolve_authors(
+        self, *, eid: typing.Optional[str], doi: typing.Optional[str]
+    ) -> tuple[str, list[dict[str, typing.Optional[str]]]]:
+        """
+        Try Scopus Abstract Retrieval first (IDs + names), then Crossref (names only).
+        Returns (source, authors).
+        """
+        # 1) Scopus Abstract Retrieval
+        if eid:
+            try:
+                authors = self._scopus_abstract_authors_by_eid(eid=eid)
+                time.sleep(self._THROTTLE_S)
+                if authors:
+                    return "scopus_abstract_retrieval", authors
+            except requests.HTTPError:
+                pass
+
+        # 2) Crossref fallback (no Scopus IDs)
+        if doi:
+            authors = self._crossref_authors_by_doi(doi=doi)
+            time.sleep(self._THROTTLE_S)
+            if authors:
+                return "crossref", authors
+
+        return "none", []
+
+    @staticmethod
+    def _looks_like_single_author(author_field: str | None) -> bool:
+        """Heuristic: treat empty or single 'and'-less string as single author."""
+        if not author_field:
+            return True
+        return " and " not in author_field.strip()
+
+    @staticmethod
+    def _names_to_bibtex_and(names: list[str]) -> str:
+        """
+        Convert ['Given Family', 'Given2 Family2'] -> 'Family, Given and Family2, Given2'
+        (best-effort; falls back to provided order if splitting is unclear).
+        """
+        converted = []
+        for n in names:
+            n = (n or "").strip()
+            if not n:
+                continue
+            parts = n.split()
+            if len(parts) >= 2:
+                family = parts[-1]
+                given = " ".join(parts[:-1])
+                converted.append(f"{family}, {given}")
+            else:
+                converted.append(n)
+        return " and ".join(converted)
+
+    # ------------------------
+    # API search + integration
+    # ------------------------
+    def _simple_api_search(self, query: str, rerun: bool) -> None:
 
         api_key = os.getenv("SCOPUS_API_KEY")
         if not api_key:
             self.review_manager.logger.info(
-                "No API key found. Set API key using 'export SCOPUS_API_KEY=\"XXXXX\""
+                'No API key found. Set API key using: export SCOPUS_API_KEY="XXXXX"'
             )
             return
 
+        scopus_feed = self.search_source.get_api_feed(
+            review_manager=self.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=(not rerun),
+        )
+
         try:
-            url = "https://api.elsevier.com/content/search/scopus"
             params = {
                 "query": query,
                 "count": 10,
                 "start": 0,
-                "apiKey": api_key,
+                "view": "STANDARD",  # STANDARD: only first author (with ID) in results
             }
 
-            response = requests.get(url, params=params, timeout=30)
+            response = requests.get(
+                self._SCOPUS_SEARCH_URL,
+                headers=self._scopus_headers(),
+                params=params,
+                timeout=30,
+            )
 
             if response.status_code != 200:
-                self.review_manager.logger.info(f"API Error: {response.status_code}")
+                self.review_manager.logger.info(
+                    f"API Error: {response.status_code} — {response.text}"
+                )
 
             data = response.json()
-            entries = data.get("search-results", {}).get("entry", [])
+            entries = data.get("search-results", {}).get("entry", []) or []
             self.review_manager.logger.info(f"Found {len(entries)} results via API")
-            self._save_simple_results(entries)
 
-        except Exception as e:
+            for record in self._get_records_from_api(entries):
+                scopus_feed.add_update_record(retrieved_record=record)
+
+        except ValueError as e:
             self.review_manager.logger.info(f"API search error: {str(e)}")
 
-    def _save_simple_results(
-        self, entries: list,
-    ) -> None:
-        results = []
+        scopus_feed.save()
 
+    def _get_records_from_api(
+        self,
+        entries: list,
+    ) -> typing.Generator[colrev.record.record_prep.PrepRecord]:
+        """
+        Transform each Scopus entry to a CoLRev record and enrich with a resolved author list:
+        - colrev.scopus.author_resolution_source
+        - colrev.scopus.authors_json
+        - Update 'author' field (BibTeX) if only single/empty author present
+        """
         for entry in entries:
-            record = {
-                "ID": entry.get("dc:identifier", "").replace("SCOPUS_ID:", ""),
-                "title": entry.get("dc:title", ""),
-                "author": self._simple_parse_authors(entry.get("author", [])),
-                "year": (
-                    entry.get("prism:coverDate", "")[:4]
-                    if entry.get("prism:coverDate")
-                    else ""
-                ),
-                "journal": entry.get("prism:publicationName", ""),
-                "doi": entry.get("prism:doi", ""),
-                "ENTRYTYPE": "article",
-            }
-            results.append(record)
+            rec = transformer.transform_record(entry)
 
-        self._convert_to_bib(results)
+            # Grab EID / DOI directly from the search entry
+            eid = entry.get("eid") or rec.get("scopus.eid")  # transformer may set it
+            doi = entry.get("prism:doi") or rec.get("doi")
 
-    def _convert_to_bib(self, records: list) -> None:
-        with open(self.search_source.filename, "w") as f:
-            for record in records:
-                f.write(f"@{record['ENTRYTYPE']}{{{record['ID']},\n")
-                for key, value in record.items():
-                    if key not in ["ENTRYTYPE", "ID"] and value:
-                        f.write(f"  {key} = {{{value}}},\n")
-                f.write("}\n\n")
-        self.review_manager.logger.info(f"BibTeX file saved to {self.search_source.filename}")
+            _, authors = self._resolve_authors(eid=eid, doi=doi)
 
-    def _simple_parse_authors(self, authors: list) -> str:
-        if not isinstance(authors, list):
-            return ""
-        names = []
-        for author in authors[:3]:
-            if isinstance(author, dict):
-                surname = author.get("surname", "")
-                initials = author.get("initials", "")
-                if surname:
-                    names.append(f"{surname} {initials}".strip())
-        return ", ".join(names)
+            # Optionally update the human-readable BibTeX 'author' if it's empty/single
+            names: list[str] = [
+                n for a in authors if isinstance((n := a.get("name")), str) and n
+            ]
+            if names and self._looks_like_single_author(rec.get(Fields.AUTHOR)):
+                rec[Fields.AUTHOR] = self._names_to_bibtex_and(names)
+
+            yield colrev.record.record_prep.PrepRecord(rec)
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -130,8 +270,8 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         params: str,
     ) -> colrev.settings.SearchSource:
 
-        params_dict = {}
-        search_type = operation.select_search_type (
+        params_dict: dict = {}
+        search_type = operation.select_search_type(
             search_types=cls.search_types, params=params_dict
         )
 
@@ -155,11 +295,11 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if self.search_source.search_type == SearchType.API:
             self.review_manager.logger.info(f"Running Scopus API search with: {query}")
-            self._simple_api_search(query)
+            self._simple_api_search(query, rerun)
             return
 
         if self.search_source.search_type == SearchType.DB:
-            self.operation.run_db_search(
+            self.operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,
             )
