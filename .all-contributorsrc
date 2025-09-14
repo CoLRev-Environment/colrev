@@ -355,6 +355,24 @@
         "contributions": [
           "code"
         ]
+      },
+      {
+        "login": "Lea-Chaoui",
+        "name": "Lea-Chaoui",
+        "avatar_url": "https://avatars.githubusercontent.com/u/148755227?v=4",
+        "profile": "https://github.com/Lea-Chaoui",
+        "contributions": [
+          "code"
+        ]
+      },
+      {
+        "login": "ChloeT17",
+        "name": "ChloeT17",
+        "avatar_url": "https://avatars.githubusercontent.com/u/209974918?v=4",
+        "profile": "https://github.com/ChloeT17",
+        "contributions": [
+          "code"
+        ]
       }
   ],
   "contributorsPerLine": 7,
