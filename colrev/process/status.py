@@ -6,10 +6,14 @@ import typing
 
 from pydantic import BaseModel
 
-import colrev.process.operation
+import colrev.loader.load_utils
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.process.model import ProcessModel
+
+if typing.TYPE_CHECKING:
+    import colrev.review_manager
+    import colrev.record.record
 
 
 class StatusStatsCurrently(BaseModel):

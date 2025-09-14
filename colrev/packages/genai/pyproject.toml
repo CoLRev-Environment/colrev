@@ -27,6 +27,7 @@ search_types = []
 [project.entry-points.colrev]
 prescreen = "colrev.packages.genai.src.genai_prescreen:GenAIPrescreen"
 screen = "colrev.packages.genai.src.genai_screen:GenAIScreen"
+data = "colrev.packages.genai.src.genai_data:GenAIData"
 
 [build-system]
 requires = ["hatchling"]

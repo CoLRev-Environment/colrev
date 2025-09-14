@@ -208,6 +208,12 @@ class Upgrade(colrev.process.operation.Operation):
                 "script": self._migrate_0_14_0,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.14.0"),
+                "target_version": CoLRevVersion("0.15.0"),
+                "script": self._migrate_0_15_0,
+                "released": False,
+            },
         ]
         self.review_manager.logger.info(
             "Colrev version installed:           %s", installed_colrev_version
@@ -792,6 +798,20 @@ class Upgrade(colrev.process.operation.Operation):
             )
 
             self.repo.index.add([str(target_path)])
+
+        return self.repo.is_dirty()
+
+    def _migrate_0_15_0(self) -> bool:
+
+        # replace "commit" with "pre-commit" and "push" with "pre-push" in .pre-commit-config.yaml
+        pre_commit_config_path = Path(".pre-commit-config.yaml")
+        if pre_commit_config_path.is_file():
+            pre_commit_contents = pre_commit_config_path.read_text(encoding="utf-8")
+            pre_commit_contents = pre_commit_contents.replace(
+                "[commit]", "[pre-commit]"
+            ).replace("[push]", "[pre-push]")
+            pre_commit_config_path.write_text(pre_commit_contents, encoding="utf-8")
+            self.repo.index.add([str(pre_commit_config_path)])
 
         return self.repo.is_dirty()
 

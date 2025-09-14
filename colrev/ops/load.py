@@ -168,7 +168,7 @@ class Load(colrev.process.operation.Operation):
         # pylint: disable=too-many-branches
         if len(source_records_list) == 0:
             raise colrev_exceptions.NoRecordsToImport(
-                msg=f"{source} has no records to load"
+                msg=f"{source.source_identifier} has no records to load"
             )
         for source_record in source_records_list:
             if not all(x in source_record for x in [Fields.ID, Fields.ENTRYTYPE]):

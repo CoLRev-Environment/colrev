@@ -20,7 +20,7 @@ class Dashboard:
     """Dashboard class"""
 
     def make_dashboard(self) -> Dash:
-        """creates dashboard header and general structure"""
+        """Create dashboard header and general structure."""
         app = Dash(__name__, use_pages=True)
 
         app.layout = html.Div(

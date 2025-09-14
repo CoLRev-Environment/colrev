@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import time
+import typing
 from copy import deepcopy
 from random import randint
 
@@ -19,6 +20,10 @@ from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
+
+if typing.TYPE_CHECKING:
+    import colrev.review_manager
+    import colrev.settings
 
 
 # Keep in mind the need for lock-mechanisms, e.g., in concurrent prep operations

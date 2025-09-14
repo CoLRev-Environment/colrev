@@ -192,7 +192,7 @@ class Endpoint:
                 f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
             ) from exc
 
-        return int(result["message"]["total-results"])
+        return int(result["message"].get("total-results", 0))
 
     def get_dois(self) -> typing.List[str]:
         """Retrieve the dois resulting from a query."""
@@ -231,7 +231,7 @@ class Endpoint:
 
         request_url = str(self.request_url)
 
-        if request_url.startswith("https://api.crossref.org/works/10."):
+        if request_url.startswith("https://api.crossref.org/works/"):
             result = self.retrieve(
                 request_url,
                 headers=self.headers,
@@ -287,7 +287,11 @@ class Endpoint:
 
                 result = result.json()
 
-                if len(result["message"]["items"]) == 0:
+                if (
+                    "message" not in result
+                    or "items" not in result["message"]
+                    or len(result["message"]["items"]) == 0
+                ):
                     return
 
                 yield from result["message"]["items"]

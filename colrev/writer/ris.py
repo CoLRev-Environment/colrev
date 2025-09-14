@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to write ris files"""
+"""Function to write ris files"""
 from __future__ import annotations
 
 from colrev.constants import ENTRYTYPES

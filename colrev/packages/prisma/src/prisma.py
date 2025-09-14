@@ -16,8 +16,11 @@ import colrev.env.docker_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
+from colrev.constants import Colors
+
+if typing.TYPE_CHECKING:
+    import colrev.ops.data
 
 
 class PRISMA(base_classes.DataPackageBaseClass):
@@ -107,19 +110,30 @@ class PRISMA(base_classes.DataPackageBaseClass):
         prisma_data.loc["records_excluded", "n"] = (
             status_stats.overall.rev_prescreen_excluded
         )
+
         if status_stats.currently.exclusion:
-            prisma_data.loc["dbr_excluded", "n"] = "; ".join(
-                f"{key}, {val}" for key, val in status_stats.currently.exclusion.items()
-            )
+            reasons = [
+                f"{key}, {val}"
+                for key, val in status_stats.currently.exclusion.items()
+                if val > 0
+            ]
+
+            # Ensure there are at least 2 reasons to avoid PRISMA2020 bug
+            if len(reasons) == 1:
+                reasons.append("Other, 0")
+
+            prisma_data.loc["dbr_excluded", "n"] = "; ".join(reasons)
         else:
+            # Provide a dummy second reason even for the summary case
             prisma_data.loc["dbr_excluded", "n"] = (
-                f"Overall, {status_stats.overall.rev_excluded}"
+                f"Overall, {status_stats.overall.rev_excluded}; Other, 0"
             )
 
         prisma_data.loc["dbr_assessed", "n"] = status_stats.overall.rev_screen
         prisma_data.loc["new_studies", "n"] = status_stats.overall.rev_included
         prisma_data.loc["dbr_notretrieved_reports", "n"] = (
             status_stats.overall.pdf_not_available
+            + status_stats.currently.pdf_needs_manual_retrieval
         )
         prisma_data.loc["dbr_sought_reports", "n"] = (
             status_stats.overall.rev_prescreen_included
@@ -179,13 +193,23 @@ class PRISMA(base_classes.DataPackageBaseClass):
             msg = f"Running docker container created from image {self.PRISMA_IMAGE}"
             self.review_manager.report_logger.info(msg)
 
-            client.containers.run(
+            container = client.containers.run(
                 image=self.PRISMA_IMAGE,
                 command=script,
                 user=user,
                 volumes=[os.getcwd() + ":/data"],
                 detach=True,
             )
+
+            container.wait()
+            # Print the logs (including Pandoc errors)
+            logs = container.logs().decode("utf-8")
+            if logs and not logs.endswith('[1] "/data/output/PRISMA.png"\n'):
+                print(f"🔧 Docker container logs:\n{Colors.RED}{logs}{Colors.END}")
+
+            container.stop()
+            container.remove()
+
         except docker.errors.ImageNotFound:
             self.review_manager.logger.error("Docker image not found")
         except docker.errors.ContainerError as exc:

@@ -82,7 +82,7 @@ class OCRMyPDF(base_classes.PDFPrepPackageBaseClass):
         record.add_field_provenance_note(
             key=Fields.FILE, note="pdf_processed with OCRMYPDF"
         )
-        record.set_text_from_pdf()
+        record.set_text_from_pdf(first_pages=True)
         return record
 
     def prep_pdf(

@@ -63,8 +63,12 @@ name = "{data['name']}"
 description = "{data['description']}"
 version = "{data['version']}"
 license = "{data['license']}"
-authors = ["{data['author']['name']} <{data['author']['email']}>"]
+authors = [
+    {{ name = "{data['author']['name']}", email = "{data['author']['email']}" }}
+]
 requires-python = ">=3.8, <4"
+
+[project.urls]
 repository = "{data['repository']}"
 
 [tool.hatch.build.targets.wheel]

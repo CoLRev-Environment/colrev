@@ -18,13 +18,20 @@ if typing.TYPE_CHECKING:  # pragma: no cover
     import logging
     import colrev.record.record
     import colrev.settings
+    import colrev.ops
 
 
 # pylint: disable=too-few-public-methods
 
 
 class ReviewTypePackageBaseClass(abc.ABC):
-    """The base class for ReviewType packages"""
+    """The base class for ReviewType packages
+
+    The following cli command calls the initialize method of a ReviewType package:
+
+    ``colrev init --type package_name`` -> calls ``package.initialize()``
+
+    """
 
     ci_supported: bool
 
@@ -40,7 +47,19 @@ class ReviewTypePackageBaseClass(abc.ABC):
 
 
 class SearchSourcePackageBaseClass(ABC):
-    """The base class for SearchSource packages"""
+    """The base class for SearchSource packages
+
+    The following cli commands call specific methods of a SearchSource package:
+
+    ``colrev search --add package_name`` -> calls ``package.add_endpoint()``
+
+    ``colrev search`` -> calls ``search`` operation -> calls ``package.search()``
+
+    ``colrev load`` -> calls ``load`` operation -> calls ``package.load()``
+
+    ``colrev prep`` -> calls ``prep`` operation -> calls ``package.prep()``
+
+    """
 
     ci_supported: bool
     settings_class: Type[colrev.package_manager.package_settings.DefaultSourceSettings]
@@ -105,7 +124,12 @@ class SearchSourcePackageBaseClass(ABC):
 
 
 class PrepPackageBaseClass(ABC):
-    """The base class for Prep packages."""
+    """The base class for Prep packages.
+
+    The following cli command calls the prepare method of a Prep package:
+
+    ``colrev prep`` -> calls ``package.prepare()``
+    """
 
     ci_supported: bool
 
@@ -130,7 +154,13 @@ class PrepPackageBaseClass(ABC):
 
 
 class PrepManPackageBaseClass(ABC):
-    """The base class for PrepMan packages."""
+    """The base class for PrepMan packages.
+
+    The following cli command calls the prepare_manual method of a PrepMan package:
+
+    ``colrev prep-man`` -> calls ``package.prepare_manual()``
+
+    """
 
     ci_supported: bool
 
@@ -148,7 +178,12 @@ class PrepManPackageBaseClass(ABC):
 
 
 class DedupePackageBaseClass(ABC):
-    """The base class for Dedupe packages."""
+    """The base class for Dedupe packages.
+
+    The following cli command calls the dedupe method of a Dedupe package:
+
+    ``colrev dedupe`` -> calls ``package.run_dedupe()``
+    """
 
     ci_supported: bool
 
@@ -169,7 +204,11 @@ class DedupePackageBaseClass(ABC):
 
 
 class PrescreenPackageBaseClass(ABC):
-    """The base class for Prescreen packages."""
+    """The base class for Prescreen packages.
+
+    The following cli command calls the run_prescreen method of a Prescreen package:
+
+    ``colrev prescreen`` -> calls ``package.run_prescreen()``"""
 
     ci_supported: bool
 
@@ -191,7 +230,12 @@ class PrescreenPackageBaseClass(ABC):
 
 
 class PDFGetPackageBaseClass(ABC):
-    """The base class for PDFGet packages."""
+    """The base class for PDFGet packages.
+
+    The following cli command calls the pdf_get method of a PDFGet package:
+
+    ``colrev pdf-get`` -> calls ``package.get_pdf()``
+    """
 
     ci_supported: bool
 
@@ -214,7 +258,11 @@ class PDFGetPackageBaseClass(ABC):
 
 
 class PDFGetManPackageBaseClass(ABC):
-    """The base class for PDFGetMan packages."""
+    """The base class for PDFGetMan packages.
+
+    The following cli command calls the pdf_get_man method of a PDFGetMan package:
+
+    ``colrev pdf-get-man`` -> calls ``package.pdf_get_man()``"""
 
     ci_supported: bool
 
@@ -235,7 +283,12 @@ class PDFGetManPackageBaseClass(ABC):
 
 
 class PDFPrepPackageBaseClass(ABC):
-    """The base class for PDFPrep packages."""
+    """The base class for PDFPrep packages.
+
+    The following cli command calls the prep_pdf method of a PDFPrep package:
+
+    ``colrev pdf-prep`` -> calls ``package.prep_pdf()``
+    """
 
     ci_supported: bool
 
@@ -258,7 +311,12 @@ class PDFPrepPackageBaseClass(ABC):
 
 
 class PDFPrepManPackageBaseClass(ABC):
-    """The base class for PDFPrepMan packages."""
+    """The base class for PDFPrepMan packages.
+
+    The following cli command calls the pdf_prep_man method of a PDFPrepMan package:
+
+    ``colrev pdf-prep-man`` -> calls ``package.pdf_prep_man()``
+    """
 
     ci_supported: bool
 
@@ -279,7 +337,13 @@ class PDFPrepManPackageBaseClass(ABC):
 
 
 class ScreenPackageBaseClass(ABC):
-    """The base class for Screen packages."""
+    """The base class for Screen packages.
+
+    The following cli command calls the run_screen method of a Screen package:
+
+    ``colrev screen`` -> calls ``package.run_screen()``
+
+    """
 
     ci_supported: bool
 
@@ -300,7 +364,12 @@ class ScreenPackageBaseClass(ABC):
 
 
 class DataPackageBaseClass(ABC):
-    """The base class for Data packages."""
+    """The base class for Data packages.
+
+    The following cli command calls the update_data method of a Data package:
+
+    ``colrev data`` -> calls ``package.update_data()``
+    """
 
     ci_supported: bool
 

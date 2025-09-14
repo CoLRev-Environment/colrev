@@ -685,8 +685,13 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 volumes=[self.review_manager.path.as_posix() + ":/data"],
                 detach=True,
             )
-            # Wait for the container to finish
+
             container.wait()
+            # Print the logs (including Pandoc errors)
+            logs = container.logs().decode("utf-8")
+            if logs:
+                print(f"🔧 Docker container logs:\n{Colors.RED}{logs}{Colors.END}")
+
             container.stop()
             container.remove()
 
@@ -746,6 +751,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             + f"--output {output_relative_path.as_posix()}"
         )
 
+        # self._call_docker_build_process(script=script)
         Timer(
             1,
             lambda: self._call_docker_build_process(script=script),

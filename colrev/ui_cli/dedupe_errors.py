@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""CoLRev dedupe operation: identify and merge duplicate records."""
+"""Scipt to screen for deduplication errors."""
 from __future__ import annotations
 
 import typing

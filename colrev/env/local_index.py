@@ -13,12 +13,8 @@ from git.exc import GitCommandError
 
 import colrev.env.environment_manager
 import colrev.env.local_index_sqlite
-import colrev.env.resources
-import colrev.env.tei_parser
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
-import colrev.ops.check
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -397,3 +393,11 @@ class LocalIndex:
                     return fields_to_remove
 
         return fields_to_remove
+
+    def get_curations(self) -> list[Path]:
+        """Get the directories of curations"""
+        return [
+            Path(x["repo_source_path"])
+            for x in self.environment_manager.local_repos()
+            if "curated_metadata" in x["repo_source_path"]
+        ]

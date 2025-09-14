@@ -7,9 +7,12 @@ from pathlib import Path
 
 import inquirer
 
-import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import EndpointType
+
+if typing.TYPE_CHECKING:
+    import colrev.settings
+    import colrev.ops.search
 
 # pylint: disable=too-few-public-methods
 
@@ -35,6 +38,8 @@ class CLISourceAdder:
             )
             for heuristic_source in source_candidates
         ]
+        # sort choices by confidence
+        choices.sort(key=lambda x: x[1]["confidence"], reverse=True)
         questions = [
             inquirer.List(
                 "source",

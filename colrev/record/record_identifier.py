@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Functionality to identify records."""
+"""Record identifier."""
 from __future__ import annotations
 
 import logging
@@ -221,7 +221,11 @@ def get_colrev_pdf_id(pdf_path: Path, *, cpid_version: str = "cpid2") -> str:
     """Get the PDF hash"""
 
     pdf_path = pdf_path.resolve()
-    if 0 == os.path.getsize(pdf_path):
+    try:
+        file_size = os.path.getsize(pdf_path)
+    except FileNotFoundError as exc:
+        raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
+    if 0 == file_size:
         logging.error("%sPDF with size 0: %s %s", Colors.RED, pdf_path, Colors.END)
         raise colrev_exceptions.InvalidPDFException(path=pdf_path)
 

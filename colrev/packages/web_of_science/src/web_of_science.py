@@ -78,9 +78,11 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
+        params_dict = {params.split("=")[0]: params.split("=")[1]}
+
         search_source = operation.create_db_source(
             search_source_cls=cls,
-            params={},
+            params=params_dict,
         )
         operation.add_source_and_search(search_source)
         return search_source

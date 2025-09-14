@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to load nbib files"""
+"""Function to load nbib files"""
 from __future__ import annotations
 
 import logging

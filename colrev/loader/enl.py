@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to load ENL files"""
+"""Function to load ENL files"""
 from __future__ import annotations
 
 import logging

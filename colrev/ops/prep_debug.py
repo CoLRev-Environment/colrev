@@ -9,7 +9,6 @@ from multiprocessing import Value
 
 from requests.exceptions import ConnectionError as requests_ConnectionError
 
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.prep
 import colrev.process.operation

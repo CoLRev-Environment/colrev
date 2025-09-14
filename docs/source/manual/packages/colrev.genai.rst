@@ -54,6 +54,13 @@ colrev.genai
 
          colrev screen --add colrev.genai
 
+   * - data
+     - |EXPERIMENTAL|
+     - .. code-block::
+
+
+         colrev data --add colrev.genai
+
 
 Summary
 -------
@@ -67,6 +74,12 @@ To install the dependencies of ``colrev.genai``\ , run
 
    pip install colrev[colrev.genai]
 
+To set the open-AI key, run
+
+.. code-block::
+
+   export OPENAI_API_KEY="your_api_key_here"
+
 prescreen
 ---------
 
@@ -78,7 +91,7 @@ Note: This document is currently under development. It will contain the followin
 
 .. code-block::
 
-   colrev settings -m "prescreen.prescreen_package_endpoints=[{'endpoint': 'colrev.genai'}]"
+   colrev prescreen --add colrev.genai
 
 screen
 ------
@@ -91,10 +104,7 @@ Note: This document is currently under development. It will contain the followin
 
 .. code-block::
 
-   colrev settings -m "screen.screen_package_endpoints=[{'endpoint': 'colrev.genai'}]"
-
-Links
------
+   colrev screen --add colrev.genai
 
 References
 ----------

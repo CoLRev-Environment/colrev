@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to load bib files"""
+"""Function to load bib files"""
 from __future__ import annotations
 
 import itertools
@@ -203,7 +203,7 @@ def process_key_value(
     current_record: Dict[str, Any], current_key: str, current_value: str, line: str
 ) -> tuple[str, str]:
     """Processes a key-value pair inside an entry."""
-    if "=" in line:  # New key-value pair
+    if re.match(r"^\s*[a-zA-Z0-9._-]+\s*=", line):
         if current_key:
             store_current_key_value(current_record, current_key, current_value)
         key, value = map(str.strip, line.split("=", 1))

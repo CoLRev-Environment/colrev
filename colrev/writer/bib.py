@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to write bib files"""
+"""Function to write bib files"""
 from __future__ import annotations
 
 from copy import deepcopy
@@ -37,21 +37,38 @@ RECORDS_FIELD_ORDER = [
 ]
 
 
+def _sanitize_string_for_dict(input_string: str) -> str:
+    """Sanitize a string for dict keys"""
+    return (
+        input_string.replace(";", "_")
+        .replace("=", "_")
+        .replace("{", "_")
+        .replace("}", "_")
+    )
+
+
 def _save_field_dict(*, input_dict: dict, input_key: str) -> list:
     list_to_return = []
     assert input_key in [Fields.MD_PROV, Fields.D_PROV]
     if input_key == Fields.MD_PROV:
         for key, value in input_dict.items():
             if isinstance(value, dict):
-                formated_node = ",".join(
+                formated_note = ",".join(
                     sorted(e for e in value["note"].split(",") if "" != e)
                 )
-                list_to_return.append(f"{key}:{value['source']};{formated_node};")
+                formated_note = _sanitize_string_for_dict(formated_note)
+                formatted_source = _sanitize_string_for_dict(value["source"])
+                list_to_return.append(f"{key}:{formatted_source};{formated_note};")
 
     elif input_key == Fields.D_PROV:
         for key, value in input_dict.items():
             if isinstance(value, dict):
-                list_to_return.append(f"{key}:{value['source']};{value['note']};")
+                formated_note = ",".join(
+                    sorted(e for e in value["note"].split(",") if "" != e)
+                )
+                formated_note = _sanitize_string_for_dict(formated_note)
+                formatted_source = _sanitize_string_for_dict(value["source"])
+                list_to_return.append(f"{key}:{formatted_source};{formated_note};")
 
     return list_to_return
 

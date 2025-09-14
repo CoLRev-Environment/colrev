@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
+import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
@@ -433,7 +434,7 @@ class Screen(colrev.process.operation.Operation):
                 continue
 
             try:
-                tei = self.review_manager.get_tei(
+                tei = colrev.env.tei_parser.TEIParser(
                     pdf_path=Path(record_dict[Fields.FILE]),
                     tei_path=colrev.record.record.Record(
                         record_dict

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """Test the tei parser"""
+import platform
 import re
 from pathlib import Path
 
 import pytest
 
-import colrev.env.environment_manager
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import ENTRYTYPES
@@ -23,51 +23,62 @@ def script_loc(request) -> Path:  # type: ignore
     return Path(request.fspath).parent
 
 
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
+)
 @pytest.fixture(scope="module")
 def tei_doc(script_loc) -> colrev.env.tei_parser.TEIParser:  # type: ignore
     """Return the tei_doc"""
 
     tei_file = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.tei.xml")
 
-    environment_manager = colrev.env.environment_manager.EnvironmentManager()
-
-    tei_doc = colrev.env.tei_parser.TEIParser(
-        environment_manager=environment_manager, tei_path=tei_file
-    )
+    tei_doc = colrev.env.tei_parser.TEIParser(tei_path=tei_file)
     return tei_doc
 
 
-def test_tei_creation(script_loc, base_repo_review_manager) -> None:  # type: ignore
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
+)
+def test_tei_creation(script_loc) -> None:  # type: ignore
     """Test the tei"""
-    if base_repo_review_manager.in_ci_environment():
-        return
     tei_file = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.tei.xml")
     pdf_path = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.pdf")
 
-    tei_file.unlink(missing_ok=True)
+    tmp_tei_file = tei_file.with_name(tei_file.stem + "_tmp.tei.xml")
+    if tmp_tei_file.exists():
+        tmp_tei_file.unlink(missing_ok=True)
+    tei_file.rename(tmp_tei_file)
 
-    environment_manager = colrev.env.environment_manager.EnvironmentManager()
+    try:
 
-    colrev.env.tei_parser.TEIParser(
-        environment_manager=environment_manager, pdf_path=pdf_path, tei_path=tei_file
-    )
+        colrev.env.tei_parser.TEIParser(pdf_path=pdf_path, tei_path=tei_file)
 
-    with open(tei_file) as file:
-        tei_content = file.read()
+        with open(tei_file) as file:
+            tei_content = file.read()
 
-    tei_content = re.sub(
-        r'(ident="GROBID" when=")[^"]+(">)', r"\g<1>NA\g<2>", tei_content
-    )
+        tei_content = re.sub(
+            r'(ident="GROBID" when=")[^"]+(">)', r"\g<1>NA\g<2>", tei_content
+        )
 
-    with open(tei_file, "w") as file:
-        file.write(tei_content)
+        with open(tei_file, "w") as file:
+            file.write(tei_content)
+    except Exception as exc:
+        print("Restoring original TEI file")
+        tmp_tei_file.rename(tei_file)
+        raise exc
 
 
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
+)
 def test_tei_version(tei_doc) -> None:  # type: ignore
     """Test the tei version"""
-    assert "0.8.1" == tei_doc.get_grobid_version()
+    assert "0.8.2" == tei_doc.get_grobid_version()
 
 
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
+)
 def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
     """Test the tei version"""
     assert (
@@ -107,6 +118,9 @@ def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
     ] == tei_doc.get_author_details()
 
 
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
+)
 def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
     """Test the tei extraction of references"""
 
@@ -1546,6 +1560,9 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
     ] == tei_doc.get_references(add_intext_citation_count=True)
 
 
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
+)
 def test_tei_citations_per_section(tei_doc, tmp_path) -> None:  # type: ignore
     """Test the tei citations per section method."""
 
@@ -1766,6 +1783,9 @@ def test_tei_citations_per_section(tei_doc, tmp_path) -> None:  # type: ignore
     } == tei_doc.get_citations_per_section()
 
 
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
+)
 def test_tei_mark_references(tei_doc, tmp_path) -> None:  # type: ignore
     """Test the tei extraction of references"""
 
@@ -1818,26 +1838,26 @@ def test_tei_mark_references(tei_doc, tmp_path) -> None:  # type: ignore
     assert "NOT_INCLUDED" not in actual
 
 
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
+)
 def test_tei_exception(tmp_path) -> None:  # type: ignore
+
     tei_path = tmp_path / Path("erroneous_tei.tei.xml")
 
     with open(tei_path, "wb") as f:
         f.write(b"[BAD_INPUT_DATA]")
 
-    environment_manager = colrev.env.environment_manager.EnvironmentManager()
-
     with pytest.raises(colrev_exceptions.TEIException):
-        colrev.env.tei_parser.TEIParser(
-            environment_manager=environment_manager, tei_path=tei_path
-        )
+        colrev.env.tei_parser.TEIParser(tei_path=tei_path)
 
 
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
+)
 def test_tei_pdf_not_exists() -> None:
+
     pdf_path = Path("data/non_existent.pdf")
 
-    environment_manager = colrev.env.environment_manager.EnvironmentManager()
-
     with pytest.raises(FileNotFoundError):
-        colrev.env.tei_parser.TEIParser(
-            environment_manager=environment_manager, pdf_path=pdf_path
-        )
+        colrev.env.tei_parser.TEIParser(pdf_path=pdf_path)

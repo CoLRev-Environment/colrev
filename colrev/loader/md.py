@@ -9,7 +9,7 @@ from pathlib import Path
 import requests
 
 import colrev.env.grobid_service
-import colrev.loader.bib
+import colrev.loader.load_utils
 import colrev.loader.loader
 from colrev.constants import Fields
 

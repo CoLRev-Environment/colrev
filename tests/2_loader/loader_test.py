@@ -7,8 +7,6 @@ from pathlib import Path
 import pytest
 
 import colrev.loader.load_utils
-import colrev.review_manager
-import colrev.settings
 
 
 def test_load(tmp_path, helpers) -> None:  # type: ignore

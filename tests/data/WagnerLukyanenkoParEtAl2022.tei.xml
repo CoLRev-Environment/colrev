@@ -1,0 +1,2700 @@
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xsi:schemaLocation="http://www.tei-c.org/ns/1.0 https://raw.githubusercontent.com/kermitt2/grobid/master/grobid-home/schemas/xsd/Grobid.xsd">
+	<teiHeader xml:lang="en">
+		<fileDesc>
+			<titleStmt>
+				<title level="a" type="main">Artificial intelligence and the conduct of literature reviews</title>
+			</titleStmt>
+			<publicationStmt>
+				<publisher/>
+				<availability status="unknown"><licence/></availability>
+			</publicationStmt>
+			<sourceDesc>
+				<biblStruct>
+					<analytic>
+						<author>
+							<persName><forename type="first">Gerit</forename><surname>Wagner</surname></persName>
+						</author>
+						<author>
+							<persName><forename type="first">Roman</forename><surname>Lukyanenko</surname></persName>
+						</author>
+						<author role="corresp">
+							<persName><forename type="first">Guy</forename><surname>Par</surname></persName>
+							<email>guy.pare@hec.ca</email>
+							<idno type="ORCID">0000-0001-7425-1994</idno>
+						</author>
+						<author>
+							<persName><forename type="first">Guy</forename><surname>Paré</surname></persName>
+						</author>
+						<author>
+							<affiliation key="aff0">
+								<orgName type="department">Department of Information Technologies</orgName>
+								<orgName type="institution">HEC Montréal</orgName>
+								<address>
+									<settlement>Montréal</settlement>
+									<region>Québec</region>
+									<country key="CA">Canada</country>
+								</address>
+							</affiliation>
+						</author>
+						<author>
+							<affiliation key="aff1">
+								<orgName type="department">Research Chair in Digital Health</orgName>
+								<orgName type="institution">HEC Montréal</orgName>
+								<address>
+									<addrLine>chemin de la C ôte-Sainte-Catherin Montréal</addrLine>
+									<postCode>3000 H3T 2A7</postCode>
+									<region>Québec</region>
+									<country key="CA">Canada</country>
+								</address>
+							</affiliation>
+						</author>
+						<title level="a" type="main">Artificial intelligence and the conduct of literature reviews</title>
+					</analytic>
+					<monogr>
+						<imprint>
+							<date/>
+						</imprint>
+					</monogr>
+					<idno type="MD5">17D4EB159A8EF007FAF3A6FA2DEC6788</idno>
+					<idno type="DOI">10.1177/02683962211048201</idno>
+				</biblStruct>
+			</sourceDesc>
+		</fileDesc>
+		<encodingDesc>
+			<appInfo>
+				<application version="0.8.2" ident="GROBID" when="NA">
+					<desc>GROBID - A machine learning software for extracting information from scholarly documents</desc>
+					<label type="revision">a91ee48</label>
+					<label type="parameters">startPage=-1, endPage=-1, consolidateCitations=0, consolidateHeader=0, consolidateFunders=0, includeRawAffiliations=false, includeRawCitations=false, includeRawCopyrights=false, generateTeiIds=false, generateTeiCoordinates=[], sentenceSegmentation=false, flavor=null</label>
+					<ref target="https://github.com/kermitt2/grobid"/>
+				</application>
+			</appInfo>
+		</encodingDesc>
+		<profileDesc>
+			<textClass>
+				<keywords>
+					<term>Artificial intelligence</term>
+					<term>machine learning</term>
+					<term>natural language processing</term>
+					<term>research data management</term>
+					<term>data infrastructure</term>
+					<term>automation</term>
+					<term>literature review</term>
+				</keywords>
+			</textClass>
+			<abstract>
+<div xmlns="http://www.tei-c.org/ns/1.0"><p>Artificial intelligence (AI) is beginning to transform traditional research practices in many areas. In this context, literature reviews stand out because they operate on large and rapidly growing volumes of documents, that is, partially structured (meta)data, and pervade almost every type of paper published in information systems research or related social science disciplines. To familiarize researchers with some of the recent trends in this area, we outline how AI can expedite individual steps of the literature review process. Considering that the use of AI in this context is in an early stage of development, we propose a comprehensive research agenda for AI-based literature reviews (AILRs) in our field. With this agenda, we would like to encourage design science research and a broader constructive discourse on shaping the future of AILRs in research.</p></div>
+			</abstract>
+		</profileDesc>
+	</teiHeader>
+	<text xml:lang="en">
+		<body>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head>Introduction</head><p>The potential of artificial intelligence (AI) to augment and partially automate research has sparked vivid debates in many scientific disciplines, including the health sciences <ref type="bibr" target="#b0">(Adams et al., 2013;</ref><ref type="bibr" target="#b108">Tsafnat et al., 2014)</ref>, biology <ref type="bibr" target="#b50">(King et al., 2009)</ref>, and management <ref type="bibr" target="#b45">(Johnson et al., 2019)</ref>. In particular, the concept of automated science is raising intriguing questions related to the future of research in disciplines that require "high-level abstract thinking, intricate knowledge of methodologies and epistemology, and persuasive writing capabilities" <ref type="bibr">(Johnson et al., 2019: 292)</ref>. These debates resonate with scholars in Information Systems (IS), who ponder which role AI and automation can play in theory development <ref type="bibr" target="#b107">(Tremblay et al., 2018)</ref> and in combining data-driven and theory-driven research <ref type="bibr" target="#b69">(Maass et al., 2018)</ref>. With this commentary, we join the discussion which has been resumed recently by <ref type="bibr" target="#b45">Johnson et al. (2019)</ref> in the business disciplines. The authors observe that across this multi-disciplinary discourse, two dominant narratives have emerged. The first narrative adopts a provocative and visionary perspective to present its audience with a choice between accepting or rejecting future research practices in which AI plays a dominant role. The second narrative acknowledges that a gradual adoption of AI-based research tools has already begun and aims at engaging its readers in a constructive debate on how to leverage AI-based tools for the benefit of the research field and its stakeholders. In this paper, our position resonates more with the latter perspective, which is focused on the mid-term instead of the long-term, and well-positioned to advance the discourse with less speculative and more actionable discussions of the specific research processes that are more amenable applications of AI and those processes that rely more on the human ingenuity of researchers.</p><p>In this essay, we focus on the use of AI-based tools in the conduct of literature reviews. Advancing knowledge in this area is particularly promising since (1) standalone review projects require substantial efforts over months and years <ref type="bibr" target="#b59">(Larsen et al., 2019)</ref>, (2) the volume of reviews published in IS journals has been rising steadily <ref type="bibr" target="#b93">(Schryen et al., 2020)</ref>, and (3) literature reviews involve tasks that fall on a spectrum between the mechanical and the creative . At the same time, the process of reviewing literature is mostly conducted manually with sample sizes threatening to exceed the cognitive limits of human processing capacities. This has been illustrated recently by <ref type="bibr" target="#b59">Larsen et al. (2019)</ref>, who estimated that in the IS field, the number of relevant papers in many research areas easily exceeds 10,000. As a consequence, some review articles, problematically, no longer aim for comprehensive coverage, often restricting their scope to few top journals. Overall, we anticipate that these trends will be reinforced in the future, further emphasizing the need to envision fruitful collaboration between human researchers and machines, such as AI-based tools (cf. <ref type="bibr" target="#b94">Seeber et al., 2020)</ref>.</p><p>In light of these challenges, we focus on the contributions of AI which refers to the capability of performing cognitive tasks and exhibiting intelligent behavior commonly associated with human intelligence <ref type="bibr" target="#b90">(Russell and Norvig, 2016;</ref><ref type="bibr" target="#b102">Taulli and Oni, 2019)</ref>. Specifically, we are interested in approaches that are commonly referred to as "weak AI" and combine process automation (execution engines) with capabilities like machine learning (ML) or natural language processing (NLP). Machine learning refers to tools, methods, and techniques for learning and improving task performance with experience <ref type="bibr" target="#b32">(Goodfellow et al., 2016;</ref><ref type="bibr" target="#b74">Mitchell, 1997)</ref>, while NLP refers to computational tools, methods, and techniques for analyzing, interpreting, and increasingly generating natural language <ref type="bibr" target="#b70">(Manning and Schütze, 1999)</ref>. Although we are particularly interested in tools powered by advanced AI, we do not discard predecessors of AI per se.</p><p>AI offers two capabilities that are particularly salient for conducting literature reviews. First, they operate on potentially fuzzy, weakly structured, and unstructured data that are provided in the form of bibliographical meta-data or fulltext documents. Techniques of NLP can go beyond purely syntactic processing of text by abstracting and analyzing its semantic meaning, thereby promising to offer valuable support in the searching and screening tasks. For example, papers including the word "review" may be hard to distinguish on a syntactic level, but using semantic techniques, NLP performs much better in dissociating whether "review" refers to a literature review or a customer review. An example applying such techniques to IS research is offered by <ref type="bibr" target="#b96">Sidorova et al. (2008)</ref>, who illustrate the topics prevalent in top-tier IS journals based on latent Dirichlet allocation (LDA) models. This paper clearly shows the advantages of LDA models, which allow unobserved (latent) topics to emerge from the analysis of bags of words. The application of NLP techniques has further been considered useful for generating semantic topics from samples of papers and thereby allowing researchers to explore the literature from a more abstract perspective <ref type="bibr" target="#b75">(Mortenson and Vidgen, 2016)</ref>. Second, advanced supervised ML techniques, such as deep learning, can be trained to replicate the decisions of researchers. This relieves researchers of the task of explicating and codifying myriads of rules, and even more significantly, it can automate decisions for which exact rules are hard to specify. The work of <ref type="bibr" target="#b59">Larsen et al. (2019)</ref> is exemplary in this regard, developing classifiers that can automatically screen and include papers relevant to research on TAM (Technology Acceptance Model). Considering these capabilities, we expect AI to be most useful in the mechanical tasks of reviews compared to more creative ones. At the same time, an informed discourse and methodological guidelines are necessary to identify the appropriate areas of application and to address the challenges associated with AI, such as model overfitting, biases, black box predictions, and the acceptance by the research community.</p><p>The objective of this essay is to frame the broader discourse on how AI is and can be applied in the individual steps of the literature review process, providing illustrative exemplars for prospective authors and outlining opportunities for further advancing such methods. To clearly frame this objective, we coin the term AI-based literature reviews (AILRs), which refers to literature reviews undertaken with the aid of AI-based tools for one or multiple steps of the review process, that is, problem formulation, literature search, screening for inclusion, quality assessment, data extraction, or data analysis and interpretation. Without necessarily being driven by academic researchers, functionality for literature searches is already supported by AI, as implemented by academic literature databases and indexing routines. We focus on how AI-based tools can evolve to play an even more powerful role and further automate and augment steps in different types of literature reviews. An important question for researchers is how such tools can best be leveraged in all stages of the review process and how it can be adapted to particular types of reviews. In doing so, it can be expected that different types of reviews, such as descriptive or interpretive reviews, will be more or less amenable to the use of AI. The remainder of this paper is structured as follows. In the next section, we outline the process of conducting a literature review, explaining the steps and tasks that may benefit from AI-based tools. Next, we outline a comprehensive research agenda for AILRs. We close with some concluding remarks.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head>Artificial intelligence-based support for the literature review process</head><p>The literature review process involves both creative and mechanical tasks, which creates exciting opportunities for advanced AI-based tools 1 to reduce prospective authors' efforts for time-consuming and repetitive tasks and to dedicate more time to the creative tasks that require human interpretation, intuition, and expertise <ref type="bibr" target="#b108">(Tsafnat et al., 2014)</ref>. To familiarize the reader with state-of-the-art knowledge in this area, we consider each step of the review process in turn, outlining current AI-based tools as well as the potential for AI-based tool support. Corresponding opportunities for further tool development and improvement are outlined in the following agenda. The overview is in line with the steps of the review process that <ref type="bibr" target="#b103">Templier and Paré (2018)</ref> have synthesized from the methodological literature. Table <ref type="table" target="#tab_0">1</ref> provides a brief summary, explaining whether the step is amenable to AI-support and pointing the reader to corresponding tools.</p><p>We collected the evidence by surveying previous literature reviews of AI-based tools (e.g., <ref type="bibr" target="#b3">Al-Zubidy et al., 2017;</ref><ref type="bibr" target="#b35">Harrison et al., 2020;</ref><ref type="bibr" target="#b47">Jonnalagadda et al., 2015;</ref><ref type="bibr" target="#b55">Kohl et al., 2018;</ref><ref type="bibr" target="#b72">Marshall and Wallace, 2019;</ref><ref type="bibr" target="#b108">Tsafnat et al., 2014;</ref><ref type="bibr" target="#b110">Van Dinter et al., 2021)</ref> and online registries (i.e., <ref type="url" target="http://www.systematicreviewtools.com/">www.  systematicreviewtools.com</ref>). Since AI-based tools are constantly evolving, with some not applicable to IS research and some no longer maintained, we briefly tested those deemed relevant for our main purpose. This overview is by no means comprehensive and aims at illustrating promising examples for IS researchers. In the following paragraphs, • Statistical software packages (e.g., RevMan)</p><p>• RobotReviewer <ref type="bibr" target="#b73">(Marshall et al., 2015)</ref> for experimental research</p><p>• Low-to-moderate potential for semi-automated quality assessment 5. Data extraction • Software for data extraction and qualitative content analysis (e.g., Nvivo and ATLAS.ti) offers AI-based functionality for qualitative coding, named entity recognition, and sentiment analysis • WebPlotDigitizer and Graph2Data for extracting data from statistical plots • Moderate potential for reviews requiring a formal data extraction (descriptive reviews, scoping reviews, meta-analyses and qualitative systematic reviews) • High for objective and atomic data items (e.g., sample sizes), low for complex data which has ambiguities and lends itself to different interpretations (e.g., theoretical arguments and main conclusions) 6. Data analysis and interpretation • Descriptive synthesis: Tools for text-mining (Kobayashi et al., 2017), scientometric techniques and topic models (Nakagawa et al., 2019; Schmiedel et al., 2019), and computational reviews aimed at stimulating conceptual contributions (Antons et al., 2021) • Theory building: Examples of inductive (computationally intensive) theory development (e.g., Berente et al., 2019; Lindberg, 2020; Nelson, 2020) • Theory testing: Tools for meta-analyses (e.g., RevMan and dmetar) • Very high potential for descriptive syntheses • Moderate potential for (inductive) theory development and theory testing • Low non-existent potential for reviews adopting traditional and interpretive approaches a Applicable to meta-analyses and qualitative systematic reviews.</p><p>we adopt a granular perspective, highlighting AI-support for individual tasks that authors can ultimately orchestrate in an overarching data processing and tool chain. 2</p><p>Step 1: Problem formulation</p><p>The first step of a literature review requires authors to identify and clarify the research questions and central concepts or theories <ref type="bibr" target="#b103">(Templier and Paré, 2018)</ref>. In addition, authors can be advised to complete an initial verification of the research gap <ref type="bibr" target="#b76">(Müller-Bloch and Kranz, 2015)</ref>, which may involve assessing whether the gap has already been addressed, whether the research question allows for a substantial contribution that exceeds previous work, and whether it is indeed important to address the gap <ref type="bibr" target="#b89">(Rivard, 2014)</ref>. We expect moderate potential for AI-support in the problem formulation step, in which we focus on the identification and verification of research gaps. Given that the natural sciences have witnessed some exciting advances with regard to detecting new research gaps and promising starting points for hypotheses, it can be hoped that some of this work will eventually be applied and adapted to the social sciences. For instance, there are path-breaking advances with regard to automated generation of hypotheses (and experimental testing in automated laboratories) in biochemistry <ref type="bibr" target="#b50">(King et al., 2009)</ref> and machine-learning approaches for scientometric, literature-based discovery in computer science <ref type="bibr" target="#b104">(Thilakaratne et al., 2019)</ref>. These areas are certainly more predestined for the initial application of AI because they do not necessarily raise complex ethical decisions of research involving human participants, or the fuzziness of behavioral theories and constructs prevalent in IS research <ref type="bibr" target="#b63">(Li et al., 2020)</ref>. Nevertheless, research in the social sciences may eventually be inspired by these approaches. Overall, they could stimulate researchers in identifying areas in need of review papers or further research more broadly. Still, we expect that human judgment will remain a necessary ingredient for this step in the near future, especially for research generating questions through problematization <ref type="bibr" target="#b2">(Alvesson and Sandberg, 2011)</ref>. Beyond the discovery of research gaps and areas in need of a review paper, there is some potential for supporting researchers in verifying whether the gaps are still open by identifying identical or similar knowledge contributions and previous review papers. In the discovery and verification, the use of AI is likely to involve uncertainty, requiring researchers to make final decisions regarding the treatment of research gaps.</p><p>In sum, current tool support for this initial step is still in the early stages of development with published approaches implementing their code on an individual basis as opposed to drawing on mature GUI-based tools. Researchers with programming skills can find inspiration in previous works exploring and detecting research gaps and opportunities for inter-disciplinary research at the intersection of literatures or research topics. For instance, this can be achieved by applying and advancing scientometric methods (e.g., <ref type="bibr" target="#b29">Evans and Foster, 2011;</ref><ref type="bibr" target="#b100">Swanson and Smalheiser, 1997)</ref> and LDA topic models (e.g., <ref type="bibr" target="#b5">Antons and Breidbach, 2017)</ref>.</p><p>Step 2: Literature search In this step, authors construct the literature sample by applying different search methods, including database searches, table-of-content scans, citation searches, and complementary searches (cf. <ref type="bibr" target="#b103">Templier and Paré, 2018)</ref>. Depending on the goal of the review, authors can aim at a coverage that is comprehensive, representative, or selective <ref type="bibr" target="#b20">(Cooper, 1988)</ref>. Corresponding search methods can be assembled in complex search strategies, involving several iterations, collaborative work of research teams, and AIbased tools. Due to the heterogeneity of the information retrieval process, the variety of data sources (e.g., journals, conference proceedings, books, and different forms of grey literature), and the plethora of data quality problems (e.g., incomplete or incorrect meta-data), appropriate data management strategies are vital. Ultimately, they should enable transparent reporting <ref type="bibr" target="#b83">(Paré et al., 2016;</ref><ref type="bibr" target="#b103">Templier and Paré, 2018)</ref>, as well as repeatability and reproducibility <ref type="bibr" target="#b21">(Cram et al., 2020)</ref>.</p><p>Recent work in IS provides compelling advances, especially with regard to the prevalent database searches. We highlight three tools that have been published recently. First, the TheoryOn search engine <ref type="bibr" target="#b63">(Li et al., 2020)</ref> offers a complementary option to traditional databases by allowing researchers to execute ontology-based searches for individual constructs and construct relationships across behavioral theories. Second, Litbaskets <ref type="bibr" target="#b14">(Boell and Wang, 2019)</ref> can inform the design of search strategies. This web-based tool allows researchers to assess the potential volume of database search results based on pre-specified keywords and different sets of journals which can be adjusted in a flexible way. Third, LitSonar <ref type="bibr" target="#b99">(Sturm and Sunyaev, 2018)</ref> greatly facilitates the execution of database searches by automatically translating search queries for a range of literature databases relevant for IS reviews (e.g., EBSCO, AIS eLibrary, and ProQuest). This tool is particularly promising because it provides a coverage report, potentially identifying possible database embargos (periods in which journals are not indexed), and thereby alleviating insufficiencies of academic databases.</p><p>Overall, this step tends to be time-consuming with many mechanical tasks potentially lending themselves to automation <ref type="bibr" target="#b16">(Carver et al., 2013;</ref><ref type="bibr" target="#b45">Johnson et al., 2019)</ref>. The need for automation and AI-support is particularly salient when considering the rapid growth of research output <ref type="bibr" target="#b59">(Larsen et al., 2019)</ref> and the inefficiency of investing valuable time of academic experts to complete repetitive and mechanical tasks.</p><p>Step 3: Screening for inclusion</p><p>In the screening step, authors work with the search results to dissociate the relevant papers from those that must be excluded from the review. This step is typically divided into a first (more inclusive) screening based on titles and abstracts and a second (more restrictive) screening based on full-texts <ref type="bibr" target="#b103">(Templier and Paré, 2018)</ref>. In manual screening processes, researchers execute the tedious task of checking hundreds or thousands of papers. In this process, they are likely to experience fatigue, which may interfere with their ability to accurately dissociate cognitively demanding borderline cases. This explains why methodologists have recommended to conduct a first screen in which researchers exclude papers that are clearly irrelevant (based on titles and abstracts) and to deliberately retain challenging papers for a second round of screening. To ensure screening performance in the second round, researchers typically work with smaller samples (after excluding a bulk of papers in the first screen), consult the full-text documents, apply more specific (pre-defined) exclusion criteria, and execute parallel independent assessment with team decisions on the final borderline cases. The most rigorous screening procedures have been suggested for reviews aimed at theory testing <ref type="bibr" target="#b103">(Templier and Paré, 2018)</ref>, in which erroneous inclusion decisions may have more significant and measurable effects on the conclusions of the review.</p><p>AI-based tool support for screening has been evolving over the years <ref type="bibr" target="#b35">(Harrison et al., 2020)</ref>. While many tools suffer from severe restrictions for screening IS research (e.g., operating primarily on health sciences databases and requiring PubMed IDs), ASReview (Van de <ref type="bibr" target="#b109">Schoot et al., 2021)</ref>, which has been published recently, offers an option for researchers in IS. This tool is a particularly promising exemplar since it combines inspectability of the code (published under the Apache-2.0 License), extensibility (availability of code and documentation, implementation using popular Python MLlibraries), ongoing validation efforts, and interoperability (offering import and export of common Research Information System Format and Comma-separated values files). Implementing a range of ML classifiers (including Naive Bayes, Support Vector Machines, Logistic Regression, and Random forest classifiers), it learns from initial inclusion decisions and leverages these insights to present researchers with a prioritized list of papers (i.e., the titles and abstracts), proceeding from those most likely to be included to those least likely. This allows researchers to efficiently work through a prioritized list of papers in the first inclusion screen and even rely on automated exclusion by stopping to screen after decisions exceed a certain number of excluded papers in a row (e.g., n = 100). Borderline cases can be retained for a second screen in which decisions are based on full-text documents.</p><p>Furthermore, researchers with programming skills can adapt the discourse approach proposed by <ref type="bibr" target="#b59">Larsen et al. (2019)</ref>. The authors point out that reviews of popular theories may be infeasible, especially when thousands of relevant papers have been published. In such cases, they propose the thought-provoking possibility to consider sampling papers randomly from the set of relevant (called theory-contributing) papers, as identified by machinelearning algorithms. In line with random sampling in empirical studies, <ref type="bibr" target="#b59">Larsen et al. (2019)</ref> thereby suggest that random selection may be useful in literature reviews to obtain a view of the literature that is representative for the scientific discourse. As a result, the Automated detection of implicit theory approach is particularly promising for developing reviews that use a theory as the unit of analysis (Theory and Review Articles) and encounter excessive amounts of research following up on the selected theory.</p><p>We expect the potential for AI-support to be high for the first screen and moderate for the second screen. The first screen seems particularly amenable to partial automation and AI-support because it is more inclusive and does not require final exclusion decisions for borderline cases. This arguably requires machines to have adequate capabilities of reading and "understanding" abstracts and titles. In contrast, the second screen is dedicated to disentangling the remaining cases, which can be particularly challenging since IS research is not standardized as strictly as other disciplines. In contrast to the health sciences and biology, for instance, the lack of widely used taxonomies for IS constructs, standard vocabulary for keywords (e.g., MeSH terms), and descriptive paper titles makes it difficult to achieve required classification performance in the second screen (cf. O' <ref type="bibr">Mara-Eves et al., 2015)</ref>. This challenge applies to humans and machines alike. Taken together, the screen and search (considered as an information retrieval task) should primarily be evaluated in terms of the recall, that is, the proportion of papers that are successfully retrieved (i.e., relevant). Authors of literature reviews traditionally target a high recall by executing comprehensive searches and thereby accept very low precision and the corresponding screening burden <ref type="bibr" target="#b63">(Li et al., 2020)</ref>. One implication of <ref type="bibr">Li et al.'s (2020)</ref> work is that AI-supported, ontology-based searches may effectively prevent some of the screening burden through better precision. Overall, the two screening steps are therefore among the most timeconsuming activities of the literature review process <ref type="bibr" target="#b16">(Carver et al., 2013)</ref>. When considering potential AI-support of this step, the reliability of manual screening processes should not be overestimated, even if the screen is conducted by academic experts. In fact, recent evidence in the health sciences suggests a base rate of 10% disagreements between inclusion screens conducted independently <ref type="bibr" target="#b115">(Wang et al., 2020)</ref>. This indicates that it may even be possible to augment and improve screening activities of researchers by having AI-based tools identify inconsistent and potentially erroneous screening decisions.</p><p>Step 4: Quality assessment</p><p>The quality assessment involves checking primary empirical studies for methodological flaws and other sources of bias <ref type="bibr" target="#b38">(Higgins and Green, 2008;</ref><ref type="bibr" target="#b51">Kitchenham and Charters, 2007;</ref><ref type="bibr" target="#b103">Templier and Paré, 2018)</ref>. This step is intended to assess the degree to which the conclusions of reviews aimed at theory testing may be affected by different types of biases (e.g., selection, attrition, and reporting bias). It is recommended to conduct these procedures in a parallel and independent way to ensure high reliability <ref type="bibr" target="#b103">(Templier and Paré, 2018)</ref>.</p><p>We believe the potential for AI-based tools supporting these procedures is low to moderate for two reasons. First, assessing (methodological) quality is a challenging task which requires expert judgment, making it difficult to achieve high inter-coder agreement <ref type="bibr" target="#b36">(Hartling et al., 2009)</ref>. Second, sample sizes in IS reviews (meta-analyses and qualitative systematic reviews) are not excessively large, that is, manual assessments are still manageable. Following methodological guidelines for quality appraisal and risk of bias assessment, IS researchers conducting meta-analyses and systematic literature reviews can leverage traditional tools like RevMan (cf. <ref type="bibr" target="#b11">Bax et al., 2007)</ref> or corresponding packages of statistical software environments like R and SPSS. Further AI-based tools like RobotReviewer <ref type="bibr" target="#b73">(Marshall et al., 2015)</ref> can also be applicable for metaanalyses in IS. While focusing on risk of bias assessment of randomized controlled trials in the life sciences, Robot-Reviewer is an excellent exemplar for explainable AI, allowing researchers to interactively trace ratings in each domain of bias to its origin in the full-text document.</p><p>Step 5: Data extraction Data extraction requires researchers to identify relevant fragments of qualitative and quantitative data and to transfer them to a (semi) structured coding sheet <ref type="bibr" target="#b103">(Templier and Paré, 2018)</ref>. It is more salient in descriptive reviews, scoping reviews, and reviews aimed at theory testing compared to reviews that are more selective and interpretive such as narrative reviews and theory development reviews.</p><p>Current tool support in the IS field reflects the moderate potential of AI in this area, with authors relying on general tools for qualitative data analysis, such as ATLAS.ti and NVivo (which are starting to implement NLP and machine learning algorithms for tasks such as automated qualitative coding, named entity recognition and sentiment analysis), or specialized tools for extracting data from tables or statistical plots, such as WebPlotDigitizer or Graph2Data.</p><p>We expect the potential for supporting this step with AI to be moderate. Learning from ongoing data extraction decisions prospective tools could progressively improve, highlight the more promising fragments in a given paper, and facilitate the transfer and organization of data into corresponding repositories. We do not expect full automation of more significant data items in the near future. Even in the health sciences, which have established relatively consistent reporting practices, corresponding tools designed to extract study characteristics like the PICO (population, intervention, context, and outcome) elements are still in the early stages of development <ref type="bibr" target="#b47">(Jonnalagadda et al., 2015)</ref>.</p><p>Step 6: Data analysis and interpretation</p><p>The final step of the review process can take various forms, depending on the type of review <ref type="bibr" target="#b103">(Templier and Paré, 2018)</ref>. Some reviews put more emphasis on elegant narratives which convey insightful and deeply hermeneutic interpretations while others are designed to eliminate any subjectivity which may interfere with the accuracy of aggregated evidence or descriptive overviews.</p><p>Depending on the main knowledge building activities <ref type="bibr" target="#b93">(Schryen et al., 2020)</ref>, IS researchers can use different tools. For descriptive syntheses, there is a range of established tools for text-mining <ref type="bibr" target="#b54">(Kobayashi et al., 2017)</ref>, as well as tools for analyzing and visualizing topics, theories, and research communities based on scientometric techniques, computational techniques, or LDA models <ref type="bibr" target="#b8">(Balducci and Marinova, 2018;</ref><ref type="bibr" target="#b77">Nakagawa et al., 2019;</ref><ref type="bibr" target="#b104">Thilakaratne et al., 2019)</ref>, for instance. Further promising tools originally applied to unstructured data in contexts such as technology adoption <ref type="bibr" target="#b61">(Laurell et al., 2019)</ref>, corporate communication (van Zoonen and van der Meer, 2016), or corporate social responsibility <ref type="bibr" target="#b101">(Tate et al., 2010)</ref> could be adapted to the needs of IS review papers. For inductive work, there is an increasing amount of research on computationally intensive techniques that leverage data for theory generation (e.g., <ref type="bibr" target="#b13">Berente et al., 2019;</ref><ref type="bibr" target="#b64">Lindberg, 2020;</ref><ref type="bibr" target="#b78">Nelson, 2020)</ref>. Finally, for theory testing, there is a range of applications and libraries for meta-analyses, such as RevMan (cf. <ref type="bibr" target="#b11">Bax et al., 2007)</ref> or the R package dmetar.</p><p>In assessing the potential for future AI-based tools to support data analysis, we need to take into account that this step can take various forms. In pre-theoretical reviews, AIbased tools offer capabilities to generate descriptive insights, for example, based on topic modeling <ref type="bibr" target="#b57">(Kunc et al., 2018;</ref><ref type="bibr" target="#b75">Mortenson and Vidgen, 2016;</ref><ref type="bibr" target="#b92">Schmiedel et al., 2019)</ref>. As a promising bridge toward conceptual contributions, <ref type="bibr" target="#b6">Antons et al. (2021)</ref> advance the notion of computational reviews. Specifically, they suggest to leverage descriptive and scientometric analyses to stimulate researchers in pursuing conceptual goals of explicating, envisioning, relating, and debating. Theory development in IS appears to be most amenable to AI-support when it follows an inductive approach <ref type="bibr" target="#b13">(Berente et al., 2019)</ref>. We have yet to witness exemplars of AI-driven theory development in a behavioral research domain which comes close to the ingenuity and creativity displayed in some of the strongest theory and review papers. After all, it is important to remember that new assemblages of constructs and relationships are not a sufficient condition for a strong theoretical contribution. As pointed out by <ref type="bibr" target="#b45">Johnson et al. (2019)</ref>, it is the "why" associated with the relationships, the underlying theoretical rationale <ref type="bibr" target="#b118">(Whetten, 1989)</ref>, which is critical and one of the open challenges for AI-based theory development in the near future. In contrast to the creative and unstructured endeavor of theory development, the process of aggregating evidence from primary studies in order to test hypotheses and theories (most notably in a meta-analysis) can largely be supported by AI-based tools using the extant methodological literature as guidance.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head>A research agenda</head><p>In this section, we outline an agenda suggesting how IS researchers can focus and coordinate their efforts in advancing AILRs. Nurturing a vibrant AILR tradition is a task for the entire scholarly community, including design science researchers, behavioral scientists, methodologists, reviewers, and journal editors as well as authors of primary research papers. The AILR-centric agenda for research, design, and action, as displayed in Figure <ref type="figure" target="#fig_0">1</ref>, covers three levels: (I) supporting infrastructure, (II) methods and tools, and (III) research practice.</p><p>The agenda proceeds from technical questions of how research is stored and made accessible (Level I) to specific questions of how methods and tools can support the process of conducting AILRs (Level II), to overarching communitycentric questions of how IS research could facilitate the conduct of AILRs (Level III). For each level, we suggest fruitful opportunities, focusing on research and design (primarily on Levels I and II) as well as actionable advice targeting individuals and the IS community as a whole (primarily on Level III). With this broad agenda, we emphasize that AI and AILRs raise interesting questions on how we conduct and synthesize research.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head>Level I: Supporting infrastructure</head><p>Technical infrastructure can greatly facilitate or constrain AILRs. The diversity of infrastructure needed to support a vibrant AILR tradition within IS points to a wide range of related opportunities for research and design. We cover quality assurance, smart search technologies, and enhanced databases.</p><p>Quality assurance of AILR inputs. One of the prominent characteristics of AILRs is scalability. The expanding computational resources allow ever greater numbers of research papers to be extracted and analyzed with some projects reporting tens <ref type="bibr" target="#b59">(Larsen et al., 2019)</ref> and others reporting hundreds of thousands <ref type="bibr" target="#b23">(Dang et al., 2009)</ref> of papers processed. In such cases, the technical quality of paper documents would vary (e.g., regarding Optical character recognition and the inclusion of additional, non-content-related text), and the scale of work necessitates novel methods and metrics for preprocessing and establishing the quality of inputs into AILRs <ref type="bibr" target="#b6">(Antons et al., 2021)</ref>. Considering the scale, an important consideration in undertaking this work is the need to establish and, if necessary and possible, improve quality of inputs automatically, with little human intervention. Furthermore, methods and tools should attempt to cover a diverse range of AILR inputs, including traditional research papers, grey literature, and objects of research, such as IT artifacts. These challenges create fertile opportunities for collaboration with researchers working on information quality of big heterogenous data within IS, computer science and beyond, many of whom also utilize AI methods <ref type="bibr" target="#b10">(Batini et al., 2015;</ref><ref type="bibr" target="#b49">Kenett and Shmueli, 2016;</ref><ref type="bibr" target="#b68">Lukyanenko et al., 2019;</ref><ref type="bibr" target="#b112">Wahyudi et al., 2018)</ref>.</p><p>Smart search technologies. To facilitate information retrieval from databases and subsequent analyses, more research is needed on smart search technologies. This involves going beyond a mere word matching and seeking to understand the intent and meaning behind a search query. First, work is needed on better syntactic interpretation of search words, such as research on query parsing and validation <ref type="bibr" target="#b91">(Russell-Rose and Shokraneh, 2019)</ref>. Indeed, machine learning has become a major driver in NLP improvements. One notable opportunity here is the development of IS-specific NLP query parsing algorithms, as parsing text is partially context-dependent <ref type="bibr" target="#b27">(Eisenstein, 2019)</ref>.</p><p>Second, to go from syntactic parsing to understating the meaning and intent of a search query, AILR tools must possess the ability to infer and reason beyond the information provided. Here, domain-specific ontologies can greatly facilitate deeper semantic interpretation of search queries. Unlike simple tags or labels, ontologies capture nuanced semantics of the domain, including concept definitions and relationships among concepts (e.g., "ERP" is a kind of "enterprise IT," "design principles" are synonymous with "design guidelines," "UTAUT" is an extension of "TAM"). Research opportunities pertain both to IS-specific and foundational ontologies. Work on IS-specific ontologies has already been undertaken in the past <ref type="bibr" target="#b1">(Alter, 2005;</ref><ref type="bibr" target="#b66">Lukyanenko, 2020)</ref>, and the need to support AILRs could provide a new impetus to this line of work. Indeed, in fastpaced disciplines like IS, for such ontologies to be useful, they need to be current and up to date, necessitating continuous research attention.</p><p>We call for further work on ontology-based indexing to improve discoverability of scholarly content (cf. <ref type="bibr" target="#b63">Li et al., 2020)</ref>. This could involve the use of domain ontologies to assign specific labels to papers and their content (e.g., constructs, construct relationships, theories, themes, and methodologies), potentially alleviating the problems of "concept drift" or buzzwords in IS (O' <ref type="bibr">Mara-Eves et al., 2015;</ref><ref type="bibr" target="#b111">vom Brocke et al., 2015)</ref>.</p><p>Further design science and empirical research is needed on foundational ontologies, which commonly provide the basis for domain ontologies, describing primitive constructs and rules for using them in domain ontologies <ref type="bibr" target="#b71">(March and Allen, 2014;</ref><ref type="bibr" target="#b114">Wand and Weber, 1988)</ref>. With the development of new ontologies constituting a research opportunity, surveys and evaluations of different ontologies will also be needed, especially for the objective of creating an ISspecific domain ontology to guide AILRs.</p><p>Enhanced databases. We envision enhancements of IS databases and complementary repositories which can greatly facilitate AILRs. First, recognizing that there are many areas in which scholarly databases could improve, we call for research advancing coverage reports and improving interoperability of academic databases. A prevalent challenge for literature reviews in the social sciences, in general, and IS, in particular, is the lack of databases comprehensively curating research published in the main outlets, including journals and conferences <ref type="bibr" target="#b111">(vom Brocke et al., 2015)</ref>, accompanied by increasing volatility of database indices and search algorithms <ref type="bibr" target="#b21">(Cram et al., 2020)</ref>. This requires researchers to search multiple sources and apply multiple search techniques <ref type="bibr" target="#b81">(Papaioannou et al., 2009;</ref><ref type="bibr" target="#b103">Templier and Paré, 2018)</ref>. The ground-breaking paper of <ref type="bibr" target="#b99">Sturm and Sunyaev (2018)</ref> illustrates how journal coverage reports could enable substantially more targeted and efficient literature searches. We further emphasize that limited interoperability (accessibility via APIs) is still a major obstacle breaking the data processing pipeline between the database and local repositories of the research team, introducing manual database queries and duplicate checking as potential sources of errors.</p><p>Second, data curation initiatives could benefit from the interplay of supervised ML and crowdsourcing platforms, targeting annotation, quality control, and synthesis. For example, the Cochrane crowd is a section of the larger online medical database which actively solicits volunteers "to help categorise and summarise healthcare evidence." 3 Beyond the IS theory wiki, 4 which is curated by online editors in a manner similar to Wikipedia, we are not aware of any such efforts in the IS discipline. Considering the potential value such repositories may bring, we call for more work on crowdsourcing for research, including on how to motivate volunteer researchers to categorize and analyze IS literature and how to evaluate and improve quality of the contributions.</p><p>Third, we highlight opportunities for advancing complementary database repositories for models and artefacts. To ensure long-term viability and cross-fertilization of AILRs, there are opportunities to design reusable repositories for NLP and ML models, whitelists and lexicons which can then be shared with the community <ref type="bibr" target="#b22">(Dalgali and Crowston, 2019)</ref> and incorporated into AILR routines. This can be especially powerful for capturing recurring patterns in IS literature, such as AI models capable to understanding common dependent variables (e.g., intention to adopt), which could be reused as module components for specific literature reviews (e.g., adoption of electronic health record technologies).</p><p>In addition, tools and algorithms are needed to extract and analyze non-textual subject matter of research papers, especially the IT artifacts. IS researchers have begun to conduct reviews of the features of IT artifacts, known as "design archaeology" <ref type="bibr" target="#b31">(Gleasure, 2014;</ref><ref type="bibr" target="#b56">Chandra Kruse et al. 2019)</ref>. Corresponding algorithms for automated reviews of digital artifacts can be based on recent advances in image mining, process mining, or computer vision. This is a unique opportunity native to the IS discipline, which stands to enrich AILRs broadly.</p><p>Overall, advancing quality assurance and domainontologies, as well as information curated in enhanced databases and local repositories will enable prospective authors to execute AILRs more efficiently, to expedite ML training, and to enhance ML models by infusing domain knowledge into NLP algorithms. These advances can facilitate research progress through corresponding tools and methods supporting distinct steps of the literature review process.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head>Level II: Methods and tools</head><p>There are vast opportunities for methodological and toolcentric research on AILRs. We outline promising avenues for research and design in each individual step of the review process and offer complementary recommendations on cross-cutting concerns, covering the need for advancing evaluation studies, conceptions of validity, and the notion of transparency in AILRs.</p><p>Step 1: Problem formulation. Future design-oriented research targeting problem formulation could facilitate posing innovative questions, discovering unanticipated patterns in the literature, and promoting novel research perspectives on the phenomena under investigation. This problem of discovering novel insights from big data repositories has already been discussed in IS <ref type="bibr" target="#b87">(Rai, 2016)</ref> and investigated in various contexts (e.g., <ref type="bibr" target="#b30">Germonprez et al., 2007;</ref><ref type="bibr" target="#b48">Kallinikos and Tempini, 2014;</ref><ref type="bibr" target="#b68">Lukyanenko et al., 2019)</ref>. The lessons from these studies could be transferred to the retrieval of information from knowledge repositories and subsequent discovery of novel problems. A second stream of research opportunities relates to facilitating the verification of research gaps <ref type="bibr" target="#b76">(Müller-Bloch and Kranz, 2015)</ref>. For instance, this could be accomplished based on ML classifiers identifying previous review papers (cf. <ref type="bibr" target="#b108">Tsafnat et al., 2014)</ref>. While health scientists have dedicated repositories of review papers at their disposal (e.g., the Cochrane library), IS researchers do not have easy access to an overview of published reviews. A corresponding artifact could enable prospective authors to verify whether their research questions have already been addressed and to make more informed statements on related review papers, especially when confronted with a rapidly growing volume of papers and reviews published outside the top-tier journals. Such tools could provide a prioritized list of reviews on related topics (e.g., based on sample overlap), facilitating research gap verification, the development of related work sections, and contribution statements.</p><p>Step 2: Literature search. We highlight two opportunities to leverage AI in the search step. First, backward citation searches (wherein the literature is drawn from the references in a focal article) are rarely reported in IS review papers despite initial evidence for their effectiveness <ref type="bibr" target="#b44">(Jalali and Wohlin, 2012;</ref><ref type="bibr" target="#b81">Papaioannou et al., 2009)</ref>. The tedious task of scanning multiple (in all likelihood overlapping) reference sections would easily lend itself to AI-supported extraction, consolidation, and merging of reference data. Consideration of additional cues (e.g., frequency and contexts of citations) could even provide a basis for prioritizing or filtering de-duplicated search results. Second, we expect further progress regarding tools aimed at documenting, analyzing, and justifying individual search strategies (cf. <ref type="bibr" target="#b103">Templier and Paré, 2018)</ref>. IS researchers could use initial work on syntactic search query validation <ref type="bibr" target="#b91">(Russell-Rose and Shokraneh, 2019)</ref> to build tools supporting researchers in designing and improving different elements of search strategies. Examples of promising starting points include the analysis and justification of the scope in terms of publication outlets covered and the selection of search terms in database searches.</p><p>Step 3: Inclusion screen. The screening tasks provide the most significant opportunities for advancing AI-based tools. Most importantly, this pertains to supporting the timeconsuming first screen (based on titles and abstracts), in which AI-based tools and humans can complement each other in different ways (see <ref type="bibr" target="#b59">Larsen et al., 2019;</ref><ref type="bibr" target="#b80">O'Mara-Eves et al., 2015</ref><ref type="bibr" target="#b109">, van de Schoot et al., 2021)</ref>. Many promising tools designed for reviews of health research (e.g., <ref type="bibr" target="#b113">Wallace et al., 2012)</ref> could serve as an inspiration for design-oriented work in IS. Since IS research does not follow comparable standards regarding research reporting and regulated vocabulary, such as the MeSH terms in the health sciences (cf. O' <ref type="bibr">Mara-Eves et al., 2015)</ref>, modifications and careful evaluation are necessary. Beyond supporting the screen, further AI-based tools could target two mechanical, tedious tasks intertwined with the screen, namely the acquisition of full-texts between the first and second screen <ref type="bibr" target="#b105">(Thomas et al., 2017;</ref><ref type="bibr" target="#b108">Tsafnat et al., 2014)</ref> and the identification of studies reporting results from the same dataset <ref type="bibr" target="#b103">(Templier and Paré, 2018)</ref>.</p><p>Step 4: Quality assessment. There are several opportunities for advancing AI-based tool support for the quality appraisal step. This is underlined by the fact that current research practices regarding the reporting of quality assessment in meta-analyses of IS research are insufficient, even for meta-analyses published in top-tier journals <ref type="bibr" target="#b103">(Templier and Paré, 2018)</ref>. While methods papers in IS are beginning to recognize the critical role of quality assessment, corresponding procedures are a more established element in general meta-analysis methods papers (e.g., <ref type="bibr" target="#b38">Higgins and Green, 2008;</ref><ref type="bibr" target="#b41">Hunter and Schmidt, 2014)</ref>.</p><p>Corresponding design science research could draw inspiration from risk of bias assessment tools like Robot-Reviewer <ref type="bibr" target="#b73">(Marshall et al., 2015)</ref> and advance AI-supported quality appraisal of non-experimental, observational, and cross-sectional research designs. In a first step, this would be greatly facilitated by classifiers dedicated to detecting the research designs and methods of primary papers. In a second step, design-oriented work could aim at (partial) automation of quality assessment based on checklists and criteria for observational studies <ref type="bibr" target="#b95">(Shamliyan et al., 2010)</ref>, surveys <ref type="bibr" target="#b84">(Pinsonneault and Kraemer, 1993)</ref>, positivist case studies <ref type="bibr" target="#b25">(Dubé and Paré, 2003)</ref>, or Delphi studies <ref type="bibr" target="#b82">(Paré et al., 2013)</ref>.</p><p>Step 5: Data extraction. Future AI-based tools supporting the data extraction step may adopt two perspectives on extant research. First, there is the view that papers contain data and evidence that have a singular interpretation and should lend themselves to efficient extraction and analysis. Consistent with the positivist paradigm (which holds that there is single ground truth accessible through empirical studies), corresponding tools may spot relatively isolated fragments of a paper to provide researchers with target categories like methodological characteristics or details of the research design. There are several opportunities of transferring and adapting corresponding tools aimed at extracting study characteristics <ref type="bibr" target="#b47">(Jonnalagadda et al., 2015)</ref>. Second, consistent with philosophical paradigms recognizing that multiple interpretations may exist simultaneously (e.g., interpretivism, critical social theory, or critical realism), research can be viewed as a discourse in which authors of review papers examine different arguments and possibly diverging interpretations of the same observations <ref type="bibr" target="#b7">(Avison and Malaurent, 2014;</ref><ref type="bibr" target="#b52">Klein and Myers, 1999)</ref> in the process of forming a synthesis. The discourse evolving around particular theoretical models, that is, the focus of <ref type="bibr" target="#b59">Larsen et al. (2019)</ref>, is one very promising way to operationalize this perspective. Future work in this area is unlikely to succeed when considering isolated fragments. Instead, identifying main arguments and influential ideas will require consideration of a broader context. This pertains to an argument's position in the overall structure of the paper <ref type="bibr" target="#b85">(Prester et al., 2020)</ref>, overarching ontologies <ref type="bibr" target="#b63">(Li et al., 2020)</ref>, or its relation to previous work and the meaning associated with cited papers <ref type="bibr" target="#b37">(Hassan et al., 2020;</ref><ref type="bibr" target="#b97">Small, 1978)</ref>. It will require researchers to go beyond basic NLP models and improve NLP algorithms for context-sensitive data extraction, analysis, and synthesis which are capable of capturing and representing higher order linguistic structures and deeper meaning. This research could contribute to work on deep linguistic processing, context extraction, wordsense disambiguation, and other open ML and NLP problems <ref type="bibr" target="#b24">(Dörpinghaus and Stefan, 2019;</ref><ref type="bibr" target="#b86">Raganato et al., 2017;</ref><ref type="bibr" target="#b98">Stanovsky et al., 2017;</ref><ref type="bibr" target="#b115">Wang et al., 2020)</ref>. We believe this second, discourse-oriented perspective illustrates how tools in the social sciences may differ from those in the natural sciences.</p><p>Step 6: Data analysis and interpretation. Regarding the final step, we focus on knowledge integration and inductive theory development. With knowledge integration still posing challenges for prospective authors, we call for the development of discipline-specific algorithms to address issues especially prevalent in IS, such as similarity assessment of IS measurement items or IS constructs, and IS construct integration. Here, important progress can be made by anchoring solutions in IS domain knowledge. For example, similarity judgment for reflective vs formative constructs rely on different assumptions about the relationships between measurement items, and knowledge of whether a given IS construct is generally reflective or formative can be useful. Hence, different algorithmic similarity metrics can be used depending on the type of constructs involved. For formative constructs, measurement items are expected to be quite dissimilar from one another, as the items represent different dimensions of the higher order construct (e.g., measurement items of information quality's dimensions of perceived accuracy are quite different from those which measure perceived information completeness, see, e.g., <ref type="bibr" target="#b119">Xu et al., 2013)</ref>. In this case, to ensure that these measurement items can be automatically related, a domain-specific ontology can be helpful. In contrast, for reflective constructs, the algorithms can expect to detect high synonymity among the measurement items (e.g., as in the case of items which measure perceived ease of use), which could be a signal that these measurement items belong to the same reflective construct.</p><p>Work on integrating constructs is already being pursued, including such artefacts as CID1 <ref type="bibr" target="#b58">(Larsen and Bong, 2016)</ref>, ADIT <ref type="bibr" target="#b59">(Larsen et al., 2019)</ref>, ideational impact classifiers <ref type="bibr" target="#b85">(Prester et al., 2020)</ref>, RefMod-Miner <ref type="bibr" target="#b34">(Hake et al., 2017)</ref>, or TheoryOn <ref type="bibr" target="#b63">(Li et al., 2020)</ref>. Developing theories lies at the core of IS research <ref type="bibr" target="#b62">(Leidner, 2018;</ref><ref type="bibr" target="#b89">Rivard, 2014;</ref><ref type="bibr" target="#b117">Webster and Watson, 2002)</ref>. AILRs, which can operate on larger volume of literature, provide an ideal basis for large-scale inductive theory development <ref type="bibr" target="#b13">(Berente et al., 2019;</ref><ref type="bibr" target="#b19">Choudhury et al., 2018;</ref><ref type="bibr" target="#b78">Nelson, 2020)</ref>, resulting in substantive opportunities for future studies. Here, many open questions remain, for instance, ascertaining which steps of the theory-building process based on literature are most ripe for automation. Another key challenge is assurance of validity and rigor in inductive generation of components needed for theory construction (i.e., constructs, relationships, and boundary conditions) from heterogenous literature sources which may vary in quality and contain tacit assumptions. Automated discovery of causal chains from literature is a booming practice in medicine and bioinformatics <ref type="bibr" target="#b40">(Hossain et al., 2012)</ref>. However, it has yet to be widely utilized in IS, which offers a lucrative prospect of finding novel connections among distal IS phenomena (e.g., organizational IT, social media, and Internet of things). Although, as we stated earlier, we do not envision tools to replace humans; here, we are excited to see how a theory development could benefit from scalable automated pattern discoveries in IS.</p><p>All steps. We conclude this section by outlining four aspects relevant to AI-based tools across the six steps of the literature review process: (1) evaluation and validity, (2) transparency and replicability, (3) compatibility for recombination, and (4) usability. These aspects point to the need for methodological research as well as an accompanying discourse in the IS community, both critical pillars for the development of best practices (further discussed in level 3 of this agenda).</p><p>Evaluation and validity. Evaluation methods and studies of the feasibility, effectiveness, and utility of AILR methods and tools are needed, considering that they operate at the intersection of data, theory, and complex computational software systems. It is unlikely that a single evaluation type (e.g., behavioral experiment) could lend sufficient and comprehensive support for the various considerations in developing and using AILR tools. Presently, little guidance exists on what constitutes an effective evaluation of these tools, and researchers have started to draw attention to the lack of methodological guidance on performing such evaluations <ref type="bibr" target="#b63">(Li et al., 2020)</ref>. Drawing inspiration from <ref type="bibr">Li et al.'s (2020)</ref> multi-stage evaluation approach, we encourage future work on the evaluation of AILR methods and tools, potentially combining ML experiments, behavioral field and laboratory studies, and applicability checks. As part of reporting AILRs, as well as designing and evaluating AILR tools, researchers invariably make assertions and claims about properties, behavior, and value of these tools, raising questions of validity in this context. Validity deals with justification of claims (such as inferences and conclusions) in research studies <ref type="bibr" target="#b65">(Lindzey et al., 1998)</ref>, including literature reviews <ref type="bibr" target="#b83">(Paré et al., 2016)</ref>. The area of AI developed a set of validation procedures to establish the performance of automated classifiers. The most common measures are precision, recall, their harmonic mean (Fmeasure), or the area under the receiver operating characteristic curve (AUC), which captures the diagnostic ability of a classifier based on varying discrimination thresholds <ref type="bibr" target="#b80">(O'Mara-Eves et al., 2015)</ref>. These measures may be used to assess the validity of AILR findings <ref type="bibr" target="#b58">(Larsen and Bong, 2016;</ref><ref type="bibr" target="#b85">Prester et al., 2020)</ref>. However, a recent review of design validities, including AI-based validities <ref type="bibr" target="#b60">(Larsen et al., 2020)</ref>, concluded that we continue to lack specialized design science validities needed to establish common principles of rigor when designing and applying such artifacts as ML and NLP. In the context of evaluation and validity, many open questions remain: How can bias in AILRs arising from using unrepresentative literature sources or specific local design choices (e.g., feature engineering decisions) be detected and mitigated? Do we need specialized validity categories <ref type="bibr" target="#b60">(Larsen et al., 2020)</ref> to capture the nuances of automated literature reviews? For AILRs such validities could be concerned with the quality of inputs (e.g., research papers and other variables, such as hyperparameters), whether the internal model's characteristics could interfere with the outcomes and conclusions, and whether language interpretation is valid and appropriate to the domain of IS and specific contexts of the study.</p><p>Transparency and replicability. There has been concern and growing effort to make IS research more transparent to support replication of findings and application of IS knowledge in practice <ref type="bibr" target="#b15">(Burton-Jones et al., 2021)</ref>. Accordingly, the traditional literature review process seeks to be transparent and replicable in IS and beyond <ref type="bibr" target="#b83">(Paré et al., 2016;</ref><ref type="bibr" target="#b103">Templier and Paré, 2018)</ref>. Typically, researchers query databases (e.g., Web of Science) with explicit keywords and then follow pre-defined steps for screening, extracting, and analyzing the results. Yet, decisions can sometimes be idiosyncratic, leading to reproducibility concerns <ref type="bibr" target="#b21">(Cram et al., 2020)</ref>. AILRs may make literature extraction and coding more reproducible, as the same ML or NLP logic can be applied to new datasets, further allowing reviews to incorporate recently published papers or add new journals. At the same time, AILRs raise new transparency concerns. The problem is two-fold. First, AI frequently relies on black box models for search, data extraction, and classification tasks. The very power of such approaches (e.g., deep learning neural networks) lies in their ability to form thousands of extremely nuanced and complex rules resulting from millions or even billions of iterations over training data <ref type="bibr" target="#b18">(Castelvecchi, 2016;</ref><ref type="bibr" target="#b39">Holzinger, 2016)</ref>. Indeed, the complexity of the resulting models is so high that the scientists themselves may not fully understand how the algorithms work exactly <ref type="bibr">(Hutson, 2018a)</ref>. Second, even if AI models themselves are simple and relatively interpretable (e.g., regression models or decision trees), the process of generating these models may be opaque, lacking rigor and systematization. For example, in training ML models, many local choices need to be made (e.g., input normalization, dimensionality reduction, missing value imputation, feature engineering, and hyperparameter selection). In the absence of standardized procedures, these are commonly performed in an ad hoc manner, with great reliance on the experience and intuition of researchers as well as trial and error approaches <ref type="bibr" target="#b4">(Anderson et al., 2013;</ref><ref type="bibr" target="#b26">Duboue, 2020)</ref>. These choices are then seldomly explained or shared. This means that it could be unclear how to produce these exact models given the inputs <ref type="bibr" target="#b17">(Castellanos et al., 2021)</ref>. This makes it challenging to follow the logic and replicate AILRs using traditional human coders. In short, the lack of model preparation transparency is a key culprit for the current reproducibility crisis in ML <ref type="bibr">(Hutson, 2018b;</ref><ref type="bibr" target="#b46">Jones, 2018)</ref>, which could also affect AILRs. This creates an opportunity for research on the most appropriate and effective strategies in the AILR context. To improve replicability of literature reviews <ref type="bibr" target="#b21">(Cram et al., 2020)</ref>, research on transparency and explainability of ML and NLP models is needed. Such efforts can build on the extant research in the computer science <ref type="bibr" target="#b18">(Castelvecchi, 2016;</ref><ref type="bibr" target="#b33">Gunning and Aha, 2019;</ref><ref type="bibr" target="#b53">Knight, 2017)</ref>, and we invite IS scholars to contribute to these efforts in the context of AILRs. More broadly, we hope future researchers can begin addressing such questions as: How can the AI-based literature identification and search be made more transparent? How can automated data extraction and analysis become more explainable? Also, how can transparency be improved when AI is used at multiple stages of the literature review process? Until these questions can be answered to a degree of satisfaction of the research community, transparency is likely to remain a persisting constraint on AILRs.</p><p>Of special importance is development of methods for undertaking local decisions appropriate for the AILR context. Using ML and NLP algorithms involves making a large number of specific, local decisions. For example, before running an ML algorithm, a researcher has to specify parameters (hyperparameters). Furthermore, to improve performance, the data (here, contents of research articles) are typically transformed using a variety of techniques (e.g., normalization, dimensionality reduction, and missing value imputation).</p><p>Compatibility for recombination. It is also important to design AILR tools with future recombination in mind <ref type="bibr" target="#b12">(Beller et al., 2018)</ref>. Presently, a major limitation of many tools, especially those aiming at automating multiple steps of the review process, is that they do not effectively integrate with preexisting components. Thus, while such tools are accessible, they may not be as powerful, as they restrict researchers in incorporating the most effective tools for the task. Consistent with previous calls <ref type="bibr" target="#b3">(Al-Zubidy et al., 2017;</ref><ref type="bibr" target="#b30">Germonprez et al., 2007;</ref><ref type="bibr" target="#b79">O'Connor et al., 2018)</ref>, we encourage more research on making AILR tools more flexible, modular, and tailorable (which should also contribute to a greater AILR transparency). Promising packages and ongoing projects in this area can be found in the Evidence Synthesis Hackathon Series, which has been initiated recently. 5   Usability. Developing AILR tools is not only a technical problem, but is also a usability challenge, resulting in ample opportunities for research on human factors in tool use. Poor usability has been a persistent concern in this area <ref type="bibr" target="#b72">(Marshall and Wallace, 2019)</ref> with current tools often created on an ad hoc basis, implementing idiosyncratic interfaces, which are difficult to understand. The tools also face the challenging tension between offering simple interfaces that are accessible to users without AI knowledge while at the same time allowing advanced users to adapt, modify, and combine algorithms. We note that ASReview is a promising exemplar in this regard since it offers a graphical user interface as well as command-line access to the underlying code (Van de <ref type="bibr" target="#b109">Schoot et al., 2021)</ref>. These issues create an opportunity for researchers in human-computer interaction and usability research to study and improve upon the interface design and process flow of AILR tools. As the portfolio of methods and tools supporting AILRs continuously expands, we encourage IS researchers to join forces in review teams, bringing together researchers with expertise in state-ofthe-art tools and the broader spectrum of NLP and ML techniques with others who have experience in theory development, for example. There are many interesting and exciting possibilities of integrating the unique strength of AI and human-computer interaction and usability researchers in the collaborative process of conducting AILRs (cf. <ref type="bibr" target="#b88">Raisch and Krakowski, 2020;</ref><ref type="bibr" target="#b94">Seeber et al., 2020)</ref>.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head>Level III: Research practice</head><p>AILRs require broader considerations, which we believe, should involve the entire IS community, including authors of papers surveyed by AILRs, their reviewers, community thought leaders, and innovators interested in improving the way we conduct research. We highlight two broad streams of discussion pertaining to standardization and sharing.</p><p>Standardization debate within IS. To support AILR practice within IS, a discussion is needed on the potential and boundaries of greater standardization within the discipline. Clearly, our discipline being so diverse would not be wellserved if we begin to straitjacket ideas through umbrella standardizations. However, some local cases of standardization (e.g., use common evaluation metrics, such as Fscores or AUCs in ML studies) may become beneficial. Indeed, many AILRs rely on limited information, such as paper abstracts only (cf., <ref type="bibr" target="#b96">Sidorova et al., 2008)</ref>, and difficulties in separating relevant elements and sections of the paper may introduce noise in the analysis. Identifying similar entities within papers remains a challenge due to lack of agreed upon conventions for describing and presenting, for example, theoretical constructs or measurement items <ref type="bibr" target="#b28">(Endicott et al., 2017)</ref>. To continue building a cumulative research body of knowledge, the IS discipline could consider adopting common naming conventions and domain ontologies. For instance, this could mean avoiding giving the same construct different names (see <ref type="bibr" target="#b58">Larsen and Bong, 2016)</ref> or consistent naming of standard sections of research papers (e.g., "methods"and "results"), as long as it does not detract from the ability to present the results in a unique manner. A. The rationale is that even technically perfect tools (like researchers) would struggle to extract and interpret information from sources which use ambiguous, confusing language, and presentation. Standardization, however, brings its own challenges and invites additional considerations, especially in disciplines of great diversity, such as IS. Rather than endorsing the need to standardize, we call on the community to engage in the debates about its merits and limitations. In particular, we suggest considering which areas of IS and type of papers are most amenable to standardization, where standardization may bring benefits, while constantly remaining cognizant of the negative effects of standardization, some of which may not be easy to anticipate at the onset. It is important to ensure that in pursuing the goal of integrated science, we do not alter the spirit of those contributions, which purposefully strive for multiple, nuanced, and at times, contradictory perspectives and interpretations <ref type="bibr" target="#b7">(Avison and Malaurent, 2014;</ref><ref type="bibr" target="#b52">Klein and Myers, 1999)</ref>.</p><p>Debate on sharing complementary research outputs. For AILRs to go beyond text of papers and analyze other research outputs (e.g., IT artifacts, empirical data, and ML models), we need to develop stronger sharing tradition in the IS discipline. Corresponding calls to improve data and IT artifact sharing practices within the IS discipline are mounting <ref type="bibr" target="#b67">(Lukyanenko and Parsons, 2020;</ref><ref type="bibr" target="#b69">Maass et al., 2018)</ref>, culminating with the recent MISQ Editorial on transparency, where sharing of research components is a major recommendation <ref type="bibr" target="#b15">(Burton-Jones et al., 2021)</ref>. Sharing components of research is not without challenges, such as protection of privacy or intellectual property rights of software code or adding to an already long list of things to do for scientists. Furthermore, as the IS discipline is investigating properties of IT artifacts (in addition to human behavior), it is not unreasonable to foresee research which uses advanced computational techniques (such as computer vision) to mine properties of IT artifacts and use those as units of LR analysis. Motivated by its potential benefits to AILRs, we call on the community to investigate technical approaches, requisite infrastructure (e.g., at the conference and journal levels), and community practices (e.g., during review stage) for data, model, and artifact sharing. This includes making the data open and publicly accessible, complete with appropriate meta-data to facilitate identification of the data semantics. Our call joins a chorus of suggestions made by other researchers. Thus, <ref type="bibr" target="#b69">Maass et al. (2018)</ref> impel researchers to "play a proactive role in which they prepare data for future problems, needs, or changes. As part of this role, IS researchers will need to anticipate concerns that go beyond a single research project to generate approaches and infrastructures that build capacity for, and facilitate work across, multiple research settings and projects (e.g., to address problems such as data sharing)." (p. 1266). While community-level norms for sharing may take time to emerge <ref type="bibr" target="#b15">(Burton-Jones et al., 2021)</ref>, authors could lead this effort by voluntarily sharing those components of their own work they deem appropriate. In doing so, authors would make their papers more accessible to the AILR tools of the future and hence increase the exposure and potential impact of their work.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head>Concluding remarks</head><p>Scholars in many scientific disciplines share excitement about the opportunities of leveraging AI in support of various research tasks. In this essay, we explored how literature reviews can benefit from AI-support, summarizing the current state-of-research and sketching opportunities for future research, design, and action. While some trends target (partial) automation of repetitive tasks, others are more ambitious, advancing the use of AI in the analysis and interpretation steps. Not unexpectedly, such visionary approaches are met with excitement from some and reservations from others. In this opinionated discourse, we emphasize that AILRs are not an end in itself but a means to the end of making a strong contribution to knowledge and theory development. We expect top IS journals to continue their tradition of championing papers that thoughtfully integrate previous research streams, develop new theories, or elaborate on existing ones <ref type="bibr" target="#b62">(Leidner, 2018;</ref><ref type="bibr" target="#b89">Rivard, 2014;</ref><ref type="bibr" target="#b117">Webster and Watson, 2002)</ref>. While AI can certainly automate repetitive tasks and support others, there is no doubt that these contributions require human interpretation and insightful syntheses, as well as novel explanation and theory building. Having surveyed a range of promising examples of AI-based tools for literature reviews, we recognize that much remains to be done to support the more repetitive tasks and to facilitate insightful contributions. We therefore propose a multi-level agenda for AILR-centric research, design, and action. Our main ambition is to foster a vibrant and constructive AILR tradition in IS, which offers exciting opportunities for the entire research community, including authors and reviewers, as well as external stakeholders from other disciplines and the industry. Especially for design science researchers, there is significant potential for advancing AI-based tools and methods beyond the IS discipline. We hope that our vision encourages scholars to engage in debates and reflections on how AI can be leveraged for the progress of research in IS and its neighboring disciplines.</p></div><figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_0"><head>Figure 1 .</head><label>1</label><figDesc>Figure 1. A research agenda for AILR-centric research, design, and action.</figDesc><graphic coords="7,140.09,521.97,324.69,171.61" type="bitmap"/></figure>
+<figure xmlns="http://www.tei-c.org/ns/1.0" type="table" xml:id="tab_0"><head>Table 1 .</head><label>1</label><figDesc>AI-based tools for steps of the review process.</figDesc><table><row><cell>Step</cell><cell>AI-based tools</cell><cell>Potential for AI-support</cell></row><row><cell>1. Problem</cell><cell>• Programming libraries supporting thematic analyses</cell><cell>• Moderate potential with AI potentially pointing</cell></row><row><cell>formulation</cell><cell>based on LDA models (example paper: Antons and</cell><cell>researchers to promising areas and questions or</cell></row><row><cell/><cell>Breidbach, 2017)</cell><cell>verifying research gaps</cell></row><row><cell/><cell>• GUI applications and programming libraries supporting</cell><cell/></row><row><cell/><cell>scientometric analyses (Swanson and Smalheiser,</cell><cell/></row><row><cell/><cell>1997)</cell><cell/></row><row><cell>3. Search</cell><cell>• TheoryOn (Li et al., 2020) enables ontology-based</cell><cell>• Very high potential since the most important search</cell></row><row><cell/><cell>searches for constructs and construct relationships in</cell><cell>methods consist of steps that are repetitive and</cell></row><row><cell/><cell>behavioral theories</cell><cell>time-consuming, that is, amenable to automation</cell></row><row><cell/><cell>• Litbaskets (Boell and Wang, 2019) supports</cell><cell/></row><row><cell/><cell>researchers in setting a manageable scope in terms of</cell><cell/></row><row><cell/><cell>journals covered</cell><cell/></row><row><cell/><cell>• LitSonar (Sturm and Sunyaev, 2018) offers syntactic</cell><cell/></row><row><cell/><cell>translation of search queries in for different databases;</cell><cell/></row><row><cell/><cell>it also provides (journal) coverage reports</cell><cell/></row><row><cell>4. Screen</cell><cell>• ASReview (Van de Schoot et al., 2021) offers screening</cell><cell>• High potential for semi-automated support in the first</cell></row><row><cell/><cell>prioritization</cell><cell>screen, which requires many repetitive decisions</cell></row><row><cell/><cell>• ADIT approach of Larsen et al. (2019) for researchers</cell><cell>• Moderate potential for the second screen, which</cell></row><row><cell/><cell>capable of designing and programming ML classifiers</cell><cell>requires considerable expert judgment (especially</cell></row><row><cell/><cell/><cell>for borderline cases)</cell></row><row><cell>5. Quality</cell><cell/><cell/></row><row><cell>assessment a</cell><cell/><cell/></row></table></figure>
+			<note xmlns="http://www.tei-c.org/ns/1.0" place="foot" xml:id="foot_0"><p>Journal of Information Technology 37(2)</p></note>
+		</body>
+		<back>
+
+			
+			<div type="funding">
+<div xmlns="http://www.tei-c.org/ns/1.0"><head>Funding</head><p>The author(s) received no financial support for the research, authorship, and/or publication of this article.</p></div>
+			</div>
+
+			<div type="annex">
+<div xmlns="http://www.tei-c.org/ns/1.0"><head>Declaration of conflicting interests</head><p>The author(s) declared no potential conflicts of interest with respect to the research, authorship, and/or publication of this article.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head>ORCID iD</head><p>Guy Paré  <ref type="url" target="https://orcid.org/0000-0001-7425-1994">https://orcid.org/0000-0001-</ref>  Notes 1. We use the term "tool" in a broad sense, covering applications offering graphical user interfaces (GUI), statistical packages, as well as programming libraries, for example. 2. For the sake of completeness, we recognize that some tools support multiple steps of the review process (e. </p></div>			</div>
+			<div type="references">
+
+				<listBibl>
+
+<biblStruct xml:id="b0">
+	<analytic>
+		<title level="a" type="main">Systematic reviews: work that needs to be done and not to be done</title>
+		<author>
+			<persName><forename type="first">C</forename><forename type="middle">E</forename><surname>Adams</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">S</forename><surname>Polzmacher</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><surname>Wolff</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of Evidence-Based Medicine</title>
+		<imprint>
+			<biblScope unit="volume">6</biblScope>
+			<biblScope unit="issue">4</biblScope>
+			<biblScope unit="page" from="232" to="235"/>
+			<date type="published" when="2013">2013</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b1">
+	<analytic>
+		<title level="a" type="main">Architecture of Sysperanto: a model-based ontology of the is field</title>
+		<author>
+			<persName><forename type="first">S</forename><surname>Alter</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Communications of the Association for Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">15</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="1" to="40"/>
+			<date type="published" when="2005">2005</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b2">
+	<analytic>
+		<title level="a" type="main">Generating research questions through problematization</title>
+		<author>
+			<persName><forename type="first">M</forename><surname>Alvesson</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Sandberg</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Academy of Management Review</title>
+		<imprint>
+			<biblScope unit="volume">36</biblScope>
+			<biblScope unit="issue">2</biblScope>
+			<biblScope unit="page" from="247" to="271"/>
+			<date type="published" when="2011">2011</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b3">
+	<analytic>
+		<title level="a" type="main">Vision for SLR tooling infrastructure: prioritizing value-added requirements</title>
+		<author>
+			<persName><forename type="first">A</forename><surname>Al-Zubidy</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><forename type="middle">C</forename><surname>Carver</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">D</forename><forename type="middle">P</forename><surname>Hale</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Information and Software Technology</title>
+		<imprint>
+			<biblScope unit="volume">91</biblScope>
+			<biblScope unit="page" from="72" to="81"/>
+			<date type="published" when="2017">2017</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b4">
+	<analytic>
+		<title level="a" type="main">Brainwash: a data system for feature engineering</title>
+		<author>
+			<persName><forename type="first">M</forename><forename type="middle">R</forename><surname>Anderson</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">D</forename><surname>Antenucci</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">V</forename><surname>Bittorf</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the biennial conference on innovative data systems research</title>
+		<meeting>the biennial conference on innovative data systems research<address><addrLine>Asilomar, CA</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2013">2013. 2013. 2013</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b5">
+	<analytic>
+		<title level="a" type="main">Big data, big insights? Advancing service innovation and design with machine learning</title>
+		<author>
+			<persName><forename type="first">D</forename><surname>Antons</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">C</forename><forename type="middle">F</forename><surname>Breidbach</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of Service Research</title>
+		<imprint>
+			<biblScope unit="volume">21</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="17" to="39"/>
+			<date type="published" when="2017">2017</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b6">
+	<analytic>
+		<title level="a" type="main">Computational literature reviews: method, algorithms, and roadmap</title>
+		<author>
+			<persName><forename type="first">D</forename><surname>Antons</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">C</forename><forename type="middle">F</forename><surname>Breidbach</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><forename type="middle">M</forename><surname>Joshi</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Organizational Research Methods</title>
+		<imprint>
+			<biblScope unit="page">1094428121991230</biblScope>
+			<date type="published" when="2021">2021</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b7">
+	<analytic>
+		<title level="a" type="main">Is theory king?: questioning the theory fetish in Information Systems</title>
+		<author>
+			<persName><forename type="first">D</forename><surname>Avison</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Malaurent</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of Information Technology</title>
+		<imprint>
+			<biblScope unit="volume">29</biblScope>
+			<biblScope unit="issue">4</biblScope>
+			<biblScope unit="page" from="327" to="336"/>
+			<date type="published" when="2014">2014</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b8">
+	<analytic>
+		<title level="a" type="main">Unstructured data in marketing</title>
+		<author>
+			<persName><forename type="first">B</forename><surname>Balducci</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">D</forename><surname>Marinova</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of the Academy of Marketing Science</title>
+		<imprint>
+			<biblScope unit="volume">46</biblScope>
+			<biblScope unit="issue">4</biblScope>
+			<biblScope unit="page" from="557" to="590"/>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b9">
+	<analytic>
+		<title level="a" type="main">Achieving rigour in literature reviews: insights from qualitative data analysis and tool-support</title>
+		<author>
+			<persName><forename type="first">W</forename><surname>Bandara</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">E</forename><surname>Furtmueller</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">E</forename><surname>Gorbacheva</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Communications of the Association for Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">34</biblScope>
+			<biblScope unit="issue">8</biblScope>
+			<biblScope unit="page" from="154" to="204"/>
+			<date type="published" when="2015">2015</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b10">
+	<analytic>
+		<title level="a" type="main">From data quality to big data quality</title>
+		<author>
+			<persName><forename type="first">C</forename><surname>Batini</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><surname>Rula</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">M</forename><surname>Scannapieco</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of Database Management</title>
+		<imprint>
+			<biblScope unit="volume">26</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="60" to="82"/>
+			<date type="published" when="2015">2015</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b11">
+	<analytic>
+		<title level="a" type="main">A systematic comparison of software dedicated to meta-analysis of causal studies</title>
+		<author>
+			<persName><forename type="first">L</forename><surname>Bax</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">L-M</forename><surname>Yu</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">N</forename><surname>Ikeda</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">BMC Medical Research Methodology</title>
+		<imprint>
+			<biblScope unit="volume">7</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="1" to="9"/>
+			<date type="published" when="2007">2007</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b12">
+	<analytic>
+		<title level="a" type="main">Making progress with the automation of systematic reviews: principles of the International Collaboration for the Automation of Systematic Reviews (ICASR)</title>
+		<author>
+			<persName><forename type="first">E</forename><surname>Beller</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Clark</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">G</forename><surname>Tsafnat</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Systematic Reviews</title>
+		<imprint>
+			<biblScope unit="volume">7</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="1" to="7"/>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+	<note>BioMed Central</note>
+</biblStruct>
+
+<biblStruct xml:id="b13">
+	<analytic>
+		<title level="a" type="main">Research commentarydata-driven computationally intensive theory development</title>
+		<author>
+			<persName><forename type="first">N</forename><surname>Berente</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">S</forename><surname>Seidel</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">H</forename><surname>Safadi</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Information Systems Research</title>
+		<imprint>
+			<biblScope unit="volume">30</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="50" to="64"/>
+			<date type="published" when="2019">2019</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b14">
+	<analytic>
+		<title level="a" type="main">wwwlitbaskets.io, an IT artifact supporting exploratory literature searches for Information Systems research</title>
+		<author>
+			<persName><forename type="first">S</forename><forename type="middle">K</forename><surname>Boell</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">B</forename><surname>Wang</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the Pacific Asia conference on information systems</title>
+		<editor>
+			<persName><surname>Wei</surname></persName>
+		</editor>
+		<editor>
+			<persName><surname>Huang</surname></persName>
+		</editor>
+		<editor>
+			<persName><surname>Lee</surname></persName>
+		</editor>
+		<meeting>the Pacific Asia conference on information systems<address><addrLine>China</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2019-07">2019. July 2019</date>
+			<biblScope unit="page" from="8" to="12"/>
+		</imprint>
+	</monogr>
+	<note>X'ian</note>
+</biblStruct>
+
+<biblStruct xml:id="b15">
+	<analytic>
+		<title level="a" type="main">Editor's Comments: advancing research transparency at MIS quarterly: a pluralistic approach</title>
+		<author>
+			<persName><forename type="first">Burton-Jones A</forename><surname>Boh</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">W</forename><forename type="middle">F</forename><surname>Oborn</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">E</forename></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">MIS Quarterly</title>
+		<imprint>
+			<biblScope unit="volume">45</biblScope>
+			<biblScope unit="issue">2</biblScope>
+			<date type="published" when="2021">2021</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b16">
+	<analytic>
+		<title level="a" type="main">Identifying barriers to the systematic literature review process</title>
+		<author>
+			<persName><forename type="first">J</forename><forename type="middle">C</forename><surname>Carver</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">E</forename><surname>Hassler</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">E</forename><surname>Hernandes</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">ternational symposium on empirical software engineering and measurement</title>
+		<meeting><address><addrLine>Baltimore, MD, USA</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2013-10">2013. October 2013</date>
+			<biblScope unit="page" from="10" to="11"/>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b17">
+	<analytic>
+		<title level="a" type="main">Improving machine learning performance using conceptual modeling</title>
+		<author>
+			<persName><forename type="first">A</forename><surname>Castellanos</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><surname>Castillo</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">M</forename><forename type="middle">C</forename><surname>Tremblay</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">AAAI spring symposium: Combining machine learning with knowledge engineering</title>
+		<imprint>
+			<date type="published" when="2021">2021. 2021</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b18">
+	<analytic>
+		<title level="a" type="main">Can we open the black box of AI?</title>
+		<author>
+			<persName><forename type="first">D</forename><surname>Castelvecchi</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Nature</title>
+		<imprint>
+			<biblScope unit="volume">538</biblScope>
+			<biblScope unit="issue">7623</biblScope>
+			<biblScope unit="page" from="20" to="23"/>
+			<date type="published" when="2016">2016</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b19">
+	<monogr>
+		<title level="m" type="main">Developing theory using machine learning methods</title>
+		<author>
+			<persName><forename type="first">P</forename><surname>Choudhury</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Allen</forename><forename type="middle">R</forename><surname>Endres</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">M</forename></persName>
+		</author>
+		<ptr target="http://ssrn.com/abstract=3251077"/>
+		<imprint>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b20">
+	<analytic>
+		<title level="a" type="main">Organizing knowledge syntheses: a taxonomy of literature reviews</title>
+		<author>
+			<persName><forename type="first">H</forename><forename type="middle">M</forename><surname>Cooper</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Knowledge in Society</title>
+		<imprint>
+			<biblScope unit="volume">1</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="104" to="126"/>
+			<date type="published" when="1988">1988</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b21">
+	<analytic>
+		<title level="a" type="main">Re)considering the concept of literature review reproducibility</title>
+		<author>
+			<persName><forename type="first">W</forename><forename type="middle">A</forename><surname>Cram</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">M</forename><surname>Templier</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">M</forename><surname>Templier</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of the Association for Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">21</biblScope>
+			<biblScope unit="issue">5</biblScope>
+			<biblScope unit="page" from="1103" to="1114"/>
+			<date type="published" when="2020">2020</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b22">
+	<analytic>
+		<title level="a" type="main">Sharing open deep learning models</title>
+		<author>
+			<persName><forename type="first">A</forename><surname>Dalgali</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">K</forename><surname>Crowston</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the hawaii international conference on system sciences</title>
+		<meeting>the hawaii international conference on system sciences<address><addrLine>Grand Wailea, Hawaii, USA</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2019-01-08">2019. January 8-11, 2019</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b23">
+	<analytic>
+		<title level="a" type="main">Arizona literature mapper: an integrated approach to monitor and analyze global bioterrorism research literature</title>
+		<author>
+			<persName><forename type="first">Y</forename><surname>Dang</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Y</forename><surname>Zhang</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">H</forename><surname>Chen</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of the American Society for Information Science and Technology</title>
+		<imprint>
+			<biblScope unit="volume">60</biblScope>
+			<biblScope unit="issue">7</biblScope>
+			<biblScope unit="page" from="1466" to="1485"/>
+			<date type="published" when="2009">2009</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b24">
+	<analytic>
+		<title level="a" type="main">Knowledge extraction and applications utilizing context data in knowledge graphs</title>
+		<author>
+			<persName><forename type="first">J</forename><surname>Dörpinghaus</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Stefan</forename><forename type="middle">A</forename></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the federated conference on computer science and information systems</title>
+		<meeting>the federated conference on computer science and information systems<address><addrLine>Leipzig, Germany</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2019-09-01">2019. September 1-4, 2019</date>
+			<biblScope unit="page" from="265" to="272"/>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b25">
+	<analytic>
+		<title level="a" type="main">Rigor in information systems positivist case research: current practices, trends, and recommendations</title>
+		<author>
+			<persName><forename type="first">L</forename><surname>Dubé</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">G</forename><surname>Paré</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">MIS Quarterly</title>
+		<imprint>
+			<biblScope unit="volume">27</biblScope>
+			<biblScope unit="issue">4</biblScope>
+			<biblScope unit="page" from="597" to="636"/>
+			<date type="published" when="2003">2003</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b26">
+	<monogr>
+		<title level="m" type="main">The Art of Feature Engineering: Essentials for Machine Learning</title>
+		<author>
+			<persName><forename type="first">P</forename><surname>Duboue</surname></persName>
+		</author>
+		<imprint>
+			<date type="published" when="2020">2020</date>
+			<publisher>Cambridge University Press</publisher>
+			<pubPlace>Cambridge, UK</pubPlace>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b27">
+	<monogr>
+		<title level="m" type="main">Introduction to Natural Language Processing</title>
+		<author>
+			<persName><forename type="first">J</forename><surname>Eisenstein</surname></persName>
+		</author>
+		<imprint>
+			<date type="published" when="2019">2019</date>
+			<publisher>MIT press</publisher>
+			<pubPlace>Cambridge, MA</pubPlace>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b28">
+	<analytic>
+		<title level="a" type="main">Integrating scientific research: Theory and design of discovering similar constructs</title>
+		<author>
+			<persName><forename type="first">J</forename><surname>Endicott</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">K</forename><surname>Larsen</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><surname>Lukyanenko</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">AIS SIGSAND Symposium</title>
+		<meeting><address><addrLine>Cincinnati, Ohio</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2017">2017. 2017</date>
+			<biblScope unit="page" from="1" to="7"/>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b29">
+	<analytic>
+		<title/>
+		<author>
+			<persName><forename type="first">J</forename><forename type="middle">A</forename><surname>Evans</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><forename type="middle">G</forename><surname>Foster</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Metaknowledge. Science</title>
+		<imprint>
+			<biblScope unit="volume">331</biblScope>
+			<biblScope unit="issue">11</biblScope>
+			<biblScope unit="page" from="721" to="725"/>
+			<date type="published" when="2011">2011</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b30">
+	<analytic>
+		<title level="a" type="main">A theory of tailorable technology design</title>
+		<author>
+			<persName><forename type="first">M</forename><surname>Germonprez</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">D</forename><surname>Hovorka</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">D</forename><surname>Hovorka</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of the Association for Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">8</biblScope>
+			<biblScope unit="issue">6</biblScope>
+			<biblScope unit="page" from="351" to="367"/>
+			<date type="published" when="2007">2007</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b31">
+	<analytic>
+		<title level="a" type="main">Conceptual design science research? How and why untested meta-artifacts have a place in IS</title>
+		<author>
+			<persName><forename type="first">R</forename><surname>Gleasure</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the international conference on design science research in information systems and technology</title>
+		<meeting>the international conference on design science research in information systems and technology<address><addrLine>Miami, FL, USA</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2014">2014</date>
+			<biblScope unit="page" from="99" to="114"/>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b32">
+	<monogr>
+		<author>
+			<persName><forename type="first">I</forename><surname>Goodfellow</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Y</forename><surname>Bengio</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><surname>Courville</surname></persName>
+		</author>
+		<title level="m">Deep Learning, Adaptive Computation and Machine Learning Series</title>
+		<meeting><address><addrLine>Cambridge, MA</addrLine></address></meeting>
+		<imprint>
+			<publisher>MIT Press</publisher>
+			<date type="published" when="2016">2016</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b33">
+	<analytic>
+		<title level="a" type="main">DARPA's Explainable Artificial Intelligence (XAI) Program</title>
+		<author>
+			<persName><forename type="first">D</forename><surname>Gunning</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">D</forename><surname>Aha</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">AI Magazine</title>
+		<imprint>
+			<biblScope unit="volume">40</biblScope>
+			<biblScope unit="issue">2</biblScope>
+			<biblScope unit="page" from="44" to="58"/>
+			<date type="published" when="2019">2019</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b34">
+	<analytic>
+		<title level="a" type="main">Extracting business objects and activities from labels of German process models</title>
+		<author>
+			<persName><forename type="first">P</forename><surname>Hake</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">P</forename><surname>Fettke</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">G</forename><surname>Neumann</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the international conference on design science research in information system and technology</title>
+		<meeting>the international conference on design science research in information system and technology<address><addrLine>Karlsruhe, Germany</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2017-06-01">May 30 -June 1, 2017</date>
+			<biblScope unit="page" from="21" to="38"/>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b35">
+	<analytic>
+		<title level="a" type="main">Software tools to support title and abstract screening for systematic reviews in healthcare: an evaluation</title>
+		<author>
+			<persName><forename type="first">H</forename><surname>Harrison</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">S</forename><forename type="middle">J</forename><surname>Griffin</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">I</forename><surname>Kuhn</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">BMC Medical Research Methodology</title>
+		<imprint>
+			<biblScope unit="volume">20</biblScope>
+			<biblScope unit="issue">7</biblScope>
+			<biblScope unit="page" from="1" to="12"/>
+			<date type="published" when="2020">2020</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b36">
+	<analytic>
+		<title level="a" type="main">Risk of bias versus quality assessment of randomised controlled trials: cross sectional study</title>
+		<author>
+			<persName><forename type="first">L</forename><surname>Hartling</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">M</forename><surname>Ospina</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Y</forename><surname>Liang</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">British Medical Journal</title>
+		<imprint>
+			<biblScope unit="volume">339</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="1" to="6"/>
+			<date type="published" when="2009">2009</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b37">
+	<analytic>
+		<title level="a" type="main">Seeking out clear and unique Information Systems Concepts: a natural language processing approach</title>
+		<author>
+			<persName><forename type="first">N</forename><forename type="middle">R</forename><surname>Hassan</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Prester</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">G</forename><surname>Wagner</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the European conference on information systems (eds MLF Rowe and R El Amrani)</title>
+		<meeting>the European conference on information systems (eds MLF Rowe and R El Amrani)<address><addrLine>Marrakech, Morocco</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2020-06">2020. June 2020</date>
+			<biblScope unit="page" from="15" to="17"/>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b38">
+	<monogr>
+		<title level="m" type="main">Cochrane Handbook for Systematic Reviews of Interventions</title>
+		<author>
+			<persName><forename type="first">Jpt</forename><surname>Higgins</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">S</forename><surname>Green</surname></persName>
+		</author>
+		<imprint>
+			<date type="published" when="2008">2008</date>
+			<publisher>John Wiley &amp; Sons, Ltd</publisher>
+			<pubPlace>Chichester, UK</pubPlace>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b39">
+	<analytic>
+		<title level="a" type="main">Interactive machine learning for health informatics: when do we need the human-in-the-loop?</title>
+		<author>
+			<persName><forename type="first">A</forename><surname>Holzinger</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Brain Informatics</title>
+		<imprint>
+			<biblScope unit="volume">3</biblScope>
+			<biblScope unit="issue">2</biblScope>
+			<biblScope unit="page" from="119" to="131"/>
+			<date type="published" when="2016">2016</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b40">
+	<analytic>
+		<title level="a" type="main">Connecting the dots between PubMed abstracts</title>
+		<author>
+			<persName><forename type="first">M</forename><forename type="middle">S</forename><surname>Hossain</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Gresock</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Y</forename><surname>Edmonds</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">PLoS One</title>
+		<imprint>
+			<biblScope unit="volume">7</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="1" to="23"/>
+			<date type="published" when="2012">2012</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b41">
+	<monogr>
+		<title level="m" type="main">Methods of Meta-Analysis: Correcting Error and Bias in Research Findings</title>
+		<author>
+			<persName><forename type="first">J</forename><forename type="middle">E</forename><surname>Hunter</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">F</forename><forename type="middle">L</forename><surname>Schmidt</surname></persName>
+		</author>
+		<imprint>
+			<date type="published" when="2014">2014</date>
+			<publisher>Sage</publisher>
+			<pubPlace>Thousand Oaks, CA</pubPlace>
+		</imprint>
+	</monogr>
+	<note>2nd edition</note>
+</biblStruct>
+
+<biblStruct xml:id="b42">
+	<analytic>
+		<title level="a" type="main">Has artificial intelligence become alchemy?</title>
+		<author>
+			<persName><forename type="first">M</forename><surname>Hutson</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Science</title>
+		<imprint>
+			<biblScope unit="volume">360</biblScope>
+			<biblScope unit="issue">6388</biblScope>
+			<biblScope unit="page" from="478" to="479"/>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b43">
+	<analytic>
+		<title level="a" type="main">Artificial intelligence faces reproducibility crisis</title>
+		<author>
+			<persName><forename type="first">M</forename><surname>Hutson</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Science</title>
+		<imprint>
+			<biblScope unit="volume">359</biblScope>
+			<biblScope unit="issue">6377</biblScope>
+			<biblScope unit="page" from="725" to="726"/>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b44">
+	<analytic>
+		<title level="a" type="main">Systematic literature studies: database searches vs. backward snowballing</title>
+		<author>
+			<persName><forename type="first">S</forename><surname>Jalali</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">C</forename><surname>Wohlin</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the ACM-IEEE international symposium on empirical software engineering and measurement</title>
+		<meeting>the ACM-IEEE international symposium on empirical software engineering and measurement<address><addrLine>Lund, Sweden</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2012-09-20">2012. September 20-21, 2012</date>
+			<biblScope unit="page" from="29" to="38"/>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b45">
+	<analytic>
+		<title level="a" type="main">The Automation of Management and Business Science</title>
+		<author>
+			<persName><forename type="first">C</forename><forename type="middle">D</forename><surname>Johnson</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">B</forename><forename type="middle">C</forename><surname>Bauer</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">F</forename><surname>Niederman</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Academy of Management Perspectives</title>
+		<imprint>
+			<biblScope unit="volume">35</biblScope>
+			<biblScope unit="issue">2</biblScope>
+			<biblScope unit="page" from="292" to="309"/>
+			<date type="published" when="2019">2019</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b46">
+	<monogr>
+		<author>
+			<persName><forename type="first">M</forename><surname>Jones</surname></persName>
+		</author>
+		<ptr target="https://www.forbes.com/sites/forbestechcouncil/2018/10/26/how-do-we-address-the-reproducibility-crisis-in-artificial-intelligence/#54236c5b7688"/>
+		<title level="m">How do we address the reproducibility crisis in artificial intelligence? Forbes</title>
+		<imprint>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b47">
+	<analytic>
+		<title level="a" type="main">Automating data extraction in systematic reviews: a systematic review</title>
+		<author>
+			<persName><forename type="first">S</forename><forename type="middle">R</forename><surname>Jonnalagadda</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">P</forename><surname>Goyal</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">M</forename><forename type="middle">D</forename><surname>Huffman</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Systematic Reviews</title>
+		<imprint>
+			<biblScope unit="volume">4</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page">78</biblScope>
+			<date type="published" when="2015">2015</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b48">
+	<analytic>
+		<title level="a" type="main">Patient data as medical facts: social media practices as a foundation for medical knowledge creation</title>
+		<author>
+			<persName><forename type="first">J</forename><surname>Kallinikos</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">N</forename><surname>Tempini</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Information Systems Research</title>
+		<imprint>
+			<biblScope unit="volume">25</biblScope>
+			<biblScope unit="issue">4</biblScope>
+			<biblScope unit="page" from="817" to="833"/>
+			<date type="published" when="2014">2014</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b49">
+	<monogr>
+		<title level="m" type="main">Information Quality: The Potential of Data and Analytics to Generate Knowledge</title>
+		<author>
+			<persName><forename type="first">R</forename><forename type="middle">S</forename><surname>Kenett</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">G</forename><surname>Shmueli</surname></persName>
+		</author>
+		<imprint>
+			<date type="published" when="2016">2016</date>
+			<publisher>John Wiley &amp; Sons</publisher>
+			<pubPlace>Hoboken, NJ</pubPlace>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b50">
+	<analytic>
+		<title level="a" type="main">The automation of science</title>
+		<author>
+			<persName><forename type="first">R</forename><forename type="middle">D</forename><surname>King</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Rowland</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">S</forename><forename type="middle">G</forename><surname>Oliver</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Science</title>
+		<imprint>
+			<biblScope unit="volume">324</biblScope>
+			<biblScope unit="page" from="85" to="89"/>
+			<date type="published" when="2009">2009. 5923</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b51">
+	<monogr>
+		<title level="m" type="main">Guidelines for performing systematic literature reviews in software engineering</title>
+		<author>
+			<persName><forename type="first">B</forename><forename type="middle">A</forename><surname>Kitchenham</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">S</forename><surname>Charters</surname></persName>
+		</author>
+		<imprint>
+			<date type="published" when="2007">2007</date>
+		</imprint>
+	</monogr>
+	<note type="report_type">EBSE Technical Report</note>
+</biblStruct>
+
+<biblStruct xml:id="b52">
+	<analytic>
+		<title level="a" type="main">A set of principles for conducting and evaluating interpretive field studies in information systems</title>
+		<author>
+			<persName><forename type="first">H</forename><forename type="middle">K</forename><surname>Klein</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">M</forename><forename type="middle">D</forename><surname>Myers</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">MIS Quarterly</title>
+		<imprint>
+			<biblScope unit="volume">23</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="67" to="94"/>
+			<date type="published" when="1999">1999</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b53">
+	<analytic>
+		<title level="a" type="main">Darpa Is Funding Projects that Will Try to Open up AI's Black Boxes</title>
+		<author>
+			<persName><forename type="first">W</forename><surname>Knight</surname></persName>
+		</author>
+		<ptr target="https://www.technologyreview.com/2017/04/13/152590/the-financial-world-wants-to-open-ais-black-boxes/"/>
+	</analytic>
+	<monogr>
+		<title level="j">MIT Technology Review</title>
+		<imprint>
+			<date type="published" when="2017-09-25">2017. Sept 25, 2020</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b54">
+	<analytic>
+		<title level="a" type="main">Text mining in organizational research</title>
+		<author>
+			<persName><forename type="first">V</forename><forename type="middle">B</forename><surname>Kobayashi</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">S</forename><forename type="middle">T</forename><surname>Mol</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">H</forename><forename type="middle">A</forename><surname>Berkers</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Organizational Research Methods</title>
+		<imprint>
+			<biblScope unit="volume">21</biblScope>
+			<biblScope unit="issue">3</biblScope>
+			<biblScope unit="page" from="733" to="765"/>
+			<date type="published" when="2017">2017</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b55">
+	<analytic>
+		<title level="a" type="main">Online tools supporting the conduct and reporting of systematic reviews and systematic maps: a case study on cadima and review of existing tools</title>
+		<author>
+			<persName><forename type="first">C</forename><surname>Kohl</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">E</forename><forename type="middle">J</forename><surname>Mcintosh</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">S</forename><surname>Unger</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Environmental Evidence</title>
+		<imprint>
+			<biblScope unit="volume">7</biblScope>
+			<biblScope unit="issue">8</biblScope>
+			<biblScope unit="page" from="1" to="17"/>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b56">
+	<analytic>
+		<title level="a" type="main">Design archaeology: Generating design knowledge from real-world artifact design</title>
+		<author>
+			<persName><forename type="first">Chandra</forename><surname>Kruse</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">L</forename><surname>Seidel</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">S</forename><surname>Vom Brocke</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the International Conference on Design Science Research in Information Systems and Technology</title>
+		<meeting>the International Conference on Design Science Research in Information Systems and Technology<address><addrLine>Worcester, MA, USA</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2019-06-04">2019. June 4-6, 2019</date>
+			<biblScope unit="page" from="32" to="45"/>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b57">
+	<analytic>
+		<title level="a" type="main">A computational literature review of the field of system dynamics from 1974 to 2017</title>
+		<author>
+			<persName><forename type="first">M</forename><surname>Kunc</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">M</forename><forename type="middle">J</forename><surname>Mortenson</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><surname>Vidgen</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of Simulation</title>
+		<imprint>
+			<biblScope unit="volume">12</biblScope>
+			<biblScope unit="issue">2</biblScope>
+			<biblScope unit="page" from="115" to="127"/>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b58">
+	<analytic>
+		<title level="a" type="main">A tool for addressing construct identity in literature reviews and meta-analyses</title>
+		<author>
+			<persName><forename type="first">K</forename><forename type="middle">R</forename><surname>Larsen</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Bong</forename><forename type="middle">Ch</forename><surname>Bong</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">C</forename><forename type="middle">H</forename></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">MIS Quarterly</title>
+		<imprint>
+			<biblScope unit="volume">40</biblScope>
+			<biblScope unit="issue">3</biblScope>
+			<biblScope unit="page" from="529" to="551"/>
+			<date type="published" when="2016">2016</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b59">
+	<analytic>
+		<title level="a" type="main">Understanding the elephant: the discourse approach to boundary identification and corpus construction for theory review articles</title>
+		<author>
+			<persName><forename type="first">K</forename><surname>Larsen</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">D</forename><surname>Hovorka</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><forename type="middle">R</forename><surname>Dennis</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of the Association for Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">20</biblScope>
+			<biblScope unit="issue">7</biblScope>
+			<biblScope unit="page" from="887" to="928"/>
+			<date type="published" when="2019">2019</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b60">
+	<analytic>
+		<title level="a" type="main">Validity in design science research</title>
+		<author>
+			<persName><forename type="first">K</forename><surname>Larsen</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><surname>Lukyanenko</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><surname>Muller</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the International Conference on Design Science Research in Information Systems and Technology</title>
+		<meeting>the International Conference on Design Science Research in Information Systems and Technology<address><addrLine>Kristiansand, Norway</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2020-12-02">2020. December 2-4, 2020</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b61">
+	<analytic>
+		<title level="a" type="main">Exploring barriers to adoption of virtual reality through social media analytics and machine learning-an assessment of technology, network, price and trialability</title>
+		<author>
+			<persName><forename type="first">C</forename><surname>Laurell</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">C</forename><surname>Sandström</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><surname>Berthold</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of Business Research</title>
+		<imprint>
+			<biblScope unit="volume">100</biblScope>
+			<biblScope unit="page" from="469" to="474"/>
+			<date type="published" when="2019">2019</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b62">
+	<analytic>
+		<title level="a" type="main">Review and theory symbiosis: an introspective retrospective</title>
+		<author>
+			<persName><forename type="first">D</forename><forename type="middle">E</forename><surname>Leidner</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of the Association for Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">19</biblScope>
+			<biblScope unit="issue">6</biblScope>
+			<biblScope unit="page" from="552" to="567"/>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b63">
+	<analytic>
+		<title level="a" type="main">TheoryOn: a design framework and system for unlocking behavioral knowledge through ontology learning</title>
+		<author>
+			<persName><forename type="first">J</forename><surname>Li</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">K</forename><surname>Larsen</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><surname>Abbasi</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">MIS Quarterly</title>
+		<imprint>
+			<biblScope unit="volume">44</biblScope>
+			<biblScope unit="issue">4</biblScope>
+			<biblScope unit="page" from="1733" to="1772"/>
+			<date type="published" when="2020">2020</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b64">
+	<analytic>
+		<title level="a" type="main">Developing theory through integrating human and machine pattern recognition</title>
+		<author>
+			<persName><forename type="first">A</forename><surname>Lindberg</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of the Association for Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">21</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="90" to="116"/>
+			<date type="published" when="2020">2020</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b65">
+	<monogr>
+		<title level="m" type="main">The Handbook of Social Psychology</title>
+		<author>
+			<persName><forename type="first">G</forename><surname>Lindzey</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">D</forename><surname>Gilbert</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Fiske</forename><surname>St</surname></persName>
+		</author>
+		<imprint>
+			<date type="published" when="1998">1998</date>
+			<publisher>Oxford University Press</publisher>
+			<pubPlace>New York</pubPlace>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b66">
+	<analytic>
+		<title level="a" type="main">A journey to BSO: evaluating earlier and more recent ideas of Mario Bunge as a foundation for information and software development</title>
+		<author>
+			<persName><forename type="first">R</forename><surname>Lukyanenko</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Exploring Modeling Methods for Systems Analysis and Development</title>
+		<meeting><address><addrLine>Grenoble, France</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2020">2020. 2020</date>
+			<biblScope unit="page" from="1" to="15"/>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b67">
+	<analytic>
+		<title level="a" type="main">Research perspectives: design theory indeterminacy: what Is it, how can it be reduced, and why did the polar bear drown</title>
+		<author>
+			<persName><forename type="first">R</forename><surname>Lukyanenko</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Parsons</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Parsons</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of the Association for Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">21</biblScope>
+			<biblScope unit="issue">5</biblScope>
+			<biblScope unit="page" from="1343" to="1369"/>
+			<date type="published" when="2020">2020</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b68">
+	<analytic>
+		<title level="a" type="main">Expecting the unexpected: effects of data collection design choices on the quality of crowdsourced user-generated content</title>
+		<author>
+			<persName><forename type="first">R</forename><surname>Lukyanenko</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Parsons</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Y</forename><forename type="middle">F</forename><surname>Wiersma</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">MIS Quarterly</title>
+		<imprint>
+			<biblScope unit="volume">43</biblScope>
+			<biblScope unit="issue">2</biblScope>
+			<biblScope unit="page" from="623" to="648"/>
+			<date type="published" when="2019">2019</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b69">
+	<analytic>
+		<title level="a" type="main">Data-driven meets theory-driven research in the era of big data: opportunities and challenges for Information Systems research</title>
+		<author>
+			<persName><forename type="first">W</forename><surname>Maass</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Parsons</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">S</forename><surname>Purao</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of the Association for Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">19</biblScope>
+			<biblScope unit="issue">12</biblScope>
+			<biblScope unit="page" from="1253" to="1273"/>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b70">
+	<monogr>
+		<title level="m" type="main">Foundations of Statistical Natural Language Processing</title>
+		<author>
+			<persName><forename type="first">C</forename><forename type="middle">D</forename><surname>Manning</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">H</forename><surname>Schütze</surname></persName>
+		</author>
+		<imprint>
+			<date type="published" when="1999">1999</date>
+			<publisher>MIT Press</publisher>
+			<pubPlace>Cambridge, MA</pubPlace>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b71">
+	<analytic>
+		<title level="a" type="main">Toward a social ontology for conceptual modeling</title>
+		<author>
+			<persName><forename type="first">S</forename><forename type="middle">T</forename><surname>March</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Allen</forename><surname>Gn</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Communications of the Association for Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">34</biblScope>
+			<biblScope unit="issue">70</biblScope>
+			<biblScope unit="page" from="1347" to="1359"/>
+			<date type="published" when="2014">2014</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b72">
+	<analytic>
+		<title level="a" type="main">Toward systematic review automation: a practical guide to using machine learning tools in research synthesis</title>
+		<author>
+			<persName><forename type="first">I</forename><forename type="middle">J</forename><surname>Marshall</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">B</forename><forename type="middle">C</forename><surname>Wallace</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Systematic Reviews</title>
+		<imprint>
+			<biblScope unit="volume">8</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page">163</biblScope>
+			<date type="published" when="2019">2019</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b73">
+	<analytic>
+		<title level="a" type="main">RobotReviewer: evaluation of a system for automatically assessing bias in clinical trials</title>
+		<author>
+			<persName><forename type="first">I</forename><forename type="middle">J</forename><surname>Marshall</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Kuiper</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Wallace</forename><surname>Bc</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of the American Medical Informatics Association</title>
+		<imprint>
+			<biblScope unit="volume">23</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="193" to="201"/>
+			<date type="published" when="2015">2015</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b74">
+	<monogr>
+		<title level="m" type="main">Machine learning</title>
+		<author>
+			<persName><forename type="first">T</forename><forename type="middle">M</forename><surname>Mitchell</surname></persName>
+		</author>
+		<imprint>
+			<date type="published" when="1997">1997</date>
+			<publisher>McGraw-Hill</publisher>
+			<biblScope unit="volume">45</biblScope>
+			<biblScope unit="page" from="870" to="877"/>
+			<pubPlace>Burr Ridge, IL</pubPlace>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b75">
+	<analytic>
+		<title level="a" type="main">A computational literature review of the technology acceptance model</title>
+		<author>
+			<persName><forename type="first">M</forename><forename type="middle">J</forename><surname>Mortenson</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><surname>Vidgen</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">International Journal of Information Management</title>
+		<imprint>
+			<biblScope unit="volume">36</biblScope>
+			<biblScope unit="issue">6</biblScope>
+			<biblScope unit="page" from="1248" to="1259"/>
+			<date type="published" when="2016">2016</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b76">
+	<analytic>
+		<title level="a" type="main">A framework for rigorously identifying research gaps in qualitative literature reviews</title>
+		<author>
+			<persName><forename type="first">C</forename><surname>Müller-Bloch</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Kranz</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the international conference on information systems (eds T Carte, A Heinzl and C Urquhart)</title>
+		<meeting>the international conference on information systems (eds T Carte, A Heinzl and C Urquhart)<address><addrLine>Fort Worth, Texas, USA</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2015-12-16">2015. 16 December 2015</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b77">
+	<analytic>
+		<title level="a" type="main">Research weaving: visualizing the future of research synthesis</title>
+		<author>
+			<persName><forename type="first">S</forename><surname>Nakagawa</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">G</forename><surname>Samarasinghe</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">N</forename><forename type="middle">R</forename><surname>Haddaway</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Trends in Ecology &amp; Evolution</title>
+		<imprint>
+			<biblScope unit="volume">34</biblScope>
+			<biblScope unit="issue">3</biblScope>
+			<biblScope unit="page" from="224" to="238"/>
+			<date type="published" when="2019">2019</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b78">
+	<analytic>
+		<title level="a" type="main">Computational grounded theory: a methodological framework</title>
+		<author>
+			<persName><forename type="first">L</forename><forename type="middle">K</forename><surname>Nelson</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Sociological Methods &amp; Research</title>
+		<imprint>
+			<biblScope unit="volume">49</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="3" to="42"/>
+			<date type="published" when="2020">2020</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b79">
+	<analytic>
+		<title level="a" type="main">Moving toward the automation of the systematic review process: a summary of discussions at the second meeting of the International Collaboration for the Automation of Systematic Reviews (ICASR)</title>
+		<author>
+			<persName><forename type="first">A</forename><forename type="middle">M</forename><surname>O'connor</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">G</forename><surname>Tsafnat</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">S</forename><forename type="middle">B</forename><surname>Gilbert</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Systematic Reviews</title>
+		<imprint>
+			<biblScope unit="volume">7</biblScope>
+			<biblScope unit="issue">3</biblScope>
+			<biblScope unit="page" from="1" to="5"/>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b80">
+	<analytic>
+		<title level="a" type="main">Using text mining for study identification in systematic reviews: a systematic review of current approaches</title>
+		<author>
+			<persName><forename type="first">A</forename><surname>O'mara-Eves</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Thomas</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Mcnaught</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Systematic Reviews</title>
+		<imprint>
+			<biblScope unit="volume">4</biblScope>
+			<date type="published" when="2015">2015</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b81">
+	<analytic>
+		<title level="a" type="main">Literature searching for social science systematic reviews: consideration of a range of search techniques</title>
+		<author>
+			<persName><forename type="first">D</forename><surname>Papaioannou</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><surname>Sutton</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">C</forename><surname>Carroll</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Health Information &amp; Libraries Journal</title>
+		<imprint>
+			<biblScope unit="volume">27</biblScope>
+			<biblScope unit="issue">2</biblScope>
+			<biblScope unit="page" from="114" to="122"/>
+			<date type="published" when="2009">2009</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b82">
+	<analytic>
+		<title level="a" type="main">A systematic assessment of rigor in information systems ranking-type Delphi studies</title>
+		<author>
+			<persName><forename type="first">G</forename><surname>Paré</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A-F</forename><surname>Cameron</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">P</forename><surname>Poba-Nzaou</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Information &amp; Management</title>
+		<imprint>
+			<biblScope unit="volume">50</biblScope>
+			<biblScope unit="issue">5</biblScope>
+			<biblScope unit="page" from="207" to="217"/>
+			<date type="published" when="2013">2013</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b83">
+	<analytic>
+		<title level="a" type="main">Contextualizing the twin concepts of systematicity and transparency in information systems literature reviews</title>
+		<author>
+			<persName><forename type="first">G</forename><surname>Paré</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">M</forename><surname>Tate</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">D</forename><surname>Johnstone</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">European Journal of Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">25</biblScope>
+			<biblScope unit="issue">6</biblScope>
+			<biblScope unit="page" from="493" to="508"/>
+			<date type="published" when="2016">2016</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b84">
+	<analytic>
+		<title level="a" type="main">Survey research methodology in management information systems: an assessment</title>
+		<author>
+			<persName><forename type="first">A</forename><surname>Pinsonneault</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">K</forename><surname>Kraemer</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of Management Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">10</biblScope>
+			<biblScope unit="issue">2</biblScope>
+			<biblScope unit="page" from="75" to="105"/>
+			<date type="published" when="1993">1993</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b85">
+	<analytic>
+		<title level="a" type="main">Classifying the ideational impact of Information Systems review articles: a content-enriched deep learning approach</title>
+		<author>
+			<persName><forename type="first">J</forename><surname>Prester</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">G</forename><surname>Wagner</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">G</forename><surname>Schryen</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Decision Support Systems</title>
+		<imprint>
+			<biblScope unit="volume">140</biblScope>
+			<biblScope unit="page">113432</biblScope>
+			<date type="published" when="2020">2020</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b86">
+	<analytic>
+		<title level="a" type="main">Neural sequence learning models for word sense disambiguation</title>
+		<author>
+			<persName><forename type="first">A</forename><surname>Raganato</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">C</forename><forename type="middle">D</forename><surname>Bovi</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><surname>Navigli</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the conference on empirical methods in natural language processing</title>
+		<meeting>the conference on empirical methods in natural language processing<address><addrLine>Copenhagen, Denmark</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2017-09-07">2017. September 7-11, 2017</date>
+			<biblScope unit="page" from="1156" to="1167"/>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b87">
+	<analytic>
+		<title level="a" type="main">Editor's comments: synergies between big data and theory</title>
+		<author>
+			<persName><forename type="first">A</forename><surname>Rai</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">MIS Quarterly</title>
+		<imprint>
+			<biblScope unit="volume">40</biblScope>
+			<biblScope unit="issue">2</biblScope>
+			<biblScope unit="page" from="iii" to="ix"/>
+			<date type="published" when="2016">2016</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b88">
+	<analytic>
+		<title level="a" type="main">Artificial intelligence and management: the automation-augmentation paradox</title>
+		<author>
+			<persName><forename type="first">S</forename><surname>Raisch</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">S</forename><surname>Krakowski</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Academy of Management Review</title>
+		<imprint>
+			<biblScope unit="volume">46</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="192" to="210"/>
+			<date type="published" when="2020">2020</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b89">
+	<analytic>
+		<title level="a" type="main">Editor's comments: the ions of theory construction</title>
+		<author>
+			<persName><forename type="first">S</forename><surname>Rivard</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">MIS Quarterly</title>
+		<imprint>
+			<biblScope unit="volume">38</biblScope>
+			<biblScope unit="issue">2</biblScope>
+			<date type="published" when="2014">2014</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b90">
+	<monogr>
+		<title level="m" type="main">Artificial Intelligence: A Modern Approach</title>
+		<author>
+			<persName><forename type="first">S</forename><forename type="middle">J</forename><surname>Russell</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">P</forename><surname>Norvig</surname></persName>
+		</author>
+		<imprint>
+			<date type="published" when="2016">2016</date>
+			<publisher>Pearson Education Limited</publisher>
+			<pubPlace>Malaysia</pubPlace>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b91">
+	<analytic>
+		<title level="a" type="main">2Dsearch: Facilitating reproducible and valid searching in evidence synthesis</title>
+		<author>
+			<persName><forename type="first">Russell-Rose T And</forename><surname>Shokraneh</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">F</forename></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">BMJ Evidence-Based Medicine</title>
+		<imprint>
+			<biblScope unit="volume">24</biblScope>
+			<biblScope unit="issue">Suppl 1</biblScope>
+			<biblScope unit="page">36</biblScope>
+			<date type="published" when="2019">2019</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b92">
+	<analytic>
+		<title level="a" type="main">Topic modeling as a strategy of inquiry in organizational research: A tutorial with an application example on organizational culture</title>
+		<author>
+			<persName><forename type="first">T</forename><surname>Schmiedel</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">O</forename><surname>Müller</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Vom Brocke</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Organizational Research Methods</title>
+		<imprint>
+			<biblScope unit="volume">22</biblScope>
+			<biblScope unit="issue">4</biblScope>
+			<biblScope unit="page" from="941" to="968"/>
+			<date type="published" when="2019">2019</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b93">
+	<analytic>
+		<title level="a" type="main">A knowledge development perspective on literature reviews: validation of a new typology in the IS field</title>
+		<author>
+			<persName><forename type="first">G</forename><surname>Schryen</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">G</forename><surname>Wagner</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><surname>Benlian</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Communications of the Association for Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">46</biblScope>
+			<biblScope unit="page" from="134" to="168"/>
+			<date type="published" when="2020">2020</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b94">
+	<analytic>
+		<title level="a" type="main">Machines as teammates: a research agenda on AI in team collaboration</title>
+		<author>
+			<persName><forename type="first">I</forename><surname>Seeber</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">E</forename><surname>Bittner</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><forename type="middle">O</forename><surname>Briggs</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Information &amp; Management</title>
+		<imprint>
+			<biblScope unit="volume">57</biblScope>
+			<biblScope unit="issue">2</biblScope>
+			<biblScope unit="page" from="1" to="22"/>
+			<date type="published" when="2020">2020</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b95">
+	<analytic>
+		<title level="a" type="main">A systematic review of tools used to assess the quality of observational studies that examine incidence or prevalence and risk factors for diseases</title>
+		<author>
+			<persName><forename type="first">T</forename><surname>Shamliyan</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><forename type="middle">L</forename><surname>Kane</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">S</forename><surname>Dickinson</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of Clinical Epidemiology</title>
+		<imprint>
+			<biblScope unit="volume">63</biblScope>
+			<biblScope unit="issue">10</biblScope>
+			<biblScope unit="page" from="1061" to="1070"/>
+			<date type="published" when="2010">2010</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b96">
+	<analytic>
+		<title level="a" type="main">Uncovering the intellectual core of the information systems discipline</title>
+		<author>
+			<persName><forename type="first">A</forename><surname>Sidorova</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">N</forename><surname>Evangelopoulos</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><forename type="middle">S</forename><surname>Valacich</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">MIS Quarterly</title>
+		<imprint>
+			<biblScope unit="volume">32</biblScope>
+			<biblScope unit="issue">3</biblScope>
+			<biblScope unit="page" from="467" to="482"/>
+			<date type="published" when="2008">2008</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b97">
+	<analytic>
+		<title level="a" type="main">Cited documents as concept symbols</title>
+		<author>
+			<persName><forename type="first">H</forename><forename type="middle">G</forename><surname>Small</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Social Studies of Science</title>
+		<imprint>
+			<biblScope unit="volume">8</biblScope>
+			<biblScope unit="issue">3</biblScope>
+			<biblScope unit="page" from="327" to="340"/>
+			<date type="published" when="1978">1978</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b98">
+	<analytic>
+		<title level="a" type="main">Integrating deep linguistic features in factuality prediction over unified datasets</title>
+		<author>
+			<persName><forename type="first">G</forename><surname>Stanovsky</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Eckle-Kohler</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Y</forename><surname>Puzikov</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the Annual Meeting of the Association for Computational Linguistics</title>
+		<meeting>the Annual Meeting of the Association for Computational Linguistics<address><addrLine>Vancouver, Canada</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2017-07-30">2017. July 30 -August 4, 2017</date>
+			<biblScope unit="page" from="352" to="357"/>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b99">
+	<analytic>
+		<title level="a" type="main">Design principles for systematic search systems: a holistic synthesis of a rigorous multi-cycle design science research journey</title>
+		<author>
+			<persName><forename type="first">B</forename><surname>Sturm</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><surname>Sunyaev</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Business &amp; Information Systems Engineering</title>
+		<imprint>
+			<biblScope unit="volume">61</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="91" to="111"/>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b100">
+	<analytic>
+		<title level="a" type="main">An interactive system for finding complementary literatures: a stimulus to scientific discovery</title>
+		<author>
+			<persName><forename type="first">D</forename><forename type="middle">R</forename><surname>Swanson</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">N</forename><forename type="middle">R</forename><surname>Smalheiser</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Artificial Intelligence</title>
+		<imprint>
+			<biblScope unit="volume">91</biblScope>
+			<biblScope unit="issue">2</biblScope>
+			<biblScope unit="page" from="183" to="203"/>
+			<date type="published" when="1997">1997</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b101">
+	<analytic>
+		<title level="a" type="main">Corporate social responsibility reports: a thematic analysis related to supply chain management</title>
+		<author>
+			<persName><forename type="first">W</forename><forename type="middle">L</forename><surname>Tate</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">L</forename><forename type="middle">M</forename><surname>Ellram</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><forename type="middle">F</forename><surname>Kirchoff</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of Supply Chain Management</title>
+		<imprint>
+			<biblScope unit="volume">46</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page" from="19" to="44"/>
+			<date type="published" when="2010">2010</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b102">
+	<monogr>
+		<author>
+			<persName><forename type="first">T</forename><surname>Taulli</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">M</forename><surname>Oni</surname></persName>
+		</author>
+		<title level="m">Artificial Intelligence Basics</title>
+		<meeting><address><addrLine>Berkeley, CA</addrLine></address></meeting>
+		<imprint>
+			<publisher>Apress</publisher>
+			<date type="published" when="2019">2019</date>
+		</imprint>
+	</monogr>
+	<note>1st edition</note>
+</biblStruct>
+
+<biblStruct xml:id="b103">
+	<analytic>
+		<title level="a" type="main">Transparency in literature reviews: an assessment of reporting practices across review types and genres in top IS journals</title>
+		<author>
+			<persName><forename type="first">M</forename><surname>Templier</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">G</forename><surname>Paré</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">European Journal of Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">27</biblScope>
+			<biblScope unit="issue">5</biblScope>
+			<biblScope unit="page" from="503" to="550"/>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b104">
+	<analytic>
+		<title level="a" type="main">A systematic review on literature-based discovery: general overview, methodology, &amp; statistical analysis</title>
+		<author>
+			<persName><forename type="first">M</forename><surname>Thilakaratne</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">K</forename><surname>Falkner</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">T</forename><surname>Atapattu</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">ACM Computing Surveys</title>
+		<imprint>
+			<biblScope unit="volume">52</biblScope>
+			<biblScope unit="issue">6</biblScope>
+			<biblScope unit="page" from="1" to="34"/>
+			<date type="published" when="2019">2019</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b105">
+	<analytic>
+		<title level="a" type="main">Living systematic reviews: 2. Combining human and machine effort</title>
+		<author>
+			<persName><forename type="first">J</forename><surname>Thomas</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><surname>Noel-Storr</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">I</forename><surname>Marshall</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of Clinical Epidemiology</title>
+		<imprint>
+			<biblScope unit="volume">91</biblScope>
+			<biblScope unit="page" from="31" to="37"/>
+			<date type="published" when="2017">2017</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b106">
+	<analytic>
+		<title level="a" type="main">Machine learning vs. Rules and out-of-the-box vs. retrained</title>
+		<author>
+			<persName><forename type="first">D</forename><surname>Tkaczyk</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><surname>Collins</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">P</forename><surname>Sheridan</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the ACM/IEEE on Joint Conference on Digital Libraries</title>
+		<meeting>the ACM/IEEE on Joint Conference on Digital Libraries<address><addrLine>Fort Worth, Texas, USA</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2018">June 3-7, 2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b107">
+	<analytic>
+		<title level="a" type="main">The effects of the quantification of faculty productivity: perspectives from the design science research community</title>
+		<author>
+			<persName><forename type="first">M</forename><forename type="middle">C</forename><surname>Tremblay</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Van</forename><surname>Der Meer</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">D</forename><surname>Beck</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Communications of the Association for Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">43</biblScope>
+			<biblScope unit="page" from="625" to="661"/>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b108">
+	<analytic>
+		<title level="a" type="main">Systematic review automation technologies</title>
+		<author>
+			<persName><forename type="first">G</forename><surname>Tsafnat</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">P</forename><surname>Glasziou</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">M</forename><forename type="middle">K</forename><surname>Choong</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Systematic Reviews</title>
+		<imprint>
+			<biblScope unit="volume">3</biblScope>
+			<biblScope unit="page" from="1" to="15"/>
+			<date type="published" when="2014">2014</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b109">
+	<analytic>
+		<title level="a" type="main">An open source machine learning framework for efficient and transparent systematic reviews</title>
+		<author>
+			<persName><forename type="first">R</forename><surname>Van De Schoot</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>De Bruin</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><surname>Schram</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Nature Machine Intelligence</title>
+		<imprint>
+			<biblScope unit="volume">3</biblScope>
+			<biblScope unit="page" from="125" to="133"/>
+			<date type="published" when="2021">2021</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b110">
+	<analytic>
+		<title level="a" type="main">Automation of systematic literature reviews: a systematic literature review</title>
+		<author>
+			<persName><forename type="first">R</forename><surname>Van Dinter</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">B</forename><surname>Tekinerdogan</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">C</forename><surname>Catal</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Information and Software Technology</title>
+		<imprint>
+			<biblScope unit="volume">136</biblScope>
+			<biblScope unit="page">106589</biblScope>
+			<date type="published" when="2021">2021</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b111">
+	<analytic>
+		<title level="a" type="main">Standing on the shoulders of giants: challenges and recommendations of literature search in information systems research</title>
+		<author>
+			<persName><forename type="first">J</forename><surname>Vom Brocke</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">A</forename><surname>Simons</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">K</forename><surname>Riemer</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Communications of the Association for Information Systems</title>
+		<imprint>
+			<biblScope unit="volume">37</biblScope>
+			<biblScope unit="issue">9</biblScope>
+			<biblScope unit="page" from="205" to="224"/>
+			<date type="published" when="2015">2015</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b112">
+	<analytic>
+		<title level="a" type="main">A process pattern model for tackling and improving big data quality</title>
+		<author>
+			<persName><forename type="first">A</forename><surname>Wahyudi</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">G</forename><surname>Kuk</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">M</forename><surname>Janssen</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Information Systems Frontiers</title>
+		<imprint>
+			<biblScope unit="volume">20</biblScope>
+			<biblScope unit="issue">3</biblScope>
+			<biblScope unit="page" from="457" to="469"/>
+			<date type="published" when="2018">2018</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b113">
+	<analytic>
+		<title level="a" type="main">Deploying an interactive machine learning system in an evidence-based practice center: Abstrackr</title>
+		<author>
+			<persName><forename type="first">B</forename><forename type="middle">C</forename><surname>Wallace</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">K</forename><surname>Small</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">C</forename><forename type="middle">E</forename><surname>Brodley</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the ACM SIGHIT International Health Informatics Symposium</title>
+		<meeting>the ACM SIGHIT International Health Informatics Symposium<address><addrLine>Miami, Florida, USA</addrLine></address></meeting>
+		<imprint>
+			<date type="published" when="2012">January 28-30, 2012</date>
+			<biblScope unit="page" from="819" to="824"/>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b114">
+	<analytic>
+		<title level="a" type="main">An ontological analysis of some fundamental information systems concepts</title>
+		<author>
+			<persName><forename type="first">Y</forename><surname>Wand</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><surname>Weber</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="m">Proceedings of the International Conference on Information Systems</title>
+		<meeting>the International Conference on Information Systems</meeting>
+		<imprint>
+			<date type="published" when="1988">1988</date>
+			<biblScope unit="page" from="213" to="226"/>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b115">
+	<analytic>
+		<title level="a" type="main">Error rates of human reviewers during abstract screening in systematic reviews</title>
+		<author>
+			<persName><forename type="first">Z</forename><surname>Wang</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">T</forename><surname>Nayfeh</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">J</forename><surname>Tetzlaff</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">PLoS One</title>
+		<imprint>
+			<biblScope unit="volume">15</biblScope>
+			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="page">227742</biblScope>
+			<date type="published" when="2020">2020</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b116">
+	<analytic>
+		<title level="a" type="main">Social media research: the application of supervised machine learning in organizational communication research</title>
+		<author>
+			<persName><forename type="first">W</forename><surname>Van Zoonen</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Van</forename><surname>Der Meer</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Tgla</forename></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Computers in Human Behavior</title>
+		<imprint>
+			<biblScope unit="volume">63</biblScope>
+			<biblScope unit="page" from="132" to="141"/>
+			<date type="published" when="2016">2016</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b117">
+	<analytic>
+		<title level="a" type="main">Analyzing the past to prepare for the future: writing a literature review</title>
+		<author>
+			<persName><forename type="first">J</forename><surname>Webster</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">R</forename><forename type="middle">T</forename><surname>Watson</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">MIS Quarterly</title>
+		<imprint>
+			<biblScope unit="volume">26</biblScope>
+			<biblScope unit="issue">2</biblScope>
+			<biblScope unit="page">xiii</biblScope>
+			<date type="published" when="2002">2002</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b118">
+	<analytic>
+		<title level="a" type="main">What constitutes a theoretical contribution?</title>
+		<author>
+			<persName><forename type="first">D</forename><forename type="middle">A</forename><surname>Whetten</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">Academy of Management Review</title>
+		<imprint>
+			<biblScope unit="volume">14</biblScope>
+			<biblScope unit="issue">4</biblScope>
+			<biblScope unit="page" from="490" to="495"/>
+			<date type="published" when="1989">1989</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+<biblStruct xml:id="b119">
+	<analytic>
+		<title level="a" type="main">Integrating service quality with system and information quality: an empirical test in the e-service context</title>
+		<author>
+			<persName><forename type="first">J</forename><surname>Xu</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">I</forename><surname>Benbasat</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">I</forename><surname>Benbasat</surname></persName>
+		</author>
+	</analytic>
+	<monogr>
+		<title level="j">MIS Quarterly</title>
+		<imprint>
+			<biblScope unit="volume">37</biblScope>
+			<biblScope unit="issue">3</biblScope>
+			<biblScope unit="page" from="777" to="794"/>
+			<date type="published" when="2013">2013</date>
+		</imprint>
+	</monogr>
+</biblStruct>
+
+				</listBibl>
+			</div>
+		</back>
+	</text>
+</TEI>

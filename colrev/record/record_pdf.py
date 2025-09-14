@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Functionality for PDF handling."""
+"""Class to handle PDFs associated with a record."""
 from __future__ import annotations
 
 import logging
@@ -14,7 +14,6 @@ import imagehash
 import pymupdf
 from PIL import Image
 
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 from colrev.constants import Colors
@@ -22,9 +21,9 @@ from colrev.constants import Fields
 
 
 class PDFRecord(colrev.record.record.Record):
-    """The PDFRecord class provides a range of convenience functions for PDF handling"""
+    """The PDFRecord class provides a range of Function for PDF handling"""
 
-    def __init__(self, data: dict, path: Path) -> None:
+    def __init__(self, data: dict, *, path: Path) -> None:
         self.data = data
         """Dictionary containing the record data"""
 
@@ -35,7 +34,9 @@ class PDFRecord(colrev.record.record.Record):
 
     def _get_path(self) -> Path:
         if Fields.FILE not in self.data:
-            raise colrev_exceptions.InvalidPDFException(path=self.data[Fields.ID])
+            raise colrev_exceptions.InvalidPDFException(
+                path=self.data.get(Fields.ID, self.data.get(Fields.FILE, "unknown"))
+            )
 
         pdf_path = (self.path / Path(self.data[Fields.FILE])).absolute()
 
@@ -99,11 +100,17 @@ class PDFRecord(colrev.record.record.Record):
             pages_in_file = doc.page_count
         self.data[Fields.NR_PAGES_IN_FILE] = pages_in_file
 
-    def set_text_from_pdf(self) -> None:
+    def set_text_from_pdf(self, *, first_pages: bool = False) -> None:
         """Set the text_from_pdf field based on the PDF"""
         self.data[Fields.TEXT_FROM_PDF] = ""
         self.set_nr_pages_in_pdf()
-        text = self.extract_text_by_page(pages=[0, 1, 2])
+
+        if first_pages:
+            pages = [0, 1, 2]
+        else:
+            pages = list(range(self.data[Fields.NR_PAGES_IN_FILE]))
+
+        text = self.extract_text_by_page(pages=pages)
         text_from_pdf = text.replace("\n", " ").replace("\x0c", "")
         self.data[Fields.TEXT_FROM_PDF] = text_from_pdf
 

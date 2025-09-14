@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Exceptions of CoLRev."""
+"""Exceptions"""
 from __future__ import annotations
 
 import typing
@@ -384,7 +384,7 @@ class RecordNotFoundException(CoLRevException):
 
 
 class ImportException(CoLRevException):
-    """An error occured in the import functions."""
+    """An error occurred in the import functions."""
 
     def __init__(
         self,
@@ -604,7 +604,7 @@ class InvalidLanguageCodeException(CoLRevException):
 
 
 class PackageSettingMustStartWithPackagesException(CoLRevException):
-    """package settings must start with `packages` key"""
+    """Package settings must start with `packages` key."""
 
     def __init__(self, invalid_key: str) -> None:
         self.invalid_key = invalid_key

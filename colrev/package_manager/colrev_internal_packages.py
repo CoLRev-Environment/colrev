@@ -9,6 +9,8 @@ import tempfile
 from importlib.metadata import distribution
 from importlib.metadata import PackageNotFoundError
 from pathlib import Path
+from urllib.parse import unquote
+from urllib.parse import urlparse
 
 import toml
 
@@ -41,12 +43,14 @@ def _get_local_editable_colrev_path() -> str:
     if "url" not in data or not data["url"].startswith("file://"):
         return ""
 
-    return data["url"].replace("file://", "")
+    parsed_url = urlparse(data["url"])
+    local_path = Path(unquote(parsed_url.path)).resolve(strict=False)
+
+    return str(local_path)
 
 
 def _clone_colrev_repository() -> Path:
     temp_dir = tempfile.mkdtemp()
-    print(f"Clone to {temp_dir}")
     subprocess.run(
         [
             "git",
@@ -56,31 +60,49 @@ def _clone_colrev_repository() -> Path:
             "https://github.com/CoLRev-Environment/colrev",
             temp_dir,
         ],
-        check=False,
+        check=True,
     )
     return Path(temp_dir)
 
 
 def _get_colrev_path() -> Path:
 
-    local_editable_colrev_path = _get_local_editable_colrev_path()
-    if local_editable_colrev_path:
-        colrev_path = Path(local_editable_colrev_path)
-        if local_editable_colrev_path.startswith("/D:"):
-            # Remove the leading slash to correct the path format
-            corrected_path_str = local_editable_colrev_path.lstrip("/")
-            colrev_path = Path(corrected_path_str).resolve(strict=False)
-        else:
-            colrev_path = colrev_path.resolve(strict=False)
-    else:
-        colrev_path = _clone_colrev_repository().resolve(strict=False)
+    def is_colrev_root(path: Path) -> bool:
+        return (path / "packages").is_dir()
 
-    # Check if there is a nested colrev directory
-    potential_nested_path = colrev_path / "colrev"
-    if potential_nested_path.is_dir():
-        colrev_path = potential_nested_path
+    # Try editable install
+    try:
+        dist = distribution("colrev")
+        dist_info_folder = (
+            f"{dist.metadata['Name'].replace('-', '_')}-{dist.version}.dist-info"
+        )
+        dist_info_path = (
+            Path(str(dist.locate_file(""))) / dist_info_folder / "direct_url.json"
+        )
 
-    return colrev_path
+        if dist_info_path.exists():
+            with open(dist_info_path, encoding="utf-8") as file:
+                url = json.load(file).get("url", "")
+                if url.startswith("file://"):
+                    parsed = urlparse(url)
+                    editable_path = Path(unquote(parsed.path)).resolve(strict=False)
+                    if is_colrev_root(editable_path):
+                        return editable_path
+                    if (editable_path / "colrev").is_dir():
+                        return editable_path / "colrev"
+    except PackageNotFoundError:
+        print("CoLRev not installed")
+
+    # Fallback to clone
+    clone_path = _clone_colrev_repository().resolve(strict=False)
+    for candidate in [clone_path, *clone_path.glob("**/")]:
+        if is_colrev_root(candidate):
+            print(f"[DEBUG] Using candidate CoLRev root: {candidate}")
+            return candidate
+
+    raise FileNotFoundError(
+        f"Cannot find CoLRev root folder with 'packages/' under: {clone_path}"
+    )
 
 
 def get_internal_packages_dict() -> dict:

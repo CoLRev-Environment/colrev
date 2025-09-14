@@ -5,14 +5,8 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-import colrev.env.environment_manager
-import colrev.env.local_index_sqlite
-import colrev.env.resources
-import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.check
 import colrev.record.record
-import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues

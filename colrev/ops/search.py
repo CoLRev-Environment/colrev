@@ -286,9 +286,21 @@ class Search(colrev.process.operation.Operation):
             f
             for f in files
             if f not in [s.filename for s in self.review_manager.settings.sources]
-            and not str(f).endswith("_query.txt")
-            and not str(f).endswith(".tmp")
-            and ".~lock" not in str(f)
+            and f.suffix
+            in [
+                ".bib",
+                ".nbib",
+                ".ris",
+                ".enl",
+                ".csv",
+                ".xls",
+                "xlsx",
+                ".md",
+                ".txt",
+                ".json",
+            ]
+            # Note: do not cover .Identifier, ".~lock" etc.
+            and not f.name.startswith(".")
         ]
 
         return sorted(list(set(files)))

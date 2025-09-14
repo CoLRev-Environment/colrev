@@ -119,7 +119,7 @@ rapidfuzz==3.12.2
     #   bib-dedupe
 readchar==4.2.1
     # via inquirer
-requests==2.32.3
+requests==2.32.4
     # via
     #   colrev (pyproject.toml)
     #   bib-dedupe
@@ -152,7 +152,7 @@ tzdata==2025.1
     # via pandas
 url-normalize==1.4.3
     # via requests-cache
-urllib3==2.3.0
+urllib3==2.5.0
     # via
     #   docker
     #   requests

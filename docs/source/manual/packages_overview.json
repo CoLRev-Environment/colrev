@@ -554,6 +554,12 @@
         "endpoint_type": "prep"
     },
     {
+        "package_endpoint_identifier": "colrev.cli_prep_man",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "TODO (:doc:`instructions </manual/packages/colrev.cli_prep_man>`)",
+        "endpoint_type": "prep_man"
+    },
+    {
         "package_endpoint_identifier": "colrev.export_man_prep",
         "status": "|MATURING|",
         "short_description": "Export Man Prep (:doc:`instructions </manual/packages/colrev.export_man_prep>`)",
@@ -710,6 +716,12 @@
         "endpoint_type": "data"
     },
     {
+        "package_endpoint_identifier": "colrev.genai",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "GenAI (:doc:`instructions </manual/packages/colrev.genai>`)",
+        "endpoint_type": "data"
+    },
+    {
         "package_endpoint_identifier": "colrev.github_pages",
         "status": "|MATURING|",
         "short_description": "GitHub pages (:doc:`instructions </manual/packages/colrev.github_pages>`)",
@@ -761,6 +773,12 @@
         "package_endpoint_identifier": "colrev.doi_org",
         "status": "|MATURING|",
         "short_description": "Doi.org (:doc:`instructions </manual/packages/colrev.doi_org>`)",
+        "endpoint_type": "na"
+    },
+    {
+        "package_endpoint_identifier": "colrev.enlit",
+        "status": "|EXPERIMENTAL|",
+        "short_description": "TODO (:doc:`instructions </manual/packages/colrev.enlit>`)",
         "endpoint_type": "na"
     },
     {

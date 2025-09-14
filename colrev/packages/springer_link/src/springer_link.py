@@ -82,7 +82,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        params_dict: dict[str, str] = {}
+        params_dict = {params.split("=")[0]: params.split("=")[1]}
         search_type = operation.select_search_type(
             search_types=cls.search_types, params=params_dict
         )
@@ -90,7 +90,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         if search_type == SearchType.DB:
             search_source = operation.create_db_source(
                 search_source_cls=cls,
-                params={},
+                params=params_dict,
             )
 
         elif search_type == SearchType.API:
@@ -135,7 +135,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def _add_constraints(self) -> dict:
-        """add constraints for API query"""
+        """Add constraints for API query."""
         complex_query_prompt = [
             inquirer.List(
                 name="complex_query",
@@ -244,7 +244,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_parameters
 
     def build_query(self, search_parameters: dict) -> str:
-        """build API query"""
+        """Build API query."""
 
         if "query" in search_parameters:
             query = search_parameters["query"]
@@ -307,7 +307,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _run_api_search(
         self, springer_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
-        """save API search results"""
+        """Save API search results."""
         for record in self.get_query_return():
             springer_feed.add_update_record(record)
 
@@ -517,7 +517,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        """load bib file"""
+        """Load bib file."""
         records = colrev.loader.load_utils.load(
             filename=filename,
             logger=logger,

@@ -69,7 +69,7 @@ class Checker:
             raise colrev_exceptions.RepoSetupError(
                 "No colrev repository."
                 + "To retrieve a shared repository, use colrev init."
-                + "To initalize a new repository, "
+                + "To initialize a new repository, "
                 + "execute the command in an empty directory."
             )
 

@@ -8,9 +8,8 @@ from pathlib import Path
 from pydantic import BaseModel
 from pydantic import Field
 
-import colrev.env.utils
+import colrev.env.tei_parser
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
@@ -106,9 +105,10 @@ class Obsidian(base_classes.DataPackageBaseClass):
                 self.review_manager.path
                 / colrev.record.record.Record(record_dict).get_tei_filename()
             )
+            self.review_manager.logger.info(f"  extract keywords for {tei_file.name}")
 
             if tei_file.is_file():
-                tei = self.review_manager.get_tei(tei_path=tei_file)
+                tei = colrev.env.tei_parser.TEIParser(tei_path=tei_file)
                 keywords = [
                     x.lower().replace(" ", "-") for x in tei.get_paper_keywords()
                 ]
@@ -120,14 +120,11 @@ class Obsidian(base_classes.DataPackageBaseClass):
 
         return keywords
 
-    def _append_missing_records(self, *, records: dict, silent_mode: bool) -> None:
+    def _append_missing_records(self, *, records: dict) -> None:
         included = self.data_operation.get_record_ids_for_synthesis(records)
         missing_records = self._get_obsidian_missing(included=included)
         if len(missing_records) == 0:
-            if not silent_mode:
-                self.review_manager.logger.info(
-                    "All records included. Nothing to export."
-                )
+            self.review_manager.logger.info("All records included. Nothing to export.")
             return
 
         inbox_text = ""
@@ -214,9 +211,12 @@ class Obsidian(base_classes.DataPackageBaseClass):
     ) -> None:
         """Update the obsidian vault"""
 
+        if silent_mode:
+            return
+
         self.review_manager.logger.debug("Export to obsidian endpoint")
 
-        self._append_missing_records(records=records, silent_mode=silent_mode)
+        self._append_missing_records(records=records)
 
     def update_record_status_matrix(
         self,

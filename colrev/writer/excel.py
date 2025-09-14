@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to write excel files"""
+"""Function to write Excel files with flexible field handling"""
 from __future__ import annotations
 
 import pandas as pd
@@ -23,25 +23,45 @@ FIELDS = [
 ]
 
 
-def to_dataframe(*, records_dict: dict) -> pd.DataFrame:
+def to_dataframe(
+    *,
+    records_dict: dict,
+    sort_fields_first: bool = True,
+    drop_empty_fields: bool = True,
+) -> pd.DataFrame:
     """Convert a records dict to a pandas DataFrame"""
+    all_keys = {k for v in records_dict.values() for k in v.keys()}
+    additional_fields = sorted(all_keys - set(FIELDS))
+    fields = FIELDS + additional_fields if sort_fields_first else sorted(all_keys)
+
     data = []
     for record_id in sorted(records_dict.keys()):
         record_dict = records_dict[record_id]
-        row = {}
-        for field in FIELDS:
-            if field in record_dict:
-                row[field] = record_dict[field]
-            else:
-                row[field] = ""
+        row = {field: record_dict.get(field, "") for field in fields}
         data.append(row)
-    return pd.DataFrame(data)
+
+    df = pd.DataFrame(data)
+
+    if drop_empty_fields:
+        df = df.dropna(axis=1, how="all")
+        df = df.loc[:, (df != "").any(axis=0)]
+
+    return df
 
 
-def write_file(*, records_dict: dict, filename: str) -> None:
-    """Write an excel file from a records dict"""
-    data_frame = to_dataframe(records_dict=records_dict)
-    # pylint: disable=abstract-class-instantiated
+def write_file(
+    *,
+    records_dict: dict,
+    filename: str,
+    sort_fields_first: bool = True,
+    drop_empty_fields: bool = True,
+) -> None:
+    """Write an Excel file from a records dict"""
+    data_frame = to_dataframe(
+        records_dict=records_dict,
+        sort_fields_first=sort_fields_first,
+        drop_empty_fields=drop_empty_fields,
+    )
     writer = pd.ExcelWriter(filename, engine="xlsxwriter")
     data_frame.to_excel(writer, index=False)
 

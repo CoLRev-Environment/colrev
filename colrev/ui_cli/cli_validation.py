@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scripts to print the CoLRev status (cli)."""
+"""Scripts to support command-line validation."""
 from __future__ import annotations
 
 import difflib
@@ -14,6 +14,9 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
+
+if typing.TYPE_CHECKING:
+    import colrev.ops.validate
 
 # pylint: disable=duplicate-code
 keys = [

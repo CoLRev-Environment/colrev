@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""The CoLRev review manager (main entrypoint)."""
+"""Review Manager
+
+This module provides the core `ReviewManager` class, which acts as the central interface
+for managing a CoLRev project repository. It encapsulates configuration, logging,
+dataset access, and orchestrates the execution of review operations.
+
+Key responsibilities of the `ReviewManager` include:
+
+- Initializing and validating the project repository
+- Loading, saving, and validating project settings
+- Providing access to the dataset (`colrev.dataset.Dataset`)"""
 from __future__ import annotations
 
 import logging
@@ -16,9 +26,7 @@ import yaml
 import colrev.dataset
 import colrev.exceptions as colrev_exceptions
 import colrev.logger
-import colrev.ops.check
 import colrev.ops.checker
-import colrev.process.operation
 import colrev.record.qm.quality_model
 import colrev.settings
 from colrev.constants import Colors
@@ -36,7 +44,7 @@ class ReviewManager:
     # pylint: disable=too-many-public-methods
     # pylint: disable=too-many-arguments
 
-    notified_next_operation = None
+    notified_next_operation: typing.Optional[OperationsType] = None
     """ReviewManager was notified for the upcoming process and
     will provide access to the Dataset"""
 
@@ -127,14 +135,16 @@ class ReviewManager:
         self.logger = logger
 
     def get_loggers(self) -> typing.Tuple[logging.Logger, logging.Logger]:
-        """return loggers"""
+        """Return loggers."""
         if self.verbose_mode:
             return colrev.logger.setup_report_logger(
-                review_manager=self, level=logging.DEBUG
-            ), colrev.logger.setup_logger(review_manager=self, level=logging.DEBUG)
+                report_path=self.paths.report, level=logging.DEBUG
+            ), colrev.logger.setup_logger(
+                logger_path=self.paths.report, level=logging.DEBUG
+            )
         return colrev.logger.setup_report_logger(
-            review_manager=self, level=logging.INFO
-        ), colrev.logger.setup_logger(review_manager=self, level=logging.INFO)
+            report_path=self.paths.report, level=logging.INFO
+        ), colrev.logger.setup_logger(logger_path=self.paths.report, level=logging.INFO)
 
     def _check_update(self) -> None:
         # Once the following has run for all repositories,
@@ -179,7 +189,19 @@ class ReviewManager:
 
     def reset_report_logger(self) -> None:
         """Reset the report logger"""
-        colrev.logger.reset_report_logger(review_manager=self)
+
+        # Stop and remove the report log file
+        if self.report_logger.handlers:
+            report_handler = self.report_logger.handlers[0]
+            self.report_logger.removeHandler(report_handler)
+            report_handler.close()
+
+        report_path = self.paths.report
+        if report_path.is_file():
+            with open(report_path, "r+", encoding="utf8") as file:
+                file.truncate(0)
+        file_handler = colrev.logger.reset_report_logger(report_path=self.paths.report)
+        self.report_logger.addHandler(file_handler)
 
     def check_repo(self) -> dict:
         """Check the repository"""
@@ -199,51 +221,6 @@ class ReviewManager:
         """Get the CoLRev versions"""
         checker = colrev.ops.checker.Checker(review_manager=self)
         return checker.get_colrev_versions()
-
-    def report(self, *, msg_file: Path) -> None:
-        """Append commit-message report if not already available
-        (Entrypoint for pre-commit hooks)
-        """
-        import colrev.ops.commit
-        import colrev.ops.correct
-
-        with open(msg_file, encoding="utf8") as file:
-            available_contents = file.read()
-
-        with open(msg_file, "w", encoding="utf8") as file:
-            file.write(available_contents)
-            # Don't append if it's already there
-            # update = False
-            # if "Command" not in available_contents:
-            #     update = True
-            # if "Properties" in available_contents:
-            #     update = False
-            # if update:
-            commit = colrev.ops.commit.Commit(
-                review_manager=self,
-                msg=available_contents,
-                manual_author=True,
-                script_name="MANUAL",
-            )
-            commit.update_report(msg_file=msg_file)
-
-        if (
-            not self.settings.is_curated_masterdata_repo()
-            and self.dataset.records_changed()
-        ):  # pragma: no cover
-            colrev.ops.check.CheckOperation(self)  # to notify
-            corrections_operation = colrev.ops.correct.Corrections(review_manager=self)
-            corrections_operation.check_corrections_of_records()
-
-    def sharing(self) -> dict:
-        """Check whether sharing requirements are met
-        (Entrypoint for pre-commit hooks)
-        """
-
-        self.notified_next_operation = OperationsType.check
-        advisor = self.get_advisor()
-        sharing_advice = advisor.get_sharing_instructions()
-        return sharing_advice
 
     def update_status_yaml(
         self, *, add_to_git: bool = True, records: typing.Optional[dict] = None
@@ -348,34 +325,6 @@ class ReviewManager:
         import colrev.package_manager.package_manager
 
         return colrev.package_manager.package_manager.PackageManager()
-
-    @classmethod
-    def get_grobid_service(
-        cls,
-    ) -> colrev.env.grobid_service.GrobidService:  # pragma: no cover
-        """Get a grobid service object"""
-        import colrev.env.grobid_service
-
-        environment_manager = cls.get_environment_manager()
-        return colrev.env.grobid_service.GrobidService(
-            environment_manager=environment_manager
-        )
-
-    def get_tei(
-        self,
-        *,
-        pdf_path: typing.Optional[Path] = None,
-        tei_path: typing.Optional[Path] = None,
-    ) -> colrev.env.tei_parser.TEIParser:  # type: ignore # pragma: no cover
-        """Get a tei object"""
-
-        import colrev.env.tei_parser
-
-        return colrev.env.tei_parser.TEIParser(
-            environment_manager=self.environment_manager,
-            pdf_path=self.path / pdf_path if pdf_path else None,
-            tei_path=self.path / tei_path if tei_path else None,
-        )
 
     @classmethod
     def get_environment_manager(

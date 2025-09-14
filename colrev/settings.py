@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Settings of the CoLRev project."""
+"""Settings of the project"""
 from __future__ import annotations
 
 import json
@@ -18,6 +18,9 @@ from colrev.constants import PDFPathType
 from colrev.constants import ScreenCriterionType
 from colrev.constants import SearchType
 from colrev.constants import ShareStatReq
+
+if typing.TYPE_CHECKING:
+    import colrev.review_manager
 
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
 # the settings dataclasses should be in one file (13s compared to 0.3s)

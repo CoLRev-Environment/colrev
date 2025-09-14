@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-"""dashboard table and graphs for synthesized records"""
+"""Dashboard table and graphs for synthesized records."""
 from __future__ import annotations
 
 import dash  # pylint: disable=import-error
@@ -41,7 +41,7 @@ else:
 
 
 def empty_figure() -> object:
-    """creates an empty figure in case of invalid search"""
+    """Create an empty figure in case of invalid search."""
     figure = go.Figure(go.Scatter(x=[], y=[]))
     figure.update_layout(template=None)
     figure.update_xaxes(showgrid=False, showticklabels=False, zeroline=False)
@@ -51,7 +51,7 @@ def empty_figure() -> object:
 
 
 def plot_time(data_input: pd.DataFrame) -> object:
-    """creates graph about papers published over time"""
+    """Create graph about papers published over time."""
 
     # check for data_input
     if data_input.empty:
@@ -100,7 +100,7 @@ def plot_time(data_input: pd.DataFrame) -> object:
 
 
 def plot_journals(data_input: pd.DataFrame) -> px.bar:
-    """creates graph about papers published per journal"""
+    """Create graph about papers published per journal."""
 
     # check for data_input
     if data_input.empty:
@@ -266,7 +266,7 @@ layout = html.Div(
     Input("sortby", "value"),
 )
 def update_table(searchvalue, sortvalue) -> tuple[dict, str, px.bar, px.bar]:  # type: ignore
-    """callback function updating table and graphs based on search and sort"""
+    """Callback function updating table and graphs based on search and sort."""
     sorted_data = data.copy(deep=True)
 
     output = ""

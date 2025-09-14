@@ -123,6 +123,7 @@ Packages
    packages/colrev.source_specific_prep.rst
 
 
+   packages/colrev.cli_prep_man.rst
    packages/colrev.export_man_prep.rst
    packages/colrev.prep_man_curation_jupyter.rst
 
@@ -165,6 +166,7 @@ Packages
 
    packages/colrev.bibliography_export.rst
    packages/colrev.colrev_curation.rst
+   packages/colrev.genai.rst
    packages/colrev.github_pages.rst
    packages/colrev.obsidian.rst
    packages/colrev.paper_md.rst
@@ -176,4 +178,5 @@ Packages
 
    packages/colrev-sync.rst
    packages/colrev.doi_org.rst
+   packages/colrev.enlit.rst
    packages/colrev.ui_web.rst
