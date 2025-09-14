@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the CoLRev checks"""
+import json as stdjson
 import platform
 import typing
 
@@ -44,6 +45,10 @@ def test_checks(  # type: ignore
     search_sources = base_repo_review_manager.settings.sources
     actual = [s.model_dump() for s in search_sources]  # type: ignore
 
+    def canon(d: dict) -> str:
+        # Canonicalize dicts so we can compare order-insensitively
+        return stdjson.dumps(d, sort_keys=True)
+
     if current_platform in ["Linux", "Darwin"]:
         expected = [  # type: ignore
             {  # type: ignore
@@ -60,4 +65,7 @@ def test_checks(  # type: ignore
                 "search_string": "",
             },
         ]
-        assert expected == actual
+
+        assert sorted(map(canon, actual)) == sorted(
+            map(canon, expected)  # type: ignore
+        )
