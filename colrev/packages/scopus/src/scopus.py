@@ -3,23 +3,31 @@
 from __future__ import annotations
 
 import logging
+import os
+import time
 import typing
+import urllib.parse
 from pathlib import Path
 from typing import Optional
 
+import requests
 from pydantic import Field
 
 import colrev.loader.bib
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.record.record_prep
+import colrev.utils
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
+from colrev.packages.scopus.src import transformer
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -29,37 +37,241 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Scopus"""
 
     endpoint = "colrev.scopus"
-    # pylint: disable=colrev-missed-constant-usage
-    source_identifier = "url"
-    search_types = [SearchType.DB]
-
+    source_identifier = "scopus.eid"
+    search_types = [SearchType.DB, SearchType.API]
     ci_supported: bool = Field(default=False)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     db_url = "https://www.scopus.com/search/form.uri?display=advanced"
+
+    # --- External API endpoints ---
+    _SCOPUS_SEARCH_URL = "https://api.elsevier.com/content/search/scopus"
+    _SCOPUS_ABSTRACT_BY_EID_URL = "https://api.elsevier.com/content/abstract/eid/"
+    _CROSSREF_WORKS_URL = "https://api.crossref.org/works/"
+
+    # Throttling to be gentle with APIs
+    _THROTTLE_S = 0.34
 
     def __init__(
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
         logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.search_source = search_file
+        self.verbose_mode = verbose_mode
+
+    # ------------------------
+    # Author-resolution helpers
+    # ------------------------
+    def _scopus_headers(self) -> dict:
+        api_key = os.getenv("SCOPUS_API_KEY")
+        headers = {"Accept": "application/json"}
+        if api_key:
+            headers["X-ELS-APIKey"] = api_key
+        return headers
+
+    def _crossref_headers(self) -> dict:
+        return {
+            "User-Agent": "colrev-scopus-author-resolution/1.0",
+            "Accept": "application/json",
+        }
+
+    def _scopus_abstract_authors_by_eid(
+        self, *, eid: str
+    ) -> list[dict[str, typing.Optional[str]]]:
+        """Return [{'name': 'Given Family', 'scopus_author_id': '...'}, ...]
+        via Abstract Retrieval."""
+        url = self._SCOPUS_ABSTRACT_BY_EID_URL + urllib.parse.quote(eid)
+        r = requests.get(
+            url,
+            headers=self._scopus_headers(),
+            timeout=30,
+            params={"field": "authors"},
+        )
+        r.raise_for_status()
+        data = r.json()
+        arr = (
+            data.get("abstracts-retrieval-response", {})
+            .get("authors", {})
+            .get("author", [])
+        )
+        if not isinstance(arr, list):
+            arr = [arr] if arr else []
+        out: list[dict[str, typing.Optional[str]]] = []
+        for a in arr:
+            if not isinstance(a, dict):
+                continue
+            auid = a.get("@auid")
+            pref = a.get("preferred-name") or {}
+            if not isinstance(pref, dict):
+                pref = {}
+            given = pref.get("ce:given-name") or a.get("ce:given-name")
+            family = pref.get("ce:surname") or a.get("ce:surname")
+            name = " ".join([p for p in [given, family] if p])
+            out.append({"name": name if name else None, "scopus_author_id": auid})
+        return out
+
+    def _crossref_authors_by_doi(
+        self, *, doi: str
+    ) -> list[dict[str, typing.Optional[str]]]:
+        """Return [{'name': 'Given Family', 'scopus_author_id': None}, ...] via Crossref."""
+        url = self._CROSSREF_WORKS_URL + urllib.parse.quote(doi)
+        r = requests.get(url, headers=self._crossref_headers(), timeout=30)
+        r.raise_for_status()
+        msg = r.json().get("message", {})
+        authors = msg.get("author", []) or []
+        out: list[dict[str, typing.Optional[str]]] = []
+        for a in authors:
+            if not isinstance(a, dict):
+                continue
+            given = a.get("given")
+            family = a.get("family")
+            name = " ".join([p for p in [given, family] if p])
+            out.append({"name": name if name else None, "scopus_author_id": None})
+        return out
+
+    def _resolve_authors(
+        self, *, eid: typing.Optional[str], doi: typing.Optional[str]
+    ) -> tuple[str, list[dict[str, typing.Optional[str]]]]:
+        """
+        Try Scopus Abstract Retrieval first (IDs + names), then Crossref (names only).
+        Returns (source, authors).
+        """
+        # 1) Scopus Abstract Retrieval
+        if eid:
+            try:
+                authors = self._scopus_abstract_authors_by_eid(eid=eid)
+                time.sleep(self._THROTTLE_S)
+                if authors:
+                    return "scopus_abstract_retrieval", authors
+            except requests.HTTPError:
+                pass
+
+        # 2) Crossref fallback (no Scopus IDs)
+        if doi:
+            authors = self._crossref_authors_by_doi(doi=doi)
+            time.sleep(self._THROTTLE_S)
+            if authors:
+                return "crossref", authors
+
+        return "none", []
+
+    @staticmethod
+    def _looks_like_single_author(author_field: str | None) -> bool:
+        """Heuristic: treat empty or single 'and'-less string as single author."""
+        if not author_field:
+            return True
+        return " and " not in author_field.strip()
+
+    @staticmethod
+    def _names_to_bibtex_and(names: list[str]) -> str:
+        """
+        Convert ['Given Family', 'Given2 Family2'] -> 'Family, Given and Family2, Given2'
+        (best-effort; falls back to provided order if splitting is unclear).
+        """
+        converted = []
+        for n in names:
+            n = (n or "").strip()
+            if not n:
+                continue
+            parts = n.split()
+            if len(parts) >= 2:
+                family = parts[-1]
+                given = " ".join(parts[:-1])
+                converted.append(f"{family}, {given}")
+            else:
+                converted.append(n)
+        return " and ".join(converted)
+
+    # ------------------------
+    # API search + integration
+    # ------------------------
+    def _simple_api_search(self, query: str, rerun: bool) -> None:
+
+        api_key = os.getenv("SCOPUS_API_KEY")
+        if not api_key:
+            self.logger.info(
+                'No API key found. Set API key using: export SCOPUS_API_KEY="XXXXX"'
+            )
+            return
+
+        scopus_feed = colrev.ops.search_api_feed.SearchAPIFeed(
+            source_identifier=self.source_identifier,
+            search_source=self.search_source,
+            update_only=(not rerun),
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
+        )
+
+        try:
+            params = {
+                "query": query,
+                "count": 10,
+                "start": 0,
+                "view": "STANDARD",  # STANDARD: only first author (with ID) in results
+            }
+
+            response = requests.get(
+                self._SCOPUS_SEARCH_URL,
+                headers=self._scopus_headers(),
+                params=params,
+                timeout=30,
+            )
+
+            if response.status_code != 200:
+                self.logger.info(f"API Error: {response.status_code} — {response.text}")
+
+            data = response.json()
+            entries = data.get("search-results", {}).get("entry", []) or []
+            self.logger.info(f"Found {len(entries)} results via API")
+
+            for record in self._get_records_from_api(entries):
+                scopus_feed.add_update_record(retrieved_record=record)
+
+        except ValueError as e:
+            self.logger.info(f"API search error: {str(e)}")
+
+        scopus_feed.save()
+
+    def _get_records_from_api(
+        self,
+        entries: list,
+    ) -> typing.Generator[colrev.record.record_prep.PrepRecord]:
+        """
+        Transform each Scopus entry to a CoLRev record and enrich with a resolved author list:
+        - colrev.scopus.author_resolution_source
+        - colrev.scopus.authors_json
+        - Update 'author' field (BibTeX) if only single/empty author present
+        """
+        for entry in entries:
+            rec = transformer.transform_record(entry)
+
+            # Grab EID / DOI directly from the search entry
+            eid = entry.get("eid") or rec.get("scopus.eid")  # transformer may set it
+            doi = entry.get("prism:doi") or rec.get("doi")
+
+            _, authors = self._resolve_authors(eid=eid, doi=doi)
+
+            # Optionally update the human-readable BibTeX 'author' if it's empty/single
+            names: list[str] = [
+                n for a in authors if isinstance((n := a.get("name")), str) and n
+            ]
+            if names and self._looks_like_single_author(rec.get(Fields.AUTHOR)):
+                rec[Fields.AUTHOR] = self._names_to_bibtex_and(names)
+
+            yield colrev.record.record_prep.PrepRecord(rec)
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Scopus"""
-
         result = {"confidence": 0.0}
         if "source={Scopus}," in data:
             result["confidence"] = 1.0
-            return result
-
-        if "www.scopus.com" in data:
+        elif "www.scopus.com" in data:
             if data.count("www.scopus.com") >= data.count("\n@"):
                 result["confidence"] = 1.0
-
         return result
 
     @classmethod
@@ -71,19 +283,45 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        params_dict = {params.split("=")[0]: params.split("=")[1]}
+        # params_dict = {params.split("=")[0]: params.split("=")[1]}
 
-        search_source = create_db_source(
-            path=path,
-            platform=cls.endpoint,
-            params=params_dict,
-            add_to_git=True,
-            logger=logger,
+        # search_source = create_db_source(
+        #     path=path,
+        #     platform=cls.endpoint,
+        #     params=params_dict,
+        #     add_to_git=True,
+        #     logger=logger,
+        # )
+
+        params_dict: dict = {}
+        search_type = colrev.utils.select_search_type(
+            search_types=cls.search_types, params=params_dict
         )
+
+        if search_type == SearchType.API:
+            search_source = create_api_source(platform=cls.endpoint, path=path)
+
+        elif search_type == SearchType.DB:
+            search_source = create_db_source(
+                path=path,
+                platform=cls.endpoint,
+                params=params_dict,
+                add_to_git=True,
+                logger=logger,
+            )
+
         return search_source
 
     def search(self, rerun: bool) -> None:
-        """Run a search of Scopus"""
+        query = self.search_source.search_parameters.get("query", "")
+
+        if not query:
+            raise ValueError("No query provided. Use --query when adding source.")
+
+        if self.search_source.search_type == SearchType.API:
+            self.logger.info(f"Running Scopus API search with: {query}")
+            self._simple_api_search(query, rerun)
+            return
 
         if self.search_source.search_type == SearchType.DB:
             run_db_search(
@@ -102,25 +340,20 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
         return record
 
     @classmethod
     def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-
         def entrytype_setter(record_dict: dict) -> None:
             if "document_type" in record_dict:
                 if record_dict["document_type"] == "Conference Paper":
                     record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
-
                 elif record_dict["document_type"] == "Conference Review":
                     record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.PROCEEDINGS
-
                 elif record_dict["document_type"] == "Article":
                     record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
 
         def field_mapper(record_dict: dict) -> None:
-
             if record_dict[Fields.ENTRYTYPE] in [
                 ENTRYTYPES.INPROCEEDINGS,
                 ENTRYTYPES.PROCEEDINGS,
@@ -155,10 +388,7 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
                 ):
                     record_dict[Fields.PAGES] = (
                         record_dict["Start_Page"] + "--" + record_dict["End_Page"]
-                    )
-                    record_dict[Fields.PAGES] = record_dict[Fields.PAGES].replace(
-                        ".0", ""
-                    )
+                    ).replace(".0", "")
                     del record_dict["Start_Page"]
                     del record_dict["End_Page"]
 
@@ -170,7 +400,6 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
             field_mapper=field_mapper,
             logger=logger,
         )
-
         return records
 
     def load(self) -> dict:
@@ -190,6 +419,4 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for Scopus"""
-
         return record

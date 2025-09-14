@@ -27,6 +27,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 # TODO : add version to all packages
 
+
 class ReviewTypePackageBaseClass(abc.ABC):
     """The base class for ReviewType packages
 

@@ -170,6 +170,8 @@ For further information, see [tests](tests/readme.md), [changes](CHANGELOG.md), 
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/trathienphuc-tran"><img src="https://avatars.githubusercontent.com/u/185779015?v=4?s=100" width="100px;" alt="trathienphuc-tran"/><br /><sub><b>trathienphuc-tran</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=trathienphuc-tran" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ammar-uni"><img src="https://avatars.githubusercontent.com/u/185945385?v=4?s=100" width="100px;" alt="ammar-uni"/><br /><sub><b>ammar-uni</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=ammar-uni" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Lea-Chaoui"><img src="https://avatars.githubusercontent.com/u/148755227?v=4?s=100" width="100px;" alt="Lea-Chaoui"/><br /><sub><b>Lea-Chaoui</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=Lea-Chaoui" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ChloeT17"><img src="https://avatars.githubusercontent.com/u/209974918?v=4?s=100" width="100px;" alt="ChloeT17"/><br /><sub><b>ChloeT17</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=ChloeT17" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
