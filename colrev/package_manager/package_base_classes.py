@@ -25,6 +25,8 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 # pylint: disable=too-few-public-methods
 
 
+# TODO : add version to all packages
+
 class ReviewTypePackageBaseClass(abc.ABC):
     """The base class for ReviewType packages
 

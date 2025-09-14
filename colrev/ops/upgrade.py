@@ -813,6 +813,22 @@ class Upgrade(colrev.process.operation.Operation):
             pre_commit_config_path.write_text(pre_commit_contents, encoding="utf-8")
             self.repo.index.add([str(pre_commit_config_path)])
 
+
+        # TODO: extract sources from settings to search-files
+        # TODO : add version to settings.json (and search-source)
+
+
+        # import colrev.package_manager.package_manager
+        # package_manager = colrev.package_manager.package_manager.PackageManager()
+
+        # for package_endpoint in settings....:
+        #     package_class = package_manager.get_package_endpoint_class(
+        #         package_type=EndpointType.search_source,
+        #         package_identifier=package_endpoint,
+        #     )
+        #     if package_class.needs_syntax_update(search_source):
+        #         package_class.migrate_to_current_version(search_source)
+
         return self.repo.is_dirty()
 
 
