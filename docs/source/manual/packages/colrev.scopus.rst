@@ -64,3 +64,4 @@ Links
 
 
 * `Scopus <http://www.scopus.com>`_
+* `Search <https://dev.elsevier.com/sd_search_example.html>`_
