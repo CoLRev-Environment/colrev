@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Optional
+import typing
 
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
@@ -17,6 +16,7 @@ from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
+# pylint: disable=unused-argument
 
 
 class GeneralPolishPrep(base_classes.PrepPackageBaseClass):
@@ -53,15 +53,19 @@ class GeneralPolishPrep(base_classes.PrepPackageBaseClass):
     def __init__(
         self,
         *,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
 
     def prepare(
-        self, record: colrev.record.record_prep.PrepRecord
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
     ) -> colrev.record.record.Record:
         """Prepare the record by applying polishing rules"""
 

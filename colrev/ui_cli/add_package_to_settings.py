@@ -2,6 +2,8 @@
 """Discovering and using packages."""
 from __future__ import annotations
 
+from pathlib import Path
+
 import colrev.process.operation
 from colrev.constants import Colors
 from colrev.constants import EndpointType
@@ -82,7 +84,15 @@ def add_package_to_settings(
     )
 
     if hasattr(e_class, "add_endpoint"):
-        e_class.add_endpoint(operation=operation, params=params)  # type: ignore
+        if package_type == EndpointType.search_source:
+            source = e_class.add_endpoint(params=params, path=Path.cwd())  # type: ignore
+            source.save()
+            operation.review_manager.settings.sources.append(source)  # type: ignore
+            operation.review_manager.dataset.git_repo.add_changes(path=source._filepath)
+
+        else:
+            # TODO : remove "path" from add_endpoint!?
+            e_class.add_endpoint(params=params)  # type: ignore
 
     else:
         add_package = {"endpoint": package_identifier}

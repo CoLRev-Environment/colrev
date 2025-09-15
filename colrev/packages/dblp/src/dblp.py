@@ -127,6 +127,10 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         search_type = colrev.utils.select_search_type(
             search_types=cls.search_types, params=params_dict
         )
+        filename = colrev.utils.get_unique_filename(
+            base_path=path,
+            file_path_string="dblp",
+        )
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
@@ -141,10 +145,6 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     .replace("https://dblp.org/search/publ?q=", api_url)
                 )
 
-                filename = colrev.utils.get_unique_filename(
-                    base_path=path,
-                    file_path_string="dblp",
-                )
                 search_source = colrev.search_file.ExtendedSearchFile(
                     platform=cls.endpoint,
                     search_results_path=filename,
@@ -153,10 +153,27 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     search_parameters={"query": query},
                     comment="",
                 )
+
             else:
                 raise NotImplementedError
 
-        # elif search_type == SearchType.TOC:
+        elif search_type == SearchType.TOC:
+            url = input("Paste the URL of the DBLP venue (e.g. conference):")
+            assert url.startswith("https://dblp.org/db/journals/")
+            venue_key = url.split("/")[-2].replace(".html", "")
+            search_source = colrev.search_file.ExtendedSearchFile(
+                platform=cls.endpoint,
+                search_results_path=filename,
+                search_type=SearchType.TOC,
+                search_string="",
+                search_parameters={
+                    "scope": {
+                        "venue_key": venue_key,
+                    }
+                },
+                comment="",
+            )
+
         else:
             raise colrev_exceptions.PackageParameterError(
                 f"Cannot add dblp endpoint with query {params}"

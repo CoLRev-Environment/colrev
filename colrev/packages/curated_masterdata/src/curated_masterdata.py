@@ -10,6 +10,7 @@ import colrev.env.utils
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -40,24 +41,49 @@ class CuratedMasterdata(base_classes.ReviewTypePackageBaseClass):
     ) -> colrev.settings.Settings:
         """Initialize a curated masterdata repository"""
 
+        self.logger.info("Initializing curated masterdata repository")
+
         # replace readme
         colrev.env.utils.retrieve_package_file(
-            template_file=Path("packages/review_types/curated_masterdata/readme.md"),
+            template_file=Path(
+                "packages/curated_masterdata/curated_masterdata/README.md"
+            ),
             target=Path("readme.md"),
         )
         colrev.env.utils.retrieve_package_file(
             template_file=Path(
-                "packages/review_types/curated_masterdata/curations_github_colrev_update.yml"
+                "packages/curated_masterdata/curated_masterdata/curations_github_colrev_update.yml"
             ),
             target=Path(".github/workflows/colrev_update.yml"),
         )
 
-        if hasattr(self.review_manager.settings.project, "curation_url"):
-            colrev.env.utils.inplace_change(
-                filename=Path("readme.md"),
-                old_string="{{url}}",
-                new_string=self.review_manager.settings.project.curation_url,
-            )
+        issn = input("Provide ISSN for crossref (or leave blank to skip:)")
+
+        crossref_search_history = colrev.search_file.ExtendedSearchFile(
+            platform="colrev.crossref",
+            search_results_path=Path("data/search/CROSSREF.bib"),
+            search_type=SearchType.TOC,
+            search_string=f"https://api.crossref.org/journals/{issn}/works",
+            comment="",
+        )
+        pdf_search_history = colrev.search_file.ExtendedSearchFile(
+            platform="colrev.files_dir",
+            search_results_path=Path("data/search/pdfs.bib"),
+            search_string="",
+            search_parameters={
+                "scope": {
+                    # "subdir_pattern": "volume_number|year",
+                    "type": "TODO",
+                    # "conference": "TODO",
+                    # "journal": "TODO",
+                    # "year": "TODO",
+                    "path": "data/pdfs",
+                }
+            },
+            search_type=SearchType.FILES,
+        )
+
+        settings.sources = [crossref_search_history, pdf_search_history]
 
         settings.search.retrieve_forthcoming = False
 
@@ -66,7 +92,6 @@ class CuratedMasterdata(base_classes.ReviewTypePackageBaseClass):
             {"endpoint": "colrev.exclude_complementary_materials"},
             {"endpoint": "colrev.remove_urls_with_500_errors"},
             {"endpoint": "colrev.remove_broken_ids"},
-            {"endpoint": "colrev.global_ids_consistency_check"},
             {"endpoint": "colrev.get_doi_from_urls"},
             {"endpoint": "colrev.get_year_from_vol_iss_jour"},
         ]
@@ -105,11 +130,15 @@ class CuratedMasterdata(base_classes.ReviewTypePackageBaseClass):
             {"endpoint": "colrev.curation_missing_dedupe"},
         ]
 
+        curation_url = input(
+            "Enter the curation URL (or <leave blank to skip>): "
+        ).strip()
+
         settings.data.data_package_endpoints = [
             {
                 "endpoint": "colrev.colrev_curation",
                 "version": "0.1",
-                "curation_url": "TODO",
+                "curation_url": curation_url,
                 "curated_masterdata": True,
                 "masterdata_restrictions": {
                     # "1900": {
@@ -122,6 +151,13 @@ class CuratedMasterdata(base_classes.ReviewTypePackageBaseClass):
                 "curated_fields": [Fields.DOI, Fields.URL],
             }
         ]
+
+        if settings.data.data_package_endpoints[0].get("curation_url"):
+            colrev.env.utils.inplace_change(
+                filename=Path("readme.md"),
+                old_string="{{url}}",
+                new_string=settings.data.data_package_endpoints[0].get("curation_url"),
+            )
 
         # curated repo: automatically prescreen/screen-include papers
         # (no data endpoint -> automatically rev_synthesized)

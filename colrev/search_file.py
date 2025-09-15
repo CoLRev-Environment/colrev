@@ -17,6 +17,8 @@ from colrev.constants import SearchType
 class ExtendedSearchFile(search_query.SearchFile):
     """Extended SearchFile with search_results_path and derived search_history_path."""
 
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-positional-arguments
     def __init__(
         self,
         search_string: str,

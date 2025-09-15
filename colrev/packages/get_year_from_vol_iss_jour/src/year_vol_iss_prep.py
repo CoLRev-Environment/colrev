@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
+import typing
 
 import requests
 from pydantic import Field
@@ -40,7 +40,7 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
@@ -53,7 +53,6 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
         )
         self.vol_nr_dict = self._get_vol_nr_dict()
         self.quality_model = self.review_manager.get_qm()
-        self.api = crossref_api.CrossrefAPI(url="")
 
     def _get_vol_nr_dict(self) -> dict:
         vol_nr_dict: dict = {}
@@ -160,7 +159,8 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
     def _get_year_from_crossref(self, *, record: colrev.record.record.Record) -> None:
         try:
 
-            retrieved_records = self.api.crossref_query(
+            api = crossref_api.CrossrefAPI(url="https://api.crossref.org/")
+            retrieved_records = api.crossref_query(
                 record_input=record,
                 jour_vol_iss_list=True,
             )
@@ -170,7 +170,7 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
                 and retries < self.prep_operation.max_retries_on_error
             ):
                 retries += 1
-                retrieved_records = self.api.crossref_query(
+                retrieved_records = api.crossref_query(
                     record_input=record,
                     jour_vol_iss_list=True,
                 )
@@ -202,8 +202,13 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
         except requests.exceptions.RequestException:
             pass
 
+    # pylint: disable=unused-argument
     def prepare(
-        self, record: colrev.record.record_prep.PrepRecord
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
     ) -> colrev.record.record.Record:
         """Prepare a record based on year-volume-issue dependency"""
 

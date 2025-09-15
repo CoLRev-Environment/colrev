@@ -29,6 +29,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.crossref.src import crossref_api
+from colrev.packages.crossref.src.crossref_api import query_doi
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -78,6 +79,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def _parse_params(cls, params: str) -> dict:
+        # pylint: disable=colrev-missed-constant-usage
         params_dict = {}
         if params:
             if params.startswith("http"):
@@ -284,7 +286,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         for feed_record_dict in crossref_feed.feed_records.values():
             try:
-                retrieved_record = self.api.query_doi(doi=feed_record_dict[Fields.DOI])
+                retrieved_record = query_doi(doi=feed_record_dict[Fields.DOI])
 
                 if retrieved_record.data[Fields.DOI] != feed_record_dict[Fields.DOI]:
                     continue
@@ -340,10 +342,12 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         rerun: bool,
     ) -> None:
 
+        self.logger.info("Retrieving from %s", self.api.url)
         self.api.rerun = rerun
         self.api.last_updated = crossref_feed.get_last_updated()
 
         nrecs = self.api.get_len_total()
+
         self.logger.info(f"Total: {nrecs:,} records")
         if not rerun:
             self.logger.info(
@@ -433,7 +437,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.record.record.Record:
         try:
             try:
-                retrieved_record = self.api.query_doi(doi=record.data[Fields.DOI])
+                retrieved_record = query_doi(doi=record.data[Fields.DOI])
             except (colrev_exceptions.RecordNotFoundInPrepSourceException, KeyError):
 
                 retrieved_records = self.api.crossref_query(
@@ -516,7 +520,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         self, record: colrev.record.record.Record
     ) -> colrev.record.record.Record:
         try:
-            retrieved_record = self.api.query_doi(doi=record.data[Fields.DOI])
+            retrieved_record = query_doi(doi=record.data[Fields.DOI])
             if not colrev.record.record_similarity.matches(record, retrieved_record):
                 record.remove_field(key=Fields.DOI)
 

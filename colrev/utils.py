@@ -11,6 +11,7 @@ from pathlib import Path
 import inquirer
 import requests_cache
 
+import colrev.exceptions as colrev_exceptions
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import SearchType
@@ -59,6 +60,7 @@ def get_unique_filename(
     existing_filenames = []
     for search_file_path in base_path.glob("*_search_history.json"):
         search_file = load_search_file(search_file_path)
+        # pylint: disable=protected-access
         existing_filenames.append(search_file._filepath)
     for existing_file in base_path.glob("*"):
         existing_filenames.append(existing_file)
@@ -102,3 +104,25 @@ def select_search_type(*, search_types: list, params: dict) -> SearchType:
     ]
     answers = inquirer.prompt(questions)
     return SearchType[answers["search_type"]]
+
+
+def get_project_home_dir(*, path_str: typing.Optional[str] = None) -> Path:
+    """Get the root directory of the CoLRev project (i.e., the directory containing the .git directory)"""
+    if path_str:
+        original_dir = Path(path_str)
+    else:
+        original_dir = Path.cwd()
+
+    while ".git" not in [f.name for f in original_dir.iterdir() if f.is_dir()]:
+        if original_dir.parent == original_dir:  # reached root
+            break
+        original_dir = original_dir.parent
+
+    if original_dir.parent == original_dir:  # reached root
+        raise colrev_exceptions.RepoSetupError(
+            "Failed to locate a .git directory. "
+            "Ensure you are within a Git repository, "
+            "or set navigate_to_home_dir=False for init."
+        )
+
+    return original_dir

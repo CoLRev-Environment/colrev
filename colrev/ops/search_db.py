@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+"""Database search operations"""
 from __future__ import annotations
 
 import logging
@@ -13,8 +15,8 @@ from colrev.constants import Colors
 from colrev.constants import SearchType
 from colrev.git_repo import GitRepo
 
-if typing.TYPE_CHECKING:
-    import colrev.review_manager
+
+# pylint: disable=too-few-public-methods
 
 
 class _Paths:
@@ -117,9 +119,9 @@ def create_db_source(
             base_path=path,
             file_path_string=platform.replace("colrev.", ""),
         )
-    logger.debug(f"Add new DB source: {filename}")  # type: ignore
+    logger.debug("Add new DB source: %s", filename)  # type: ignore
 
-    logger.info(f"- Save search results in {Colors.ORANGE}{filename}{Colors.END}")  # type: ignore
+    logger.info("- Save search results in %s", Colors.ORANGE + str(filename) + Colors.END)  # type: ignore
     input("Press Enter to complete")
 
     git_repo = GitRepo(path=path)

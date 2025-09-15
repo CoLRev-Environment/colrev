@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import logging
+import typing
 from pathlib import Path
-from typing import Optional
 
 from pydantic import Field
 
@@ -38,7 +38,7 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
@@ -74,8 +74,13 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
         """Check status (availability) of the DBLP API"""
         self.dblp_source.check_availability()
 
+    # pylint: disable=unused-argument
     def prepare(
-        self, record: colrev.record.record_prep.PrepRecord
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
     ) -> colrev.record.record.Record:
         """Prepare a record by retrieving its metadata from DBLP"""
 

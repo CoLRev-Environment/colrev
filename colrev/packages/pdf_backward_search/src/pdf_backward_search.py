@@ -33,7 +33,7 @@ from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
-from colrev.packages.crossref.src import crossref_api
+from colrev.packages.crossref.src.crossref_api import query_doi
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -72,7 +72,6 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
             search_file.search_parameters["min_intext_citations"] = 3
 
         self.search_source = search_file
-        self.crossref_api = crossref_api.CrossrefAPI(url="")
 
     @classmethod
     def get_default_source(cls) -> colrev.search_file.ExtendedSearchFile:
@@ -154,7 +153,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             for doi in [x["cited"] for x in items]:
                 try:
-                    retrieved_record = self.crossref_api.query_doi(
+                    retrieved_record = query_doi(
                         doi=doi,
                     )
                     # if not crossref_query_return:

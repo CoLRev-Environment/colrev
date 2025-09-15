@@ -140,7 +140,8 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
 
         try:
             ret = requests.get(
-                "https://export.arxiv.org/api/query?search_query=all:electron&start=0&max_results=1",
+                "https://export.arxiv.org/api/"
+                + "query?search_query=all:electron&start=0&max_results=1",
                 timeout=30,
             )
             ret.raise_for_status()

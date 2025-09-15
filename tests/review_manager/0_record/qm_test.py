@@ -1092,8 +1092,8 @@ def test_inconsistent_with_doi_metadata(
             return None
 
     # Patch the CrossrefSearchSource.query_doi method
-    original_method = crossref_api.CrossrefAPI.query_doi
-    crossref_api.CrossrefAPI.query_doi = patched_query_doi  # type: ignore
+    original_method = crossref_api.query_doi
+    crossref_api.query_doi = patched_query_doi  # type: ignore
 
     doi_consistency_checker = InconsistentWithDOIMetadataChecker(quality_model)
 

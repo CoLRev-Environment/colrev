@@ -586,9 +586,9 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
                 key=Fields.ENTRYTYPE, value="phdthesis", source="unkown_source_prep"
             )
             self.logger.info(
-                f" {record.data[Fields.ID]}".ljust(self._padding, " ")
-                + f"Set from {prior_e_type} to phdthesis "
-                '("thesis" in fulltext link)'
+                ' %sSet from %s to phdthesis ("thesis" in fulltext link)',
+                str(record.data[Fields.ID]).ljust(self._padding, " "),
+                prior_e_type,
             )
 
         if (
@@ -600,9 +600,9 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
                 key=Fields.ENTRYTYPE, value="phdthesis", source="unkown_source_prep"
             )
             self.logger.info(
-                f" {record.data[Fields.ID]}".ljust(self._padding, " ")
-                + f"Set from {prior_e_type} to phdthesis "
-                '("thesis" in abstract)'
+                ' %sSet from %s to phdthesis ("thesis" in abstract)',
+                str(record.data[Fields.ID]).ljust(self._padding, " "),
+                prior_e_type,
             )
 
     def _format_inproceedings(

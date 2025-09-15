@@ -26,6 +26,7 @@ import colrev.logger
 import colrev.ops.checker
 import colrev.record.qm.quality_model
 import colrev.settings
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import OperationsType
 from colrev.env.environment_manager import EnvironmentManager
@@ -73,7 +74,7 @@ class ReviewManager:
         # Note : mostly for formatting output
 
         if navigate_to_home_dir:
-            self.path = self._get_project_home_dir(path_str=path_str)
+            self.path = colrev.utils.get_project_home_dir(path_str=path_str)
         else:
             self.path = Path.cwd()
 
@@ -150,26 +151,6 @@ class ReviewManager:
         upgrade_operation = self.get_upgrade()
         upgrade_operation.main()
 
-    def _get_project_home_dir(self, *, path_str: typing.Optional[str] = None) -> Path:
-        if path_str:
-            original_dir = Path(path_str)
-        else:
-            original_dir = Path.cwd()
-
-        while ".git" not in [f.name for f in original_dir.iterdir() if f.is_dir()]:
-            if original_dir.parent == original_dir:  # reached root
-                break
-            original_dir = original_dir.parent
-
-        if original_dir.parent == original_dir:  # reached root
-            raise colrev.exceptions.RepoSetupError(
-                "Failed to locate a .git directory. "
-                "Ensure you are within a Git repository, "
-                "or set navigate_to_home_dir=False for init."
-            )
-
-        return original_dir
-
     def load_settings(self) -> colrev.settings.Settings:
         """Load the settings"""
         self.settings = colrev.settings.load_settings(settings_path=self.paths.settings)
@@ -190,6 +171,7 @@ class ReviewManager:
         skip_status_yaml: bool = False,
         skip_hooks: bool = True,
     ) -> bool:
+        """Create a commit in the git repository"""
         return self.dataset.git_repo.create_commit(
             msg=msg,
             review_manager=self,

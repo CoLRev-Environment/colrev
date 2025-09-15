@@ -858,10 +858,12 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         check_review_manager = colrev.review_manager.ReviewManager(path_str=source_url)
         check_operation = colrev.ops.check.CheckOperation(check_review_manager)
 
-        git_repo = check_review_manager.dataset.git_repo.repo
+        git_repo = check_review_manager.dataset.git_repo
         if git_repo.behind_remote():
-            origin = git_repo.remotes.origin
-            self.logger.info(f"Pull project changes from {git_repo.remotes.origin}")
+            origin = git_repo.repo.remotes.origin
+            self.logger.info(
+                f"Pull project changes from {git_repo.repo.remotes.origin}"
+            )
             res = origin.pull()
             self.logger.info(res)
 

@@ -226,13 +226,13 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             data = response.json()
             entries = data.get("search-results", {}).get("entry", []) or []
-            self.logger.info(f"Found {len(entries)} results via API")
+            self.logger.info("Found %d results via API", len(entries))
 
             for record in self._get_records_from_api(entries):
                 scopus_feed.add_update_record(retrieved_record=record)
 
         except ValueError as e:
-            self.logger.info(f"API search error: {str(e)}")
+            self.logger.info("API search error: %s", str(e))
 
         scopus_feed.save()
 
@@ -308,6 +308,10 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
                 params=params_dict,
                 add_to_git=True,
                 logger=logger,
+            )
+        else:
+            raise NotImplementedError(
+                f"Search type {search_type} not implemented for {cls.endpoint}"
             )
 
         return search_source

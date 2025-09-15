@@ -20,7 +20,7 @@ from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
-from colrev.packages.crossref.src import crossref_api
+from colrev.packages.crossref.src.crossref_api import query_doi
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -53,8 +53,6 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         import colrev.review_manager
 
         self.review_manager = colrev.review_manager.ReviewManager()
-
-        self.crossref_api = crossref_api.CrossrefAPI(url="")
 
     @classmethod
     def get_default_source(cls) -> colrev.search_file.ExtendedSearchFile:
@@ -125,7 +123,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
             items = json.loads(ret.text)
 
             for doi in [x["citing"] for x in items]:
-                retrieved_record = self.crossref_api.query_doi(doi=doi)
+                retrieved_record = query_doi(doi=doi)
                 # if not crossref_query_return:
                 #     raise colrev_exceptions.RecordNotFoundInPrepSourceException()
                 retrieved_record.data[Fields.ID] = retrieved_record.data[Fields.DOI]

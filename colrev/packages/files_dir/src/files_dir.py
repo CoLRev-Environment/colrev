@@ -12,7 +12,6 @@ import pymupdf
 import requests
 from pydantic import Field
 
-import colrev.env.local_index
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
@@ -30,7 +29,7 @@ from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
-from colrev.packages.crossref.src import crossref_api
+from colrev.packages.crossref.src.crossref_api import query_doi
 from colrev.writer.write_utils import write_file
 
 # pylint: disable=unused-argument
@@ -94,7 +93,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             if self.subdir_pattern == Fields.VOLUME:
                 self.r_subdir_pattern = re.compile("([0-9]{1,4})")
 
-        self.crossref_api = crossref_api.CrossrefAPI(url="")
         self.local_index = colrev.env.local_index.LocalIndex()
 
     def _update_if_pdf_renamed(
@@ -769,8 +767,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         if Fields.DOI not in record_dict:
             return
         try:
-            api = crossref_api.CrossrefAPI(url="")
-            retrieved_record = api.query_doi(
+            retrieved_record = query_doi(
                 doi=record_dict[Fields.DOI],
             )
 

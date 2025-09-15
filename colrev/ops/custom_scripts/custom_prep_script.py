@@ -2,13 +2,15 @@
 """Template for a custom Prep PackageEndpoint"""
 from __future__ import annotations
 
+import typing
+
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
-import colrev.process.operation
 from colrev.constants import Fields
 
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=unused-argument
 
 
 class CustomPrep(base_classes.PrepPackageBaseClass):
@@ -21,7 +23,7 @@ class CustomPrep(base_classes.PrepPackageBaseClass):
     def __init__(
         self,
         *,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
         self.settings = self.settings_class(**settings)
@@ -29,6 +31,9 @@ class CustomPrep(base_classes.PrepPackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record.Record,
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
     ) -> colrev.record.record.Record:
         """Update record (metadata)"""
 

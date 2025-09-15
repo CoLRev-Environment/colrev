@@ -26,7 +26,6 @@ import colrev.review_manager
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType
-from colrev.constants import Fields
 from colrev.constants import SearchType
 from colrev.env.environment_manager import EnvironmentManager
 from colrev.package_manager.package_manager import PackageManager
@@ -115,8 +114,6 @@ class Initializer:
         )
 
         self._register_repo(example=example)
-
-        self._post_commit_edits()
 
         self.review_manager.logger.info(
             "%sCompleted init operation%s", Colors.GREEN, Colors.END
@@ -375,6 +372,7 @@ class Initializer:
         )
 
         settings = review_type_object.initialize(settings=settings)
+        self.review_manager.settings = settings
         self.review_manager.save_settings()
 
         project_title = self.review_manager.settings.project.title
@@ -416,7 +414,6 @@ class Initializer:
                     "colrev.grobid_tei",
                 ]
             ]
-
         self.review_manager.save_settings()
 
     def _finalize(self) -> None:
@@ -453,45 +450,6 @@ class Initializer:
         environment_manager.register_repo(
             self.target_path, logger=self.review_manager.logger
         )
-
-    def _post_commit_edits(self) -> None:
-        if self.review_type != "colrev.curated_masterdata":
-            return
-
-        self.review_manager.logger.info("Post-commit edits")
-        self.review_manager.settings.project.curation_url = "TODO"
-        self.review_manager.settings.project.curated_fields = [
-            Fields.URL,
-            Fields.DOI,
-            "TODO",
-        ]
-
-        pdf_source_l = [
-            s
-            for s in self.review_manager.settings.sources
-            if "data/search/pdfs.bib" == str(s.filename)
-        ]
-        if pdf_source_l:
-            pdf_source = pdf_source_l[0]
-            pdf_source.search_parameters = {
-                "scope": {
-                    "path": "pdfs",
-                    Fields.JOURNAL: "TODO",
-                    "subdir_pattern": "TODO:volume_number|year",
-                }
-            }
-
-        crossref_source_l = [
-            s
-            for s in self.review_manager.settings.sources
-            if "data/search/CROSSREF.bib" == str(s.filename)
-        ]
-        if crossref_source_l:
-            crossref_source = crossref_source_l[0]
-            crossref_source.search_parameters = {"scope": {"journal_issn": "TODO"}}
-
-        self.review_manager.save_settings()
-        self.review_manager.logger.info("Completed setup.")
 
     def _create_example_repo(self) -> None:
         """The example repository is intended to provide an initial illustration

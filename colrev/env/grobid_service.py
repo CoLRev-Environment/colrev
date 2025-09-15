@@ -35,7 +35,7 @@ class GrobidService:
                 self.GROBID_IMAGE.split(":")[1],
                 running_version,
             )
-            raise Exception
+            raise Exception  # pylint: disable=broad-exception-raised
 
     def check_grobid_availability(self, *, wait: bool = True) -> bool:
         """Check whether the GROBID service is available"""

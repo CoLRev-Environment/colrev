@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+"""Git repository wrapper for CoLRev"""
 from __future__ import annotations
 
 import time
@@ -10,10 +12,13 @@ from git import GitCommandError
 from git import InvalidGitRepositoryError
 
 import colrev.exceptions as colrev_exceptions
+import colrev.utils
 from colrev.constants import FileSets
 
 if typing.TYPE_CHECKING:
     import colrev.review_manager
+
+# pylint: disable=too-many-public-methods
 
 
 class GitRepo:
@@ -21,6 +26,9 @@ class GitRepo:
 
     def __init__(self, path: typing.Optional[Path]) -> None:
         self.path = path if path else Path.cwd()
+        if not self.path.is_absolute():
+            self.path = self.path.resolve()
+        self.path = colrev.utils.get_project_home_dir(path_str=str(self.path))
         try:
             self.repo = git.Repo(self.path)
         except InvalidGitRepositoryError as exc:

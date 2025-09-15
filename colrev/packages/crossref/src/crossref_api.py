@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 """Crossref API"""
+from __future__ import annotations
+
 import contextlib
 import re
 import typing
@@ -128,6 +130,7 @@ class Endpoint:
         self.crossref_plus_token = crossref_plus_token
         if crossref_plus_token:
             self.headers["Crossref-Plus-API-Token"] = self.crossref_plus_token
+        assert request_url.startswith(CrossrefAPI._api_url)
         self.request_url = request_url
         self.request_params: typing.Dict[str, str] = {}
         self.timeout = 60
@@ -325,6 +328,7 @@ class CrossrefAPI:
         url: str,
         rerun: bool = False,
     ):
+        assert url.startswith(self._api_url)
         self.url = url
 
         _, self.email = (
@@ -409,29 +413,6 @@ class CrossrefAPI:
         except requests.exceptions.RequestException as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 self._availability_exception_message
-            ) from exc
-
-    def query_doi(self, *, doi: str) -> colrev.record.record_prep.PrepRecord:
-        """Get records from Crossref based on a doi query"""
-
-        try:
-            endpoint = Endpoint(self._api_url + "works/" + doi, email=self.email)
-
-            crossref_query_return = next(iter(endpoint))
-
-            if crossref_query_return is None:
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
-                    msg="Record not found in crossref (based on doi)"
-                )
-
-            retrieved_record = record_transformer.json_to_record(
-                item=crossref_query_return
-            )
-            return retrieved_record
-
-        except (requests.exceptions.RequestException, StopIteration) as exc:
-            raise colrev_exceptions.RecordNotFoundInPrepSourceException(
-                msg="Record not found in crossref (based on doi)"
             ) from exc
 
     def _get_similarity(
@@ -566,3 +547,28 @@ class CrossrefAPI:
                 ]
 
         return record_list
+
+
+def query_doi(*, doi: str) -> colrev.record.record_prep.PrepRecord:
+    """Get records from Crossref based on a doi query"""
+
+    try:
+        _, email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
+        endpoint = Endpoint("https://api.crossref.org/works/" + doi, email=email)
+
+        crossref_query_return = next(iter(endpoint))
+
+        if crossref_query_return is None:
+            raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                msg="Record not found in crossref (based on doi)"
+            )
+
+        retrieved_record = record_transformer.json_to_record(item=crossref_query_return)
+        return retrieved_record
+
+    except (requests.exceptions.RequestException, StopIteration) as exc:
+        raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+            msg="Record not found in crossref (based on doi)"
+        ) from exc

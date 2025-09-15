@@ -9,7 +9,7 @@ import colrev.record.qm.quality_model
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-from colrev.packages.crossref.src import crossref_api
+from colrev.packages.crossref.src.crossref_api import query_doi
 
 # pylint: disable=too-few-public-methods
 
@@ -32,8 +32,6 @@ class InconsistentWithDOIMetadataChecker:
     ) -> None:
         self.quality_model = quality_model
 
-        self.crossref_api = crossref_api.CrossrefAPI(url="")
-
     def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the inconsistent-with-doi-metadata checks"""
 
@@ -54,7 +52,7 @@ class InconsistentWithDOIMetadataChecker:
         record_copy = record.copy_prep_rec()
 
         try:
-            crossref_md = self.crossref_api.query_doi(doi=record_copy.data[Fields.DOI])
+            crossref_md = query_doi(doi=record_copy.data[Fields.DOI])
 
             for key in crossref_md.data.keys():
                 if key not in self._fields_to_check:

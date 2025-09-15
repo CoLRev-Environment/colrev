@@ -5,8 +5,8 @@ from __future__ import annotations
 import collections
 import logging
 import re
+import typing
 from sqlite3 import OperationalError
-from typing import Optional
 
 import requests
 from pydantic import Field
@@ -44,7 +44,7 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
@@ -63,8 +63,13 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
             colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
         )
 
+    # pylint: disable=unused-argument
     def prepare(
-        self, record: colrev.record.record_prep.PrepRecord
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
     ) -> colrev.record.record.Record:
         """Prepare the record by retrieving its DOI from the website (url) if available"""
 

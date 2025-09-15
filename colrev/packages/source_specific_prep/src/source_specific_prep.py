@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import typing
 from pathlib import Path
-from typing import Optional
 
 from pydantic import Field
 
@@ -18,8 +17,6 @@ from colrev.constants import Fields
 from colrev.package_manager.package_manager import PackageManager
 
 # pylint: disable=duplicate-code
-
-
 # pylint: disable=too-few-public-methods
 
 
@@ -37,13 +34,14 @@ class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = prep_operation.review_manager
         self.package_manager = PackageManager()
 
+    # pylint: disable=unused-argument
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,

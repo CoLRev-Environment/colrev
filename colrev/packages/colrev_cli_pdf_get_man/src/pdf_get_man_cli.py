@@ -307,7 +307,8 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
                 )
         else:
             self.logger.info(
-                "Retrieve PDFs manually and copy the files to the %s. Afterwards, use colrev pdf-get-man",
+                "Retrieve PDFs manually and copy the files to the %s."
+                + " Afterwards, use colrev pdf-get-man",
                 pdf_dir,
             )
 
