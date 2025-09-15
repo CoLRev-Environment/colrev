@@ -12,7 +12,7 @@ ci:
 
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
     -   id: trailing-whitespace
         exclude: bib$|txt$|ris$|enl$|xml$|extensions_index/
@@ -37,32 +37,32 @@ repos:
     hooks:
     -   id: autoflake
 -   repo: https://github.com/PyCQA/flake8
-    rev: 7.2.0
+    rev: 7.3.0
     hooks:
     -   id: flake8
         additional_dependencies: [flake8-typing-imports==1.12.0]
         args: ['--max-line-length=110', '--extend-ignore=E203,TYP006']
         exclude: "tests/data/package_init/"
 -   repo: https://github.com/asottile/reorder-python-imports
-    rev: v3.14.0
+    rev: v3.15.0
     hooks:
     -   id: reorder-python-imports
         args: [--py3-plus]
         exclude: "tests/data/package_init/search_source.py"
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.1
+    rev: v3.20.0
     hooks:
     -   id: pyupgrade
         args: [--py36-plus, --keep-runtime-typing]
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.15.0'
+    rev: 'v1.18.1'
     hooks:
     -   id: mypy
         args: [--disallow-untyped-defs, --disallow-incomplete-defs, --disallow-untyped-calls]
         additional_dependencies: [types-toml]
         exclude: "tests/data/package_init/"
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.11.6
+  rev: v0.13.0
   hooks:
     - id: ruff # runs faster than pylint
       args: [--fix, --exit-non-zero-on-fix]
