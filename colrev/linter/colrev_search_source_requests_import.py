@@ -56,7 +56,10 @@ class SearchSourceRequestsImportChecker(checkers.BaseChecker):
                 and base.attrname == "SearchSourcePackageBaseClass"
             ):
                 return True
-            if isinstance(base, nodes.Name) and base.name == "SearchSourcePackageBaseClass":
+            if (
+                isinstance(base, nodes.Name)
+                and base.name == "SearchSourcePackageBaseClass"
+            ):
                 return True
         return False
 
