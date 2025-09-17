@@ -1,36 +1,30 @@
-.. figure:: https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png
-   :width: 400
-   :align: center
-   :alt: Logo
+.. raw:: html
 
-Collaborative Literature Reviews
-========================================
+    <h1 style="display:none;">Collaborative Literature Reviews</h1>
 
-.. image:: https://zenodo.org/badge/363073613.svg
-   :target: https://zenodo.org/badge/latestdoi/363073613
+.. raw:: html
 
-.. image:: https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg
-   :target: https://github.com/CoLRev-Environment/colrev/releases/
+    <div style="text-align: center;">
+        <img src="https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png" alt="Logo" width="400"><br><br>
 
-.. image:: https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg
-   :target: https://github.com/CoLRev-Environment/colrev/releases/
+        <img src="https://zenodo.org/badge/363073613.svg" alt="Zenodo DOI"
+             onclick="window.open('https://zenodo.org/badge/latestdoi/363073613')">
+        <img src="https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg" alt="GitHub Release"
+             onclick="window.open('https://github.com/CoLRev-Environment/colrev/releases/')">
+        <img src="https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg" alt="License"
+             onclick="window.open('https://github.com/CoLRev-Environment/colrev/releases/')">
+        <img src="https://app.codacy.com/project/badge/Grade/bd4e44c6cda646e4b9e494c4c4d9487b" alt="Codacy Grade"
+             onclick="window.open('https://app.codacy.com/gh/CoLRev-Environment/colrev/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade')">
+        <img src="https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev" alt="Last commit">
+        <img src="https://static.pepy.tech/badge/colrev/month" alt="Monthly downloads"
+             onclick="window.open('https://pepy.tech/project/colrev')">
+        <img src="https://bestpractices.coreinfrastructure.org/projects/7148/badge" alt="CII Best Practices"
+             onclick="window.open('https://bestpractices.coreinfrastructure.org/projects/7148')">
+        <img src="https://img.shields.io/badge/all_contributors-32-green.svg?style=flat-square" alt="All Contributors"
+             onclick="window.open('#contributors')">
+    </div><br>
 
-.. image:: https://app.codacy.com/project/badge/Grade/bd4e44c6cda646e4b9e494c4c4d9487b
-   :target: https://app.codacy.com/gh/CoLRev-Environment/colrev/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
-
-.. image:: https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev
-
-.. image:: https://static.pepy.tech/badge/colrev/month
-   :target: https://pepy.tech/project/colrev
-
-.. image:: https://bestpractices.coreinfrastructure.org/projects/7148/badge
-   :target: https://bestpractices.coreinfrastructure.org/projects/7148
-
-.. image:: https://img.shields.io/badge/all_contributors-32-green.svg?style=flat-square
-   :target: #contributors
-
-
-CoLRev is an open-source environment for collaborative literature reviews. It integrates with differerent synthesis tools, takes care of the data, and facilitates Git-based collaboration.
+CoLRev is an open-source environment for collaborative literature reviews. It integrates with different synthesis tools, takes care of the data, and facilitates Git-based collaboration.
 
 To accomplish these goals, CoLRev advances the design of review technology at the intersection of methods, design, cognition, and community building.
 The following features stand out:
