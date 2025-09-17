@@ -18,8 +18,6 @@
              onclick="window.open('https://pepy.tech/project/colrev')">
         <img src="https://bestpractices.coreinfrastructure.org/projects/7148/badge" alt="CII Best Practices"
              onclick="window.open('https://bestpractices.coreinfrastructure.org/projects/7148')">
-        <img src="https://img.shields.io/badge/all_contributors-32-green.svg?style=flat-square" alt="All Contributors"
-             onclick="window.open('#contributors')">
     </div><br>
 
 ..
