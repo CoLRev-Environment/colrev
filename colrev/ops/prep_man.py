@@ -287,4 +287,4 @@ class PrepMan(colrev.process.operation.Operation):
             endpoint = prep_man_class(
                 prep_man_operation=self, settings=prep_man_package_endpoint
             )
-            records = endpoint.prepare_manual(records)  # type: ignore
+            records: dict = endpoint.prepare_manual(records)  # type: ignore

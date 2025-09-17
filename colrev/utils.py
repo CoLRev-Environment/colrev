@@ -107,7 +107,8 @@ def select_search_type(*, search_types: list, params: dict) -> SearchType:
 
 
 def get_project_home_dir(*, path_str: typing.Optional[str] = None) -> Path:
-    """Get the root directory of the CoLRev project (i.e., the directory containing the .git directory)"""
+    """Get the root directory of the CoLRev project
+    (i.e., the directory containing the .git directory)"""
     if path_str:
         original_dir = Path(path_str)
     else:

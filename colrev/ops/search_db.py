@@ -30,6 +30,7 @@ class _ReviewManagerStub:
         self.paths = _Paths(root)
 
 
+# pylint: disable=unused-argument
 def run_db_search(
     *,
     db_url: str,
@@ -121,7 +122,9 @@ def create_db_source(
         )
     logger.debug("Add new DB source: %s", filename)  # type: ignore
 
-    logger.info("- Save search results in %s", Colors.ORANGE + str(filename) + Colors.END)  # type: ignore
+    logger.info(  # type: ignore
+        "- Save search results in %s", Colors.ORANGE + str(filename) + Colors.END
+    )
     input("Press Enter to complete")
 
     git_repo = GitRepo(path=path)

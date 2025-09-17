@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import pprint
 import typing
 
 import requests
@@ -14,12 +15,38 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
-from colrev.constants import RecordState
 from colrev.packages.crossref.src import crossref_api
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-instance-attributes
+
+
+def _index_record(record: dict, vol_nr_dict: dict) -> None:
+    # pylint: disable=duplicate-code
+
+    if not record.get(Fields.YEAR, "NA").isdigit():
+        return
+
+    if Fields.JOURNAL not in record or Fields.VOLUME not in record:
+        return
+
+    if record[Fields.JOURNAL] not in vol_nr_dict:
+        vol_nr_dict[record[Fields.JOURNAL]] = {}
+
+    if record[Fields.VOLUME] not in vol_nr_dict[record[Fields.JOURNAL]]:
+        vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]] = {}
+
+    if Fields.NUMBER not in record:
+        vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]] = record[Fields.YEAR]
+    else:
+        if isinstance(vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]], dict):
+            vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]][
+                record[Fields.NUMBER]
+            ] = record[Fields.YEAR]
+        else:
+            # do not use inconsistent data (has/has no number)
+            del vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]]
 
 
 class YearVolIssPrep(base_classes.PrepPackageBaseClass):
@@ -52,49 +79,34 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
             verbose_mode=self.verbose_mode
         )
         self.vol_nr_dict = self._get_vol_nr_dict()
+
+        if self.verbose_mode:
+            pprint.pprint(self.vol_nr_dict)
+
         self.quality_model = self.review_manager.get_qm()
 
     def _get_vol_nr_dict(self) -> dict:
         vol_nr_dict: dict = {}
         if not hasattr(self.review_manager, "dataset"):
             return vol_nr_dict
+
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():
-            # pylint: disable=duplicate-code
-            if record[Fields.STATUS] not in RecordState.get_post_x_states(
-                state=RecordState.md_processed
-            ):
-                continue
-            if not record.get(Fields.YEAR, "NA").isdigit():
-                continue
+            _index_record(record, vol_nr_dict)
 
-            if Fields.JOURNAL not in record or Fields.VOLUME not in record:
-                continue
+        for source in self.review_manager.settings.sources:
+            records = colrev.loader.load_utils.load(source.search_results_path)
+            for record in records.values():
+                _index_record(record, vol_nr_dict)
 
-            if record[Fields.JOURNAL] not in vol_nr_dict:
-                vol_nr_dict[record[Fields.JOURNAL]] = {}
-
-            if record[Fields.VOLUME] not in vol_nr_dict[record[Fields.JOURNAL]]:
-                vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]] = {}
-
-            if Fields.NUMBER not in record:
-                vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]] = record[
-                    Fields.YEAR
-                ]
-            else:
-                if isinstance(
-                    vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]], dict
-                ):
-                    vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]][
-                        record[Fields.NUMBER]
-                    ] = record[Fields.YEAR]
-                else:
-                    # do not use inconsistent data (has/has no number)
-                    del vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]]
+        for _, mapping_yvn in vol_nr_dict.items():
+            mapping_yvn.pop("UNKNOWN", None)
 
         return vol_nr_dict
 
-    def _get_year_from_toc(self, *, record: colrev.record.record.Record) -> None:
+    def _get_year_from_local_index_toc(
+        self, *, record: colrev.record.record.Record
+    ) -> None:
         # TBD: maybe extract the following three lines as a separate script...
         try:
             year = self.local_index.get_year_from_toc(record.get_data())
@@ -212,20 +224,17 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
     ) -> colrev.record.record.Record:
         """Prepare a record based on year-volume-issue dependency"""
 
-        if (
-            record.data.get(Fields.YEAR, "NA").isdigit()
-            or record.masterdata_is_curated()
-        ):
+        if record.data.get(Fields.YEAR, "NA").isdigit():
             return record
 
-        self._get_year_from_toc(record=record)
+        self._get_year_from_local_index_toc(record=record)
 
-        if Fields.YEAR in record.data:
+        if record.data.get(Fields.YEAR, "UNKNOWN") != "UNKNOWN":
             return record
 
         self._get_year_from_vol_nr_dict(record=record)
 
-        if Fields.YEAR in record.data:
+        if record.data.get(Fields.YEAR, "UNKNOWN") != "UNKNOWN":
             return record
 
         self._get_year_from_crossref(record=record)

@@ -123,7 +123,7 @@ class Dataset:
         self,
         *,
         header_only: bool = False,
-    ) -> dict:
+    ) -> dict[str, dict[str, typing.Any]]:
         """Load the records
 
         header_only:

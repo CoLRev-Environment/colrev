@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+import typing
 from glob import glob
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
@@ -346,7 +347,7 @@ class PDFGet(colrev.process.operation.Operation):
     def check_existing_unlinked_pdfs(
         self,
         records: dict,
-    ) -> dict:
+    ) -> dict[str, dict[str, typing.Any]]:
         """Check for PDFs that are in the pdfs directory but not linked in the record file"""
 
         linked_pdfs = [
@@ -578,7 +579,9 @@ class PDFGet(colrev.process.operation.Operation):
         self.review_manager.logger.info(retrieved_string)
         self.review_manager.logger.info(not_retrieved_string)
 
-    def _set_status_if_pdf_linked(self, records: dict) -> dict:
+    def _set_status_if_pdf_linked(
+        self, records: dict
+    ) -> dict[str, dict[str, typing.Any]]:
         for record_dict in records.values():
             if record_dict[Fields.STATUS] in [
                 RecordState.rev_prescreen_included,

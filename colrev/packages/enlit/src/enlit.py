@@ -74,7 +74,9 @@ def _extract_references_from_records(
     return df_all_references
 
 
-def _load_included_records(review_manager: ReviewManager) -> pd.DataFrame:
+def _load_included_records(
+    review_manager: ReviewManager,
+) -> dict:
     colrev.ops.check.CheckOperation(review_manager)
     records = review_manager.dataset.load_records_dict()
 
@@ -102,7 +104,7 @@ def main() -> None:
     review_manager = ReviewManager()
     review_manager.logger.info("Start ENLIT")
 
-    records = _load_included_records(review_manager=review_manager)
+    records: dict = _load_included_records(review_manager=review_manager)
 
     # TODO : create a generic extract_citation_network() method in tei-utils?
     df_all_references = _extract_references_from_records(

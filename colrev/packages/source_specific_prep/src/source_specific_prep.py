@@ -50,7 +50,6 @@ class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
         ] = None,
     ) -> colrev.record.record.Record:
         """Prepare the record by applying source-specific fixes"""
-
         # Note : we take the first origin (ie., the source-specific prep should
         # be one of the first in the prep-list)
         origin_source = record.data[Fields.ORIGIN][0].split("/")[0]
@@ -58,7 +57,7 @@ class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
         sources = [
             s
             for s in self.review_manager.settings.sources
-            if s.search_history_path == Path("data/search") / Path(origin_source)
+            if s.search_results_path == Path("data/search") / Path(origin_source)
         ]
 
         for source in sources:
@@ -73,7 +72,7 @@ class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
                 endpoint = search_source_class(search_file=source)
 
                 if callable(endpoint.prepare):
-                    record = endpoint.prepare(record, source)
+                    record = endpoint.prepare(record)  # source
                 else:
                     print(f"error: {source.platform}")
             except colrev_exceptions.MissingDependencyError as exc:

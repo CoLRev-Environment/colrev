@@ -105,20 +105,20 @@ class PrepDebug(colrev.ops.prep.Prep):
     # overrides _load_prep_data
     def _load_prep_data(self) -> dict:
 
-        records = []
+        records_list = []
         original_records = list(
             self.review_manager.dataset.read_next_record(
                 conditions=[{Fields.ID: ID} for ID in self.debug_ids]
             )
         )
-        records = self._retrieve_records_from_history(original_records)
-        if len(records) == 0:
+        records_list = self._retrieve_records_from_history(original_records)
+        if len(records_list) == 0:
             prep_data = {"nr_tasks": 0, "PAD": 0, "items": []}
         else:
             prep_data = {
                 "nr_tasks": len(self.debug_ids),
                 "PAD": len(self.debug_ids),
-                "items": records,
+                "items": records_list,
             }
         return prep_data
 

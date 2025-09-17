@@ -154,14 +154,14 @@ class Validate(colrev.process.operation.Operation):
             records=records, origin_records=origin_records
         )
 
-    def _export_merge_candidates_file(self, records: list[dict]) -> None:
+    def _export_merge_candidates_file(self, records_list: list[dict]) -> None:
         merge_candidates_file = Path("data/dedupe/merge_candidates_file.txt")
         merge_candidates_file.parent.mkdir(exist_ok=True, parents=True)
 
         with open(merge_candidates_file, "w", encoding="utf-8") as file:
-            for ref_rec_dict in tqdm(records):
+            for ref_rec_dict in tqdm(records_list):
                 ref_rec = colrev.record.record.Record(ref_rec_dict)
-                for comp_rec_dict in reversed(records):
+                for comp_rec_dict in reversed(records_list):
                     # Note : due to symmetry, we only need one part of the matrix
                     if ref_rec_dict[Fields.ID] == comp_rec_dict[Fields.ID]:
                         break
@@ -210,20 +210,20 @@ class Validate(colrev.process.operation.Operation):
 
         #     return gid_conflict
 
-        records = self._load_changed_records(commit_sha=commit_sha)
+        records_list = self._load_changed_records(commit_sha=commit_sha)
 
         prior_records_dict = self._load_prior_records_dict(commit_sha=commit_sha)
         # Note : the if-statement avoids time-consuming procedures when the
         # origin-sets have not changed (no duplicates merged)
         if not self._deduplicated_records(
-            records=records, prior_records_dict=prior_records_dict
+            records_list=records_list, prior_records_dict=prior_records_dict
         ):
             report["dedupe"] = []
             return
 
         change_diff = []
         merged_records = False
-        for record in records:
+        for record in records_list:
             if "changed_in_target_commit" not in record:
                 continue
             del record["changed_in_target_commit"]
@@ -269,7 +269,7 @@ class Validate(colrev.process.operation.Operation):
             else:
                 self.review_manager.logger.info("No merged records")
 
-        self._export_merge_candidates_file(records)
+        self._export_merge_candidates_file(records_list)
 
         # sort according to similarity
         change_diff.sort(key=lambda x: x["change_score"], reverse=True)
@@ -618,9 +618,11 @@ class Validate(colrev.process.operation.Operation):
         return commit
 
     def _deduplicated_records(
-        self, *, records: list[dict], prior_records_dict: dict
+        self, *, records_list: list[dict], prior_records_dict: dict
     ) -> bool:
-        return {",".join(sorted(x)) for x in [r[Fields.ORIGIN] for r in records]} != {
+        return {
+            ",".join(sorted(x)) for x in [r[Fields.ORIGIN] for r in records_list]
+        } != {
             ",".join(sorted(x))
             for x in [r[Fields.ORIGIN] for r in prior_records_dict.values()]
         }

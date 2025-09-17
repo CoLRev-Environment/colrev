@@ -86,6 +86,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         return result
 
+    # pylint: disable=too-many-locals
     @classmethod
     def add_endpoint(
         cls,

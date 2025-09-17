@@ -69,6 +69,7 @@ class ExtendedSearchFile(search_query.SearchFile):
         )
         return base_dict
 
+    # pylint: disable=unused-argument
     def model_dump(self, **kwargs) -> dict:  # type: ignore
         """Dump the search file with search_results_path and search_history_path."""
         return {

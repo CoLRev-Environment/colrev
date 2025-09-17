@@ -26,6 +26,7 @@ from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import FieldValues
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -62,22 +63,11 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
 
-        # TODO / TBD: replace review_manager?
-        import colrev.review_manager
-
-        self.review_manager = colrev.review_manager.ReviewManager()
-
         # TODO : files_dir: subdir_pattern etc. should be prep_parameters
         self.search_source = search_file
 
-        if not utils.in_ci_environment():
-            self.pdf_preparation_operation = self.review_manager.get_pdf_prep_operation(
-                notify_state_transition_operation=False
-            )
-
-        self.pdfs_path = self.review_manager.path / Path(
-            self.search_source.search_parameters["scope"]["path"]
-        )
+        # self.review_manager.path /
+        self.pdfs_path = Path(search_file.search_parameters["scope"]["path"])
 
         self.subdir_pattern: re.Pattern = re.compile("")
         self.r_subdir_pattern: re.Pattern = re.compile("")
@@ -691,6 +681,11 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     def search(self, rerun: bool) -> None:
         """Run a search of a Files directory"""
 
+        # TODO / TBD: replace review_manager?
+        import colrev.review_manager
+
+        self.review_manager = colrev.review_manager.ReviewManager()
+
         self.rerun = rerun
         self._validate_source()
 
@@ -886,6 +881,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             return record
 
         if Path(record.data[Fields.FILE]).suffix == ".pdf":
+
             record.format_if_mostly_upper(Fields.TITLE, case="sentence")
             record.format_if_mostly_upper(Fields.JOURNAL, case=Fields.TITLE)
             record.format_if_mostly_upper(Fields.BOOKTITLE, case=Fields.TITLE)
@@ -910,8 +906,13 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             ):
                 record.remove_field(key=Fields.TITLE, source="files_dir_prepare")
                 record.set_status(RecordState.md_needs_manual_preparation)
+
             self._fix_title_suffix(record=record)
             self._fix_special_chars(record=record)
             self._fix_special_outlets(record=record)
+
+            if record.data.get(Fields.TITLE, "").startswith("Microsoft Word"):
+                record.data[Fields.TITLE] = FieldValues.UNKNOWN
+                record.set_status(RecordState.md_needs_manual_preparation)
 
         return record
