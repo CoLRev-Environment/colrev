@@ -90,9 +90,7 @@ class ScopusAPI:
         """Retrieve authors (names only) from Crossref as a fallback."""
 
         url = self._CROSSREF_WORKS_URL + urllib.parse.quote(doi)
-        response = requests.get(
-            url, headers=self._crossref_headers(), timeout=30
-        )
+        response = requests.get(url, headers=self._crossref_headers(), timeout=30)
         response.raise_for_status()
         message = response.json().get("message", {})
         authors = message.get("author", []) or []
@@ -189,9 +187,7 @@ class ScopusAPI:
         )
 
         if response.status_code != 200:
-            self.logger.info(
-                "API Error: %s — %s", response.status_code, response.text
-            )
+            self.logger.info("API Error: %s — %s", response.status_code, response.text)
 
         data = response.json()
         entries = data.get("search-results", {}).get("entry", []) or []

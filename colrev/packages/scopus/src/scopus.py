@@ -117,7 +117,6 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
             search_source.search_parameters = {"query": search_source.search_string}
             search_source.search_string = ""
 
-
         elif search_type == SearchType.DB:
             search_source = create_db_source(
                 path=path,
