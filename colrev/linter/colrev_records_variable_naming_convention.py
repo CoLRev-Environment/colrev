@@ -15,6 +15,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 # pylint: disable=broad-exception-caught
 
+
 class RecordsVariableNamingConventionChecker(checkers.BaseChecker):
     """RecordsVariableNamingConvention + simple type rules"""
 
