@@ -1,11 +1,9 @@
 .. raw:: html
 
-    <h1 style="display:none;">Collaborative Literature Reviews</h1>
-
-.. raw:: html
-
     <div style="text-align: center;">
         <img src="https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png" alt="Logo" width="400"><br><br>
+
+        <h1>Collaborative Literature Reviews</h1>
 
         <img src="https://zenodo.org/badge/363073613.svg" alt="Zenodo DOI"
              onclick="window.open('https://zenodo.org/badge/latestdoi/363073613')">
@@ -24,8 +22,9 @@
              onclick="window.open('#contributors')">
     </div><br>
 
-CoLRev is an open-source environment for collaborative literature reviews. It integrates with different synthesis tools, takes care of the data, and facilitates Git-based collaboration.
+..
 
+CoLRev is an open-source environment for collaborative literature reviews. It integrates with different synthesis tools, takes care of the data, and facilitates Git-based collaboration.
 To accomplish these goals, CoLRev advances the design of review technology at the intersection of methods, design, cognition, and community building.
 The following features stand out:
 
