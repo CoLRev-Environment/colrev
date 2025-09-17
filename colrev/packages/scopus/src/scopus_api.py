@@ -47,6 +47,7 @@ class ScopusAPI:
 
     @staticmethod
     def has_api_key() -> bool:
+        """Check if the SCOPUS_API_KEY environment variable is set."""
         return bool(os.getenv("SCOPUS_API_KEY"))
 
     def _scopus_abstract_authors_by_eid(
@@ -172,6 +173,7 @@ class ScopusAPI:
     def iter_records(
         self, *, query: str
     ) -> typing.Iterator[colrev.record.record_prep.PrepRecord]:
+        """Iterate over records from the Scopus Search API for the given query."""
         params = {
             "query": query,
             "count": 10,
