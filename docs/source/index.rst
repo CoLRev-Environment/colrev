@@ -3,21 +3,28 @@
     <div style="text-align: center;">
         <img src="https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png" alt="Logo" width="400"><br><br>
 
-        <h1>Collaborative Literature Reviews</h1>
+    <h1>Collaborative Literature Reviews</h1>
+    
+    <a href="https://zenodo.org/badge/latestdoi/363073613" target="_blank" rel="noopener noreferrer">
+      <img src="https://zenodo.org/badge/363073613.svg" alt="Zenodo DOI">
+    </a>
+    <a href="https://github.com/CoLRev-Environment/colrev/releases/" target="_blank" rel="noopener noreferrer">
+      <img src="https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg" alt="GitHub Release">
+    </a>
+    <a href="https://github.com/CoLRev-Environment/colrev/releases/" target="_blank" rel="noopener noreferrer">
+      <img src="https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg" alt="License">
+    </a>
+    <a href="https://app.codacy.com/gh/CoLRev-Environment/colrev/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade" target="_blank" rel="noopener noreferrer">
+      <img src="https://app.codacy.com/project/badge/Grade/bd4e44c6cda646e4b9e494c4c4d9487b" alt="Codacy Grade">
+    </a>
+    <img src="https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev" alt="Last commit">
+    <a href="https://pepy.tech/project/colrev" target="_blank" rel="noopener noreferrer">
+      <img src="https://static.pepy.tech/badge/colrev/month" alt="Monthly downloads">
+    </a>
+    <a href="https://bestpractices.coreinfrastructure.org/projects/7148" target="_blank" rel="noopener noreferrer">
+      <img src="https://bestpractices.coreinfrastructure.org/projects/7148/badge" alt="CII Best Practices">
+    </a>
 
-        <img src="https://zenodo.org/badge/363073613.svg" alt="Zenodo DOI"
-             onclick="window.open('https://zenodo.org/badge/latestdoi/363073613')">
-        <img src="https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg" alt="GitHub Release"
-             onclick="window.open('https://github.com/CoLRev-Environment/colrev/releases/')">
-        <img src="https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg" alt="License"
-             onclick="window.open('https://github.com/CoLRev-Environment/colrev/releases/')">
-        <img src="https://app.codacy.com/project/badge/Grade/bd4e44c6cda646e4b9e494c4c4d9487b" alt="Codacy Grade"
-             onclick="window.open('https://app.codacy.com/gh/CoLRev-Environment/colrev/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade')">
-        <img src="https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev" alt="Last commit">
-        <img src="https://static.pepy.tech/badge/colrev/month" alt="Monthly downloads"
-             onclick="window.open('https://pepy.tech/project/colrev')">
-        <img src="https://bestpractices.coreinfrastructure.org/projects/7148/badge" alt="CII Best Practices"
-             onclick="window.open('https://bestpractices.coreinfrastructure.org/projects/7148')">
     </div><br>
 
 ..
