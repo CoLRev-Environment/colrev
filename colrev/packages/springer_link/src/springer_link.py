@@ -11,7 +11,6 @@ from typing import Optional
 
 import inquirer
 import pandas as pd
-import requests
 from pydantic import Field
 
 import colrev.env.environment_manager
@@ -28,6 +27,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
+from colrev.packages.springer_link.src import springer_link_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -64,6 +64,9 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.search_source = search_file
 
         self.language_service = colrev.env.language_service.LanguageService()
+        self.api = springer_link_api.SpringerLinkAPI(
+            session=colrev.utils.get_cached_session()
+        )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -302,14 +305,14 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
             full_url = self._build_api_search_url(
                 query=query, api_key=api_key, start=start
             )
-            response = requests.get(full_url, timeout=10)
-            if response.status_code != 200:
+            try:
+                data = self.api.get_json(full_url, timeout=10)
+            except springer_link_api.SpringerLinkAPIError as exc:
                 print(
-                    f"Error - API search failed for the following reason: {response.status_code}"
+                    "Error - API search failed for the following reason:"
+                    f" {exc}"
                 )
                 return
-
-            data = response.json()
 
             for record in data.get("records", []):
                 yield self._create_record(record)
@@ -503,9 +506,12 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         full_url = self._build_api_search_url(
             query="doi:10.1007/978-3-319-07410-8_4", api_key=answer
         )
-        response = requests.get(full_url, timeout=10)
-        if response.status_code != 200:
-            raise inquirer.errors.ValidationError("", reason="Error: Invalid API key.")
+        try:
+            self.api.validate_api_key(full_url, timeout=10)
+        except springer_link_api.SpringerLinkAPIError as exc:
+            raise inquirer.errors.ValidationError(
+                "", reason="Error: Invalid API key."
+            ) from exc
         print(
             f"\n{Colors.GREEN}Successfully authenticated with Springer Link API{Colors.END}"
         )

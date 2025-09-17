@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Optional
 
 import pymupdf
-import requests
 from pydantic import Field
 
 import colrev.env.tei_parser
@@ -271,8 +270,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
         except (
             FileNotFoundError,
-            requests.exceptions.ReadTimeout,
-            requests.exceptions.ConnectionError,
             colrev_exceptions.TEITimeoutException,
         ):
             return record_dict

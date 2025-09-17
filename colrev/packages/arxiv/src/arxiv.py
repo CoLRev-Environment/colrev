@@ -10,7 +10,6 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import feedparser
-import requests
 from pydantic import Field
 
 import colrev.env.environment_manager
@@ -26,6 +25,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.arxiv.src import record_transformer
+from colrev.packages.arxiv.src import arxiv_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -60,6 +60,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         _, self.email = (
             colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
         )
+        self.api = arxiv_api.ArxivAPI()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -139,13 +140,8 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         """Check status (availability) of the ArXiv API"""
 
         try:
-            ret = requests.get(
-                "https://export.arxiv.org/api/"
-                + "query?search_query=all:electron&start=0&max_results=1",
-                timeout=30,
-            )
-            ret.raise_for_status()
-        except requests.exceptions.RequestException as exc:
+            self.api.check_availability(timeout=30)
+        except arxiv_api.ArxivAPIError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 self._availability_exception_message
             ) from exc

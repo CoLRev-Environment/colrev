@@ -10,7 +10,6 @@ from typing import Optional
 
 import inquirer
 import pandas as pd
-import requests
 from bib_dedupe.bib_dedupe import block
 from bib_dedupe.bib_dedupe import cluster
 from bib_dedupe.bib_dedupe import match
@@ -34,6 +33,7 @@ from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.crossref.src.crossref_api import query_doi
+from colrev.packages.pdf_backward_search.src import pdf_backward_search_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -72,6 +72,9 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
             search_file.search_parameters["min_intext_citations"] = 3
 
         self.search_source = search_file
+        self.api = pdf_backward_search_api.PDFBackwardSearchAPI(
+            session=colrev.utils.get_cached_session()
+        )
 
     @classmethod
     def get_default_source(cls) -> colrev.search_file.ExtendedSearchFile:
@@ -147,7 +150,14 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         url = f"{self._api_url}{record_dict['doi']}"
         # headers = {"authorization": "YOUR-OPENCITATIONS-ACCESS-TOKEN"}
         headers: typing.Dict[str, str] = {}
-        ret = requests.get(url, headers=headers, timeout=300)
+        try:
+            ret = self.api.get(url, timeout=300)
+        except pdf_backward_search_api.PDFBackwardSearchAPIError:
+            self.logger.info(
+                "Error retrieving citations from Opencitations for %s",
+                record_dict[Fields.ID],
+            )
+            return references
         try:
             items = json.loads(ret.text)
 
@@ -167,7 +177,8 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
                     pass
         except json.decoder.JSONDecodeError:
             self.logger.info(
-                f"Error retrieving citations from Opencitations for {record_dict['ID']}"
+                "Error retrieving citations from Opencitations for %s",
+                record_dict[Fields.ID],
             )
 
         return references

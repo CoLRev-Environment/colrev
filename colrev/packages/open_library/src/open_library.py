@@ -8,7 +8,6 @@ from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
 
-import requests
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
@@ -18,6 +17,7 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
 import colrev.utils
+from colrev.packages.open_library.src import open_library_api
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -60,6 +60,10 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self.open_library_lock = Lock()
         self.origin_prefix = self.search_source.get_origin_prefix()
+        self.api = open_library_api.OpenLibraryAPI(
+            session=colrev.utils.get_cached_session(),
+            headers=self.requests_headers,
+        )
 
     def check_availability(self) -> None:
         """Check the status (availability) of the OpenLibrary API"""
@@ -74,18 +78,14 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         }
         try:
             url = f"https://openlibrary.org/isbn/{test_rec['isbn']}.json"
-            ret = requests.get(
-                url,
-                headers=self.requests_headers,
-                timeout=30,
-            )
-            if ret.status_code != 200:
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    self._availability_exception_message
-                )
-        except requests.exceptions.RequestException as exc:
+            self.api.get(url, timeout=30)
+        except open_library_api.OpenLibraryAPIError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 self._availability_exception_message
+            ) from exc
+        except json.decoder.JSONDecodeError as exc:  # pragma: no cover
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    self._availability_exception_message
             ) from exc
 
     # pylint: disable=colrev-missed-constant-usage
@@ -129,19 +129,11 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.record.Record,
     ) -> colrev.record.record.Record:
-        session = colrev.utils.get_cached_session()
-
         url = "NA"
         if Fields.ISBN in record.data:
             isbn = record.data[Fields.ISBN].replace("-", "").replace(" ", "")
             url = f"https://openlibrary.org/isbn/{isbn}.json"
-            ret = session.request(
-                "GET",
-                url,
-                headers=self.requests_headers,
-                timeout=prep_operation.timeout,
-            )
-            ret.raise_for_status()
+            ret = self.api.get(url, timeout=prep_operation.timeout)
             # self.logger.debug(url)
             if '"error": "notfound"' in ret.text:
                 record.remove_field(key=Fields.ISBN)
@@ -182,13 +174,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
             if ":" in title:
                 title = title[: title.find(":")]  # To catch sub-titles
             url = url + "&title=" + title.replace(" ", "+")
-            ret = session.request(
-                "GET",
-                url,
-                headers=self.requests_headers,
-                timeout=prep_operation.timeout,
-            )
-            ret.raise_for_status()
+            ret = self.api.get(url, timeout=prep_operation.timeout)
             # self.logger.debug(url)
 
             # if we have an exact match, we don't need to check the similarity

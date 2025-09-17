@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
-import requests
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
@@ -27,6 +26,7 @@ from colrev.ops.search_api_feed import create_api_source
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
 from colrev.packages.ais_library.src import ais_load_utils
+from colrev.packages.ais_library.src import aisel_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -79,6 +79,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.search_source = search_file
+        self.api = aisel_api.AISeLAPI()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -260,8 +261,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         )
         query_string = f"{query_string}&q={final_q}"
 
-        response = requests.get(query_string, timeout=300)
-        response.raise_for_status()
+        response = self.api.get(query_string, timeout=300)
 
         # Note: the following writes the enl to the feed file (bib).
         # This file is replaced by ais_feed.save()
@@ -302,10 +302,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
-        except (
-            requests.exceptions.JSONDecodeError,
-            requests.exceptions.HTTPError,
-        ) as exc:
+        except aisel_api.AISeLAPIError as exc:
             # watch github issue:
             # https://github.com/fabiobatalha/crossrefapi/issues/46
             if "504 Gateway Time-out" in str(exc):

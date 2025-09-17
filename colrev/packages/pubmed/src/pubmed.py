@@ -10,7 +10,6 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import pandas as pd
-import requests
 from pydantic import Field
 
 import colrev.env.environment_manager
@@ -201,7 +200,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message
                 )
-        except (requests.exceptions.RequestException, IndexError, KeyError) as exc:
+        except (pubmed_api.PubmedAPIError, IndexError, KeyError) as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 self._availability_exception_message
             ) from exc
@@ -274,7 +273,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 return record
 
         except (
-            requests.exceptions.RequestException,
+            pubmed_api.PubmedAPIError,
             OSError,
             IndexError,
             colrev_exceptions.RecordNotFoundInPrepSourceException,

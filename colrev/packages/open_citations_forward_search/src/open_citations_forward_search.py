@@ -8,7 +8,6 @@ import typing
 from pathlib import Path
 from typing import Optional
 
-import requests
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
@@ -21,6 +20,7 @@ from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.crossref.src.crossref_api import query_doi
+from colrev.packages.open_citations_forward_search.src import open_citations_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -53,6 +53,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         import colrev.review_manager
 
         self.review_manager = colrev.review_manager.ReviewManager()
+        self.api = open_citations_api.OpenCitationsAPI()
 
     @classmethod
     def get_default_source(cls) -> colrev.search_file.ExtendedSearchFile:
@@ -118,7 +119,14 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         # headers = {"authorization": "YOUR-OPENCITATIONS-ACCESS-TOKEN"}
         headers: typing.Dict[str, str] = {}
 
-        ret = requests.get(url, headers=headers, timeout=300)
+        try:
+            ret = self.api.get(url, timeout=300)
+        except open_citations_api.OpenCitationsAPIError:
+            self.logger.info(
+                "Error retrieving citations from Opencitations for %s",
+                record_dict[Fields.ID],
+            )
+            return forward_citations
         try:
             items = json.loads(ret.text)
 
@@ -130,7 +138,8 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
                 forward_citations.append(retrieved_record.data)
         except json.decoder.JSONDecodeError:
             self.logger.info(
-                f"Error retrieving citations from Opencitations for {record_dict['ID']}"
+                "Error retrieving citations from Opencitations for %s",
+                record_dict[Fields.ID],
             )
 
         return forward_citations

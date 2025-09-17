@@ -138,7 +138,10 @@ class TEIParser:
 
                 tree = etree.ElementTree(self.root)
                 tree.write(str(self.tei_path), encoding="utf-8")
-        except requests.exceptions.ConnectionError as exc:  # pragma: no cover
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout,
+        ) as exc:  # pragma: no cover
             print(exc)
             print(str(self.pdf_path))
             raise colrev_exceptions.TEITimeoutException() from exc

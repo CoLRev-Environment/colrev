@@ -8,9 +8,7 @@ from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
 
-import requests
 from pydantic import Field
-from semanticscholar import SemanticScholar
 from semanticscholar import SemanticScholarException
 from semanticscholar.PaginatedResults import PaginatedResults
 
@@ -25,6 +23,7 @@ from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.semanticscholar.src import record_transformer
+from colrev.packages.semanticscholar.src import semanticscholar_api
 from colrev.packages.semanticscholar.src.semanticscholar_ui import SemanticScholarUI
 
 if typing.TYPE_CHECKING:  # pragma: no cover
@@ -40,8 +39,8 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Semantic Scholar API Search Source"""
 
     # Provide objects with classes
-    _s2: SemanticScholar
     _search_return: PaginatedResults
+    api: semanticscholar_api.SemanticScholarAPI
 
     endpoint = "colrev.semanticscholar"
     ci_supported: bool = Field(default=True)
@@ -86,6 +85,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
                 comment="",
             )
             self.s2_lock = Lock()
+        self.api = semanticscholar_api.SemanticScholarAPI()
 
     def check_availability(self) -> None:
         """Check the availability of the Semantic Scholar API"""
@@ -100,7 +100,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "/b639a05d936dfd519fe4098edc95b5680b7ec7ec",
             }
 
-            returned_record = self._s2.get_paper(paper_id=test_doi)
+            returned_record = self.api.get_paper(paper_id=test_doi)
 
             if 0 != len(returned_record):
                 assert returned_record[Fields.TITLE] == test_record[Fields.TITLE]
@@ -109,7 +109,10 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message
                 )
-        except (requests.exceptions.RequestException, IndexError) as exc:
+        except (
+            semanticscholar_api.SemanticScholarAPIError,
+            IndexError,
+        ) as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 self._availability_exception_message
             ) from exc
@@ -154,7 +157,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
                 open_access_pdf = value
 
         try:
-            record_return = self._s2.search_paper(
+            record_return = self.api.search_paper(
                 query=query,
                 year=year,
                 publication_types=None,
@@ -165,6 +168,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         except (
             SemanticScholarException.SemanticScholarException,
             SemanticScholarException.BadQueryParametersException,
+            semanticscholar_api.SemanticScholarAPIError,
         ) as exc:
             self.logger.error(
                 "Error: Something went wrong during the search with the Python Client."
@@ -190,10 +194,11 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if "paper_ids" in params:
             try:
-                record_return = self._s2.get_papers(params.get("paper_ids"))
+                record_return = self.api.get_papers(params.get("paper_ids"))
             except (
                 SemanticScholarException.SemanticScholarException,
                 SemanticScholarException.BadQueryParametersException,
+                semanticscholar_api.SemanticScholarAPIError,
             ) as exc:
                 self.logger.error(
                     "Error: Something went wrong during the search with the Python Client."
@@ -217,10 +222,11 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if "author_ids" in params:
             try:
-                record_return = self._s2.get_authors(params.get("author_ids"))
+                record_return = self.api.get_authors(params.get("author_ids"))
             except (
                 SemanticScholarException.SemanticScholarException,
                 SemanticScholarException.BadQueryParametersException,
+                semanticscholar_api.SemanticScholarAPIError,
             ) as exc:
                 self.logger.error(
                     "Error: Something went wrong during the search with the Python Client."
@@ -269,9 +275,9 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         # get the api key
         s2_api_key = self._get_api_key()
         if s2_api_key:
-            self._s2 = SemanticScholar(api_key=s2_api_key)
+            self.api = semanticscholar_api.SemanticScholarAPI(api_key=s2_api_key)
         else:
-            self._s2 = SemanticScholar()
+            self.api = semanticscholar_api.SemanticScholarAPI()
 
         # load file because the object is not shared between processes
         s2_feed = colrev.ops.search_api_feed.SearchAPIFeed(
@@ -301,6 +307,12 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
             print(exc)
             raise colrev_exceptions.ServiceNotAvailableException("No valid API key.")
+        except semanticscholar_api.SemanticScholarAPIError as exc:
+            self.logger.error(
+                "Error: Something went wrong when communicating with Semantic Scholar."
+            )
+            print(exc)
+            raise colrev_exceptions.ServiceNotAvailableException(exc)
 
         try:
             for item in _search_return:

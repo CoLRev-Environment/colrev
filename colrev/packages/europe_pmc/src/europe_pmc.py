@@ -12,7 +12,6 @@ from typing import Optional
 from urllib.parse import quote
 from urllib.parse import urlparse
 
-import requests
 from pydantic import BaseModel
 from pydantic import Field
 from rapidfuzz import fuzz
@@ -153,7 +152,10 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if most_similar_only and counter > 5:
                     break
 
-        except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
+        except (
+            europe_pmc_api.EuropePMCAPIError,
+            json.decoder.JSONDecodeError,
+        ):
             return []
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(

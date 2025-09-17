@@ -568,7 +568,9 @@ def query_doi(*, doi: str) -> colrev.record.record_prep.PrepRecord:
         retrieved_record = record_transformer.json_to_record(item=crossref_query_return)
         return retrieved_record
 
-    except (requests.exceptions.RequestException, StopIteration) as exc:
+    except requests.exceptions.RequestException as exc:  # pragma: no cover
+        raise CrossrefAPIError from exc
+    except StopIteration as exc:  # pragma: no cover
         raise colrev_exceptions.RecordNotFoundInPrepSourceException(
             msg="Record not found in crossref (based on doi)"
         ) from exc

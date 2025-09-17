@@ -21,6 +21,10 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
+class PubmedAPIError(Exception):
+    """Exception raised for PubMed API errors."""
+
+
 class PubmedAPI:
     """Connector for the Pubmed API"""
 
@@ -186,9 +190,7 @@ class PubmedAPI:
                 retrieved_record = colrev.record.record.Record(retrieved_record_dict)
                 return retrieved_record
         except requests.exceptions.RequestException as exc:
-            raise colrev_exceptions.SearchSourceException(
-                "Pubmed record not found"
-            ) from exc
+            raise PubmedAPIError from exc
         except XMLSyntaxError as exc:
             raise colrev_exceptions.RecordNotParsableException(
                 "Error parsing xml"
@@ -203,8 +205,11 @@ class PubmedAPI:
     def _get_pubmed_ids(self, query: str, retstart: int, page: int) -> dict:
 
         url = query + f"&retstart={retstart}&page={page}"
-        ret = self.session.request("GET", url, headers=self.headers, timeout=30)
-        ret.raise_for_status()
+        try:
+            ret = self.session.request("GET", url, headers=self.headers, timeout=30)
+            ret.raise_for_status()
+        except requests.exceptions.RequestException as exc:  # pragma: no cover
+            raise PubmedAPIError from exc
         # if ret.status_code != 200:
         #     # review_manager.logger.debug(
         #     #     f"crossref_query failed with status {ret.status_code}"
