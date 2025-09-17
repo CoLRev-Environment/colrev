@@ -13,6 +13,7 @@ from pylint.checkers.utils import only_required_for_messages
 if typing.TYPE_CHECKING:  # pragma: no cover
     from pylint.lint import PyLinter
 
+# pylint: disable=broad-exception-caught
 
 class RecordsVariableNamingConventionChecker(checkers.BaseChecker):
     """RecordsVariableNamingConvention + simple type rules"""
@@ -37,6 +38,7 @@ class RecordsVariableNamingConventionChecker(checkers.BaseChecker):
         ),
     }
 
+    # pylint: disable=too-many-branches
     @only_required_for_messages(
         "colrev-records-variable-naming-convention",
         "colrev-record-cannot-be-dict",

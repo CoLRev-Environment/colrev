@@ -9,7 +9,6 @@ from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
 
-import requests
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -467,8 +466,6 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
             except (colrev_exceptions.NotFeedIdentifiableException,):
                 self.dblp_lock.release()
 
-        except requests.exceptions.RequestException:
-            pass
         except colrev_exceptions.ServiceNotAvailableException:
             if prep_operation.review_manager.force_mode:
                 self.logger.error("Service not available: DBLP")

@@ -74,6 +74,10 @@ r2 = colrev.record.record.Record(v2)
             "Garza, JL;Wu, ZH;Singh, M;Cherniack, MG.",
             "Garza, JL and Wu, ZH and Singh, M and Cherniack, MG.",
         ),
+        (
+            "Joseph Rottman, Erran Carmel, Mary Lacity",
+            "Rottman, Joseph and Carmel, Erran and Lacity, Mary",
+        ),
     ],
 )
 def test_format_author_field(input_string: str, expected: str) -> None:
