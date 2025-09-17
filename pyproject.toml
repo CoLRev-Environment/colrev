@@ -119,7 +119,8 @@ extension-pkg-whitelist = "lxml.etree"
 load-plugins = [
     "colrev.linter.colrev_direct_status_assign",
     "colrev.linter.colrev_missed_constant_usage",
-    "colrev.linter.colrev_records_variable_naming_convention"
+    "colrev.linter.colrev_records_variable_naming_convention",
+    "colrev.linter.colrev_search_source_requests_import"
 ]
 
 [tool.pylint."MESSAGES CONTROL"]
