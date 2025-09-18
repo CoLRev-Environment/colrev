@@ -136,7 +136,6 @@ def create_db_source(
         platform=platform,
         search_results_path=filename,
         search_type=SearchType.DB,
-        # TODO : save in json instead of separate text file
         search_string=search_string,
         comment="",
     )

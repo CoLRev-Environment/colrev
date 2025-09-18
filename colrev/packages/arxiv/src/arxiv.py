@@ -9,8 +9,6 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
-import feedparser
-import requests
 from pydantic import Field
 
 import colrev.env.environment_manager
@@ -25,7 +23,8 @@ from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search_api_feed import create_api_source
-from colrev.packages.arxiv.src import record_transformer
+from colrev.packages.arxiv.src import arxiv_api
+
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -60,6 +59,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         _, self.email = (
             colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
         )
+        self.api = arxiv_api.ArxivAPI(search_file=search_file)
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -90,6 +90,8 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         # Note : always API search
         if len(params_dict) == 0:
             search_source = create_api_source(platform=cls.endpoint, path=path)
+            search_source.search_parameters = {"query": search_source.search_string}
+            search_source.search_string = ""
 
         # pylint: disable=colrev-missed-constant-usage
         else:
@@ -122,77 +124,28 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
-        self.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
-        if source.filename.name != self._arxiv_md_filename.name:
+        if source.search_results_path.name != self._arxiv_md_filename.name:
             if "query" not in source.search_string:
                 raise colrev_exceptions.InvalidQueryException(
-                    f"Source missing query search_parameter ({source.filename})"
+                    f"Source missing query search_parameter ({source.search_results_path})"
                 )
 
             # if "query_file" in source.search_string:
             # ...
 
-        self.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug(f"SearchSource {source.search_results_path} validated")
 
     def check_availability(self) -> None:
         """Check status (availability) of the ArXiv API"""
 
         try:
-            ret = requests.get(
-                "https://export.arxiv.org/api/"
-                + "query?search_query=all:electron&start=0&max_results=1",
-                timeout=30,
-            )
-            ret.raise_for_status()
-        except requests.exceptions.RequestException as exc:
+            self.api.check_availability(timeout=30)
+        except arxiv_api.ArxivAPIError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 self._availability_exception_message
             ) from exc
-
-    # def _arxiv_query_id(
-    #     self,
-    #     *,
-    #     arxiv_id: str,
-    #     timeout: int = 60,
-    # ) -> dict:
-    #     """Retrieve records from ArXiv based on a query"""
-
-    #     # Query using ID List prefix ?? - wo hast du das gefunden?
-    #     try:
-    #         prefix = "id_list"
-    #         url = (
-    #             "https://export.arxiv.org/api/query?search_query="
-    #             + f"list={prefix}:&id={arxiv_id}"
-    #         )
-
-    #         headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
-    #         session = colrev.utils.get_cached_session()
-
-    #         # self.logger.debug(url)
-    #         ret = session.request("GET", url, headers=headers, timeout=timeout)
-    #         ret.raise_for_status()
-    #         if ret.status_code != 200:
-    #             # self.logger.debug(
-    #             #     f"crossref_query failed with status {ret.status_code}"
-    #             # )
-    #             return {"arxiv_id": arxiv_id}
-
-    #         input(str.encode(ret.text))
-    #         root = fromstring(str.encode(ret.text))
-    #         retrieved_record = self._arxiv_xml_to_record(root=root)
-    #         if not retrieved_record:
-    #             return {"arxiv_id": arxiv_id}
-    #     except requests.exceptions.RequestException:
-    #         return {"arxiv_id": arxiv_id}
-    #     # pylint: disable=duplicate-code
-    #     except OperationalError as exc:
-    #         raise colrev_exceptions.ServiceNotAvailableException(
-    #             "sqlite, required for requests CachedSession "
-    #             "(possibly caused by concurrent operations)"
-    #         ) from exc
-
-    #     return retrieved_record
 
     def prep_link_md(
         self,
@@ -206,26 +159,6 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         # id_list
         return record
 
-    def _get_arxiv_ids(self, query: str, retstart: int) -> typing.List[dict]:
-        url = (
-            "https://export.arxiv.org/api/query?search_query="
-            + f"all:{query}&start={retstart}&max_results=20"
-        )
-        feed = feedparser.parse(url)
-        return feed["entries"]
-
-    def _get_arxiv_query_return(self) -> typing.Iterator[dict]:
-        params = self.search_source.search_string
-        retstart = 0
-        while True:
-            entries = self._get_arxiv_ids(query=params["query"], retstart=retstart)
-            if not entries:
-                break
-            for entry in entries:
-                yield record_transformer.parse_record(entry)
-
-            retstart += 20
-
     def _run_parameter_search(
         self,
         *,
@@ -235,40 +168,28 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         if rerun:
             self.logger.info("Performing a search of the full history (may take time)")
 
-        try:
-            for record_dict in self._get_arxiv_query_return():
-                try:
-                    # Note : discard "empty" records
-                    if "" == record_dict.get(
-                        Fields.AUTHOR, ""
-                    ) and "" == record_dict.get(Fields.TITLE, ""):
-                        self.logger.warning(f"Skipped record: {record_dict}")
-                        continue
-
-                    prep_record = colrev.record.record_prep.PrepRecord(record_dict)
-
-                    added = arxiv_feed.add_update_record(prep_record)
-
-                    # Note : only retrieve/update the latest deposits (unless in rerun mode)
-                    if not added and not rerun:
-                        # problem: some publishers don't necessarily
-                        # deposit papers chronologically
-                        break
-                except colrev_exceptions.NotFeedIdentifiableException:
+        for record_dict in self.api.get_arxiv_query_return():
+            try:
+                # Note : discard "empty" records
+                if "" == record_dict.get(Fields.AUTHOR, "") and "" == record_dict.get(
+                    Fields.TITLE, ""
+                ):
+                    self.logger.warning(f"Skipped record: {record_dict}")
                     continue
 
-            arxiv_feed.save()
+                prep_record = colrev.record.record_prep.PrepRecord(record_dict)
 
-        except requests.exceptions.JSONDecodeError as exc:
-            # watch github issue:
-            # https://github.com/fabiobatalha/crossrefapi/issues/46
-            if "504 Gateway Time-out" in str(exc):
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    "Crossref (check https://status.crossref.org/)"
-                )
-            raise colrev_exceptions.ServiceNotAvailableException(
-                f"Crossref (check https://status.crossref.org/) ({exc})"
-            )
+                added = arxiv_feed.add_update_record(prep_record)
+
+                # Note : only retrieve/update the latest deposits (unless in rerun mode)
+                if not added and not rerun:
+                    # problem: some publishers don't necessarily
+                    # deposit papers chronologically
+                    break
+            except colrev_exceptions.NotFeedIdentifiableException:
+                continue
+
+        arxiv_feed.save()
 
     # def _run_md_search_update(
     #     self,

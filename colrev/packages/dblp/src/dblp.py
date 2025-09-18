@@ -407,12 +407,15 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             # Note: queries combining title+author/journal do not seem to work any more
             api = dblp_api.DBLPAPI(
-                params={"query": record.data[Fields.TITLE]},
+                params={
+                    "query": colrev.utils.remove_stopwords(record.data[Fields.TITLE])
+                },
                 email=self.email,
                 session=colrev.utils.get_cached_session(),
                 timeout=timeout,
             )
 
+            api.set_url_from_query()
             retrieved_records = api.retrieve_records()
             if not retrieved_records:
                 return record

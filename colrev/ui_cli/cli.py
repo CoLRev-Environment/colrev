@@ -17,7 +17,6 @@ import inquirer
 import pandas as pd
 from git.exc import GitCommandError
 
-import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
 import colrev.package_manager.package_manager
@@ -48,7 +47,6 @@ from colrev.env.resources import Resources
 # pylint: disable=too-many-locals
 # pylint: disable=import-outside-toplevel
 # pylint: disable=too-many-return-statements
-# pylint: disable=too-many-positional-arguments
 
 # Note: autocompletion needs bash/... activation:
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
@@ -61,7 +59,7 @@ PACKAGE_MANAGER = colrev.package_manager.package_manager.PackageManager()
 SHELL_MODE = False
 
 
-def _add_endpoint_interactively(add: str, endpoint_type: EndpointType) -> str:
+def _select_endpoint_interactively(add: str, endpoint_type: EndpointType) -> str:
     """Add package interactively"""
     if add != "add_interactively":
         return add
@@ -357,7 +355,7 @@ def init(
     """
     import colrev.ops.init
 
-    review_type = _add_endpoint_interactively(review_type, EndpointType.review_type)
+    review_type = _select_endpoint_interactively(review_type, EndpointType.review_type)
     colrev.ops.init.Initializer(
         review_type=review_type,
         target_path=Path.cwd(),
@@ -566,7 +564,7 @@ def search(
 
     if view:
         for source in search_operation.sources:
-            utils.p_print(source)
+            utils.p_print(source.to_dict())
         return
 
     if add:
@@ -574,19 +572,23 @@ def search(
         # pylint: disable=reimported
         import colrev.ui_cli.add_package_to_settings
 
-        add = _add_endpoint_interactively(add, EndpointType.search_source)
-        colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+        add = _select_endpoint_interactively(add, EndpointType.search_source)
+        source_dict = colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=search_operation,
             package_identifier=add,
             params=params,
+        )
+        print("\n")
+        search_operation.main(
+            selection_str=source_dict["search_results_path"], rerun=rerun
         )
         return
 
     if skip:
         existing_sources = ",".join(
             str(
-                source.filename
+                source.search_results_path
                 for source in search_operation.review_manager.settings.sources
             )
         )
@@ -621,9 +623,10 @@ def search(
         if selected is None:
             selected = ",".join(
                 [
-                    str(source.filename)
+                    str(source.search_results_path)
                     for source in search_operation.review_manager.settings.sources
-                    if source.filename not in [x.filename for x in sources_added]
+                    if source.search_results_path
+                    not in [x.search_results_path for x in sources_added]
                 ]
             )
         else:
@@ -793,7 +796,7 @@ def prep(
             )
             return
         if add:
-            add = _add_endpoint_interactively(add, EndpointType.prep)
+            add = _select_endpoint_interactively(add, EndpointType.prep)
             colrev.ui_cli.add_package_to_settings.add_package_to_settings(
                 PACKAGE_MANAGER,
                 operation=prep_operation,
@@ -882,7 +885,7 @@ def prep_man(
         return
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.prep_man)
+        add = _select_endpoint_interactively(add, EndpointType.prep_man)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=prep_man_operation,
@@ -997,7 +1000,7 @@ def dedupe(
     )
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.dedupe)
+        add = _select_endpoint_interactively(add, EndpointType.dedupe)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=dedupe_operation,
@@ -1190,7 +1193,7 @@ def prescreen(
         prescreen_operation.setup_custom_script()
         print("Activated custom_prescreen_script.py.")
     elif add:
-        add = _add_endpoint_interactively(add, EndpointType.prescreen)
+        add = _select_endpoint_interactively(add, EndpointType.prescreen)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=prescreen_operation,
@@ -1327,7 +1330,7 @@ def screen(
         screen_operation.add_abstracts_from_tei()
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.screen)
+        add = _select_endpoint_interactively(add, EndpointType.screen)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=screen_operation,
@@ -1569,7 +1572,7 @@ def pdf_get(
     )
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.pdf_get)
+        add = _select_endpoint_interactively(add, EndpointType.pdf_get)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_get_operation,
@@ -1663,7 +1666,7 @@ def pdf_get_man(
     pdf_get_man_operation = review_manager.get_pdf_get_man_operation()
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.pdf_get_man)
+        add = _select_endpoint_interactively(add, EndpointType.pdf_get_man)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_get_man_operation,
@@ -1826,7 +1829,7 @@ def pdf_prep(
     pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.pdf_prep)
+        add = _select_endpoint_interactively(add, EndpointType.pdf_prep)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_prep_operation,
@@ -1963,7 +1966,7 @@ def pdf_prep_man(
     pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.pdf_prep_man)
+        add = _select_endpoint_interactively(add, EndpointType.pdf_prep_man)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_prep_man_operation,
@@ -2079,7 +2082,7 @@ def data(
         return
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.data)
+        add = _select_endpoint_interactively(add, EndpointType.data)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=data_operation,

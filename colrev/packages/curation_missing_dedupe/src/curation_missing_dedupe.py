@@ -54,7 +54,7 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
         Path("dedupe").mkdir(exist_ok=True)
 
         source_origins = [
-            str(source.filename).replace("data/search/", "")
+            str(source.search_results_path).replace("data/search/", "")
             for source in self.review_manager.settings.sources
         ]
 

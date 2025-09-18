@@ -156,12 +156,12 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         return toc_items
 
     def _warn_on_missing_sources(self, *, first_source: bool) -> None:
-        # warn if not all SOURCE.filenames are included in a dedupe script
+        # warn if not all SOURCE.search_results_path are included in a dedupe script
         if first_source:
             available_sources = [
-                str(s.filename)
+                str(s.search_results_path)
                 for s in self.review_manager.settings.sources
-                if "md_" not in str(s.filename)
+                if "md_" not in str(s.search_results_path)
             ]
             dedupe_sources = [
                 s["selected_source"]
@@ -508,10 +508,10 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         relevant_source = [
             s
             for s in self.review_manager.settings.sources
-            if str(s.filename) == self.settings.selected_source
+            if str(s.search_results_path) == self.settings.selected_source
         ]
         if len(relevant_source) > 0:
-            pdf_source = "colrev.files_dir" == relevant_source[0].endpoint
+            pdf_source = "colrev.files_dir" == relevant_source[0].platform
         return pdf_source
 
     def _first_source_selected(self) -> bool:

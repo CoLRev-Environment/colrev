@@ -44,7 +44,7 @@ class OpenLibraryMetadataPrep(base_classes.PrepPackageBaseClass):
         open_library_md_source_l = [
             s
             for s in self.prep_operation.review_manager.settings.sources
-            if s.filename == self._open_library_md_filename
+            if s.search_results_path == self._open_library_md_filename
         ]
         if open_library_md_source_l:
             search_file = open_library_md_source_l[0]

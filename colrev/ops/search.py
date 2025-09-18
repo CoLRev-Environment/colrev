@@ -281,18 +281,19 @@ class Search(colrev.process.operation.Operation):
         """Add a SearchSource and run the search"""
 
         search_file.save()
-        # TODO : get_filepath()?
         self.review_manager.dataset.git_repo.add_changes(
-            search_file.search_history_path
+            search_file.get_search_history_path()
         )
 
         self.review_manager.create_commit(
             msg=f"Search: add {search_file.platform}:{search_file.search_type} → "
-            f"data/search/{search_file.search_history_path.name}",
+            f"data/search/{search_file.get_search_history_path().name}",
         )
-        if not search_file.search_history_path.is_file():
+        if not search_file.get_search_history_path().is_file():
             print()
-            self.main(selection_str=str(search_file.search_history_path), rerun=True)
+            self.main(
+                selection_str=str(search_file.get_search_history_path()), rerun=True
+            )
 
     @_check_source_selection_exists(  # pylint: disable=too-many-function-args
         "selection_str"
@@ -341,7 +342,7 @@ class Search(colrev.process.operation.Operation):
 
                 self._remove_forthcoming(source)
                 self.review_manager.dataset.git_repo.add_changes(
-                    source.search_results_path
+                    source.search_results_path, ignore_missing=True
                 )
                 if not skip_commit:
                     self.review_manager.create_commit(

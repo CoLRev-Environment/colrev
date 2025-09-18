@@ -56,7 +56,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
 
-        self.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
         if "scope" not in source.search_string:
             raise colrev_exceptions.InvalidQueryException(
@@ -67,7 +67,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "url field required in search_parameters"
             )
 
-        self.logger.debug("SearchSource %s validated", source.filename)
+        self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     # pylint: disable=colrev-missed-constant-usage
     @classmethod

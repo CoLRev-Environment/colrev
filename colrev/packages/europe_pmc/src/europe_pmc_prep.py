@@ -46,7 +46,7 @@ class EuropePMCMetadataPrep(base_classes.PrepPackageBaseClass):
         europe_pmc_md_source_l = [
             s
             for s in prep_operation.review_manager.settings.sources
-            if s.filename == self._europe_pmc_md_filename
+            if s.search_results_path == self._europe_pmc_md_filename
         ]
         if europe_pmc_md_source_l:
             search_file = europe_pmc_md_source_l[0]

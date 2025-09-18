@@ -94,7 +94,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         """Run a search of ACM Digital Library"""
 
         if self.search_source.search_type == SearchType.DB:
-            if self.search_source.filename.suffix in [".bib"]:
+            if self.search_source.search_results_path.suffix in [".bib"]:
                 run_db_search(
                     db_url=self.db_url,
                     source=self.search_source,

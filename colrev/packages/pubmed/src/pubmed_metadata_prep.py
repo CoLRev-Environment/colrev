@@ -46,7 +46,7 @@ class PubmedMetadataPrep(base_classes.PrepPackageBaseClass):
         pubmed_md_source_l = [
             s
             for s in self.prep_operation.review_manager.settings.sources
-            if s.filename == self._pubmed_md_filename
+            if s.search_results_path == self._pubmed_md_filename
         ]
         if pubmed_md_source_l:
             search_file = pubmed_md_source_l[0]
@@ -66,7 +66,7 @@ class PubmedMetadataPrep(base_classes.PrepPackageBaseClass):
         self.pubmed_prefixes = [
             s.get_origin_prefix()
             for s in prep_operation.review_manager.settings.sources
-            if s.endpoint == "colrev.pubmed"
+            if s.platform == "colrev.pubmed"
         ]
 
     def check_availability(self) -> None:

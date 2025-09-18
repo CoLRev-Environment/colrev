@@ -544,7 +544,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
                 record.remove_field(key=Fields.SERIES)
 
-        if self.search_source.search_history_path.suffix == ".md":
+        if self.search_source.get_search_history_path().suffix == ".md":
             if (
                 record.data[Fields.ENTRYTYPE] == "misc"
                 and Fields.PUBLISHER in record.data

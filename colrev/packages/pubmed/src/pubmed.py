@@ -10,7 +10,6 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import pandas as pd
-import requests
 from pydantic import Field
 
 import colrev.env.environment_manager
@@ -125,6 +124,13 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         elif search_type == SearchType.API:
             if len(params_dict) == 0:
                 search_source = create_api_source(platform=cls.endpoint, path=path)
+                api_term_url = (
+                    "https://eutils.ncbi.nlm.nih.gov/"
+                    + "entrez/eutils/esearch.fcgi?db=pubmed&term="
+                )
+                search_source.search_string = (
+                    f"{api_term_url}{search_source.search_string}"
+                )
 
             # pylint: disable=colrev-missed-constant-usage
             elif "url" in params_dict:
@@ -152,6 +158,9 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             else:
                 raise NotImplementedError
 
+            # search_source.search_parameters = {"query": search_source.search_string}
+            # search_source.search_string = ""
+
         else:
             raise NotImplementedError
         return search_source
@@ -160,18 +169,18 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Validate the SearchSource (parameters etc.)"""
 
         source = self.search_source
-        self.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
-        # if source.filename.name != self._pubmed_md_filename.name:
+        # if source.search_results_path.name != self._pubmed_md_filename.name:
         #     if "query" not in source.search_string:
         #         raise colrev_exceptions.InvalidQueryException(
-        #             f"Source missing query search_parameter ({source.filename})"
+        #             f"Source missing query search_parameter ({source.search_results_path})"
         #         )
 
         # if "query_file" in source.search_string:
         # ...
 
-        self.logger.debug("SearchSource %s validated", source.filename)
+        self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def check_availability(self) -> None:
         """Check status (availability) of the Pubmed API"""
@@ -188,7 +197,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             }
 
             api = pubmed_api.PubmedAPI(
-                parameters=self.search_source.search_string,
+                url=self.search_source.search_string,
                 email=self.email,
                 session=colrev.utils.get_cached_session(),
             )
@@ -201,7 +210,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message
                 )
-        except (requests.exceptions.RequestException, IndexError, KeyError) as exc:
+        except (pubmed_api.PubmedAPIError, IndexError, KeyError) as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 self._availability_exception_message
             ) from exc
@@ -215,7 +224,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.record.record.Record:
         try:
             api = pubmed_api.PubmedAPI(
-                parameters=self.search_source.search_string,
+                url=self.search_source.search_string,
                 email=self.email,
                 session=colrev.utils.get_cached_session(),
                 logger=self.logger,
@@ -274,7 +283,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 return record
 
         except (
-            requests.exceptions.RequestException,
+            pubmed_api.PubmedAPIError,
             OSError,
             IndexError,
             colrev_exceptions.RecordNotFoundInPrepSourceException,
@@ -328,7 +337,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.logger.info("Performing a search of the full history (may take time)")
 
         api = pubmed_api.PubmedAPI(
-            parameters=self.search_source.search_string,
+            url=self.search_source.search_string,
             email=self.email,
             session=colrev.utils.get_cached_session(),
             logger=self.logger,
@@ -367,7 +376,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
 
         api = pubmed_api.PubmedAPI(
-            parameters=self.search_source.search_string,
+            url=self.search_source.search_string,
             email=self.email,
             session=colrev.utils.get_cached_session(),
             logger=self.logger,

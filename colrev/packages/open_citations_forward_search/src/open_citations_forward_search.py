@@ -8,10 +8,10 @@ import typing
 from pathlib import Path
 from typing import Optional
 
-import requests
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.check
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
@@ -21,6 +21,7 @@ from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.crossref.src.crossref_api import query_doi
+from colrev.packages.open_citations_forward_search.src import open_citations_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -53,6 +54,8 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         import colrev.review_manager
 
         self.review_manager = colrev.review_manager.ReviewManager()
+        colrev.ops.check.CheckOperation(self.review_manager)
+        self.api = open_citations_api.OpenCitationsAPI()
 
     @classmethod
     def get_default_source(cls) -> colrev.search_file.ExtendedSearchFile:
@@ -73,24 +76,24 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         source = self.search_source
 
-        self.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
         assert source.search_type == SearchType.FORWARD_SEARCH
 
-        if "scope" not in source.search_string:
+        if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "Scope required in the search_parameters"
             )
 
         if (
-            source.search_string["scope"][Fields.STATUS]
+            source.search_parameters["scope"][Fields.STATUS]
             != "rev_included|rev_synthesized"
         ):
             raise colrev_exceptions.InvalidQueryException(
                 "search_parameters/scope/colrev_status must be rev_included|rev_synthesized"
             )
 
-        self.logger.debug("SearchSource %s validated", source.filename)
+        self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def _fw_search_condition(self, *, record: dict) -> bool:
         if Fields.DOI not in record:
@@ -98,8 +101,8 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         # rev_included/rev_synthesized required, but record not in rev_included/rev_synthesized
         if (
-            Fields.STATUS in self.search_source.search_string["scope"]
-            and self.search_source.search_string["scope"][Fields.STATUS]
+            Fields.STATUS in self.search_source.search_parameters["scope"]
+            and self.search_source.search_parameters["scope"][Fields.STATUS]
             == "rev_included|rev_synthesized"
             and record[Fields.STATUS]
             not in [
@@ -111,14 +114,19 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         return True
 
-    def _get_forward_search_records(self, *, record_dict: dict) -> list:
-        forward_citations = []
+    def _get_forward_search_records(self, *, record_dict: dict) -> typing.List[dict]:
+        forward_citations: typing.List[dict] = []
 
         url = f"https://opencitations.net/index/coci/api/v1/citations/{record_dict['doi']}"
-        # headers = {"authorization": "YOUR-OPENCITATIONS-ACCESS-TOKEN"}
-        headers: typing.Dict[str, str] = {}
 
-        ret = requests.get(url, headers=headers, timeout=300)
+        try:
+            ret = self.api.get(url, timeout=300)
+        except open_citations_api.OpenCitationsAPIError:
+            self.logger.info(
+                "Error retrieving citations from Opencitations for %s",
+                record_dict[Fields.ID],
+            )
+            return forward_citations
         try:
             items = json.loads(ret.text)
 
@@ -130,7 +138,8 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
                 forward_citations.append(retrieved_record.data)
         except json.decoder.JSONDecodeError:
             self.logger.info(
-                f"Error retrieving citations from Opencitations for {record_dict['ID']}"
+                "Error retrieving citations from Opencitations for %s",
+                record_dict[Fields.ID],
             )
 
         return forward_citations
@@ -141,6 +150,8 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         # pylint: disable=too-many-branches
 
         self._validate_source()
+
+        self.logger.info("Scope: %s", self.search_source.search_parameters["scope"])
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -156,11 +167,16 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
             verbose_mode=self.verbose_mode,
         )
 
-        for record in records.values():
-            if not self._fw_search_condition(record=record):
-                continue
+        relevant_records = [
+            record
+            for record in records.values()
+            if self._fw_search_condition(record=record)
+        ]
+        self.logger.info("Run forward search for %s records", len(relevant_records))
 
-            self.logger.info(f"Run forward search for {record[Fields.ID]}")
+        for record in relevant_records:
+
+            self.logger.info("Run forward search for %s", record[Fields.ID])
 
             new_records = self._get_forward_search_records(record_dict=record)
 
@@ -169,7 +185,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
                     new_record["fwsearch_ref"] = (
                         record[Fields.ID] + "_forward_search_" + new_record[Fields.ID]
                     )
-                    new_record["cites_IDs"] = record[Fields.ID]
+                    new_record["cites_ids"] = record[Fields.ID]
                     retrieved_record = colrev.record.record.Record(new_record)
 
                     forward_search_feed.add_update_record(

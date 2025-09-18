@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import re
 import typing
 import urllib.parse
@@ -11,10 +12,8 @@ from typing import Optional
 
 import inquirer
 import pandas as pd
-import requests
 from pydantic import Field
 
-import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
@@ -26,8 +25,10 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
+from colrev.packages.springer_link.src import springer_link_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -64,6 +65,9 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.search_source = search_file
 
         self.language_service = colrev.env.language_service.LanguageService()
+        self.api = springer_link_api.SpringerLinkAPI(
+            session=colrev.utils.get_cached_session()
+        )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -89,7 +93,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        params_dict = {params.split("=")[0]: params.split("=")[1]}
+        params_dict: dict = {}  # {params.split("=")[0]: params.split("=")[1]}
         search_type = colrev.utils.select_search_type(
             search_types=cls.search_types, params=params_dict
         )
@@ -104,17 +108,21 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
         elif search_type == SearchType.API:
-            filename = colrev.utils.get_unique_filename(
-                base_path=path,
-                file_path_string="springer_link",
-            )
-            search_source = colrev.search_file.ExtendedSearchFile(
-                platform=cls.endpoint,
-                search_results_path=filename,
-                search_type=SearchType.API,
-                search_string="",
-                comment="",
-            )
+            search_source = create_api_source(platform=cls.endpoint, path=path)
+            search_source.search_parameters = {"query": search_source.search_string}
+            search_source.search_string = ""
+
+            # filename = colrev.utils.get_unique_filename(
+            #     base_path=path,
+            #     file_path_string="springer_link",
+            # )
+            # search_source = colrev.search_file.ExtendedSearchFile(
+            #     platform=cls.endpoint,
+            #     search_results_path=filename,
+            #     search_type=SearchType.API,
+            #     search_string="",
+            #     comment="",
+            # )
             # params_dict.update(vars(search_source))
 
             # TODO : reactivate the following once the base-class is updated
@@ -294,7 +302,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
         """Get the records from a API search"""
-        query = self.build_query(self.search_source.search_string)
+        query = self.build_query(self.search_source.search_parameters)
         api_key = self.get_api_key()
         start = 1
 
@@ -302,14 +310,11 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
             full_url = self._build_api_search_url(
                 query=query, api_key=api_key, start=start
             )
-            response = requests.get(full_url, timeout=10)
-            if response.status_code != 200:
-                print(
-                    f"Error - API search failed for the following reason: {response.status_code}"
-                )
+            try:
+                data = self.api.get_json(full_url, timeout=10)
+            except springer_link_api.SpringerLinkAPIError as exc:
+                print("Error - API search failed for the following reason:" f" {exc}")
                 return
-
-            data = response.json()
 
             for record in data.get("records", []):
                 yield self._create_record(record)
@@ -483,11 +488,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def get_api_key(self) -> str:
         """Get API key from settings"""
-        api_key = (
-            colrev.env.environment_manager.EnvironmentManager().get_settings_by_key(
-                key="springer_api_key"
-            )
-        )
+        api_key = os.getenv("SPRINGER_API_KEY")
         if api_key:
             return api_key
         return ""
@@ -503,9 +504,12 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         full_url = self._build_api_search_url(
             query="doi:10.1007/978-3-319-07410-8_4", api_key=answer
         )
-        response = requests.get(full_url, timeout=10)
-        if response.status_code != 200:
-            raise inquirer.errors.ValidationError("", reason="Error: Invalid API key.")
+        try:
+            self.api.validate_api_key(full_url, timeout=10)
+        except springer_link_api.SpringerLinkAPIError as exc:
+            raise inquirer.errors.ValidationError(
+                "", reason="Error: Invalid API key."
+            ) from exc
         print(
             f"\n{Colors.GREEN}Successfully authenticated with Springer Link API{Colors.END}"
         )
@@ -530,9 +534,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         ]
         answers = inquirer.prompt(questions)
         input_key = answers["springer_api_key"]
-        colrev.env.environment_manager.EnvironmentManager().update_registry(
-            key="springer_api_key", value=input_key
-        )
+        os.environ["SPRINGER_API_KEY"] = input_key
 
     @classmethod
     def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:

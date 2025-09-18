@@ -61,7 +61,6 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.search_file.ExtendedSearchFile:
         """Adds Prospero as a search source endpoint based on user-provided parameters."""
         if len(params) == 0:
-            # TODO : test prospero search
             search_source = create_api_source(platform=cls.endpoint, path=path)
             search_source.search_string[Fields.URL] = (
                 cls.db_url + "search?" + search_source.search_string + "#searchadvanced"
@@ -101,7 +100,9 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
                 f"not {self.search_source.search_type}"
             )
         if self.logger:
-            self.logger.debug("Validate SearchFile %s", self.search_source.filename)
+            self.logger.debug(
+                "Validate SearchFile %s", self.search_source.search_results_path
+            )
 
     def get_search_word(self) -> str:
         """

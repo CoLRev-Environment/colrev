@@ -30,9 +30,11 @@ class CLISourceAdder:
         *,
         source_candidates: list,
     ) -> dict:
+        # TODO : api searches could add metadata to the bib file
+        # (e.g., identifying it as colrev.crossref)
         choices = [
             (
-                f"{heuristic_source['source_candidate'].endpoint} "
+                f"{heuristic_source['source_candidate'].platform} "
                 f"(confidence: {round(heuristic_source['confidence'], 2)}): ",
                 heuristic_source,
             )
@@ -56,14 +58,14 @@ class CLISourceAdder:
         if 1 == len(source_candidates):
             heuristic_source_dict = source_candidates[0]
             self.search_operation.review_manager.logger.info(
-                f"Automatically selected {heuristic_source_dict['source_candidate'].endpoint}"
+                f"Automatically selected {heuristic_source_dict['source_candidate'].platform}"
             )
         else:
             heuristic_source_dict = self._select_source(
                 source_candidates=source_candidates
             )
             self.search_operation.review_manager.logger.info(
-                f"Selected {heuristic_source_dict['source_candidate'].endpoint}"
+                f"Selected {heuristic_source_dict['source_candidate'].platform}"
             )
 
         candidate: colrev.search_file.ExtendedSearchFile = heuristic_source_dict[
@@ -71,7 +73,7 @@ class CLISourceAdder:
         ]
         search_source_class = self.package_manager.get_package_endpoint_class(
             package_type=EndpointType.search_source,
-            package_identifier=candidate.endpoint,
+            package_identifier=candidate.platform,
         )
         endpoint = search_source_class(
             search_file=candidate.model_dump(),

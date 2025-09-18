@@ -165,15 +165,15 @@ class Repare(colrev.process.operation.Operation):
     def _get_source_feeds(self) -> dict:
         source_feeds = {}
         for source in self.review_manager.settings.sources:
-            source_feeds[str(source.filename).replace("data/search/", "")] = (
-                colrev.ops.search_api_feed.SearchAPIFeed(
-                    source_identifier="NA",
-                    search_source=source,
-                    update_only=False,
-                    logger=self.review_manager.logger,
-                    verbose_mode=self.review_manager.verbose_mode,
-                ).feed_records
-            )
+            source_feeds[
+                str(source.search_results_path).replace("data/search/", "")
+            ] = colrev.ops.search_api_feed.SearchAPIFeed(
+                source_identifier="NA",
+                search_source=source,
+                update_only=False,
+                logger=self.review_manager.logger,
+                verbose_mode=self.review_manager.verbose_mode,
+            ).feed_records
         return source_feeds
 
     # pylint: disable=too-many-branches
@@ -408,10 +408,10 @@ class Repare(colrev.process.operation.Operation):
                         del curation_recs[record_id]
 
             write_file(
-                records_dict=curation_recs, filename=search_source.search_history_path
+                records_dict=curation_recs, filename=search_source.search_results_path
             )
             self.review_manager.dataset.git_repo.add_changes(
-                search_source.search_history_path
+                search_source.search_results_path
             )
 
     def _update_field_names(self, records: dict) -> None:

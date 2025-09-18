@@ -71,8 +71,7 @@ def convert(pdf_dir: Path, tei_dir: Path) -> None:
 
     print(f"Converting PDFs in {pdf_dir} to TEI in {tei_dir}...")
 
-    # TODO : should the grobid/tei service be simpler?
-
+    # pylint: disable=import-outside-toplevel
     import colrev.env.grobid_service
     import colrev.env.environment_manager
 
@@ -80,8 +79,6 @@ def convert(pdf_dir: Path, tei_dir: Path) -> None:
 
     grobid_service = colrev.env.grobid_service.GrobidService()
     grobid_service.start()
-
-    import colrev.env.tei_parser
 
     for pdf_file in Path(pdf_dir).glob("*.pdf"):
         tei_file = Path(tei_dir) / (pdf_file.stem + ".tei.xml")

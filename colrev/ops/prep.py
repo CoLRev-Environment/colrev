@@ -41,6 +41,8 @@ if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
     import colrev.settings
 
+# pylint: disable=too-many-lines
+
 # logging.getLogger("urllib3").setLevel(logging.ERROR)
 logging.getLogger("requests_cache").setLevel(logging.ERROR)
 

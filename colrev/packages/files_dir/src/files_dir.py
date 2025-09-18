@@ -9,11 +9,11 @@ from pathlib import Path
 from typing import Optional
 
 import pymupdf
-import requests
 from pydantic import Field
 
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.check
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.packages.pdf_backward_search.src.pdf_backward_search as bws
@@ -63,7 +63,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
 
-        # TODO : files_dir: subdir_pattern etc. should be prep_parameters
         self.search_source = search_file
 
         # self.review_manager.path /
@@ -271,8 +270,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
         except (
             FileNotFoundError,
-            requests.exceptions.ReadTimeout,
-            requests.exceptions.ConnectionError,
             colrev_exceptions.TEITimeoutException,
         ):
             return record_dict
@@ -597,9 +594,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         for suffix in types:
             files_grabbed.extend(self.pdfs_path.glob(suffix))
 
-        files_to_index = [
-            x.relative_to(self.review_manager.path) for x in files_grabbed
-        ]
+        files_to_index = [self.review_manager.path / x for x in files_grabbed]
 
         file_batches = [
             files_to_index[i * self._batch_size : (i + 1) * self._batch_size]
@@ -685,6 +680,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         import colrev.review_manager
 
         self.review_manager = colrev.review_manager.ReviewManager()
+        colrev.ops.check.CheckOperation(self.review_manager)
 
         self.rerun = rerun
         self._validate_source()
@@ -912,6 +908,15 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             self._fix_special_outlets(record=record)
 
             if record.data.get(Fields.TITLE, "").startswith("Microsoft Word"):
+                record.data[Fields.TITLE] = FieldValues.UNKNOWN
+                record.set_status(RecordState.md_needs_manual_preparation)
+            if any(
+                x in record.data.get(Fields.TITLE, "").lower()
+                for x in [
+                    "reproduced with permission",
+                    "further reproduction prohibited",
+                ]
+            ):
                 record.data[Fields.TITLE] = FieldValues.UNKNOWN
                 record.set_status(RecordState.md_needs_manual_preparation)
 

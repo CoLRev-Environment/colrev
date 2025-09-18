@@ -50,7 +50,7 @@ class DBLPAPI:
         self.year = datetime.now().year - 2
         if rerun:
             self.year = 1980
-        self.total = self.get_total()
+        self.set_total()
 
     def check_availability(self) -> None:
         """Check if the DBLP API is available"""
@@ -261,9 +261,9 @@ class DBLPAPI:
             return True
         return self.year > datetime.now().year
 
-    def get_total(self) -> int:
+    def set_total(self) -> None:
         """Get the total number of records"""
-
+        total = -1
         try:
             ret = self.session.request(
                 "GET",
@@ -275,22 +275,22 @@ class DBLPAPI:
 
             data = json.loads(ret.text)
 
-            if "result" not in data:
-                return -1
-            if "hits" not in data["result"]:
-                return -1
-            if "@total" not in data["result"]["hits"]:
-                return -1
-            return int(data["result"]["hits"]["@total"])
+            if (
+                "result" in data
+                and "hits" in data["result"]
+                and "@total" in data["result"]["hits"]
+            ):
+                total = int(data["result"]["hits"]["@total"])
         except (requests.exceptions.RequestException, ValueError):
-            return -1
+            pass
+        self.total = total
 
     def retrieve_records(self) -> list:
         """Retrieve records from DBLP"""
 
         # try:
         while True:
-            # review_manager.logger.debug(url)
+            # print(self.url)
             ret = self.session.request(
                 "GET", self.url, headers=self.headers, timeout=self._timeout  # type: ignore
             )
@@ -353,6 +353,6 @@ class DBLPAPI:
     def set_url_from_query(self) -> None:
         """Set the URL from a query"""
         query = re.sub(
-            r"[\W]+", " ", self.params["query"].replace(" ", "_").replace("-", "_")
+            r"[\W]+", " ", self.params["query"].replace(" ", "+").replace("-", "+")
         )
         self.url = self._api_url + query.replace(" ", "+") + "&format=json"

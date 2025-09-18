@@ -69,7 +69,7 @@ def add_package_to_settings(
     operation: colrev.process.operation.Operation,
     package_identifier: str,
     params: str,
-) -> None:
+) -> dict:
     """Add a package_endpoint (for cli usage)"""
 
     operation.review_manager.logger.info(
@@ -82,17 +82,22 @@ def add_package_to_settings(
         package_type=package_type,
         package_identifier=package_identifier,
     )
+    add_package = {}
 
     if hasattr(e_class, "add_endpoint"):
         if package_type == EndpointType.search_source:
-            source = e_class.add_endpoint(params=params, path=Path.cwd())  # type: ignore
+            source = e_class.add_endpoint(  # type: ignore
+                params=params, path=Path.cwd(), logger=operation.review_manager.logger
+            )
             source.save()
             operation.review_manager.settings.sources.append(source)  # type: ignore
-            operation.review_manager.dataset.git_repo.add_changes(path=source._filepath)
+            operation.review_manager.dataset.git_repo.add_changes(
+                path=source.get_search_history_path()
+            )
+            add_package = source.to_dict()
 
         else:
-            # TODO : remove "path" from add_endpoint!?
-            e_class.add_endpoint(params=params)  # type: ignore
+            e_class.add_endpoint(operation=operation, params=params)  # type: ignore
 
     else:
         add_package = {"endpoint": package_identifier}
@@ -102,3 +107,4 @@ def add_package_to_settings(
     operation.review_manager.create_commit(
         msg=f"Add {operation.type} {package_identifier}",
     )
+    return add_package

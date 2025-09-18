@@ -331,7 +331,7 @@ class Initializer:
             comment="",
         )
         files_dir_search_history.save(
-            filepath=Path("data/search/files_search_history.json")
+            search_history_path=Path("data/search/files_search_history.json")
         )
 
     def _setup_settings(self) -> None:

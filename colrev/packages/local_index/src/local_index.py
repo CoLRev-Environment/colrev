@@ -81,14 +81,14 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
-        self.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
         assert source.search_type in self.search_types
 
         # if "query" not in source.search_string:
         # Note :  for md-sources, there is no query parameter.
         #     raise colrev_exceptions.InvalidQueryException(
-        #         f"Source missing query search_parameter ({source.filename})"
+        #         f"Source missing query search_parameter ({source.search_results_path})"
         #     )
 
         if "query" in source.search_string:
@@ -99,17 +99,17 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             #     else:
             #         raise colrev_exceptions.InvalidQueryException(
             #             "Source missing query/simple_query_string/query "
-            #             f"search_parameter ({source.filename})"
+            #             f"search_parameter ({source.search_results_path})"
             #         )
 
             # elif "url" in source.search_string["query"]:
             #     pass
             # # else:
             #     raise colrev_exceptions.InvalidQueryException(
-            #         f"Source missing query/query search_parameter ({source.filename})"
+            #         f"Source missing query/query search_parameter ({source.search_results_path})"
             #     )
 
-        self.logger.debug("SearchSource %s validated", source.filename)
+        self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def _retrieve_from_index(self) -> typing.List[dict]:
         params = self.search_source.search_string

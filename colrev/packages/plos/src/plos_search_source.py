@@ -52,7 +52,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.plos_lock = Lock()
         self.language_service = colrev.env.language_service.LanguageService()
 
-        self.api = plos_api.PlosAPI(params=self.search_source.search_string)
+        self.api = plos_api.PlosAPI(url=self.search_source.search_string)
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -91,16 +91,16 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
             if len(params) == 0:
                 search_source = create_api_source(platform=cls.endpoint, path=path)
 
-                search_source.search_string[Fields.URL] = (
+                search_source.search_string = (
                     cls._api_url
                     + "search?"
                     + "q="
-                    + search_source.search_string.pop("query", "").replace(" ", "+")
+                    + search_source.search_string.replace(" ", "+")
                     + "&fl=id,abstract,author_display,title_display,"
                     + "journal,publication_date,volume,issue"
                 )
 
-                search_source.search_string["version"] = "0.1.0"
+                search_source.search_parameters = {"version": "0.1.0"}
 
                 return search_source
 
@@ -251,7 +251,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         if source.search_type == SearchType.API:
             self._validate_api_params()
 
-        self.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug(f"SearchSource {source.search_results_path} validated")
 
     # pylint: disable=pointless-statement
     def _validate_api_params(self) -> None:

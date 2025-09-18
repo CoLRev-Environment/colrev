@@ -10,6 +10,7 @@ from typing import Optional
 
 import search_query
 
+import colrev.exceptions as colrev_exceptions
 import colrev.git_repo
 from colrev.constants import SearchType
 
@@ -18,14 +19,12 @@ class ExtendedSearchFile(search_query.SearchFile):
     """Extended SearchFile with search_results_path and derived search_history_path."""
 
     # pylint: disable=too-many-arguments
-    # pylint: disable=too-many-positional-arguments
     def __init__(
         self,
         search_string: str,
         platform: str,
         search_results_path: Path,
         search_type: SearchType,
-        path: Path = Path("data/search"),
         authors: Optional[list[dict]] = None,
         record_info: Optional[dict] = None,
         date: Optional[dict] = None,
@@ -33,17 +32,12 @@ class ExtendedSearchFile(search_query.SearchFile):
     ) -> None:
 
         # Mandatory attribute
-        self.search_results_path = Path(search_results_path)
         self.search_type = SearchType(search_type)
 
-        assert not str(search_results_path).endswith(
-            "_search_history.json"
-        ), "search_results_path should not end with _search_history.json"
-
-        # Derived attribute
-        self.search_history_path = Path(path) / Path(
-            Path(search_results_path).stem + "_search_history.json"
-        )
+        if not str(search_results_path).replace("\\", "/").startswith("data/search"):
+            raise colrev_exceptions.InvalidSettingsError(
+                msg=f"Source search_results_path does not start with data/search: {search_results_path}"
+            )
 
         super().__init__(
             search_string=search_string,
@@ -51,9 +45,7 @@ class ExtendedSearchFile(search_query.SearchFile):
             authors=authors,
             record_info=record_info,
             date=date,
-            filepath=self.search_history_path,
-            # TODO : remove this:
-            # search_results_path=Path(search_results_path),
+            search_results_path=search_results_path,
             **kwargs,
         )
 
@@ -63,7 +55,7 @@ class ExtendedSearchFile(search_query.SearchFile):
         base_dict.update(
             {
                 "search_results_path": str(self.search_results_path),
-                "search_history_path": str(self.search_history_path),
+                "search_history_path": str(self.get_search_history_path()),
                 "search_type": self.search_type.value,
             }
         )
@@ -75,11 +67,8 @@ class ExtendedSearchFile(search_query.SearchFile):
         return {
             "platform": self.platform,
             "search_results_path": str(self.search_results_path),
-            # "search_history_path": str(self.search_history_path),
             "search_string": self.search_string,
             "search_type": self.search_type.value,
-            # TODO check:
-            # **kwargs,
         }
 
     def setup_for_load(
@@ -114,15 +103,32 @@ class ExtendedSearchFile(search_query.SearchFile):
 
         return self.get_origin_prefix() == "md_curated.bib"
 
+    # pylint: disable=unused-argument
+    def get_search_history_path(
+        self, search_history_path: Optional[str | Path] = None
+    ) -> Path:
+        """Get the search history path."""
+        assert search_history_path is None
+
+        return Path("data/search") / Path(
+            Path(self.search_results_path).stem + "_search_history.json"
+        )
+
     def save(
         self,
-        filepath: Optional[str | Path] = None,
+        search_history_path: Optional[str | Path] = None,
         git_repo: typing.Optional[colrev.git_repo.GitRepo] = None,
     ) -> None:
         """Save the search file to a JSON file."""
-        path = Path(filepath) if filepath else self._filepath
+        path = (
+            Path(search_history_path)
+            if search_history_path
+            else self.get_search_history_path()
+        )
         if path is None:
-            raise ValueError("No filepath provided and no previous filepath stored.")
+            raise ValueError(
+                "No search_history_path provided and no previous search_history_path stored."
+            )
         with open(path, "w", encoding="utf-8") as f:
             mod_dict = self.to_dict()
             mod_dict.pop("search_history_path", None)

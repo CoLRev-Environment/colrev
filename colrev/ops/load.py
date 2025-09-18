@@ -250,22 +250,24 @@ class Load(colrev.process.operation.Operation):
 
         if re.findall(
             r"^TI ", data, re.MULTILINE
-        ) and source.search_source.search_history_path.suffix not in [".ris"]:
-            new_filename = source.search_source.search_history_path.with_suffix(".ris")
+        ) and source.search_source.get_search_history_path().suffix not in [".ris"]:
+            new_filename = source.search_source.get_search_history_path().with_suffix(
+                ".ris"
+            )
             self.review_manager.logger.info(
                 f"{Colors.GREEN}Rename to {new_filename} "
                 f"(because the format is .ris){Colors.END}"
             )
             shutil.move(
-                str(source.search_source.search_history_path), str(new_filename)
+                str(source.search_source.get_search_history_path()), str(new_filename)
             )
             self.review_manager.dataset.git_repo.add_changes(
-                source.search_source.search_history_path, remove=True
+                source.search_source.get_search_history_path(), remove=True
             )
-            source.search_source.search_history_path = new_filename
+            # source.search_source.get_search_history_path() = new_filename
             self.review_manager.dataset.git_repo.add_changes(new_filename)
             self.review_manager.create_commit(
-                msg=f"Rename {source.search_source.search_history_path}",
+                msg=f"Rename {source.search_source.get_search_history_path()}",
             )
 
     def setup_source_for_load(
@@ -335,14 +337,14 @@ class Load(colrev.process.operation.Operation):
             keep_ids: A boolean flag indicating whether to keep the original IDs of the records.
         """
         self.review_manager.logger.debug(
-            f"Load source records {source.search_source.search_history_path}"
+            f"Load source records {source.search_source.get_search_history_path()}"
         )
 
         self.setup_source_for_load(source)
         records = self.review_manager.dataset.load_records_dict()
 
         self.review_manager.logger.debug(
-            f"Import individual source records {source.search_source.search_history_path}"
+            f"Import individual source records {source.search_source.get_search_history_path()}"
         )
         for source_record in source.search_source.source_records_list:
             source_record = self._import_record(record_dict=source_record)
@@ -369,7 +371,7 @@ class Load(colrev.process.operation.Operation):
             )
 
         self.review_manager.logger.debug(
-            f"Save records {source.search_source.search_history_path}"
+            f"Save records {source.search_source.get_search_history_path()}"
         )
         self.review_manager.dataset.save_records_dict(records)
         self._validate_load(source=source)
@@ -398,20 +400,20 @@ class Load(colrev.process.operation.Operation):
     ) -> None:
 
         # Add to settings (if new filename)
-        if source.search_source.search_history_path in [
-            s.search_history_path for s in self.review_manager.settings.sources
+        if source.search_source.get_search_history_path() in [
+            s.get_search_history_path() for s in self.review_manager.settings.sources
         ]:
             return
 
         self.review_manager.logger.debug(
-            f"Add source to settings {source.search_source.search_history_path}"
+            f"Add source to settings {source.search_source.get_search_history_path()}"
         )
         git_repo = self.review_manager.dataset.git_repo.repo
         self.review_manager.settings.sources.append(source.search_source)
         self.review_manager.save_settings()
         # Add files that were renamed (removed)
         for obj in git_repo.index.diff(None).iter_change_type("D"):
-            if source.search_source.search_history_path.stem in obj.b_path:
+            if source.search_source.get_search_history_path().stem in obj.b_path:
                 self.review_manager.dataset.git_repo.add_changes(
                     Path(obj.b_path), remove=True
                 )
@@ -450,7 +452,7 @@ class Load(colrev.process.operation.Operation):
             except colrev_exceptions.MissingDependencyError as exc:
                 self.review_manager.logger.error(exc)
                 self.review_manager.logger.error(
-                    f"Cannot load records for {source.search_history_path}"
+                    f"Cannot load records for {source.get_search_history_path()}"
                 )
                 print()
 
@@ -536,7 +538,7 @@ class Load(colrev.process.operation.Operation):
         for source in self.load_active_sources():
             try:
                 self.review_manager.logger.info(
-                    f"Load {source.search_source.search_history_path}"
+                    f"Load {source.search_source.get_search_history_path()}"
                 )
                 self._add_source_to_settings(source)
                 self.load_source_records(source, keep_ids=keep_ids)

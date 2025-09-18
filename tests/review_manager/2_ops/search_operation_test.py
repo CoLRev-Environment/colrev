@@ -126,11 +126,11 @@ def test_search_get_unique_filename(
 #     search_operation.remove_forthcoming(source=source)
 
 
-#     with open(source.filename, encoding="utf8") as bibtex_file:
+#     with open(source.search_results_path, encoding="utf8") as bibtex_file:
 #         records = base_repo_review_manager.dataset.load_records_dict(
 #             load_str=bibtex_file.read()
 #         )
 #         assert "00003" not in records.keys()
 
-#     source.filename.unlink()
+#     source.search_results_path.unlink()
 #     search_operation.review_manager.settings.sources.pop()

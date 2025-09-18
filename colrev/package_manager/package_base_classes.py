@@ -112,11 +112,10 @@ class SearchSourcePackageBaseClass(ABC):
     ) -> colrev.record.record.Record:
         """Retrieve masterdata from the SearchSource."""
 
-    # TODO : clarify
     # pylint: disable=unused-argument
     @classmethod
     def ensure_append_only(cls, filename: Path) -> bool:
-        """Ensure that the SearchSource is append-only."""
+        """Ensure that the SearchSource is append-only (override this method if needed)."""
         return False
 
     @abstractmethod

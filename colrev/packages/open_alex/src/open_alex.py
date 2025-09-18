@@ -7,7 +7,6 @@ from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
 
-import requests
 from pydantic import Field
 
 import colrev.env.environment_manager
@@ -83,7 +82,7 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message
                 )
-        except (requests.exceptions.RequestException, KeyError) as exc:
+        except (open_alex_api.OpenAlexAPIError, KeyError) as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 self._availability_exception_message
             ) from exc
@@ -132,7 +131,7 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
             open_alex_feed.save()
         except (
             colrev_exceptions.RecordNotParsableException,
-            requests.exceptions.RequestException,
+            open_alex_api.OpenAlexAPIError,
         ):
             pass
         except Exception as exc:

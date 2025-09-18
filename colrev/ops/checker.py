@@ -495,12 +495,6 @@ class Checker:
 
     def check_sources(self) -> None:
         """Check the sources"""
-        # TODO : temporarily disabled
-        # for source in self.review_manager.settings.sources:
-        #     if not source.search_history_path.is_file():
-        #         self.review_manager.logger.debug(
-        #             f"Search details without file: {source.search_history_path}"
-        #         )
 
     def _retrieve_prior(self) -> dict:
         prior: dict = {Fields.STATUS: [], "persisted_IDs": []}

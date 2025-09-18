@@ -50,7 +50,7 @@ class LocalIndexPrep(base_classes.PrepPackageBaseClass):
         li_md_source_l = [
             s
             for s in prep_operation.review_manager.settings.sources
-            if s.filename == self._local_index_md_filename
+            if s.search_results_path == self._local_index_md_filename
         ]
         if li_md_source_l:
             search_file = li_md_source_l[0]

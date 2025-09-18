@@ -14,6 +14,10 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
+class EuropePMCAPIError(Exception):
+    """Exception raised for Europe PMC API errors."""
+
+
 class EPMCAPI:
     """Connector for the Europe PMC API"""
 
@@ -31,8 +35,14 @@ class EPMCAPI:
     def get_records(self) -> typing.Iterator[colrev.record.record_prep.PrepRecord]:
         """Get records from the Europe PMC API"""
 
-        ret = self.session.request("GET", self.url, headers=self.headers, timeout=60)
-        ret.raise_for_status()
+        try:
+            ret = self.session.request(
+                "GET", self.url, headers=self.headers, timeout=60
+            )
+            ret.raise_for_status()
+        except requests.exceptions.RequestException as exc:  # pragma: no cover
+            raise EuropePMCAPIError from exc
+
         if ret.status_code != 200:
             # review_manager.logger.debug(
             #     f"europe_pmc failed with status {ret.status_code}"

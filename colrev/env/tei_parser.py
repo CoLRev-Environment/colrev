@@ -68,7 +68,6 @@ class TEIParser:
                 load_from_tei = True
 
         if pdf_path is not None and not load_from_tei:
-            # TODO / TBD:
             # Do not run in continuous-integration environment
             # if not utils.in_ci_environment():
             grobid_service = colrev.env.grobid_service.GrobidService()

@@ -50,7 +50,7 @@ class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
         crossref_md_source_l = [
             s
             for s in self.prep_operation.review_manager.settings.sources
-            if s.search_history_path == crossref_md_filename
+            if s.search_results_path == crossref_md_filename
         ]
         if crossref_md_source_l:
             search_file = crossref_md_source_l[0]
@@ -59,7 +59,7 @@ class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
                 platform="colrev.crossref",
                 search_results_path=crossref_md_filename,
                 search_type=SearchType.MD,
-                search_string="",
+                search_string="https://api.crossref.org/",  # dummy
                 comment="",
             )
 
@@ -70,7 +70,7 @@ class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
         self.crossref_prefixes = [
             s.get_origin_prefix()
             for s in prep_operation.review_manager.settings.sources
-            if s.endpoint == "colrev.crossref"
+            if s.platform == "colrev.crossref"
         ]
 
     def check_availability(self) -> None:

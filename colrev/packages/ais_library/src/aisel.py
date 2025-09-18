@@ -9,10 +9,10 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
-import requests
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
+import colrev.loader.load_utils
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
@@ -27,6 +27,7 @@ from colrev.ops.search_api_feed import create_api_source
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
 from colrev.packages.ais_library.src import ais_load_utils
+from colrev.packages.ais_library.src import aisel_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -79,6 +80,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.search_source = search_file
+        self.api = aisel_api.AISeLAPI(search_file=search_file)
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -210,6 +212,9 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                 # Add API search without params
                 search_source = create_api_source(platform=cls.endpoint, path=path)
 
+            search_source.search_parameters = {"query": search_source.search_string}
+            search_source.search_string = ""
+
         # elif search_type == SearchType.TOC:
         else:
             raise NotImplementedError
@@ -220,62 +225,14 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
         source = self.search_source
 
-        self.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
         if source.search_type == SearchType.API:
-            if "query" not in source.search_string:
+            if "query" not in source.search_parameters:
                 # if "search_terms" not in source.search_string["query"]:
                 raise colrev_exceptions.InvalidQueryException("query parameter missing")
 
-        self.logger.debug("SearchSource %s validated", source.filename)
-
-    def _get_ais_query_return(self) -> list:
-        def query_from_params(params: dict) -> str:
-
-            final = ""
-            if isinstance(params["query"], str):
-                final = params["query"]
-            else:
-                for i in params["query"]:
-                    final = f"{final} {i['operator']} {i['field']}:{i['term']}".strip()
-                    final = final.replace("All fields:", "")
-
-            if "start_date" in params["query"]:
-                final = f"{final}&start_date={params['query']['start_date']}"
-
-            if "end_date" in params["query"]:
-                final = f"{final}&end_date={params['query']['end_date']}"
-
-            if "peer_reviewed" in params["query"]:
-                final = f"{final}&peer_reviewed=true"
-
-            return urllib.parse.quote(final)
-
-        params = self.search_source.search_string
-        final_q = query_from_params(params)
-
-        query_string = (
-            "https://aisel.aisnet.org/do/search/results/refer?"
-            + "start=0&context=509156&sort=score&facet=&dlt=Export122204"
-        )
-        query_string = f"{query_string}&q={final_q}"
-
-        response = requests.get(query_string, timeout=300)
-        response.raise_for_status()
-
-        # Note: the following writes the enl to the feed file (bib).
-        # This file is replaced by ais_feed.save()
-
-        records = colrev.loader.load_utils.loads(
-            response.text,
-            implementation="enl",
-            id_labeler=ais_load_utils.enl_id_labeler,
-            entrytype_setter=ais_load_utils.enl_entrytype_setter,
-            field_mapper=ais_load_utils.enl_field_mapper,
-            logger=self.logger,
-        )
-
-        return list(records.values())
+        self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def _run_api_search(
         self,
@@ -289,7 +246,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
             self.logger.info("Performing a search of the full history (may take time)")
 
         try:
-            for record_dict in self._get_ais_query_return():
+            for record_dict in self.api.get_ais_query_return():
                 try:
                     # Note : discard "empty" records
                     if "" == record_dict.get(
@@ -302,10 +259,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
-        except (
-            requests.exceptions.JSONDecodeError,
-            requests.exceptions.HTTPError,
-        ) as exc:
+        except aisel_api.AISeLAPIError as exc:
             # watch github issue:
             # https://github.com/fabiobatalha/crossrefapi/issues/46
             if "504 Gateway Time-out" in str(exc):

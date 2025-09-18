@@ -266,7 +266,7 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
         source_comparison_xlsx = dedupe_dir / Path("source_comparison.xlsx")
 
         source_filenames = [
-            str(x._filepath) for x in self.review_manager.settings.sources
+            str(x.search_results_path) for x in self.review_manager.settings.sources
         ]
         if not silent_mode:
             print("sources: " + ",".join([str(x) for x in source_filenames]))

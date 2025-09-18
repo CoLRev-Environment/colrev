@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
@@ -12,8 +11,6 @@ from typing import Optional
 from urllib.parse import quote
 from urllib.parse import urlparse
 
-import requests
-from pydantic import BaseModel
 from pydantic import Field
 from rapidfuzz import fuzz
 
@@ -38,19 +35,6 @@ from colrev.packages.europe_pmc.src import europe_pmc_api
 # pylint: disable=unused-argument
 
 
-# TODO : is this really needed? ExtendedSearchFile is already extensible
-class EuropePMCSearchSourceSettings(colrev.search_file.ExtendedSearchFile, BaseModel):
-    """Settings for EuropePMCSearchSource"""
-
-    # pylint: disable=too-many-instance-attributes
-    platform: str
-    filepath: Path
-    search_type: SearchType
-    search_string: dict
-    version: typing.Optional[str]
-    comment: typing.Optional[str]
-
-
 class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Europe PMC"""
 
@@ -68,8 +52,6 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     _SOURCE_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
     db_url = "https://europepmc.org/"
-
-    settings_class = EuropePMCSearchSourceSettings
 
     def __init__(
         self,
@@ -153,7 +135,10 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if most_similar_only and counter > 5:
                     break
 
-        except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
+        except (
+            europe_pmc_api.EuropePMCAPIError,
+            json.decoder.JSONDecodeError,
+        ):
             return []
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
@@ -224,8 +209,6 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
             europe_pmc_feed.save()
 
-        except requests.exceptions.RequestException:
-            pass
         except colrev_exceptions.NotFeedIdentifiableException:
             pass
         finally:
@@ -241,7 +224,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         source = self.search_source
 
-        self.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
         assert source.search_type in self.search_types
 
@@ -250,7 +233,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "Query required in search_parameters"
             )
 
-        self.logger.debug("SearchSource %s validated", source.filename)
+        self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def search(self, rerun: bool) -> None:
         """Run a search of Europe PMC"""
@@ -311,8 +294,8 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
                     europe_pmc_feed.add_update_record(retrieved_record)
 
-        except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
-            pass
+        # except (json.decoder.JSONDecodeError):
+        #     pass
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 "sqlite, required for requests CachedSession "

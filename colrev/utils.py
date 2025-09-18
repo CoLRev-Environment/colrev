@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import os
 import pprint
+import re
 import typing
+import unicodedata
 from datetime import timedelta
 from pathlib import Path
 
@@ -61,7 +63,7 @@ def get_unique_filename(
     for search_file_path in base_path.glob("*_search_history.json"):
         search_file = load_search_file(search_file_path)
         # pylint: disable=protected-access
-        existing_filenames.append(search_file._filepath)
+        existing_filenames.append(search_file.get_search_history_path())
     for existing_file in base_path.glob("*"):
         existing_filenames.append(existing_file)
 
@@ -127,3 +129,80 @@ def get_project_home_dir(*, path_str: typing.Optional[str] = None) -> Path:
         )
 
     return original_dir
+
+
+STOPWORDS = {
+    "a",
+    "an",
+    "the",
+    "and",
+    "or",
+    "of",
+    "in",
+    "on",
+    "for",
+    "to",
+    "with",
+    "by",
+    "from",
+    "at",
+    "as",
+    "is",
+    "are",
+    "be",
+    "was",
+    "were",
+    "been",
+    "being",
+    "into",
+    "about",
+    "over",
+    "under",
+    "between",
+    "among",
+    "via",
+    "using",
+    "than",
+    "that",
+    "this",
+    "those",
+    "these",
+    "their",
+    "its",
+    "it",
+    "we",
+    "you",
+    "your",
+    "our",
+    "his",
+    "her",
+}
+
+
+# Keep letters, digits, and common tech punctuation (+, #, -)
+_TOKEN_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9+#-]*")
+
+
+def _strip_diacritics(text: str) -> str:
+    text = unicodedata.normalize("NFKD", text)
+    return "".join(ch for ch in text if not unicodedata.combining(ch))
+
+
+def remove_stopwords(
+    input_str: str, stopwords: typing.Optional[typing.Set[str]] = None
+) -> str:
+    """Remove stopwords from a string"""
+    if stopwords is None:
+        stopwords = STOPWORDS
+    text = _strip_diacritics(input_str)
+    tokens = _TOKEN_RE.findall(text)
+
+    kept = []
+    for tok in tokens:
+        low = tok.lower()
+        # drop function-word stopwords (but keep ALLCAPS acronyms)
+        if low in stopwords and not tok.isupper():
+            continue
+        kept.append(tok)
+
+    return " ".join(kept)

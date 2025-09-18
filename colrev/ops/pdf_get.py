@@ -255,7 +255,7 @@ class PDFGet(colrev.process.operation.Operation):
 
         self.review_manager.logger.info(
             "Checking PDFs in same directory to reassign when "
-            f"the cpid is identical {source.search_history_path}"
+            f"the cpid is identical {source.search_results_path}"
         )
 
         pdf_dir = self.review_manager.paths.pdf
@@ -272,7 +272,7 @@ class PDFGet(colrev.process.operation.Operation):
             logger=self.review_manager.logger,
         )
         source_records = list(source_records_dict.values())
-        corresponding_origin = str(source.search_history_path)
+        corresponding_origin = str(source.get_origin_prefix())
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():
             if Fields.FILE not in record:
@@ -323,11 +323,11 @@ class PDFGet(colrev.process.operation.Operation):
         if len(source_records) > 0:
             source_records_dict = {r[Fields.ID]: r for r in source_records}
             write_file(
-                records_dict=source_records_dict, filename=source.search_history_path
+                records_dict=source_records_dict, filename=source.search_results_path
             )
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.git_repo.add_changes(source.search_history_path)
+        self.review_manager.dataset.git_repo.add_changes(source.search_results_path)
 
     def relink_pdfs(self) -> None:
         """Relink record files to the corresponding PDFs (if available)"""
@@ -337,7 +337,7 @@ class PDFGet(colrev.process.operation.Operation):
         sources = [
             s
             for s in self.review_manager.settings.sources
-            if s.platform == "colrev.files_dir" and s.search_history_path.is_file()
+            if s.platform == "colrev.files_dir" and s.search_results_path.is_file()
         ]
         for source in sources:
             self._relink_pdfs_in_source(source)

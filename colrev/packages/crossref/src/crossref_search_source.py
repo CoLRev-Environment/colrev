@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Optional
 
 import inquirer
-import requests
 from pydantic import Field
 
 import colrev.env.language_service
@@ -525,7 +524,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                 record.remove_field(key=Fields.DOI)
 
         except (
-            requests.exceptions.RequestException,
+            crossref_api.CrossrefAPIError,
             OSError,
             IndexError,
             colrev_exceptions.RecordNotFoundInPrepSourceException,

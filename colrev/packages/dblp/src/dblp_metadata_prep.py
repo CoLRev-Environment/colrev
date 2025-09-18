@@ -49,7 +49,7 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
         dblp_md_source_l = [
             s
             for s in self.prep_operation.review_manager.settings.sources
-            if s.filename == dblp_md_filename
+            if s.search_results_path == dblp_md_filename
         ]
         if dblp_md_source_l:
             search_file = dblp_md_source_l[0]
@@ -67,7 +67,7 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
         self.dblp_prefixes = [
             s.get_origin_prefix()
             for s in prep_operation.review_manager.settings.sources
-            if s.endpoint == "colrev.dblp"
+            if s.search_results_path == "colrev.dblp"
         ]
 
     def check_availability(self) -> None:
