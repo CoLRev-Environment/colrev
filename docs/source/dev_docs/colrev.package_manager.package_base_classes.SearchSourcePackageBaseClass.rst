@@ -33,7 +33,6 @@ colrev.package\_manager.package\_base\_classes.SearchSourcePackageBaseClass
    .. autosummary::
 
       ~SearchSourcePackageBaseClass.ci_supported
-      ~SearchSourcePackageBaseClass.settings_class
       ~SearchSourcePackageBaseClass.source_identifier
       ~SearchSourcePackageBaseClass.search_types
       ~SearchSourcePackageBaseClass.heuristic_status

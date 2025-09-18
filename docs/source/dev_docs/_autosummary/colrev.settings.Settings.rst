@@ -19,6 +19,7 @@ colrev.settings.Settings
       ~Settings.get_packages
       ~Settings.is_curated_masterdata_repo
       ~Settings.is_curated_repo
+      ~Settings.validate_sources
 
 
 

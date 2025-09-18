@@ -15,6 +15,7 @@ import colrev.record.record_merger
 import colrev.record.record_similarity
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
+from colrev.constants import ENTRYTYPE_FIELD_REQUIREMENTS
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldSet
@@ -743,20 +744,22 @@ class Record:
     def change_entrytype(
         self,
         new_entrytype: str,
-        *,
-        qm: colrev.record.qm.quality_model.QualityModel,
     ) -> None:
         """Change the ENTRYTYPE"""
         if new_entrytype == self.data.get(Fields.ENTRYTYPE, "NA"):
             if Fields.MD_PROV in self.data:
                 self.align_provenance()
             return  # otherwise, IGNORE:missing would be reset
+
+        # Clear defect notes that are inconsistent with the soon-to-change entrytype
         for value in self.data.get(Fields.MD_PROV, {}).values():
             if any(
                 x in value["note"]
                 for x in [DefectCodes.INCONSISTENT_WITH_ENTRYTYPE, DefectCodes.MISSING]
             ):
                 value["note"] = ""
+
+        # Remove fields explicitly marked as UNKNOWN to avoid carrying stale "missing" across types
         missing_fields = [k for k, v in self.data.items() if v == FieldValues.UNKNOWN]
         for missing_field in missing_fields:
             self.remove_field(key=missing_field)
@@ -764,6 +767,8 @@ class Record:
         self.align_provenance()
 
         self.data[Fields.ENTRYTYPE] = new_entrytype
+
+        # Reassign fields
         if new_entrytype in [ENTRYTYPES.INPROCEEDINGS, ENTRYTYPES.PROCEEDINGS]:
             if Fields.JOURNAL in self.data and Fields.BOOKTITLE not in self.data:
                 self.rename_field(key=Fields.JOURNAL, new_key=Fields.BOOKTITLE)
@@ -791,7 +796,22 @@ class Record:
                 f"No ENTRYTYPE specification ({new_entrytype})"
             )
 
-        self.run_quality_model(qm, set_prepared=True)
+        # Ensure required-but-missing fields are set and annotated
+        required_fields = ENTRYTYPE_FIELD_REQUIREMENTS.get(new_entrytype, [])
+        if required_fields:
+            self.data.setdefault(Fields.MD_PROV, {})
+
+            for req_field in required_fields:
+                if not self.data.get(req_field):
+                    # Set missing required field to UNKNOWN
+                    self.data[req_field] = FieldValues.UNKNOWN
+
+                    # Ensure provenance entry exists
+                    self.data[Fields.MD_PROV].setdefault(req_field, {})
+                    self.data[Fields.MD_PROV][req_field][
+                        "source"
+                    ] = "generic_field_requirements"
+                    self.data[Fields.MD_PROV][req_field]["note"] = DefectCodes.MISSING
 
     def set_status(self, target_state: RecordState, *, force: bool = False) -> None:
         """Set the record status"""

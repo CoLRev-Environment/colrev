@@ -1,5 +1,8 @@
 #! /usr/bin/env python
 """DataPackageBaseClass: RefCheck"""
+import logging
+from typing import Optional
+
 import colrev.ops.data
 import colrev.package_manager.package_settings
 from colrev.package_manager.package_base_classes import DataPackageBaseClass
@@ -10,14 +13,14 @@ from colrev.package_manager.package_base_classes import DataPackageBaseClass
 class RefCheck(DataPackageBaseClass):
     """RefCheck Class"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-
     def __init__(
         self,
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.data_operation = data_operation
         self.review_manager = data_operation.review_manager
 

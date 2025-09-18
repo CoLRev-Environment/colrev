@@ -3,20 +3,23 @@
 from __future__ import annotations
 
 import collections
+import logging
 import re
+import typing
 from sqlite3 import OperationalError
 
 import requests
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
+import colrev.utils
 from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
@@ -41,7 +44,9 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
@@ -49,15 +54,22 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
             prep_operation.review_manager.settings.is_curated_masterdata_repo()
         )
         try:
-            self.session = prep_operation.review_manager.get_cached_session()
+            self.session = colrev.utils.get_cached_session()
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="sqlite-requests-cache"
             ) from exc
-        _, self.email = prep_operation.review_manager.get_committer()
+        _, self.email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
 
+    # pylint: disable=unused-argument
     def prepare(
-        self, record: colrev.record.record_prep.PrepRecord
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
     ) -> colrev.record.record.Record:
         """Prepare the record by retrieving its DOI from the website (url) if available"""
 
@@ -96,8 +108,8 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
                 retrieved_record_dict
             )
             doi_connector.DOIConnector.retrieve_doi_metadata(
-                review_manager=self.review_manager,
                 record=retrieved_record,
+                logger=self.logger,
                 timeout=self.prep_operation.timeout,
             )
 

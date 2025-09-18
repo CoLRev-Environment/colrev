@@ -20,6 +20,7 @@ colrev.ops.search\_api\_feed.SearchAPIFeed
       ~SearchAPIFeed.add_update_record
       ~SearchAPIFeed.get_last_updated
       ~SearchAPIFeed.get_prev_feed_record
+      ~SearchAPIFeed.get_records
       ~SearchAPIFeed.save
 
 

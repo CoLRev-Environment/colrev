@@ -2,7 +2,9 @@
 """Creation of a github-page for the review as part of the data operations"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
+from typing import Optional
 
 import git
 from pydantic import BaseModel
@@ -13,6 +15,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -53,7 +56,9 @@ class GithubPages(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         # Set default values (if necessary)
         if "version" not in settings:
             settings["version"] = "0.1.0"
@@ -62,7 +67,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
 
         self.settings = self.settings_class(**settings)
         self.review_manager = data_operation.review_manager
-        self.git_repo = self.review_manager.dataset.get_repo()
+        self.git_repo = self.review_manager.dataset.git_repo.repo
 
     # pylint: disable=unused-argument
     @classmethod
@@ -79,7 +84,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
 
     def _setup_github_pages_branch(self) -> None:
         # if branch does not exist: create and add index.html
-        self.review_manager.logger.info("Setup gh-pages branch")
+        self.logger.info("Setup gh-pages branch")
         self.git_repo.git.checkout("--orphan", self.GH_PAGES_BRANCH_NAME)
         self.git_repo.git.rm("-rf", Path("."))
 
@@ -93,13 +98,13 @@ class GithubPages(base_classes.DataPackageBaseClass):
             old_string="{{project_title}}",
             new_string=project_title.rstrip(" ").capitalize(),
         )
-        self.review_manager.dataset.add_changes(Path("README.md"))
+        self.review_manager.dataset.git_repo.add_changes(Path("README.md"))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("packages/github_pages/github_pages/index.html"),
             target=Path("index.html"),
         )
-        self.review_manager.dataset.add_changes(Path("index.html"))
+        self.review_manager.dataset.git_repo.add_changes(Path("index.html"))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("packages/github_pages/github_pages/_config.yml"),
@@ -110,15 +115,15 @@ class GithubPages(base_classes.DataPackageBaseClass):
             old_string="{{project_title}}",
             new_string=project_title,
         )
-        self.review_manager.dataset.add_changes(Path("_config.yml"))
+        self.review_manager.dataset.git_repo.add_changes(Path("_config.yml"))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("packages/github_pages/github_pages/about.md"),
             target=Path("about.md"),
         )
-        self.review_manager.dataset.add_changes(Path("about.md"))
+        self.review_manager.dataset.git_repo.add_changes(Path("about.md"))
 
-        self.review_manager.dataset.create_commit(
+        self.review_manager.create_commit(
             msg="Setup gh-pages branch", skip_status_yaml=True
         )
 
@@ -128,7 +133,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
         silent_mode: bool,
     ) -> None:
         if not silent_mode:
-            self.review_manager.logger.info("Update data on github pages")
+            self.logger.info("Update data on github pages")
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -150,7 +155,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
                 ),
                 target=self.review_manager.paths.PRE_COMMIT_CONFIG,
             )
-            self.review_manager.dataset.add_changes(
+            self.review_manager.dataset.git_repo.add_changes(
                 self.review_manager.paths.PRE_COMMIT_CONFIG
             )
 
@@ -165,11 +170,9 @@ class GithubPages(base_classes.DataPackageBaseClass):
         data_file = Path("data.bib")
         write_file(records_dict=included_records, filename=data_file)
 
-        self.review_manager.dataset.add_changes(data_file)
+        self.review_manager.dataset.git_repo.add_changes(data_file)
 
-        self.review_manager.dataset.create_commit(
-            msg="Update sample", skip_status_yaml=True
-        )
+        self.review_manager.create_commit(msg="Update sample", skip_status_yaml=True)
 
     def _push_branch(
         self,
@@ -177,7 +180,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
         silent_mode: bool,
     ) -> None:
         if not silent_mode:
-            self.review_manager.logger.info("Push to github pages")
+            self.logger.info("Push to github pages")
         if "origin" in self.git_repo.remotes:
             if "origin/gh-pages" in [r.name for r in self.git_repo.remotes.origin.refs]:
                 try:
@@ -185,7 +188,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
                         refspec=f"{self.GH_PAGES_BRANCH_NAME}:{self.GH_PAGES_BRANCH_NAME}"
                     )
                 except git.exc.GitCommandError:  # pylint: disable=no-member
-                    self.review_manager.logger.error(
+                    self.logger.error(
                         "Could not push branch gh-pages. Please resolve manually, i.e., run "
                         f"{Colors.ORANGE}git switch gh-pages && "
                         f"git pull --rebase && git push{Colors.END}"
@@ -204,12 +207,14 @@ class GithubPages(base_classes.DataPackageBaseClass):
                 .split("/")
             )
             if not silent_mode:
-                self.review_manager.logger.info(
-                    f"Data available at: https://{username}.github.io/{project}/"
+                self.logger.info(
+                    "Data available at: https://%s.github.io/%s/",
+                    username,
+                    project,
                 )
         else:
             if not silent_mode:
-                self.review_manager.logger.info("No remotes specified")
+                self.logger.info("No remotes specified")
 
     def _check_gh_pages_setup(self) -> None:
         username, project = (
@@ -239,43 +244,43 @@ class GithubPages(base_classes.DataPackageBaseClass):
 
         # pylint: disable=too-many-branches
 
-        if self.review_manager.in_ci_environment():
-            self.review_manager.logger.error(
+        if utils.in_ci_environment():
+            self.logger.error(
                 "Running in CI environment. Skipping github-pages generation."
             )
             return
 
-        if self.review_manager.dataset.has_record_changes():
-            self.review_manager.logger.error(
+        if self.review_manager.dataset.git_repo.has_record_changes():
+            self.logger.error(
                 "Cannot update github pages because there are uncommitted changes."
             )
             return
 
-        active_branch = self.git_repo.active_branch
+        active_branch = self.git_repo.repo.active_branch
 
         # check if there is an "origin" remote
 
-        if "origin" in self.git_repo.remotes:
+        if "origin" in self.git_repo.repo.remotes:
             # check if remote.origin has a gh-pages branch
-            self.git_repo.remotes.origin.fetch()
+            self.git_repo.repo.remotes.origin.fetch()
             if f"origin/{self.GH_PAGES_BRANCH_NAME}" in [
-                r.name for r in self.git_repo.remotes.origin.refs
+                r.name for r in self.git_repo.repo.remotes.origin.refs
             ]:
                 try:
                     if "origin/gh-pages" not in [
-                        r.name for r in self.git_repo.remotes.origin.refs
+                        r.name for r in self.git_repo.repo.remotes.origin.refs
                     ]:
-                        self.git_repo.git.push(
+                        self.git_repo.repo.git.push(
                             "--set-upstream",
                             "origin",
                             self.GH_PAGES_BRANCH_NAME,
                             "--no-verify",
                         )
                     else:
-                        self.git_repo.remotes.origin.pull(ff_only=True)
+                        self.git_repo.repo.remotes.origin.pull(ff_only=True)
 
                     # update
-                    self.git_repo.git.checkout(active_branch)
+                    self.git_repo.repo.git.checkout(active_branch)
                     self._update_data(
                         silent_mode=silent_mode,
                     )
@@ -292,12 +297,12 @@ class GithubPages(base_classes.DataPackageBaseClass):
             else:
                 # create branch
                 if self.GH_PAGES_BRANCH_NAME not in [
-                    h.name for h in self.git_repo.heads
+                    h.name for h in self.git_repo.repo.heads
                 ]:
                     self._setup_github_pages_branch()
 
                 # update
-                self.git_repo.git.checkout(active_branch)
+                self.git_repo.repo.git.checkout(active_branch)
                 self._update_data(
                     silent_mode=silent_mode,
                 )
@@ -307,24 +312,26 @@ class GithubPages(base_classes.DataPackageBaseClass):
                     self._push_branch(
                         silent_mode=silent_mode,
                     )
-            self.git_repo.git.checkout(active_branch)
+            self.git_repo.repo.git.checkout(active_branch)
             self._check_gh_pages_setup()
         else:
-            self.review_manager.logger.warning(
+            self.logger.warning(
                 "Cannot push github pages because there is no remote origin. "
                 "gh-pages branch will only be created locally."
             )
             # create branch
-            if self.GH_PAGES_BRANCH_NAME not in [h.name for h in self.git_repo.heads]:
+            if self.GH_PAGES_BRANCH_NAME not in [
+                h.name for h in self.git_repo.repo.heads
+            ]:
                 self._setup_github_pages_branch()
 
             # update
-            self.git_repo.git.checkout(active_branch)
+            self.git_repo.repo.git.checkout(active_branch)
             self._update_data(
                 silent_mode=silent_mode,
             )
 
-        self.git_repo.git.checkout(active_branch)
+        self.git_repo.repo.git.checkout(active_branch)
 
     def update_record_status_matrix(
         self,
@@ -345,7 +352,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
         data_endpoint = "Data operation [github pages data endpoint]: "
 
         advice = {"msg": f"{data_endpoint}", "detailed_msg": "TODO"}
-        if self.review_manager.dataset.get_remote_url() == "NA":
+        if self.review_manager.dataset.git_repo.get_remote_url() == "NA":
             advice["msg"] += (
                 "\n    - To make the repository available on Github pages, "
                 + "push it to a Github repository\nhttps://github.com/new"

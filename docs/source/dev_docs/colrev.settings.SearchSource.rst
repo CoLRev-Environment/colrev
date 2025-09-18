@@ -33,7 +33,7 @@ colrev.settings.SearchSource
    .. autosummary::
 
       ~SearchSource.endpoint
-      ~SearchSource.filename
+      ~SearchSource.search_results_path
       ~SearchSource.search_type
       ~SearchSource.search_parameters
       ~SearchSource.comment

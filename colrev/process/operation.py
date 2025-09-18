@@ -9,6 +9,7 @@ import git
 from docker.errors import DockerException
 
 import colrev.exceptions as colrev_exceptions
+from colrev import utils
 from colrev.constants import OperationsType
 from colrev.process.model import ProcessModel
 
@@ -51,7 +52,7 @@ class Operation:
                 retval = func(self, *args, **kwargs)
                 # Conclude the operation
                 self.conclude()
-                if self.review_manager.in_ci_environment():
+                if utils.in_ci_environment():
                     print("\n\n")
                 return retval
 

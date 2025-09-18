@@ -367,9 +367,9 @@ class XPLORE:
         if "articles" not in formattedData:
             return []
         articles = formattedData["articles"]
-        records = []
+        records_list = []
         for article in articles:
             record_dict = self._create_record_dict(article)
             record = colrev.record.record.Record(record_dict)
-            records.append(record)
-        return records
+            records_list.append(record)
+        return records_list

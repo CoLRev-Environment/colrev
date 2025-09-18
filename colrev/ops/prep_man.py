@@ -12,10 +12,12 @@ import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record_prep
+from colrev import utils
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 
 
 class PrepMan(colrev.process.operation.Operation):
@@ -92,10 +94,10 @@ class PrepMan(colrev.process.operation.Operation):
             )
 
         print("Entry type statistics overall:")
-        self.review_manager.p_printer.pprint(overall_types[Fields.ENTRYTYPE])
+        utils.p_print(overall_types[Fields.ENTRYTYPE])
 
         print("Entry type statistics (needs_manual_preparation):")
-        self.review_manager.p_printer.pprint(stats[Fields.ENTRYTYPE])
+        utils.p_print(stats[Fields.ENTRYTYPE])
 
         return pd.DataFrame(crosstab, columns=[Fields.ORIGIN, "hint"])
 
@@ -241,9 +243,7 @@ class PrepMan(colrev.process.operation.Operation):
             "all_ids": all_ids,
             "PAD": pad,
         }
-        self.review_manager.logger.debug(
-            self.review_manager.p_printer.pformat(md_prep_man_data)
-        )
+        self.review_manager.logger.debug(utils.pformat(md_prep_man_data))
         return md_prep_man_data
 
     def set_data(self, *, record_dict: dict) -> None:
@@ -267,10 +267,7 @@ class PrepMan(colrev.process.operation.Operation):
     def main(self) -> None:
         """Manually prepare records (main entrypoint)"""
 
-        if (
-            self.review_manager.in_ci_environment()
-            and not self.review_manager.in_test_environment()
-        ):
+        if utils.in_ci_environment() and not self.review_manager.in_test_environment():
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev prep-man",
                 detailed_trace="prep-man not available in ci environment",
@@ -278,7 +275,7 @@ class PrepMan(colrev.process.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
 
         for (
             prep_man_package_endpoint
@@ -290,4 +287,4 @@ class PrepMan(colrev.process.operation.Operation):
             endpoint = prep_man_class(
                 prep_man_operation=self, settings=prep_man_package_endpoint
             )
-            records = endpoint.prepare_manual(records)  # type: ignore
+            records: dict = endpoint.prepare_manual(records)  # type: ignore

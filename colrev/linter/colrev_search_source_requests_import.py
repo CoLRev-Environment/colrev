@@ -22,7 +22,8 @@ class SearchSourceRequestsImportChecker(checkers.BaseChecker):
 
     msgs = {
         "W0933": (
-            "SearchSource package imports requests. Move requests usage to a separate api.py module.",
+            "SearchSource package imports requests. "
+            + "Move requests usage to a separate api.py module.",
             "colrev-search-source-requests-import",
             "Emitted when a module containing a SearchSourcePackageBaseClass imports requests. "
             "Network I/O must live in <package>/api.py.",

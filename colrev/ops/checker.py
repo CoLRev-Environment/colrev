@@ -13,10 +13,12 @@ import yaml
 from git.exc import InvalidGitRepositoryError
 
 import colrev.exceptions as colrev_exceptions
+from colrev import utils
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.env.environment_manager import EnvironmentManager
 from colrev.process.model import ProcessModel
 
 if typing.TYPE_CHECKING:  # pragma: no cover
@@ -93,7 +95,7 @@ class Checker:
         # Note: when check is called directly from the command line.
         # pre-commit hooks automatically notify on merge conflicts
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
         unmerged_blobs = git_repo.index.unmerged_blobs()
 
         for path, list_of_blobs in unmerged_blobs.items():
@@ -105,7 +107,7 @@ class Checker:
         try:
             if not (self.review_manager.path / Path(".git")).is_dir():
                 return False
-            _ = self.review_manager.dataset.get_repo().git_dir
+            _ = self.review_manager.dataset.git_repo.repo
             return True
         except InvalidGitRepositoryError:
             return False
@@ -145,7 +147,7 @@ class Checker:
                 f"missing hooks in .pre-commit-config.yaml ({', '.join(missing_hooks)})"
             )
 
-        if not self.review_manager.in_ci_environment():
+        if not utils.in_ci_environment():
             pch_file = Path(".git/hooks/pre-commit")
             if pch_file.is_file():
                 with open(pch_file, encoding="utf8") as file:
@@ -188,6 +190,22 @@ class Checker:
 
         return True
 
+    def _check_search_history_files(self) -> None:
+        search_files = self.review_manager.paths.search.glob("**/*.*")
+        # for every file that does not end with _search_history.json,
+        # require a corresponding search_history file
+        for search_file in search_files:
+            if str(search_file).endswith("_search_history.json"):
+                continue
+            if (
+                not Path(search_file)
+                .with_name(search_file.stem + "_search_history.json")
+                .is_file()
+            ):
+                raise colrev_exceptions.RepoSetupError(
+                    f"Missing search history file for {search_file.name}"
+                )
+
     def _retrieve_ids_from_bib(self, *, file_path: Path) -> list:
         assert file_path.suffix == ".bib"
         record_ids = []
@@ -210,7 +228,7 @@ class Checker:
             )
 
         # if (
-        #     self.review_manager.dataset.records_changed()
+        #     self.review_manager.dataset.git_repo.records_changed()
         #     or self.review_manager.verbose_mode
         # ):
         #     # Check for broken origins
@@ -477,11 +495,6 @@ class Checker:
 
     def check_sources(self) -> None:
         """Check the sources"""
-        for source in self.review_manager.settings.sources:
-            if not source.filename.is_file():
-                self.review_manager.logger.debug(
-                    f"Search details without file: {source.filename}"
-                )
 
     def _retrieve_prior(self) -> dict:
         prior: dict = {Fields.STATUS: [], "persisted_IDs": []}
@@ -670,7 +683,7 @@ class Checker:
         # We work with exceptions because each issue may be raised in different checks.
         # Currently, linting is limited for the scripts.
 
-        environment_manager = self.review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         check_scripts: list[dict[str, typing.Any]] = [
             {
                 "script": environment_manager.check_git_installed,
@@ -679,17 +692,16 @@ class Checker:
             {"script": self._check_git_conflicts, "params": []},
             {"script": self.check_repository_setup, "params": []},
             {"script": self._check_software, "params": []},
+            {"script": self._check_search_history_files, "params": []},
         ]
 
         if self.review_manager.paths.records.is_file():
-            if self.review_manager.dataset.file_in_history(
+            if self.review_manager.dataset.git_repo.file_in_history(
                 self.review_manager.paths.RECORDS_FILE
             ):
                 prior = self._retrieve_prior()
                 self.review_manager.logger.debug("prior")
-                self.review_manager.logger.debug(
-                    self.review_manager.p_printer.pformat(prior)
-                )
+                self.review_manager.logger.debug(utils.pformat(prior))
             else:  # if RECORDS_FILE not yet in git history
                 prior = {}
 

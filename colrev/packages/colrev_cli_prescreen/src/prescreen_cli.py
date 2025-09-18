@@ -2,7 +2,9 @@
 """Prescreen based on CLI"""
 from __future__ import annotations
 
+import logging
 import textwrap
+from typing import Optional
 
 from pydantic import Field
 
@@ -30,7 +32,9 @@ class CoLRevCLIPrescreen(base_classes.PrescreenPackageBaseClass):
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prescreen_operation = prescreen_operation
         self.review_manager = prescreen_operation.review_manager
@@ -76,10 +80,10 @@ class CoLRevCLIPrescreen(base_classes.PrescreenPackageBaseClass):
         stat_len: int,
         padding: int,
     ) -> bool:
-        self.review_manager.logger.debug("Start prescreen")
+        self.logger.debug("Start prescreen")
 
         if 0 == stat_len:
-            self.review_manager.logger.info("No records to prescreen")
+            self.logger.info("No records to prescreen")
 
         i, quit_pressed = 0, False
         for record_dict in prescreen_data["items"]:
@@ -108,7 +112,7 @@ class CoLRevCLIPrescreen(base_classes.PrescreenPackageBaseClass):
                     inclusion_decision_str = ret.replace("y", "yes").replace("n", "no")
 
             if quit_pressed:
-                self.review_manager.logger.info("Stop prescreen")
+                self.logger.info("Stop prescreen")
                 break
 
             if ret == "s":
@@ -153,7 +157,7 @@ class CoLRevCLIPrescreen(base_classes.PrescreenPackageBaseClass):
         #     if input("Create commit (y/n)?") != "y":
         #         return records
 
-        self.review_manager.dataset.create_commit(
+        self.review_manager.create_commit(
             msg="Pre-screen: manual screen (cli)", manual_author=True
         )
         return records

@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 import collections
+import logging
 import os
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import BaseModel
 from pydantic import Field
 
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
@@ -47,7 +47,9 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         # Set default values (if necessary)
         if "version" not in settings:
             settings["version"] = "0.1"
@@ -113,7 +115,7 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
             elif Fields.BOOKTITLE in record_dict:
                 key = record_dict.get(Fields.YEAR, "-")
             else:
-                self.review_manager.logger.error(f"TOC not supported: {record_dict}")
+                self.logger.error(f"TOC not supported: {record_dict}")
                 continue
             if not all(
                 source in [o.split("/")[0] for o in record_dict[Fields.ORIGIN]]
@@ -239,7 +241,7 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
         silent_mode: bool,
     ) -> None:
         if not silent_mode:
-            self.review_manager.logger.info("Calculate statistics for readme")
+            self.logger.info("Calculate statistics for readme")
 
         # alternatively: get sources from search_sources.filename (name/stem?)
         sources = []
@@ -252,7 +254,9 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
         stats = self._get_stats(records=records, sources=sources)
         markdown_output = self._get_stats_markdown_table(stats=stats, sources=sources)
         self._update_table_in_readme(markdown_output=markdown_output)
-        self.review_manager.dataset.add_changes(self.review_manager.paths.README_FILE)
+        self.review_manager.dataset.git_repo.add_changes(
+            self.review_manager.paths.README_FILE
+        )
 
     def _source_comparison(self, *, silent_mode: bool) -> None:
         """Exports a table to support analyses of records that are not
@@ -262,7 +266,7 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
         source_comparison_xlsx = dedupe_dir / Path("source_comparison.xlsx")
 
         source_filenames = [
-            str(x.filename) for x in self.review_manager.settings.sources
+            str(x.search_results_path) for x in self.review_manager.settings.sources
         ]
         if not silent_mode:
             print("sources: " + ",".join([str(x) for x in source_filenames]))

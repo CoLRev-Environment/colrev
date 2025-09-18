@@ -9,6 +9,14 @@ colrev.ops.search\_api\_feed
 
 
 
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+
+      create_api_source
+
 
 
 

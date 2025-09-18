@@ -24,6 +24,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.process.operation
 import colrev.record.record_prep
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import EndpointType
@@ -31,6 +32,7 @@ from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
 
@@ -39,8 +41,23 @@ if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
     import colrev.settings
 
+# pylint: disable=too-many-lines
+
 # logging.getLogger("urllib3").setLevel(logging.ERROR)
 logging.getLogger("requests_cache").setLevel(logging.ERROR)
+
+# ---- start-method guard: avoid unsafe fork in multi-threaded parent ----
+_AVAILABLE = mp.get_all_start_methods()
+_PREFERRED = "forkserver" if "forkserver" in _AVAILABLE else "spawn"
+
+try:
+    if mp.get_start_method(allow_none=True) is None:
+        mp.set_start_method(_PREFERRED)
+except RuntimeError:
+    # Start method already set elsewhere; safe to ignore
+    pass
+# ------------------------------------------------------------------------
+
 
 PREP_COUNTER = Value("i", 0)
 
@@ -105,10 +122,23 @@ class Prep(colrev.process.operation.Operation):
         self.temp_records = self.review_manager.path / (Path(".colrev/temp_recs.bib"))
 
         self.quality_model = review_manager.get_qm()
-        self.package_manager = self.review_manager.get_package_manager()
+        self.package_manager = PackageManager()
 
         self.polish = polish
         self._cpu = cpu
+
+        self.source_prefix_masterdata_complete = [
+            s.get_origin_prefix()
+            for s in self.review_manager.settings.sources
+            if s.platform
+            in [
+                "colrev.crossref",
+                "colrev.pubmed",
+                "colrev.dblp",
+                "colrev.europe_pmc",
+                "colrev.plos",
+            ]
+        ]
 
         # Note: for unit testing, we use a simple loop (instead of parallel)
         # to ensure that the IDs of feed records don't change
@@ -186,7 +216,9 @@ class Prep(colrev.process.operation.Operation):
             prior = preparation_record.copy_prep_rec()
 
             start_time = datetime.now()
-            preparation_record = endpoint.prepare(preparation_record)
+            preparation_record = endpoint.prepare(
+                preparation_record, self.quality_model
+            )
             self._add_stats(
                 start_time=start_time,
                 prep_round_package_endpoint=prep_round_package_endpoint,
@@ -499,9 +531,18 @@ class Prep(colrev.process.operation.Operation):
         prior_state = record.data[Fields.STATUS]
 
         # Rerun quality model (in case there are manual prep changes)
-        preparation_record.change_entrytype(
-            new_entrytype=record.data[Fields.ENTRYTYPE], qm=self.quality_model
-        )
+        preparation_record.change_entrytype(new_entrytype=record.data[Fields.ENTRYTYPE])
+        complete_sources = [
+            o
+            for o in preparation_record.data[Fields.ORIGIN]
+            if o.split("/")[0] in self.source_prefix_masterdata_complete
+        ]
+        if complete_sources:
+            preparation_record.set_masterdata_complete(
+                source=complete_sources[0],
+                masterdata_repository=self.review_manager.settings.is_curated_repo(),
+            )
+
         preparation_record.run_quality_model(
             self.quality_model, set_prepared=not self.polish
         )
@@ -568,7 +609,7 @@ class Prep(colrev.process.operation.Operation):
                     old_string=old_filename,
                     new_string=str(new_filename),
                 )
-                self.review_manager.dataset.add_changes(pdfs_origin_file)
+                self.review_manager.dataset.git_repo.add_changes(pdfs_origin_file)
 
     def set_ids(self) -> None:
         """Set IDs (regenerate). In force-mode, all IDs are regenerated and PDFs are renamed"""
@@ -578,7 +619,7 @@ class Prep(colrev.process.operation.Operation):
         records = self.review_manager.dataset.set_ids()
         self._rename_files(records)
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(msg="Set IDs")
+        self.review_manager.create_commit(msg="Set IDs")
 
     def setup_custom_script(self) -> None:
         """Setup a custom prep script"""
@@ -590,7 +631,7 @@ class Prep(colrev.process.operation.Operation):
             with open("custom_prep_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(Path("custom_prep_script.py"))
+        self.review_manager.dataset.git_repo.add_changes(Path("custom_prep_script.py"))
 
         prep_round = self.review_manager.settings.prep.prep_rounds[-1]
         prep_round.prep_package_endpoints.append({"endpoint": "custom_prep_script"})
@@ -620,11 +661,7 @@ class Prep(colrev.process.operation.Operation):
                 conditions=[{Fields.STATUS: s} for s in r_states_to_prepare]
             )
         )
-        if (
-            self.polish
-            and self.review_manager.in_ci_environment()
-            and len(items) > 2000
-        ):
+        if self.polish and utils.in_ci_environment() and len(items) > 2000:
             items = random.choices(items, k=2000)  # nosec
 
         prep_data = {
@@ -731,7 +768,6 @@ class Prep(colrev.process.operation.Operation):
 
         self.prep_package_endpoints: dict[str, typing.Any] = {}
         for prep_package_endpoint in prep_round.prep_package_endpoints:
-
             prep_class = self.package_manager.get_package_endpoint_class(
                 package_type=EndpointType.prep,
                 package_identifier=prep_package_endpoint["endpoint"],
@@ -746,7 +782,7 @@ class Prep(colrev.process.operation.Operation):
             if x["endpoint"].lower() not in self.prep_package_endpoints
         ]
         if non_available_endpoints:
-            if self.review_manager.in_ci_environment():
+            if utils.in_ci_environment():
                 raise colrev_exceptions.ServiceNotAvailableException(
                     dep=f"colrev prep ({','.join(non_available_endpoints)})",
                     detailed_trace="prep not available in ci environment",
@@ -761,7 +797,10 @@ class Prep(colrev.process.operation.Operation):
                 self.review_manager.logger.debug(
                     f"Check availability of {endpoint_name}"
                 )
-                endpoint.check_availability(source_operation=self)  # type: ignore
+                try:
+                    endpoint.check_availability()
+                except colrev_exceptions.ServiceNotAvailableException as exc:
+                    print(exc)
 
     def _log_record_change_scores(
         self, *, preparation_data: list, prepared_records: list
@@ -893,10 +932,12 @@ class Prep(colrev.process.operation.Operation):
             {r[Fields.ID]: r for r in prepared_records}, partial=True
         )
         self._log_commit_details(prepared_records)
-        self.review_manager.dataset.create_commit(
+        self.review_manager.create_commit(
             msg="Prep: improve record metadata",
         )
-        self._prep_commit_id = self.review_manager.dataset.get_repo().head.commit.hexsha
+        self._prep_commit_id = (
+            self.review_manager.dataset.git_repo.repo.head.commit.hexsha
+        )
         if not self.review_manager.high_level_operation:
             print()
         self.review_manager.reset_report_logger()
@@ -916,7 +957,7 @@ class Prep(colrev.process.operation.Operation):
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed prep operation{Colors.END}"
         )
-        if self.review_manager.in_ci_environment():
+        if utils.in_ci_environment():
             print("\n\n")
 
     def _nothing_to_prepare_condition(self, preparation_data: list) -> bool:
@@ -990,6 +1031,6 @@ class Prep(colrev.process.operation.Operation):
         if not keep_ids and not self.polish:
             self.review_manager.logger.info("Set record IDs")
             self.review_manager.dataset.set_ids()
-            self.review_manager.dataset.create_commit(msg="Set IDs")
+            self.review_manager.create_commit(msg="Set IDs")
 
         self._post_prep()

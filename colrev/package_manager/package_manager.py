@@ -174,7 +174,7 @@ class PackageManager:
         else:
             package_manager = ["pip"]
 
-        print(package_manager)
+        # print(package_manager)
 
         internal_packages_dict = (
             colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()

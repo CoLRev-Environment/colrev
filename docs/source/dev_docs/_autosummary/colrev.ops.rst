@@ -54,6 +54,7 @@ colrev.ops
    colrev.ops.screen
    colrev.ops.search
    colrev.ops.search_api_feed
+   colrev.ops.search_db
    colrev.ops.status
    colrev.ops.trace
    colrev.ops.upgrade

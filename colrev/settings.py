@@ -7,17 +7,18 @@ import typing
 from pathlib import Path
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import model_validator
+from pydantic import field_validator
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.search_api_feed
+import colrev.search_file
 from colrev.constants import IDPattern
 from colrev.constants import PDFPathType
 from colrev.constants import ScreenCriterionType
-from colrev.constants import SearchType
 from colrev.constants import ShareStatReq
+
 
 if typing.TYPE_CHECKING:
     import colrev.review_manager
@@ -76,111 +77,6 @@ class ProjectSettings(BaseModel):
 
 
 # Search
-
-
-class SearchSource(BaseModel):
-    """Search source settings"""
-
-    # pylint: disable=too-many-instance-attributes
-    endpoint: str
-    filename: Path
-    search_type: SearchType
-    search_parameters: dict
-    comment: typing.Optional[str]
-
-    to_import: int = 0
-    imported_origins: typing.List[str] = []
-    len_before: int = 0
-    source_records_list: typing.List[typing.Dict] = []
-
-    # pylint: disable=no-self-argument
-    @model_validator(mode="before")
-    def validate_filename(cls, values):  # type: ignore
-        """Validate the filename"""
-        filename = values.get("filename")
-        if filename and not str(filename).replace("\\", "/").startswith("data/search"):
-            raise colrev_exceptions.InvalidSettingsError(
-                msg=f"Source filename does not start with data/search: {filename}"
-            )
-        return values
-
-    def model_dump(self, **kwargs) -> dict:  # type: ignore
-        exclude = set(kwargs.pop("exclude", set()))
-        exclude.add("to_import")
-        exclude.add("imported_origins")
-        exclude.add("len_before")
-        exclude.add("source_records_list")
-        return super().model_dump(exclude=exclude, **kwargs)
-
-    def setup_for_load(
-        self,
-        *,
-        source_records_list: typing.List[typing.Dict],
-        imported_origins: typing.List[str],
-    ) -> None:
-        """Set the SearchSource up for the load process (initialize statistics)"""
-        # pylint: disable=attribute-defined-outside-init
-        # Note : define outside init because the following
-        # attributes are temporary. They should not be
-        # saved to SETTINGS_FILE.
-
-        self.to_import = len(source_records_list)
-        self.imported_origins: typing.List[str] = imported_origins
-        self.len_before = len(imported_origins)
-        self.source_records_list: typing.List[typing.Dict] = source_records_list
-
-    def get_origin_prefix(self) -> str:
-        """Get the corresponding origin prefix"""
-        assert not any(x in str(self.filename.name) for x in [";", "/"])
-        return str(self.filename.name).lstrip("/")
-
-    def is_md_source(self) -> bool:
-        """Check whether the source is a metadata source (for preparation)"""
-
-        return str(self.filename.name).startswith("md_")
-
-    def is_curated_source(self) -> bool:
-        """Check whether the source is a curated source (for preparation)"""
-
-        return self.get_origin_prefix() == "md_curated.bib"
-
-    def get_query(self) -> str:
-        """Get the query filepath"""
-        assert self.search_type == SearchType.DB
-        # Note : save API queries in SETTINGS_FILE
-        if "query_file" not in self.search_parameters:
-            raise KeyError
-        if not Path(self.search_parameters["query_file"]).is_file():
-            raise FileNotFoundError
-        return Path(self.search_parameters["query_file"]).read_text(encoding="utf-8")
-
-    def get_api_feed(
-        self,
-        review_manager: colrev.review_manager.ReviewManager,
-        source_identifier: str,
-        update_only: bool,
-        prep_mode: bool = False,
-    ) -> colrev.ops.search_api_feed.SearchAPIFeed:
-        """Get a feed to add and update records"""
-
-        return colrev.ops.search_api_feed.SearchAPIFeed(
-            review_manager=review_manager,
-            source_identifier=source_identifier,
-            search_source=self,
-            update_only=update_only,
-            prep_mode=prep_mode,
-        )
-
-    def __str__(self) -> str:
-        formatted_str = (
-            f"{str(self.search_type).lower()}: {self.endpoint} >> {self.filename}"
-        )
-        if self.search_parameters:
-            formatted_str += f"\n   search parameters:   {self.search_parameters}"
-        if self.comment:
-            formatted_str += f"\n   comment:             {self.comment}"
-
-        return formatted_str
 
 
 class SearchSettings(BaseModel):
@@ -366,10 +262,12 @@ class DataSettings(BaseModel):
 class Settings(BaseModel):
     """CoLRev project settings"""
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     # pylint: disable=too-many-instance-attributes
 
     project: ProjectSettings
-    sources: typing.List[SearchSource]
+    sources: typing.List[colrev.search_file.ExtendedSearchFile]
     search: SearchSettings
     prep: PrepSettings
     dedupe: DedupeSettings
@@ -379,10 +277,21 @@ class Settings(BaseModel):
     screen: ScreenSettings
     data: DataSettings
 
+    @field_validator("sources", mode="before")
+    @classmethod
+    def validate_sources(
+        cls, value: typing.List[colrev.search_file.ExtendedSearchFile]
+    ) -> typing.List[colrev.search_file.ExtendedSearchFile]:
+        """Validate the sources"""
+        return [
+            colrev.search_file.ExtendedSearchFile(**v) if isinstance(v, dict) else v
+            for v in value
+        ]
+
     def model_dump(self, **kwargs) -> dict:  # type: ignore
         """Dump the settings model with recursive handling of SearchSource."""
 
-        sources_dump = [source.model_dump(**kwargs) for source in self.sources]
+        sources_dump = [source.model_dump(**kwargs) for source in self.sources]  # type: ignore
         data = super().model_dump(**kwargs)
         data["sources"] = sources_dump
         return data
@@ -450,7 +359,7 @@ class Settings(BaseModel):
 
         all_packages = (
             [self.project.review_type]
-            + [s.endpoint for s in self.sources]
+            + [s.platform for s in self.sources]
             + extract_endpoints(self.prep.prep_man_package_endpoints)
             + extract_endpoints(self.dedupe.dedupe_package_endpoints)
             + extract_endpoints(self.prescreen.prescreen_package_endpoints)
@@ -474,17 +383,26 @@ def _add_missing_attributes(loaded_dict: dict) -> None:  # pragma: no cover
 
 
 def _load_settings_from_dict(loaded_dict: dict) -> Settings:
-    try:
-        _add_missing_attributes(loaded_dict)
-        settings = Settings(**loaded_dict)
-        filenames = [x.filename for x in settings.sources]
-        if not len(filenames) == len(set(filenames)):
-            non_unique = list({str(x) for x in filenames if filenames.count(x) > 1})
-            msg = f"Non-unique source filename(s): {', '.join(non_unique)}"
-            raise colrev_exceptions.InvalidSettingsError(msg=msg, fix_per_upgrade=False)
 
-    except (Exception,) as exc:  # pragma: no cover
-        raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
+    _add_missing_attributes(loaded_dict)
+    settings = Settings(**loaded_dict)
+    filenames = [x.search_results_path for x in settings.sources]
+    if not len(filenames) == len(set(filenames)):
+        non_unique = list({str(x) for x in filenames if filenames.count(x) > 1})
+        msg = f"Non-unique source filename(s): {', '.join(non_unique)}"
+        raise colrev_exceptions.InvalidSettingsError(msg=msg, fix_per_upgrade=False)
+
+    # try:
+    #     _add_missing_attributes(loaded_dict)
+    #     settings = Settings(**loaded_dict)
+    #     filenames = [x.search_results_path for x in settings.sources]
+    #     if not len(filenames) == len(set(filenames)):
+    #         non_unique = list({str(x) for x in filenames if filenames.count(x) > 1})
+    #         msg = f"Non-unique source filename(s): {', '.join(non_unique)}"
+    #         raise colrev_exceptions.InvalidSettingsError(msg=msg, fix_per_upgrade=False)
+
+    # except (Exception,) as exc:  # pragma: no cover
+    #     raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
 
     return settings
 
@@ -504,15 +422,29 @@ def load_settings(*, settings_path: Path) -> Settings:
             f"Failed to load settings: {exc}"
         ) from exc
 
+    search_path = settings_path.parent / Path("data/search")
+    search_source_paths = search_path.glob("**/*_search_history.json")
+
+    loaded_dict["sources"] = []
+    for search_source_path in search_source_paths:
+        with open(search_source_path, encoding="utf-8") as file:
+            source_dict = json.load(file)
+            loaded_dict["sources"].append(source_dict)
+
     return _load_settings_from_dict(loaded_dict)
 
 
 def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> None:
     """Save the settings"""
 
+    sources = review_manager.settings.sources
+    review_manager.settings.sources = []
     exported_dict = review_manager.settings.model_dump()
     exported_dict = colrev.env.utils.custom_asdict_factory(exported_dict)
 
     with open(review_manager.paths.settings, "w", encoding="utf-8") as outfile:
         json.dump(exported_dict, outfile, indent=4)
-    review_manager.dataset.add_changes(review_manager.paths.settings)
+    for source in sources:
+        source.save()
+    review_manager.settings.sources = sources
+    review_manager.dataset.git_repo.add_changes(review_manager.paths.settings)

@@ -33,7 +33,7 @@ class Validate(colrev.process.operation.Operation):
 
     def _load_prior_records_dict(self, *, commit_sha: str) -> dict:
         """If commit is "": return the last committed version of records"""
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
         records_file_path = self.review_manager.paths.RECORDS_FILE_GIT
         revlist = (
@@ -139,7 +139,7 @@ class Validate(colrev.process.operation.Operation):
         )
         origin_records = {}
         for source in load_operation.load_active_sources(include_md=True):
-            if not source.search_source.filename.is_file():
+            if not source.search_source.search_results_path.is_file():
                 continue
             load_operation.setup_source_for_load(source, select_new_records=False)
             for origin_record in source.search_source.source_records_list:
@@ -154,14 +154,14 @@ class Validate(colrev.process.operation.Operation):
             records=records, origin_records=origin_records
         )
 
-    def _export_merge_candidates_file(self, records: list[dict]) -> None:
+    def _export_merge_candidates_file(self, records_list: list[dict]) -> None:
         merge_candidates_file = Path("data/dedupe/merge_candidates_file.txt")
         merge_candidates_file.parent.mkdir(exist_ok=True, parents=True)
 
         with open(merge_candidates_file, "w", encoding="utf-8") as file:
-            for ref_rec_dict in tqdm(records):
+            for ref_rec_dict in tqdm(records_list):
                 ref_rec = colrev.record.record.Record(ref_rec_dict)
-                for comp_rec_dict in reversed(records):
+                for comp_rec_dict in reversed(records_list):
                     # Note : due to symmetry, we only need one part of the matrix
                     if ref_rec_dict[Fields.ID] == comp_rec_dict[Fields.ID]:
                         break
@@ -210,20 +210,20 @@ class Validate(colrev.process.operation.Operation):
 
         #     return gid_conflict
 
-        records = self._load_changed_records(commit_sha=commit_sha)
+        records_list = self._load_changed_records(commit_sha=commit_sha)
 
         prior_records_dict = self._load_prior_records_dict(commit_sha=commit_sha)
         # Note : the if-statement avoids time-consuming procedures when the
         # origin-sets have not changed (no duplicates merged)
         if not self._deduplicated_records(
-            records=records, prior_records_dict=prior_records_dict
+            records_list=records_list, prior_records_dict=prior_records_dict
         ):
             report["dedupe"] = []
             return
 
         change_diff = []
         merged_records = False
-        for record in records:
+        for record in records_list:
             if "changed_in_target_commit" not in record:
                 continue
             del record["changed_in_target_commit"]
@@ -269,7 +269,7 @@ class Validate(colrev.process.operation.Operation):
             else:
                 self.review_manager.logger.info("No merged records")
 
-        self._export_merge_candidates_file(records)
+        self._export_merge_candidates_file(records_list)
 
         # sort according to similarity
         change_diff.sort(key=lambda x: x["change_score"], reverse=True)
@@ -280,7 +280,7 @@ class Validate(colrev.process.operation.Operation):
         """Get the records that changed in a selected commit"""
 
         dataset = self.review_manager.dataset
-        git_repo = dataset.get_repo()
+        git_repo = dataset.git_repo.repo
         revlist = (
             (
                 commit.hexsha,
@@ -348,7 +348,7 @@ class Validate(colrev.process.operation.Operation):
 
         # option: --history: check all preceding commits (create a list...)
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
 
         cur_sha = git_repo.head.commit.hexsha
         cur_branch = git_repo.active_branch.name
@@ -397,9 +397,9 @@ class Validate(colrev.process.operation.Operation):
         # pylint: disable=too-many-branches
 
         if not commit_sha:
-            commit_sha = self.review_manager.dataset.get_last_commit_sha()
+            commit_sha = self.review_manager.dataset.git_repo.get_last_commit_sha()
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
 
         revlist = list(
             (
@@ -514,7 +514,7 @@ class Validate(colrev.process.operation.Operation):
 
         merge_validation = []
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
 
         revlist = git_repo.iter_commits(
             paths=str(self.review_manager.paths.RECORDS_FILE)
@@ -579,7 +579,7 @@ class Validate(colrev.process.operation.Operation):
         if filter_setting == "contributor":
             return commit
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
         if scope in ["HEAD", "."]:
             scope = "HEAD~0"
         if scope.startswith("HEAD~"):
@@ -618,9 +618,11 @@ class Validate(colrev.process.operation.Operation):
         return commit
 
     def _deduplicated_records(
-        self, *, records: list[dict], prior_records_dict: dict
+        self, *, records_list: list[dict], prior_records_dict: dict
     ) -> bool:
-        return {",".join(sorted(x)) for x in [r[Fields.ORIGIN] for r in records]} != {
+        return {
+            ",".join(sorted(x)) for x in [r[Fields.ORIGIN] for r in records_list]
+        } != {
             ",".join(sorted(x))
             for x in [r[Fields.ORIGIN] for r in prior_records_dict.values()]
         }
@@ -628,7 +630,7 @@ class Validate(colrev.process.operation.Operation):
     def _get_contributor_validation(self, *, scope: str) -> dict:
         report: typing.Dict[str, typing.Any] = {"contributor_commits": []}
         valid_options = []
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
         for commit in git_repo.iter_commits():
             if any(
                 x == scope
@@ -670,7 +672,7 @@ class Validate(colrev.process.operation.Operation):
         return report
 
     def _get_relative_commit(self, commit_sha: str) -> str:
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
 
         relative_to_head = 0
         for commit_i in git_repo.iter_commits():
@@ -709,7 +711,7 @@ class Validate(colrev.process.operation.Operation):
                         origin_records.pop(identifier)
                 write_file(records_dict=origin_records, filename=filename)
 
-            self.review_manager.dataset.add_changes(filename)
+            self.review_manager.dataset.git_repo.add_changes(filename)
 
     @colrev.process.operation.Operation.decorate()
     def main(

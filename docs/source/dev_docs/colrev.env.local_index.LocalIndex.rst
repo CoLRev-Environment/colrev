@@ -16,6 +16,7 @@ colrev.env.local\_index.LocalIndex
    .. autosummary::
       :nosignatures:
 
+      ~LocalIndex.get_curations
       ~LocalIndex.get_fields_to_remove
       ~LocalIndex.get_journal_rankings
       ~LocalIndex.get_year_from_toc

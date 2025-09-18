@@ -11,15 +11,7 @@
         "colrev_version": "-",
         "auto_upgrade": true
     },
-    "sources": [
-        {
-            "endpoint": "colrev.files_dir",
-            "filename": "data/search/files.bib",
-            "search_type": "FILES",
-            "search_parameters": {"scope": {"path": "data/pdfs"}},
-            "comment": ""
-        }
-    ],
+    "sources": [],
     "search": {
         "retrieve_forthcoming": true
     },

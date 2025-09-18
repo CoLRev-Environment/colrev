@@ -2,6 +2,9 @@
 """Dedupe functionality dedicated to curated metadata repositories"""
 from __future__ import annotations
 
+import logging
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel
@@ -44,7 +47,9 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ):
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.dedupe_operation = dedupe_operation
         self.review_manager = dedupe_operation.review_manager
@@ -151,12 +156,12 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         return toc_items
 
     def _warn_on_missing_sources(self, *, first_source: bool) -> None:
-        # warn if not all SOURCE.filenames are included in a dedupe script
+        # warn if not all SOURCE.search_results_path are included in a dedupe script
         if first_source:
             available_sources = [
-                str(s.filename)
+                str(s.search_results_path)
                 for s in self.review_manager.settings.sources
-                if "md_" not in str(s.filename)
+                if "md_" not in str(s.search_results_path)
             ]
             dedupe_sources = [
                 s["selected_source"]
@@ -167,7 +172,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
                 x for x in available_sources if x not in dedupe_sources
             ]
             if len(sources_missing_in_dedupe) > 0:
-                self.review_manager.logger.warning(
+                self.logger.warning(
                     f"{Colors.ORANGE}Sources missing in "
                     "dedupe.scripts.colrev.curation_full_outlet_dedupe: "
                     f"{','.join(sources_missing_in_dedupe)}{Colors.END}"
@@ -186,15 +191,17 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
                             penultimate_position, dedupe_script_to_add
                         )
                         self.review_manager.save_settings()
-                        self.review_manager.logger.info(
-                            f"{Colors.GREEN}Added {source_missing_in_dedupe} "
-                            f"to dedupe.scripts{Colors.END}"
+                        self.logger.info(
+                            "%sAdded %s to dedupe.scripts%s",
+                            Colors.GREEN,
+                            source_missing_in_dedupe,
+                            Colors.END,
                         )
 
     def _add_first_source_if_deduplicated(self, *, records: dict) -> None:
-        self.review_manager.logger.info(
-            f"Starting with records from {self.settings.selected_source}"
-            " (setting to md_processed as the initial records)"
+        self.logger.info(
+            "Starting with records from %s (setting to md_processed as the initial records)",
+            self.settings.selected_source,
         )
 
         source_records = [
@@ -271,9 +278,9 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
             record.pop(Fields.CONTAINER_TITLE)
         self.review_manager.dataset.save_records_dict(records)
 
-        if self.review_manager.dataset.has_record_changes():
-            self.review_manager.logger.info(f"{Colors.GREEN}Commit changes{Colors.END}")
-            self.review_manager.dataset.create_commit(
+        if self.review_manager.dataset.git_repo.has_record_changes():
+            self.logger.info(f"{Colors.GREEN}Commit changes{Colors.END}")
+            self.review_manager.create_commit(
                 msg=(
                     "Merge duplicate records (set unique records from "
                     f"{self.settings.selected_source} "
@@ -281,9 +288,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
                 ),
             )
         else:
-            self.review_manager.logger.info(
-                f"{Colors.GREEN}No duplicates found{Colors.END}"
-            )
+            self.logger.info("%sNo duplicates found%s", Colors.GREEN, Colors.END)
 
     def _prep_records(self, *, records: dict) -> dict:
         required_fields = [
@@ -310,9 +315,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         return records
 
     def _dedupe_source(self, *, records: dict) -> list[list]:
-        self.review_manager.logger.info(
-            "Processing as a non-pdf source (matching exact colrev_ids)"
-        )
+        self.logger.info("Processing as a non-pdf source (matching exact colrev_ids)")
 
         source_records = [
             r
@@ -475,7 +478,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
             )
 
     def _dedupe_pdf_source(self, *, records: dict) -> list[list]:
-        self.review_manager.logger.info("Processing as a pdf source")
+        self.logger.info("Processing as a pdf source")
 
         source_records = [
             r
@@ -505,10 +508,10 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         relevant_source = [
             s
             for s in self.review_manager.settings.sources
-            if str(s.filename) == self.settings.selected_source
+            if str(s.search_results_path) == self.settings.selected_source
         ]
         if len(relevant_source) > 0:
-            pdf_source = "colrev.files_dir" == relevant_source[0].endpoint
+            pdf_source = "colrev.files_dir" == relevant_source[0].platform
         return pdf_source
 
     def _first_source_selected(self) -> bool:
@@ -537,7 +540,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
             self._add_first_source_if_deduplicated(records=records)
             return
 
-        self.review_manager.logger.info(
+        self.logger.info(
             "Identify duplicates between "
             f"curated_records and {self.settings.selected_source} (within toc_items)"
         )
@@ -552,14 +555,14 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         # Note : dedupe.apply_merges reloads the records and
         # thereby discards previous changes
         if len(decision_list) == 0:
-            self.review_manager.logger.info(
-                f"{Colors.GREEN}No merge-candidates identified between sets{Colors.END}"
+            self.logger.info(
+                "%sNo merge-candidates identified between sets%s",
+                Colors.GREEN,
+                Colors.END,
             )
             return
 
-        self.review_manager.logger.info(
-            f"{Colors.GREEN}Duplicates identified{Colors.END}"
-        )
+        self.logger.info("%sDuplicates identified%s", Colors.GREEN, Colors.END)
 
         preferred_masterdata_sources = [
             s
@@ -570,6 +573,6 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
             id_sets=decision_list,
             preferred_masterdata_sources=preferred_masterdata_sources,
         )
-        self.review_manager.dataset.create_commit(
+        self.review_manager.create_commit(
             msg="Merge duplicate records",
         )

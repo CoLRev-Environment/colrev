@@ -5,9 +5,6 @@ from pathlib import Path
 import pytest
 import requests_mock
 
-import colrev.ops.prep
-import colrev.packages.plos.src.plos_search_source
-import colrev.record.record
 import colrev.record.record_prep
 from colrev.packages.plos.src import plos_api
 
@@ -75,7 +72,7 @@ from colrev.packages.plos.src import plos_api
 )
 def test_plos_query(doi: str, expected_dict: dict) -> None:
     """Test the plos query_doi()"""
-    api = plos_api.PlosAPI(params={})
+    api = plos_api.PlosAPI(url="")
 
     filename = Path(__file__).parent / f"data/{doi.replace('/', '_')}.json"
 

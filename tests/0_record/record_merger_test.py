@@ -3,7 +3,6 @@
 import pytest
 
 import colrev.record.record_merger
-import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues

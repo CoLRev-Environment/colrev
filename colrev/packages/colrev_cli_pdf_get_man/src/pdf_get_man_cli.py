@@ -2,22 +2,22 @@
 """CLI interface for manual retrieval of PDFs"""
 from __future__ import annotations
 
+import logging
 import shutil
 import urllib.parse
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.env.utils
-import colrev.ops.pdf_get
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
-
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=unused-argument
@@ -34,7 +34,9 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
         *,
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = pdf_get_man_operation.review_manager
         self.pdf_get_man_operation = pdf_get_man_operation
@@ -62,7 +64,9 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
         subject = f"Copy of a PDF ({record.data['ID']})"
 
         author_name = record.data.get(Fields.AUTHOR, "").split(",")[0]
-        signed, _ = self.review_manager.get_committer()
+        signed, _ = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
 
         template = colrev.env.utils.get_template(
             "packages/colrev_cli_pdf_get_man/src/pdf_get_man_mail.txt"
@@ -211,7 +215,7 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
         *,
         record: colrev.record.record.Record,
     ) -> None:
-        # self.review_manager.logger.debug(
+        # self.logger.debug(
         #     f"called pdf_get_man_cli for {record}"
         # )
 
@@ -229,7 +233,7 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
 
         filepath = self._get_filepath(record=record)
         for retrieval_script in retrieval_scripts.values():
-            # self.review_manager.logger.debug(
+            # self.logger.debug(
             #     f'{script_name}({record.data[Fields.ID]}) called'
             # )
             record = retrieval_script(record)
@@ -260,7 +264,7 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
     def pdf_get_man(self, records: dict) -> dict:
         """Get the PDF manually based on a cli"""
 
-        self.review_manager.logger.info("Retrieve PDFs manually")
+        self.logger.info("Retrieve PDFs manually")
         pdf_get_operation = self.review_manager.get_pdf_get_operation()
         pdf_dir = self.pdf_dir
 
@@ -278,9 +282,7 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
         self.pdf_get_man_operation.export_retrieval_table(records)
         pdf_get_man_data = self.pdf_get_man_operation.get_data()
         if pdf_get_man_data["nr_tasks"] == 0:
-            self.review_manager.logger.info(
-                "No tasks for PDF retrieval (run colrev pdf-get )."
-            )
+            self.logger.info("No tasks for PDF retrieval (run colrev pdf-get ).")
             return records
         print(
             "\nInstructions\n\n      "
@@ -297,17 +299,17 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
 
             self._pdf_get_man_record_cli(record=record)
 
-        if self.review_manager.dataset.has_record_changes():
+        if self.review_manager.dataset.git_repo.has_record_changes():
             if input("Create commit (y/n)?") == "y":
-                self.review_manager.dataset.create_commit(
+                self.review_manager.create_commit(
                     msg="Retrieve PDFs manually",
                     manual_author=True,
                 )
         else:
-            self.review_manager.logger.info(
-                "Retrieve PDFs manually and copy the files to "
-                f"the {pdf_dir}. Afterwards, use "
-                "colrev pdf-get-man"
+            self.logger.info(
+                "Retrieve PDFs manually and copy the files to the %s."
+                + " Afterwards, use colrev pdf-get-man",
+                pdf_dir,
             )
 
         return records

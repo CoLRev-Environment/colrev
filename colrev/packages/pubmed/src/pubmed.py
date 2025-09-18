@@ -6,24 +6,29 @@ import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urlparse
 
 import pandas as pd
-import requests
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
+import colrev.search_file
+import colrev.utils
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
+from colrev.ops.search_db import create_db_source
+from colrev.ops.search_db import run_db_search
 from colrev.packages.pubmed.src import pubmed_api
 
 # pylint: disable=unused-argument
@@ -33,7 +38,6 @@ from colrev.packages.pubmed.src import pubmed_api
 class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Pubmed"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = "pubmedid"
     search_types = [
         SearchType.DB,
@@ -46,41 +50,25 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     db_url = "https://pubmed.ncbi.nlm.nih.gov/"
-    _pubmed_md_filename = Path("data/search/md_pubmed.bib")
+    _availability_exception_message = "Pubmed"
 
     def __init__(
         self,
         *,
-        source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
-        self.review_manager = source_operation.review_manager
-        if settings:
-            # Pubmed as a search_source
-            self.search_source = self.settings_class(**settings)
-        else:
-            # Pubmed as an md-prep source
-            pubmed_md_source_l = [
-                s
-                for s in self.review_manager.settings.sources
-                if s.filename == self._pubmed_md_filename
-            ]
-            if pubmed_md_source_l:
-                self.search_source = pubmed_md_source_l[0]
-            else:
-                self.search_source = colrev.settings.SearchSource(
-                    endpoint=self.endpoint,
-                    filename=self._pubmed_md_filename,
-                    search_type=SearchType.MD,
-                    search_parameters={},
-                    comment="",
-                )
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
 
-            self.pubmed_lock = Lock()
+        self.search_source = search_file
 
-        self.source_operation = source_operation
-        self.quality_model = self.review_manager.get_qm()
-        _, self.email = self.review_manager.get_committer()
+        self.pubmed_lock = Lock()
+
+        _, self.email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -105,9 +93,10 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+        path: Path,
+        logger: Optional[logging.Logger] = None,
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -119,41 +108,49 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                     key, value = item.split("=")
                     params_dict[key] = value
 
-        search_type = operation.select_search_type(
+        search_type = colrev.utils.select_search_type(
             search_types=cls.search_types, params=params_dict
         )
 
         if search_type == SearchType.DB:
-            search_source = operation.create_db_source(
-                search_source_cls=cls,
+            search_source = create_db_source(
+                path=path,
+                platform=cls.endpoint,
                 params=params_dict,
+                add_to_git=True,
+                logger=logger,
             )
 
         elif search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.create_api_source(endpoint=cls.endpoint)
+                search_source = create_api_source(platform=cls.endpoint, path=path)
+                api_term_url = (
+                    "https://eutils.ncbi.nlm.nih.gov/"
+                    + "entrez/eutils/esearch.fcgi?db=pubmed&term="
+                )
+                search_source.search_string = (
+                    f"{api_term_url}{search_source.search_string}"
+                )
 
             # pylint: disable=colrev-missed-constant-usage
             elif "url" in params_dict:
                 host = urlparse(params_dict["url"]).hostname
 
                 if host and host.endswith("pubmed.ncbi.nlm.nih.gov"):
-                    query = {
-                        "query": params_dict["url"].replace(
-                            "https://pubmed.ncbi.nlm.nih.gov/?term=", ""
-                        )
-                    }
 
-                    filename = operation.get_unique_filename(file_path_string="pubmed")
+                    filename = colrev.utils.get_unique_filename(
+                        base_path=path,
+                        file_path_string="pubmed",
+                    )
                     # params = (
                     # "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
                     #     + params
                     # )
-                    search_source = colrev.settings.SearchSource(
-                        endpoint=cls.endpoint,
-                        filename=filename,
+                    search_source = colrev.search_file.ExtendedSearchFile(
+                        platform=cls.endpoint,
+                        search_results_path=filename,
                         search_type=SearchType.API,
-                        search_parameters=query,
+                        search_string=params_dict["url"],
                         comment="",
                     )
                 else:
@@ -161,32 +158,31 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             else:
                 raise NotImplementedError
 
+            # search_source.search_parameters = {"query": search_source.search_string}
+            # search_source.search_string = ""
+
         else:
             raise NotImplementedError
-
-        operation.add_source_and_search(search_source)
         return search_source
 
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
         source = self.search_source
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
-        if source.filename.name != self._pubmed_md_filename.name:
-            if "query" not in source.search_parameters:
-                raise colrev_exceptions.InvalidQueryException(
-                    f"Source missing query search_parameter ({source.filename})"
-                )
+        # if source.search_results_path.name != self._pubmed_md_filename.name:
+        #     if "query" not in source.search_string:
+        #         raise colrev_exceptions.InvalidQueryException(
+        #             f"Source missing query search_parameter ({source.search_results_path})"
+        #         )
 
-            # if "query_file" in source.search_parameters:
-            # ...
+        # if "query_file" in source.search_string:
+        # ...
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.search_results_path)
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check status (availability) of the Pubmed API"""
 
         try:
@@ -201,9 +197,9 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             }
 
             api = pubmed_api.PubmedAPI(
-                parameters=self.search_source.search_parameters,
+                url=self.search_source.search_string,
                 email=self.email,
-                session=self.review_manager.get_cached_session(),
+                session=colrev.utils.get_cached_session(),
             )
             returned_record = api.query_id(pubmed_id=test_rec["pubmedid"])
 
@@ -211,12 +207,13 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 assert returned_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
                 assert returned_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
             else:
-                if not self.review_manager.force_mode:
-                    raise colrev_exceptions.ServiceNotAvailableException("Pubmed")
-        except (requests.exceptions.RequestException, IndexError, KeyError) as exc:
-            print(exc)
-            if not self.review_manager.force_mode:
-                raise colrev_exceptions.ServiceNotAvailableException("Pubmed") from exc
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    self._availability_exception_message
+                )
+        except (pubmed_api.PubmedAPIError, IndexError, KeyError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                self._availability_exception_message
+            ) from exc
 
     def _get_masterdata_record(
         self,
@@ -227,10 +224,10 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.record.record.Record:
         try:
             api = pubmed_api.PubmedAPI(
-                parameters=self.search_source.search_parameters,
+                url=self.search_source.search_string,
                 email=self.email,
-                session=self.review_manager.get_cached_session(),
-                logger=self.review_manager.logger,
+                session=colrev.utils.get_cached_session(),
+                logger=self.logger,
             )
 
             retrieved_record = api.query_id(pubmed_id=record.data["pubmedid"])
@@ -247,11 +244,14 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 self.pubmed_lock.acquire(timeout=60)
 
                 # Note : need to reload file because the object is not shared between processes
-                pubmed_feed = self.search_source.get_api_feed(
-                    review_manager=self.review_manager,
+                pubmed_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                     source_identifier=self.source_identifier,
+                    search_source=self.search_source,
                     update_only=False,
                     prep_mode=True,
+                    records=prep_operation.review_manager.dataset.load_records_dict(),
+                    logger=self.logger,
+                    verbose_mode=self.verbose_mode,
                 )
 
                 pubmed_feed.add_update_record(retrieved_record)
@@ -261,12 +261,12 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                     default_source=retrieved_record.data[Fields.ORIGIN][0],
                 )
 
-                record.set_masterdata_complete(
-                    source=retrieved_record.data[Fields.ORIGIN][0],
-                    masterdata_repository=self.review_manager.settings.is_curated_repo(),
-                )
                 record.set_status(RecordState.md_prepared)
+
                 if save_feed:
+                    prep_operation.review_manager.dataset.save_records_dict(
+                        pubmed_feed.get_records(),
+                    )
                     pubmed_feed.save()
                 try:
                     self.pubmed_lock.release()
@@ -283,7 +283,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 return record
 
         except (
-            requests.exceptions.RequestException,
+            pubmed_api.PubmedAPIError,
             OSError,
             IndexError,
             colrev_exceptions.RecordNotFoundInPrepSourceException,
@@ -334,15 +334,13 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         rerun: bool,
     ) -> None:
         if rerun:
-            self.review_manager.logger.info(
-                "Performing a search of the full history (may take time)"
-            )
+            self.logger.info("Performing a search of the full history (may take time)")
 
         api = pubmed_api.PubmedAPI(
-            parameters=self.search_source.search_parameters,
+            url=self.search_source.search_string,
             email=self.email,
-            session=self.review_manager.get_cached_session(),
-            logger=self.review_manager.logger,
+            session=colrev.utils.get_cached_session(),
+            logger=self.logger,
         )
 
         for record in api.get_query_return():
@@ -351,7 +349,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if "" == record.data.get(Fields.AUTHOR, "") and "" == record.data.get(
                     Fields.TITLE, ""
                 ):
-                    self.review_manager.logger.warning(f"Skipped record: {record.data}")
+                    self.logger.warning(f"Skipped record: {record.data}")
                     continue
                 prep_record = colrev.record.record_prep.PrepRecord(record.data)
 
@@ -378,10 +376,10 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
 
         api = pubmed_api.PubmedAPI(
-            parameters=self.search_source.search_parameters,
+            url=self.search_source.search_string,
             email=self.email,
-            session=self.review_manager.get_cached_session(),
-            logger=self.review_manager.logger,
+            session=colrev.utils.get_cached_session(),
+            logger=self.logger,
         )
 
         for feed_record_dict in pubmed_feed.feed_records.values():
@@ -407,10 +405,12 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self._validate_source()
 
-        pubmed_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        pubmed_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         if self.search_source.search_type == SearchType.MD:
@@ -423,9 +423,10 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
         elif self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
-                search_source_cls=self.__class__,
+            run_db_search(
+                db_url=self.db_url,
                 source=self.search_source,
+                add_to_git=True,
             )
             return
         else:
@@ -491,24 +492,29 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
         return records
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".csv":
-            return cls._load_csv(filename=filename, logger=logger)
+        if self.search_source.search_results_path.suffix == ".csv":
+            return self._load_csv(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=filename,
-                logger=logger,
+                filename=self.search_source.search_results_path,
+                logger=self.logger,
             )
             return records
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Pubmed"""
 

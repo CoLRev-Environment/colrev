@@ -371,11 +371,11 @@ class BIBLoader(colrev.loader.loader.Loader):
 
     def load_records_list(self, header_only: bool = False) -> List[Dict[str, Any]]:
         """Parses the file and returns either full records or just header fields."""
-        records = []
+        records_list = []
         check_valid_bib(self.filename, self.logger)
 
         with open(self.filename, encoding="utf-8") as file:
-            records = process_lines(file, header_only=header_only)
+            records_list = process_lines(file, header_only=header_only)
 
-        records.sort(key=lambda x: x[Fields.ID])
-        return records
+        records_list.sort(key=lambda x: x[Fields.ID])
+        return records_list

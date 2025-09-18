@@ -9,6 +9,7 @@ from pathlib import Path
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils_formatter
+import colrev.ops.search_api_feed
 import colrev.process.operation
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
@@ -137,10 +138,12 @@ class Repare(colrev.process.operation.Operation):
             if x.search_type == SearchType.FILES
         ]
         for search_source in file_search_sources:
-            files_dir_feed = search_source.get_api_feed(
-                review_manager=self.review_manager,
+            files_dir_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier="UNKNOWN",
+                search_source=search_source,
                 update_only=True,
+                logger=self.review_manager.logger,
+                verbose_mode=self.review_manager.verbose_mode,
             )
             prefix = search_source.get_origin_prefix()
             for record_dict in records.values():
@@ -162,13 +165,15 @@ class Repare(colrev.process.operation.Operation):
     def _get_source_feeds(self) -> dict:
         source_feeds = {}
         for source in self.review_manager.settings.sources:
-            source_feeds[str(source.filename).replace("data/search/", "")] = (
-                source.get_api_feed(
-                    review_manager=self.review_manager,
-                    source_identifier="NA",
-                    update_only=False,
-                ).feed_records
-            )
+            source_feeds[
+                str(source.search_results_path).replace("data/search/", "")
+            ] = colrev.ops.search_api_feed.SearchAPIFeed(
+                source_identifier="NA",
+                search_source=source,
+                update_only=False,
+                logger=self.review_manager.logger,
+                verbose_mode=self.review_manager.verbose_mode,
+            ).feed_records
         return source_feeds
 
     # pylint: disable=too-many-branches
@@ -366,11 +371,11 @@ class Repare(colrev.process.operation.Operation):
 
     def _fix_curated_sources(self, records: dict) -> None:
         for search_source in self.review_manager.settings.sources:
-            if search_source.endpoint != "colrev.local_index":
+            if search_source.platform != "colrev.local_index":
                 continue
 
             curation_recs = colrev.loader.load_utils.load(
-                filename=search_source.filename,
+                filename=search_source.search_results_path,
                 logger=self.review_manager.logger,
             )
 
@@ -402,8 +407,12 @@ class Repare(colrev.process.operation.Operation):
                             )
                         del curation_recs[record_id]
 
-            write_file(records_dict=curation_recs, filename=search_source.filename)
-            self.review_manager.dataset.add_changes(search_source.filename)
+            write_file(
+                records_dict=curation_recs, filename=search_source.search_results_path
+            )
+            self.review_manager.dataset.git_repo.add_changes(
+                search_source.search_results_path
+            )
 
     def _update_field_names(self, records: dict) -> None:
         for record_dict in records.values():

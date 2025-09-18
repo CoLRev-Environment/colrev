@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """Open Alex API"""
 import pyalex
+import requests
 from pyalex import Works
 
 import colrev.env.language_service
@@ -11,6 +12,10 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 
 # pylint: disable=too-few-public-methods
+
+
+class OpenAlexAPIError(Exception):
+    """Exception raised for OpenAlex API errors."""
 
 
 class OpenAlexAPI:
@@ -119,6 +124,12 @@ class OpenAlexAPI:
     def get_record(self, *, open_alex_id: str) -> colrev.record.record.Record:
         """Get a record from OpenAlex"""
 
-        item = Works()[open_alex_id]
+        try:
+            item = Works()[open_alex_id]
+        except requests.exceptions.RequestException as exc:  # pragma: no cover
+            raise OpenAlexAPIError from exc
+        except Exception as exc:  # pragma: no cover
+            raise OpenAlexAPIError from exc
+
         retrieved_record = self._parse_item_to_record(item=item)
         return retrieved_record

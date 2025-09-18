@@ -14,11 +14,13 @@ import colrev.exceptions as colrev_exceptions
 import colrev.packages.grobid_tei.src.grobid_tei
 import colrev.process.operation
 import colrev.record.record_pdf
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+from colrev.package_manager.package_manager import PackageManager
 
 
 class PDFPrep(colrev.process.operation.Operation):
@@ -297,7 +299,7 @@ class PDFPrep(colrev.process.operation.Operation):
         pool.join()
         records = {r[Fields.ID]: r for r in records_list}
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(msg="Update colrev_pdf_ids")
+        self.review_manager.create_commit(msg="Update colrev_pdf_ids")
 
     def _print_stats(self, *, pdf_prep_record_list: list) -> None:
         self.pdf_prepared = len(
@@ -353,7 +355,9 @@ class PDFPrep(colrev.process.operation.Operation):
             with open("custom_pdf_prep_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(Path("custom_pdf_prep_script.py"))
+        self.review_manager.dataset.git_repo.add_changes(
+            Path("custom_pdf_prep_script.py")
+        )
 
         self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints.append(
             {"endpoint": "custom_pdf_prep_script"}
@@ -397,10 +401,7 @@ class PDFPrep(colrev.process.operation.Operation):
     ) -> None:
         """Prepare PDFs (main entrypoint)"""
 
-        if (
-            self.review_manager.in_ci_environment()
-            and not self.review_manager.in_test_environment()
-        ):
+        if utils.in_ci_environment() and not self.review_manager.in_test_environment():
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev pdf-prep",
                 detailed_trace="pdf-prep not available in ci environment",
@@ -426,7 +427,7 @@ class PDFPrep(colrev.process.operation.Operation):
 
         pdf_prep_data = self._get_data(batch_size=batch_size)
 
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
         self.pdf_prep_package_endpoints = {}
         for (
             pdf_prep_package_endpoint
@@ -473,7 +474,7 @@ class PDFPrep(colrev.process.operation.Operation):
 
             self._print_stats(pdf_prep_record_list=pdf_prep_record_list)
 
-        self.review_manager.dataset.create_commit(msg="PDFs: prepare")
+        self.review_manager.create_commit(msg="PDFs: prepare")
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed pdf-prep operation{Colors.END}"
         )

@@ -25,8 +25,11 @@ The user can select the search type by navigating through the list with `uparrow
 #### API search: API key for Springer Link
 
 After selecting API search the user is asked to enter an API key for Springer Link (available upon [registration](https://dev.springernature.com/)).
-If an API key is already stored, the user can change the key with the first prompted question by navigating through the list with `downarrow` and selecting `yes`. Pressing `enter` will confirm this selection.
-The use of an API key is mandatory.
+Set the API-KEY using
+
+```
+export SPRINGER_API_KEY="your-api-key"
+```
 
 The user can choose between `complete_search_string` for searching with a complex query or `interactively` to enter search parameters interactively.
 

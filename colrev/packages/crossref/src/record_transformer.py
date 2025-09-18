@@ -7,7 +7,6 @@ import re
 from copy import deepcopy
 
 import colrev.exceptions as colrev_exceptions
-import colrev.record.record
 import colrev.record.record_prep
 from colrev.constants import Fields
 from colrev.constants import FieldValues

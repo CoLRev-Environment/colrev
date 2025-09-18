@@ -2,6 +2,8 @@
 """Discovering and using packages."""
 from __future__ import annotations
 
+from pathlib import Path
+
 import colrev.process.operation
 from colrev.constants import Colors
 from colrev.constants import EndpointType
@@ -67,7 +69,7 @@ def add_package_to_settings(
     operation: colrev.process.operation.Operation,
     package_identifier: str,
     params: str,
-) -> None:
+) -> dict:
     """Add a package_endpoint (for cli usage)"""
 
     operation.review_manager.logger.info(
@@ -80,15 +82,29 @@ def add_package_to_settings(
         package_type=package_type,
         package_identifier=package_identifier,
     )
+    add_package = {}
 
     if hasattr(e_class, "add_endpoint"):
-        e_class.add_endpoint(operation=operation, params=params)  # type: ignore
+        if package_type == EndpointType.search_source:
+            source = e_class.add_endpoint(  # type: ignore
+                params=params, path=Path.cwd(), logger=operation.review_manager.logger
+            )
+            source.save()
+            operation.review_manager.settings.sources.append(source)  # type: ignore
+            operation.review_manager.dataset.git_repo.add_changes(
+                path=source.get_search_history_path()
+            )
+            add_package = source.to_dict()
+
+        else:
+            e_class.add_endpoint(operation=operation, params=params)  # type: ignore
 
     else:
         add_package = {"endpoint": package_identifier}
         endpoints_in_settings.append(add_package)  # type: ignore
 
     operation.review_manager.save_settings()
-    operation.review_manager.dataset.create_commit(
+    operation.review_manager.create_commit(
         msg=f"Add {operation.type} {package_identifier}",
     )
+    return add_package

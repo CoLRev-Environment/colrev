@@ -2,8 +2,10 @@
 """Deduplication of remaining records in curated metadata repositories"""
 from __future__ import annotations
 
+import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import Field
@@ -35,7 +37,9 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ):
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = dedupe_operation.review_manager
         self.dedupe_operation = dedupe_operation
@@ -50,7 +54,7 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
         Path("dedupe").mkdir(exist_ok=True)
 
         source_origins = [
-            str(source.filename).replace("data/search/", "")
+            str(source.search_results_path).replace("data/search/", "")
             for source in self.review_manager.settings.sources
         ]
 
@@ -69,16 +73,20 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
             ]
             records_df = pd.DataFrame.from_records(list(selected_records))
             if records_df.shape[0] == 0:
-                self.review_manager.logger.info(
-                    f"{Colors.GREEN}Source {source_origin} fully merged{Colors.END}"
+                self.logger.info(
+                    "%sSource %s fully merged%s",
+                    Colors.GREEN,
+                    source_origin,
+                    Colors.END,
                 )
             else:
-                self.review_manager.logger.info(
-                    f"{Colors.ORANGE}Source {source_origin} not fully merged{Colors.END}"
+                self.logger.info(
+                    "%sSource %s not fully merged%s",
+                    Colors.ORANGE,
+                    source_origin,
+                    Colors.END,
                 )
-                self.review_manager.logger.info(
-                    f"Exporting details to dedupe/{source_origin}.xlsx"
-                )
+                self.logger.info("Exporting details to dedupe/%s.xlsx", source_origin)
 
                 records_df = records_df[
                     records_df.columns.intersection(
@@ -184,7 +192,7 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
 
     def _get_nr_recs_to_merge(self, *, records: dict) -> int:
         if self.review_manager.force_mode:
-            self.review_manager.logger.info(
+            self.logger.info(
                 "Scope: md_prepared, md_needs_manual_preparation, md_imported"
             )
             nr_recs_to_merge = len(
@@ -195,7 +203,7 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
                 ]
             )
         else:
-            self.review_manager.logger.info("Scope: md_prepared")
+            self.logger.info("Scope: md_prepared")
             nr_recs_to_merge = len(
                 [
                     x
@@ -326,7 +334,7 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
             self.review_manager.dataset.save_records_dict(records)
 
         if len(ret["decision_list"]) > 0 or len(ret["records_to_prepare"]) > 0:
-            self.review_manager.dataset.create_commit(
+            self.review_manager.create_commit(
                 msg="Merge duplicate records",
             )
 
@@ -345,7 +353,7 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
             self.review_manager.dataset.save_records_dict(records)
             input("Edit records (if any), add to git, and press Enter")
 
-            self.review_manager.dataset.create_commit(
+            self.review_manager.create_commit(
                 msg="Add non-duplicate records",
             )
 

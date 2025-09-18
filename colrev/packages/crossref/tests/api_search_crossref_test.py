@@ -5,9 +5,8 @@ from pathlib import Path
 import pytest
 import requests_mock
 
-import colrev.ops.prep
-import colrev.packages.crossref.src.crossref_search_source
-from colrev.packages.crossref.src import crossref_api
+import colrev.record.record_prep
+from colrev.packages.crossref.src.crossref_api import query_doi
 
 # pylint: disable=line-too-long
 
@@ -124,8 +123,6 @@ def test_crossref_query(  # type: ignore
 ) -> None:
     """Test the crossref query_doi()"""
 
-    api = crossref_api.CrossrefAPI(params={})
-
     # replace the / in filenames by _
     filename = Path(__file__).parent / f"data/{doi.replace('/', '_')}.json"
     with open(filename, encoding="utf-8") as file:
@@ -136,7 +133,7 @@ def test_crossref_query(  # type: ignore
             f"https://api.crossref.org/works/{doi}", content=json_str.encode("utf-8")
         )
 
-        actual = api.query_doi(doi=doi)
+        actual = query_doi(doi=doi)
         expected = colrev.record.record_prep.PrepRecord(expected_dict)
 
         assert actual.data == expected.data
