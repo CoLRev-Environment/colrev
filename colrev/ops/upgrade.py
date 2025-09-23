@@ -813,19 +813,162 @@ class Upgrade(colrev.process.operation.Operation):
             pre_commit_config_path.write_text(pre_commit_contents, encoding="utf-8")
             self.repo.index.add([str(pre_commit_config_path)])
 
-        # TODO: extract sources from settings to search-files
-        # TODO : add version to settings.json (and search-source)
+        def _derive_search_string(
+            *,
+            endpoint: str,
+            search_parameters: dict,
+            existing: typing.Any,
+        ) -> typing.Any:
+            if existing not in ["", None]:
+                return existing
 
-        # import colrev.package_manager.package_manager
-        # package_manager = colrev.package_manager.package_manager.PackageManager()
+            if not search_parameters:
+                return existing if existing is not None else ""
 
-        # for package_endpoint in settings....:
-        #     package_class = package_manager.get_package_endpoint_class(
-        #         package_type=EndpointType.search_source,
-        #         package_identifier=package_endpoint,
-        #     )
-        #     if package_class.needs_syntax_update(search_source):
-        #         package_class.migrate_to_current_version(search_source)
+            if Fields.URL in search_parameters:
+                return search_parameters[Fields.URL]
+
+            if endpoint == "colrev.crossref":
+                query = search_parameters.get("query", "")
+                scope = search_parameters.get("scope", {})
+                if isinstance(scope, dict) and Fields.ISSN in scope:
+                    issn_list = scope.get(Fields.ISSN, [])
+                    if isinstance(issn_list, list) and issn_list:
+                        issn = issn_list[0].replace("-", "")
+                        return f"https://api.crossref.org/journals/{issn}/works"
+                if isinstance(query, str) and query:
+                    return (
+                        "https://api.crossref.org/works?query.bibliographic="
+                        + query.replace(" ", "+")
+                    )
+                return search_parameters
+
+            if endpoint == "colrev.pubmed":
+                query = search_parameters.get("query", "")
+                if isinstance(query, str) and query:
+                    return (
+                        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+                        "?db=pubmed&term="
+                        + query.replace(" ", "+")
+                    )
+                return search_parameters
+
+            if endpoint == "colrev.plos":
+                query = search_parameters.get("query", "")
+                if isinstance(query, str) and query:
+                    return (
+                        "http://api.plos.org/search?q="
+                        + query.replace(" ", "+")
+                        + "&fl=id,abstract,author_display,title_display,journal,"
+                        "publication_date,volume,issue"
+                    )
+                return search_parameters
+
+            if endpoint == "colrev.dblp":
+                query = search_parameters.get("query", "")
+                scope = search_parameters.get("scope", {})
+                if isinstance(query, str) and query:
+                    return "https://dblp.org/search/publ/api?q=" + query.replace(" ", "+")
+                if isinstance(scope, dict) and "venue_key" in scope:
+                    venue_key = scope["venue_key"]
+                    if isinstance(venue_key, str) and venue_key:
+                        return {
+                            "scope": {
+                                "venue_key": venue_key,
+                                **{
+                                    k: v
+                                    for k, v in scope.items()
+                                    if k != "venue_key"
+                                },
+                            }
+                        }
+                return search_parameters
+
+            if endpoint == "colrev.semanticscholar":
+                query = search_parameters.get("query", "")
+                if isinstance(query, str) and query:
+                    return (
+                        "https://api.semanticscholar.org/graph/v1/paper/search?query="
+                        + query.replace(" ", "+")
+                    )
+                return search_parameters
+
+            if endpoint == "colrev.ieee":
+                query = search_parameters.get("query", "")
+                if isinstance(query, str) and query:
+                    return {
+                        "query": query,
+                        **{k: v for k, v in search_parameters.items() if k != "query"},
+                    }
+                return search_parameters
+
+            if endpoint == "colrev.scopus":
+                query = search_parameters.get("query", "")
+                if isinstance(query, str) and query:
+                    return query
+                return search_parameters
+
+            if "query" in search_parameters and isinstance(
+                search_parameters["query"], str
+            ):
+                return search_parameters["query"]
+
+            return search_parameters
+
+        settings = self._load_settings_dict()
+
+        if settings.get("sources"):
+            search_dir = Path("data/search")
+            search_dir.mkdir(parents=True, exist_ok=True)
+
+            for source in settings["sources"]:
+                filename = source.get("filename") or source.get("search_results_path")
+                if not filename:
+                    continue
+
+                search_results_path = Path(str(filename))
+                if not str(search_results_path).replace("\\", "/").startswith("data/search"):
+                    continue
+
+                search_history_path = (
+                    search_results_path.parent
+                    / f"{search_results_path.stem}_search_history.json"
+                )
+
+                if search_history_path.is_file():
+                    continue
+
+                search_parameters = source.get("search_parameters", {})
+                search_string = _derive_search_string(
+                    endpoint=source.get("endpoint", ""),
+                    search_parameters=search_parameters,
+                    existing=source.get("search_string"),
+                )
+
+                search_file_dict: dict[str, typing.Any] = {
+                    "platform": source.get("endpoint", ""),
+                    "search_results_path": str(search_results_path),
+                    "search_type": source.get("search_type", ""),
+                    "search_string": search_string,
+                }
+
+                if search_parameters:
+                    search_file_dict["search_parameters"] = search_parameters
+
+                if source.get("comment"):
+                    search_file_dict["comment"] = source["comment"]
+
+                if source.get("version"):
+                    search_file_dict["version"] = source["version"]
+
+                with open(search_history_path, "w", encoding="utf-8") as file:
+                    json.dump(search_file_dict, file, indent=4)
+
+                self.repo.index.add([str(search_history_path)])
+
+            if settings["sources"]:
+                settings["sources"] = []
+                self._save_settings(settings)
 
         return self.repo.is_dirty()
 
