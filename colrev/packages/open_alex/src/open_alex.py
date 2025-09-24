@@ -25,6 +25,7 @@ from colrev.packages.open_alex.src import open_alex_api
 
 class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
     """OpenAlex API"""
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     endpoint = "colrev.open_alex"
     source_identifier = "openalex_id"

@@ -23,6 +23,7 @@ from colrev.ops.search_db import run_db_search
 
 class JSTORSearchSource(base_classes.SearchSourcePackageBaseClass):
     """JSTOR"""
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     endpoint = "colrev.jstor"
     # pylint: disable=colrev-missed-constant-usage

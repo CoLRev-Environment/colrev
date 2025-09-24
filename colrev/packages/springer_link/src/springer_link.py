@@ -39,6 +39,7 @@ from colrev.packages.springer_link.src import springer_link_api
 
 class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Springer Link"""
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     endpoint = "colrev.springer_link"
     # pylint: disable=colrev-missed-constant-usage

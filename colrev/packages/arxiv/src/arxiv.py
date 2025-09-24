@@ -32,6 +32,7 @@ from colrev.packages.arxiv.src import arxiv_api
 
 class ArXivSource(base_classes.SearchSourcePackageBaseClass):
     """arXiv"""
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     endpoint = "colrev.arxiv"
     source_identifier = "arxivid"
