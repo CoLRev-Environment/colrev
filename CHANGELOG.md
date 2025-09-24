@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 ## Changed
 
 - Extract search source details to separate search-file (compliance with Haddaway et al. 2022). Upgrades implemented for all search-sources, tested for crossref, dblp, and files_dir. Added structure of search-files to docs.
+- PubMed search source settings are versioned (`CURRENT_SYNTAX_VERSION = "1.0.0"`), enforcing `search_parameters.version` validation and documenting versioned configuration examples.
 
 Haddaway, N. R., Rethlefsen, M. L., Davies, M., Glanville, J., McGowan, B., Nyhan, K., & Young, S. (2022). A suggested data structure for transparent and repeatable reporting of bibliographic searching. Campbell systematic reviews, 18(4), e1288.
 

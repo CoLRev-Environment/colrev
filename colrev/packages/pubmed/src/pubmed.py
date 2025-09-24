@@ -38,6 +38,8 @@ from colrev.packages.pubmed.src import pubmed_api
 class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Pubmed"""
 
+    CURRENT_SYNTAX_VERSION = "1.0.0"
+
     source_identifier = "pubmedid"
     search_types = [
         SearchType.DB,
@@ -63,6 +65,8 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.verbose_mode = verbose_mode
 
         self.search_source = search_file
+
+        self._validate_source()
 
         self.pubmed_lock = Lock()
 
@@ -121,6 +125,14 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 logger=logger,
             )
 
+            search_source.version = cls.CURRENT_SYNTAX_VERSION
+            search_source.search_parameters = {
+                **getattr(search_source, "search_parameters", {})
+                if isinstance(getattr(search_source, "search_parameters", {}), dict)
+                else {},
+                "version": cls.CURRENT_SYNTAX_VERSION,
+            }
+
         elif search_type == SearchType.API:
             if len(params_dict) == 0:
                 search_source = create_api_source(platform=cls.endpoint, path=path)
@@ -131,6 +143,12 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 search_source.search_string = (
                     f"{api_term_url}{search_source.search_string}"
                 )
+
+                search_source.search_parameters = {
+                    "url": search_source.search_string,
+                    "version": cls.CURRENT_SYNTAX_VERSION,
+                }
+                search_source.version = cls.CURRENT_SYNTAX_VERSION
 
             # pylint: disable=colrev-missed-constant-usage
             elif "url" in params_dict:
@@ -153,6 +171,12 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                         search_string=params_dict["url"],
                         comment="",
                     )
+
+                    search_source.search_parameters = {
+                        "url": params_dict["url"],
+                        "version": cls.CURRENT_SYNTAX_VERSION,
+                    }
+                    search_source.version = cls.CURRENT_SYNTAX_VERSION
                 else:
                     raise NotImplementedError
             else:
@@ -170,6 +194,18 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         source = self.search_source
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
+
+        version = getattr(source, "version", None)
+        if (
+            isinstance(getattr(source, "search_parameters", None), dict)
+            and source.search_parameters.get("version") is not None
+        ):
+            version = source.search_parameters.get("version")
+
+        if version != self.CURRENT_SYNTAX_VERSION:
+            raise colrev_exceptions.InvalidQueryException(
+                f"PubMed version should be {self.CURRENT_SYNTAX_VERSION}, found {version}"
+            )
 
         # if source.search_results_path.name != self._pubmed_md_filename.name:
         #     if "query" not in source.search_string:

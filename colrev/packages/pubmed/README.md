@@ -14,6 +14,24 @@ To add a pubmed API search, enter the query in the [Pubmed web interface](https:
 colrev search --add colrev.pubmed -p "https://pubmed.ncbi.nlm.nih.gov/?term=fitbit"
 ```
 
+### Settings (v1.0.0)
+
+PubMed search source settings are versioned. The configuration validates that
+`search_parameters.version` matches the current syntax version (`1.0.0`).
+
+```json
+{
+  "search_string": "https://pubmed.ncbi.nlm.nih.gov/?term=fitbit",
+  "platform": "colrev.pubmed",
+  "search_results_path": "data/search/pubmed.bib",
+  "search_type": "API",
+  "search_parameters": {
+    "url": "https://pubmed.ncbi.nlm.nih.gov/?term=fitbit",
+    "version": "1.0.0"
+  }
+}
+```
+
 ## prep
 
 PubMed linking
