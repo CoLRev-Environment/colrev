@@ -556,8 +556,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             new_record = self._get_grobid_metadata(file_path=file_path_abs)
 
         self._fix_grobid_errors(new_record)
-
-        new_record[Fields.FILE] = str(file_path)
+        new_record[Fields.FILE] = file_path.relative_to(self.review_manager.path)
         new_record = self._add_md_string(record_dict=new_record)
 
         # Note: identical md_string as a heuristic for duplicates
