@@ -27,9 +27,8 @@ For metadata curations, i.e., repositories containing all PDFs organized in dire
             "journal": "MIS Quarterly",
             "path": "data/pdfs"
         },
-        "version": "0.1.0"
     },
-    "comment": ""
+    "version": "0.1.0"
 }
 ```
 

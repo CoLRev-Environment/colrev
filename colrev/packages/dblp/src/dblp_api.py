@@ -234,7 +234,7 @@ class DBLPAPI:
             query = self.params["scope"]["journal_abbreviated"]
             # query = params['scope']["venue_key"]
             return self._api_url + query.replace(" ", "+")
-        elif "query" in self.params:
+        if "query" in self.params:
             query = self.params["query"]
             # return self._api_url + query.replace(" ", "+")
             return query.replace(" ", "+")

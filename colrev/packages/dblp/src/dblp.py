@@ -56,7 +56,7 @@ class DBLPSearchSourceSettings(colrev.search_file.ExtendedSearchFile, BaseModel)
 class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     """DBLP API"""
 
-    CURRENT_SYNTAX_VERSION = "1.0.0"
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     source_identifier = "dblp_key"
     search_types = [
@@ -141,8 +141,8 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
                 search_source.search_parameters = {
                     "query": url,
-                    "version": cls.CURRENT_SYNTAX_VERSION,
                 }
+                search_source.version = cls.CURRENT_SYNTAX_VERSION
                 search_source.search_string = ""
 
             # pylint: disable=colrev-missed-constant-usage
@@ -161,9 +161,9 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     search_string="",
                     search_parameters={
                         "query": query,
-                        "version": cls.CURRENT_SYNTAX_VERSION,
                     },
                     comment="",
+                    version=cls.CURRENT_SYNTAX_VERSION,
                 )
 
             else:
@@ -184,6 +184,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     }
                 },
                 comment="",
+                version=cls.CURRENT_SYNTAX_VERSION,
             )
 
         else:

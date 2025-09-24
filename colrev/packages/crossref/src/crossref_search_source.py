@@ -37,7 +37,7 @@ from colrev.packages.crossref.src.crossref_api import query_doi
 class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Crossref API"""
 
-    CURRENT_SYNTAX_VERSION = "1.0.0"
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     endpoint = "colrev.crossref"
     source_identifier = Fields.DOI
@@ -64,7 +64,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.verbose_mode = verbose_mode
 
         self.search_source = search_file
-        self._validate_source
+        self._validate_source()
         self.crossref_lock = Lock()
         self.language_service = colrev.env.language_service.LanguageService()
 
@@ -181,7 +181,10 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
             platform="colrev.crossref",
             search_results_path=filename,
             search_type=SearchType.TOC,
-            search_string=f"https://api.crossref.org/journals/{issn.replace('-', '')}/works",
+            search_string="",
+            search_params={
+                "url": f"https://api.crossref.org/journals/{issn.replace('-', '')}/works"
+            },
             version=cls.CURRENT_SYNTAX_VERSION,
             comment="",
         )
@@ -209,8 +212,8 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                     + "query.bibliographic="
                     + search_source.search_string.replace(" ", "+")
                 )
-                search_source.search_parameters["version"] = cls.CURRENT_SYNTAX_VERSION
                 search_source.search_string = ""
+                search_source.version = cls.CURRENT_SYNTAX_VERSION
             else:
                 if Fields.URL in params_dict:
                     query = {"url": params_dict[Fields.URL]}
@@ -228,9 +231,9 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                     search_string="",
                     search_parameters={
                         "query": query["url"],
-                        "version": cls.CURRENT_SYNTAX_VERSION,
                     },
                     comment="",
+                    version=cls.CURRENT_SYNTAX_VERSION,
                 )
 
         elif search_type == SearchType.TOC:
@@ -238,8 +241,8 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                 search_source = cls._add_toc_interactively(path=path)
                 search_source.search_parameters = {
                     "url": search_source.search_string,
-                    "version": cls.CURRENT_SYNTAX_VERSION,
                 }
+                search_source.version = cls.CURRENT_SYNTAX_VERSION
                 search_source.search_string = ""
             else:
                 filename = colrev.utils.get_unique_filename(
@@ -253,9 +256,9 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                     search_string="",
                     search_parameters={
                         "url": params_dict["url"],
-                        "version": cls.CURRENT_SYNTAX_VERSION,
                     },
                     comment="",
+                    version=cls.CURRENT_SYNTAX_VERSION,
                 )
 
         else:

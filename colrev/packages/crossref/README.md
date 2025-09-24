@@ -30,8 +30,8 @@ Format of the search-history file:
     "search_type": "API",
     "search_parameters": {
         "url": "https://api.crossref.org/works?query.bibliographic=microsourcing",
-        "version": "1.0.0"
-    }
+    },
+    "version": "0.1.0"
 }
 ```
 
@@ -52,8 +52,8 @@ Format of the search-history file:
     "search_type": "TOC",
     "search_parameters": {
         "url": "https://api.crossref.org/journals/0276-7783/works",
-        "version": "1.0.0"
-    }
+    },
+    "version": "0.1.0"
 }
 ```
 

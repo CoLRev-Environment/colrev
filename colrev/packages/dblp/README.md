@@ -24,8 +24,8 @@ Format of the search-history file:
     "search_type": "API",
     "search_parameters": {
         "query": "https://dblp.org/search/publ/api?q=microsourcing",
-        "version": "1.0.0"
-    }
+    },
+    "version": "0.1.0"
 }
 ```
 
@@ -46,9 +46,8 @@ Format of the search-history file:
             "venue_key": "journals/misq",
             "journal_abbreviated": "MIS Q."
         },
-        "version": "0.1.0"
     },
-    "comment": ""
+    "version": "0.1.0"
 }
 ```
 

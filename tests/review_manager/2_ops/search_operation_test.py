@@ -52,8 +52,11 @@ def test_search_add_source(  # type: ignore
     add_source = colrev.search_file.ExtendedSearchFile(
         platform="colrev.crossref",
         search_results_path=Path("data/search/crossref_search.bib"),
-        search_type=SearchType.DB,
-        search_string="https://api.crossref.org/works?query.bibliographic=test",
+        search_type=SearchType.API,
+        search_string="",
+        search_parameters={
+            "url": "https://api.crossref.org/works?query.bibliographic=test"
+        },
         comment="",
     )
 

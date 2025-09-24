@@ -815,7 +815,6 @@ class Upgrade(colrev.process.operation.Operation):
 
         def _derive_search_fields(
             *,
-            endpoint: str,
             search_parameters: typing.Any,
             existing: typing.Any,
             search_type: str = "",
@@ -866,12 +865,10 @@ class Upgrade(colrev.process.operation.Operation):
 
                 search_parameters = source.get("search_parameters", {})
                 search_string, updated_parameters = _derive_search_fields(
-                    endpoint=source.get("endpoint", ""),
                     search_parameters=search_parameters,
                     existing=source.get("search_string"),
                     search_type=source.get("search_type", ""),
                 )
-                updated_parameters["version"] = "0.1.0"
 
                 platform = source.get("endpoint", "")
                 search_file_dict: dict[str, typing.Any] = {
@@ -879,10 +876,12 @@ class Upgrade(colrev.process.operation.Operation):
                     "search_results_path": str(search_results_path),
                     "search_type": source.get("search_type", "DB"),
                     "search_string": "",
+                    "version": "0.1.0",
                 }
 
                 search_file_dict["search_string"] = search_string
                 if source.get("search_type", "") not in ["DB", "MD"]:
+                    updated_parameters.pop("version", None)
                     search_file_dict["search_parameters"] = updated_parameters
                 search_file_dict["comment"] = source.get("comment", "")
 

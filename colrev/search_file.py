@@ -25,9 +25,7 @@ class ExtendedSearchFile(search_query.SearchFile):
         platform: str,
         search_results_path: Path,
         search_type: SearchType,
-        authors: Optional[list[dict]] = None,
-        record_info: Optional[dict] = None,
-        date: Optional[dict] = None,
+        version: str = "0.1.0",
         **kwargs: Any,
     ) -> None:
 
@@ -42,10 +40,8 @@ class ExtendedSearchFile(search_query.SearchFile):
         super().__init__(
             search_string=search_string,
             platform=platform,
-            authors=authors,
-            record_info=record_info,
-            date=date,
             search_results_path=search_results_path,
+            version=version,
             **kwargs,
         )
 
