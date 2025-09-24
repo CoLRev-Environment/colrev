@@ -34,7 +34,8 @@ class ExtendedSearchFile(search_query.SearchFile):
 
         if not str(search_results_path).replace("\\", "/").startswith("data/search"):
             raise colrev_exceptions.InvalidSettingsError(
-                msg=f"Source search_results_path does not start with data/search: {search_results_path}"
+                msg="Source search_results_path does not start with "
+                + f"data/search: {search_results_path}"
             )
 
         super().__init__(
