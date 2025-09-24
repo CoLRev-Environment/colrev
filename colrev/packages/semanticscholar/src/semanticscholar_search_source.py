@@ -37,6 +37,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Semantic Scholar API Search Source"""
+
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
     # Provide objects with classes

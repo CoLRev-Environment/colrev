@@ -31,6 +31,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Forward search based on OpenCitations
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
+
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
     endpoint = "colrev.open_citations_forward_search"

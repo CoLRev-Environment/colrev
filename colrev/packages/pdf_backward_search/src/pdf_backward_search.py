@@ -43,6 +43,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Backward search extracting references from PDFs using GROBID
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
+
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
     _api_url = "https://opencitations.net/index/coci/api/v1/references/"

@@ -23,6 +23,7 @@ from colrev.ops.search_db import run_db_search
 
 class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """Wiley"""
+
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
     endpoint = "colrev.wiley"

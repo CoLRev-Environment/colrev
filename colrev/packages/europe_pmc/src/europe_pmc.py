@@ -37,6 +37,7 @@ from colrev.packages.europe_pmc.src import europe_pmc_api
 
 class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Europe PMC"""
+
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
     #

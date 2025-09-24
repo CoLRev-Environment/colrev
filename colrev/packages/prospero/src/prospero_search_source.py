@@ -29,6 +29,7 @@ from colrev.ops.search_api_feed import create_api_source
 
 class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Prospero Search Source for retrieving protocol data"""
+
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
     endpoint = "colrev.prospero"

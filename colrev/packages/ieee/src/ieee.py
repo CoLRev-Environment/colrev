@@ -32,6 +32,7 @@ from colrev.ops.search_db import run_db_search
 
 class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
     """IEEEXplore"""
+
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
     flag = True

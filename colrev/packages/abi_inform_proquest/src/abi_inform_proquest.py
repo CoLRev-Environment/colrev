@@ -25,6 +25,7 @@ from colrev.writer.write_utils import write_file
 
 class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
     """ABI/INFORM (ProQuest)"""
+
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
     endpoint = "colrev.abi_inform_proquest"

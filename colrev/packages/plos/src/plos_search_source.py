@@ -30,6 +30,7 @@ from colrev.packages.plos.src import plos_api
 # pylint: disable=unused-argument
 class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     """PLOS API"""
+
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
     endpoint = "colrev.plos"

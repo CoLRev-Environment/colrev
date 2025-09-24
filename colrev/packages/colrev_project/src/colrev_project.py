@@ -32,6 +32,7 @@ from colrev.constants import SearchType
 
 class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
     """CoLRev projects"""
+
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
     source_identifier = "colrev_project_identifier"
