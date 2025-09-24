@@ -813,19 +813,177 @@ class Upgrade(colrev.process.operation.Operation):
             pre_commit_config_path.write_text(pre_commit_contents, encoding="utf-8")
             self.repo.index.add([str(pre_commit_config_path)])
 
-        # TODO: extract sources from settings to search-files
-        # TODO : add version to settings.json (and search-source)
+        def _derive_search_fields(
+            *,
+            endpoint: str,
+            search_parameters: typing.Any,
+            existing: typing.Any,
+        ) -> tuple[str, dict]:
+            existing_string = existing if isinstance(existing, str) else ""
+            parameters: dict = (
+                search_parameters.copy() if isinstance(search_parameters, dict) else {}
+            )
 
-        # import colrev.package_manager.package_manager
-        # package_manager = colrev.package_manager.package_manager.PackageManager()
+            if existing_string:
+                return existing_string, parameters
 
-        # for package_endpoint in settings....:
-        #     package_class = package_manager.get_package_endpoint_class(
-        #         package_type=EndpointType.search_source,
-        #         package_identifier=package_endpoint,
-        #     )
-        #     if package_class.needs_syntax_update(search_source):
-        #         package_class.migrate_to_current_version(search_source)
+            if not parameters:
+                return "", {}
+
+            if Fields.URL in parameters and isinstance(parameters[Fields.URL], str):
+                return parameters[Fields.URL], parameters
+
+            if endpoint == "colrev.crossref":
+                query = parameters.get("query", "")
+                scope = parameters.get("scope", {})
+                if isinstance(scope, dict) and Fields.ISSN in scope:
+                    issn_list = scope.get(Fields.ISSN, [])
+                    if isinstance(issn_list, list) and issn_list:
+                        issn = issn_list[0].replace("-", "")
+                        return f"https://api.crossref.org/journals/{issn}/works", parameters
+                if isinstance(query, str) and query:
+                    return (
+                        "https://api.crossref.org/works?query.bibliographic="
+                        + query.replace(" ", "+"),
+                        parameters,
+                    )
+                return "", parameters
+
+            if endpoint == "colrev.pubmed":
+                query = parameters.get("query", "")
+                if isinstance(query, str) and query:
+                    return (
+                        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+                        "?db=pubmed&term="
+                        + query.replace(" ", "+"),
+                        parameters,
+                    )
+                return "", parameters
+
+            if endpoint == "colrev.plos":
+                query = parameters.get("query", "")
+                if isinstance(query, str) and query:
+                    return (
+                        "http://api.plos.org/search?q="
+                        + query.replace(" ", "+")
+                        + "&fl=id,abstract,author_display,title_display,journal,"
+                        "publication_date,volume,issue",
+                        parameters,
+                    )
+                return "", parameters
+
+            if endpoint == "colrev.dblp":
+                query = parameters.get("query", "")
+                if isinstance(query, str) and query:
+                    return (
+                        "https://dblp.org/search/publ/api?q=" + query.replace(" ", "+"),
+                        parameters,
+                    )
+                scope = parameters.get("scope", {})
+                if isinstance(scope, dict) and "venue_key" in scope:
+                    venue_key = scope.get("venue_key", "")
+                    if isinstance(venue_key, str) and venue_key:
+                        filtered_scope = {
+                            "venue_key": venue_key,
+                            **{k: v for k, v in scope.items() if k != "venue_key"},
+                        }
+                        remaining_parameters = {
+                            k: v for k, v in parameters.items() if k != "scope"
+                        }
+                        remaining_parameters["scope"] = filtered_scope
+                        return "", remaining_parameters
+                return "", parameters
+
+            if endpoint == "colrev.semanticscholar":
+                query = parameters.get("query", "")
+                if isinstance(query, str) and query:
+                    return (
+                        "https://api.semanticscholar.org/graph/v1/paper/search?query="
+                        + query.replace(" ", "+"),
+                        parameters,
+                    )
+                return "", parameters
+
+            if endpoint == "colrev.ieee":
+                query = parameters.get("query", "")
+                if isinstance(query, str) and query:
+                    return "", {
+                        "query": query,
+                        **{k: v for k, v in parameters.items() if k != "query"},
+                    }
+                return "", parameters
+
+            if endpoint == "colrev.scopus":
+                query = parameters.get("query", "")
+                if isinstance(query, str) and query:
+                    return query, parameters
+                return "", parameters
+
+            if "query" in parameters and isinstance(parameters["query"], str):
+                return parameters["query"], parameters
+
+            return "", parameters
+
+        settings = self._load_settings_dict()
+
+        if settings.get("sources"):
+            search_dir = Path("data/search")
+            search_dir.mkdir(parents=True, exist_ok=True)
+
+            for source in settings["sources"]:
+                filename = source.get("filename") or source.get("search_results_path")
+                if not filename:
+                    continue
+
+                search_results_path = Path(str(filename))
+                if not str(search_results_path).replace("\\", "/").startswith("data/search"):
+                    continue
+
+                search_history_path = (
+                    search_results_path.parent
+                    / f"{search_results_path.stem}_search_history.json"
+                )
+
+                if search_history_path.is_file():
+                    continue
+
+                search_parameters = source.get("search_parameters", {})
+                search_string, updated_parameters = _derive_search_fields(
+                    endpoint=source.get("endpoint", ""),
+                    search_parameters=search_parameters,
+                    existing=source.get("search_string"),
+                )
+
+                platform = source.get("endpoint", "")
+                search_file_dict: dict[str, typing.Any] = {
+                    "platform": platform,
+                    "search_results_path": str(search_results_path),
+                    "search_type": source.get("search_type", ""),
+                }
+
+                if platform == "colrev.files_dir":
+                    if updated_parameters:
+                        search_file_dict["search_parameters"] = updated_parameters
+                else:
+                    if search_string:
+                        search_file_dict["search_string"] = search_string
+                    if updated_parameters:
+                        search_file_dict["search_parameters"] = updated_parameters
+
+                if source.get("comment"):
+                    search_file_dict["comment"] = source["comment"]
+
+                if source.get("version"):
+                    search_file_dict["version"] = source["version"]
+
+                with open(search_history_path, "w", encoding="utf-8") as file:
+                    json.dump(search_file_dict, file, indent=4)
+
+                self.repo.index.add([str(search_history_path)])
+
+            if settings["sources"]:
+                settings["sources"] = []
+                self._save_settings(settings)
 
         return self.repo.is_dirty()
 
