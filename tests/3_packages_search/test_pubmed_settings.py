@@ -38,9 +38,7 @@ def pubmed_search_file_factory():
 
 
 def test_pubmed_validate_accepts_current_version(pubmed_search_file_factory):
-    search_file = pubmed_search_file_factory(
-        PubMedSearchSource.CURRENT_SYNTAX_VERSION
-    )
+    search_file = pubmed_search_file_factory(PubMedSearchSource.CURRENT_SYNTAX_VERSION)
 
     PubMedSearchSource(search_file=search_file)
 
@@ -53,10 +51,7 @@ def test_pubmed_validate_rejects_missing_version(pubmed_search_file_factory):
     with pytest.raises(colrev_exceptions.InvalidQueryException) as exc_info:
         PubMedSearchSource(search_file=search_file)
 
-    assert (
-        str(exc_info.value)
-        == "PubMed version should be 1.0.0, found None"
-    )
+    assert str(exc_info.value) == "PubMed version should be 1.0.0, found None"
 
 
 def test_pubmed_validate_rejects_mismatched_version(pubmed_search_file_factory):
@@ -65,7 +60,4 @@ def test_pubmed_validate_rejects_mismatched_version(pubmed_search_file_factory):
     with pytest.raises(colrev_exceptions.InvalidQueryException) as exc_info:
         PubMedSearchSource(search_file=search_file)
 
-    assert (
-        str(exc_info.value)
-        == "PubMed version should be 1.0.0, found 9.9.9"
-    )
+    assert str(exc_info.value) == "PubMed version should be 1.0.0, found 9.9.9"
