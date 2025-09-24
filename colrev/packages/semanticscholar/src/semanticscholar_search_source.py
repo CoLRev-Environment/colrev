@@ -37,6 +37,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Semantic Scholar API Search Source"""
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     # Provide objects with classes
     _search_return: PaginatedResults
@@ -78,6 +79,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.search_source = search_file
         else:
             self.search_source = colrev.search_file.ExtendedSearchFile(
+                version=self.CURRENT_SYNTAX_VERSION,
                 platform="colrev.semanticscholar",
                 search_results_path=self._s2_filename,
                 search_type=SearchType.API,
@@ -380,6 +382,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
         search_source = colrev.search_file.ExtendedSearchFile(
+            version=cls.CURRENT_SYNTAX_VERSION,
             platform="colrev.semanticscholar",
             search_results_path=filename,
             search_type=SearchType.API,

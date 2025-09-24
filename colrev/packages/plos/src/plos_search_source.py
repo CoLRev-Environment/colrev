@@ -30,6 +30,7 @@ from colrev.packages.plos.src import plos_api
 # pylint: disable=unused-argument
 class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     """PLOS API"""
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     endpoint = "colrev.plos"
     source_identifier = Fields.DOI
@@ -100,7 +101,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
                     + "journal,publication_date,volume,issue"
                 )
 
-                search_source.search_parameters = {"version": "0.1.0"}
+                search_source.version = cls.CURRENT_SYNTAX_VERSION
 
                 return search_source
 
@@ -115,6 +116,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
             search_source = colrev.search_file.ExtendedSearchFile(
+                version=cls.CURRENT_SYNTAX_VERSION,
                 platform="colrev.plos",
                 search_results_path=filename,
                 search_type=SearchType.API,

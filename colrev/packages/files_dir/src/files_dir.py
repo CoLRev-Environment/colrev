@@ -39,6 +39,7 @@ from colrev.writer.write_utils import write_file
 
 class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Files directories (PDFs based on GROBID)"""
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     # pylint: disable=too-many-instance-attributes
 
@@ -744,6 +745,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
         # pylint: disable=no-value-for-parameter
         search_source = colrev.search_file.ExtendedSearchFile(
+            version=cls.CURRENT_SYNTAX_VERSION,
             platform="colrev.files_dir",
             search_results_path=filename,
             search_type=SearchType.FILES,

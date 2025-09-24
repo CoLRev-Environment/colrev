@@ -31,6 +31,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Forward search based on OpenCitations
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     endpoint = "colrev.open_citations_forward_search"
     source_identifier = "fwsearch_ref"
@@ -61,6 +62,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     def get_default_source(cls) -> colrev.search_file.ExtendedSearchFile:
         """Get the default SearchSource settings"""
         return colrev.search_file.ExtendedSearchFile(
+            version=cls.CURRENT_SYNTAX_VERSION,
             platform="colrev.open_citations_forward_search",
             search_results_path=Path("data/search/forward_search.bib"),
             search_type=SearchType.FORWARD_SEARCH,

@@ -32,6 +32,7 @@ from colrev.ops.search_db import run_db_search
 
 class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
     """IEEEXplore"""
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     flag = True
 
@@ -64,6 +65,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.search_source = search_file
         else:
             self.search_source = colrev.search_file.ExtendedSearchFile(
+                version=self.CURRENT_SYNTAX_VERSION,
                 platform=self.endpoint,
                 search_results_path=Path("data/search/ieee.bib"),
                 search_type=SearchType.OTHER,
@@ -140,6 +142,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
 
                 search_source = colrev.search_file.ExtendedSearchFile(
+                    version=cls.CURRENT_SYNTAX_VERSION,
                     platform=cls.endpoint,
                     search_results_path=filename,
                     search_type=SearchType.API,

@@ -32,6 +32,7 @@ from colrev.constants import SearchType
 
 class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
     """CoLRev projects"""
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     source_identifier = "colrev_project_identifier"
     search_types = [SearchType.API]
@@ -86,6 +87,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
             file_path_string=params.split("/")[-1],
         )
         search_source = colrev.search_file.ExtendedSearchFile(
+            version=cls.CURRENT_SYNTAX_VERSION,
             platform=cls.endpoint,
             search_results_path=filename,
             search_type=SearchType.OTHER,

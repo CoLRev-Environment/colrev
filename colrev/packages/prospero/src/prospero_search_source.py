@@ -29,6 +29,7 @@ from colrev.ops.search_api_feed import create_api_source
 
 class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Prospero Search Source for retrieving protocol data"""
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     endpoint = "colrev.prospero"
     source_identifier = Fields.PROSPERO_ID
@@ -65,7 +66,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
             search_source.search_string[Fields.URL] = (
                 cls.db_url + "search?" + search_source.search_string + "#searchadvanced"
             )
-            search_source.version = "0.1.0"
+            search_source.version = cls.CURRENT_SYNTAX_VERSION
             return search_source
 
         filename = colrev.utils.get_unique_filename(
@@ -74,6 +75,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
         new_search_source = colrev.search_file.ExtendedSearchFile(
+            version=cls.CURRENT_SYNTAX_VERSION,
             platform=cls.endpoint,
             search_results_path=filename,
             search_type=SearchType.API,

@@ -29,6 +29,7 @@ from colrev.packages.eric.src import eric_api
 
 class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
     """ERIC API"""
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
@@ -55,6 +56,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.search_source = search_file
         else:
             self.search_source = colrev.search_file.ExtendedSearchFile(
+                version=self.CURRENT_SYNTAX_VERSION,
                 platform=self.endpoint,
                 search_results_path=Path("data/search/eric.bib"),
                 search_type=SearchType.OTHER,
@@ -138,6 +140,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
                 file_path_string=f"eric_{search}",
             )
             search_source = colrev.search_file.ExtendedSearchFile(
+                version=cls.CURRENT_SYNTAX_VERSION,
                 platform=cls.endpoint,
                 search_results_path=filename,
                 search_type=SearchType.API,

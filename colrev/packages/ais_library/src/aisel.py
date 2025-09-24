@@ -35,6 +35,7 @@ from colrev.packages.ais_library.src import aisel_api
 
 class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """AIS electronic Library (AISeL)"""
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
@@ -201,6 +202,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                     file_path_string="ais",
                 )
                 search_source = colrev.search_file.ExtendedSearchFile(
+                    version=cls.CURRENT_SYNTAX_VERSION,
                     platform=cls.endpoint,
                     search_results_path=filename,
                     search_type=SearchType.API,

@@ -26,6 +26,7 @@ from colrev.packages.unpaywall.src.api import UnpaywallAPI
 
 class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Unpaywall Search Source"""
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     source_identifier = "doi"
     search_types = [SearchType.API]
@@ -53,6 +54,7 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.search_source = search_file
         else:
             self.search_source = colrev.search_file.ExtendedSearchFile(
+                version=self.CURRENT_SYNTAX_VERSION,
                 platform=self.endpoint,
                 search_results_path=Path("data/search/unpaywall.bib"),
                 search_type=SearchType.API,
@@ -114,6 +116,7 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
             search_source = colrev.search_file.ExtendedSearchFile(
+                version=cls.CURRENT_SYNTAX_VERSION,
                 platform=cls.endpoint,
                 search_results_path=filename,
                 search_type=SearchType.API,
