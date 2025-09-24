@@ -233,12 +233,13 @@ class DBLPAPI:
             # Note : journal_abbreviated is the abbreviated venue_key
             query = self.params["scope"]["journal_abbreviated"]
             # query = params['scope']["venue_key"]
+            return self._api_url + query.replace(" ", "+")
         elif "query" in self.params:
             query = self.params["query"]
-        else:
-            raise ValueError("No query or scope provided")
+            # return self._api_url + query.replace(" ", "+")
+            return query.replace(" ", "+")
 
-        return self._api_url + query.replace(" ", "+")
+        raise ValueError("No query or scope provided")
 
     def set_next_url(self) -> None:
         """Set the next URL"""

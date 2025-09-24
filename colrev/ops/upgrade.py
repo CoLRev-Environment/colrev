@@ -813,19 +813,87 @@ class Upgrade(colrev.process.operation.Operation):
             pre_commit_config_path.write_text(pre_commit_contents, encoding="utf-8")
             self.repo.index.add([str(pre_commit_config_path)])
 
-        # TODO: extract sources from settings to search-files
-        # TODO : add version to settings.json (and search-source)
+        def _derive_search_fields(
+            *,
+            endpoint: str,
+            search_parameters: typing.Any,
+            existing: typing.Any,
+            search_type: str = "",
+        ) -> tuple[str, dict]:
+            existing_string = existing if isinstance(existing, str) else ""
+            parameters: dict = (
+                search_parameters.copy() if isinstance(search_parameters, dict) else {}
+            )
+            if search_type == "MD":
+                return "", {}
+            if search_type == "DB":
+                return existing_string, {}
 
-        # import colrev.package_manager.package_manager
-        # package_manager = colrev.package_manager.package_manager.PackageManager()
+            if existing_string:
+                return existing_string, parameters
 
-        # for package_endpoint in settings....:
-        #     package_class = package_manager.get_package_endpoint_class(
-        #         package_type=EndpointType.search_source,
-        #         package_identifier=package_endpoint,
-        #     )
-        #     if package_class.needs_syntax_update(search_source):
-        #         package_class.migrate_to_current_version(search_source)
+            if not parameters:
+                return "", {}
+
+            return "", parameters
+
+        settings = self._load_settings_dict()
+
+        if settings.get("sources"):
+            search_dir = Path("data/search")
+            search_dir.mkdir(parents=True, exist_ok=True)
+
+            for source in settings["sources"]:
+                filename = source.get("filename") or source.get("search_results_path")
+                if not filename:
+                    continue
+
+                search_results_path = Path(str(filename))
+                if (
+                    not str(search_results_path)
+                    .replace("\\", "/")
+                    .startswith("data/search")
+                ):
+                    continue
+
+                search_history_path = (
+                    search_results_path.parent
+                    / f"{search_results_path.stem}_search_history.json"
+                )
+
+                if search_history_path.is_file():
+                    continue
+
+                search_parameters = source.get("search_parameters", {})
+                search_string, updated_parameters = _derive_search_fields(
+                    endpoint=source.get("endpoint", ""),
+                    search_parameters=search_parameters,
+                    existing=source.get("search_string"),
+                    search_type=source.get("search_type", ""),
+                )
+                updated_parameters["version"] = "0.1.0"
+
+                platform = source.get("endpoint", "")
+                search_file_dict: dict[str, typing.Any] = {
+                    "platform": platform,
+                    "search_results_path": str(search_results_path),
+                    "search_type": source.get("search_type", "DB"),
+                    "search_string": "",
+                }
+
+                search_file_dict["search_string"] = search_string
+                if source.get("search_type", "") not in ["DB", "MD"]:
+                    search_file_dict["search_parameters"] = updated_parameters
+                search_file_dict["comment"] = source.get("comment", "")
+
+                with open(search_history_path, "w", encoding="utf-8") as file:
+                    json.dump(search_file_dict, file, indent=4)
+
+                self.repo.index.add([str(search_history_path)])
+
+            if settings["sources"]:
+                settings["sources"] = []
+                self._save_settings(settings)
 
         return self.repo.is_dirty()
 

@@ -37,7 +37,7 @@ from colrev.packages.crossref.src.crossref_api import query_doi
 class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Crossref API"""
 
-    # TODO : CURRENT_SYNTAX_VERSION = "1.0.0"
+    CURRENT_SYNTAX_VERSION = "1.0.0"
 
     endpoint = "colrev.crossref"
     source_identifier = Fields.DOI
@@ -64,10 +64,52 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.verbose_mode = verbose_mode
 
         self.search_source = search_file
+        self._validate_source
         self.crossref_lock = Lock()
         self.language_service = colrev.env.language_service.LanguageService()
 
-        self.api = crossref_api.CrossrefAPI(url=self.search_source.search_string)
+        self.api = crossref_api.CrossrefAPI(
+            url=self.search_source.search_parameters["url"]
+        )
+
+    def _validate_source(self) -> None:
+        # validate version and migrate if needed
+        # TBD: automatically migrate (option to skip?)
+        source = self.search_source
+        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
+        if source.search_type not in self.search_types:
+            raise colrev_exceptions.InvalidQueryException(
+                f"Crossref search_type should be in {self.search_types}"
+            )
+
+        # if source.version == "0.1.0":
+        # migration here...
+
+        if source.version != self.CURRENT_SYNTAX_VERSION:
+            raise colrev_exceptions.InvalidQueryException(
+                f"Crossref version should be {self.CURRENT_SYNTAX_VERSION}, found {source.version}"
+            )
+
+        # logic to validate the latest version
+        if source.search_string != "":
+            raise colrev_exceptions.InvalidQueryException(
+                "Crossref search_string should be empty - use search_parameters"
+            )
+        if source.search_type == SearchType.API:
+            self._validate_api_params()
+
+        # TODO : use search-query to validate queries and print linter messages
+        self.logger.debug("SearchSource %s validated", source.search_results_path)
+
+    def _validate_api_params(self) -> None:
+        pass
+        # self.search_source
+
+        # if not all(x in ["url", "version"] for x in source.search_string):
+        #     raise colrev_exceptions.InvalidQueryException(
+        #         "Crossref search_string supports query or scope/issn field"
+        #     )
+        # Validate Query here
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -140,7 +182,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
             search_results_path=filename,
             search_type=SearchType.TOC,
             search_string=f"https://api.crossref.org/journals/{issn.replace('-', '')}/works",
-            version="1.0.0",
+            version=cls.CURRENT_SYNTAX_VERSION,
             comment="",
         )
         return add_source
@@ -153,7 +195,6 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         logger: Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint"""
-
         params_dict = cls._parse_params(params)
         search_type = cls._select_search_type(params_dict)
 
@@ -161,13 +202,15 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
             if len(params_dict) == 0:
                 search_source = create_api_source(platform=cls.endpoint, path=path)
                 # pylint: disable=colrev-missed-constant-usage
-                search_source.search_string = (
+                search_source.search_parameters = {}
+                search_source.search_parameters["url"] = (
                     cls._api_url
                     + "works?"
                     + "query.bibliographic="
                     + search_source.search_string.replace(" ", "+")
                 )
-                search_source.version = "1.0.0"
+                search_source.search_parameters["version"] = cls.CURRENT_SYNTAX_VERSION
+                search_source.search_string = ""
             else:
                 if Fields.URL in params_dict:
                     query = {"url": params_dict[Fields.URL]}
@@ -182,13 +225,22 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                     platform="colrev.crossref",
                     search_results_path=filename,
                     search_type=SearchType.API,
-                    search_string=query["url"],
+                    search_string="",
+                    search_parameters={
+                        "query": query["url"],
+                        "version": cls.CURRENT_SYNTAX_VERSION,
+                    },
                     comment="",
                 )
 
         elif search_type == SearchType.TOC:
             if len(params_dict) == 0:
                 search_source = cls._add_toc_interactively(path=path)
+                search_source.search_parameters = {
+                    "url": search_source.search_string,
+                    "version": cls.CURRENT_SYNTAX_VERSION,
+                }
+                search_source.search_string = ""
             else:
                 filename = colrev.utils.get_unique_filename(
                     base_path=path,
@@ -198,7 +250,11 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                     platform="colrev.crossref",
                     search_results_path=filename,
                     search_type=SearchType.TOC,
-                    search_string=params_dict["url"],
+                    search_string="",
+                    search_parameters={
+                        "url": params_dict["url"],
+                        "version": cls.CURRENT_SYNTAX_VERSION,
+                    },
                     comment="",
                 )
 
@@ -238,31 +294,6 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
             record.remove_field(key="warning")
         else:
             record.set_status(RecordState.md_prepared)
-
-    def _validate_api_params(self) -> None:
-        pass
-        # self.search_source
-
-        # if not all(x in ["url", "version"] for x in source.search_string):
-        #     raise colrev_exceptions.InvalidQueryException(
-        #         "Crossref search_string supports query or scope/issn field"
-        #     )
-        # Validate Query here
-
-    def _validate_source(self) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-        source = self.search_source
-        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
-
-        if source.search_type not in self.search_types:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Crossref search_type should be in {self.search_types}"
-            )
-
-        if source.search_type == SearchType.API:
-            self._validate_api_params()
-
-        self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def _restore_url(
         self,
@@ -307,14 +338,14 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def _scope_excluded(self, retrieved_record_dict: dict) -> bool:
         if (
-            "scope" not in self.search_source.search_string
-            or "years" not in self.search_source.search_string["scope"]
+            "scope" not in self.search_source.search_parameters
+            or "years" not in self.search_source.search_parameters["scope"]
         ):
             return False
 
-        year_from, year_to = self.search_source.search_string["scope"]["years"].split(
-            "-"
-        )
+        year_from, year_to = self.search_source.search_parameters["scope"][
+            "years"
+        ].split("-")
         if not retrieved_record_dict.get(Fields.YEAR, -1000).isdigit():
             return True
 
@@ -327,7 +358,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         return True
 
     def _potentially_overlapping_issn_search(self) -> bool:
-        params = self.search_source.search_string
+        params = self.search_source.search_parameters
         if "scope" not in params:
             return False
         if Fields.ISSN not in params["scope"]:
@@ -383,8 +414,6 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def search(self, rerun: bool) -> None:
         """Run a search of Crossref"""
-
-        self._validate_source()
 
         crossref_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,

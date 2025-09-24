@@ -56,6 +56,8 @@ class DBLPSearchSourceSettings(colrev.search_file.ExtendedSearchFile, BaseModel)
 class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     """DBLP API"""
 
+    CURRENT_SYNTAX_VERSION = "1.0.0"
+
     source_identifier = "dblp_key"
     search_types = [
         SearchType.API,
@@ -134,6 +136,14 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         if search_type == SearchType.API:
             if len(params_dict) == 0:
                 search_source = create_api_source(platform=cls.endpoint, path=path)
+                url = (
+                    "https://dblp.org/search/publ/api?q=" + search_source.search_string
+                )
+                search_source.search_parameters = {
+                    "query": url,
+                    "version": cls.CURRENT_SYNTAX_VERSION,
+                }
+                search_source.search_string = ""
 
             # pylint: disable=colrev-missed-constant-usage
             elif "url" in params_dict:
@@ -149,7 +159,10 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     search_results_path=filename,
                     search_type=SearchType.API,
                     search_string="",
-                    search_parameters={"query": query},
+                    search_parameters={
+                        "query": query,
+                        "version": cls.CURRENT_SYNTAX_VERSION,
+                    },
                     comment="",
                 )
 
@@ -262,15 +275,22 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
             for retrieved_record in api.retrieve_records():
                 try:
 
+                    # Check if the scope is respected (key starts with venue_key)
                     if "scope" in self.search_source.search_parameters and (
                         f"{self.search_source.search_parameters['scope']['venue_key']}/"
                         not in retrieved_record.data["dblp_key"]
-                        or retrieved_record.data.get(Fields.ENTRYTYPE, "")
-                        not in [
-                            "article",
-                            "inproceedings",
-                        ]
                     ):
+                        continue
+
+                    if retrieved_record.data.get(Fields.ENTRYTYPE, "") not in [
+                        "article",
+                        "inproceedings",
+                    ]:
+                        # warn
+                        self.logger.warning(
+                            "DBLP: Unknown type: %s",
+                            retrieved_record.data.get(Fields.ENTRYTYPE, ""),
+                        )
                         continue
 
                     dblp_feed.add_update_record(retrieved_record)
