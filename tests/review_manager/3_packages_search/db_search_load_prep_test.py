@@ -49,7 +49,10 @@ NO_CUSTOM_SOURCE = None
                 search_results_path=Path("data/search/crossref_bib.bib"),
                 search_type=SearchType.API,
                 search_string="",
-                search_parameters={"url":"https://api.crossref.org/works?query.bibliographic=test", "version": "1.0.0"},
+                search_parameters={
+                    "url": "https://api.crossref.org/works?query.bibliographic=test",
+                    "version": "1.0.0",
+                },
                 comment="",
             ),
             Path("crossref_bib_result.bib"),
