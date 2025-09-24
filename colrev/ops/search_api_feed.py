@@ -194,7 +194,9 @@ class SearchAPIFeed:
         self.feed_records[frid] = feed_record_dict
         if added_new:
             if not self.prep_mode:
-                self.logger.info(f"  add record: {record.data[self.source_identifier]}")
+                self.logger.info(
+                    f"  retrieve record: {record.data[self.source_identifier]}"
+                )
             elif self.prep_mode and self.verbose_mode:  # pragma: no cover
                 self.logger.info(
                     f"  link record: {record.data[self.source_identifier]}"
