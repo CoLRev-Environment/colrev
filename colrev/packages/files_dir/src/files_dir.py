@@ -180,7 +180,8 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                     f" {Colors.RED}Removed {len(to_remove)} records "
                     f"(PDFs no longer available){Colors.END}"
                 )
-                print(" " + "\n ".join(files_removed))
+                for file_removed in files_removed:
+                    self.logger.info(f" {Colors.RED}{file_removed}{Colors.END}")
             records = {k: v for k, v in records.items() if v[Fields.ORIGIN]}
             self.review_manager.dataset.save_records_dict(records)
 
