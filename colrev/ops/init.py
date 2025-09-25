@@ -22,8 +22,8 @@ import colrev.env.environment_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
-import colrev.search_file
 import colrev.review_manager
+import colrev.search_file
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType

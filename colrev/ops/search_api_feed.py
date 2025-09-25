@@ -14,8 +14,8 @@ import colrev.loader.load_utils_formatter
 import colrev.record.record_merger
 import colrev.utils
 from colrev.constants import Colors
-from colrev.constants import EndpointType
 from colrev.constants import DefectCodes
+from colrev.constants import EndpointType
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldSet
