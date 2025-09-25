@@ -9,6 +9,8 @@ import typing
 import urllib.parse
 from pathlib import Path
 from typing import Optional
+from urllib.parse import parse_qs
+from urllib.parse import urlparse
 
 import inquirer
 import pandas as pd
@@ -33,12 +35,13 @@ from colrev.packages.springer_link.src import springer_link_api
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 
-# Note : API requires registration
-# https://dev.springernature.com/
+DEFAULT_PAGE_SIZE = 10
 
 
 class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Springer Link"""
+
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     endpoint = "colrev.springer_link"
     # pylint: disable=colrev-missed-constant-usage
@@ -111,25 +114,9 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
             search_source = create_api_source(platform=cls.endpoint, path=path)
             search_source.search_parameters = {"query": search_source.search_string}
             search_source.search_string = ""
-
-            # filename = colrev.utils.get_unique_filename(
-            #     base_path=path,
-            #     file_path_string="springer_link",
-            # )
-            # search_source = colrev.search_file.ExtendedSearchFile(
-            #     platform=cls.endpoint,
-            #     search_results_path=filename,
-            #     search_type=SearchType.API,
-            #     search_string="",
-            #     comment="",
-            # )
-            # params_dict.update(vars(search_source))
-
-            # TODO : reactivate the following once the base-class is updated
-            # (no longer contains the operation as a parameter)
-            # instance = cls(search_file=search_source)
-            # instance.api_ui()
-            # search_source.search_string = instance._add_constraints()
+            instance = cls(search_file=search_source)
+            instance.api_ui()
+            search_source.search_parameters = instance._add_constraints()
 
         else:
             raise NotImplementedError
@@ -181,7 +168,9 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "Please enter your search parameter for the following constraints"
                 + "(or just press enter to continue):"
             )
-            keyword = input("keyword: ")
+            search_string = input(
+                "search string (e.g., 'keyword:digital AND keyword:outsourcing'): "
+            )
             subject_choices = [
                 inquirer.Checkbox(
                     name="subject",
@@ -260,7 +249,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             search_parameters = {
                 "subject": subject,
-                "keyword": keyword,
+                "search_string": search_string,
                 "language": language,
                 "year": year,
                 "type": doc_type,
@@ -290,41 +279,88 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
                     constraints.append(f"({subject_query})")
                     continue
 
+                if key == "search_string":
+                    constraints.append(value)
+                    continue
+
                 if value:
                     constraints.append(f'{key}:"{value}"')
+                    continue
 
             query = " AND ".join(constraints)
 
         return urllib.parse.quote(query)
 
-    def _build_api_search_url(self, query: str, api_key: str, start: int = 1) -> str:
-        return f"https://api.springernature.com/meta/v2/json?q={query}&api_key={api_key}&s={start}"
+    def _build_api_search_url(
+        self,
+        query: str,
+        api_key: str,
+        start: int = 1,
+        page_size: int = DEFAULT_PAGE_SIZE,
+    ) -> str:
+        # Include both start (s) and page size (p)
+        return (
+            "https://api.springernature.com/meta/v2/json"
+            f"?q={query}&api_key={api_key}&s={start}&p={page_size}"
+        )
 
+    # pylint: disable=too-many-locals
     def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
-        """Get the records from a API search"""
+        """Get the records from an API search"""
         query = self.build_query(self.search_source.search_parameters)
         api_key = self.get_api_key()
-        start = 1
+
+        # Allow overriding via settings; fall back to DEFAULT_PAGE_SIZE
+        page_size = int(
+            self.search_source.search_parameters.get("page_size", DEFAULT_PAGE_SIZE)
+        )
+        start = int(self.search_source.search_parameters.get("start", 1))
+
+        last_start = None  # to prevent infinite loops if API repeats nextPage
 
         while True:
             full_url = self._build_api_search_url(
-                query=query, api_key=api_key, start=start
+                query=query, api_key=api_key, start=start, page_size=page_size
             )
+            # print(full_url)
+
             try:
                 data = self.api.get_json(full_url, timeout=10)
             except springer_link_api.SpringerLinkAPIError as exc:
-                print("Error - API search failed for the following reason:" f" {exc}")
+                print(f"Error - API search failed for the following reason: {exc}")
                 return
 
-            for record in data.get("records", []):
-                yield self._create_record(record)
-
-            next_page = data.get("nextPage")
-            if not next_page:
+            records = data.get("records", [])
+            if not records:
                 break
 
-            start_str = next_page.split("s=")[1].split("&")[0]
-            start = int(start_str)
+            for record in records:
+                yield self._create_record(record)
+
+            # Prefer authoritative nextPage link when present
+            next_page = data.get("nextPage")
+            if next_page:
+                # Parse s (and optionally p) from nextPage to be safe
+                try:
+
+                    qs = parse_qs(urlparse(next_page).query)
+                    next_start = int(qs.get("s", [start + page_size])[0])
+                    # Some responses also include "p" — keep it aligned if present
+                    if "p" in qs:
+                        page_size = int(qs["p"][0])
+                except Exception as exc:  # pylint: disable=broad-exception-caught
+                    print(exc)
+                    next_start = start + page_size
+            else:
+                # Fallback if no nextPage provided: advance by current page_size
+                next_start = start + page_size
+
+            # Stop if the API cycles or we’ve reached the end (short page)
+            if next_start == last_start or len(records) < page_size:
+                break
+
+            last_start = start
+            start = next_start
 
     def _run_api_search(
         self, springer_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
@@ -467,24 +503,25 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         api_key = self.get_api_key()
 
-        if api_key:
-            print("Your API key is available\n")
+        if not api_key:
+            print("\n An API key is required for search \n\n")
+            self._api_key_ui()
+            return
 
-            change_api_key = [
-                inquirer.List(
-                    name="change_api_key",
-                    message="Do you want to change your saved API key?",
-                    choices=["no", "yes"],
-                ),
-            ]
+        print("Your API key is available\n")
 
-            answers = inquirer.prompt(change_api_key)
+        change_api_key = [
+            inquirer.List(
+                name="change_api_key",
+                message="Do you want to change your saved API key?",
+                choices=["no", "yes"],
+            ),
+        ]
 
-            if answers["change_api_key"] == "no":
-                return
+        answers = inquirer.prompt(change_api_key)
 
-        print("\n An API key is required for search \n\n")
-        self._api_key_ui()
+        if answers["change_api_key"] == "no":
+            return
 
     def get_api_key(self) -> str:
         """Get API key from settings"""

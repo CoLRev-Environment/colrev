@@ -39,6 +39,8 @@ def is_github_api_key(previous: dict, answer: str) -> bool:
 class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
     """GitHub API"""
 
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     search_types = [SearchType.API]
     endpoint = "colrev.github"
     source_identifier = Fields.URL
@@ -138,6 +140,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
                 file_path_string="github",
             )
             search_source = colrev.search_file.ExtendedSearchFile(
+                version=cls.CURRENT_SYNTAX_VERSION,
                 platform="colrev.github",
                 search_results_path=filename,
                 search_type=SearchType.API,

@@ -25,6 +25,8 @@ from colrev.ops.search_db import run_db_search
 class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Taylor and Francis"""
 
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     db_url = "https://www.tandfonline.com/"
     endpoint = "colrev.taylor_and_francis"
     source_identifier = "{{doi}}"

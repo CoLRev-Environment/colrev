@@ -15,6 +15,8 @@ from colrev.constants import Fields
 class CustomSearch(base_classes.SearchSourcePackageBaseClass):
     """Class for custom search scripts"""
 
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     source_identifier = "custom"
 
     def __init__(

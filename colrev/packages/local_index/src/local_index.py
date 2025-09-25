@@ -38,6 +38,8 @@ from colrev.ops.search_api_feed import create_api_source
 class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
     """LocalIndex"""
 
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     # pylint: disable=too-many-instance-attributes
 
     source_identifier = Fields.CURATION_ID
@@ -239,6 +241,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                 ),
             )
             search_source = colrev.search_file.ExtendedSearchFile(
+                version=cls.CURRENT_SYNTAX_VERSION,
                 platform=cls.endpoint,
                 search_results_path=filename,
                 search_type=SearchType.API,

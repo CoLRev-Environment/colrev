@@ -30,8 +30,7 @@ class CLISourceAdder:
         *,
         source_candidates: list,
     ) -> dict:
-        # TODO : api searches could add metadata to the bib file
-        # (e.g., identifying it as colrev.crossref)
+
         choices = [
             (
                 f"{heuristic_source['source_candidate'].platform} "
@@ -76,13 +75,14 @@ class CLISourceAdder:
             package_identifier=candidate.platform,
         )
         endpoint = search_source_class(
-            search_file=candidate.model_dump(),
+            search_file=candidate,
         )
 
         params = f"search_file={filename}"
         source = endpoint.add_endpoint(
-            operation=self.search_operation,
             params=params,
+            path=self.review_manager.path,
+            logger=self.review_manager.logger,
         )
         return source
 

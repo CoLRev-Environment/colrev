@@ -27,6 +27,7 @@ from colrev.writer.write_utils import to_string
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=line-too-long
+# pylint: disable=too-many-locals
 
 
 class Upgrade(colrev.process.operation.Operation):
@@ -801,18 +802,7 @@ class Upgrade(colrev.process.operation.Operation):
 
         return self.repo.is_dirty()
 
-    def _migrate_0_15_0(self) -> bool:
-
-        # replace "commit" with "pre-commit" and "push" with "pre-push" in .pre-commit-config.yaml
-        pre_commit_config_path = Path(".pre-commit-config.yaml")
-        if pre_commit_config_path.is_file():
-            pre_commit_contents = pre_commit_config_path.read_text(encoding="utf-8")
-            pre_commit_contents = pre_commit_contents.replace(
-                "[commit]", "[pre-commit]"
-            ).replace("[push]", "[pre-push]")
-            pre_commit_config_path.write_text(pre_commit_contents, encoding="utf-8")
-            self.repo.index.add([str(pre_commit_config_path)])
-
+    def _extract_search_files(self) -> None:
         def _derive_search_fields(
             *,
             search_parameters: typing.Any,
@@ -880,6 +870,7 @@ class Upgrade(colrev.process.operation.Operation):
                 }
 
                 search_file_dict["search_string"] = search_string
+
                 if source.get("search_type", "") not in ["DB", "MD"]:
                     updated_parameters.pop("version", None)
                     search_file_dict["search_parameters"] = updated_parameters
@@ -893,6 +884,47 @@ class Upgrade(colrev.process.operation.Operation):
             if settings["sources"]:
                 settings["sources"] = []
                 self._save_settings(settings)
+
+    def _fix_crossref_toc(self) -> None:
+
+        settings = self._load_settings_dict()
+
+        # pylint: disable=colrev-missed-constant-usage
+        for source in settings["sources"]:
+            if source["endpoint"] != "colrev.crossref":
+                continue
+            if source["search_type"] != "TOC":
+                continue
+            if not isinstance(source["search_parameters"], dict):
+                continue
+            if (
+                "scope" in source["search_parameters"]
+                and "issn" in source["search_parameters"]["scope"]
+            ):
+                issn = source["search_parameters"]["scope"]["issn"][0]
+                source["search_parameters"][
+                    "url"
+                ] = f"https://api.crossref.org/journals/{issn}/works"
+                source["search_parameters"].pop("scope")
+
+        self._save_settings(settings)
+
+    def _update_pre_commit_trigger_pre_commit_push(self) -> None:
+        # replace "commit" with "pre-commit" and "push" with "pre-push" in .pre-commit-config.yaml
+        pre_commit_config_path = Path(".pre-commit-config.yaml")
+        if pre_commit_config_path.is_file():
+            pre_commit_contents = pre_commit_config_path.read_text(encoding="utf-8")
+            pre_commit_contents = pre_commit_contents.replace(
+                "[commit]", "[pre-commit]"
+            ).replace("[push]", "[pre-push]")
+            pre_commit_config_path.write_text(pre_commit_contents, encoding="utf-8")
+            self.repo.index.add([str(pre_commit_config_path)])
+
+    def _migrate_0_15_0(self) -> bool:
+
+        self._update_pre_commit_trigger_pre_commit_push()
+        self._fix_crossref_toc()
+        self._extract_search_files()
 
         return self.repo.is_dirty()
 

@@ -25,9 +25,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 # pylint: disable=too-few-public-methods
 
 
-# TODO : add version to all packages
-
-
 class ReviewTypePackageBaseClass(abc.ABC):
     """The base class for ReviewType packages
 
@@ -70,6 +67,7 @@ class SearchSourcePackageBaseClass(ABC):
 
     """
 
+    CURRENT_SYNTAX_VERSION: str
     ci_supported: bool
     source_identifier: str
     search_types: list[SearchType]

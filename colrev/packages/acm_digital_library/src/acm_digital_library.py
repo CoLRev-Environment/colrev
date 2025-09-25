@@ -28,6 +28,8 @@ if typing.TYPE_CHECKING:
 class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """ACM digital Library"""
 
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     endpoint = "colrev.acm_digital_library"
     # Note : the ID contains the doi
     # "https://dl.acm.org/doi/{{ID}}"

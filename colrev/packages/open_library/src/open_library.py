@@ -33,6 +33,8 @@ from colrev.packages.open_library.src import open_library_api
 class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     """OpenLibrary API"""
 
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     endpoint = "colrev.open_library"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "isbn"

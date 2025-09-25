@@ -24,6 +24,8 @@ from colrev.ops.search_db import run_db_search
 class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Web of Science"""
 
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     endpoint = "colrev.web_of_science"
     source_identifier = (
         "https://www.webofscience.com/wos/woscc/full-record/" + "{{unique-id}}"

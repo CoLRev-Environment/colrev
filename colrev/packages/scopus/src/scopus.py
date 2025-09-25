@@ -30,6 +30,8 @@ from colrev.packages.scopus.src import scopus_api
 class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Scopus"""
 
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     endpoint = "colrev.scopus"
     source_identifier = "scopus.eid"
     search_types = [SearchType.DB, SearchType.API]

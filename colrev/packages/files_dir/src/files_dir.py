@@ -40,6 +40,8 @@ from colrev.writer.write_utils import write_file
 class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Files directories (PDFs based on GROBID)"""
 
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     # pylint: disable=too-many-instance-attributes
 
     endpoint = "colrev.files_dir"
@@ -506,9 +508,10 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         linked_file_paths: list,
     ) -> dict:
         new_record: dict = {}
+        relative_path = file_path.relative_to(self.review_manager.path)
 
         file_path_abs = self.review_manager.path / file_path
-        if self._is_broken_filepath(file_path=file_path_abs):
+        if self._is_broken_filepath(file_path=relative_path):
             return new_record
 
         if not self.review_manager.force_mode:
@@ -521,7 +524,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if not self.rerun:
 
-            if file_path in [
+            if relative_path in [
                 Path(r[Fields.FILE])
                 for r in files_dir_feed.feed_records.values()
                 if Fields.FILE in r
@@ -529,7 +532,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                 return new_record
         # otherwise: reindex all
 
-        self.logger.info(" extract metadata from %s", file_path)
+        self.logger.info(" extract metadata from %s", relative_path)
         try:
             if not self.review_manager.settings.is_curated_masterdata_repo():
                 # retrieve_based_on_colrev_pdf_id
@@ -546,7 +549,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             else:
                 new_record = self._get_grobid_metadata(file_path=file_path)
         except FileNotFoundError:
-            self.logger.error("File not found: %s (skipping)", file_path)
+            self.logger.error("File not found: %s (skipping)", relative_path)
             return {}
         except (
             colrev_exceptions.PDFHashError,
@@ -556,7 +559,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             new_record = self._get_grobid_metadata(file_path=file_path_abs)
 
         self._fix_grobid_errors(new_record)
-        new_record[Fields.FILE] = file_path.relative_to(self.review_manager.path)
+        new_record[Fields.FILE] = str(relative_path)
         new_record = self._add_md_string(record_dict=new_record)
 
         # Note: identical md_string as a heuristic for duplicates
@@ -744,6 +747,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
         # pylint: disable=no-value-for-parameter
         search_source = colrev.search_file.ExtendedSearchFile(
+            version=cls.CURRENT_SYNTAX_VERSION,
             platform="colrev.files_dir",
             search_results_path=filename,
             search_type=SearchType.FILES,

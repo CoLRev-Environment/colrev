@@ -32,6 +32,8 @@ from colrev.packages.osf.src.osf_api import OSFApiQuery
 class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     """OSF"""
 
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     source_identifier = Fields.ID
     search_types = [SearchType.API]
     endpoint = "colrev.osf"
@@ -58,6 +60,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.search_source = search_file
         else:
             self.search_source = colrev.search_file.ExtendedSearchFile(
+                version=self.CURRENT_SYNTAX_VERSION,
                 platform=self.endpoint,
                 search_results_path=Path("data/search/osf.bib"),
                 search_type=SearchType.API,
@@ -118,6 +121,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
                     file_path_string=f"osf_{last_value}",
                 )
                 search_source = colrev.search_file.ExtendedSearchFile(
+                    version=cls.CURRENT_SYNTAX_VERSION,
                     platform=cls.endpoint,
                     search_results_path=filename,
                     search_type=SearchType.API,

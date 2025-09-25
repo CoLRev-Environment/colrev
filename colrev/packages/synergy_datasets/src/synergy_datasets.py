@@ -43,6 +43,8 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     """
 
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     endpoint = "colrev.synergy_datasets"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
@@ -142,6 +144,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
             file_path_string=f"SYNERGY_{dataset.replace('/', '_').replace('_ids.csv', '')}",
         )
         search_source = colrev.search_file.ExtendedSearchFile(
+            version=cls.CURRENT_SYNTAX_VERSION,
             platform="colrev.synergy_datasets",
             search_results_path=filename,
             search_type=SearchType.API,
