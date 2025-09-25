@@ -23,6 +23,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
 import colrev.review_manager
+import colrev.search_file
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType
@@ -329,6 +330,7 @@ class Initializer:
             search_string="",
             search_parameters={"scope": {"path": "data/pdfs"}},
             comment="",
+            version="0.1.0",
         )
         files_dir_search_history.save(
             search_history_path=Path("data/search/files_search_history.json")

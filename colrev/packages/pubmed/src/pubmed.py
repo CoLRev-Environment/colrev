@@ -161,6 +161,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                         search_type=SearchType.API,
                         search_string=params_dict["url"],
                         comment="",
+                        version=cls.CURRENT_SYNTAX_VERSION,
                     )
 
                     search_source.search_parameters = {

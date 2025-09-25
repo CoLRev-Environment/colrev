@@ -12,8 +12,10 @@ import colrev.exceptions as colrev_exceptions
 import colrev.search_file
 import colrev.utils
 from colrev.constants import Colors
+from colrev.constants import EndpointType
 from colrev.constants import SearchType
 from colrev.git_repo import GitRepo
+from colrev.package_manager.package_manager import PackageManager
 
 
 # pylint: disable=too-few-public-methods
@@ -132,12 +134,23 @@ def create_db_source(
         git_repo.add_changes(filename, ignore_missing=True)
 
     search_string = input("Enter search string: ")
+    package_manager = PackageManager()
+    try:
+        search_source_class = package_manager.get_package_endpoint_class(
+            package_type=EndpointType.search_source,
+            package_identifier=platform,
+        )
+        version = getattr(search_source_class, "CURRENT_SYNTAX_VERSION", "0.1.0")
+    except Exception:  # pragma: no cover - fall back to default
+        version = "0.1.0"
+
     add_source = colrev.search_file.ExtendedSearchFile(
         platform=platform,
         search_results_path=filename,
         search_type=SearchType.DB,
         search_string=search_string,
         comment="",
+        version=version,
     )
     add_source.save(git_repo=git_repo)
 

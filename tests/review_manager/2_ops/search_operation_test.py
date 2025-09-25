@@ -58,6 +58,7 @@ def test_search_add_source(  # type: ignore
             "url": "https://api.crossref.org/works?query.bibliographic=test"
         },
         comment="",
+        version="0.1.0",
     )
 
     package_manager = PackageManager()

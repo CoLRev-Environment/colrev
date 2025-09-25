@@ -40,6 +40,7 @@ def test_load_md(helpers) -> None:  # type: ignore
         search_type=SearchType.OTHER,
         search_string="",
         comment="",
+        version="0.1.0",
     )
 
     helpers.retrieve_test_file(

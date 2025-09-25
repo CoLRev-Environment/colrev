@@ -65,6 +65,7 @@ class CuratedMasterdata(base_classes.ReviewTypePackageBaseClass):
             search_type=SearchType.TOC,
             search_string=f"https://api.crossref.org/journals/{issn}/works",
             comment="",
+            version="0.1.0",
         )
         pdf_search_history = colrev.search_file.ExtendedSearchFile(
             platform="colrev.files_dir",
@@ -81,6 +82,7 @@ class CuratedMasterdata(base_classes.ReviewTypePackageBaseClass):
                 }
             },
             search_type=SearchType.FILES,
+            version="0.1.0",
         )
 
         settings.sources = [crossref_search_history, pdf_search_history]

@@ -42,6 +42,7 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
         search_type=SearchType.OTHER,
         search_string="",
         comment="",
+        version="0.1.0",
     )
     feed = colrev.ops.search_api_feed.SearchAPIFeed(
         source_identifier="bws_id",
