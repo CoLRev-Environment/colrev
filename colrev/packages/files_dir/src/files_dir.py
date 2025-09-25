@@ -590,7 +590,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                 Colors.END,
             )
 
-
         return new_record
 
     def _index_mp4(

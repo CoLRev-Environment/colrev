@@ -17,8 +17,11 @@ colrev.search\_file.ExtendedSearchFile
       :nosignatures:
 
       ~ExtendedSearchFile.get_origin_prefix
+      ~ExtendedSearchFile.get_search_history_path
       ~ExtendedSearchFile.is_curated_source
       ~ExtendedSearchFile.is_md_source
       ~ExtendedSearchFile.save
+      ~ExtendedSearchFile.set_search_history_file_path
+      ~ExtendedSearchFile.set_search_results_path
       ~ExtendedSearchFile.setup_for_load
       ~ExtendedSearchFile.to_dict

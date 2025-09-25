@@ -32,6 +32,7 @@ colrev.package\_manager.package\_base\_classes.SearchSourcePackageBaseClass
 
    .. autosummary::
 
+      ~SearchSourcePackageBaseClass.CURRENT_SYNTAX_VERSION
       ~SearchSourcePackageBaseClass.ci_supported
       ~SearchSourcePackageBaseClass.source_identifier
       ~SearchSourcePackageBaseClass.search_types

@@ -215,6 +215,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         search_type=SearchType.DB,
         search_string="",
         comment="",
+        version="0.1.0",
     )
     review_manager.settings.sources = [test_bib_source]
     # TODO : should the saving be done by settings.save()?
