@@ -74,7 +74,7 @@ def test_plos_query(doi: str, expected_dict: dict) -> None:
     """Test the plos query_doi()"""
     api = plos_api.PlosAPI(url="")
 
-    filename = Path(__file__).parent / f"data/{doi.replace('/', '_')}.json"
+    filename = Path(__file__).parent / f"data_plos/{doi.replace('/', '_')}.json"
 
     with open(filename, encoding="utf-8") as file:
         json_str = file.read()

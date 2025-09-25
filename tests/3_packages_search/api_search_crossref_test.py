@@ -124,7 +124,7 @@ def test_crossref_query(  # type: ignore
     """Test the crossref query_doi()"""
 
     # replace the / in filenames by _
-    filename = Path(__file__).parent / f"data/{doi.replace('/', '_')}.json"
+    filename = Path(__file__).parent / f"data_crossref/{doi.replace('/', '_')}.json"
     with open(filename, encoding="utf-8") as file:
         json_str = file.read()
 
