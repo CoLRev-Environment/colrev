@@ -61,6 +61,7 @@ class LocalIndexPrep(base_classes.PrepPackageBaseClass):
                 search_type=SearchType.MD,
                 search_string="",
                 comment="",
+                version="0.1.0",
             )
 
         self.local_index_source = local_index_connector.LocalIndexSearchSource(

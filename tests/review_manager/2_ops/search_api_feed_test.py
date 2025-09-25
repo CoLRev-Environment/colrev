@@ -32,6 +32,7 @@ def fixture_search_feed(
         search_type=SearchType.DB,
         search_string="query",
         comment="",
+        version="0.1.0",
     )
     base_repo_review_manager.get_search_operation()
     feed = colrev.ops.search_api_feed.SearchAPIFeed(
@@ -80,6 +81,7 @@ def test_search_feed_update(  # type: ignore
         search_type=SearchType.DB,
         search_string="query",
         comment="",
+        version="0.1.0",
     )
     # base_repo_review_manager.get_search_operation()
     search_feed = colrev.ops.search_api_feed.SearchAPIFeed(

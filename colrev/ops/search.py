@@ -175,12 +175,16 @@ class Search(colrev.process.operation.Operation):
                 # Note : as the identifier, we use the filename
                 # (if search results are added by file/not via the API)
 
+                version = getattr(
+                    search_source_class, "CURRENT_SYNTAX_VERSION", "0.1.0"
+                )
                 source_candidate = colrev.search_file.ExtendedSearchFile(
                     platform=endpoint,
                     search_results_path=filepath,
                     search_type=search_type,
                     search_string="",
                     comment="",
+                    version=version,
                 )
 
                 result_item["source_candidate"] = source_candidate

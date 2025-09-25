@@ -57,6 +57,7 @@ class PubmedMetadataPrep(base_classes.PrepPackageBaseClass):
                 search_type=SearchType.MD,
                 search_string="",
                 comment="",
+                version="0.1.0",
             )
 
         self.pubmed_source = pubmed_connector.PubMedSearchSource(

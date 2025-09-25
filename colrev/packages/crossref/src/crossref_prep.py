@@ -61,6 +61,9 @@ class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
                 search_type=SearchType.MD,
                 search_string="https://api.crossref.org/",  # dummy
                 comment="",
+                version=(
+                    crossref_connector.CrossrefSearchSource.CURRENT_SYNTAX_VERSION
+                ),
             )
 
         self.crossref_source = crossref_connector.CrossrefSearchSource(

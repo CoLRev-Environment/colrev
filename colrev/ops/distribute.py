@@ -115,6 +115,7 @@ class Distribute(colrev.process.operation.Operation):
                         search_type=SearchType.OTHER,
                         search_string="",
                         comment="",
+                        version="0.1.0",
                     )
 
                     self.review_manager.settings.sources.append(new_source)

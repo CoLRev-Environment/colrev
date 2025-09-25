@@ -56,6 +56,7 @@ class OpenAlexMetadataPrep(base_classes.PrepPackageBaseClass):
                 search_type=SearchType.MD,
                 search_string="",
                 comment="",
+                version="0.1.0",
             )
 
         self.open_alex_source = open_alex_connector.OpenAlexSearchSource(

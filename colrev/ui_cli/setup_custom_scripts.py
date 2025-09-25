@@ -33,6 +33,7 @@ def setup_custom_search_script(
         search_type=SearchType.DB,
         search_string="",
         comment="",
+        version="0.1.0",
     )
 
     review_manager.settings.sources.append(new_source)

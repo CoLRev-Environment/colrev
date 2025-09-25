@@ -55,6 +55,7 @@ class OpenLibraryMetadataPrep(base_classes.PrepPackageBaseClass):
                 search_type=SearchType.MD,
                 search_string="",
                 comment="",
+                version="0.1.0",
             )
 
         self.open_library_connector = open_library_connector.OpenLibrarySearchSource(

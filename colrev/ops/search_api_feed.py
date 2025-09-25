@@ -14,12 +14,14 @@ import colrev.loader.load_utils_formatter
 import colrev.record.record_merger
 import colrev.utils
 from colrev.constants import Colors
+from colrev.constants import EndpointType
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import SearchType
+from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
 
@@ -38,12 +40,23 @@ def create_api_source(
         base_path=path,
         file_path_string=f"{platform.replace('colrev.', '')}",
     )
+    package_manager = PackageManager()
+    try:
+        search_source_class = package_manager.get_package_endpoint_class(
+            package_type=EndpointType.search_source,
+            package_identifier=platform,
+        )
+        version = getattr(search_source_class, "CURRENT_SYNTAX_VERSION", "0.1.0")
+    except Exception:  # pragma: no cover - fall back to default version
+        version = "0.1.0"
+
     add_source = colrev.search_file.ExtendedSearchFile(
         platform=platform,
         search_results_path=filename,
         search_type=SearchType.API,
         search_string=keywords,
         comment="",
+        version=version,
     )
     return add_source
 

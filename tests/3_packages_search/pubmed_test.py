@@ -23,6 +23,7 @@ def pubmed_search_file_factory() -> typing.Callable:
             search_type=SearchType.API,
             search_string="https://pubmed.ncbi.nlm.nih.gov/?term=validation",
             comment="",
+            version="0.1.0",
         )
 
         search_parameters = {"url": search_file.search_string}
@@ -44,7 +45,7 @@ def pubmed_search_file_factory() -> typing.Callable:
 def test_pubmed_validate_accepts_current_version(
     pubmed_search_file_factory: colrev.search_file.ExtendedSearchFile,
 ) -> None:
-    search_file = pubmed_search_file_factory(PubMedSearchSource.CURRENT_SYNTAX_VERSION)
+    search_file = pubmed_search_file_factory("0.1.0")
 
     PubMedSearchSource(search_file=search_file)
 
