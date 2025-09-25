@@ -9,7 +9,8 @@ import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.search_file
-from colrev.constants import Fields, SearchType
+from colrev.constants import Fields
+from colrev.constants import SearchType
 
 try:  # pragma: no cover - compatibility with previous module names
     from colrev.packages.ais_library.src.ais_library import AISLibrarySearchSource

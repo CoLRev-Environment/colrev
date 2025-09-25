@@ -10,7 +10,8 @@ import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.search_file
-from colrev.constants import Fields, SearchType
+from colrev.constants import Fields
+from colrev.constants import SearchType
 from colrev.packages.dblp.src.dblp import DBLPSearchSource
 
 
@@ -132,9 +133,7 @@ def test_dblp_search_persists_api_results(
                 raise RuntimeError(f"HTTP status {self.status_code}")
 
     total_url = "https://dblp.org/search/publ/api?q=validation&format=json"
-    search_url = (
-        "https://dblp.org/search/publ/api?q=validation&format=json&h=250&f=0"
-    )
+    search_url = "https://dblp.org/search/publ/api?q=validation&format=json&h=250&f=0"
     venue_url = "https://dblp.org/search/venue/api?q=isr&format=json"
 
     fake_total_payload = {

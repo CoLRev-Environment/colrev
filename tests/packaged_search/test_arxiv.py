@@ -9,7 +9,8 @@ import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.search_file
-from colrev.constants import Fields, SearchType
+from colrev.constants import Fields
+from colrev.constants import SearchType
 
 try:  # pragma: no cover - compatibility with updated interfaces
     from colrev.packages.arxiv.src.arxiv import ArXivSearchSource
@@ -114,7 +115,9 @@ def test_arxiv_search_persists_api_results(
     )
 
     class FakeResponse:
-        def __init__(self, *, status_code: int, json_data: typing.Any = None, text: str = "") -> None:
+        def __init__(
+            self, *, status_code: int, json_data: typing.Any = None, text: str = ""
+        ) -> None:
             self.status_code = status_code
             self._json_data = json_data
             self.text = text
@@ -186,7 +189,9 @@ def test_arxiv_search_persists_api_results(
     assert len(saved_records) == 1
     saved_record = next(iter(saved_records.values()))
     assert saved_record[Fields.ID] == "000001"
-    assert saved_record[Fields.TITLE] == "Tracking Fitbit usage for longitudinal studies"
+    assert (
+        saved_record[Fields.TITLE] == "Tracking Fitbit usage for longitudinal studies"
+    )
     assert saved_record[Fields.AUTHOR] == "Doe, Alex and Roe, Sam"
     assert saved_record[Fields.YEAR] == "2023"
     assert saved_record[Fields.DOI] == "10.1000/FITBIT-TRIALS"
