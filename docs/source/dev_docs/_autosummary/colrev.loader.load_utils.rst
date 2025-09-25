@@ -1,13 +1,7 @@
 colrev.loader.load\_utils
 =========================
 
-.. automodule:: colrev.loader.load_utils
-
-
-
-
-
-
+.. automodule:: colrev.loader.load\_utils
 
    .. rubric:: Functions
 
@@ -15,8 +9,8 @@ colrev.loader.load\_utils
       :toctree:
       :nosignatures:
 
-      bib_entrytype_setter
-      get_nr_records
-      load
-      load_df
-      loads
+      colrev.loader.load\_utils.bib_entrytype_setter
+      colrev.loader.load\_utils.get_nr_records
+      colrev.loader.load\_utils.load
+      colrev.loader.load\_utils.load_df
+      colrev.loader.load\_utils.loads

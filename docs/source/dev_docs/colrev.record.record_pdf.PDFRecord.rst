@@ -1,82 +1,74 @@
 colrev.record.record\_pdf.PDFRecord
 ===================================
 
-.. currentmodule:: colrev.record.record_pdf
-
-.. autoclass:: PDFRecord
+.. autoclass:: colrev.record.record\_pdf.PDFRecord
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~PDFRecord.add_field_provenance
-      ~PDFRecord.add_field_provenance_note
-      ~PDFRecord.add_provenance_all
-      ~PDFRecord.align_provenance
-      ~PDFRecord.change_entrytype
-      ~PDFRecord.complete_provenance
-      ~PDFRecord.copy_prep_rec
-      ~PDFRecord.defects
-      ~PDFRecord.extract_pages
-      ~PDFRecord.extract_pages_from_pdf
-      ~PDFRecord.extract_text_by_page
-      ~PDFRecord.format_bib_style
-      ~PDFRecord.get_citation_format
-      ~PDFRecord.get_colrev_id
-      ~PDFRecord.get_colrev_pdf_id
-      ~PDFRecord.get_container_title
-      ~PDFRecord.get_data
-      ~PDFRecord.get_diff
-      ~PDFRecord.get_field_provenance
-      ~PDFRecord.get_field_provenance_notes
-      ~PDFRecord.get_field_provenance_source
-      ~PDFRecord.get_pdf_hash
-      ~PDFRecord.get_record_change_score
-      ~PDFRecord.get_record_similarity
-      ~PDFRecord.get_tei_filename
-      ~PDFRecord.get_toc_key
-      ~PDFRecord.get_value
-      ~PDFRecord.has_fatal_quality_defects
-      ~PDFRecord.has_pdf_defects
-      ~PDFRecord.has_quality_defects
-      ~PDFRecord.ignore_defect
-      ~PDFRecord.ignored_defect
-      ~PDFRecord.is_retracted
-      ~PDFRecord.masterdata_is_curated
-      ~PDFRecord.merge
-      ~PDFRecord.prescreen_exclude
-      ~PDFRecord.print_citation_format
-      ~PDFRecord.remove_field
-      ~PDFRecord.remove_field_provenance_note
-      ~PDFRecord.rename_field
-      ~PDFRecord.require_prov
-      ~PDFRecord.reset_pdf_provenance_notes
-      ~PDFRecord.run_pdf_quality_model
-      ~PDFRecord.run_quality_model
-      ~PDFRecord.set_masterdata_complete
-      ~PDFRecord.set_masterdata_consistent
-      ~PDFRecord.set_masterdata_curated
-      ~PDFRecord.set_nr_pages_in_pdf
-      ~PDFRecord.set_status
-      ~PDFRecord.set_text_from_pdf
-      ~PDFRecord.update_by_record
-      ~PDFRecord.update_field
-
-
-
-
+      ~colrev.record.record\_pdf.PDFRecord.add_field_provenance
+      ~colrev.record.record\_pdf.PDFRecord.add_field_provenance_note
+      ~colrev.record.record\_pdf.PDFRecord.add_provenance_all
+      ~colrev.record.record\_pdf.PDFRecord.align_provenance
+      ~colrev.record.record\_pdf.PDFRecord.change_entrytype
+      ~colrev.record.record\_pdf.PDFRecord.complete_provenance
+      ~colrev.record.record\_pdf.PDFRecord.copy_prep_rec
+      ~colrev.record.record\_pdf.PDFRecord.defects
+      ~colrev.record.record\_pdf.PDFRecord.extract_pages
+      ~colrev.record.record\_pdf.PDFRecord.extract_pages_from_pdf
+      ~colrev.record.record\_pdf.PDFRecord.extract_text_by_page
+      ~colrev.record.record\_pdf.PDFRecord.format_bib_style
+      ~colrev.record.record\_pdf.PDFRecord.get_citation_format
+      ~colrev.record.record\_pdf.PDFRecord.get_colrev_id
+      ~colrev.record.record\_pdf.PDFRecord.get_colrev_pdf_id
+      ~colrev.record.record\_pdf.PDFRecord.get_container_title
+      ~colrev.record.record\_pdf.PDFRecord.get_data
+      ~colrev.record.record\_pdf.PDFRecord.get_diff
+      ~colrev.record.record\_pdf.PDFRecord.get_field_provenance
+      ~colrev.record.record\_pdf.PDFRecord.get_field_provenance_notes
+      ~colrev.record.record\_pdf.PDFRecord.get_field_provenance_source
+      ~colrev.record.record\_pdf.PDFRecord.get_pdf_hash
+      ~colrev.record.record\_pdf.PDFRecord.get_record_change_score
+      ~colrev.record.record\_pdf.PDFRecord.get_record_similarity
+      ~colrev.record.record\_pdf.PDFRecord.get_tei_filename
+      ~colrev.record.record\_pdf.PDFRecord.get_toc_key
+      ~colrev.record.record\_pdf.PDFRecord.get_value
+      ~colrev.record.record\_pdf.PDFRecord.has_fatal_quality_defects
+      ~colrev.record.record\_pdf.PDFRecord.has_pdf_defects
+      ~colrev.record.record\_pdf.PDFRecord.has_quality_defects
+      ~colrev.record.record\_pdf.PDFRecord.ignore_defect
+      ~colrev.record.record\_pdf.PDFRecord.ignored_defect
+      ~colrev.record.record\_pdf.PDFRecord.is_retracted
+      ~colrev.record.record\_pdf.PDFRecord.masterdata_is_curated
+      ~colrev.record.record\_pdf.PDFRecord.merge
+      ~colrev.record.record\_pdf.PDFRecord.prescreen_exclude
+      ~colrev.record.record\_pdf.PDFRecord.print_citation_format
+      ~colrev.record.record\_pdf.PDFRecord.remove_field
+      ~colrev.record.record\_pdf.PDFRecord.remove_field_provenance_note
+      ~colrev.record.record\_pdf.PDFRecord.rename_field
+      ~colrev.record.record\_pdf.PDFRecord.require_prov
+      ~colrev.record.record\_pdf.PDFRecord.reset_pdf_provenance_notes
+      ~colrev.record.record\_pdf.PDFRecord.run_pdf_quality_model
+      ~colrev.record.record\_pdf.PDFRecord.run_quality_model
+      ~colrev.record.record\_pdf.PDFRecord.set_masterdata_complete
+      ~colrev.record.record\_pdf.PDFRecord.set_masterdata_consistent
+      ~colrev.record.record\_pdf.PDFRecord.set_masterdata_curated
+      ~colrev.record.record\_pdf.PDFRecord.set_nr_pages_in_pdf
+      ~colrev.record.record\_pdf.PDFRecord.set_status
+      ~colrev.record.record\_pdf.PDFRecord.set_text_from_pdf
+      ~colrev.record.record\_pdf.PDFRecord.update_by_record
+      ~colrev.record.record\_pdf.PDFRecord.update_field
 
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~PDFRecord.pp
-      ~PDFRecord.data
-      ~PDFRecord.path
+      ~colrev.record.record\_pdf.PDFRecord.pp
+      ~colrev.record.record\_pdf.PDFRecord.data
+      ~colrev.record.record\_pdf.PDFRecord.path

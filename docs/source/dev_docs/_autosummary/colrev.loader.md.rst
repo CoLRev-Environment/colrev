@@ -3,16 +3,6 @@ colrev.loader.md
 
 .. automodule:: colrev.loader.md
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.loader.md
       :template: custom-class-template.rst
       :nosignatures:
 
-      MarkdownLoader
+      colrev.loader.md.MarkdownLoader

@@ -1,13 +1,7 @@
 colrev.ui\_cli.show\_printer
 ============================
 
-.. automodule:: colrev.ui_cli.show_printer
-
-
-
-
-
-
+.. automodule:: colrev.ui\_cli.show\_printer
 
    .. rubric:: Functions
 
@@ -15,5 +9,5 @@ colrev.ui\_cli.show\_printer
       :toctree:
       :nosignatures:
 
-      print_sample
-      print_venv_notes
+      colrev.ui\_cli.show\_printer.print_sample
+      colrev.ui\_cli.show\_printer.print_venv_notes

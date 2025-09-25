@@ -3,24 +3,6 @@ colrev.record
 
 .. automodule:: colrev.record
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .. autosummary::
    :toctree:
    :template: custom-module-template.rst

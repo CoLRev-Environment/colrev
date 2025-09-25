@@ -1,6 +1,4 @@
 colrev.exceptions.FieldValueError
 =================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: FieldValueError
+.. autoexception:: colrev.exceptions.FieldValueError

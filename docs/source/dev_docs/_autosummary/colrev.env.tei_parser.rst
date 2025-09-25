@@ -1,17 +1,7 @@
 colrev.env.tei\_parser
 ======================
 
-.. automodule:: colrev.env.tei_parser
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.env.tei\_parser
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.env.tei\_parser
       :template: custom-class-template.rst
       :nosignatures:
 
-      TEIParser
+      colrev.env.tei\_parser.TEIParser

@@ -1,6 +1,4 @@
 colrev.exceptions.GitConflictError
 ==================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: GitConflictError
+.. autoexception:: colrev.exceptions.GitConflictError

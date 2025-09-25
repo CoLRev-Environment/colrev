@@ -65,7 +65,7 @@ html_show_sourcelink = (
 )
 autodoc_inherit_docstrings = True  # If no docstring, inherit from base class
 set_type_checking_flag = True  # Enable 'expensive' imports for sphinx_autodoc_typehints
-add_module_names = False  # Remove namespaces from class/method signatures
+add_module_names = True  # Ensure fully qualified names in signatures
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

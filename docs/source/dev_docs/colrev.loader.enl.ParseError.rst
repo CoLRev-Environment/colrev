@@ -1,6 +1,4 @@
 colrev.loader.enl.ParseError
 ============================
 
-.. currentmodule:: colrev.loader.enl
-
-.. autoexception:: ParseError
+.. autoexception:: colrev.loader.enl.ParseError

@@ -1,25 +1,7 @@
-﻿colrev.hooks
+colrev.hooks
 ============
 
 .. automodule:: colrev.hooks
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 .. autosummary::
    :toctree:

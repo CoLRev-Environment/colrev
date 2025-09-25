@@ -1,17 +1,7 @@
-﻿colrev.dataset
+colrev.dataset
 ==============
 
 .. automodule:: colrev.dataset
-
-
-
-
-
-
-
-
-
-
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@
       :template: custom-class-template.rst
       :nosignatures:
 
-      Dataset
+      colrev.dataset.Dataset

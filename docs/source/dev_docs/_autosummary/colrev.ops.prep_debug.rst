@@ -1,17 +1,7 @@
 colrev.ops.prep\_debug
 ======================
 
-.. automodule:: colrev.ops.prep_debug
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.ops.prep\_debug
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.ops.prep\_debug
       :template: custom-class-template.rst
       :nosignatures:
 
-      PrepDebug
+      colrev.ops.prep\_debug.PrepDebug

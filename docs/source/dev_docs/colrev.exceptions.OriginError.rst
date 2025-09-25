@@ -1,6 +1,4 @@
 colrev.exceptions.OriginError
 =============================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: OriginError
+.. autoexception:: colrev.exceptions.OriginError

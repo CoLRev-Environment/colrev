@@ -1,13 +1,7 @@
 colrev.package\_manager.check
 =============================
 
-.. automodule:: colrev.package_manager.check
-
-
-
-
-
-
+.. automodule:: colrev.package\_manager.check
 
    .. rubric:: Functions
 
@@ -15,4 +9,4 @@ colrev.package\_manager.check
       :toctree:
       :nosignatures:
 
-      main
+      colrev.package\_manager.check.main

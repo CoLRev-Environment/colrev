@@ -3,16 +3,6 @@ colrev.ops.trace
 
 .. automodule:: colrev.ops.trace
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.trace
       :template: custom-class-template.rst
       :nosignatures:
 
-      Trace
+      colrev.ops.trace.Trace

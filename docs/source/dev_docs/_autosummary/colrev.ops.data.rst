@@ -3,16 +3,6 @@ colrev.ops.data
 
 .. automodule:: colrev.ops.data
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.data
       :template: custom-class-template.rst
       :nosignatures:
 
-      Data
+      colrev.ops.data.Data

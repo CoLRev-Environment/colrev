@@ -3,16 +3,6 @@ colrev.ops.merge
 
 .. automodule:: colrev.ops.merge
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.merge
       :template: custom-class-template.rst
       :nosignatures:
 
-      Merge
+      colrev.ops.merge.Merge

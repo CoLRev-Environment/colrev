@@ -1,38 +1,30 @@
 colrev.ops.checker.Checker
 ==========================
 
-.. currentmodule:: colrev.ops.checker
-
-.. autoclass:: Checker
+.. autoclass:: colrev.ops.checker.Checker
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~Checker.check_change_in_propagated_id
-      ~Checker.check_fields
-      ~Checker.check_repo
-      ~Checker.check_repo_basics
-      ~Checker.check_repo_extended
-      ~Checker.check_repository_setup
-      ~Checker.check_sources
-      ~Checker.check_status_transitions
-      ~Checker.get_colrev_versions
-      ~Checker.in_virtualenv
-
-
-
-
+      ~colrev.ops.checker.Checker.check_change_in_propagated_id
+      ~colrev.ops.checker.Checker.check_fields
+      ~colrev.ops.checker.Checker.check_repo
+      ~colrev.ops.checker.Checker.check_repo_basics
+      ~colrev.ops.checker.Checker.check_repo_extended
+      ~colrev.ops.checker.Checker.check_repository_setup
+      ~colrev.ops.checker.Checker.check_sources
+      ~colrev.ops.checker.Checker.check_status_transitions
+      ~colrev.ops.checker.Checker.get_colrev_versions
+      ~colrev.ops.checker.Checker.in_virtualenv
 
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~Checker.records
+      ~colrev.ops.checker.Checker.records

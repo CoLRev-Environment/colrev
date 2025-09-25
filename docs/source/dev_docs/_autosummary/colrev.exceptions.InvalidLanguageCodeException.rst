@@ -1,6 +1,4 @@
 colrev.exceptions.InvalidLanguageCodeException
 ==============================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: InvalidLanguageCodeException
+.. autoexception:: colrev.exceptions.InvalidLanguageCodeException

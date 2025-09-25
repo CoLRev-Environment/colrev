@@ -1,6 +1,4 @@
 colrev.utils.p\_print
 =====================
 
-.. currentmodule:: colrev.utils
-
-.. autofunction:: p_print
+.. autofunction:: colrev.utils.p\_print

@@ -1,13 +1,7 @@
 colrev.loader.load\_utils\_name\_formatter
 ==========================================
 
-.. automodule:: colrev.loader.load_utils_name_formatter
-
-
-
-
-
-
+.. automodule:: colrev.loader.load\_utils\_name\_formatter
 
    .. rubric:: Functions
 
@@ -15,13 +9,9 @@ colrev.loader.load\_utils\_name\_formatter
       :toctree:
       :nosignatures:
 
-      parse_names
-      parse_names_in_records
-      split_tex_string
-
-
-
-
+      colrev.loader.load\_utils\_name\_formatter.parse_names
+      colrev.loader.load\_utils\_name\_formatter.parse_names_in_records
+      colrev.loader.load\_utils\_name\_formatter.split_tex_string
 
    .. rubric:: Classes
 
@@ -30,4 +20,4 @@ colrev.loader.load\_utils\_name\_formatter
       :template: custom-class-template.rst
       :nosignatures:
 
-      NameParser
+      colrev.loader.load\_utils\_name\_formatter.NameParser

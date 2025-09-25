@@ -3,16 +3,6 @@ colrev.loader.enl
 
 .. automodule:: colrev.loader.enl
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,16 +10,12 @@ colrev.loader.enl
       :template: custom-class-template.rst
       :nosignatures:
 
-      ENLLoader
-
-
-
-
+      colrev.loader.enl.ENLLoader
 
    .. rubric:: Exceptions
 
    .. autosummary::
       :toctree:
 
-      NextLine
-      ParseError
+      colrev.loader.enl.NextLine
+      colrev.loader.enl.ParseError

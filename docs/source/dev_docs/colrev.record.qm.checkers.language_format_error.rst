@@ -1,13 +1,7 @@
 colrev.record.qm.checkers.language\_format\_error
 =================================================
 
-.. automodule:: colrev.record.qm.checkers.language_format_error
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.checkers.language\_format\_error
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.checkers.language\_format\_error
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.checkers.language\_format\_error.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.checkers.language\_format\_error
       :template: custom-class-template.rst
       :nosignatures:
 
-      LanguageFormatChecker
+      colrev.record.qm.checkers.language\_format\_error.LanguageFormatChecker

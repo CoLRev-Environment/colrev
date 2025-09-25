@@ -1,25 +1,7 @@
-﻿colrev.writer
+colrev.writer
 =============
 
 .. automodule:: colrev.writer
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 .. autosummary::
    :toctree:

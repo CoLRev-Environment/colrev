@@ -3,24 +3,14 @@ colrev.settings
 
 .. automodule:: colrev.settings
 
-
-
-
-
-
-
    .. rubric:: Functions
 
    .. autosummary::
       :toctree:
       :nosignatures:
 
-      load_settings
-      save_settings
-
-
-
-
+      colrev.settings.load_settings
+      colrev.settings.save_settings
 
    .. rubric:: Classes
 
@@ -29,17 +19,17 @@ colrev.settings
       :template: custom-class-template.rst
       :nosignatures:
 
-      Author
-      DataSettings
-      DedupeSettings
-      PDFGetSettings
-      PDFPrepSettings
-      PrepRound
-      PrepSettings
-      PrescreenSettings
-      ProjectSettings
-      Protocol
-      ScreenCriterion
-      ScreenSettings
-      SearchSettings
-      Settings
+      colrev.settings.Author
+      colrev.settings.DataSettings
+      colrev.settings.DedupeSettings
+      colrev.settings.PDFGetSettings
+      colrev.settings.PDFPrepSettings
+      colrev.settings.PrepRound
+      colrev.settings.PrepSettings
+      colrev.settings.PrescreenSettings
+      colrev.settings.ProjectSettings
+      colrev.settings.Protocol
+      colrev.settings.ScreenCriterion
+      colrev.settings.ScreenSettings
+      colrev.settings.SearchSettings
+      colrev.settings.Settings

@@ -1,17 +1,7 @@
 colrev.review\_manager
 ======================
 
-.. automodule:: colrev.review_manager
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.review\_manager
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.review\_manager
       :template: custom-class-template.rst
       :nosignatures:
 
-      ReviewManager
+      colrev.review\_manager.ReviewManager

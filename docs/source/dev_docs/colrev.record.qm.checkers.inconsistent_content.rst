@@ -1,13 +1,7 @@
 colrev.record.qm.checkers.inconsistent\_content
 ===============================================
 
-.. automodule:: colrev.record.qm.checkers.inconsistent_content
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.checkers.inconsistent\_content
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.checkers.inconsistent\_content
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.checkers.inconsistent\_content.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.checkers.inconsistent\_content
       :template: custom-class-template.rst
       :nosignatures:
 
-      InconsistentContentChecker
+      colrev.record.qm.checkers.inconsistent\_content.InconsistentContentChecker

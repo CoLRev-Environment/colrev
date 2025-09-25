@@ -1,25 +1,7 @@
 colrev.package\_manager
 =======================
 
-.. automodule:: colrev.package_manager
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.package\_manager
 
 .. autosummary::
    :toctree:

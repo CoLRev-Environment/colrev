@@ -3,16 +3,6 @@ colrev.ops.status
 
 .. automodule:: colrev.ops.status
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.status
       :template: custom-class-template.rst
       :nosignatures:
 
-      Status
+      colrev.ops.status.Status

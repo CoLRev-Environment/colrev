@@ -1,13 +1,7 @@
 colrev.ui\_cli.dedupe\_errors
 =============================
 
-.. automodule:: colrev.ui_cli.dedupe_errors
-
-
-
-
-
-
+.. automodule:: colrev.ui\_cli.dedupe\_errors
 
    .. rubric:: Functions
 
@@ -15,5 +9,5 @@ colrev.ui\_cli.dedupe\_errors
       :toctree:
       :nosignatures:
 
-      load_dedupe_false_negatives
-      load_dedupe_false_positives
+      colrev.ui\_cli.dedupe\_errors.load_dedupe_false_negatives
+      colrev.ui\_cli.dedupe\_errors.load_dedupe_false_positives

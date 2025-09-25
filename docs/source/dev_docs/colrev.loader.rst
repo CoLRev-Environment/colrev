@@ -1,25 +1,7 @@
-﻿colrev.loader
+colrev.loader
 =============
 
 .. automodule:: colrev.loader
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 .. autosummary::
    :toctree:

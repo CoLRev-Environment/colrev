@@ -1,13 +1,7 @@
 colrev.record.qm.checkers.record\_not\_in\_toc
 ==============================================
 
-.. automodule:: colrev.record.qm.checkers.record_not_in_toc
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.checkers.record\_not\_in\_toc
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.checkers.record\_not\_in\_toc
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.checkers.record\_not\_in\_toc.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.checkers.record\_not\_in\_toc
       :template: custom-class-template.rst
       :nosignatures:
 
-      RecordNotInTOCChecker
+      colrev.record.qm.checkers.record\_not\_in\_toc.RecordNotInTOCChecker

@@ -3,16 +3,6 @@ colrev.record.record
 
 .. automodule:: colrev.record.record
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.record.record
       :template: custom-class-template.rst
       :nosignatures:
 
-      Record
+      colrev.record.record.Record

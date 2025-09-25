@@ -1,6 +1,4 @@
 colrev.loader.nbib.ParseError
 =============================
 
-.. currentmodule:: colrev.loader.nbib
-
-.. autoexception:: ParseError
+.. autoexception:: colrev.loader.nbib.ParseError

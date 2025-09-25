@@ -1,6 +1,4 @@
 colrev.writer.markdown.write\_file
 ==================================
 
-.. currentmodule:: colrev.writer.markdown
-
-.. autofunction:: write_file
+.. autofunction:: colrev.writer.markdown.write\_file

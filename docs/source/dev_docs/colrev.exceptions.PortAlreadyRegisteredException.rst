@@ -1,6 +1,4 @@
 colrev.exceptions.PortAlreadyRegisteredException
 ================================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: PortAlreadyRegisteredException
+.. autoexception:: colrev.exceptions.PortAlreadyRegisteredException

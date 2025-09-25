@@ -3,24 +3,6 @@ colrev.ops
 
 .. automodule:: colrev.ops
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .. autosummary::
    :toctree:
    :template: custom-module-template.rst

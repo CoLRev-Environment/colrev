@@ -1,6 +1,4 @@
 colrev.exceptions.StatusTransitionError
 =======================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: StatusTransitionError
+.. autoexception:: colrev.exceptions.StatusTransitionError

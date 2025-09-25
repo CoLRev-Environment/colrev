@@ -1,6 +1,4 @@
 colrev.exceptions.ProcessOrderViolation
 =======================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: ProcessOrderViolation
+.. autoexception:: colrev.exceptions.ProcessOrderViolation

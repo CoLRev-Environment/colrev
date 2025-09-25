@@ -1,17 +1,7 @@
 colrev.search\_file
 ===================
 
-.. automodule:: colrev.search_file
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.search\_file
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.search\_file
       :template: custom-class-template.rst
       :nosignatures:
 
-      ExtendedSearchFile
+      colrev.search\_file.ExtendedSearchFile

@@ -1,17 +1,7 @@
-﻿colrev.paths
+colrev.paths
 ============
 
 .. automodule:: colrev.paths
-
-
-
-
-
-
-
-
-
-
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@
       :template: custom-class-template.rst
       :nosignatures:
 
-      PathManager
+      colrev.paths.PathManager

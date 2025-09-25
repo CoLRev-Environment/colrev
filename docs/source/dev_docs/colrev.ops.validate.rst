@@ -3,16 +3,6 @@ colrev.ops.validate
 
 .. automodule:: colrev.ops.validate
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.validate
       :template: custom-class-template.rst
       :nosignatures:
 
-      Validate
+      colrev.ops.validate.Validate

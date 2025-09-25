@@ -1,13 +1,7 @@
 colrev.ops.search\_api\_feed
 ============================
 
-.. automodule:: colrev.ops.search_api_feed
-
-
-
-
-
-
+.. automodule:: colrev.ops.search\_api\_feed
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.ops.search\_api\_feed
       :toctree:
       :nosignatures:
 
-      create_api_source
-
-
-
-
+      colrev.ops.search\_api\_feed.create_api_source
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.ops.search\_api\_feed
       :template: custom-class-template.rst
       :nosignatures:
 
-      SearchAPIFeed
+      colrev.ops.search\_api\_feed.SearchAPIFeed

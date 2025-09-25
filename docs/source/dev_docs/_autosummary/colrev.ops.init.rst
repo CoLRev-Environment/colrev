@@ -3,16 +3,6 @@ colrev.ops.init
 
 .. automodule:: colrev.ops.init
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.init
       :template: custom-class-template.rst
       :nosignatures:
 
-      Initializer
+      colrev.ops.init.Initializer

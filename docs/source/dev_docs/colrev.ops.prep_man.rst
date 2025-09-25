@@ -1,17 +1,7 @@
 colrev.ops.prep\_man
 ====================
 
-.. automodule:: colrev.ops.prep_man
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.ops.prep\_man
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.ops.prep\_man
       :template: custom-class-template.rst
       :nosignatures:
 
-      PrepMan
+      colrev.ops.prep\_man.PrepMan

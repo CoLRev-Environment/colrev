@@ -1,6 +1,4 @@
 colrev.ops.prep.PreparationBreak
 ================================
 
-.. currentmodule:: colrev.ops.prep
-
-.. autoexception:: PreparationBreak
+.. autoexception:: colrev.ops.prep.PreparationBreak

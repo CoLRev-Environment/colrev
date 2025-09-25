@@ -1,6 +1,4 @@
 colrev.exceptions.CoLRevUpgradeError
 ====================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: CoLRevUpgradeError
+.. autoexception:: colrev.exceptions.CoLRevUpgradeError

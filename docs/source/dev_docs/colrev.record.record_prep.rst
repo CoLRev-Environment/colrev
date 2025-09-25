@@ -1,13 +1,7 @@
 colrev.record.record\_prep
 ==========================
 
-.. automodule:: colrev.record.record_prep
-
-
-
-
-
-
+.. automodule:: colrev.record.record\_prep
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.record\_prep
       :toctree:
       :nosignatures:
 
-      capitalize_entities
-
-
-
-
+      colrev.record.record\_prep.capitalize_entities
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.record\_prep
       :template: custom-class-template.rst
       :nosignatures:
 
-      PrepRecord
+      colrev.record.record\_prep.PrepRecord

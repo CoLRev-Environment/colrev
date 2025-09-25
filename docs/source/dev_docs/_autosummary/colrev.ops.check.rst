@@ -3,16 +3,6 @@ colrev.ops.check
 
 .. automodule:: colrev.ops.check
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.check
       :template: custom-class-template.rst
       :nosignatures:
 
-      CheckOperation
+      colrev.ops.check.CheckOperation

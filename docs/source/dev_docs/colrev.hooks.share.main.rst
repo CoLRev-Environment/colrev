@@ -1,6 +1,4 @@
 colrev.hooks.share.main
 =======================
 
-.. currentmodule:: colrev.hooks.share
-
-.. autofunction:: main
+.. autofunction:: colrev.hooks.share.main

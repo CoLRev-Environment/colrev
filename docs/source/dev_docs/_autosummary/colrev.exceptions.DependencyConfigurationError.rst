@@ -1,6 +1,4 @@
 colrev.exceptions.DependencyConfigurationError
 ==============================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: DependencyConfigurationError
+.. autoexception:: colrev.exceptions.DependencyConfigurationError

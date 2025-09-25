@@ -1,6 +1,4 @@
 colrev.exceptions.SearchNotAutomated
 ====================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: SearchNotAutomated
+.. autoexception:: colrev.exceptions.SearchNotAutomated

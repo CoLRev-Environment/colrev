@@ -1,13 +1,7 @@
 colrev.record.qm.checkers.thesis\_with\_multiple\_authors
 =========================================================
 
-.. automodule:: colrev.record.qm.checkers.thesis_with_multiple_authors
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.checkers.thesis\_with\_multiple\_authors
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.checkers.thesis\_with\_multiple\_authors
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.checkers.thesis\_with\_multiple\_authors.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.checkers.thesis\_with\_multiple\_authors
       :template: custom-class-template.rst
       :nosignatures:
 
-      ThesisWithMultipleAuthorsChecker
+      colrev.record.qm.checkers.thesis\_with\_multiple\_authors.ThesisWithMultipleAuthorsChecker

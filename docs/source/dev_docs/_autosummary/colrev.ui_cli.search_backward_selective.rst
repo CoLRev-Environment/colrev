@@ -1,13 +1,7 @@
 colrev.ui\_cli.search\_backward\_selective
 ==========================================
 
-.. automodule:: colrev.ui_cli.search_backward_selective
-
-
-
-
-
-
+.. automodule:: colrev.ui\_cli.search\_backward\_selective
 
    .. rubric:: Functions
 
@@ -15,4 +9,4 @@ colrev.ui\_cli.search\_backward\_selective
       :toctree:
       :nosignatures:
 
-      main
+      colrev.ui\_cli.search\_backward\_selective.main

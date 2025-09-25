@@ -1,6 +1,4 @@
 colrev.exceptions.RecordNotParsableException
 ============================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: RecordNotParsableException
+.. autoexception:: colrev.exceptions.RecordNotParsableException

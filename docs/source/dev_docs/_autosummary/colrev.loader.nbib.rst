@@ -3,16 +3,6 @@ colrev.loader.nbib
 
 .. automodule:: colrev.loader.nbib
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,16 +10,12 @@ colrev.loader.nbib
       :template: custom-class-template.rst
       :nosignatures:
 
-      NBIBLoader
-
-
-
-
+      colrev.loader.nbib.NBIBLoader
 
    .. rubric:: Exceptions
 
    .. autosummary::
       :toctree:
 
-      NextLine
-      ParseError
+      colrev.loader.nbib.NextLine
+      colrev.loader.nbib.ParseError

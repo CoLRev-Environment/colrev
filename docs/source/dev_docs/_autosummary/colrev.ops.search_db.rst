@@ -1,13 +1,7 @@
 colrev.ops.search\_db
 =====================
 
-.. automodule:: colrev.ops.search_db
-
-
-
-
-
-
+.. automodule:: colrev.ops.search\_db
 
    .. rubric:: Functions
 
@@ -15,6 +9,6 @@ colrev.ops.search\_db
       :toctree:
       :nosignatures:
 
-      create_db_source
-      get_query_filename
-      run_db_search
+      colrev.ops.search\_db.create_db_source
+      colrev.ops.search\_db.get_query_filename
+      colrev.ops.search\_db.run_db_search

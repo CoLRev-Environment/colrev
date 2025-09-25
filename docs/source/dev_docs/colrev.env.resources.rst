@@ -3,16 +3,6 @@ colrev.env.resources
 
 .. automodule:: colrev.env.resources
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.env.resources
       :template: custom-class-template.rst
       :nosignatures:
 
-      Resources
+      colrev.env.resources.Resources

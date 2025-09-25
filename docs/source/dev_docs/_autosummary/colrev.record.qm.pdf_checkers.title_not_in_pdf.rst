@@ -1,13 +1,7 @@
 colrev.record.qm.pdf\_checkers.title\_not\_in\_pdf
 ==================================================
 
-.. automodule:: colrev.record.qm.pdf_checkers.title_not_in_pdf
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.pdf\_checkers.title\_not\_in\_pdf
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.pdf\_checkers.title\_not\_in\_pdf
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.pdf\_checkers.title\_not\_in\_pdf.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.pdf\_checkers.title\_not\_in\_pdf
       :template: custom-class-template.rst
       :nosignatures:
 
-      TitleNotInPDFChecker
+      colrev.record.qm.pdf\_checkers.title\_not\_in\_pdf.TitleNotInPDFChecker

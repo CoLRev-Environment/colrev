@@ -1,6 +1,4 @@
 colrev.writer.csv.write\_file
 =============================
 
-.. currentmodule:: colrev.writer.csv
-
-.. autofunction:: write_file
+.. autofunction:: colrev.writer.csv.write\_file

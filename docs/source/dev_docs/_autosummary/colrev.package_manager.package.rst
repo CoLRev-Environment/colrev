@@ -1,17 +1,7 @@
 colrev.package\_manager.package
 ===============================
 
-.. automodule:: colrev.package_manager.package
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.package\_manager.package
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.package\_manager.package
       :template: custom-class-template.rst
       :nosignatures:
 
-      Package
+      colrev.package\_manager.package.Package

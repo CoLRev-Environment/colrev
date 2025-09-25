@@ -1,6 +1,4 @@
 colrev.exceptions.ImportException
 =================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: ImportException
+.. autoexception:: colrev.exceptions.ImportException

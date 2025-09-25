@@ -1,17 +1,7 @@
 colrev.ui\_cli.detect\_and\_add\_source
 =======================================
 
-.. automodule:: colrev.ui_cli.detect_and_add_source
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.ui\_cli.detect\_and\_add\_source
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.ui\_cli.detect\_and\_add\_source
       :template: custom-class-template.rst
       :nosignatures:
 
-      CLISourceAdder
+      colrev.ui\_cli.detect\_and\_add\_source.CLISourceAdder

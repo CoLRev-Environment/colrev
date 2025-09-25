@@ -1,6 +1,4 @@
 colrev.exceptions.NoRecordsError
 ================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: NoRecordsError
+.. autoexception:: colrev.exceptions.NoRecordsError

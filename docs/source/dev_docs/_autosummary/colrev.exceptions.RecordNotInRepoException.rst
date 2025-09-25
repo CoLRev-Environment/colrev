@@ -1,6 +1,4 @@
 colrev.exceptions.RecordNotInRepoException
 ==========================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: RecordNotInRepoException
+.. autoexception:: colrev.exceptions.RecordNotInRepoException

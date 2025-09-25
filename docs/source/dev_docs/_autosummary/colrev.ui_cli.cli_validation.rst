@@ -1,13 +1,7 @@
 colrev.ui\_cli.cli\_validation
 ==============================
 
-.. automodule:: colrev.ui_cli.cli_validation
-
-
-
-
-
-
+.. automodule:: colrev.ui\_cli.cli\_validation
 
    .. rubric:: Functions
 
@@ -15,6 +9,6 @@ colrev.ui\_cli.cli\_validation
       :toctree:
       :nosignatures:
 
-      print_diff
-      print_diff_pair
-      print_string_diff
+      colrev.ui\_cli.cli\_validation.print_diff
+      colrev.ui\_cli.cli\_validation.print_diff_pair
+      colrev.ui\_cli.cli\_validation.print_string_diff

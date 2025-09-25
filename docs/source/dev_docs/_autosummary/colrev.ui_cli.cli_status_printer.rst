@@ -1,13 +1,7 @@
 colrev.ui\_cli.cli\_status\_printer
 ===================================
 
-.. automodule:: colrev.ui_cli.cli_status_printer
-
-
-
-
-
-
+.. automodule:: colrev.ui\_cli.cli\_status\_printer
 
    .. rubric:: Functions
 
@@ -15,8 +9,8 @@ colrev.ui\_cli.cli\_status\_printer
       :toctree:
       :nosignatures:
 
-      print_collaboration_instructions
-      print_environment_instructions
-      print_progress
-      print_project_status
-      print_review_instructions
+      colrev.ui\_cli.cli\_status\_printer.print_collaboration_instructions
+      colrev.ui\_cli.cli\_status\_printer.print_environment_instructions
+      colrev.ui\_cli.cli\_status\_printer.print_progress
+      colrev.ui\_cli.cli\_status\_printer.print_project_status
+      colrev.ui\_cli.cli\_status\_printer.print_review_instructions

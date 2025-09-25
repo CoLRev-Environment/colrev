@@ -1,6 +1,4 @@
 colrev.exceptions.InvalidQueryException
 =======================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: InvalidQueryException
+.. autoexception:: colrev.exceptions.InvalidQueryException

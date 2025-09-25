@@ -1,6 +1,4 @@
 colrev.utils.remove\_stopwords
 ==============================
 
-.. currentmodule:: colrev.utils
-
-.. autofunction:: remove_stopwords
+.. autofunction:: colrev.utils.remove\_stopwords

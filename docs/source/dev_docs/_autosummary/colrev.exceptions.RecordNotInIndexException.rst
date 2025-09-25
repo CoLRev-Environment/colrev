@@ -1,6 +1,4 @@
 colrev.exceptions.RecordNotInIndexException
 ===========================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: RecordNotInIndexException
+.. autoexception:: colrev.exceptions.RecordNotInIndexException

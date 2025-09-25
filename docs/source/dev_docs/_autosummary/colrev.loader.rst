@@ -3,24 +3,6 @@ colrev.loader
 
 .. automodule:: colrev.loader
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .. autosummary::
    :toctree:
    :template: custom-module-template.rst

@@ -1,33 +1,25 @@
 colrev.ops.repare.Repare
 ========================
 
-.. currentmodule:: colrev.ops.repare
-
-.. autoclass:: Repare
+.. autoclass:: colrev.ops.repare.Repare
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~Repare.check_precondition
-      ~Repare.conclude
-      ~Repare.decorate
-      ~Repare.main
-      ~Repare.notify
-
-
-
-
+      ~colrev.ops.repare.Repare.check_precondition
+      ~colrev.ops.repare.Repare.conclude
+      ~colrev.ops.repare.Repare.decorate
+      ~colrev.ops.repare.Repare.main
+      ~colrev.ops.repare.Repare.notify
 
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~Repare.type
+      ~colrev.ops.repare.Repare.type

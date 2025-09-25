@@ -3,16 +3,6 @@ colrev.ops.clone
 
 .. automodule:: colrev.ops.clone
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.clone
       :template: custom-class-template.rst
       :nosignatures:
 
-      Clone
+      colrev.ops.clone.Clone

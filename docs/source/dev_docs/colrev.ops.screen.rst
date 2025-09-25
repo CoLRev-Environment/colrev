@@ -3,16 +3,6 @@ colrev.ops.screen
 
 .. automodule:: colrev.ops.screen
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.screen
       :template: custom-class-template.rst
       :nosignatures:
 
-      Screen
+      colrev.ops.screen.Screen

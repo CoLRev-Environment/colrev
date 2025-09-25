@@ -1,43 +1,35 @@
 colrev.settings.SearchSource
 ============================
 
-.. currentmodule:: colrev.settings
-
-.. autoclass:: SearchSource
+.. autoclass:: colrev.settings.SearchSource
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~SearchSource.get_api_feed
-      ~SearchSource.get_origin_prefix
-      ~SearchSource.get_query
-      ~SearchSource.is_curated_source
-      ~SearchSource.is_md_source
-      ~SearchSource.setup_for_load
-      ~SearchSource.validate_filename
-
-
-
-
+      ~colrev.settings.SearchSource.get_api_feed
+      ~colrev.settings.SearchSource.get_origin_prefix
+      ~colrev.settings.SearchSource.get_query
+      ~colrev.settings.SearchSource.is_curated_source
+      ~colrev.settings.SearchSource.is_md_source
+      ~colrev.settings.SearchSource.setup_for_load
+      ~colrev.settings.SearchSource.validate_filename
 
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~SearchSource.endpoint
-      ~SearchSource.search_results_path
-      ~SearchSource.search_type
-      ~SearchSource.search_parameters
-      ~SearchSource.comment
-      ~SearchSource.to_import
-      ~SearchSource.imported_origins
-      ~SearchSource.len_before
-      ~SearchSource.source_records_list
+      ~colrev.settings.SearchSource.endpoint
+      ~colrev.settings.SearchSource.search_results_path
+      ~colrev.settings.SearchSource.search_type
+      ~colrev.settings.SearchSource.search_parameters
+      ~colrev.settings.SearchSource.comment
+      ~colrev.settings.SearchSource.to_import
+      ~colrev.settings.SearchSource.imported_origins
+      ~colrev.settings.SearchSource.len_before
+      ~colrev.settings.SearchSource.source_records_list

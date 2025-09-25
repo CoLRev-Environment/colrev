@@ -1,6 +1,4 @@
 colrev.settings.save\_settings
 ==============================
 
-.. currentmodule:: colrev.settings
-
-.. autofunction:: save_settings
+.. autofunction:: colrev.settings.save\_settings

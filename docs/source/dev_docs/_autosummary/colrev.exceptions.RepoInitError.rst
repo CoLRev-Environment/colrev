@@ -1,6 +1,4 @@
 colrev.exceptions.RepoInitError
 ===============================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: RepoInitError
+.. autoexception:: colrev.exceptions.RepoInitError

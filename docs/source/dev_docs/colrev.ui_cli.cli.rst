@@ -1,13 +1,7 @@
 colrev.ui\_cli.cli
 ==================
 
-.. automodule:: colrev.ui_cli.cli
-
-
-
-
-
-
+.. automodule:: colrev.ui\_cli.cli
 
    .. rubric:: Functions
 
@@ -15,14 +9,10 @@ colrev.ui\_cli.cli
       :toctree:
       :nosignatures:
 
-      catch_exception
-      get_review_manager
-      get_search_files
-      select_format
-
-
-
-
+      colrev.ui\_cli.cli.catch_exception
+      colrev.ui\_cli.cli.get_review_manager
+      colrev.ui\_cli.cli.get_search_files
+      colrev.ui\_cli.cli.select_format
 
    .. rubric:: Classes
 
@@ -31,4 +21,4 @@ colrev.ui\_cli.cli
       :template: custom-class-template.rst
       :nosignatures:
 
-      SpecialHelpOrder
+      colrev.ui\_cli.cli.SpecialHelpOrder

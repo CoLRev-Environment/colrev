@@ -1,17 +1,7 @@
 colrev.env.grobid\_service
 ==========================
 
-.. automodule:: colrev.env.grobid_service
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.env.grobid\_service
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.env.grobid\_service
       :template: custom-class-template.rst
       :nosignatures:
 
-      GrobidService
+      colrev.env.grobid\_service.GrobidService

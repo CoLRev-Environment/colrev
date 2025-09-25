@@ -1,13 +1,7 @@
 colrev.ui\_cli.setup\_custom\_scripts
 =====================================
 
-.. automodule:: colrev.ui_cli.setup_custom_scripts
-
-
-
-
-
-
+.. automodule:: colrev.ui\_cli.setup\_custom\_scripts
 
    .. rubric:: Functions
 
@@ -15,4 +9,4 @@ colrev.ui\_cli.setup\_custom\_scripts
       :toctree:
       :nosignatures:
 
-      setup_custom_search_script
+      colrev.ui\_cli.setup\_custom\_scripts.setup_custom_search_script

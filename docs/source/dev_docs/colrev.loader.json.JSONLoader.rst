@@ -1,21 +1,17 @@
 colrev.loader.json.JSONLoader
 =============================
 
-.. currentmodule:: colrev.loader.json
-
-.. autoclass:: JSONLoader
+.. autoclass:: colrev.loader.json.JSONLoader
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~JSONLoader.get_nr_records
-      ~JSONLoader.load
-      ~JSONLoader.load_records_list
+      ~colrev.loader.json.JSONLoader.get_nr_records
+      ~colrev.loader.json.JSONLoader.load
+      ~colrev.loader.json.JSONLoader.load_records_list

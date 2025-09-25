@@ -1,6 +1,4 @@
 colrev.exceptions.PDFHashError
 ==============================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: PDFHashError
+.. autoexception:: colrev.exceptions.PDFHashError

@@ -3,24 +3,6 @@ colrev.record.qm.checkers
 
 .. automodule:: colrev.record.qm.checkers
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .. autosummary::
    :toctree:
    :template: custom-module-template.rst

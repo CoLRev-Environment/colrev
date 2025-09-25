@@ -3,18 +3,12 @@ colrev.writer.markdown
 
 .. automodule:: colrev.writer.markdown
 
-
-
-
-
-
-
    .. rubric:: Functions
 
    .. autosummary::
       :toctree:
       :nosignatures:
 
-      to_dataframe
-      to_string
-      write_file
+      colrev.writer.markdown.to_dataframe
+      colrev.writer.markdown.to_string
+      colrev.writer.markdown.write_file

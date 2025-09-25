@@ -1,6 +1,4 @@
 colrev.hooks.report.main
 ========================
 
-.. currentmodule:: colrev.hooks.report
-
-.. autofunction:: main
+.. autofunction:: colrev.hooks.report.main

@@ -1,25 +1,7 @@
 colrev.record.qm.pdf\_checkers
 ==============================
 
-.. automodule:: colrev.record.qm.pdf_checkers
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.pdf\_checkers
 
 .. autosummary::
    :toctree:

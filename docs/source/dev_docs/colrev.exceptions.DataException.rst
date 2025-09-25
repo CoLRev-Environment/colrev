@@ -1,6 +1,4 @@
 colrev.exceptions.DataException
 ===============================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: DataException
+.. autoexception:: colrev.exceptions.DataException

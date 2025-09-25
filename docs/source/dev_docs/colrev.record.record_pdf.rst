@@ -1,17 +1,7 @@
 colrev.record.record\_pdf
 =========================
 
-.. automodule:: colrev.record.record_pdf
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.record.record\_pdf
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.record.record\_pdf
       :template: custom-class-template.rst
       :nosignatures:
 
-      PDFRecord
+      colrev.record.record\_pdf.PDFRecord

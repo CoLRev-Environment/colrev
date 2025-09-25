@@ -1,13 +1,7 @@
 colrev.record.qm.checkers.language\_unknown
 ===========================================
 
-.. automodule:: colrev.record.qm.checkers.language_unknown
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.checkers.language\_unknown
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.checkers.language\_unknown
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.checkers.language\_unknown.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.checkers.language\_unknown
       :template: custom-class-template.rst
       :nosignatures:
 
-      LanguageChecker
+      colrev.record.qm.checkers.language\_unknown.LanguageChecker

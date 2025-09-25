@@ -1,29 +1,21 @@
 colrev.record.qm.pdf\_checkers.pdf\_incomplete.PDFIncompletenessChecker
 =======================================================================
 
-.. currentmodule:: colrev.record.qm.pdf_checkers.pdf_incomplete
-
-.. autoclass:: PDFIncompletenessChecker
+.. autoclass:: colrev.record.qm.pdf\_checkers.pdf\_incomplete.PDFIncompletenessChecker
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~PDFIncompletenessChecker.run
-
-
-
-
+      ~colrev.record.qm.pdf\_checkers.pdf\_incomplete.PDFIncompletenessChecker.run
 
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~PDFIncompletenessChecker.msg
+      ~colrev.record.qm.pdf\_checkers.pdf\_incomplete.PDFIncompletenessChecker.msg

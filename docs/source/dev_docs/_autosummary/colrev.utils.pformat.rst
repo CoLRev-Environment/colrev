@@ -1,6 +1,4 @@
 colrev.utils.pformat
 ====================
 
-.. currentmodule:: colrev.utils
-
-.. autofunction:: pformat
+.. autofunction:: colrev.utils.pformat

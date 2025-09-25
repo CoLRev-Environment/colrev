@@ -3,16 +3,6 @@ colrev.ops.repare
 
 .. automodule:: colrev.ops.repare
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.repare
       :template: custom-class-template.rst
       :nosignatures:
 
-      Repare
+      colrev.ops.repare.Repare

@@ -1,13 +1,7 @@
 colrev.record.record\_similarity
 ================================
 
-.. automodule:: colrev.record.record_similarity
-
-
-
-
-
-
+.. automodule:: colrev.record.record\_similarity
 
    .. rubric:: Functions
 
@@ -15,7 +9,7 @@ colrev.record.record\_similarity
       :toctree:
       :nosignatures:
 
-      container_is_abbreviated
-      get_record_change_score
-      get_record_similarity
-      matches
+      colrev.record.record\_similarity.container_is_abbreviated
+      colrev.record.record\_similarity.get_record_change_score
+      colrev.record.record\_similarity.get_record_similarity
+      colrev.record.record\_similarity.matches

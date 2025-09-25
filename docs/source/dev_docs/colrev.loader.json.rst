@@ -3,16 +3,6 @@ colrev.loader.json
 
 .. automodule:: colrev.loader.json
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.loader.json
       :template: custom-class-template.rst
       :nosignatures:
 
-      JSONLoader
+      colrev.loader.json.JSONLoader

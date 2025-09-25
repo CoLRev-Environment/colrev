@@ -1,13 +1,7 @@
 colrev.package\_manager.init
 ============================
 
-.. automodule:: colrev.package_manager.init
-
-
-
-
-
-
+.. automodule:: colrev.package\_manager.init
 
    .. rubric:: Functions
 
@@ -15,7 +9,7 @@ colrev.package\_manager.init
       :toctree:
       :nosignatures:
 
-      generate_module_content
-      main
-      validate_module_name
-      validate_version
+      colrev.package\_manager.init.generate_module_content
+      colrev.package\_manager.init.main
+      colrev.package\_manager.init.validate_module_name
+      colrev.package\_manager.init.validate_version

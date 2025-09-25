@@ -1,17 +1,7 @@
 colrev.ops.pdf\_prep
 ====================
 
-.. automodule:: colrev.ops.pdf_prep
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.ops.pdf\_prep
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.ops.pdf\_prep
       :template: custom-class-template.rst
       :nosignatures:
 
-      PDFPrep
+      colrev.ops.pdf\_prep.PDFPrep

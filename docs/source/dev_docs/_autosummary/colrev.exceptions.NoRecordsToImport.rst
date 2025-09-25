@@ -1,6 +1,4 @@
 colrev.exceptions.NoRecordsToImport
 ===================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: NoRecordsToImport
+.. autoexception:: colrev.exceptions.NoRecordsToImport

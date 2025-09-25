@@ -1,6 +1,4 @@
 colrev.exceptions.ServiceNotAvailableException
 ==============================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: ServiceNotAvailableException
+.. autoexception:: colrev.exceptions.ServiceNotAvailableException

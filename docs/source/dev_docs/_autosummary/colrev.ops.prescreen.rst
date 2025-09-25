@@ -3,16 +3,6 @@ colrev.ops.prescreen
 
 .. automodule:: colrev.ops.prescreen
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.prescreen
       :template: custom-class-template.rst
       :nosignatures:
 
-      Prescreen
+      colrev.ops.prescreen.Prescreen

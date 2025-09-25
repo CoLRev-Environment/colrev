@@ -1,17 +1,7 @@
 colrev.ops.pdf\_get
 ===================
 
-.. automodule:: colrev.ops.pdf_get
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.ops.pdf\_get
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.ops.pdf\_get
       :template: custom-class-template.rst
       :nosignatures:
 
-      PDFGet
+      colrev.ops.pdf\_get.PDFGet

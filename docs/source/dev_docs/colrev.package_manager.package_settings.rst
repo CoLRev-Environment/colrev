@@ -1,17 +1,7 @@
 colrev.package\_manager.package\_settings
 =========================================
 
-.. automodule:: colrev.package_manager.package_settings
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.package\_manager.package\_settings
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.package\_manager.package\_settings
       :template: custom-class-template.rst
       :nosignatures:
 
-      DefaultSettings
+      colrev.package\_manager.package\_settings.DefaultSettings

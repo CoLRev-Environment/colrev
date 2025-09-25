@@ -1,22 +1,14 @@
 colrev.ops.init.Initializer
 ===========================
 
-.. currentmodule:: colrev.ops.init
-
-.. autoclass:: Initializer
+.. autoclass:: colrev.ops.init.Initializer
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
-
-
-
-
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~Initializer.review_manager
+      ~colrev.ops.init.Initializer.review_manager

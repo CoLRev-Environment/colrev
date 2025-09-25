@@ -3,16 +3,6 @@ colrev.ops.commit
 
 .. automodule:: colrev.ops.commit
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.commit
       :template: custom-class-template.rst
       :nosignatures:
 
-      Commit
+      colrev.ops.commit.Commit

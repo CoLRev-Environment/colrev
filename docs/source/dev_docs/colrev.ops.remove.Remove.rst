@@ -1,33 +1,25 @@
 colrev.ops.remove.Remove
 ========================
 
-.. currentmodule:: colrev.ops.remove
-
-.. autoclass:: Remove
+.. autoclass:: colrev.ops.remove.Remove
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~Remove.check_precondition
-      ~Remove.conclude
-      ~Remove.decorate
-      ~Remove.notify
-      ~Remove.remove_records
-
-
-
-
+      ~colrev.ops.remove.Remove.check_precondition
+      ~colrev.ops.remove.Remove.conclude
+      ~colrev.ops.remove.Remove.decorate
+      ~colrev.ops.remove.Remove.notify
+      ~colrev.ops.remove.Remove.remove_records
 
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~Remove.type
+      ~colrev.ops.remove.Remove.type

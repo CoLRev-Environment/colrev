@@ -1,31 +1,23 @@
 colrev.env.grobid\_service.GrobidService
 ========================================
 
-.. currentmodule:: colrev.env.grobid_service
-
-.. autoclass:: GrobidService
+.. autoclass:: colrev.env.grobid\_service.GrobidService
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~GrobidService.check_grobid_availability
-      ~GrobidService.start
-
-
-
-
+      ~colrev.env.grobid\_service.GrobidService.check_grobid_availability
+      ~colrev.env.grobid\_service.GrobidService.start
 
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~GrobidService.GROBID_IMAGE
-      ~GrobidService.GROBID_URL
+      ~colrev.env.grobid\_service.GrobidService.GROBID_IMAGE
+      ~colrev.env.grobid\_service.GrobidService.GROBID_URL

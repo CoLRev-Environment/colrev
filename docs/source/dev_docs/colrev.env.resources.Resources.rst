@@ -1,19 +1,15 @@
 colrev.env.resources.Resources
 ==============================
 
-.. currentmodule:: colrev.env.resources
-
-.. autoclass:: Resources
+.. autoclass:: colrev.env.resources.Resources
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~Resources.install_curated_resource
+      ~colrev.env.resources.Resources.install_curated_resource

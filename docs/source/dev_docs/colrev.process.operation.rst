@@ -3,16 +3,6 @@ colrev.process.operation
 
 .. automodule:: colrev.process.operation
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.process.operation
       :template: custom-class-template.rst
       :nosignatures:
 
-      Operation
+      colrev.process.operation.Operation

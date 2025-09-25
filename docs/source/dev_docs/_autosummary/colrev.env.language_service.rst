@@ -1,17 +1,7 @@
 colrev.env.language\_service
 ============================
 
-.. automodule:: colrev.env.language_service
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.env.language\_service
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.env.language\_service
       :template: custom-class-template.rst
       :nosignatures:
 
-      LanguageService
+      colrev.env.language\_service.LanguageService

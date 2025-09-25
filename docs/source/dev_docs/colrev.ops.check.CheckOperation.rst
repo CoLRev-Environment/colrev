@@ -1,32 +1,24 @@
 colrev.ops.check.CheckOperation
 ===============================
 
-.. currentmodule:: colrev.ops.check
-
-.. autoclass:: CheckOperation
+.. autoclass:: colrev.ops.check.CheckOperation
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~CheckOperation.check_precondition
-      ~CheckOperation.conclude
-      ~CheckOperation.decorate
-      ~CheckOperation.notify
-
-
-
-
+      ~colrev.ops.check.CheckOperation.check_precondition
+      ~colrev.ops.check.CheckOperation.conclude
+      ~colrev.ops.check.CheckOperation.decorate
+      ~colrev.ops.check.CheckOperation.notify
 
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~CheckOperation.type
+      ~colrev.ops.check.CheckOperation.type

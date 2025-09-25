@@ -1,29 +1,21 @@
 colrev.ops.clone.Clone
 ======================
 
-.. currentmodule:: colrev.ops.clone
-
-.. autoclass:: Clone
+.. autoclass:: colrev.ops.clone.Clone
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~Clone.clone_git_repo
-
-
-
-
+      ~colrev.ops.clone.Clone.clone_git_repo
 
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~Clone.git_url
+      ~colrev.ops.clone.Clone.git_url

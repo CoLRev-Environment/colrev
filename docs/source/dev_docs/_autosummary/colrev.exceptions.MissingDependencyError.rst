@@ -1,6 +1,4 @@
 colrev.exceptions.MissingDependencyError
 ========================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: MissingDependencyError
+.. autoexception:: colrev.exceptions.MissingDependencyError

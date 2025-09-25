@@ -3,16 +3,6 @@ colrev.loader.ris
 
 .. automodule:: colrev.loader.ris
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,16 +10,12 @@ colrev.loader.ris
       :template: custom-class-template.rst
       :nosignatures:
 
-      RISLoader
-
-
-
-
+      colrev.loader.ris.RISLoader
 
    .. rubric:: Exceptions
 
    .. autosummary::
       :toctree:
 
-      NextLine
-      ParseError
+      colrev.loader.ris.NextLine
+      colrev.loader.ris.ParseError

@@ -1,25 +1,7 @@
-﻿colrev.packages
+colrev.packages
 ===============
 
 .. automodule:: colrev.packages
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 .. autosummary::
    :toctree:

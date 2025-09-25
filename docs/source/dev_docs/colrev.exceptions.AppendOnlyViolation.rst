@@ -1,6 +1,4 @@
 colrev.exceptions.AppendOnlyViolation
 =====================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: AppendOnlyViolation
+.. autoexception:: colrev.exceptions.AppendOnlyViolation

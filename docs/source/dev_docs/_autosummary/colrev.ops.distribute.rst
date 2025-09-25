@@ -3,16 +3,6 @@ colrev.ops.distribute
 
 .. automodule:: colrev.ops.distribute
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.distribute
       :template: custom-class-template.rst
       :nosignatures:
 
-      Distribute
+      colrev.ops.distribute.Distribute

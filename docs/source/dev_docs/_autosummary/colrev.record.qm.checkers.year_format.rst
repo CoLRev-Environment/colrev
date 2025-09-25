@@ -1,13 +1,7 @@
 colrev.record.qm.checkers.year\_format
 ======================================
 
-.. automodule:: colrev.record.qm.checkers.year_format
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.checkers.year\_format
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.checkers.year\_format
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.checkers.year\_format.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.checkers.year\_format
       :template: custom-class-template.rst
       :nosignatures:
 
-      YearFormatChecker
+      colrev.record.qm.checkers.year\_format.YearFormatChecker

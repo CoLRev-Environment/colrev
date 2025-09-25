@@ -1,6 +1,4 @@
 colrev.loader.ris.ParseError
 ============================
 
-.. currentmodule:: colrev.loader.ris
-
-.. autoexception:: ParseError
+.. autoexception:: colrev.loader.ris.ParseError

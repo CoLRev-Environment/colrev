@@ -3,16 +3,6 @@ colrev.ops.dedupe
 
 .. automodule:: colrev.ops.dedupe
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.dedupe
       :template: custom-class-template.rst
       :nosignatures:
 
-      Dedupe
+      colrev.ops.dedupe.Dedupe

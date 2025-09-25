@@ -1,13 +1,7 @@
 colrev.record.qm.checkers.name\_particles
 =========================================
 
-.. automodule:: colrev.record.qm.checkers.name_particles
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.checkers.name\_particles
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.checkers.name\_particles
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.checkers.name\_particles.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.checkers.name\_particles
       :template: custom-class-template.rst
       :nosignatures:
 
-      NameParticlesChecker
+      colrev.record.qm.checkers.name\_particles.NameParticlesChecker

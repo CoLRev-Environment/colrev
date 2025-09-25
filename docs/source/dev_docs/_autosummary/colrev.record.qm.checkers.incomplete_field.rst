@@ -1,13 +1,7 @@
 colrev.record.qm.checkers.incomplete\_field
 ===========================================
 
-.. automodule:: colrev.record.qm.checkers.incomplete_field
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.checkers.incomplete\_field
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.checkers.incomplete\_field
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.checkers.incomplete\_field.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.checkers.incomplete\_field
       :template: custom-class-template.rst
       :nosignatures:
 
-      IncompleteFieldChecker
+      colrev.record.qm.checkers.incomplete\_field.IncompleteFieldChecker

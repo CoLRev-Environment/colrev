@@ -1,17 +1,7 @@
 colrev.record.qm.quality\_model
 ===============================
 
-.. automodule:: colrev.record.qm.quality_model
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.quality\_model
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.record.qm.quality\_model
       :template: custom-class-template.rst
       :nosignatures:
 
-      QualityModel
+      colrev.record.qm.quality\_model.QualityModel

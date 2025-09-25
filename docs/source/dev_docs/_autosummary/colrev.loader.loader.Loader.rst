@@ -1,20 +1,16 @@
 colrev.loader.loader.Loader
 ===========================
 
-.. currentmodule:: colrev.loader.loader
-
-.. autoclass:: Loader
+.. autoclass:: colrev.loader.loader.Loader
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~Loader.load
-      ~Loader.load_records_list
+      ~colrev.loader.loader.Loader.load
+      ~colrev.loader.loader.Loader.load_records_list

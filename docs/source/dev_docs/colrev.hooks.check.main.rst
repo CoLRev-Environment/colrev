@@ -1,6 +1,4 @@
 colrev.hooks.check.main
 =======================
 
-.. currentmodule:: colrev.hooks.check
-
-.. autofunction:: main
+.. autofunction:: colrev.hooks.check.main

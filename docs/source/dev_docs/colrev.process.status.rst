@@ -3,23 +3,13 @@ colrev.process.status
 
 .. automodule:: colrev.process.status
 
-
-
-
-
-
-
    .. rubric:: Functions
 
    .. autosummary::
       :toctree:
       :nosignatures:
 
-      get_status_stats
-
-
-
-
+      colrev.process.status.get_status_stats
 
    .. rubric:: Classes
 
@@ -28,6 +18,6 @@ colrev.process.status
       :template: custom-class-template.rst
       :nosignatures:
 
-      StatusStats
-      StatusStatsCurrently
-      StatusStatsOverall
+      colrev.process.status.StatusStats
+      colrev.process.status.StatusStatsCurrently
+      colrev.process.status.StatusStatsOverall

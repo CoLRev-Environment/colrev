@@ -1,6 +1,4 @@
 colrev.exceptions.UnstagedGitChangesError
 =========================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: UnstagedGitChangesError
+.. autoexception:: colrev.exceptions.UnstagedGitChangesError

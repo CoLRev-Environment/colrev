@@ -1,17 +1,7 @@
 colrev.env.docker\_manager
 ==========================
 
-.. automodule:: colrev.env.docker_manager
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.env.docker\_manager
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.env.docker\_manager
       :template: custom-class-template.rst
       :nosignatures:
 
-      DockerManager
+      colrev.env.docker\_manager.DockerManager

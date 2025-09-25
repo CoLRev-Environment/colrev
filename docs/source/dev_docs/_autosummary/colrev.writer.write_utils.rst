@@ -1,13 +1,7 @@
 colrev.writer.write\_utils
 ==========================
 
-.. automodule:: colrev.writer.write_utils
-
-
-
-
-
-
+.. automodule:: colrev.writer.write\_utils
 
    .. rubric:: Functions
 
@@ -15,5 +9,5 @@ colrev.writer.write\_utils
       :toctree:
       :nosignatures:
 
-      to_string
-      write_file
+      colrev.writer.write\_utils.to_string
+      colrev.writer.write\_utils.write_file

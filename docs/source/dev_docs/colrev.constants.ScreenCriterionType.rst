@@ -1,30 +1,22 @@
 colrev.constants.ScreenCriterionType
 ====================================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: ScreenCriterionType
+.. autoclass:: colrev.constants.ScreenCriterionType
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~ScreenCriterionType.get_options
-
-
-
-
+      ~colrev.constants.ScreenCriterionType.get_options
 
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~ScreenCriterionType.inclusion_criterion
-      ~ScreenCriterionType.exclusion_criterion
+      ~colrev.constants.ScreenCriterionType.inclusion_criterion
+      ~colrev.constants.ScreenCriterionType.exclusion_criterion

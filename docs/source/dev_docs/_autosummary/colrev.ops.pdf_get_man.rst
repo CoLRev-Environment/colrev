@@ -1,17 +1,7 @@
 colrev.ops.pdf\_get\_man
 ========================
 
-.. automodule:: colrev.ops.pdf_get_man
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.ops.pdf\_get\_man
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.ops.pdf\_get\_man
       :template: custom-class-template.rst
       :nosignatures:
 
-      PDFGetMan
+      colrev.ops.pdf\_get\_man.PDFGetMan

@@ -3,24 +3,6 @@ colrev.env
 
 .. automodule:: colrev.env
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .. autosummary::
    :toctree:
    :template: custom-module-template.rst

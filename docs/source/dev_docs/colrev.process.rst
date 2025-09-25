@@ -1,25 +1,7 @@
-﻿colrev.process
+colrev.process
 ==============
 
 .. automodule:: colrev.process
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 .. autosummary::
    :toctree:

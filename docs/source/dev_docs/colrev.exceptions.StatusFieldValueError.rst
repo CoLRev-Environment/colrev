@@ -1,6 +1,4 @@
 colrev.exceptions.StatusFieldValueError
 =======================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: StatusFieldValueError
+.. autoexception:: colrev.exceptions.StatusFieldValueError

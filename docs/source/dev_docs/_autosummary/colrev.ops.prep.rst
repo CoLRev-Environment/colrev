@@ -3,16 +3,6 @@ colrev.ops.prep
 
 .. automodule:: colrev.ops.prep
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,15 +10,11 @@ colrev.ops.prep
       :template: custom-class-template.rst
       :nosignatures:
 
-      Prep
-
-
-
-
+      colrev.ops.prep.Prep
 
    .. rubric:: Exceptions
 
    .. autosummary::
       :toctree:
 
-      PreparationBreak
+      colrev.ops.prep.PreparationBreak

@@ -1,13 +1,7 @@
 colrev.record.qm.checkers.missing\_field
 ========================================
 
-.. automodule:: colrev.record.qm.checkers.missing_field
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.checkers.missing\_field
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.checkers.missing\_field
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.checkers.missing\_field.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.checkers.missing\_field
       :template: custom-class-template.rst
       :nosignatures:
 
-      MissingFieldChecker
+      colrev.record.qm.checkers.missing\_field.MissingFieldChecker

@@ -1,17 +1,7 @@
 colrev.record.record\_id\_setter
 ================================
 
-.. automodule:: colrev.record.record_id_setter
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.record.record\_id\_setter
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.record.record\_id\_setter
       :template: custom-class-template.rst
       :nosignatures:
 
-      IDSetter
+      colrev.record.record\_id\_setter.IDSetter

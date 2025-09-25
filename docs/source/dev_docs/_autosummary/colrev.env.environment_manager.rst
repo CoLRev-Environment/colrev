@@ -1,17 +1,7 @@
 colrev.env.environment\_manager
 ===============================
 
-.. automodule:: colrev.env.environment_manager
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.env.environment\_manager
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.env.environment\_manager
       :template: custom-class-template.rst
       :nosignatures:
 
-      EnvironmentManager
+      colrev.env.environment\_manager.EnvironmentManager

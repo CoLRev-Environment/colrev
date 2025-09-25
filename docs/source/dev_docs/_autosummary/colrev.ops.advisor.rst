@@ -3,16 +3,6 @@ colrev.ops.advisor
 
 .. automodule:: colrev.ops.advisor
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.advisor
       :template: custom-class-template.rst
       :nosignatures:
 
-      Advisor
+      colrev.ops.advisor.Advisor

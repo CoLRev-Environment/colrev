@@ -1,6 +1,4 @@
 colrev.exceptions.RecordNotIndexableException
 =============================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: RecordNotIndexableException
+.. autoexception:: colrev.exceptions.RecordNotIndexableException

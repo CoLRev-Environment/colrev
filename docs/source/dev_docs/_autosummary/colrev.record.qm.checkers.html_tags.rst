@@ -1,13 +1,7 @@
 colrev.record.qm.checkers.html\_tags
 ====================================
 
-.. automodule:: colrev.record.qm.checkers.html_tags
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.checkers.html\_tags
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.checkers.html\_tags
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.checkers.html\_tags.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.checkers.html\_tags
       :template: custom-class-template.rst
       :nosignatures:
 
-      HTMLTagChecker
+      colrev.record.qm.checkers.html\_tags.HTMLTagChecker

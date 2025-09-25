@@ -1,6 +1,4 @@
 colrev.exceptions.NotFeedIdentifiableException
 ==============================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: NotFeedIdentifiableException
+.. autoexception:: colrev.exceptions.NotFeedIdentifiableException

@@ -1,17 +1,7 @@
 colrev.git\_repo
 ================
 
-.. automodule:: colrev.git_repo
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.git\_repo
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.git\_repo
       :template: custom-class-template.rst
       :nosignatures:
 
-      GitRepo
+      colrev.git\_repo.GitRepo

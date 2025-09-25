@@ -1,6 +1,4 @@
 colrev.exceptions.MissingRecordQualityRuleSpecification
 =======================================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: MissingRecordQualityRuleSpecification
+.. autoexception:: colrev.exceptions.MissingRecordQualityRuleSpecification

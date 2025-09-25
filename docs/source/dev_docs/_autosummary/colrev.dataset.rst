@@ -3,16 +3,6 @@ colrev.dataset
 
 .. automodule:: colrev.dataset
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.dataset
       :template: custom-class-template.rst
       :nosignatures:
 
-      Dataset
+      colrev.dataset.Dataset

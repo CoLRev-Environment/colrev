@@ -1,13 +1,7 @@
 colrev.env.local\_index\_prep
 =============================
 
-.. automodule:: colrev.env.local_index_prep
-
-
-
-
-
-
+.. automodule:: colrev.env.local\_index\_prep
 
    .. rubric:: Functions
 
@@ -15,5 +9,5 @@ colrev.env.local\_index\_prep
       :toctree:
       :nosignatures:
 
-      prepare_record_for_indexing
-      prepare_record_for_return
+      colrev.env.local\_index\_prep.prepare_record_for_indexing
+      colrev.env.local\_index\_prep.prepare_record_for_return

@@ -1,46 +1,38 @@
 colrev.ops.prep\_debug.PrepDebug
 ================================
 
-.. currentmodule:: colrev.ops.prep_debug
-
-.. autoclass:: PrepDebug
+.. autoclass:: colrev.ops.prep\_debug.PrepDebug
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~PrepDebug.check_precondition
-      ~PrepDebug.conclude
-      ~PrepDebug.decorate
-      ~PrepDebug.main
-      ~PrepDebug.notify
-      ~PrepDebug.prepare
-      ~PrepDebug.run_debug
-      ~PrepDebug.set_ids
-      ~PrepDebug.setup_custom_script
-
-
-
-
+      ~colrev.ops.prep\_debug.PrepDebug.check_precondition
+      ~colrev.ops.prep\_debug.PrepDebug.conclude
+      ~colrev.ops.prep\_debug.PrepDebug.decorate
+      ~colrev.ops.prep\_debug.PrepDebug.main
+      ~colrev.ops.prep\_debug.PrepDebug.notify
+      ~colrev.ops.prep\_debug.PrepDebug.prepare
+      ~colrev.ops.prep\_debug.PrepDebug.run_debug
+      ~colrev.ops.prep\_debug.PrepDebug.set_ids
+      ~colrev.ops.prep\_debug.PrepDebug.setup_custom_script
 
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~PrepDebug.max_retries_on_error
-      ~PrepDebug.pad
-      ~PrepDebug.polish
-      ~PrepDebug.timeout
-      ~PrepDebug.type
-      ~PrepDebug.debug_ids
-      ~PrepDebug.commit_sha
-      ~PrepDebug.first_round
-      ~PrepDebug.last_round
-      ~PrepDebug.prep_package_endpoints
+      ~colrev.ops.prep\_debug.PrepDebug.max_retries_on_error
+      ~colrev.ops.prep\_debug.PrepDebug.pad
+      ~colrev.ops.prep\_debug.PrepDebug.polish
+      ~colrev.ops.prep\_debug.PrepDebug.timeout
+      ~colrev.ops.prep\_debug.PrepDebug.type
+      ~colrev.ops.prep\_debug.PrepDebug.debug_ids
+      ~colrev.ops.prep\_debug.PrepDebug.commit_sha
+      ~colrev.ops.prep\_debug.PrepDebug.first_round
+      ~colrev.ops.prep\_debug.PrepDebug.last_round
+      ~colrev.ops.prep\_debug.PrepDebug.prep_package_endpoints

@@ -1,13 +1,7 @@
 colrev.record.qm.checkers.mostly\_all\_caps
 ===========================================
 
-.. automodule:: colrev.record.qm.checkers.mostly_all_caps
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.checkers.mostly\_all\_caps
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.checkers.mostly\_all\_caps
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.checkers.mostly\_all\_caps.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.checkers.mostly\_all\_caps
       :template: custom-class-template.rst
       :nosignatures:
 
-      MostlyAllCapsFieldChecker
+      colrev.record.qm.checkers.mostly\_all\_caps.MostlyAllCapsFieldChecker

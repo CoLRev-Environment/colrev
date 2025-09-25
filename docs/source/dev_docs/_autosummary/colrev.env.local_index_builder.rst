@@ -1,17 +1,7 @@
 colrev.env.local\_index\_builder
 ================================
 
-.. automodule:: colrev.env.local_index_builder
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.env.local\_index\_builder
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.env.local\_index\_builder
       :template: custom-class-template.rst
       :nosignatures:
 
-      LocalIndexBuilder
+      colrev.env.local\_index\_builder.LocalIndexBuilder

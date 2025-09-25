@@ -1,25 +1,7 @@
-﻿colrev.env
+colrev.env
 ==========
 
 .. automodule:: colrev.env
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 .. autosummary::
    :toctree:

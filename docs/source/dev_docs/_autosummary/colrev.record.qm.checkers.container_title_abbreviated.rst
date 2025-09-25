@@ -1,13 +1,7 @@
 colrev.record.qm.checkers.container\_title\_abbreviated
 =======================================================
 
-.. automodule:: colrev.record.qm.checkers.container_title_abbreviated
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.checkers.container\_title\_abbreviated
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.checkers.container\_title\_abbreviated
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.checkers.container\_title\_abbreviated.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.checkers.container\_title\_abbreviated
       :template: custom-class-template.rst
       :nosignatures:
 
-      ContainerTitleAbbreviatedChecker
+      colrev.record.qm.checkers.container\_title\_abbreviated.ContainerTitleAbbreviatedChecker

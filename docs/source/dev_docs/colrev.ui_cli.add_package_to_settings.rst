@@ -1,13 +1,7 @@
 colrev.ui\_cli.add\_package\_to\_settings
 =========================================
 
-.. automodule:: colrev.ui_cli.add_package_to_settings
-
-
-
-
-
-
+.. automodule:: colrev.ui\_cli.add\_package\_to\_settings
 
    .. rubric:: Functions
 
@@ -15,4 +9,4 @@ colrev.ui\_cli.add\_package\_to\_settings
       :toctree:
       :nosignatures:
 
-      add_package_to_settings
+      colrev.ui\_cli.add\_package\_to\_settings.add_package_to_settings

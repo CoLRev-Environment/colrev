@@ -1,13 +1,7 @@
 colrev.record.record\_identifier
 ================================
 
-.. automodule:: colrev.record.record_identifier
-
-
-
-
-
-
+.. automodule:: colrev.record.record\_identifier
 
    .. rubric:: Functions
 
@@ -15,6 +9,6 @@ colrev.record.record\_identifier
       :toctree:
       :nosignatures:
 
-      get_colrev_id
-      get_colrev_pdf_id
-      get_toc_key
+      colrev.record.record\_identifier.get_colrev_id
+      colrev.record.record\_identifier.get_colrev_pdf_id
+      colrev.record.record\_identifier.get_toc_key

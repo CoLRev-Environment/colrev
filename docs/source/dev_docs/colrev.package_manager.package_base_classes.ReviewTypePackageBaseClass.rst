@@ -1,29 +1,21 @@
 colrev.package\_manager.package\_base\_classes.ReviewTypePackageBaseClass
 =========================================================================
 
-.. currentmodule:: colrev.package_manager.package_base_classes
-
-.. autoclass:: ReviewTypePackageBaseClass
+.. autoclass:: colrev.package\_manager.package\_base\_classes.ReviewTypePackageBaseClass
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~ReviewTypePackageBaseClass.initialize
-
-
-
-
+      ~colrev.package\_manager.package\_base\_classes.ReviewTypePackageBaseClass.initialize
 
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~ReviewTypePackageBaseClass.ci_supported
+      ~colrev.package\_manager.package\_base\_classes.ReviewTypePackageBaseClass.ci_supported

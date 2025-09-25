@@ -3,16 +3,6 @@ colrev.ops.remove
 
 .. automodule:: colrev.ops.remove
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.remove
       :template: custom-class-template.rst
       :nosignatures:
 
-      Remove
+      colrev.ops.remove.Remove

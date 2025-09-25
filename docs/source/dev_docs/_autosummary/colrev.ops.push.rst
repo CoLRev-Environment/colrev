@@ -3,16 +3,6 @@ colrev.ops.push
 
 .. automodule:: colrev.ops.push
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.push
       :template: custom-class-template.rst
       :nosignatures:
 
-      Push
+      colrev.ops.push.Push

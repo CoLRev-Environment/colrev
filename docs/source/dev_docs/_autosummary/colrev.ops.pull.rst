@@ -3,16 +3,6 @@ colrev.ops.pull
 
 .. automodule:: colrev.ops.pull
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.pull
       :template: custom-class-template.rst
       :nosignatures:
 
-      Pull
+      colrev.ops.pull.Pull

@@ -1,6 +1,4 @@
 colrev.exceptions.RecordNotFoundException
 =========================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: RecordNotFoundException
+.. autoexception:: colrev.exceptions.RecordNotFoundException

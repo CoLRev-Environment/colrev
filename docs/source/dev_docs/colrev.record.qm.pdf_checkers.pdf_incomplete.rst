@@ -1,13 +1,7 @@
 colrev.record.qm.pdf\_checkers.pdf\_incomplete
 ==============================================
 
-.. automodule:: colrev.record.qm.pdf_checkers.pdf_incomplete
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.pdf\_checkers.pdf\_incomplete
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.pdf\_checkers.pdf\_incomplete
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.pdf\_checkers.pdf\_incomplete.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.pdf\_checkers.pdf\_incomplete
       :template: custom-class-template.rst
       :nosignatures:
 
-      PDFIncompletenessChecker
+      colrev.record.qm.pdf\_checkers.pdf\_incomplete.PDFIncompletenessChecker

@@ -1,6 +1,4 @@
 colrev.exceptions.TEIException
 ==============================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: TEIException
+.. autoexception:: colrev.exceptions.TEIException

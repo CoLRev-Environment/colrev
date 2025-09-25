@@ -3,16 +3,6 @@ colrev.ops.correct
 
 .. automodule:: colrev.ops.correct
 
-
-
-
-
-
-
-
-
-
-
    .. rubric:: Classes
 
    .. autosummary::
@@ -20,4 +10,4 @@ colrev.ops.correct
       :template: custom-class-template.rst
       :nosignatures:
 
-      Corrections
+      colrev.ops.correct.Corrections

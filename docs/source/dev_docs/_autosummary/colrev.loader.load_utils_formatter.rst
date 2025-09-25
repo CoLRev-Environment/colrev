@@ -1,17 +1,7 @@
 colrev.loader.load\_utils\_formatter
 ====================================
 
-.. automodule:: colrev.loader.load_utils_formatter
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.loader.load\_utils\_formatter
 
    .. rubric:: Classes
 
@@ -20,4 +10,4 @@ colrev.loader.load\_utils\_formatter
       :template: custom-class-template.rst
       :nosignatures:
 
-      LoadFormatter
+      colrev.loader.load\_utils\_formatter.LoadFormatter

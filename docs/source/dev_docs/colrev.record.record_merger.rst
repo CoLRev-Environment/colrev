@@ -1,13 +1,7 @@
 colrev.record.record\_merger
 ============================
 
-.. automodule:: colrev.record.record_merger
-
-
-
-
-
-
+.. automodule:: colrev.record.record\_merger
 
    .. rubric:: Functions
 
@@ -15,5 +9,5 @@ colrev.record.record\_merger
       :toctree:
       :nosignatures:
 
-      fuse_fields
-      merge
+      colrev.record.record\_merger.fuse_fields
+      colrev.record.record\_merger.merge

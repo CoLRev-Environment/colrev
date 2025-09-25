@@ -1,33 +1,25 @@
 colrev.constants.Filepaths
 ==========================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: Filepaths
+.. autoclass:: colrev.constants.Filepaths
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
-
-
-
-
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~Filepaths.COLREV_PATH
-      ~Filepaths.COVERPAGES
-      ~Filepaths.CURATIONS_PATH
-      ~Filepaths.LASTPAGES
-      ~Filepaths.LOCAL_ENVIRONMENT_DIR
-      ~Filepaths.LOCAL_INDEX_SQLITE_FILE
-      ~Filepaths.PACKAGES_ENDPOINTS_JSON
-      ~Filepaths.PACKAGES_JSON
-      ~Filepaths.PREP_REQUESTS_CACHE_FILE
-      ~Filepaths.REGISTRY_FILE
-      ~Filepaths.TEI_INDEX_DIR
-      ~Filepaths.colrev_spec
+      ~colrev.constants.Filepaths.COLREV_PATH
+      ~colrev.constants.Filepaths.COVERPAGES
+      ~colrev.constants.Filepaths.CURATIONS_PATH
+      ~colrev.constants.Filepaths.LASTPAGES
+      ~colrev.constants.Filepaths.LOCAL_ENVIRONMENT_DIR
+      ~colrev.constants.Filepaths.LOCAL_INDEX_SQLITE_FILE
+      ~colrev.constants.Filepaths.PACKAGES_ENDPOINTS_JSON
+      ~colrev.constants.Filepaths.PACKAGES_JSON
+      ~colrev.constants.Filepaths.PREP_REQUESTS_CACHE_FILE
+      ~colrev.constants.Filepaths.REGISTRY_FILE
+      ~colrev.constants.Filepaths.TEI_INDEX_DIR
+      ~colrev.constants.Filepaths.colrev_spec

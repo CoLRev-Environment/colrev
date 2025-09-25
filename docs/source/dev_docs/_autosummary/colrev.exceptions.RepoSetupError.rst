@@ -1,6 +1,4 @@
 colrev.exceptions.RepoSetupError
 ================================
 
-.. currentmodule:: colrev.exceptions
-
-.. autoexception:: RepoSetupError
+.. autoexception:: colrev.exceptions.RepoSetupError

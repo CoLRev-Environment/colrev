@@ -1,13 +1,7 @@
 colrev.record.qm.checkers.page\_range
 =====================================
 
-.. automodule:: colrev.record.qm.checkers.page_range
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.checkers.page\_range
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.checkers.page\_range
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.checkers.page\_range.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.checkers.page\_range
       :template: custom-class-template.rst
       :nosignatures:
 
-      PageRangeChecker
+      colrev.record.qm.checkers.page\_range.PageRangeChecker

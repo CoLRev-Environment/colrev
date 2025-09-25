@@ -1,9 +1,7 @@
 colrev.ops.upgrade.CoLRevVersion
 ================================
 
-.. currentmodule:: colrev.ops.upgrade
-
-.. autoclass:: CoLRevVersion
+.. autoclass:: colrev.ops.upgrade.CoLRevVersion
    :members:
    :show-inheritance:
    :inherited-members:

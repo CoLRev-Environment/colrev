@@ -1,32 +1,24 @@
 colrev.package\_manager.package\_base\_classes.DataPackageBaseClass
 ===================================================================
 
-.. currentmodule:: colrev.package_manager.package_base_classes
-
-.. autoclass:: DataPackageBaseClass
+.. autoclass:: colrev.package\_manager.package\_base\_classes.DataPackageBaseClass
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~DataPackageBaseClass.get_advice
-      ~DataPackageBaseClass.update_data
-      ~DataPackageBaseClass.update_record_status_matrix
-
-
-
-
+      ~colrev.package\_manager.package\_base\_classes.DataPackageBaseClass.get_advice
+      ~colrev.package\_manager.package\_base\_classes.DataPackageBaseClass.update_data
+      ~colrev.package\_manager.package\_base\_classes.DataPackageBaseClass.update_record_status_matrix
 
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~DataPackageBaseClass.ci_supported
-      ~DataPackageBaseClass.settings_class
+      ~colrev.package\_manager.package\_base\_classes.DataPackageBaseClass.ci_supported
+      ~colrev.package\_manager.package\_base\_classes.DataPackageBaseClass.settings_class

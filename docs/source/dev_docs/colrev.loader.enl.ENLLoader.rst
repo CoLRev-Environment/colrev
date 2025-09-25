@@ -1,31 +1,23 @@
 colrev.loader.enl.ENLLoader
 ===========================
 
-.. currentmodule:: colrev.loader.enl
-
-.. autoclass:: ENLLoader
+.. autoclass:: colrev.loader.enl.ENLLoader
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
-
-
 
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
 
-      ~ENLLoader.get_nr_records
-      ~ENLLoader.load
-      ~ENLLoader.load_records_list
-
-
-
-
+      ~colrev.loader.enl.ENLLoader.get_nr_records
+      ~colrev.loader.enl.ENLLoader.load
+      ~colrev.loader.enl.ENLLoader.load_records_list
 
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~ENLLoader.PATTERN
+      ~colrev.loader.enl.ENLLoader.PATTERN

@@ -1,23 +1,15 @@
 colrev.constants.FileSets
 =========================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: FileSets
+.. autoclass:: colrev.constants.FileSets
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
-
-
-
-
    .. rubric:: Attributes
 
    .. autosummary::
 
-      ~FileSets.DEFAULT_GIT_IGNORE_ITEMS
-      ~FileSets.DEPRECATED_GIT_IGNORE_ITEMS
+      ~colrev.constants.FileSets.DEFAULT_GIT_IGNORE_ITEMS
+      ~colrev.constants.FileSets.DEPRECATED_GIT_IGNORE_ITEMS

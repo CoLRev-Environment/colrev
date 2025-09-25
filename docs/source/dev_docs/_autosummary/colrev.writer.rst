@@ -3,24 +3,6 @@ colrev.writer
 
 .. automodule:: colrev.writer
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .. autosummary::
    :toctree:
    :template: custom-module-template.rst

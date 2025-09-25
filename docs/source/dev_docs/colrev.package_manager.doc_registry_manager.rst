@@ -1,17 +1,7 @@
 colrev.package\_manager.doc\_registry\_manager
 ==============================================
 
-.. automodule:: colrev.package_manager.doc_registry_manager
-
-
-
-
-
-
-
-
-
-
+.. automodule:: colrev.package\_manager.doc\_registry\_manager
 
    .. rubric:: Classes
 
@@ -20,5 +10,5 @@ colrev.package\_manager.doc\_registry\_manager
       :template: custom-class-template.rst
       :nosignatures:
 
-      DocRegistryManager
-      PackageDoc
+      colrev.package\_manager.doc\_registry\_manager.DocRegistryManager
+      colrev.package\_manager.doc\_registry\_manager.PackageDoc

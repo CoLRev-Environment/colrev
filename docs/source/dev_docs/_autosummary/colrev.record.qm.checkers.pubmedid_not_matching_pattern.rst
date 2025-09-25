@@ -1,13 +1,7 @@
 colrev.record.qm.checkers.pubmedid\_not\_matching\_pattern
 ==========================================================
 
-.. automodule:: colrev.record.qm.checkers.pubmedid_not_matching_pattern
-
-
-
-
-
-
+.. automodule:: colrev.record.qm.checkers.pubmedid\_not\_matching\_pattern
 
    .. rubric:: Functions
 
@@ -15,11 +9,7 @@ colrev.record.qm.checkers.pubmedid\_not\_matching\_pattern
       :toctree:
       :nosignatures:
 
-      register
-
-
-
-
+      colrev.record.qm.checkers.pubmedid\_not\_matching\_pattern.register
 
    .. rubric:: Classes
 
@@ -28,4 +18,4 @@ colrev.record.qm.checkers.pubmedid\_not\_matching\_pattern
       :template: custom-class-template.rst
       :nosignatures:
 
-      PubmedIDPatternChecker
+      colrev.record.qm.checkers.pubmedid\_not\_matching\_pattern.PubmedIDPatternChecker
