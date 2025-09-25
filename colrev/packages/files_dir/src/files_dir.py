@@ -63,6 +63,9 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.search_source = (
             colrev.package_manager.package_settings.DefaultSourceSettings(**settings)
         )
+        # self.search_source.filename = self.review_manager.path / Path(
+        #     self.search_source.filename
+        # )
 
         if not self.review_manager.in_ci_environment():
             self.pdf_preparation_operation = self.review_manager.get_pdf_prep_operation(
@@ -172,6 +175,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if len(search_rd.values()) != 0:
 
+            # TODO : should be absolute (resolved with review_manager.path)
             write_file(records_dict=search_rd, filename=self.search_source.filename)
 
         if records:
@@ -266,6 +270,10 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
     # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
     def _get_record_from_pdf_grobid(self, *, record_dict: dict) -> dict:
+        # TODO : integrate in colrev.record.record_pdf.PDFRecord
+        # start GROBID service if not running
+        # raise Exception if not available
+
         if RecordState.md_prepared == record_dict.get(Fields.STATUS, "NA"):
             return record_dict
 

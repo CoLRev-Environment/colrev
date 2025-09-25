@@ -3164,6 +3164,104 @@ def convert(
     )
 
 
+def _extract_rename_pdfs(cur_dir: Path) -> None:
+    """Extract and rename PDFs in the current directory."""
+    from colrev.env.tei_parser import TEIParser
+    import colrev.writer.write_utils
+    from colrev.packages.crossref.src import crossref_api
+
+    pdfs = list(cur_dir.glob("*.pdf"))
+    if not pdfs:
+        print("No PDFs found in the current directory.")
+        return
+
+    print(f"Extracting metadata from {len(pdfs)} PDFs...")
+
+    records = {}
+    for pdf in pdfs:
+        print(f"Processing {pdf.name}...")
+        metadata = {}
+        try:
+            # TODO : based on pdf-hash before?
+
+            # Extract metadata from the PDF
+            tei = TEIParser(pdf_path=pdf)
+            metadata = tei.get_metadata()
+            if not metadata:
+                print(f"No metadata found for {pdf.name}")
+        except Exception as e:
+            print(f"Error processing {pdf.name}: {e}")
+        metadata[Fields.FILE] = pdf.name
+        records[pdf.name] = metadata
+
+    api = crossref_api.CrossrefAPI(params={})
+
+    for record_dict in records.values():
+        record = colrev.record.record.Record(record_dict)
+        print("Retrieve from crossref: %s", record_dict[Fields.FILE])
+
+        try:
+            if "doi" in record_dict:
+                retrieved_records = [api.query_doi(doi=record_dict["doi"])]
+            else:
+                retrieved_records = api.crossref_query(
+                    record_input=record,
+                    jour_vol_iss_list=False,
+                )
+            print(f"Retrieved {len(retrieved_records)} records")
+        except colrev_exceptions.NotEnoughDataToIdentifyException:
+            print("Not enough data to identify record, skipping...")
+            continue
+        except colrev_exceptions.ServiceNotAvailableException:
+            print("Service not available, skipping...")
+            continue
+        except colrev_exceptions.RecordNotFoundInPrepSourceException:
+            continue
+        if not retrieved_records:
+            print(f"No records found for {record_dict[Fields.FILE]}")
+            continue
+        retrieved_record = retrieved_records.pop()
+        print(retrieved_record)
+
+        # import colrev.record.record_similarity
+        # if colrev.record.record_similarity.matches(record, retrieved_record):
+        for key, value in retrieved_record.data.items():
+            record.data[key] = value
+
+    id_setter = colrev.record.record_id_setter.IDSetter(
+        id_pattern=IDPattern.three_authors_year,
+        skip_local_index=False,
+    )
+    updated_records = id_setter.set_ids(records=records)
+    # print(updated_records)
+    for updated_record in updated_records.values():
+        old_path = updated_record[Fields.FILE]
+        # Rename the PDF file based on the citation key
+        new_filename = f"{updated_record[Fields.ID]}.pdf"
+        new_path = cur_dir / new_filename
+        Path(old_path).rename(new_path)
+        updated_record[Fields.FILE] = new_filename
+        print(f"Renamed {Path(old_path).name} to {new_filename}")
+
+    # consolidate with crossref
+    # TODO: rename according to citation_keys and save as references.bib
+
+    colrev.writer.write_utils.write_file(
+        updated_records, filename=Path("references.bib")
+    )
+
+
+@main.command(help_priority=34)
+@click.pass_context
+def utils(
+    ctx: click.core.Context,
+) -> None:
+
+    cur_dir = Path.cwd()
+    # TODO: choice ...
+    _extract_rename_pdfs(cur_dir)
+
+
 @main.command(help_priority=34)
 @click.pass_context
 def version(
