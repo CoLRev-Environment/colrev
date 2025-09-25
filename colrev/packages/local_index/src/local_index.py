@@ -114,11 +114,16 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def _retrieve_from_index(self) -> typing.List[dict]:
-        params = self.search_source.search_string
+        params = self.search_source.search_parameters
         query = params["query"]
 
         if not any(x in query for x in [Fields.TITLE, Fields.ABSTRACT]):
+            self.logger.warning("Adding title to query because no field specified")
+            self.logger.warning(f"Original query: {query}")
             query = f'title LIKE "%{query}%"'
+            self.logger.warning(f"Modified query: {query}")
+
+        self.logger.info(f"Querying local index: {query}")
 
         returned_records = self.local_index.search(query)
 
@@ -233,6 +238,10 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if len(params) == 0:
             search_source = create_api_source(platform=cls.endpoint, path=path)
+            query = search_source.search_string
+            # "title LIKE '%%'"}
+            search_source.search_parameters = {"query": query}
+            search_source.search_string = ""
         else:
             filename = colrev.utils.get_unique_filename(
                 base_path=path,

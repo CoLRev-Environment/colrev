@@ -85,7 +85,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         return result
 
     @classmethod
-    def __select_datset_interactively(cls) -> dict:
+    def __select_datset_interactively(cls) -> str:
         date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         temp_path = tempfile.gettempdir() / Path(f"{date_now_string}-synergy")
         temp_path.mkdir()
@@ -114,9 +114,8 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         if not dataset:
             print("No dataset selected.")
             raise ValueError
-        params_dict = {"dataset": dataset}
-        print(f"Selected dataset: {params_dict}")
-        return params_dict
+        print(f"Selected dataset: {dataset}")
+        return dataset
 
     @classmethod
     def add_endpoint(
@@ -133,12 +132,9 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
                 key, value = item.split("=")
                 params_dict[key] = value
 
-        if len(params_dict) == 0:
-            print("Retrieving available datasets")
-            params_dict = cls.__select_datset_interactively()
+        print("Retrieving available datasets")
+        dataset = cls.__select_datset_interactively()
 
-        assert "dataset" in params_dict
-        dataset = params_dict["dataset"]
         filename = colrev.utils.get_unique_filename(
             base_path=path,
             file_path_string=f"SYNERGY_{dataset.replace('/', '_').replace('_ids.csv', '')}",
@@ -148,7 +144,8 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
             platform="colrev.synergy_datasets",
             search_results_path=filename,
             search_type=SearchType.API,
-            search_string=f"dataset={dataset}",
+            search_string="",
+            search_parameters={"dataset": dataset},
             comment="",
         )
         return search_source
@@ -160,12 +157,8 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         Repo.clone_from(
             "https://github.com/asreview/synergy-dataset", temp_path, depth=1
         )
-        param_dict = {}
-        for item in self.search_source.search_string.split(";"):
-            key, value = item.split("=")
-            param_dict[key] = value
 
-        dataset_name = param_dict["dataset"]
+        dataset_name = self.search_source.search_parameters["dataset"]
         dataset_df = pd.read_csv(temp_path / Path("datasets") / dataset_name)
 
         # check data structure

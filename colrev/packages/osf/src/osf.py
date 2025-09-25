@@ -100,9 +100,11 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
             if len(params_dict) == 0:
                 search_source = create_api_source(platform=cls.endpoint, path=path)
                 # Search title per default (other fields may be supported later)
-                search_source.search_string["query"] = {
-                    "title": search_source.search_string["query"]
+                search_source.search_parameters = {
+                    "description": search_source.search_string
                 }
+
+                search_source.search_string = ""
             elif "https://api.osf.io/v2/nodes/?filter" in params_dict.get("url", ""):
                 query = (
                     params_dict["url"]
@@ -159,7 +161,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
 
         api = OSFApiQuery(
-            parameters=self.search_source.search_string["query"],
+            parameters=self.search_source.search_parameters,
             api_key=self._get_api_key(),
         )
         self.logger.info(f"Retrieve {api.overall()} records")

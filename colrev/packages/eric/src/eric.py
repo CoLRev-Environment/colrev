@@ -19,6 +19,7 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
 from colrev.packages.eric.src import eric_api
@@ -34,7 +35,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
-    search_types = [SearchType.API]
+    search_types = [SearchType.API, SearchType.DB]
     endpoint = "colrev.eric"
 
     db_url = "https://eric.ed.gov/"
@@ -116,9 +117,11 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
                     key, value = item.split("=")
                     params_dict[key] = value
 
-        # all API searches
+        search_type = colrev.utils.select_search_type(
+            search_types=cls.search_types, params=params_dict
+        )
 
-        if len(params_dict) == 0:
+        if search_type == SearchType.DB:
             search_source = create_db_source(
                 path=path,
                 platform=cls.endpoint,
@@ -127,28 +130,33 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
                 logger=logger,
             )
 
-        # pylint: disable=colrev-missed-constant-usage
-        elif "https://api.ies.ed.gov/eric/?" in params_dict["url"]:
-            url_parsed = urllib.parse.urlparse(params_dict["url"])
-            new_query = urllib.parse.parse_qs(url_parsed.query)
-            search = new_query.get("search", [""])[0]
-            start = new_query.get("start", ["0"])[0]
-            rows = new_query.get("rows", ["2000"])[0]
-            if ":" in search:
-                search = ERICSearchSource._search_split(search)
-            filename = colrev.utils.get_unique_filename(
-                base_path=path,
-                file_path_string=f"eric_{search}",
-            )
-            search_source = colrev.search_file.ExtendedSearchFile(
-                version=cls.CURRENT_SYNTAX_VERSION,
-                platform=cls.endpoint,
-                search_results_path=filename,
-                search_type=SearchType.API,
-                search_string="",
-                search_parameters={"query": search, "start": start, "rows": rows},
-                comment="",
-            )
+        if search_type == SearchType.API:
+            # pylint: disable=colrev-missed-constant-usage
+            if params_dict and "https://api.ies.ed.gov/eric/?" in params_dict["url"]:
+                url_parsed = urllib.parse.urlparse(params_dict["url"])
+                new_query = urllib.parse.parse_qs(url_parsed.query)
+                search = new_query.get("search", [""])[0]
+                start = new_query.get("start", ["0"])[0]
+                rows = new_query.get("rows", ["2000"])[0]
+                if ":" in search:
+                    search = ERICSearchSource._search_split(search)
+                filename = colrev.utils.get_unique_filename(
+                    base_path=path,
+                    file_path_string=f"eric_{search}",
+                )
+                search_source = colrev.search_file.ExtendedSearchFile(
+                    version=cls.CURRENT_SYNTAX_VERSION,
+                    platform=cls.endpoint,
+                    search_results_path=filename,
+                    search_type=SearchType.API,
+                    search_string="",
+                    search_parameters={"query": search, "start": start, "rows": rows},
+                    comment="",
+                )
+            else:
+                search_source = create_api_source(platform=cls.endpoint, path=path)
+                search_source.search_parameters = {"query": search_source.search_string}
+                search_source.search_string = ""
 
         else:
             raise colrev_exceptions.PackageParameterError(
@@ -160,7 +168,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         self, *, eric_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
 
-        api = eric_api.ERICAPI(params=self.search_source.search_string)
+        api = eric_api.ERICAPI(params=self.search_source.search_parameters)
         for record in api.get_query_return():
             eric_feed.add_update_record(record)
 

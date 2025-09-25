@@ -119,7 +119,10 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
             search_source = create_api_source(platform="colrev.github", path=path)
 
             # Checking where to search
-            search_source.search_string["scope"] = cls._choice_scope()
+            search_source.search_parameters = {}
+            search_source.search_parameters["scope"] = cls._choice_scope()
+            search_source.search_parameters["query"] = search_source.search_string
+            search_source.search_string = ""
 
         else:
             if Fields.URL in params_dict:
@@ -174,11 +177,11 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         self, github_feed: colrev.ops.search_api_feed.SearchAPIFeed
     ) -> None:
 
-        if not self.search_source.search_string:
+        if not self.search_source.search_parameters:
             raise ValueError("No search parameters defined for GitHub search source")
 
-        keywords = self.search_source.search_string.get("query", "")
-        scope = self.search_source.search_string.get("scope", "")
+        keywords = self.search_source.search_parameters.get("query", "")
+        scope = self.search_source.search_parameters.get("scope", "")
         query = f"{keywords} in:{scope}"
 
         # Getting API key

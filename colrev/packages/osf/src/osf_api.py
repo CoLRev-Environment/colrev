@@ -55,7 +55,119 @@ class OSFApiQuery:
         response = requests.get(url, headers=self.headers, timeout=60)
         return response.text
 
-    def retrieve_records(self) -> typing.List[dict]:
+    def _resolve_authors(self, record: dict) -> None:
+        """Resolve OSF authors for a single record (in place).
+
+        Replaces record[Fields.AUTHOR] (contributors URL) with a BibTeX-style string
+        'Family, Given and Family, Given'. Guarantees the URL is not kept:
+        - prefer unregistered_contributor
+        - otherwise fetch user by id (relationships.users.data.id)
+        - fallback: user id string
+        - if nothing at all is found, drop the AUTHOR field
+        """
+        href = record.get(Fields.AUTHOR)
+        if not href or not isinstance(href, str):
+            return
+
+        # tiny cache for user lookups
+        if not hasattr(self, "_user_cache"):
+            self._user_cache: dict = {}
+
+        def _name_from_attrs(uattr: dict) -> str:
+            given = (uattr.get("given_name") or "").strip()
+            family = (uattr.get("family_name") or "").strip()
+            full = (uattr.get("full_name") or "").strip()
+            if family and given:
+                return f"{family}, {given}"
+            return full or (given or family) or ""
+
+        def _fetch_user_attrs(uid: str) -> dict:
+            if not uid:
+                return {}
+            if uid in self._user_cache:
+                return self._user_cache[uid]
+            url = f"https://api.osf.io/v2/users/{uid}/"
+            try:
+                # keep it simple; no fields filter to avoid oddities
+                js = json.loads(self._query_api(url))
+                data = js.get("data", {})
+                if isinstance(data, list):
+                    data = data[0] if data else {}
+                attrs = (data.get("attributes") or {}) if isinstance(data, dict) else {}
+                if attrs:
+                    self._user_cache[uid] = attrs
+                return attrs
+            except Exception:
+                return {}
+
+        try:
+            # Pull only bibliographic contributors
+            sep = "&" if "?" in href else "?"
+            url = f"{href}{sep}filter[bibliographic]=true"
+
+            names: list[str] = []
+            id_fallbacks: list[str] = []
+
+            while url:
+                js = json.loads(self._query_api(url))
+                for item in js.get("data", []):
+                    attr = item.get("attributes") or {}
+                    if attr.get("bibliographic") is False:
+                        continue
+
+                    # 1) unregistered contributor name (verbatim)
+                    name = (attr.get("unregistered_contributor") or "").strip()
+
+                    # 2) registered user via id
+                    if not name:
+                        rel = (item.get("relationships") or {}).get("users") or {}
+                        rel_data = rel.get("data") or {}
+                        uid = rel_data.get("id") if isinstance(rel_data, dict) else None
+                        if uid:
+                            uattrs = _fetch_user_attrs(uid)
+                            name = _name_from_attrs(uattrs)
+                            if not name:
+                                # keep uid as a safe fallback
+                                id_fallbacks.append(uid)
+
+                    if name:
+                        names.append(name)
+
+                # paginate
+                links = js.get("links") or {}
+                url = links.get("next", "")
+
+            # Always overwrite AUTHOR (never keep the URL):
+            if names:
+                record[Fields.AUTHOR] = " and ".join(names)
+            elif id_fallbacks:
+                record[Fields.AUTHOR] = " and ".join(id_fallbacks)
+            else:
+                # nothing found—drop the field to avoid leaving a URL around
+                record.pop(Fields.AUTHOR, None)
+
+        except Exception:
+            # On hard failures, fall back to user ids if we can extract them without extra calls
+            try:
+                # last-chance: fetch once without filters and try to read ids
+                js = json.loads(self._query_api(href))
+                ids = []
+                for item in js.get("data", []):
+                    if (item.get("attributes") or {}).get("bibliographic") is False:
+                        continue
+                    rel = (item.get("relationships") or {}).get("users") or {}
+                    rel_data = rel.get("data") or {}
+                    uid = rel_data.get("id") if isinstance(rel_data, dict) else None
+                    if uid:
+                        ids.append(uid)
+                if ids:
+                    record[Fields.AUTHOR] = " and ".join(ids)
+                else:
+                    record.pop(Fields.AUTHOR, None)
+            except Exception:
+                record.pop(Fields.AUTHOR, None)
+
+    def retrieve_records(self) -> typing.Generator:
         """Call the API with the query parameters and return the results."""
 
         if self.next_url is None:
@@ -71,7 +183,10 @@ class OSFApiQuery:
         self.next_url = links["next"]
 
         articles = response.get("data", [])
-        return [self._create_record_dict(article) for article in articles]
+        for article in articles:
+            record = self._create_record_dict(article)
+            self._resolve_authors(record)
+            yield record
 
     def overall(self) -> int:
         """Return the overall number of records."""

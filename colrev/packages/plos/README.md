@@ -35,6 +35,21 @@ Enter the keywords:
 ```
 
 
+Format of the search-history file:
+
+```json
+{
+    "search_string": "",
+    "platform": "colrev.plos",
+    "search_results_path": "data/search/plos.bib",
+    "search_type": "API",
+    "search_parameters": {
+      "url": "http://api.plos.org/search?q=microsourcing&fl=id,abstract,author_display,title_display,journal,publication_date,volume,issue",
+    },
+    "version": "0.1.0"
+}
+```
+
 ### Load
 
 ```

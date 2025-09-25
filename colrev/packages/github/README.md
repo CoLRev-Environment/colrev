@@ -16,6 +16,22 @@ Keywords are entered after the search command is executed. The user can chose to
 colrev search --add colrev.github
 ```
 
+Format of the search-history file (API search):
+
+```json
+{
+    "search_string": "",
+    "platform": "colrev.github",
+    "search_results_path": "data/search/github_search.bib",
+    "search_type": "API",
+    "search_parameters": {
+        "scope": "url",
+        "query": "colrev"
+    },
+    "version": "0.1.0"
+}
+```
+
 ## prep
 
 GitHub can be used to provide meta data for linking and updating existing records.

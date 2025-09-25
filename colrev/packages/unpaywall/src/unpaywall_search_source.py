@@ -89,6 +89,9 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if len(params_dict) == 0:
             search_source = create_api_source(platform=cls.endpoint, path=path)
+            search_source.search_parameters = {}
+            search_source.search_parameters["query"] = search_source.search_string
+            search_source.search_string = ""
 
         # pylint: disable=colrev-missed-constant-usage
         elif "https://api.unpaywall.org/v2/search" in params_dict["url"]:
@@ -135,7 +138,7 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
         self, *, unpaywall_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
 
-        api = UnpaywallAPI(self.search_source.search_string)
+        api = UnpaywallAPI(self.search_source.search_parameters)
         for record in api.get_query_records():
             unpaywall_feed.add_update_record(record)
 

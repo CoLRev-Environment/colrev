@@ -57,7 +57,7 @@ def run_db_search(
     print(f"- Go to {Colors.ORANGE}{db_url}{Colors.END} and run the following query:")
     print()
     try:
-        print(f"{Colors.ORANGE}{source.get_query()}{Colors.END}")
+        print(f"{Colors.ORANGE}{source.search_string}{Colors.END}")
         print()
     except KeyError:
         pass

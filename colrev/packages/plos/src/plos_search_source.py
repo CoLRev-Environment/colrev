@@ -54,7 +54,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.plos_lock = Lock()
         self.language_service = colrev.env.language_service.LanguageService()
 
-        self.api = plos_api.PlosAPI(url=self.search_source.search_string)
+        self.api = plos_api.PlosAPI(url=self.search_source.search_parameters["url"])
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -93,14 +93,15 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
             if len(params) == 0:
                 search_source = create_api_source(platform=cls.endpoint, path=path)
 
-                search_source.search_string = (
-                    cls._api_url
+                search_source.search_parameters = {
+                    "url": cls._api_url
                     + "search?"
                     + "q="
                     + search_source.search_string.replace(" ", "+")
                     + "&fl=id,abstract,author_display,title_display,"
                     + "journal,publication_date,volume,issue"
-                )
+                }
+                search_source.search_string = ""
 
                 search_source.version = cls.CURRENT_SYNTAX_VERSION
 
@@ -121,7 +122,8 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
                 platform="colrev.plos",
                 search_results_path=filename,
                 search_type=SearchType.API,
-                search_string=query["url"],
+                search_string="",
+                search_parameters={"url": query["url"]},
                 comment="",
             )
 
@@ -223,14 +225,14 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _scope_excluded(self, retrieved_record_dict: dict) -> bool:
 
         if (
-            "scope" not in self.search_source.search_string
-            or "years" not in self.search_source.search_string["scope"]
+            "scope" not in self.search_source.search_parameters
+            or "years" not in self.search_source.search_parameters["scope"]
         ):
             return False
 
-        year_from, year_to = self.search_source.search_string["scope"]["years"].split(
-            "-"
-        )
+        year_from, year_to = self.search_source.search_parameters["scope"][
+            "years"
+        ].split("-")
 
         if not retrieved_record_dict.get(Fields.YEAR, -1000).isdigit():
             return True

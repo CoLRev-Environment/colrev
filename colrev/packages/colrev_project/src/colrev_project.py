@@ -17,6 +17,7 @@ from pydantic import Field
 from tqdm import tqdm
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
@@ -60,11 +61,11 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
-        if "scope" not in source.search_string:
+        if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "scope required in search_parameters"
             )
-        if "url" not in source.search_string["scope"]:
+        if "url" not in source.search_parameters["scope"]:
             raise colrev_exceptions.InvalidQueryException(
                 "url field required in search_parameters"
             )
@@ -82,7 +83,9 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         # Always API search
-
+        params = input(
+            "Enter the URL of the CoLRev project (e.g., git@github.com:...): "
+        ).strip()
         filename = colrev.utils.get_unique_filename(
             base_path=path,
             file_path_string=params.split("/")[-1],
@@ -123,7 +126,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
         # pylint: disable=colrev-missed-constant-usage
         self.logger.info(
-            f'Loading records from {self.search_source.search_string["scope"]["url"]}'
+            f'Loading records from {self.search_source.search_parameters["scope"]["url"]}'
         )
         records = project_review_manager.dataset.load_records_dict()
         shutil.rmtree(temp_path)
@@ -189,7 +192,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
             verbose_mode=self.verbose_mode,
         )
         # pylint: disable=colrev-missed-constant-usage
-        project_url = self.search_source.search_string["scope"]["url"]
+        project_url = self.search_source.search_parameters["scope"]["url"]
         project_name = project_url.split("/")[-1].rstrip(".git")
         records_to_import = self._load_records_to_import(
             project_url=project_url, project_name=project_name
@@ -207,7 +210,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self.logger.info("Importing selected records")
         for record_to_import in tqdm(list(records_to_import.values())):
-            if "condition" in self.search_source.search_string["scope"]:
+            if "condition" in self.search_source.search_parameters["scope"]:
                 res = []
                 try:
                     stringified_copy = self._get_stringified_record(
@@ -219,7 +222,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
                     query_select = "SELECT * FROM rec_df WHERE"
                     query = (
                         f"{query_select} "
-                        + f"{self.search_source.search_string['scope']['condition']}"
+                        + f"{self.search_source.search_parameters['scope']['condition']}"
                     )
                     res = ps.sqldf(query, locals())
                 except PandaSQLException:
@@ -233,7 +236,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
             # otherwise, we may also consider retrieving PDFs from local_index automatically
             # if Fields.FILE in record_to_import:
             #     record_to_import[Fields.FILE] = (
-            #         Path(self.search_source.search_string["scope"][Fields.URL])
+            #         Path(self.search_source.search_parameters["scope"][Fields.URL])
             #         / record_to_import[Fields.FILE]
             #     )
 

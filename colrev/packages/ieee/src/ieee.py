@@ -39,7 +39,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
-    search_types = [SearchType.API]
+    search_types = [SearchType.API, SearchType.DB]
     endpoint = "colrev.ieee"
 
     ci_supported: bool = Field(default=True)
@@ -115,6 +115,8 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         if search_type == SearchType.API:
             if len(params_dict) == 0:
                 search_source = create_api_source(platform=cls.endpoint, path=path)
+                search_source.search_parameters = {"query": search_source.search_string}
+                search_source.search_string = ""
 
             # pylint: disable=colrev-missed-constant-usage
             elif (
@@ -202,7 +204,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         api_key = self._get_api_key()
 
         api = colrev.packages.ieee.src.ieee_api.XPLORE(
-            parameters=self.search_source.search_string, api_key=api_key
+            parameters=self.search_source.search_parameters, api_key=api_key
         )
         while True:
             retrieved_records = api.get_records()

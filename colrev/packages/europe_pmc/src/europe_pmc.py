@@ -230,7 +230,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         assert source.search_type in self.search_types
 
-        if "query" not in source.search_string:
+        if "query" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "Query required in search_parameters"
             )
@@ -282,7 +282,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         try:
             api = europe_pmc_api.EPMCAPI(
-                params=self.search_source.search_string,
+                params=self.search_source.search_parameters,
                 email=self.email,
                 session=colrev.utils.get_cached_session(),
             )
@@ -341,6 +341,8 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if len(params_dict) == 0:
             search_source = create_api_source(platform=cls.endpoint, path=path)
+            search_source.search_parameters = {"query": search_source.search_string}
+            search_source.search_string = ""
 
         # pylint: disable=colrev-missed-constant-usage
         elif "url" in params_dict:
