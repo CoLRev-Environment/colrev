@@ -217,8 +217,7 @@ def test_pubmed_search_persists_api_results(
     saved_record = next(iter(saved_records.values()))
     assert saved_record[Fields.ID] == "000001"
     assert (
-        saved_record[Fields.TITLE]
-        == "Tracking Fitbit usage for longitudinal studies"
+        saved_record[Fields.TITLE] == "Tracking Fitbit usage for longitudinal studies"
     )
     assert saved_record[Fields.AUTHOR] == "Doe, Alex and Roe, Sam"
     assert saved_record["pubmedid"] == "37000000"

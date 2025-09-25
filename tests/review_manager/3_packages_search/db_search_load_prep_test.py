@@ -60,7 +60,14 @@ NO_CUSTOM_SOURCE = None
         (
             Path("pubmed_csv.csv"),
             "colrev.pubmed",
-            NO_CUSTOM_SOURCE,
+            colrev.search_file.ExtendedSearchFile(
+                platform="colrev.pubmed",
+                search_results_path=Path("data/search/pubmed_bib.bib"),
+                search_type=SearchType.DB,
+                search_string="digital[ti]",
+                comment="",
+                version="0.1.0",
+            ),
             Path("pubmed_csv_result.bib"),
         ),
         (
@@ -72,7 +79,14 @@ NO_CUSTOM_SOURCE = None
         (
             Path("ebsco_bib.bib"),
             "colrev.ebsco_host",
-            NO_CUSTOM_SOURCE,
+            colrev.search_file.ExtendedSearchFile(
+                platform="colrev.ebsco_host",
+                search_results_path=Path("data/search/ebsco_host_bib.bib"),
+                search_type=SearchType.DB,
+                search_string="TI digital",
+                comment="",
+                version="0.1.0",
+            ),
             Path("ebsco_bib_result.bib"),
         ),
         (
@@ -120,7 +134,14 @@ NO_CUSTOM_SOURCE = None
         (
             Path("web_of_science_bib.bib"),
             "colrev.web_of_science",
-            NO_CUSTOM_SOURCE,
+            colrev.search_file.ExtendedSearchFile(
+                platform="colrev.web_of_science",
+                search_results_path=Path("data/search/web_of_science_bib.bib"),
+                search_type=SearchType.DB,
+                search_string="TI=digital",
+                comment="",
+                version="0.1.0",
+            ),
             Path("web_of_science_bib_result.bib"),
         ),
         (
