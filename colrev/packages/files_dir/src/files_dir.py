@@ -571,12 +571,25 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         ]
         if potential_duplicates:
             self.logger.warning(
-                " %sskip record (PDF potential duplicate): %s %s (%s)",
+                " %sskip record (PDF potential duplicate):%s",
+                Colors.RED,
+                Colors.END,
+            )
+
+            self.logger.warning(
+                " %s %s %s",
                 Colors.RED,
                 new_record["file"],
                 Colors.END,
-                ",".join([r["file"] for r in potential_duplicates]),
             )
+
+            self.logger.warning(
+                " %s %s %s",
+                Colors.RED,
+                ",".join([r["file"] for r in potential_duplicates]),
+                Colors.END,
+            )
+
 
         return new_record
 

@@ -25,7 +25,7 @@ class ExtendedSearchFile(search_query.SearchFile):
         platform: str,
         search_results_path: Path,
         search_type: SearchType,
-        version: str = "0.1.0",
+        version: str,
         **kwargs: Any,
     ) -> None:
 
