@@ -26,6 +26,6 @@
    :template: custom-module-template.rst
    :recursive:
 
-   model
-   operation
-   status
+   colrev.process.model
+   colrev.process.operation
+   colrev.process.status

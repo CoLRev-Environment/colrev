@@ -147,6 +147,22 @@ Unpaywall Query Parameters
 
 * ``email:`` Your email address to access the API. If the email address is manually specified in the URL, this email will be saved and used for later requests.
 
+Format of the search-history file (interactive API search):
+
+.. code-block:: json
+
+   {
+       "search_string": "",
+       "platform": "colrev.unpaywall",
+       "search_results_path": "data/search/unpaywall.bib",
+       "search_type": "API",
+       "field": "",
+       "version": "0.1.0",
+       "search_parameters": {
+           "query": "microsourcing"
+       }
+   }
+
 pdf-get
 -------
 

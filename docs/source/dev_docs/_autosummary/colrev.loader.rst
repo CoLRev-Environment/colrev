@@ -26,14 +26,14 @@ colrev.loader
    :template: custom-module-template.rst
    :recursive:
 
-   bib
-   enl
-   json
-   load_utils
-   load_utils_formatter
-   load_utils_name_formatter
-   loader
-   md
-   nbib
-   ris
-   table
+   colrev.loader.bib
+   colrev.loader.enl
+   colrev.loader.json
+   colrev.loader.load_utils
+   colrev.loader.load_utils_formatter
+   colrev.loader.load_utils_name_formatter
+   colrev.loader.loader
+   colrev.loader.md
+   colrev.loader.nbib
+   colrev.loader.ris
+   colrev.loader.table

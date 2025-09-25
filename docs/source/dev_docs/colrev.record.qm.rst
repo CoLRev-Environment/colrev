@@ -26,6 +26,6 @@ colrev.record.qm
    :template: custom-module-template.rst
    :recursive:
 
-   checkers
-   pdf_checkers
-   quality_model
+   colrev.record.qm.checkers
+   colrev.record.qm.pdf_checkers
+   colrev.record.qm.quality_model

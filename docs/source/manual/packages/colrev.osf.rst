@@ -77,6 +77,21 @@ The search can be filtered by changing the filter parameter to one of the follow
 
    colrev search --add colrev.osf -p "https://api.osf.io/v2/nodes/?filter[description]=machine%20learning"
 
+Format of the search-history file (interactive API search):
+
+.. code-block:: json
+
+   {
+       "search_string": "",
+       "platform": "colrev.osf",
+       "search_results_path": "data/search/osf_description.bib",
+       "search_type": "API",
+       "search_parameters": {
+           "description": "fitbit"
+       },
+       "version": "0.1.0"
+   }
+
 Links
 -----
 

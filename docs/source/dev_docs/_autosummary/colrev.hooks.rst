@@ -26,7 +26,7 @@ colrev.hooks
    :template: custom-module-template.rst
    :recursive:
 
-   check
-   format
-   report
-   share
+   colrev.hooks.check
+   colrev.hooks.format
+   colrev.hooks.report
+   colrev.hooks.share

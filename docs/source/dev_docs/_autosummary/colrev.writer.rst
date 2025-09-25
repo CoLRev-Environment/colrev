@@ -26,9 +26,9 @@ colrev.writer
    :template: custom-module-template.rst
    :recursive:
 
-   bib
-   csv
-   excel
-   markdown
-   ris
-   write_utils
+   colrev.writer.bib
+   colrev.writer.csv
+   colrev.writer.excel
+   colrev.writer.markdown
+   colrev.writer.ris
+   colrev.writer.write_utils

@@ -26,4 +26,4 @@ colrev.packages
    :template: custom-module-template.rst
    :recursive:
 
-   screen_utils
+   colrev.packages.screen_utils
