@@ -17,6 +17,18 @@ Note: some datasets are "broken". For example, the [Nagtegaal_2019](https://gith
 
 The percentage of records with missing meatadata (no ids) is shown upon `colrev search`.
 
+Format of the search-history file:
+
+```json
+{
+    "search_string": "dataset=Howard_2016/Wassenaar_2017_ids.csv",
+    "platform": "colrev.synergy_datasets",
+    "search_results_path": "data/search/SYNERGY_Howard_2016_Wassenaar_2017.bib",
+    "search_type": "API",
+    "version": "0.1.0"
+}
+```
+
 ## Links
 
 - [SYNERGY Datasets](https://github.com/asreview/synergy-dataset)

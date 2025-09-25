@@ -19,6 +19,25 @@ The API search is launched with the following command:
 colrev search --add colrev.semanticscholar
 ```
 
+Format of the search-history file:
+
+```json
+{
+    "search_string": "",
+    "platform": "colrev.semanticscholar",
+    "search_results_path": "data/search/semanticscholar_keyword.bib",
+    "search_type": "API",
+    "search_parameters": {
+        "search_subject": "keyword",
+        "query": "microsourcing",
+        "year": "2020-2023",
+        "fields_of_study": "Computer Science,Medicine"
+    },
+    "version": "0.1.0"
+}
+```
+
+
 Upon entering the command above with no additional parameters, a console interface opens up, in which the user is asked to enter the parameters and query for their search.
 
 #### API search: The user interface

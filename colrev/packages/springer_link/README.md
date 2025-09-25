@@ -18,7 +18,39 @@ The user can select the search type by navigating through the list with `uparrow
 
 ### DB search
 
+Format of the search-history file (DB search):
+
+```json
+{
+    "search_string": "keyword:\"microsourcing\"",
+    "platform": "colrev.springer_link",
+    "search_results_path": "data/search/springer_link.bib",
+    "search_type": "DB",
+    "version": "0.1.0"
+}
+```
+
 ### API search
+
+Format of the search-history file (API search):
+
+```json
+{
+    "search_string": "",
+    "platform": "colrev.springer_link",
+    "search_results_path": "data/search/springer_link_api.bib",
+    "search_type": "API",
+    "search_parameters": {
+        "query": "keyword:microsourcing",
+        "subject": "Business and Management",
+        "language": "en",
+        "year": "2020",
+        "type": "Journal",
+        "page_size": "50"
+    },
+    "version": "0.1.0"
+}
+```
 
 ℹ️ Restriction: Springer Link only allows a daily quota of 500 requests. This might lead to the site being unavailable with a response code of 403.
 

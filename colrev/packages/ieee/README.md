@@ -40,6 +40,35 @@ If your search query includes Boolean operators, add "queryText=query" to the UR
 colrev search --add colrev.ieee -p "https://ieeexploreapi.ieee.org/api/v1/search/articles?booleanText=(rfid%20AND%20%22internet%20of%20things%22)"
 ```
 
+Format of the search-history file (DB search):
+
+```json
+{
+    "search_string": "microsourcing",
+    "platform": "colrev.ieee",
+    "search_results_path": "data/search/ieee.bib",
+    "search_type": "DB",
+    "version": "0.1.0"
+}
+```
+
+Format of the search-history file (API search):
+
+```json
+{
+    "search_string": "",
+    "platform": "colrev.ieee",
+    "search_results_path": "data/search/ieee_api.bib",
+    "search_type": "API",
+    "search_parameters": {
+        "querytext": "microsourcing",
+        "max_records": "200",
+        "start_record": "1"
+    },
+    "version": "0.1.0"
+}
+```
+
 ## Links
 
 - [IEEEXplore](https://ieeexplore.ieee.org/)

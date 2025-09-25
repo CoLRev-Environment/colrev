@@ -24,6 +24,39 @@ The search can be filtered by changing the filter parameter to one of the follow
 colrev search --add colrev.osf -p "https://api.osf.io/v2/nodes/?filter[description]=machine%20learning"
 ```
 
+Format of the search-history file (interactive API search):
+
+```json
+{
+    "search_string": {
+        "query": {
+            "title": "reproducibility"
+        }
+    },
+    "platform": "colrev.osf",
+    "search_results_path": "data/search/osf.bib",
+    "search_type": "API",
+    "version": "0.1.0"
+}
+```
+
+Format of the search-history file (URL-based API search):
+
+```json
+{
+    "search_string": "",
+    "platform": "colrev.osf",
+    "search_results_path": "data/search/osf_description.bib",
+    "search_type": "API",
+    "search_parameters": {
+        "query": {
+            "description": "machine learning"
+        }
+    },
+    "version": "0.1.0"
+}
+```
+
 ## Links
 
 - [OSF](https://osf.io/)
