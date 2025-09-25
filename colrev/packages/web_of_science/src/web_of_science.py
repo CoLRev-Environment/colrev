@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 from pydantic import Field
+from search_query.parser import parse
 
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
@@ -45,6 +46,16 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.search_source = search_file
+        self.validate_source(self.search_source)
+
+    @classmethod
+    def validate_source(
+        cls, search_source: colrev.search_file.ExtendedSearchFile
+    ) -> None:
+
+        if search_source.search_type == SearchType.DB:
+            print(f"Validating search string: {search_source.search_string}")
+            parse(search_source.search_string, platform="wos")
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -83,7 +94,8 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        params_dict = {params.split("=")[0]: params.split("=")[1]}
+        # params_dict = {params.split("=")[0]: params.split("=")[1]}
+        params_dict = {}
 
         search_source = create_db_source(
             path=path,

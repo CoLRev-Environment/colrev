@@ -16,6 +16,7 @@ import click_repl
 import inquirer
 import pandas as pd
 from git.exc import GitCommandError
+from search_query.exception import QuerySyntaxError
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
@@ -202,7 +203,7 @@ def catch_exception(func=None, *, handle) -> typing.Any:  # type: ignore
     def wrapper(*args, **kwargs) -> None:  # type: ignore
         try:
             return func(*args, **kwargs)
-        except colrev_exceptions.CoLRevException as exc:
+        except (colrev_exceptions.CoLRevException, QuerySyntaxError) as exc:
             if kwargs.get("verbose", False):
                 raise exc
             print(exc)

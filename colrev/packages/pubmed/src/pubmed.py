@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 
 import pandas as pd
 from pydantic import Field
+from search_query.parser import parse
 
 import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
@@ -65,14 +66,46 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.verbose_mode = verbose_mode
 
         self.search_source = search_file
-
-        self._validate_source()
+        self.validate_source(self.search_source)
 
         self.pubmed_lock = Lock()
 
         _, self.email = (
             colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
         )
+
+    @classmethod
+    def validate_source(
+        cls, search_source: colrev.search_file.ExtendedSearchFile
+    ) -> None:
+        """Validate the SearchSource (parameters etc.)"""
+
+        print(f"Validate SearchSource {search_source.search_results_path}")
+
+        if search_source.version != cls.CURRENT_SYNTAX_VERSION:
+            raise colrev_exceptions.InvalidQueryException(
+                f"PubMed version should be {cls.CURRENT_SYNTAX_VERSION}, found {search_source.version}"
+            )
+
+        # if source.search_results_path.name != self._pubmed_md_filename.name:
+        #     if "query" not in source.search_string:
+        #         raise colrev_exceptions.InvalidQueryException(
+        #             f"Source missing query search_parameter ({source.search_results_path})"
+        #         )
+
+        # if "query_file" in source.search_string:
+        # ...
+
+        if search_source.search_type == SearchType.DB:
+            print(f"Validating search string: {search_source.search_string}")
+            # TODO : TBD: pass version to search-query?
+            parse(search_source.search_string, platform="pubmed")
+
+        # if search_source.search_type == SearchType.API:
+        #     print(f'Validating search string: {search_source.search_parameters}')
+        #     parse(search_source.search_parameters, platform="pubmed_api")
+
+        print("SearchSource %s validated", search_source.search_results_path)
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -179,28 +212,6 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         else:
             raise NotImplementedError
         return search_source
-
-    def _validate_source(self) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-
-        source = self.search_source
-        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
-
-        if source.version != self.CURRENT_SYNTAX_VERSION:
-            raise colrev_exceptions.InvalidQueryException(
-                f"PubMed version should be {self.CURRENT_SYNTAX_VERSION}, found {source.version}"
-            )
-
-        # if source.search_results_path.name != self._pubmed_md_filename.name:
-        #     if "query" not in source.search_string:
-        #         raise colrev_exceptions.InvalidQueryException(
-        #             f"Source missing query search_parameter ({source.search_results_path})"
-        #         )
-
-        # if "query_file" in source.search_string:
-        # ...
-
-        self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def check_availability(self) -> None:
         """Check status (availability) of the Pubmed API"""
@@ -422,8 +433,6 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def search(self, rerun: bool) -> None:
         """Run a search of Pubmed"""
-
-        self._validate_source()
 
         pubmed_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,

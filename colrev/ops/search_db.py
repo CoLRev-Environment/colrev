@@ -135,11 +135,11 @@ def create_db_source(
 
     search_string = input("Enter search string: ")
     package_manager = PackageManager()
+    search_source_class = package_manager.get_package_endpoint_class(
+        package_type=EndpointType.search_source,
+        package_identifier=platform,
+    )
     try:
-        search_source_class = package_manager.get_package_endpoint_class(
-            package_type=EndpointType.search_source,
-            package_identifier=platform,
-        )
         version = getattr(search_source_class, "CURRENT_SYNTAX_VERSION", "0.1.0")
     except Exception:  # pragma: no cover - fall back to default
         version = "0.1.0"
@@ -152,6 +152,10 @@ def create_db_source(
         comment="",
         version=version,
     )
+    if hasattr(search_source_class, "validate_source"):
+        # prevents saving of search-file
+        search_source_class.validate_source(add_source)
+
     add_source.save(git_repo=git_repo)
 
     return add_source
