@@ -1,9 +1,7 @@
 colrev.constants.PDFPathType
 ============================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: PDFPathType
+.. autoclass:: colrev.constants.PDFPathType
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.constants.PDFPathType
    .. autosummary::
       :nosignatures:
 
-      ~PDFPathType.get_options
+      ~colrev.constants.PDFPathType.get_options
 
 
 
@@ -26,4 +24,4 @@ colrev.constants.PDFPathType
 
    .. autosummary::
 
-      ~PDFPathType.symlink
+      ~colrev.constants.PDFPathType.symlink

@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.language\_unknown.LanguageChecker
 ===========================================================
 
-.. currentmodule:: colrev.record.qm.checkers.language_unknown
-
-.. autoclass:: LanguageChecker
+.. autoclass:: colrev.record.qm.checkers.language_unknown.LanguageChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.language\_unknown.LanguageChecker
    .. autosummary::
       :nosignatures:
 
-      ~LanguageChecker.run
+      ~colrev.record.qm.checkers.language_unknown.LanguageChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.language\_unknown.LanguageChecker
 
    .. autosummary::
 
-      ~LanguageChecker.msg
+      ~colrev.record.qm.checkers.language_unknown.LanguageChecker.msg

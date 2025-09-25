@@ -15,9 +15,9 @@ colrev.loader.load\_utils\_name\_formatter
       :toctree:
       :nosignatures:
 
-      parse_names
-      parse_names_in_records
-      split_tex_string
+      colrev.loader.load_utils_name_formatter.parse_names
+      colrev.loader.load_utils_name_formatter.parse_names_in_records
+      colrev.loader.load_utils_name_formatter.split_tex_string
 
 
 
@@ -30,4 +30,4 @@ colrev.loader.load\_utils\_name\_formatter
       :template: custom-class-template.rst
       :nosignatures:
 
-      NameParser
+      colrev.loader.load_utils_name_formatter.NameParser

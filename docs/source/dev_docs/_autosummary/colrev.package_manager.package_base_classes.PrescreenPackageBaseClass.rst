@@ -1,9 +1,7 @@
 colrev.package\_manager.package\_base\_classes.PrescreenPackageBaseClass
 ========================================================================
 
-.. currentmodule:: colrev.package_manager.package_base_classes
-
-.. autoclass:: PrescreenPackageBaseClass
+.. autoclass:: colrev.package_manager.package_base_classes.PrescreenPackageBaseClass
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.package\_manager.package\_base\_classes.PrescreenPackageBaseClass
    .. autosummary::
       :nosignatures:
 
-      ~PrescreenPackageBaseClass.run_prescreen
+      ~colrev.package_manager.package_base_classes.PrescreenPackageBaseClass.run_prescreen
 
 
 
@@ -26,6 +24,6 @@ colrev.package\_manager.package\_base\_classes.PrescreenPackageBaseClass
 
    .. autosummary::
 
-      ~PrescreenPackageBaseClass.ci_supported
-      ~PrescreenPackageBaseClass.settings_class
-      ~PrescreenPackageBaseClass.settings
+      ~colrev.package_manager.package_base_classes.PrescreenPackageBaseClass.ci_supported
+      ~colrev.package_manager.package_base_classes.PrescreenPackageBaseClass.settings_class
+      ~colrev.package_manager.package_base_classes.PrescreenPackageBaseClass.settings

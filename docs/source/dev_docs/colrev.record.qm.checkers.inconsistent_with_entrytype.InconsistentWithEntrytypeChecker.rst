@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.inconsistent\_with\_entrytype.InconsistentWithEntrytypeChecker
 ========================================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.inconsistent_with_entrytype
-
-.. autoclass:: InconsistentWithEntrytypeChecker
+.. autoclass:: colrev.record.qm.checkers.inconsistent_with_entrytype.InconsistentWithEntrytypeChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.inconsistent\_with\_entrytype.InconsistentWithEntrytyp
    .. autosummary::
       :nosignatures:
 
-      ~InconsistentWithEntrytypeChecker.run
+      ~colrev.record.qm.checkers.inconsistent_with_entrytype.InconsistentWithEntrytypeChecker.run
 
 
 
@@ -26,5 +24,5 @@ colrev.record.qm.checkers.inconsistent\_with\_entrytype.InconsistentWithEntrytyp
 
    .. autosummary::
 
-      ~InconsistentWithEntrytypeChecker.msg
-      ~InconsistentWithEntrytypeChecker.record_field_inconsistencies
+      ~colrev.record.qm.checkers.inconsistent_with_entrytype.InconsistentWithEntrytypeChecker.msg
+      ~colrev.record.qm.checkers.inconsistent_with_entrytype.InconsistentWithEntrytypeChecker.record_field_inconsistencies

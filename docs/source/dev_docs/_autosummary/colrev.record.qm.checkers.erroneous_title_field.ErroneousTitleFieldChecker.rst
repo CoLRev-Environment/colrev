@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.erroneous\_title\_field.ErroneousTitleFieldChecker
 ============================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.erroneous_title_field
-
-.. autoclass:: ErroneousTitleFieldChecker
+.. autoclass:: colrev.record.qm.checkers.erroneous_title_field.ErroneousTitleFieldChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.erroneous\_title\_field.ErroneousTitleFieldChecker
    .. autosummary::
       :nosignatures:
 
-      ~ErroneousTitleFieldChecker.run
+      ~colrev.record.qm.checkers.erroneous_title_field.ErroneousTitleFieldChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.erroneous\_title\_field.ErroneousTitleFieldChecker
 
    .. autosummary::
 
-      ~ErroneousTitleFieldChecker.msg
+      ~colrev.record.qm.checkers.erroneous_title_field.ErroneousTitleFieldChecker.msg

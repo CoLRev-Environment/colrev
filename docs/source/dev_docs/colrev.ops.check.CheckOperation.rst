@@ -1,9 +1,7 @@
 colrev.ops.check.CheckOperation
 ===============================
 
-.. currentmodule:: colrev.ops.check
-
-.. autoclass:: CheckOperation
+.. autoclass:: colrev.ops.check.CheckOperation
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,10 +14,10 @@ colrev.ops.check.CheckOperation
    .. autosummary::
       :nosignatures:
 
-      ~CheckOperation.check_precondition
-      ~CheckOperation.conclude
-      ~CheckOperation.decorate
-      ~CheckOperation.notify
+      ~colrev.ops.check.CheckOperation.check_precondition
+      ~colrev.ops.check.CheckOperation.conclude
+      ~colrev.ops.check.CheckOperation.decorate
+      ~colrev.ops.check.CheckOperation.notify
 
 
 
@@ -29,4 +27,4 @@ colrev.ops.check.CheckOperation
 
    .. autosummary::
 
-      ~CheckOperation.type
+      ~colrev.ops.check.CheckOperation.type

@@ -20,4 +20,4 @@ colrev.env.resources
       :template: custom-class-template.rst
       :nosignatures:
 
-      Resources
+      colrev.env.resources.Resources

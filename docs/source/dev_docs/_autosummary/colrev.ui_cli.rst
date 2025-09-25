@@ -26,12 +26,12 @@ colrev.ui\_cli
    :template: custom-module-template.rst
    :recursive:
 
-   colrev.ui_cli.add_package_to_settings
-   colrev.ui_cli.cli
-   colrev.ui_cli.cli_status_printer
-   colrev.ui_cli.cli_validation
-   colrev.ui_cli.dedupe_errors
-   colrev.ui_cli.detect_and_add_source
-   colrev.ui_cli.search_backward_selective
-   colrev.ui_cli.setup_custom_scripts
-   colrev.ui_cli.show_printer
+   add_package_to_settings
+   cli
+   cli_status_printer
+   cli_validation
+   dedupe_errors
+   detect_and_add_source
+   search_backward_selective
+   setup_custom_scripts
+   show_printer

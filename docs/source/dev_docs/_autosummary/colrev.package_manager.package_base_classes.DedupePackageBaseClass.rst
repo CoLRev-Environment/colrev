@@ -1,9 +1,7 @@
 colrev.package\_manager.package\_base\_classes.DedupePackageBaseClass
 =====================================================================
 
-.. currentmodule:: colrev.package_manager.package_base_classes
-
-.. autoclass:: DedupePackageBaseClass
+.. autoclass:: colrev.package_manager.package_base_classes.DedupePackageBaseClass
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.package\_manager.package\_base\_classes.DedupePackageBaseClass
    .. autosummary::
       :nosignatures:
 
-      ~DedupePackageBaseClass.run_dedupe
+      ~colrev.package_manager.package_base_classes.DedupePackageBaseClass.run_dedupe
 
 
 
@@ -26,5 +24,5 @@ colrev.package\_manager.package\_base\_classes.DedupePackageBaseClass
 
    .. autosummary::
 
-      ~DedupePackageBaseClass.ci_supported
-      ~DedupePackageBaseClass.settings_class
+      ~colrev.package_manager.package_base_classes.DedupePackageBaseClass.ci_supported
+      ~colrev.package_manager.package_base_classes.DedupePackageBaseClass.settings_class

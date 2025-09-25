@@ -15,7 +15,7 @@ colrev.record.qm.pdf\_checkers.no\_text\_in\_pdf
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.pdf_checkers.no_text_in_pdf.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.pdf\_checkers.no\_text\_in\_pdf
       :template: custom-class-template.rst
       :nosignatures:
 
-      TextInPDFChecker
+      colrev.record.qm.pdf_checkers.no_text_in_pdf.TextInPDFChecker

@@ -15,7 +15,7 @@ colrev.record.qm.pdf\_checkers.pdf\_incomplete
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.pdf_checkers.pdf_incomplete.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.pdf\_checkers.pdf\_incomplete
       :template: custom-class-template.rst
       :nosignatures:
 
-      PDFIncompletenessChecker
+      colrev.record.qm.pdf_checkers.pdf_incomplete.PDFIncompletenessChecker

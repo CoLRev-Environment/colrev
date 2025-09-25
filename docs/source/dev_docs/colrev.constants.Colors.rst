@@ -1,9 +1,7 @@
 colrev.constants.Colors
 =======================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: Colors
+.. autoclass:: colrev.constants.Colors
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,8 +17,8 @@ colrev.constants.Colors
 
    .. autosummary::
 
-      ~Colors.BLUE
-      ~Colors.END
-      ~Colors.GREEN
-      ~Colors.ORANGE
-      ~Colors.RED
+      ~colrev.constants.Colors.BLUE
+      ~colrev.constants.Colors.END
+      ~colrev.constants.Colors.GREEN
+      ~colrev.constants.Colors.ORANGE
+      ~colrev.constants.Colors.RED

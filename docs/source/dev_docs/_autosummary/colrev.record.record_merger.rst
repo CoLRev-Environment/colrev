@@ -15,5 +15,5 @@ colrev.record.record\_merger
       :toctree:
       :nosignatures:
 
-      fuse_fields
-      merge
+      colrev.record.record_merger.fuse_fields
+      colrev.record.record_merger.merge

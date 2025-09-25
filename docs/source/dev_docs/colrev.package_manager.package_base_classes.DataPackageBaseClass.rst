@@ -1,9 +1,7 @@
 colrev.package\_manager.package\_base\_classes.DataPackageBaseClass
 ===================================================================
 
-.. currentmodule:: colrev.package_manager.package_base_classes
-
-.. autoclass:: DataPackageBaseClass
+.. autoclass:: colrev.package_manager.package_base_classes.DataPackageBaseClass
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,9 +14,9 @@ colrev.package\_manager.package\_base\_classes.DataPackageBaseClass
    .. autosummary::
       :nosignatures:
 
-      ~DataPackageBaseClass.get_advice
-      ~DataPackageBaseClass.update_data
-      ~DataPackageBaseClass.update_record_status_matrix
+      ~colrev.package_manager.package_base_classes.DataPackageBaseClass.get_advice
+      ~colrev.package_manager.package_base_classes.DataPackageBaseClass.update_data
+      ~colrev.package_manager.package_base_classes.DataPackageBaseClass.update_record_status_matrix
 
 
 
@@ -28,5 +26,5 @@ colrev.package\_manager.package\_base\_classes.DataPackageBaseClass
 
    .. autosummary::
 
-      ~DataPackageBaseClass.ci_supported
-      ~DataPackageBaseClass.settings_class
+      ~colrev.package_manager.package_base_classes.DataPackageBaseClass.ci_supported
+      ~colrev.package_manager.package_base_classes.DataPackageBaseClass.settings_class

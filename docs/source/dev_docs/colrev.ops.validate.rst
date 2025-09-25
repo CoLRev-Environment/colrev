@@ -20,4 +20,4 @@ colrev.ops.validate
       :template: custom-class-template.rst
       :nosignatures:
 
-      Validate
+      colrev.ops.validate.Validate

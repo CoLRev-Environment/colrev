@@ -1,9 +1,7 @@
 colrev.env.local\_index.LocalIndex
 ==================================
 
-.. currentmodule:: colrev.env.local_index
-
-.. autoclass:: LocalIndex
+.. autoclass:: colrev.env.local_index.LocalIndex
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,11 +14,11 @@ colrev.env.local\_index.LocalIndex
    .. autosummary::
       :nosignatures:
 
-      ~LocalIndex.get_curations
-      ~LocalIndex.get_fields_to_remove
-      ~LocalIndex.get_journal_rankings
-      ~LocalIndex.get_year_from_toc
-      ~LocalIndex.retrieve
-      ~LocalIndex.retrieve_based_on_colrev_pdf_id
-      ~LocalIndex.retrieve_from_toc
-      ~LocalIndex.search
+      ~colrev.env.local_index.LocalIndex.get_curations
+      ~colrev.env.local_index.LocalIndex.get_fields_to_remove
+      ~colrev.env.local_index.LocalIndex.get_journal_rankings
+      ~colrev.env.local_index.LocalIndex.get_year_from_toc
+      ~colrev.env.local_index.LocalIndex.retrieve
+      ~colrev.env.local_index.LocalIndex.retrieve_based_on_colrev_pdf_id
+      ~colrev.env.local_index.LocalIndex.retrieve_from_toc
+      ~colrev.env.local_index.LocalIndex.search

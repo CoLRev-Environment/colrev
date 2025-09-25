@@ -1,9 +1,7 @@
 colrev.ops.data.Data
 ====================
 
-.. currentmodule:: colrev.ops.data
-
-.. autoclass:: Data
+.. autoclass:: colrev.ops.data.Data
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,14 +14,14 @@ colrev.ops.data.Data
    .. autosummary::
       :nosignatures:
 
-      ~Data.check_precondition
-      ~Data.conclude
-      ~Data.decorate
-      ~Data.get_record_ids_for_synthesis
-      ~Data.main
-      ~Data.notify
-      ~Data.reading_heuristics
-      ~Data.setup_custom_script
+      ~colrev.ops.data.Data.check_precondition
+      ~colrev.ops.data.Data.conclude
+      ~colrev.ops.data.Data.decorate
+      ~colrev.ops.data.Data.get_record_ids_for_synthesis
+      ~colrev.ops.data.Data.main
+      ~colrev.ops.data.Data.notify
+      ~colrev.ops.data.Data.reading_heuristics
+      ~colrev.ops.data.Data.setup_custom_script
 
 
 
@@ -33,4 +31,4 @@ colrev.ops.data.Data
 
    .. autosummary::
 
-      ~Data.type
+      ~colrev.ops.data.Data.type

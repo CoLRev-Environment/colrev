@@ -20,4 +20,4 @@ colrev.ui\_cli.detect\_and\_add\_source
       :template: custom-class-template.rst
       :nosignatures:
 
-      CLISourceAdder
+      colrev.ui_cli.detect_and_add_source.CLISourceAdder

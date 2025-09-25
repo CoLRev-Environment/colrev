@@ -1,9 +1,7 @@
 colrev.env.local\_index\_sqlite.SQLiteIndexRankings
 ===================================================
 
-.. currentmodule:: colrev.env.local_index_sqlite
-
-.. autoclass:: SQLiteIndexRankings
+.. autoclass:: colrev.env.local_index_sqlite.SQLiteIndexRankings
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,9 +14,9 @@ colrev.env.local\_index\_sqlite.SQLiteIndexRankings
    .. autosummary::
       :nosignatures:
 
-      ~SQLiteIndexRankings.commit
-      ~SQLiteIndexRankings.insert_df
-      ~SQLiteIndexRankings.select
+      ~colrev.env.local_index_sqlite.SQLiteIndexRankings.commit
+      ~colrev.env.local_index_sqlite.SQLiteIndexRankings.insert_df
+      ~colrev.env.local_index_sqlite.SQLiteIndexRankings.select
 
 
 
@@ -28,8 +26,8 @@ colrev.env.local\_index\_sqlite.SQLiteIndexRankings
 
    .. autosummary::
 
-      ~SQLiteIndexRankings.CREATE_TABLE_QUERY
-      ~SQLiteIndexRankings.INDEX_NAME
-      ~SQLiteIndexRankings.KEYS
-      ~SQLiteIndexRankings.SELECT_QUERY
-      ~SQLiteIndexRankings.connection
+      ~colrev.env.local_index_sqlite.SQLiteIndexRankings.CREATE_TABLE_QUERY
+      ~colrev.env.local_index_sqlite.SQLiteIndexRankings.INDEX_NAME
+      ~colrev.env.local_index_sqlite.SQLiteIndexRankings.KEYS
+      ~colrev.env.local_index_sqlite.SQLiteIndexRankings.SELECT_QUERY
+      ~colrev.env.local_index_sqlite.SQLiteIndexRankings.connection

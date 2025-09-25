@@ -1,9 +1,7 @@
 colrev.env.resources.Resources
 ==============================
 
-.. currentmodule:: colrev.env.resources
-
-.. autoclass:: Resources
+.. autoclass:: colrev.env.resources.Resources
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,4 +14,4 @@ colrev.env.resources.Resources
    .. autosummary::
       :nosignatures:
 
-      ~Resources.install_curated_resource
+      ~colrev.env.resources.Resources.install_curated_resource

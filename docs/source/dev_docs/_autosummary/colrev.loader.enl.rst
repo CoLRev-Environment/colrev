@@ -20,7 +20,7 @@ colrev.loader.enl
       :template: custom-class-template.rst
       :nosignatures:
 
-      ENLLoader
+      colrev.loader.enl.ENLLoader
 
 
 
@@ -31,5 +31,5 @@ colrev.loader.enl
    .. autosummary::
       :toctree:
 
-      NextLine
-      ParseError
+      colrev.loader.enl.NextLine
+      colrev.loader.enl.ParseError

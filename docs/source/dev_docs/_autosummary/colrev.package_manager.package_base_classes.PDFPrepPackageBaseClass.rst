@@ -1,9 +1,7 @@
 colrev.package\_manager.package\_base\_classes.PDFPrepPackageBaseClass
 ======================================================================
 
-.. currentmodule:: colrev.package_manager.package_base_classes
-
-.. autoclass:: PDFPrepPackageBaseClass
+.. autoclass:: colrev.package_manager.package_base_classes.PDFPrepPackageBaseClass
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.package\_manager.package\_base\_classes.PDFPrepPackageBaseClass
    .. autosummary::
       :nosignatures:
 
-      ~PDFPrepPackageBaseClass.prep_pdf
+      ~colrev.package_manager.package_base_classes.PDFPrepPackageBaseClass.prep_pdf
 
 
 
@@ -26,5 +24,5 @@ colrev.package\_manager.package\_base\_classes.PDFPrepPackageBaseClass
 
    .. autosummary::
 
-      ~PDFPrepPackageBaseClass.ci_supported
-      ~PDFPrepPackageBaseClass.settings_class
+      ~colrev.package_manager.package_base_classes.PDFPrepPackageBaseClass.ci_supported
+      ~colrev.package_manager.package_base_classes.PDFPrepPackageBaseClass.settings_class

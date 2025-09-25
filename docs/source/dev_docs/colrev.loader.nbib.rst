@@ -20,7 +20,7 @@ colrev.loader.nbib
       :template: custom-class-template.rst
       :nosignatures:
 
-      NBIBLoader
+      colrev.loader.nbib.NBIBLoader
 
 
 
@@ -31,5 +31,5 @@ colrev.loader.nbib
    .. autosummary::
       :toctree:
 
-      NextLine
-      ParseError
+      colrev.loader.nbib.NextLine
+      colrev.loader.nbib.ParseError

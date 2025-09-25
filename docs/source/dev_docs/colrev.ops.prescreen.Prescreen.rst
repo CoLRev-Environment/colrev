@@ -1,9 +1,7 @@
 colrev.ops.prescreen.Prescreen
 ==============================
 
-.. currentmodule:: colrev.ops.prescreen
-
-.. autoclass:: Prescreen
+.. autoclass:: colrev.ops.prescreen.Prescreen
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,20 +14,20 @@ colrev.ops.prescreen.Prescreen
    .. autosummary::
       :nosignatures:
 
-      ~Prescreen.check_precondition
-      ~Prescreen.conclude
-      ~Prescreen.create_prescreen_split
-      ~Prescreen.decorate
-      ~Prescreen.exclude_records
-      ~Prescreen.export_table
-      ~Prescreen.get_data
-      ~Prescreen.import_table
-      ~Prescreen.include_all_in_prescreen
-      ~Prescreen.include_records
-      ~Prescreen.main
-      ~Prescreen.notify
-      ~Prescreen.prescreen
-      ~Prescreen.setup_custom_script
+      ~colrev.ops.prescreen.Prescreen.check_precondition
+      ~colrev.ops.prescreen.Prescreen.conclude
+      ~colrev.ops.prescreen.Prescreen.create_prescreen_split
+      ~colrev.ops.prescreen.Prescreen.decorate
+      ~colrev.ops.prescreen.Prescreen.exclude_records
+      ~colrev.ops.prescreen.Prescreen.export_table
+      ~colrev.ops.prescreen.Prescreen.get_data
+      ~colrev.ops.prescreen.Prescreen.import_table
+      ~colrev.ops.prescreen.Prescreen.include_all_in_prescreen
+      ~colrev.ops.prescreen.Prescreen.include_records
+      ~colrev.ops.prescreen.Prescreen.main
+      ~colrev.ops.prescreen.Prescreen.notify
+      ~colrev.ops.prescreen.Prescreen.prescreen
+      ~colrev.ops.prescreen.Prescreen.setup_custom_script
 
 
 
@@ -39,4 +37,4 @@ colrev.ops.prescreen.Prescreen
 
    .. autosummary::
 
-      ~Prescreen.type
+      ~colrev.ops.prescreen.Prescreen.type

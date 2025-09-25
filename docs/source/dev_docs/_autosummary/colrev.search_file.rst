@@ -20,4 +20,4 @@ colrev.search\_file
       :template: custom-class-template.rst
       :nosignatures:
 
-      ExtendedSearchFile
+      colrev.search_file.ExtendedSearchFile

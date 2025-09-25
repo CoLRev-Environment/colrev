@@ -15,7 +15,7 @@ colrev.ops.search\_api\_feed
       :toctree:
       :nosignatures:
 
-      create_api_source
+      colrev.ops.search_api_feed.create_api_source
 
 
 
@@ -28,4 +28,4 @@ colrev.ops.search\_api\_feed
       :template: custom-class-template.rst
       :nosignatures:
 
-      SearchAPIFeed
+      colrev.ops.search_api_feed.SearchAPIFeed

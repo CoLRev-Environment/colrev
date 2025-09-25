@@ -1,9 +1,7 @@
 colrev.ops.push.Push
 ====================
 
-.. currentmodule:: colrev.ops.push
-
-.. autoclass:: Push
+.. autoclass:: colrev.ops.push.Push
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,11 +14,11 @@ colrev.ops.push.Push
    .. autosummary::
       :nosignatures:
 
-      ~Push.check_precondition
-      ~Push.conclude
-      ~Push.decorate
-      ~Push.main
-      ~Push.notify
+      ~colrev.ops.push.Push.check_precondition
+      ~colrev.ops.push.Push.conclude
+      ~colrev.ops.push.Push.decorate
+      ~colrev.ops.push.Push.main
+      ~colrev.ops.push.Push.notify
 
 
 
@@ -30,4 +28,4 @@ colrev.ops.push.Push
 
    .. autosummary::
 
-      ~Push.type
+      ~colrev.ops.push.Push.type

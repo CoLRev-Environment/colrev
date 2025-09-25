@@ -20,4 +20,4 @@ colrev.ops.screen
       :template: custom-class-template.rst
       :nosignatures:
 
-      Screen
+      colrev.ops.screen.Screen

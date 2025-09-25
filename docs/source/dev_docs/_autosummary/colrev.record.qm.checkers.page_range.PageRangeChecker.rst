@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.page\_range.PageRangeChecker
 ======================================================
 
-.. currentmodule:: colrev.record.qm.checkers.page_range
-
-.. autoclass:: PageRangeChecker
+.. autoclass:: colrev.record.qm.checkers.page_range.PageRangeChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.page\_range.PageRangeChecker
    .. autosummary::
       :nosignatures:
 
-      ~PageRangeChecker.run
+      ~colrev.record.qm.checkers.page_range.PageRangeChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.page\_range.PageRangeChecker
 
    .. autosummary::
 
-      ~PageRangeChecker.msg
+      ~colrev.record.qm.checkers.page_range.PageRangeChecker.msg

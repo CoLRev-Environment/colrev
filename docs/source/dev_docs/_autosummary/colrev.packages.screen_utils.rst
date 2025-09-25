@@ -15,4 +15,4 @@ colrev.packages.screen\_utils
       :toctree:
       :nosignatures:
 
-      get_screening_criteria_from_user_input
+      colrev.packages.screen_utils.get_screening_criteria_from_user_input

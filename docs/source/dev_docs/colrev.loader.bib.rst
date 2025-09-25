@@ -15,15 +15,15 @@ colrev.loader.bib
       :toctree:
       :nosignatures:
 
-      check_valid_bib
-      extract_content
-      handle_new_entry
-      parse_provenance
-      process_key_value
-      process_lines
-      run_fix_bib_file
-      run_resolve_crossref
-      store_current_key_value
+      colrev.loader.bib.check_valid_bib
+      colrev.loader.bib.extract_content
+      colrev.loader.bib.handle_new_entry
+      colrev.loader.bib.parse_provenance
+      colrev.loader.bib.process_key_value
+      colrev.loader.bib.process_lines
+      colrev.loader.bib.run_fix_bib_file
+      colrev.loader.bib.run_resolve_crossref
+      colrev.loader.bib.store_current_key_value
 
 
 
@@ -36,4 +36,4 @@ colrev.loader.bib
       :template: custom-class-template.rst
       :nosignatures:
 
-      BIBLoader
+      colrev.loader.bib.BIBLoader

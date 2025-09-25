@@ -1,9 +1,7 @@
 colrev.record.qm.quality\_model.QualityModel
 ============================================
 
-.. currentmodule:: colrev.record.qm.quality_model
-
-.. autoclass:: QualityModel
+.. autoclass:: colrev.record.qm.quality_model.QualityModel
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,8 +14,8 @@ colrev.record.qm.quality\_model.QualityModel
    .. autosummary::
       :nosignatures:
 
-      ~QualityModel.register_checker
-      ~QualityModel.run
+      ~colrev.record.qm.quality_model.QualityModel.register_checker
+      ~colrev.record.qm.quality_model.QualityModel.run
 
 
 
@@ -27,4 +25,4 @@ colrev.record.qm.quality\_model.QualityModel
 
    .. autosummary::
 
-      ~QualityModel.checkers
+      ~colrev.record.qm.quality_model.QualityModel.checkers

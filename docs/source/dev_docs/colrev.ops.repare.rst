@@ -20,4 +20,4 @@ colrev.ops.repare
       :template: custom-class-template.rst
       :nosignatures:
 
-      Repare
+      colrev.ops.repare.Repare

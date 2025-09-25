@@ -20,4 +20,4 @@ colrev.env.grobid\_service
       :template: custom-class-template.rst
       :nosignatures:
 
-      GrobidService
+      colrev.env.grobid_service.GrobidService

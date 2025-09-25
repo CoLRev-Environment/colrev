@@ -1,9 +1,7 @@
 colrev.constants.FieldSet
 =========================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: FieldSet
+.. autoclass:: colrev.constants.FieldSet
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,10 +17,10 @@ colrev.constants.FieldSet
 
    .. autosummary::
 
-      ~FieldSet.IDENTIFYING_FIELD_KEYS
-      ~FieldSet.LIST_FIELDS
-      ~FieldSet.MASTERDATA
-      ~FieldSet.NO_PROVENANCE
-      ~FieldSet.PROVENANCE_KEYS
-      ~FieldSet.STANDARDIZED_FIELD_KEYS
-      ~FieldSet.TIME_VARIANT_FIELDS
+      ~colrev.constants.FieldSet.IDENTIFYING_FIELD_KEYS
+      ~colrev.constants.FieldSet.LIST_FIELDS
+      ~colrev.constants.FieldSet.MASTERDATA
+      ~colrev.constants.FieldSet.NO_PROVENANCE
+      ~colrev.constants.FieldSet.PROVENANCE_KEYS
+      ~colrev.constants.FieldSet.STANDARDIZED_FIELD_KEYS
+      ~colrev.constants.FieldSet.TIME_VARIANT_FIELDS

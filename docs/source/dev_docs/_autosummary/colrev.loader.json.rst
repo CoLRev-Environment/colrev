@@ -20,4 +20,4 @@ colrev.loader.json
       :template: custom-class-template.rst
       :nosignatures:
 
-      JSONLoader
+      colrev.loader.json.JSONLoader

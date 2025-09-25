@@ -15,4 +15,4 @@ colrev.hooks.report
       :toctree:
       :nosignatures:
 
-      main
+      colrev.hooks.report.main

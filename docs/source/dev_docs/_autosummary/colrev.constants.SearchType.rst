@@ -1,9 +1,7 @@
 colrev.constants.SearchType
 ===========================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: SearchType
+.. autoclass:: colrev.constants.SearchType
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.constants.SearchType
    .. autosummary::
       :nosignatures:
 
-      ~SearchType.get_options
+      ~colrev.constants.SearchType.get_options
 
 
 
@@ -26,11 +24,11 @@ colrev.constants.SearchType
 
    .. autosummary::
 
-      ~SearchType.API
-      ~SearchType.DB
-      ~SearchType.TOC
-      ~SearchType.BACKWARD_SEARCH
-      ~SearchType.FORWARD_SEARCH
-      ~SearchType.FILES
-      ~SearchType.OTHER
-      ~SearchType.MD
+      ~colrev.constants.SearchType.API
+      ~colrev.constants.SearchType.DB
+      ~colrev.constants.SearchType.TOC
+      ~colrev.constants.SearchType.BACKWARD_SEARCH
+      ~colrev.constants.SearchType.FORWARD_SEARCH
+      ~colrev.constants.SearchType.FILES
+      ~colrev.constants.SearchType.OTHER
+      ~colrev.constants.SearchType.MD

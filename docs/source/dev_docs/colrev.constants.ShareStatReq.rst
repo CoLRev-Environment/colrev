@@ -1,9 +1,7 @@
 colrev.constants.ShareStatReq
 =============================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: ShareStatReq
+.. autoclass:: colrev.constants.ShareStatReq
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.constants.ShareStatReq
    .. autosummary::
       :nosignatures:
 
-      ~ShareStatReq.get_options
+      ~colrev.constants.ShareStatReq.get_options
 
 
 
@@ -26,7 +24,7 @@ colrev.constants.ShareStatReq
 
    .. autosummary::
 
-      ~ShareStatReq.none
-      ~ShareStatReq.processed
-      ~ShareStatReq.screened
-      ~ShareStatReq.completed
+      ~colrev.constants.ShareStatReq.none
+      ~colrev.constants.ShareStatReq.processed
+      ~colrev.constants.ShareStatReq.screened
+      ~colrev.constants.ShareStatReq.completed

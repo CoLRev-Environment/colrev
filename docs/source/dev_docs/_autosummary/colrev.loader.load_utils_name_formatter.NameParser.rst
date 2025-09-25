@@ -1,9 +1,7 @@
 colrev.loader.load\_utils\_name\_formatter.NameParser
 =====================================================
 
-.. currentmodule:: colrev.loader.load_utils_name_formatter
-
-.. autoclass:: NameParser
+.. autoclass:: colrev.loader.load_utils_name_formatter.NameParser
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,5 +14,5 @@ colrev.loader.load\_utils\_name\_formatter.NameParser
    .. autosummary::
       :nosignatures:
 
-      ~NameParser.format_name
-      ~NameParser.parse_string
+      ~colrev.loader.load_utils_name_formatter.NameParser.format_name
+      ~colrev.loader.load_utils_name_formatter.NameParser.parse_string

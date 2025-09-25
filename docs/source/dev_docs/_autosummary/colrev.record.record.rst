@@ -20,4 +20,4 @@ colrev.record.record
       :template: custom-class-template.rst
       :nosignatures:
 
-      Record
+      colrev.record.record.Record

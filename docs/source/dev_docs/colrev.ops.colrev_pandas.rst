@@ -15,8 +15,8 @@ colrev.ops.colrev\_pandas
       :toctree:
       :nosignatures:
 
-      add_from_tei
-      extract_pdfs_for_data_extraction
-      load_df
-      load_resolved_papers
-      save
+      colrev.ops.colrev_pandas.add_from_tei
+      colrev.ops.colrev_pandas.extract_pdfs_for_data_extraction
+      colrev.ops.colrev_pandas.load_df
+      colrev.ops.colrev_pandas.load_resolved_papers
+      colrev.ops.colrev_pandas.save

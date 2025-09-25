@@ -1,9 +1,7 @@
 colrev.ops.search.Search
 ========================
 
-.. currentmodule:: colrev.ops.search
-
-.. autoclass:: Search
+.. autoclass:: colrev.ops.search.Search
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,15 +14,15 @@ colrev.ops.search.Search
    .. autosummary::
       :nosignatures:
 
-      ~Search.add_most_likely_sources
-      ~Search.add_source_and_search
-      ~Search.check_precondition
-      ~Search.conclude
-      ~Search.decorate
-      ~Search.get_new_search_files
-      ~Search.get_new_source_heuristic
-      ~Search.main
-      ~Search.notify
+      ~colrev.ops.search.Search.add_most_likely_sources
+      ~colrev.ops.search.Search.add_source_and_search
+      ~colrev.ops.search.Search.check_precondition
+      ~colrev.ops.search.Search.conclude
+      ~colrev.ops.search.Search.decorate
+      ~colrev.ops.search.Search.get_new_search_files
+      ~colrev.ops.search.Search.get_new_source_heuristic
+      ~colrev.ops.search.Search.main
+      ~colrev.ops.search.Search.notify
 
 
 
@@ -34,4 +32,4 @@ colrev.ops.search.Search
 
    .. autosummary::
 
-      ~Search.type
+      ~colrev.ops.search.Search.type

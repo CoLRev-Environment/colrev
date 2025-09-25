@@ -15,7 +15,7 @@ colrev.record.qm.checkers.page\_range
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.page_range.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.page\_range
       :template: custom-class-template.rst
       :nosignatures:
 
-      PageRangeChecker
+      colrev.record.qm.checkers.page_range.PageRangeChecker

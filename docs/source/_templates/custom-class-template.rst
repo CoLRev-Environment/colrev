@@ -1,8 +1,6 @@
 {{ fullname | escape | underline}}
 
-.. currentmodule:: {{ module }}
-
-.. autoclass:: {{ objname }}
+.. autoclass:: {{ fullname }}
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@
       :nosignatures:
    {% for item in methods %}
       {%- if not item.startswith('_') %}
-      ~{{ name }}.{{ item }}
+      ~{{ fullname }}.{{ item }}
       {%- endif -%}
    {%- endfor %}
    {% endif %}
@@ -28,7 +26,7 @@
 
    .. autosummary::
    {% for item in attributes %}
-      ~{{ name }}.{{ item }}
+      ~{{ fullname }}.{{ item }}
    {%- endfor %}
    {% endif %}
    {% endblock %}

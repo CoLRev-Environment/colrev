@@ -1,9 +1,7 @@
 colrev.ops.pull.Pull
 ====================
 
-.. currentmodule:: colrev.ops.pull
-
-.. autoclass:: Pull
+.. autoclass:: colrev.ops.pull.Pull
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,11 +14,11 @@ colrev.ops.pull.Pull
    .. autosummary::
       :nosignatures:
 
-      ~Pull.check_precondition
-      ~Pull.conclude
-      ~Pull.decorate
-      ~Pull.main
-      ~Pull.notify
+      ~colrev.ops.pull.Pull.check_precondition
+      ~colrev.ops.pull.Pull.conclude
+      ~colrev.ops.pull.Pull.decorate
+      ~colrev.ops.pull.Pull.main
+      ~colrev.ops.pull.Pull.notify
 
 
 
@@ -30,4 +28,4 @@ colrev.ops.pull.Pull
 
    .. autosummary::
 
-      ~Pull.type
+      ~colrev.ops.pull.Pull.type

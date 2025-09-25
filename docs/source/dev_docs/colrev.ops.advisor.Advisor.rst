@@ -1,9 +1,7 @@
 colrev.ops.advisor.Advisor
 ==========================
 
-.. currentmodule:: colrev.ops.advisor
-
-.. autoclass:: Advisor
+.. autoclass:: colrev.ops.advisor.Advisor
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,6 +14,6 @@ colrev.ops.advisor.Advisor
    .. autosummary::
       :nosignatures:
 
-      ~Advisor.get_instructions
-      ~Advisor.get_review_instructions
-      ~Advisor.get_sharing_instructions
+      ~colrev.ops.advisor.Advisor.get_instructions
+      ~colrev.ops.advisor.Advisor.get_review_instructions
+      ~colrev.ops.advisor.Advisor.get_sharing_instructions

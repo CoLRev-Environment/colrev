@@ -1,9 +1,7 @@
 colrev.package\_manager.package\_base\_classes.PDFGetManPackageBaseClass
 ========================================================================
 
-.. currentmodule:: colrev.package_manager.package_base_classes
-
-.. autoclass:: PDFGetManPackageBaseClass
+.. autoclass:: colrev.package_manager.package_base_classes.PDFGetManPackageBaseClass
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.package\_manager.package\_base\_classes.PDFGetManPackageBaseClass
    .. autosummary::
       :nosignatures:
 
-      ~PDFGetManPackageBaseClass.pdf_get_man
+      ~colrev.package_manager.package_base_classes.PDFGetManPackageBaseClass.pdf_get_man
 
 
 
@@ -26,5 +24,5 @@ colrev.package\_manager.package\_base\_classes.PDFGetManPackageBaseClass
 
    .. autosummary::
 
-      ~PDFGetManPackageBaseClass.ci_supported
-      ~PDFGetManPackageBaseClass.settings_class
+      ~colrev.package_manager.package_base_classes.PDFGetManPackageBaseClass.ci_supported
+      ~colrev.package_manager.package_base_classes.PDFGetManPackageBaseClass.settings_class

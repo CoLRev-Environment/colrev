@@ -9,7 +9,7 @@
    .. autosummary::
       :toctree:
    {% for item in attributes %}
-      {{ item }}
+      {{ item if "." in item else fullname ~ "." ~ item }}
    {%- endfor %}
    {% endif %}
    {% endblock %}
@@ -22,7 +22,7 @@
       :toctree:
       :nosignatures:
    {% for item in functions %}
-      {{ item }}
+      {{ item if "." in item else fullname ~ "." ~ item }}
    {%- endfor %}
    {% endif %}
    {% endblock %}
@@ -36,7 +36,7 @@
       :template: custom-class-template.rst
       :nosignatures:
    {% for item in classes %}
-      {{ item }}
+      {{ item if "." in item else fullname ~ "." ~ item }}
    {%- endfor %}
    {% endif %}
    {% endblock %}
@@ -48,7 +48,7 @@
    .. autosummary::
       :toctree:
    {% for item in exceptions %}
-      {{ item }}
+      {{ item if "." in item else fullname ~ "." ~ item }}
    {%- endfor %}
    {% endif %}
    {% endblock %}

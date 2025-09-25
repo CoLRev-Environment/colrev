@@ -1,9 +1,7 @@
 colrev.package\_manager.package\_settings.DefaultSettings
 =========================================================
 
-.. currentmodule:: colrev.package_manager.package_settings
-
-.. autoclass:: DefaultSettings
+.. autoclass:: colrev.package_manager.package_settings.DefaultSettings
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,4 +17,4 @@ colrev.package\_manager.package\_settings.DefaultSettings
 
    .. autosummary::
 
-      ~DefaultSettings.endpoint
+      ~colrev.package_manager.package_settings.DefaultSettings.endpoint

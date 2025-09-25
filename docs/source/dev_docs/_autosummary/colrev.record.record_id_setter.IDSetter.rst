@@ -1,9 +1,7 @@
 colrev.record.record\_id\_setter.IDSetter
 =========================================
 
-.. currentmodule:: colrev.record.record_id_setter
-
-.. autoclass:: IDSetter
+.. autoclass:: colrev.record.record_id_setter.IDSetter
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,4 +14,4 @@ colrev.record.record\_id\_setter.IDSetter
    .. autosummary::
       :nosignatures:
 
-      ~IDSetter.set_ids
+      ~colrev.record.record_id_setter.IDSetter.set_ids

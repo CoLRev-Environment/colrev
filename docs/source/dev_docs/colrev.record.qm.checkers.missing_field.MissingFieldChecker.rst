@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.missing\_field.MissingFieldChecker
 ============================================================
 
-.. currentmodule:: colrev.record.qm.checkers.missing_field
-
-.. autoclass:: MissingFieldChecker
+.. autoclass:: colrev.record.qm.checkers.missing_field.MissingFieldChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.missing\_field.MissingFieldChecker
    .. autosummary::
       :nosignatures:
 
-      ~MissingFieldChecker.run
+      ~colrev.record.qm.checkers.missing_field.MissingFieldChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.missing\_field.MissingFieldChecker
 
    .. autosummary::
 
-      ~MissingFieldChecker.msg
+      ~colrev.record.qm.checkers.missing_field.MissingFieldChecker.msg

@@ -20,5 +20,5 @@ colrev.package\_manager.doc\_registry\_manager
       :template: custom-class-template.rst
       :nosignatures:
 
-      DocRegistryManager
-      PackageDoc
+      colrev.package_manager.doc_registry_manager.DocRegistryManager
+      colrev.package_manager.doc_registry_manager.PackageDoc

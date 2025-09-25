@@ -20,4 +20,4 @@ colrev.ops.prep\_debug
       :template: custom-class-template.rst
       :nosignatures:
 
-      PrepDebug
+      colrev.ops.prep_debug.PrepDebug

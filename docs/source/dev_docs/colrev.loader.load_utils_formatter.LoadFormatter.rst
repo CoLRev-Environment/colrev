@@ -1,9 +1,7 @@
 colrev.loader.load\_utils\_formatter.LoadFormatter
 ==================================================
 
-.. currentmodule:: colrev.loader.load_utils_formatter
-
-.. autoclass:: LoadFormatter
+.. autoclass:: colrev.loader.load_utils_formatter.LoadFormatter
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,4 +14,4 @@ colrev.loader.load\_utils\_formatter.LoadFormatter
    .. autosummary::
       :nosignatures:
 
-      ~LoadFormatter.run
+      ~colrev.loader.load_utils_formatter.LoadFormatter.run

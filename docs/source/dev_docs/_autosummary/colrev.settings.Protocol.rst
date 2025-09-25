@@ -1,9 +1,7 @@
 colrev.settings.Protocol
 ========================
 
-.. currentmodule:: colrev.settings
-
-.. autoclass:: Protocol
+.. autoclass:: colrev.settings.Protocol
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,4 +17,4 @@ colrev.settings.Protocol
 
    .. autosummary::
 
-      ~Protocol.url
+      ~colrev.settings.Protocol.url

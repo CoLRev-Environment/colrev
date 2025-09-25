@@ -20,4 +20,4 @@ colrev.package\_manager.package\_settings
       :template: custom-class-template.rst
       :nosignatures:
 
-      DefaultSettings
+      colrev.package_manager.package_settings.DefaultSettings

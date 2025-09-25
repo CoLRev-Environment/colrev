@@ -15,7 +15,7 @@ colrev.record.qm.checkers.language\_format\_error
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.language_format_error.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.language\_format\_error
       :template: custom-class-template.rst
       :nosignatures:
 
-      LanguageFormatChecker
+      colrev.record.qm.checkers.language_format_error.LanguageFormatChecker

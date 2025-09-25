@@ -1,9 +1,7 @@
 colrev.loader.nbib.NBIBLoader
 =============================
 
-.. currentmodule:: colrev.loader.nbib
-
-.. autoclass:: NBIBLoader
+.. autoclass:: colrev.loader.nbib.NBIBLoader
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,9 +14,9 @@ colrev.loader.nbib.NBIBLoader
    .. autosummary::
       :nosignatures:
 
-      ~NBIBLoader.get_nr_records
-      ~NBIBLoader.load
-      ~NBIBLoader.load_records_list
+      ~colrev.loader.nbib.NBIBLoader.get_nr_records
+      ~colrev.loader.nbib.NBIBLoader.load
+      ~colrev.loader.nbib.NBIBLoader.load_records_list
 
 
 
@@ -28,4 +26,4 @@ colrev.loader.nbib.NBIBLoader
 
    .. autosummary::
 
-      ~NBIBLoader.PATTERN
+      ~colrev.loader.nbib.NBIBLoader.PATTERN

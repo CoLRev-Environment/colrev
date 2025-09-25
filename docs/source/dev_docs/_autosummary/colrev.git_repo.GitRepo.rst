@@ -1,9 +1,7 @@
 colrev.git\_repo.GitRepo
 ========================
 
-.. currentmodule:: colrev.git_repo
-
-.. autoclass:: GitRepo
+.. autoclass:: colrev.git_repo.GitRepo
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,24 +14,24 @@ colrev.git\_repo.GitRepo
    .. autosummary::
       :nosignatures:
 
-      ~GitRepo.add_changes
-      ~GitRepo.add_setting_changes
-      ~GitRepo.behind_remote
-      ~GitRepo.create_commit
-      ~GitRepo.file_in_history
-      ~GitRepo.get_commit_message
-      ~GitRepo.get_last_commit_date
-      ~GitRepo.get_last_commit_sha
-      ~GitRepo.get_last_updated
-      ~GitRepo.get_remote_url
-      ~GitRepo.get_tree_hash
-      ~GitRepo.get_untracked_files
-      ~GitRepo.has_changes
-      ~GitRepo.has_record_changes
-      ~GitRepo.has_untracked_search_records
-      ~GitRepo.pull_if_repo_clean
-      ~GitRepo.records_changed
-      ~GitRepo.remote_ahead
-      ~GitRepo.repo_initialized
-      ~GitRepo.stash_unstaged_changes
-      ~GitRepo.update_gitignore
+      ~colrev.git_repo.GitRepo.add_changes
+      ~colrev.git_repo.GitRepo.add_setting_changes
+      ~colrev.git_repo.GitRepo.behind_remote
+      ~colrev.git_repo.GitRepo.create_commit
+      ~colrev.git_repo.GitRepo.file_in_history
+      ~colrev.git_repo.GitRepo.get_commit_message
+      ~colrev.git_repo.GitRepo.get_last_commit_date
+      ~colrev.git_repo.GitRepo.get_last_commit_sha
+      ~colrev.git_repo.GitRepo.get_last_updated
+      ~colrev.git_repo.GitRepo.get_remote_url
+      ~colrev.git_repo.GitRepo.get_tree_hash
+      ~colrev.git_repo.GitRepo.get_untracked_files
+      ~colrev.git_repo.GitRepo.has_changes
+      ~colrev.git_repo.GitRepo.has_record_changes
+      ~colrev.git_repo.GitRepo.has_untracked_search_records
+      ~colrev.git_repo.GitRepo.pull_if_repo_clean
+      ~colrev.git_repo.GitRepo.records_changed
+      ~colrev.git_repo.GitRepo.remote_ahead
+      ~colrev.git_repo.GitRepo.repo_initialized
+      ~colrev.git_repo.GitRepo.stash_unstaged_changes
+      ~colrev.git_repo.GitRepo.update_gitignore

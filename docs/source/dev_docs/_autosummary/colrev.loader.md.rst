@@ -20,4 +20,4 @@ colrev.loader.md
       :template: custom-class-template.rst
       :nosignatures:
 
-      MarkdownLoader
+      colrev.loader.md.MarkdownLoader

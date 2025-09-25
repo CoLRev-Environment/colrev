@@ -1,9 +1,7 @@
 colrev.settings.Settings
 ========================
 
-.. currentmodule:: colrev.settings
-
-.. autoclass:: Settings
+.. autoclass:: colrev.settings.Settings
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,10 +14,10 @@ colrev.settings.Settings
    .. autosummary::
       :nosignatures:
 
-      ~Settings.get_packages
-      ~Settings.is_curated_masterdata_repo
-      ~Settings.is_curated_repo
-      ~Settings.validate_sources
+      ~colrev.settings.Settings.get_packages
+      ~colrev.settings.Settings.is_curated_masterdata_repo
+      ~colrev.settings.Settings.is_curated_repo
+      ~colrev.settings.Settings.validate_sources
 
 
 
@@ -29,13 +27,13 @@ colrev.settings.Settings
 
    .. autosummary::
 
-      ~Settings.project
-      ~Settings.sources
-      ~Settings.search
-      ~Settings.prep
-      ~Settings.dedupe
-      ~Settings.prescreen
-      ~Settings.pdf_get
-      ~Settings.pdf_prep
-      ~Settings.screen
-      ~Settings.data
+      ~colrev.settings.Settings.project
+      ~colrev.settings.Settings.sources
+      ~colrev.settings.Settings.search
+      ~colrev.settings.Settings.prep
+      ~colrev.settings.Settings.dedupe
+      ~colrev.settings.Settings.prescreen
+      ~colrev.settings.Settings.pdf_get
+      ~colrev.settings.Settings.pdf_prep
+      ~colrev.settings.Settings.screen
+      ~colrev.settings.Settings.data

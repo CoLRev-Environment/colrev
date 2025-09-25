@@ -15,7 +15,7 @@ colrev.record.qm.checkers.language\_unknown
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.language_unknown.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.language\_unknown
       :template: custom-class-template.rst
       :nosignatures:
 
-      LanguageChecker
+      colrev.record.qm.checkers.language_unknown.LanguageChecker

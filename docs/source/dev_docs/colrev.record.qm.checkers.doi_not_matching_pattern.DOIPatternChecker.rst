@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.doi\_not\_matching\_pattern.DOIPatternChecker
 =======================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.doi_not_matching_pattern
-
-.. autoclass:: DOIPatternChecker
+.. autoclass:: colrev.record.qm.checkers.doi_not_matching_pattern.DOIPatternChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.doi\_not\_matching\_pattern.DOIPatternChecker
    .. autosummary::
       :nosignatures:
 
-      ~DOIPatternChecker.run
+      ~colrev.record.qm.checkers.doi_not_matching_pattern.DOIPatternChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.doi\_not\_matching\_pattern.DOIPatternChecker
 
    .. autosummary::
 
-      ~DOIPatternChecker.msg
+      ~colrev.record.qm.checkers.doi_not_matching_pattern.DOIPatternChecker.msg

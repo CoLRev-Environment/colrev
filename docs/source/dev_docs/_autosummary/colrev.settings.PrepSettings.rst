@@ -1,9 +1,7 @@
 colrev.settings.PrepSettings
 ============================
 
-.. currentmodule:: colrev.settings
-
-.. autoclass:: PrepSettings
+.. autoclass:: colrev.settings.PrepSettings
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,7 +17,7 @@ colrev.settings.PrepSettings
 
    .. autosummary::
 
-      ~PrepSettings.fields_to_keep
-      ~PrepSettings.prep_rounds
-      ~PrepSettings.prep_man_package_endpoints
-      ~PrepSettings.defects_to_ignore
+      ~colrev.settings.PrepSettings.fields_to_keep
+      ~colrev.settings.PrepSettings.prep_rounds
+      ~colrev.settings.PrepSettings.prep_man_package_endpoints
+      ~colrev.settings.PrepSettings.defects_to_ignore

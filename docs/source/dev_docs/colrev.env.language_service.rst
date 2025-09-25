@@ -20,4 +20,4 @@ colrev.env.language\_service
       :template: custom-class-template.rst
       :nosignatures:
 
-      LanguageService
+      colrev.env.language_service.LanguageService

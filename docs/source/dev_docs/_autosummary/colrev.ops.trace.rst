@@ -20,4 +20,4 @@ colrev.ops.trace
       :template: custom-class-template.rst
       :nosignatures:
 
-      Trace
+      colrev.ops.trace.Trace

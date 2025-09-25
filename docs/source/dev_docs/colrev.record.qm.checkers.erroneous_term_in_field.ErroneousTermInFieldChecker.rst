@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.erroneous\_term\_in\_field.ErroneousTermInFieldChecker
 ================================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.erroneous_term_in_field
-
-.. autoclass:: ErroneousTermInFieldChecker
+.. autoclass:: colrev.record.qm.checkers.erroneous_term_in_field.ErroneousTermInFieldChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.erroneous\_term\_in\_field.ErroneousTermInFieldChecker
    .. autosummary::
       :nosignatures:
 
-      ~ErroneousTermInFieldChecker.run
+      ~colrev.record.qm.checkers.erroneous_term_in_field.ErroneousTermInFieldChecker.run
 
 
 
@@ -26,5 +24,5 @@ colrev.record.qm.checkers.erroneous\_term\_in\_field.ErroneousTermInFieldChecker
 
    .. autosummary::
 
-      ~ErroneousTermInFieldChecker.erroneous_terms
-      ~ErroneousTermInFieldChecker.msg
+      ~colrev.record.qm.checkers.erroneous_term_in_field.ErroneousTermInFieldChecker.erroneous_terms
+      ~colrev.record.qm.checkers.erroneous_term_in_field.ErroneousTermInFieldChecker.msg

@@ -1,9 +1,7 @@
 colrev.loader.loader.Loader
 ===========================
 
-.. currentmodule:: colrev.loader.loader
-
-.. autoclass:: Loader
+.. autoclass:: colrev.loader.loader.Loader
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,5 +14,5 @@ colrev.loader.loader.Loader
    .. autosummary::
       :nosignatures:
 
-      ~Loader.load
-      ~Loader.load_records_list
+      ~colrev.loader.loader.Loader.load
+      ~colrev.loader.loader.Loader.load_records_list

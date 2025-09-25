@@ -1,9 +1,7 @@
 colrev.constants.RecordState
 ============================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: RecordState
+.. autoclass:: colrev.constants.RecordState
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,9 +14,9 @@ colrev.constants.RecordState
    .. autosummary::
       :nosignatures:
 
-      ~RecordState.get_states_requiring_file
-      ~RecordState.get_non_processed_states
-      ~RecordState.get_post_x_states
+      ~colrev.constants.RecordState.get_states_requiring_file
+      ~colrev.constants.RecordState.get_non_processed_states
+      ~colrev.constants.RecordState.get_post_x_states
 
 
 
@@ -28,18 +26,18 @@ colrev.constants.RecordState
 
    .. autosummary::
 
-      ~RecordState.md_retrieved
-      ~RecordState.md_imported
-      ~RecordState.md_needs_manual_preparation
-      ~RecordState.md_prepared
-      ~RecordState.md_processed
-      ~RecordState.rev_prescreen_excluded
-      ~RecordState.rev_prescreen_included
-      ~RecordState.pdf_needs_manual_retrieval
-      ~RecordState.pdf_imported
-      ~RecordState.pdf_not_available
-      ~RecordState.pdf_needs_manual_preparation
-      ~RecordState.pdf_prepared
-      ~RecordState.rev_excluded
-      ~RecordState.rev_included
-      ~RecordState.rev_synthesized
+      ~colrev.constants.RecordState.md_retrieved
+      ~colrev.constants.RecordState.md_imported
+      ~colrev.constants.RecordState.md_needs_manual_preparation
+      ~colrev.constants.RecordState.md_prepared
+      ~colrev.constants.RecordState.md_processed
+      ~colrev.constants.RecordState.rev_prescreen_excluded
+      ~colrev.constants.RecordState.rev_prescreen_included
+      ~colrev.constants.RecordState.pdf_needs_manual_retrieval
+      ~colrev.constants.RecordState.pdf_imported
+      ~colrev.constants.RecordState.pdf_not_available
+      ~colrev.constants.RecordState.pdf_needs_manual_preparation
+      ~colrev.constants.RecordState.pdf_prepared
+      ~colrev.constants.RecordState.rev_excluded
+      ~colrev.constants.RecordState.rev_included
+      ~colrev.constants.RecordState.rev_synthesized

@@ -15,7 +15,7 @@ colrev.record.qm.checkers.name\_abbreviated
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.name_abbreviated.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.name\_abbreviated
       :template: custom-class-template.rst
       :nosignatures:
 
-      NameAbbreviatedChecker
+      colrev.record.qm.checkers.name_abbreviated.NameAbbreviatedChecker

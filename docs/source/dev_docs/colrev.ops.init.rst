@@ -20,4 +20,4 @@ colrev.ops.init
       :template: custom-class-template.rst
       :nosignatures:
 
-      Initializer
+      colrev.ops.init.Initializer

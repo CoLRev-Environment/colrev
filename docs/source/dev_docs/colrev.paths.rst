@@ -20,4 +20,4 @@
       :template: custom-class-template.rst
       :nosignatures:
 
-      PathManager
+      colrev.paths.PathManager

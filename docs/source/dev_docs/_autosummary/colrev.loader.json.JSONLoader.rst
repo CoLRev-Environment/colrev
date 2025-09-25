@@ -1,9 +1,7 @@
 colrev.loader.json.JSONLoader
 =============================
 
-.. currentmodule:: colrev.loader.json
-
-.. autoclass:: JSONLoader
+.. autoclass:: colrev.loader.json.JSONLoader
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,6 +14,6 @@ colrev.loader.json.JSONLoader
    .. autosummary::
       :nosignatures:
 
-      ~JSONLoader.get_nr_records
-      ~JSONLoader.load
-      ~JSONLoader.load_records_list
+      ~colrev.loader.json.JSONLoader.get_nr_records
+      ~colrev.loader.json.JSONLoader.load
+      ~colrev.loader.json.JSONLoader.load_records_list

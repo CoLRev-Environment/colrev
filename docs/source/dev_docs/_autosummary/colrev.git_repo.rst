@@ -20,4 +20,4 @@ colrev.git\_repo
       :template: custom-class-template.rst
       :nosignatures:
 
-      GitRepo
+      colrev.git_repo.GitRepo

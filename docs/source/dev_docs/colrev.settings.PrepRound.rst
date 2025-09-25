@@ -1,9 +1,7 @@
 colrev.settings.PrepRound
 =========================
 
-.. currentmodule:: colrev.settings
-
-.. autoclass:: PrepRound
+.. autoclass:: colrev.settings.PrepRound
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,5 +17,5 @@ colrev.settings.PrepRound
 
    .. autosummary::
 
-      ~PrepRound.name
-      ~PrepRound.prep_package_endpoints
+      ~colrev.settings.PrepRound.name
+      ~colrev.settings.PrepRound.prep_package_endpoints
