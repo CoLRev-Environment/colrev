@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ## Changed
 
+- Replaced `lxml` with `defusedxml` + stdlib `ElementTree` (lightweight dependency; no behavior change), simplified parsing (no XPath), and updated deps.
 - Extract search source details to separate search-file (compliance with Haddaway et al. 2022). Upgrades implemented for all search-sources, tested for crossref, dblp, and files_dir. Added structure of search-files to docs.
 
 Haddaway, N. R., Rethlefsen, M. L., Davies, M., Glanville, J., McGowan, B., Nyhan, K., & Young, S. (2022). A suggested data structure for transparent and repeatable reporting of bibliographic searching. Campbell systematic reviews, 18(4), e1288.

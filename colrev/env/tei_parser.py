@@ -5,10 +5,13 @@ from __future__ import annotations
 import re
 import typing
 from pathlib import Path
+from xml.etree.ElementTree import ElementTree as StdElementTree
+from xml.etree.ElementTree import ParseError
+from xml.etree.ElementTree import register_namespace
+from xml.etree.ElementTree import tostring
 
 import requests
-from lxml import etree
-from lxml.etree import XMLSyntaxError  # nosec
+from defusedxml import ElementTree as DefusedET
 
 import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
@@ -85,7 +88,7 @@ class TEIParser:
         if b"[BAD_INPUT_DATA]" in xslt_content[:100]:
             raise colrev_exceptions.TEIException()
 
-        return etree.XML(xslt_content)
+        return DefusedET.fromstring(xslt_content)
 
     def _create_tei(self) -> None:
         """Create the TEI (based on GROBID)"""
@@ -123,7 +126,7 @@ class TEIParser:
             if b"[TIMEOUT]" in ret.content:  # pragma: no cover
                 raise colrev_exceptions.TEITimeoutException()
 
-            self.root = etree.fromstring(ret.content)
+            self.root = DefusedET.fromstring(ret.content)
 
             if self.tei_path is not None:
                 self.tei_path.parent.mkdir(exist_ok=True, parents=True)
@@ -133,9 +136,9 @@ class TEIParser:
                 # Note : reopen/write to prevent format changes in the enhancement
                 with open(self.tei_path, "rb") as file:
                     xml_fstring = file.read()
-                self.root = etree.fromstring(xml_fstring)
+                self.root = DefusedET.fromstring(xml_fstring)
 
-                tree = etree.ElementTree(self.root)
+                tree = StdElementTree(self.root)
                 tree.write(str(self.tei_path), encoding="utf-8")
         except requests.exceptions.ConnectionError as exc:  # pragma: no cover
             print(exc)
@@ -145,9 +148,9 @@ class TEIParser:
     def get_tei_str(self) -> str:
         """Get the TEI string"""
         try:
-            etree.register_namespace("tei", "http://www.tei-c.org/ns/1.0")
-            return etree.tostring(self.root).decode("utf-8")
-        except XMLSyntaxError as exc:  # pragma: no cover
+            register_namespace("tei", "http://www.tei-c.org/ns/1.0")
+            return tostring(self.root, encoding="unicode")
+        except ParseError as exc:  # pragma: no cover
             raise colrev_exceptions.TEIException from exc
 
     def get_grobid_version(self) -> str:
@@ -254,8 +257,9 @@ class TEIParser:
             abstract_node = profile_description.find(
                 ".//" + self.ns["tei"] + "abstract"
             )
-            html_str = etree.tostring(abstract_node).decode("utf-8")
-            abstract_text = cleanhtml(html_str)
+            if abstract_node is not None:
+                html_str = DefusedET.tostring(abstract_node).decode("utf-8")
+                abstract_text = cleanhtml(html_str)
         abstract_text = abstract_text.lstrip().rstrip()
         return abstract_text
 
@@ -645,7 +649,7 @@ class TEIParser:
             # if settings file available: dedupe_io match agains records
 
         if self.tei_path:
-            tree = etree.ElementTree(self.root)
+            tree = StdElementTree(self.root)
             tree.write(str(self.tei_path))
 
         return self.root

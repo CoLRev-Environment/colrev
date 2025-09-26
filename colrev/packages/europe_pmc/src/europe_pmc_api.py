@@ -4,7 +4,7 @@ import typing
 from xml.etree.ElementTree import Element  # nosec
 
 import requests
-from lxml import etree
+from defusedxml import ElementTree as DefusedET
 
 import colrev.env.language_service
 import colrev.record.record_prep
@@ -49,7 +49,11 @@ class EPMCAPI:
             # )
             return
 
-        root = etree.fromstring(str.encode(ret.text))
+        response_content = getattr(ret, "content", None)
+        if response_content is None:
+            response_text = getattr(ret, "text", "")
+            response_content = response_text.encode("utf-8")
+        root = DefusedET.fromstring(response_content)
         if not root.findall("resultList"):
             return
         result_list = root.findall("resultList")[0]
