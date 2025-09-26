@@ -16,8 +16,8 @@ import click_repl
 import inquirer
 import pandas as pd
 from git.exc import GitCommandError
+from search_query.exception import QuerySyntaxError
 
-import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
 import colrev.package_manager.package_manager
@@ -27,6 +27,7 @@ import colrev.ui_cli.add_package_to_settings
 import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
@@ -34,6 +35,8 @@ from colrev.constants import Filepaths
 from colrev.constants import IDPattern
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
+from colrev.env.environment_manager import EnvironmentManager
+from colrev.env.resources import Resources
 
 # pylint: disable=too-many-lines
 # pylint: disable=redefined-outer-name
@@ -45,7 +48,6 @@ from colrev.constants import ScreenCriterionType
 # pylint: disable=too-many-locals
 # pylint: disable=import-outside-toplevel
 # pylint: disable=too-many-return-statements
-# pylint: disable=too-many-positional-arguments
 
 # Note: autocompletion needs bash/... activation:
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
@@ -58,7 +60,7 @@ PACKAGE_MANAGER = colrev.package_manager.package_manager.PackageManager()
 SHELL_MODE = False
 
 
-def _add_endpoint_interactively(add: str, endpoint_type: EndpointType) -> str:
+def _select_endpoint_interactively(add: str, endpoint_type: EndpointType) -> str:
     """Add package interactively"""
     if add != "add_interactively":
         return add
@@ -84,10 +86,12 @@ def _select_source_interactively(
     selected: str, review_manager: colrev.review_manager.ReviewManager
 ) -> str:
     """Select a source interactively"""
+    sources = [str(s.search_results_path) for s in review_manager.settings.sources]
+    if selected is None:
+        return ",".join(sources)
     if selected != "select_interactively":
         return selected
 
-    sources = [str(s.filename) for s in review_manager.settings.sources]
     questions = [
         inquirer.Checkbox(
             "source",
@@ -199,7 +203,7 @@ def catch_exception(func=None, *, handle) -> typing.Any:  # type: ignore
     def wrapper(*args, **kwargs) -> None:  # type: ignore
         try:
             return func(*args, **kwargs)
-        except colrev_exceptions.CoLRevException as exc:
+        except (colrev_exceptions.CoLRevException, QuerySyntaxError) as exc:
             if kwargs.get("verbose", False):
                 raise exc
             print(exc)
@@ -352,7 +356,7 @@ def init(
     """
     import colrev.ops.init
 
-    review_type = _add_endpoint_interactively(review_type, EndpointType.review_type)
+    review_type = _select_endpoint_interactively(review_type, EndpointType.review_type)
     colrev.ops.init.Initializer(
         review_type=review_type,
         target_path=Path.cwd(),
@@ -561,7 +565,7 @@ def search(
 
     if view:
         for source in search_operation.sources:
-            search_operation.review_manager.p_printer.pprint(source)
+            utils.p_print(source.to_dict())
         return
 
     if add:
@@ -569,19 +573,23 @@ def search(
         # pylint: disable=reimported
         import colrev.ui_cli.add_package_to_settings
 
-        add = _add_endpoint_interactively(add, EndpointType.search_source)
-        colrev.ui_cli.add_package_to_settings.add_package_to_settings(
+        add = _select_endpoint_interactively(add, EndpointType.search_source)
+        source_dict = colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=search_operation,
             package_identifier=add,
             params=params,
+        )
+        print("\n")
+        search_operation.main(
+            selection_str=source_dict["search_results_path"], rerun=rerun
         )
         return
 
     if skip:
         existing_sources = ",".join(
             str(
-                source.filename
+                source.search_results_path
                 for source in search_operation.review_manager.settings.sources
             )
         )
@@ -616,9 +624,10 @@ def search(
         if selected is None:
             selected = ",".join(
                 [
-                    str(source.filename)
+                    str(source.search_results_path)
                     for source in search_operation.review_manager.settings.sources
-                    if source.filename not in [x.filename for x in sources_added]
+                    if source.search_results_path
+                    not in [x.search_results_path for x in sources_added]
                 ]
             )
         else:
@@ -788,7 +797,7 @@ def prep(
             )
             return
         if add:
-            add = _add_endpoint_interactively(add, EndpointType.prep)
+            add = _select_endpoint_interactively(add, EndpointType.prep)
             colrev.ui_cli.add_package_to_settings.add_package_to_settings(
                 PACKAGE_MANAGER,
                 operation=prep_operation,
@@ -877,7 +886,7 @@ def prep_man(
         return
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.prep_man)
+        add = _select_endpoint_interactively(add, EndpointType.prep_man)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=prep_man_operation,
@@ -992,7 +1001,7 @@ def dedupe(
     )
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.dedupe)
+        add = _select_endpoint_interactively(add, EndpointType.dedupe)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=dedupe_operation,
@@ -1185,7 +1194,7 @@ def prescreen(
         prescreen_operation.setup_custom_script()
         print("Activated custom_prescreen_script.py.")
     elif add:
-        add = _add_endpoint_interactively(add, EndpointType.prescreen)
+        add = _select_endpoint_interactively(add, EndpointType.prescreen)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=prescreen_operation,
@@ -1322,7 +1331,7 @@ def screen(
         screen_operation.add_abstracts_from_tei()
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.screen)
+        add = _select_endpoint_interactively(add, EndpointType.screen)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=screen_operation,
@@ -1564,7 +1573,7 @@ def pdf_get(
     )
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.pdf_get)
+        add = _select_endpoint_interactively(add, EndpointType.pdf_get)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_get_operation,
@@ -1658,7 +1667,7 @@ def pdf_get_man(
     pdf_get_man_operation = review_manager.get_pdf_get_man_operation()
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.pdf_get_man)
+        add = _select_endpoint_interactively(add, EndpointType.pdf_get_man)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_get_man_operation,
@@ -1821,7 +1830,7 @@ def pdf_prep(
     pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.pdf_prep)
+        add = _select_endpoint_interactively(add, EndpointType.pdf_prep)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_prep_operation,
@@ -1958,7 +1967,7 @@ def pdf_prep_man(
     pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.pdf_prep_man)
+        add = _select_endpoint_interactively(add, EndpointType.pdf_prep_man)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=pdf_prep_man_operation,
@@ -2058,12 +2067,12 @@ def data(
             data_operation.review_manager.settings.data.data_package_endpoints
         )
         for data_endpoint in data_endpoints:
-            data_operation.review_manager.p_printer.pprint(data_endpoint)
+            utils.p_print(data_endpoint)
         return
 
     if reading_heuristics:
         heuristic_results = data_operation.reading_heuristics()
-        review_manager.p_printer.pprint(heuristic_results)
+        utils.p_print(heuristic_results)
         return
     if setup_custom_script:
         data_operation.setup_custom_script()
@@ -2074,7 +2083,7 @@ def data(
         return
 
     if add:
-        add = _add_endpoint_interactively(add, EndpointType.data)
+        add = _select_endpoint_interactively(add, EndpointType.data)
         colrev.ui_cli.add_package_to_settings.add_package_to_settings(
             PACKAGE_MANAGER,
             operation=data_operation,
@@ -2084,15 +2093,13 @@ def data(
         return
 
     ret = data_operation.main()
-    if data_operation.review_manager.in_ci_environment():
+    if utils.in_ci_environment():
         if ret["ask_to_commit"]:
-            review_manager.dataset.create_commit(
-                msg="Data and synthesis", manual_author=True
-            )
+            review_manager.create_commit(msg="Data and synthesis", manual_author=True)
     else:
         if ret["ask_to_commit"]:
             if input("Create commit (y/n)?") == "y":
-                review_manager.dataset.create_commit(
+                review_manager.create_commit(
                     msg="Data and synthesis", manual_author=True
                 )
         if ret["no_endpoints_registered"]:
@@ -2279,7 +2286,7 @@ def distribute(ctx: click.core.Context, path: Path, verbose: bool, force: bool) 
 def _print_environment_status(
     review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    environment_manager = review_manager.get_environment_manager()
+    environment_manager = EnvironmentManager()
     environment_details = environment_manager.get_environment_details()
 
     print("\nCoLRev environment status\n")
@@ -2434,7 +2441,7 @@ def env(
     )
 
     if install:
-        env_resources = review_manager.get_resources()
+        env_resources = Resources()
         if env_resources.install_curated_resource(curated_resource=install):
             print("Successfully installed curated resource.")
             print("To make it available to other projects, run")
@@ -2442,7 +2449,7 @@ def env(
         return
 
     if pull:
-        environment_manager = review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         for curated_resource in environment_manager.local_repos():
             try:
                 curated_resource_path = curated_resource["repo_source_path"]
@@ -2458,7 +2465,7 @@ def env(
                     },
                 )
 
-                review_manager.dataset.pull_if_repo_clean()
+                review_manager.dataset.git_repo.pull_if_repo_clean()
                 print(f"Pulled {curated_resource_path}")
             except GitCommandError as exc:
                 print(exc)
@@ -2469,12 +2476,12 @@ def env(
         return
 
     if register:
-        environment_manager = review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         environment_manager.register_repo(Path.cwd())
         return
 
     if unregister is not None:
-        environment_manager = review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
 
         local_repos = environment_manager.local_repos()
         if str(unregister) not in [x["source_url"] for x in local_repos]:
@@ -2607,7 +2614,7 @@ def settings(
     if update_hooks:
         print("Update pre-commit hooks")
 
-        if review_manager.dataset.has_record_changes():
+        if review_manager.dataset.git_repo.has_record_changes():
             print("Clean repo required. Commit or stash changes.")
             ctx.exit(1)
 
@@ -2622,8 +2629,10 @@ def settings(
         for script_to_call in scripts_to_call:
             check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)  # nosec
 
-        review_manager.dataset.add_changes(review_manager.paths.PRE_COMMIT_CONFIG)
-        review_manager.dataset.create_commit(msg="Update pre-commit hooks")
+        review_manager.dataset.git_repo.add_changes(
+            review_manager.paths.PRE_COMMIT_CONFIG
+        )
+        review_manager.create_commit(msg="Update pre-commit hooks")
         print("Successfully updated pre-commit hooks")
         return
 
@@ -2655,8 +2664,8 @@ def settings(
         with open(review_manager.paths.settings, "w", encoding="utf-8") as outfile:
             json.dump(project_settings, outfile, indent=4)
 
-        review_manager.dataset.add_changes(review_manager.paths.SETTINGS_FILE)
-        review_manager.dataset.create_commit(msg="Change settings", manual_author=True)
+        review_manager.dataset.git_repo.add_changes(review_manager.paths.SETTINGS_FILE)
+        review_manager.create_commit(msg="Change settings", manual_author=True)
 
     # import colrev_ui.ui_web.settings_editor
 
@@ -2830,7 +2839,7 @@ def show(  # type: ignore
     elif keyword == "cmd_history":
         cmds = []
         colrev.ops.check.CheckOperation(review_manager)
-        revlist = review_manager.dataset.get_repo().iter_commits()
+        revlist = review_manager.dataset.git_repo.repo.iter_commits()
 
         for commit in reversed(list(revlist)):
             try:
@@ -2910,7 +2919,7 @@ def upgrade(
 
         review_manager.settings.project.auto_upgrade = False
         review_manager.save_settings()
-        review_manager.dataset.create_commit(msg="Disable auto-upgrade")
+        review_manager.create_commit(msg="Disable auto-upgrade")
         return
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=True, verbose_mode=verbose
@@ -3055,7 +3064,7 @@ def merge(
 
     if not branch:
         colrev.ops.check.CheckOperation(review_manager)
-        git_repo = review_manager.dataset.get_repo()
+        git_repo = review_manager.dataset.git_repo.repo
         print(f"possible branches: {','.join([b.name for b in git_repo.heads])}")
         return
 
@@ -3096,7 +3105,7 @@ def undo(
 
     if selection == "commit":
         colrev.ops.check.CheckOperation(review_manager)
-        git_repo = review_manager.dataset.get_repo()
+        git_repo = review_manager.dataset.git_repo.repo
         git_repo.git.reset("--hard", "HEAD~1")
 
 

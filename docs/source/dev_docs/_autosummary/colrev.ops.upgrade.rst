@@ -20,5 +20,5 @@ colrev.ops.upgrade
       :template: custom-class-template.rst
       :nosignatures:
 
-      CoLRevVersion
-      Upgrade
+      colrev.ops.upgrade.CoLRevVersion
+      colrev.ops.upgrade.Upgrade

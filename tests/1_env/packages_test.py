@@ -37,7 +37,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
 #     """Test the review_type_interfaces"""
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     load_operation = base_repo_review_manager.get_load_operation()
 #     review_type_identifiers = package_manager.discover_packages(
 #         package_type=EndpointType.review_type,
@@ -58,7 +57,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
 #     """Test the search_source_interfaces"""
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     load_operation = base_repo_review_manager.get_load_operation(
 #         notify_state_transition_operation=False
 #     )
@@ -86,7 +84,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
 #     """Test the prep_package_interfaces"""
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     prep_operation = base_repo_review_manager.get_prep_operation(
 #         notify_state_transition_operation=False
 #     )
@@ -109,7 +106,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
 #     """Test the prep_man_package_interfaces"""
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     prep_man_operation = base_repo_review_manager.get_prep_man_operation(
 #         notify_state_transition_operation=False
 #     )
@@ -132,7 +128,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
 #     """Test the dedupe_package_interfaces"""
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     dedupe_operation = base_repo_review_manager.get_dedupe_operation(
 #         notify_state_transition_operation=False
 #     )
@@ -160,7 +155,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
 #     """Test the prescreen_package_interfaces"""
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     prescreen_operation = base_repo_review_manager.get_prescreen_operation(
 #         notify_state_transition_operation=False
 #     )
@@ -185,7 +179,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
 #     """Test the pdf_get_package_interfaces"""
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
 #         notify_state_transition_operation=False
 #     )
@@ -208,7 +201,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
 #     """Test the pdf_get_man_package_interfaces"""
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     pdf_get_man_operation = base_repo_review_manager.get_pdf_get_man_operation(
 #         notify_state_transition_operation=False
 #     )
@@ -231,7 +223,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
 #     """Test the pdf_prep_package_interfaces"""
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     pdf_prep_operation = base_repo_review_manager.get_pdf_prep_operation(
 #         notify_state_transition_operation=False
 #     )
@@ -254,7 +245,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
 #     """Test the pdf_prep_man_package_interfaces"""
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     pdf_prep_man_operation = base_repo_review_manager.get_pdf_prep_man_operation(
 #         notify_state_transition_operation=False
 #     )
@@ -277,7 +267,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
 #     """Test the screen_package_interfaces"""
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     screen_operation = base_repo_review_manager.get_screen_operation(
 #         notify_state_transition_operation=False
 #     )
@@ -300,7 +289,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
 #     """Test the data_package_interfaces"""
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     data_operation = base_repo_review_manager.get_data_operation(
 #         notify_state_transition_operation=False
 #     )
@@ -338,7 +326,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
 #     """Test update_package_list()"""
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     colrev_spec = importlib.util.find_spec("colrev")
 #     os.chdir(Path(colrev_spec.origin).parents[1])  # type: ignore
 #     package_manager.update_package_list()
@@ -352,7 +339,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
 #     dedupe_operation = base_repo_review_manager.get_dedupe_operation()
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     with pytest.raises(colrev_exceptions.MissingDependencyError):
 #         package_manager.add_package_to_settings(
 #             operation=dedupe_operation,
@@ -373,7 +359,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 # def test_dynamically_load_endpoints(
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     package_manager.dynamically_load_endpoints()
 #     assert EndpointType.search_source in package_manager.endpoints
 #     assert (
@@ -383,7 +368,6 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
 # def test_pyproject_endpoints(
 #     base_repo_review_manager: colrev.review_manager.ReviewManager,
 # ) -> None:
-#     package_manager = base_repo_review_manager.get_package_manager()
 #     cls = package_manager.load_endpoints_pyproject_toml(
 #         "/home/gerit/ownCloud/projects/CoLRev/colrev/colrev/packages/crossref"
 #     )

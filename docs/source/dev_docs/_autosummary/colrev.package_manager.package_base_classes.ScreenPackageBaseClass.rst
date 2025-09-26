@@ -1,9 +1,7 @@
 colrev.package\_manager.package\_base\_classes.ScreenPackageBaseClass
 =====================================================================
 
-.. currentmodule:: colrev.package_manager.package_base_classes
-
-.. autoclass:: ScreenPackageBaseClass
+.. autoclass:: colrev.package_manager.package_base_classes.ScreenPackageBaseClass
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.package\_manager.package\_base\_classes.ScreenPackageBaseClass
    .. autosummary::
       :nosignatures:
 
-      ~ScreenPackageBaseClass.run_screen
+      ~colrev.package_manager.package_base_classes.ScreenPackageBaseClass.run_screen
 
 
 
@@ -26,5 +24,5 @@ colrev.package\_manager.package\_base\_classes.ScreenPackageBaseClass
 
    .. autosummary::
 
-      ~ScreenPackageBaseClass.ci_supported
-      ~ScreenPackageBaseClass.settings_class
+      ~colrev.package_manager.package_base_classes.ScreenPackageBaseClass.ci_supported
+      ~colrev.package_manager.package_base_classes.ScreenPackageBaseClass.settings_class

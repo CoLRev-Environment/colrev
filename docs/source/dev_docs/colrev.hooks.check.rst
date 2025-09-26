@@ -15,4 +15,4 @@ colrev.hooks.check
       :toctree:
       :nosignatures:
 
-      main
+      colrev.hooks.check.main

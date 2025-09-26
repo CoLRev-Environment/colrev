@@ -20,4 +20,4 @@ colrev.ops.load
       :template: custom-class-template.rst
       :nosignatures:
 
-      Load
+      colrev.ops.load.Load

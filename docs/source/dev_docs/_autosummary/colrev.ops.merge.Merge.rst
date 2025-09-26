@@ -1,9 +1,7 @@
 colrev.ops.merge.Merge
 ======================
 
-.. currentmodule:: colrev.ops.merge
-
-.. autoclass:: Merge
+.. autoclass:: colrev.ops.merge.Merge
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,11 +14,11 @@ colrev.ops.merge.Merge
    .. autosummary::
       :nosignatures:
 
-      ~Merge.check_precondition
-      ~Merge.conclude
-      ~Merge.decorate
-      ~Merge.main
-      ~Merge.notify
+      ~colrev.ops.merge.Merge.check_precondition
+      ~colrev.ops.merge.Merge.conclude
+      ~colrev.ops.merge.Merge.decorate
+      ~colrev.ops.merge.Merge.main
+      ~colrev.ops.merge.Merge.notify
 
 
 
@@ -30,4 +28,4 @@ colrev.ops.merge.Merge
 
    .. autosummary::
 
-      ~Merge.type
+      ~colrev.ops.merge.Merge.type

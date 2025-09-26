@@ -1,9 +1,7 @@
 colrev.ops.pdf\_get.PDFGet
 ==========================
 
-.. currentmodule:: colrev.ops.pdf_get
-
-.. autoclass:: PDFGet
+.. autoclass:: colrev.ops.pdf_get.PDFGet
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,20 +14,20 @@ colrev.ops.pdf\_get.PDFGet
    .. autosummary::
       :nosignatures:
 
-      ~PDFGet.check_existing_unlinked_pdfs
-      ~PDFGet.check_precondition
-      ~PDFGet.conclude
-      ~PDFGet.copy_pdfs_to_repo
-      ~PDFGet.decorate
-      ~PDFGet.get_pdf
-      ~PDFGet.get_target_filepath
-      ~PDFGet.import_pdf
-      ~PDFGet.link_pdf
-      ~PDFGet.main
-      ~PDFGet.notify
-      ~PDFGet.relink_pdfs
-      ~PDFGet.rename_pdfs
-      ~PDFGet.setup_custom_script
+      ~colrev.ops.pdf_get.PDFGet.check_existing_unlinked_pdfs
+      ~colrev.ops.pdf_get.PDFGet.check_precondition
+      ~colrev.ops.pdf_get.PDFGet.conclude
+      ~colrev.ops.pdf_get.PDFGet.copy_pdfs_to_repo
+      ~colrev.ops.pdf_get.PDFGet.decorate
+      ~colrev.ops.pdf_get.PDFGet.get_pdf
+      ~colrev.ops.pdf_get.PDFGet.get_target_filepath
+      ~colrev.ops.pdf_get.PDFGet.import_pdf
+      ~colrev.ops.pdf_get.PDFGet.link_pdf
+      ~colrev.ops.pdf_get.PDFGet.main
+      ~colrev.ops.pdf_get.PDFGet.notify
+      ~colrev.ops.pdf_get.PDFGet.relink_pdfs
+      ~colrev.ops.pdf_get.PDFGet.rename_pdfs
+      ~colrev.ops.pdf_get.PDFGet.setup_custom_script
 
 
 
@@ -39,7 +37,7 @@ colrev.ops.pdf\_get.PDFGet
 
    .. autosummary::
 
-      ~PDFGet.type
-      ~PDFGet.to_retrieve
-      ~PDFGet.retrieved
-      ~PDFGet.not_retrieved
+      ~colrev.ops.pdf_get.PDFGet.type
+      ~colrev.ops.pdf_get.PDFGet.to_retrieve
+      ~colrev.ops.pdf_get.PDFGet.retrieved
+      ~colrev.ops.pdf_get.PDFGet.not_retrieved

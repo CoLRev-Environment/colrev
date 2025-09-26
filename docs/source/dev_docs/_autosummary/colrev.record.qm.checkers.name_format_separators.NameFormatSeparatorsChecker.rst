@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.name\_format\_separators.NameFormatSeparatorsChecker
 ==============================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.name_format_separators
-
-.. autoclass:: NameFormatSeparatorsChecker
+.. autoclass:: colrev.record.qm.checkers.name_format_separators.NameFormatSeparatorsChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.name\_format\_separators.NameFormatSeparatorsChecker
    .. autosummary::
       :nosignatures:
 
-      ~NameFormatSeparatorsChecker.run
+      ~colrev.record.qm.checkers.name_format_separators.NameFormatSeparatorsChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.name\_format\_separators.NameFormatSeparatorsChecker
 
    .. autosummary::
 
-      ~NameFormatSeparatorsChecker.msg
+      ~colrev.record.qm.checkers.name_format_separators.NameFormatSeparatorsChecker.msg

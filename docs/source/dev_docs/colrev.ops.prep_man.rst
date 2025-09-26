@@ -20,4 +20,4 @@ colrev.ops.prep\_man
       :template: custom-class-template.rst
       :nosignatures:
 
-      PrepMan
+      colrev.ops.prep_man.PrepMan

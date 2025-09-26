@@ -1,9 +1,7 @@
 colrev.process.operation.Operation
 ==================================
 
-.. currentmodule:: colrev.process.operation
-
-.. autoclass:: Operation
+.. autoclass:: colrev.process.operation.Operation
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,10 +14,10 @@ colrev.process.operation.Operation
    .. autosummary::
       :nosignatures:
 
-      ~Operation.check_precondition
-      ~Operation.conclude
-      ~Operation.decorate
-      ~Operation.notify
+      ~colrev.process.operation.Operation.check_precondition
+      ~colrev.process.operation.Operation.conclude
+      ~colrev.process.operation.Operation.decorate
+      ~colrev.process.operation.Operation.notify
 
 
 
@@ -29,4 +27,4 @@ colrev.process.operation.Operation
 
    .. autosummary::
 
-      ~Operation.type
+      ~colrev.process.operation.Operation.type

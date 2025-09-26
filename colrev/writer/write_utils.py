@@ -45,7 +45,7 @@ def write_file(records_dict: dict, *, filename: Path, **kw) -> dict:  # type: ig
     elif filename.suffix == ".md":
         writer = colrev.writer.markdown.write_file  # type: ignore
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Unsupported file type: {filename.suffix}")
 
     kw["filename"] = filename
     kw["records_dict"] = records_dict

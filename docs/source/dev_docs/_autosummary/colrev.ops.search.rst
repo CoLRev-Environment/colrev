@@ -20,4 +20,4 @@ colrev.ops.search
       :template: custom-class-template.rst
       :nosignatures:
 
-      Search
+      colrev.ops.search.Search

@@ -15,7 +15,7 @@ colrev.record.qm.checkers.inconsistent\_with\_entrytype
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.inconsistent_with_entrytype.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.inconsistent\_with\_entrytype
       :template: custom-class-template.rst
       :nosignatures:
 
-      InconsistentWithEntrytypeChecker
+      colrev.record.qm.checkers.inconsistent_with_entrytype.InconsistentWithEntrytypeChecker

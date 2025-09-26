@@ -15,5 +15,5 @@ colrev.writer.ris
       :toctree:
       :nosignatures:
 
-      to_string
-      write_file
+      colrev.writer.ris.to_string
+      colrev.writer.ris.write_file

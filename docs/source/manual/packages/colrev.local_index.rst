@@ -83,6 +83,21 @@ API search
 
    colrev search --add colrev.local_index -p "title LIKE '%dark side%'"
 
+Format of the search-history file:
+
+.. code-block:: json
+
+   {
+       "search_string": "",
+       "platform": "colrev.local_index",
+       "search_results_path": "data/search/local_index_dark_side.bib",
+       "search_type": "API",
+       "search_parameters": {
+           "query": "outsourcing"
+       },
+       "version": "0.1.0"
+   }
+
 pdf-get
 -------
 

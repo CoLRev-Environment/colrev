@@ -1,9 +1,7 @@
 colrev.ops.correct.Corrections
 ==============================
 
-.. currentmodule:: colrev.ops.correct
-
-.. autoclass:: Corrections
+.. autoclass:: colrev.ops.correct.Corrections
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.ops.correct.Corrections
    .. autosummary::
       :nosignatures:
 
-      ~Corrections.check_corrections_of_records
+      ~colrev.ops.correct.Corrections.check_corrections_of_records
 
 
 
@@ -26,5 +24,5 @@ colrev.ops.correct.Corrections
 
    .. autosummary::
 
-      ~Corrections.essential_md_keys
-      ~Corrections.keys_to_ignore
+      ~colrev.ops.correct.Corrections.essential_md_keys
+      ~colrev.ops.correct.Corrections.keys_to_ignore

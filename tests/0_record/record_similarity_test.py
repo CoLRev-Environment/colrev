@@ -2,7 +2,6 @@
 """Tests of the record similarity functionality"""
 import pytest
 
-import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
 from colrev.constants import ENTRYTYPES

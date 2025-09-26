@@ -11,7 +11,6 @@ API reference
    :align: center
    :alt: Logo
 
-
 The package interfaces are documented :doc:`here </dev_docs/packages>`.
 
 .. autosummary::
@@ -60,7 +59,6 @@ The package interfaces are documented :doc:`here </dev_docs/packages>`.
    :toctree:
    :template: custom-module-template.rst
    :recursive:
-
 
    colrev.constants
    colrev.logger

@@ -20,4 +20,4 @@ colrev.record.record\_id\_setter
       :template: custom-class-template.rst
       :nosignatures:
 
-      IDSetter
+      colrev.record.record_id_setter.IDSetter

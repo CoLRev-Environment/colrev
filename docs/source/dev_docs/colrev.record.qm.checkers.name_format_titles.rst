@@ -15,7 +15,7 @@ colrev.record.qm.checkers.name\_format\_titles
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.name_format_titles.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.name\_format\_titles
       :template: custom-class-template.rst
       :nosignatures:
 
-      NameFormatTitleChecker
+      colrev.record.qm.checkers.name_format_titles.NameFormatTitleChecker

@@ -20,4 +20,4 @@ colrev.loader.table
       :template: custom-class-template.rst
       :nosignatures:
 
-      TableLoader
+      colrev.loader.table.TableLoader

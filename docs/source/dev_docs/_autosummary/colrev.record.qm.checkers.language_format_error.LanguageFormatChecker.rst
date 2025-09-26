@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.language\_format\_error.LanguageFormatChecker
 =======================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.language_format_error
-
-.. autoclass:: LanguageFormatChecker
+.. autoclass:: colrev.record.qm.checkers.language_format_error.LanguageFormatChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.language\_format\_error.LanguageFormatChecker
    .. autosummary::
       :nosignatures:
 
-      ~LanguageFormatChecker.run
+      ~colrev.record.qm.checkers.language_format_error.LanguageFormatChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.language\_format\_error.LanguageFormatChecker
 
    .. autosummary::
 
-      ~LanguageFormatChecker.msg
+      ~colrev.record.qm.checkers.language_format_error.LanguageFormatChecker.msg

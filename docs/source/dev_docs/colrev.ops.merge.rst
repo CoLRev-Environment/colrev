@@ -20,4 +20,4 @@ colrev.ops.merge
       :template: custom-class-template.rst
       :nosignatures:
 
-      Merge
+      colrev.ops.merge.Merge

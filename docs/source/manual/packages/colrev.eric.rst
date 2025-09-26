@@ -96,6 +96,33 @@ In addition, the start parameter the starting record number for the returned res
 
 This command returns 5 records with starting record number 0.
 
+Format of the search-history file (DB search):
+
+.. code-block:: json
+
+   {
+       "search_string": "descriptor:distance education",
+       "platform": "colrev.eric",
+       "search_results_path": "data/search/eric.bib",
+       "search_type": "DB",
+       "version": "0.1.0"
+   }
+
+Format of the search-history file (API search):
+
+.. code-block:: json
+
+   {
+       "search_string": "",
+       "platform": "colrev.eric",
+       "search_results_path": "data/search/eric_api.bib",
+       "search_type": "API",
+       "search_parameters": {
+           "query": "fitbit",
+       },
+       "version": "0.1.0"
+   }
+
 Links
 -----
 

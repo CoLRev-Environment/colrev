@@ -1,9 +1,7 @@
 colrev.env.local\_index\_sqlite.SQLiteIndex
 ===========================================
 
-.. currentmodule:: colrev.env.local_index_sqlite
-
-.. autoclass:: SQLiteIndex
+.. autoclass:: colrev.env.local_index_sqlite.SQLiteIndex
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.env.local\_index\_sqlite.SQLiteIndex
    .. autosummary::
       :nosignatures:
 
-      ~SQLiteIndex.commit
+      ~colrev.env.local_index_sqlite.SQLiteIndex.commit
 
 
 
@@ -26,5 +24,5 @@ colrev.env.local\_index\_sqlite.SQLiteIndex
 
    .. autosummary::
 
-      ~SQLiteIndex.connection
-      ~SQLiteIndex.CREATE_TABLE_QUERY
+      ~colrev.env.local_index_sqlite.SQLiteIndex.connection
+      ~colrev.env.local_index_sqlite.SQLiteIndex.CREATE_TABLE_QUERY

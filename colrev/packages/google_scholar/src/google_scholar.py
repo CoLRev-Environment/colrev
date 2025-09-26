@@ -4,17 +4,18 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_db import create_db_source
+from colrev.ops.search_db import run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -23,7 +24,8 @@ from colrev.constants import SearchType
 class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     """GoogleScholar"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     endpoint = "colrev.google_scholar"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
@@ -35,11 +37,13 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     db_url = "https://scholar.google.de/"
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
-        self.search_source = self.settings_class(**settings)
-        self.source_operation = source_operation
-        self.review_manager = source_operation.review_manager
+        self.logger = logger or logging.getLogger(__name__)
+        self.search_source = search_file
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -69,27 +73,31 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+        path: Path,
+        logger: Optional[logging.Logger] = None,
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {params.split("=")[0]: params.split("=")[1]}
 
-        search_source = operation.create_db_source(
-            search_source_cls=cls,
+        search_source = create_db_source(
+            path=path,
+            platform=cls.endpoint,
             params=params_dict,
+            add_to_git=True,
+            logger=logger,
         )
-        operation.add_source_and_search(search_source)
         return search_source
 
     def search(self, rerun: bool) -> None:
         """Run a search of GoogleScholar"""
 
         if self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
-                search_source_cls=self.__class__,
+            run_db_search(
+                db_url=self.db_url,
                 source=self.search_source,
+                add_to_git=True,
             )
             return
 
@@ -105,59 +113,58 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented"""
         return record
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
 
             def bib_field_mapper(record_dict: dict) -> None:
                 if "related" in record_dict:
-                    record_dict[f"{cls.endpoint}.related"] = record_dict.pop("related")
+                    record_dict[f"{self.endpoint}.related"] = record_dict.pop("related")
                 if "note" in record_dict:
-                    record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
+                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
                 if "type" in record_dict:
-                    record_dict[f"{cls.endpoint}.type"] = record_dict.pop("type")
+                    record_dict[f"{self.endpoint}.type"] = record_dict.pop("type")
 
             records = colrev.loader.load_utils.load(
-                filename=filename,
+                filename=self.search_source.search_results_path,
                 field_mapper=bib_field_mapper,
-                logger=logger,
+                logger=self.logger,
             )
             return records
 
-        if filename.suffix == ".json":
+        if self.search_source.search_results_path.suffix == ".json":
             # pylint: disable=too-many-branches
             def json_field_mapper(record_dict: dict) -> None:
                 if "related" in record_dict:
-                    record_dict[f"{cls.endpoint}.related"] = record_dict.pop("related")
+                    record_dict[f"{self.endpoint}.related"] = record_dict.pop("related")
                 if "note" in record_dict:
-                    record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
+                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
                 if "type" in record_dict:
-                    record_dict[f"{cls.endpoint}.type"] = record_dict.pop("type")
+                    record_dict[f"{self.endpoint}.type"] = record_dict.pop("type")
                 if "article_url" in record_dict:
-                    record_dict[f"{cls.endpoint}.article_url"] = record_dict.pop(
+                    record_dict[f"{self.endpoint}.article_url"] = record_dict.pop(
                         "article_url"
                     )
                 if "cites_url" in record_dict:
-                    record_dict[f"{cls.endpoint}.cites_url"] = record_dict.pop(
+                    record_dict[f"{self.endpoint}.cites_url"] = record_dict.pop(
                         "cites_url"
                     )
                 if "related_url" in record_dict:
-                    record_dict[f"{cls.endpoint}.related_url"] = record_dict.pop(
+                    record_dict[f"{self.endpoint}.related_url"] = record_dict.pop(
                         "related_url"
                     )
                 if "fulltext_url" in record_dict:
-                    record_dict[f"{cls.endpoint}.fulltext_url"] = record_dict.pop(
+                    record_dict[f"{self.endpoint}.fulltext_url"] = record_dict.pop(
                         "fulltext_url"
                     )
 
                 if "uid" in record_dict:
-                    record_dict[f"{cls.endpoint}.uid"] = record_dict.pop("uid")
+                    record_dict[f"{self.endpoint}.uid"] = record_dict.pop("uid")
                 if "source" in record_dict:
                     record_dict[Fields.JOURNAL] = record_dict.pop("source")
                 if "cites" in record_dict:
-                    record_dict[f"{cls.endpoint}.cites"] = record_dict.pop("cites")
+                    record_dict[f"{self.endpoint}.cites"] = record_dict.pop("cites")
 
                 record_dict.pop("volume", None)
                 record_dict.pop("issue", None)
@@ -185,12 +192,12 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
                 record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
             records = colrev.loader.load_utils.load(
-                filename=filename,
+                filename=self.search_source.search_results_path,
                 entrytype_setter=json_entrytype_setter,
                 field_mapper=json_field_mapper,
                 # Note: uid not always available.
                 unique_id_field="INCREMENTAL",
-                logger=logger,
+                logger=self.logger,
             )
 
             return records
@@ -198,7 +205,8 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for GoogleScholar"""
         if "cites: https://scholar.google.com/scholar?cites=" in record.data.get(

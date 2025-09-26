@@ -20,4 +20,4 @@ colrev.ops.data
       :template: custom-class-template.rst
       :nosignatures:
 
-      Data
+      colrev.ops.data.Data

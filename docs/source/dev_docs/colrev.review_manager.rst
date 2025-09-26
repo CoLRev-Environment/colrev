@@ -20,4 +20,4 @@
       :template: custom-class-template.rst
       :nosignatures:
 
-      ReviewManager
+      colrev.review_manager.ReviewManager

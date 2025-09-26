@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.container\_title\_abbreviated.ContainerTitleAbbreviatedChecker
 ========================================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.container_title_abbreviated
-
-.. autoclass:: ContainerTitleAbbreviatedChecker
+.. autoclass:: colrev.record.qm.checkers.container_title_abbreviated.ContainerTitleAbbreviatedChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.container\_title\_abbreviated.ContainerTitleAbbreviate
    .. autosummary::
       :nosignatures:
 
-      ~ContainerTitleAbbreviatedChecker.run
+      ~colrev.record.qm.checkers.container_title_abbreviated.ContainerTitleAbbreviatedChecker.run
 
 
 
@@ -26,5 +24,5 @@ colrev.record.qm.checkers.container\_title\_abbreviated.ContainerTitleAbbreviate
 
    .. autosummary::
 
-      ~ContainerTitleAbbreviatedChecker.fields_to_check
-      ~ContainerTitleAbbreviatedChecker.msg
+      ~colrev.record.qm.checkers.container_title_abbreviated.ContainerTitleAbbreviatedChecker.fields_to_check
+      ~colrev.record.qm.checkers.container_title_abbreviated.ContainerTitleAbbreviatedChecker.msg

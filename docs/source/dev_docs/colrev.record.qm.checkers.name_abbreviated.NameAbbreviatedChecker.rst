@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.name\_abbreviated.NameAbbreviatedChecker
 ==================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.name_abbreviated
-
-.. autoclass:: NameAbbreviatedChecker
+.. autoclass:: colrev.record.qm.checkers.name_abbreviated.NameAbbreviatedChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.name\_abbreviated.NameAbbreviatedChecker
    .. autosummary::
       :nosignatures:
 
-      ~NameAbbreviatedChecker.run
+      ~colrev.record.qm.checkers.name_abbreviated.NameAbbreviatedChecker.run
 
 
 
@@ -26,6 +24,6 @@ colrev.record.qm.checkers.name\_abbreviated.NameAbbreviatedChecker
 
    .. autosummary::
 
-      ~NameAbbreviatedChecker.abbreviations
-      ~NameAbbreviatedChecker.fields_to_check
-      ~NameAbbreviatedChecker.msg
+      ~colrev.record.qm.checkers.name_abbreviated.NameAbbreviatedChecker.abbreviations
+      ~colrev.record.qm.checkers.name_abbreviated.NameAbbreviatedChecker.fields_to_check
+      ~colrev.record.qm.checkers.name_abbreviated.NameAbbreviatedChecker.msg

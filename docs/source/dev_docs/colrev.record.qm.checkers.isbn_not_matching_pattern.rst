@@ -15,7 +15,7 @@ colrev.record.qm.checkers.isbn\_not\_matching\_pattern
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.isbn_not_matching_pattern.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.isbn\_not\_matching\_pattern
       :template: custom-class-template.rst
       :nosignatures:
 
-      ISBNPatternChecker
+      colrev.record.qm.checkers.isbn_not_matching_pattern.ISBNPatternChecker

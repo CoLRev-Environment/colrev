@@ -4,10 +4,8 @@ from pathlib import Path
 
 import pytest
 
-import colrev.env.tei_parser
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.review_manager
 
 
 def test_get_template() -> None:

@@ -120,8 +120,8 @@ class ERICAPI:
         response = requests.get(full_url, timeout=90)
         if response.status_code != 200:
             return
-        with open("test.json", "wb") as file:
-            file.write(response.content)
+        # with open("test.json", "wb") as file:
+        #     file.write(response.content)
         data = response.json()
 
         if "docs" not in data["response"]:

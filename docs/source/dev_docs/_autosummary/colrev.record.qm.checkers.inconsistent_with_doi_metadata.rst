@@ -15,7 +15,7 @@ colrev.record.qm.checkers.inconsistent\_with\_doi\_metadata
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.inconsistent_with_doi_metadata.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.inconsistent\_with\_doi\_metadata
       :template: custom-class-template.rst
       :nosignatures:
 
-      InconsistentWithDOIMetadataChecker
+      colrev.record.qm.checkers.inconsistent_with_doi_metadata.InconsistentWithDOIMetadataChecker

@@ -1,9 +1,7 @@
 colrev.package\_manager.package\_manager.PackageManager
 =======================================================
 
-.. currentmodule:: colrev.package_manager.package_manager
-
-.. autoclass:: PackageManager
+.. autoclass:: colrev.package_manager.package_manager.PackageManager
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,9 +14,9 @@ colrev.package\_manager.package\_manager.PackageManager
    .. autosummary::
       :nosignatures:
 
-      ~PackageManager.discover_installed_packages
-      ~PackageManager.discover_packages
-      ~PackageManager.get_package_endpoint_class
-      ~PackageManager.install
-      ~PackageManager.install_project
-      ~PackageManager.is_installed
+      ~colrev.package_manager.package_manager.PackageManager.discover_installed_packages
+      ~colrev.package_manager.package_manager.PackageManager.discover_packages
+      ~colrev.package_manager.package_manager.PackageManager.get_package_endpoint_class
+      ~colrev.package_manager.package_manager.PackageManager.install
+      ~colrev.package_manager.package_manager.PackageManager.install_project
+      ~colrev.package_manager.package_manager.PackageManager.is_installed

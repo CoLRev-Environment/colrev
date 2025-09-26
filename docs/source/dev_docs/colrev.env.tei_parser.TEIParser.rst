@@ -1,9 +1,7 @@
 colrev.env.tei\_parser.TEIParser
 ================================
 
-.. currentmodule:: colrev.env.tei_parser
-
-.. autoclass:: TEIParser
+.. autoclass:: colrev.env.tei_parser.TEIParser
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,15 +14,15 @@ colrev.env.tei\_parser.TEIParser
    .. autosummary::
       :nosignatures:
 
-      ~TEIParser.get_abstract
-      ~TEIParser.get_author_details
-      ~TEIParser.get_citations_per_section
-      ~TEIParser.get_grobid_version
-      ~TEIParser.get_metadata
-      ~TEIParser.get_paper_keywords
-      ~TEIParser.get_references
-      ~TEIParser.get_tei_str
-      ~TEIParser.mark_references
+      ~colrev.env.tei_parser.TEIParser.get_abstract
+      ~colrev.env.tei_parser.TEIParser.get_author_details
+      ~colrev.env.tei_parser.TEIParser.get_citations_per_section
+      ~colrev.env.tei_parser.TEIParser.get_grobid_version
+      ~colrev.env.tei_parser.TEIParser.get_metadata
+      ~colrev.env.tei_parser.TEIParser.get_paper_keywords
+      ~colrev.env.tei_parser.TEIParser.get_references
+      ~colrev.env.tei_parser.TEIParser.get_tei_str
+      ~colrev.env.tei_parser.TEIParser.mark_references
 
 
 
@@ -34,5 +32,5 @@ colrev.env.tei\_parser.TEIParser
 
    .. autosummary::
 
-      ~TEIParser.ns
-      ~TEIParser.nsmap
+      ~colrev.env.tei_parser.TEIParser.ns
+      ~colrev.env.tei_parser.TEIParser.nsmap

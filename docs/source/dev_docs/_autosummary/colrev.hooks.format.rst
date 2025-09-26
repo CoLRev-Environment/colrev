@@ -15,4 +15,4 @@ colrev.hooks.format
       :toctree:
       :nosignatures:
 
-      main
+      colrev.hooks.format.main

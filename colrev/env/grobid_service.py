@@ -35,7 +35,7 @@ class GrobidService:
                 self.GROBID_IMAGE.split(":")[1],
                 running_version,
             )
-            raise Exception
+            raise Exception  # pylint: disable=broad-exception-raised
 
     def check_grobid_availability(self, *, wait: bool = True) -> bool:
         """Check whether the GROBID service is available"""
@@ -79,6 +79,7 @@ class GrobidService:
             auto_remove=True,
             tty=True,
             mem_limit="4g",
+            environment={"JAVA_TOOL_OPTIONS": "-XX:-UseContainerSupport"},
             ports={8070: 8070, 8071: 8071},
             detach=True,
         )

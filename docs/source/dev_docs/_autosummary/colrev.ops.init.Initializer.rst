@@ -1,9 +1,7 @@
 colrev.ops.init.Initializer
 ===========================
 
-.. currentmodule:: colrev.ops.init
-
-.. autoclass:: Initializer
+.. autoclass:: colrev.ops.init.Initializer
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,4 +17,4 @@ colrev.ops.init.Initializer
 
    .. autosummary::
 
-      ~Initializer.review_manager
+      ~colrev.ops.init.Initializer.review_manager

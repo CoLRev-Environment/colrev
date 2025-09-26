@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.inconsistent\_content.InconsistentContentChecker
 ==========================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.inconsistent_content
-
-.. autoclass:: InconsistentContentChecker
+.. autoclass:: colrev.record.qm.checkers.inconsistent_content.InconsistentContentChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.inconsistent\_content.InconsistentContentChecker
    .. autosummary::
       :nosignatures:
 
-      ~InconsistentContentChecker.run
+      ~colrev.record.qm.checkers.inconsistent_content.InconsistentContentChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.inconsistent\_content.InconsistentContentChecker
 
    .. autosummary::
 
-      ~InconsistentContentChecker.msg
+      ~colrev.record.qm.checkers.inconsistent_content.InconsistentContentChecker.msg

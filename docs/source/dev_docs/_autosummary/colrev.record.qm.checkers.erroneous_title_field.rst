@@ -15,7 +15,7 @@ colrev.record.qm.checkers.erroneous\_title\_field
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.erroneous_title_field.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.erroneous\_title\_field
       :template: custom-class-template.rst
       :nosignatures:
 
-      ErroneousTitleFieldChecker
+      colrev.record.qm.checkers.erroneous_title_field.ErroneousTitleFieldChecker

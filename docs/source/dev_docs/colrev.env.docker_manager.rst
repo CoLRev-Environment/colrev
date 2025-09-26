@@ -20,4 +20,4 @@ colrev.env.docker\_manager
       :template: custom-class-template.rst
       :nosignatures:
 
-      DockerManager
+      colrev.env.docker_manager.DockerManager

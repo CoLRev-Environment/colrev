@@ -20,4 +20,4 @@ colrev.process.operation
       :template: custom-class-template.rst
       :nosignatures:
 
-      Operation
+      colrev.process.operation.Operation

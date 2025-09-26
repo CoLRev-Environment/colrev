@@ -20,7 +20,7 @@ colrev.ops.prep
       :template: custom-class-template.rst
       :nosignatures:
 
-      Prep
+      colrev.ops.prep.Prep
 
 
 
@@ -31,4 +31,4 @@ colrev.ops.prep
    .. autosummary::
       :toctree:
 
-      PreparationBreak
+      colrev.ops.prep.PreparationBreak

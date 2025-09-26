@@ -15,7 +15,7 @@ colrev.record.qm.checkers.doi\_not\_matching\_pattern
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.doi_not_matching_pattern.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.doi\_not\_matching\_pattern
       :template: custom-class-template.rst
       :nosignatures:
 
-      DOIPatternChecker
+      colrev.record.qm.checkers.doi_not_matching_pattern.DOIPatternChecker

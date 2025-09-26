@@ -4,58 +4,42 @@ from __future__ import annotations
 
 import json
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
+from typing import Optional
 from urllib.parse import quote
 from urllib.parse import urlparse
 
-import requests
-from pydantic import BaseModel
 from pydantic import Field
 from rapidfuzz import fuzz
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
-import colrev.settings
+import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
+from colrev.ops.search_db import run_db_search
 from colrev.packages.europe_pmc.src import europe_pmc_api
 
 # pylint: disable=duplicate-code
 # pylint: disable=unused-argument
 
 
-class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, BaseModel):
-    """Settings for EuropePMCSearchSource"""
-
-    # pylint: disable=too-many-instance-attributes
-    endpoint: str
-    filename: Path
-    search_type: SearchType
-    search_parameters: dict
-    comment: typing.Optional[str]
-
-    _details = {
-        "search_parameters": {
-            "tooltip": "Currently supports a scope item "
-            "with venue_key and journal_abbreviated fields."
-        },
-    }
-
-
 class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Europe PMC"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     #
     source_identifier = Fields.EUROPE_PMC_ID
     search_types = [
@@ -68,41 +52,25 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
     ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
-    _europe_pmc_md_filename = Path("data/search/md_europe_pmc.bib")
     _SOURCE_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
-
-    settings_class = EuropePMCSearchSourceSettings
+    db_url = "https://europepmc.org/"
 
     def __init__(
         self,
         *,
-        source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
-        self.review_manager = source_operation.review_manager
-        if settings:
-            # EuropePMC as a search_source
-            self.search_source = self.settings_class(**settings)
-        else:
-            # EuropePMC as an md-prep source
-            europe_pmc_md_source_l = [
-                s
-                for s in source_operation.review_manager.settings.sources
-                if s.filename == self._europe_pmc_md_filename
-            ]
-            if europe_pmc_md_source_l:
-                self.search_source = europe_pmc_md_source_l[0]
-            else:
-                self.search_source = colrev.settings.SearchSource(
-                    endpoint=self.endpoint,
-                    filename=self._europe_pmc_md_filename,
-                    search_type=SearchType.MD,
-                    search_parameters={},
-                    comment="",
-                )
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
 
+        self.search_source = search_file
         self.europe_pmc_lock = Lock()
-        self.source_operation = source_operation
+        _, email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
+        self.email = email
 
     # @classmethod
     # def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
@@ -141,8 +109,8 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         try:
             api = europe_pmc_api.EPMCAPI(
                 params={"query": quote(record_input.data[Fields.TITLE])},
-                email=self.review_manager.get_committer()[1],
-                session=self.review_manager.get_cached_session(),
+                email=self.email,
+                session=colrev.utils.get_cached_session(),
             )
 
             record = record_input.copy_prep_rec()
@@ -160,14 +128,6 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                     record=record, retrieved_record=retrieved_record
                 )
 
-                source = (
-                    f"{self._SOURCE_URL}{retrieved_record.data[Fields.EUROPE_PMC_ID]}"
-                )
-                retrieved_record.set_masterdata_complete(
-                    source=source,
-                    masterdata_repository=self.review_manager.settings.is_curated_repo(),
-                )
-
                 if not most_similar_only:
                     record_list.append(retrieved_record)
 
@@ -177,7 +137,10 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if most_similar_only and counter > 5:
                     break
 
-        except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
+        except (
+            europe_pmc_api.EuropePMCAPIError,
+            json.decoder.JSONDecodeError,
+        ):
             return []
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
@@ -225,11 +188,14 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.europe_pmc_lock.acquire(timeout=60)
 
             # Note : need to reload file because the object is not shared between processes
-            europe_pmc_feed = self.search_source.get_api_feed(
-                review_manager=prep_operation.review_manager,
+            europe_pmc_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier=self.source_identifier,
+                search_source=self.search_source,
                 update_only=False,
                 prep_mode=True,
+                records=prep_operation.review_manager.dataset.load_records_dict(),
+                logger=self.logger,
+                verbose_mode=self.verbose_mode,
             )
             europe_pmc_feed.add_update_record(retrieved_record=retrieved_record)
 
@@ -238,15 +204,13 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 default_source=retrieved_record.data[Fields.ORIGIN][0],
             )
 
-            record.set_masterdata_complete(
-                source=retrieved_record.data[Fields.ORIGIN][0],
-                masterdata_repository=self.review_manager.settings.is_curated_repo(),
-            )
             record.set_status(RecordState.md_prepared)
+
+            prep_operation.review_manager.dataset.save_records_dict(
+                europe_pmc_feed.get_records(),
+            )
             europe_pmc_feed.save()
 
-        except requests.exceptions.RequestException:
-            pass
         except colrev_exceptions.NotFeedIdentifiableException:
             pass
         finally:
@@ -262,7 +226,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         source = self.search_source
 
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
         assert source.search_type in self.search_types
 
@@ -271,7 +235,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "Query required in search_parameters"
             )
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def search(self, rerun: bool) -> None:
         """Run a search of Europe PMC"""
@@ -279,10 +243,12 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         self._validate_source()
         # https://europepmc.org/RestfulWebService
 
-        europe_pmc_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        europe_pmc_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         if self.search_source.search_type == SearchType.API:
@@ -292,12 +258,13 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
         elif self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
-                search_source_cls=self.__class__,
+            run_db_search(
+                db_url=self.db_url,
                 source=self.search_source,
+                add_to_git=True,
             )
 
-        # if self.search_source.search_type == colrev.settings.SearchSource.MD:
+        # if self.search_source.search_type == colrev.search_file.ExtendedSearchFile.MD:
         # self._run_md_search_update(
         #     search_operation=search_operation,
         #     europe_pmc_feed=europe_pmc_feed,
@@ -314,32 +281,23 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
 
         try:
-            _, email = self.review_manager.get_committer()
             api = europe_pmc_api.EPMCAPI(
                 params=self.search_source.search_parameters,
-                email=email,
-                session=self.review_manager.get_cached_session(),
+                email=self.email,
+                session=colrev.utils.get_cached_session(),
             )
 
             while api.url:
 
                 for retrieved_record in api.get_records():
                     if Fields.TITLE not in retrieved_record.data:
-                        self.review_manager.logger.warning(
-                            f"Skipped record: {retrieved_record.data}"
-                        )
+                        self.logger.warning(f"Skipped record: {retrieved_record.data}")
                         continue
-
-                    source = f"{self._SOURCE_URL}{retrieved_record.data[Fields.EUROPE_PMC_ID]}"
-                    retrieved_record.set_masterdata_complete(
-                        source=source,
-                        masterdata_repository=self.review_manager.settings.is_curated_repo(),
-                    )
 
                     europe_pmc_feed.add_update_record(retrieved_record)
 
-        except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
-            pass
+        # except (json.decoder.JSONDecodeError):
+        #     pass
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 "sqlite, required for requests CachedSession "
@@ -366,9 +324,10 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+        path: Path,
+        logger: Optional[logging.Logger] = None,
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -381,7 +340,9 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                     params_dict[key] = value
 
         if len(params_dict) == 0:
-            search_source = operation.create_api_source(endpoint=cls.endpoint)
+            search_source = create_api_source(platform=cls.endpoint, path=path)
+            search_source.search_parameters = {"query": search_source.search_string}
+            search_source.search_string = ""
 
         # pylint: disable=colrev-missed-constant-usage
         elif "url" in params_dict:
@@ -391,11 +352,16 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 query = params_dict["url"].replace(
                     "https://europepmc.org/search?query=", ""
                 )
-                filename = operation.get_unique_filename(file_path_string="europepmc")
-                search_source = colrev.settings.SearchSource(
-                    endpoint=cls.endpoint,
-                    filename=filename,
+                filename = colrev.utils.get_unique_filename(
+                    base_path=path,
+                    file_path_string="europepmc",
+                )
+                search_source = colrev.search_file.ExtendedSearchFile(
+                    version=cls.CURRENT_SYNTAX_VERSION,
+                    platform=cls.endpoint,
+                    search_results_path=filename,
                     search_type=SearchType.API,
+                    search_string="",
                     search_parameters={"query": query},
                     comment="",
                 )
@@ -403,8 +369,6 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 raise NotImplementedError
         else:
             raise NotImplementedError
-
-        operation.add_source_and_search(search_source)
         return search_source
 
     @classmethod
@@ -422,17 +386,19 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
         return records
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".bib":
-            return cls._load_bib(filename=filename, logger=logger)
+        if self.search_source.search_results_path.suffix == ".bib":
+            return self._load_bib(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Europe PMC"""
         record.data[Fields.AUTHOR].rstrip(".")

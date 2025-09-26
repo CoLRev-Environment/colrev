@@ -8,6 +8,7 @@ from git import Repo
 import colrev.env.local_index_builder
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
+from colrev.env.environment_manager import EnvironmentManager
 
 
 class Clone:
@@ -35,7 +36,7 @@ class Clone:
         except colrev_exceptions.RepoSetupError:
             print("Not a CoLRev repository.")
             return
-        environment_manager = review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         environment_manager.register_repo(self.local_path)
         local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder()
 

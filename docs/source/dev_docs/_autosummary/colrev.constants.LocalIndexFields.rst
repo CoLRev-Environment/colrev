@@ -1,9 +1,7 @@
 colrev.constants.LocalIndexFields
 =================================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: LocalIndexFields
+.. autoclass:: colrev.constants.LocalIndexFields
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,9 +17,9 @@ colrev.constants.LocalIndexFields
 
    .. autosummary::
 
-      ~LocalIndexFields.BIBTEX
-      ~LocalIndexFields.CITATION_KEY
-      ~LocalIndexFields.DBLP_KEY
-      ~LocalIndexFields.ID
-      ~LocalIndexFields.TEI
-      ~LocalIndexFields.TOC_KEY
+      ~colrev.constants.LocalIndexFields.BIBTEX
+      ~colrev.constants.LocalIndexFields.CITATION_KEY
+      ~colrev.constants.LocalIndexFields.DBLP_KEY
+      ~colrev.constants.LocalIndexFields.ID
+      ~colrev.constants.LocalIndexFields.TEI
+      ~colrev.constants.LocalIndexFields.TOC_KEY

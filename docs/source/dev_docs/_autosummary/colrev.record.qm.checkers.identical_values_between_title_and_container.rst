@@ -15,7 +15,7 @@ colrev.record.qm.checkers.identical\_values\_between\_title\_and\_container
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.identical_values_between_title_and_container.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.identical\_values\_between\_title\_and\_container
       :template: custom-class-template.rst
       :nosignatures:
 
-      IdenticalValuesChecker
+      colrev.record.qm.checkers.identical_values_between_title_and_container.IdenticalValuesChecker

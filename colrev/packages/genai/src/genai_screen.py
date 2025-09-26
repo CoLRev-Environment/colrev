@@ -2,6 +2,9 @@
 """Screen based on GenAI"""
 from __future__ import annotations
 
+import logging
+from typing import Optional
+
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
@@ -25,7 +28,9 @@ class GenAIScreen(base_classes.ScreenPackageBaseClass):
         *,
         screen_operation: colrev.ops.screen.Screen,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = screen_operation.review_manager
         self.screen_operation = screen_operation
         self.settings = self.settings_class(**settings)
@@ -45,6 +50,6 @@ class GenAIScreen(base_classes.ScreenPackageBaseClass):
             # record.data[Fields.SCREENING_CRITERIA] = screening_criteria_field
 
         self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.create_commit(msg="Screen (GenAI)")
+        self.review_manager.create_commit(msg="Screen (GenAI)")
 
         return records

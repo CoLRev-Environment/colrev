@@ -63,6 +63,21 @@ API
 
    colrev search --add colrev.arxiv -p "https://arxiv.org/search/?query=fitbit&searchtype=all&abstracts=show&order=-announced_date_first&size=50"
 
+Format of the search-history file:
+
+.. code-block:: json
+
+   {
+       "search_string": "",
+       "platform": "colrev.arxiv",
+       "search_results_path": "data/search/arxiv.bib",
+       "search_type": "API",
+       "search_parameters": {
+           "query": "microsourcing"
+       },
+       "version": "0.1.0"
+   }
+
 Links
 -----
 

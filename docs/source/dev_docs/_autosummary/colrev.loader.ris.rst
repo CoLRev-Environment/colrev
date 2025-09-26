@@ -20,7 +20,7 @@ colrev.loader.ris
       :template: custom-class-template.rst
       :nosignatures:
 
-      RISLoader
+      colrev.loader.ris.RISLoader
 
 
 
@@ -31,5 +31,5 @@ colrev.loader.ris
    .. autosummary::
       :toctree:
 
-      NextLine
-      ParseError
+      colrev.loader.ris.NextLine
+      colrev.loader.ris.ParseError

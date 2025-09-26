@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.year\_format.YearFormatChecker
 ========================================================
 
-.. currentmodule:: colrev.record.qm.checkers.year_format
-
-.. autoclass:: YearFormatChecker
+.. autoclass:: colrev.record.qm.checkers.year_format.YearFormatChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.year\_format.YearFormatChecker
    .. autosummary::
       :nosignatures:
 
-      ~YearFormatChecker.run
+      ~colrev.record.qm.checkers.year_format.YearFormatChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.year\_format.YearFormatChecker
 
    .. autosummary::
 
-      ~YearFormatChecker.msg
+      ~colrev.record.qm.checkers.year_format.YearFormatChecker.msg

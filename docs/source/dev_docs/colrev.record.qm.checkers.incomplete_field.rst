@@ -15,7 +15,7 @@ colrev.record.qm.checkers.incomplete\_field
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.incomplete_field.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.incomplete\_field
       :template: custom-class-template.rst
       :nosignatures:
 
-      IncompleteFieldChecker
+      colrev.record.qm.checkers.incomplete_field.IncompleteFieldChecker

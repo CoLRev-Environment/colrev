@@ -1,9 +1,7 @@
 colrev.constants.SearchSourceHeuristicStatus
 ============================================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: SearchSourceHeuristicStatus
+.. autoclass:: colrev.constants.SearchSourceHeuristicStatus
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,7 +17,7 @@ colrev.constants.SearchSourceHeuristicStatus
 
    .. autosummary::
 
-      ~SearchSourceHeuristicStatus.na
-      ~SearchSourceHeuristicStatus.oni
-      ~SearchSourceHeuristicStatus.supported
-      ~SearchSourceHeuristicStatus.todo
+      ~colrev.constants.SearchSourceHeuristicStatus.na
+      ~colrev.constants.SearchSourceHeuristicStatus.oni
+      ~colrev.constants.SearchSourceHeuristicStatus.supported
+      ~colrev.constants.SearchSourceHeuristicStatus.todo

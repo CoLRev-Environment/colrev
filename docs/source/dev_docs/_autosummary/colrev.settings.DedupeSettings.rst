@@ -1,9 +1,7 @@
 colrev.settings.DedupeSettings
 ==============================
 
-.. currentmodule:: colrev.settings
-
-.. autoclass:: DedupeSettings
+.. autoclass:: colrev.settings.DedupeSettings
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,4 +17,4 @@ colrev.settings.DedupeSettings
 
    .. autosummary::
 
-      ~DedupeSettings.dedupe_package_endpoints
+      ~colrev.settings.DedupeSettings.dedupe_package_endpoints

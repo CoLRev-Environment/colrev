@@ -1,9 +1,7 @@
 colrev.ops.search\_api\_feed.SearchAPIFeed
 ==========================================
 
-.. currentmodule:: colrev.ops.search_api_feed
-
-.. autoclass:: SearchAPIFeed
+.. autoclass:: colrev.ops.search_api_feed.SearchAPIFeed
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,11 +14,12 @@ colrev.ops.search\_api\_feed.SearchAPIFeed
    .. autosummary::
       :nosignatures:
 
-      ~SearchAPIFeed.add_record_to_feed
-      ~SearchAPIFeed.add_update_record
-      ~SearchAPIFeed.get_last_updated
-      ~SearchAPIFeed.get_prev_feed_record
-      ~SearchAPIFeed.save
+      ~colrev.ops.search_api_feed.SearchAPIFeed.add_record_to_feed
+      ~colrev.ops.search_api_feed.SearchAPIFeed.add_update_record
+      ~colrev.ops.search_api_feed.SearchAPIFeed.get_last_updated
+      ~colrev.ops.search_api_feed.SearchAPIFeed.get_prev_feed_record
+      ~colrev.ops.search_api_feed.SearchAPIFeed.get_records
+      ~colrev.ops.search_api_feed.SearchAPIFeed.save
 
 
 
@@ -30,4 +29,4 @@ colrev.ops.search\_api\_feed.SearchAPIFeed
 
    .. autosummary::
 
-      ~SearchAPIFeed.source_identifier
+      ~colrev.ops.search_api_feed.SearchAPIFeed.source_identifier

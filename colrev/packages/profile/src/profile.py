@@ -2,7 +2,9 @@
 """Creation of a profile of studies as part of the data operations"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import BaseModel
@@ -38,7 +40,9 @@ class Profile(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.review_manager = data_operation.review_manager
         self.data_operation = data_operation
 
@@ -66,7 +70,7 @@ class Profile(base_classes.DataPackageBaseClass):
     def _update_profile(self, silent_mode: bool) -> None:
         """Create a profile of the sample"""
 
-        self.review_manager.logger.info("Create sample profile")
+        self.logger.info("Create sample profile")
 
         def prep_records(*, records: dict) -> pd.DataFrame:
             for record in records.values():
@@ -116,11 +120,11 @@ class Profile(base_classes.DataPackageBaseClass):
                 Fields.ID
             ].tolist()
             if len(missing_outlet) > 0:
-                self.review_manager.logger.info(f"No outlet: {missing_outlet}")
+                self.logger.info(f"No outlet: {missing_outlet}")
             return observations
 
         # if not status.get_completeness_condition():
-        #     self.review_manager.logger.warning(
+        #     self.logger.warning(
         #  f"{Colors.RED}Sample not completely processed!{Colors.END}")
 
         records = self.review_manager.dataset.load_records_dict()
@@ -134,10 +138,10 @@ class Profile(base_classes.DataPackageBaseClass):
         )
 
         if observations.empty:
-            self.review_manager.logger.info("No sample/observations available")
+            self.logger.info("No sample/observations available")
             return
 
-        self.review_manager.logger.info("Generate output/sample.csv")
+        self.logger.info("Generate output/sample.csv")
         observations.to_csv(output_dir / Path("sample.csv"), index=False)
 
         tabulated = pd.pivot_table(
@@ -161,7 +165,7 @@ class Profile(base_classes.DataPackageBaseClass):
         tabulated = tabulated[year_list]
         tabulated.sort_values(by=("All"), ascending=True, inplace=True)
 
-        self.review_manager.logger.info("Generate profile output/journals_years.csv")
+        self.logger.info("Generate profile output/journals_years.csv")
         tabulated.to_csv(output_dir / Path("journals_years.csv"))
 
         tabulated = pd.pivot_table(
@@ -172,10 +176,10 @@ class Profile(base_classes.DataPackageBaseClass):
             fill_value=0,
             margins=True,
         )
-        self.review_manager.logger.info("Generate output/ENTRYTYPES.csv")
+        self.logger.info("Generate output/ENTRYTYPES.csv")
         tabulated.to_csv(output_dir / Path("ENTRYTYPES.csv"))
 
-        self.review_manager.logger.info(f"Files are available in {output_dir.name}")
+        self.logger.info("Files are available in %s", output_dir.name)
 
     def update_data(
         self,

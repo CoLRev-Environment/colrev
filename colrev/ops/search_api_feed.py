@@ -2,28 +2,64 @@
 """CoLRev search feed: store and update origin records and update main records."""
 from __future__ import annotations
 
-import json
-import time
+import logging
 import typing
 from copy import deepcopy
-from random import randint
+from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
+import colrev.git_repo
 import colrev.loader.load_utils
 import colrev.loader.load_utils_formatter
 import colrev.record.record_merger
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
+from colrev.constants import EndpointType
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
+from colrev.constants import SearchType
+from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
 
-if typing.TYPE_CHECKING:
-    import colrev.review_manager
-    import colrev.settings
+
+def create_api_source(
+    *, platform: str, path: Path
+) -> colrev.search_file.ExtendedSearchFile:
+    """Interactively add an API SearchSource"""
+
+    print(f"Add {platform} as an API SearchSource")
+    print()
+
+    keywords = input("Enter the keywords:")
+
+    filename = colrev.utils.get_unique_filename(
+        base_path=path,
+        file_path_string=f"{platform.replace('colrev.', '')}",
+    )
+    package_manager = PackageManager()
+    # pylint: disable=broad-exception-caught
+    try:
+        search_source_class = package_manager.get_package_endpoint_class(
+            package_type=EndpointType.search_source,
+            package_identifier=platform,
+        )
+        version = getattr(search_source_class, "CURRENT_SYNTAX_VERSION", "0.1.0")
+    except Exception:  # pragma: no cover - fall back to default version
+        version = "0.1.0"
+
+    add_source = colrev.search_file.ExtendedSearchFile(
+        platform=platform,
+        search_results_path=filename,
+        search_type=SearchType.API,
+        search_string=keywords,
+        comment="",
+        version=version,
+    )
+    return add_source
 
 
 # Keep in mind the need for lock-mechanisms, e.g., in concurrent prep operations
@@ -39,14 +75,16 @@ class SearchAPIFeed:
     def __init__(
         self,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         source_identifier: str,
-        search_source: colrev.settings.SearchSource,
+        search_source: colrev.search_file.ExtendedSearchFile,
         update_only: bool,
+        logger: logging.Logger,
         prep_mode: bool = False,
+        verbose_mode: bool = False,
+        records: typing.Optional[dict] = None,
     ):
         self.source = search_source
-        self.feed_file = search_source.filename
+        self.feed_file = Path(search_source.search_results_path)
 
         # Note: the source_identifier identifies records in the search feed.
         # This could be a doi or link or database-specific ID (like WOS accession numbers)
@@ -64,17 +102,19 @@ class SearchAPIFeed:
         # if update_only, we do not update time_variant_fields
         # (otherwise, fields in recent records would be more up-to-date)
 
-        self.review_manager = review_manager
-        self.logger = review_manager.logger
+        self.logger = logger
         self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
 
         self.origin_prefix = self.source.get_origin_prefix()
 
         self._load_feed()
 
+        if prep_mode:
+            assert records is not None
+        self.verbose_mode = verbose_mode
         self.prep_mode = prep_mode
-        if not prep_mode:
-            self.records = self.review_manager.dataset.load_records_dict()
+        self._retrieved_records_for_saving = False
+        self.records = records or {}
 
     @property
     def source_identifier(self) -> str:
@@ -91,13 +131,6 @@ class SearchAPIFeed:
             raise ValueError("source_identifier must be at least 2 characters")
         self._source_identifier = value
 
-    def get_last_updated(self) -> str:
-        """Returns the date of the last update (if available) in YYYY-MM-DD format"""
-        file = self.feed_file
-        if not file.is_file():
-            return ""
-        return self.review_manager.dataset.get_last_commit_date(self.feed_file)
-
     def _load_feed(self) -> None:
         if not self.feed_file.is_file():
             self._available_ids = {}
@@ -107,7 +140,7 @@ class SearchAPIFeed:
         self.feed_records = colrev.loader.load_utils.loads(
             load_string=self.feed_file.read_text(encoding="utf8"),
             implementation="bib",
-            logger=self.review_manager.logger,
+            logger=self.logger,
         )
         self._available_ids = {
             x[self.source_identifier]: x[Fields.ID]
@@ -175,10 +208,10 @@ class SearchAPIFeed:
         self.feed_records[frid] = feed_record_dict
         if added_new:
             if not self.prep_mode:
-                self.logger.info(f"  add record: {record.data[self.source_identifier]}")
-            elif (
-                self.prep_mode and self.review_manager.verbose_mode
-            ):  # pragma: no cover
+                self.logger.info(
+                    f"  retrieve record: {record.data[self.source_identifier]}"
+                )
+            elif self.prep_mode and self.verbose_mode:  # pragma: no cover
                 self.logger.info(
                     f"  link record: {record.data[self.source_identifier]}"
                 )
@@ -199,7 +232,7 @@ class SearchAPIFeed:
                 colrev.loader.load_utils.loads(
                     load_string=bibtex_str,
                     implementation="bib",
-                    logger=self.review_manager.logger,
+                    logger=self.logger,
                 ).values()
             )[0]
             return record_dict
@@ -225,7 +258,7 @@ class SearchAPIFeed:
         main_record: colrev.record.record.Record,
     ) -> bool:
         if record.is_retracted():
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"{Colors.RED}Found paper retract: "
                 f"{main_record.data['ID']}{Colors.END}"
             )
@@ -244,7 +277,7 @@ class SearchAPIFeed:
     ) -> None:
 
         if self._forthcoming_published(record=record, prev_record=prev_feed_record):
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"{Colors.GREEN}Update published forthcoming paper: "
                 f"{record.data['ID']}{Colors.END}"
             )
@@ -377,17 +410,15 @@ class SearchAPIFeed:
             )
             self._nr_changed += 1
             if similarity_score > 0.98:
-                self.review_manager.logger.info(f" check/update {colrev_origin}")
+                self.logger.info(f" check/update {colrev_origin}")
             else:
                 dict_diff = retrieved_record.get_diff(prev_feed_record)
-                self.review_manager.logger.info(
+                self.logger.info(
                     f" {Colors.RED} check/update {colrev_origin} leads to substantial changes "
                     f"({similarity_score}) in {main_record.data['ID']}:{Colors.END}"
                 )
-                self.review_manager.logger.info(
-                    self.review_manager.p_printer.pformat(
-                        [x for x in dict_diff if "change" == x[0]]
-                    )
+                self.logger.info(
+                    colrev.utils.pformat([x for x in dict_diff if "change" == x[0]])
                 )
             return True
         return False
@@ -395,11 +426,11 @@ class SearchAPIFeed:
     def _print_post_run_search_infos(self) -> None:
         """Print the search infos (after running the search)"""
         if self._nr_added > 0:
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"{Colors.GREEN}Retrieved {self._nr_added} records{Colors.END}"
             )
         else:
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"{Colors.GREEN}No additional records retrieved{Colors.END}"
             )
 
@@ -409,15 +440,12 @@ class SearchAPIFeed:
             return
 
         if self._nr_changed > 0:  # pragma: no cover
-            self.review_manager.logger.info(
+            self.logger.info(
                 f"{Colors.GREEN}Updated {self._nr_changed} records{Colors.END}"
             )
         else:
             if self.records:
-                self.review_manager.logger.info(
-                    f"{Colors.GREEN}Records ({self.review_manager.paths.RECORDS_FILE})"
-                    f" up-to-date{Colors.END}"
-                )
+                self.logger.info(f"{Colors.GREEN}Records up-to-date{Colors.END}")
 
     def get_prev_feed_record(
         self, record: colrev.record.record.Record
@@ -460,8 +488,21 @@ class SearchAPIFeed:
             ]
         return added or updated
 
+    def get_records(self) -> dict:
+        """Get the prepared (primary) records"""
+
+        self._retrieved_records_for_saving = True
+
+        return self.records
+
     def save(self, *, skip_print: bool = False) -> None:
         """Save the feed file and records, printing post-run search infos."""
+
+        if self.prep_mode:
+            assert self._retrieved_records_for_saving, (
+                "You must call get_records() before calling save() "
+                "to ensure that the prepared (primary) records are saved."
+            )
 
         if not skip_print and not self.prep_mode:
             self._print_post_run_search_infos()
@@ -470,27 +511,13 @@ class SearchAPIFeed:
             self.feed_file.parents[0].mkdir(parents=True, exist_ok=True)
             write_file(records_dict=self.feed_records, filename=self.feed_file)
 
-            while True:
-                try:
-                    self.review_manager.load_settings()
-                    if self.source.filename.name not in [
-                        s.filename.name for s in self.review_manager.settings.sources
-                    ]:
-                        self.review_manager.settings.sources.append(self.source)
-                        self.review_manager.save_settings()
-
-                    self.review_manager.dataset.add_changes(self.feed_file)
-                    break
-                except (
-                    FileExistsError,
-                    OSError,
-                    json.decoder.JSONDecodeError,
-                ):  # pragma: no cover
-                    self.review_manager.logger.debug("Wait for git")
-                    time.sleep(randint(1, 15))  # nosec
-
-        if not self.prep_mode:
-            self.review_manager.dataset.save_records_dict(self.records)
         if not skip_print:
             self._nr_added = 0
             self._nr_changed = 0
+
+        self._retrieved_records_for_saving = False
+
+    def get_last_updated(self) -> str:
+        """Get the last updated timestamp."""
+        repo = colrev.git_repo.GitRepo(self.feed_file.parent)
+        return repo.get_last_updated(self.feed_file)

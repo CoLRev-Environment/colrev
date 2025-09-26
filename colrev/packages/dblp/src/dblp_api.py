@@ -26,6 +26,7 @@ class DBLPAPI:
 
     url = ""
     _batch_next = False
+    _availability_exception_message = "DBLP"
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -49,7 +50,7 @@ class DBLPAPI:
         self.year = datetime.now().year - 2
         if rerun:
             self.year = 1980
-        self.total = self.get_total()
+        self.set_total()
 
     def check_availability(self) -> None:
         """Check if the DBLP API is available"""
@@ -79,9 +80,13 @@ class DBLPAPI:
                 assert dblp_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
                 assert dblp_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
             else:
-                raise colrev_exceptions.ServiceNotAvailableException("DBLP")
-        except requests.exceptions.RequestException as exc:
-            raise colrev_exceptions.ServiceNotAvailableException("DBLP") from exc
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    self._availability_exception_message
+                )
+        except (requests.exceptions.RequestException, IndexError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                self._availability_exception_message
+            ) from exc
 
     def _get_dblp_venue(
         self,
@@ -228,12 +233,13 @@ class DBLPAPI:
             # Note : journal_abbreviated is the abbreviated venue_key
             query = self.params["scope"]["journal_abbreviated"]
             # query = params['scope']["venue_key"]
-        elif "query" in self.params:
+            return self._api_url + query.replace(" ", "+")
+        if "query" in self.params:
             query = self.params["query"]
-        else:
-            raise ValueError("No query or scope provided")
+            # return self._api_url + query.replace(" ", "+")
+            return query.replace(" ", "+")
 
-        return self._api_url + query.replace(" ", "+")
+        raise ValueError("No query or scope provided")
 
     def set_next_url(self) -> None:
         """Set the next URL"""
@@ -256,9 +262,9 @@ class DBLPAPI:
             return True
         return self.year > datetime.now().year
 
-    def get_total(self) -> int:
+    def set_total(self) -> None:
         """Get the total number of records"""
-
+        total = -1
         try:
             ret = self.session.request(
                 "GET",
@@ -270,22 +276,22 @@ class DBLPAPI:
 
             data = json.loads(ret.text)
 
-            if "result" not in data:
-                return -1
-            if "hits" not in data["result"]:
-                return -1
-            if "@total" not in data["result"]["hits"]:
-                return -1
-            return int(data["result"]["hits"]["@total"])
+            if (
+                "result" in data
+                and "hits" in data["result"]
+                and "@total" in data["result"]["hits"]
+            ):
+                total = int(data["result"]["hits"]["@total"])
         except (requests.exceptions.RequestException, ValueError):
-            return -1
+            pass
+        self.total = total
 
     def retrieve_records(self) -> list:
         """Retrieve records from DBLP"""
 
         # try:
         while True:
-            # review_manager.logger.debug(url)
+            # print(self.url)
             ret = self.session.request(
                 "GET", self.url, headers=self.headers, timeout=self._timeout  # type: ignore
             )
@@ -348,6 +354,6 @@ class DBLPAPI:
     def set_url_from_query(self) -> None:
         """Set the URL from a query"""
         query = re.sub(
-            r"[\W]+", " ", self.params["query"].replace(" ", "_").replace("-", "_")
+            r"[\W]+", " ", self.params["query"].replace(" ", "+").replace("-", "+")
         )
         self.url = self._api_url + query.replace(" ", "+") + "&format=json"

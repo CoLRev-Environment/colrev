@@ -49,18 +49,22 @@ def _extract_references_from_records(
             elif len(refs) < 10:
                 col = Colors.ORANGE
             review_manager.logger.info(
-                f" extracted {col}{str(len(refs)).rjust(4)}{Colors.END} references from {record[Fields.FILE]}"
+                " extracted %s%s%s references from %s",
+                col,
+                str(len(refs)).rjust(4),
+                Colors.END,
+                record[Fields.FILE],
             )
         except FileNotFoundError:
             review_manager.logger.warning(
-                f"Could not find TEI file for {record[Fields.FILE]}: "
-                "Please check the TEI file or the PDF."
+                "Could not find TEI file for %s: Please check the TEI file or the PDF.",
+                record[Fields.FILE],
             )
             continue
         except colrev_exceptions.TEIException:
             review_manager.logger.warning(
-                f"Could not extract references from {record[Fields.FILE]}: "
-                "Please check the TEI file or the PDF."
+                "Could not extract references from %s: Please check the TEI file or the PDF.",
+                record[Fields.FILE],
             )
             continue
 
@@ -70,7 +74,9 @@ def _extract_references_from_records(
     return df_all_references
 
 
-def _load_included_records(review_manager: ReviewManager) -> pd.DataFrame:
+def _load_included_records(
+    review_manager: ReviewManager,
+) -> dict:
     colrev.ops.check.CheckOperation(review_manager)
     records = review_manager.dataset.load_records_dict()
 
@@ -86,7 +92,8 @@ def _load_included_records(review_manager: ReviewManager) -> pd.DataFrame:
     }
 
     review_manager.logger.info(
-        f"Loaded {len(records)} records (rev_included or rev_synthesized)."
+        "Loaded %s records (rev_included or rev_synthesized).",
+        len(records),
     )
     return records
 
@@ -97,7 +104,7 @@ def main() -> None:
     review_manager = ReviewManager()
     review_manager.logger.info("Start ENLIT")
 
-    records = _load_included_records(review_manager=review_manager)
+    records: dict = _load_included_records(review_manager=review_manager)
 
     # TODO : create a generic extract_citation_network() method in tei-utils?
     df_all_references = _extract_references_from_records(
@@ -114,7 +121,7 @@ def main() -> None:
 
     def sum_nr_references(values: list) -> int:
         """Sum all integers in a list."""
-        return sum([int(value) for value in values if value != ""])
+        return sum(int(value) for value in values if value != "")
 
     records_df = prep(df_all_references, verbosity_level=0)
     deduplication_pairs = block(records_df, verbosity_level=0)
@@ -155,7 +162,10 @@ def main() -> None:
 
     pre_duplication_size = df_all_references.shape[0]
     review_manager.logger.info(
-        f"Citation network: {Colors.GREEN}{pre_duplication_size} references{Colors.END}"
+        "Citation network: %s%s references%s",
+        Colors.GREEN,
+        pre_duplication_size,
+        Colors.END,
     )
     review_manager.logger.info("Start deduplication...")
 
@@ -194,8 +204,13 @@ def main() -> None:
     after_duplication_size = df_all_references.shape[0]
     nr_duplicates = pre_duplication_size - after_duplication_size
     review_manager.logger.info(
-        f"Remove {Colors.RED}{str(nr_duplicates).rjust(6)} duplicates{Colors.END}:"
-        f"    {Colors.GREEN}{str(after_duplication_size).rjust(6)} references{Colors.END}"
+        "Remove %s%s duplicates%s:    %s%s references%s",
+        Colors.RED,
+        str(nr_duplicates).rjust(6),
+        Colors.END,
+        Colors.GREEN,
+        str(after_duplication_size).rjust(6),
+        Colors.END,
     )
 
     # Filter to keep only rows where nr_references > 0
@@ -203,17 +218,26 @@ def main() -> None:
     nr_cited = df_all_references.shape[0]
     non_cited_references = after_duplication_size - nr_cited
     review_manager.logger.info(
-        f"Remove {Colors.RED}{str(non_cited_references).rjust(6)} non-cited{Colors.END}:"
-        f"     {Colors.GREEN}{str(nr_cited).rjust(6)} references{Colors.END}"
+        "Remove %s%s non-cited%s:     %s%s references%s",
+        Colors.RED,
+        str(non_cited_references).rjust(6),
+        Colors.END,
+        Colors.GREEN,
+        str(nr_cited).rjust(6),
+        Colors.END,
     )
 
     df_all_references = df_all_references[df_all_references["in_sample"]]
     nr_in_sample = df_all_references.shape[0]
     out_of_sample_difference = nr_cited - nr_in_sample
     review_manager.logger.info(
-        f"Remove {Colors.RED}{str(out_of_sample_difference).rjust(6)} "
-        f"out-of-sample{Colors.END}: {Colors.GREEN}{str(nr_in_sample).rjust(6)} "
-        f"references{Colors.END}"
+        "Remove %s%s out-of-sample%s: %s%s references%s",
+        Colors.RED,
+        str(out_of_sample_difference).rjust(6),
+        Colors.END,
+        Colors.GREEN,
+        str(nr_in_sample).rjust(6),
+        Colors.END,
     )
 
     # df_all_references.to_csv("export_2.csv", index=False, encoding="utf-8-sig")
@@ -243,6 +267,8 @@ def main() -> None:
 
     # save to csv
     review_manager.logger.info(
-        f"Saving list to {Colors.GREEN}enlit_references.csv{Colors.END}"
+        "Saving list to %senlit_references.csv%s",
+        Colors.GREEN,
+        Colors.END,
     )
     df_all_references.to_csv("enlit_references.csv", index=False, encoding="utf-8-sig")

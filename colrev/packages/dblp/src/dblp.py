@@ -7,39 +7,42 @@ import re
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 
-import requests
 from pydantic import BaseModel
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
-import colrev.settings
+import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.dblp.src import dblp_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 
 
-class DBLPSearchSourceSettings(colrev.settings.SearchSource, BaseModel):
+class DBLPSearchSourceSettings(colrev.search_file.ExtendedSearchFile, BaseModel):
     """Settings for DBLPSearchSource"""
 
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-instance-attributes
-    endpoint: str
-    filename: Path
+    platform: str
+    filepath: Path
     search_type: SearchType
     search_parameters: dict
+    version: typing.Optional[str]
     comment: typing.Optional[str]
 
     _details = {
@@ -52,6 +55,8 @@ class DBLPSearchSourceSettings(colrev.settings.SearchSource, BaseModel):
 
 class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     """DBLP API"""
+
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     source_identifier = "dblp_key"
     search_types = [
@@ -71,39 +76,18 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     def __init__(
         self,
         *,
-        source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
-        self.review_manager = source_operation.review_manager
-        self.search_source = self._get_search_source(settings)
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
+        self.search_source = search_file
+
         self.dblp_lock = Lock()
         self.origin_prefix = self.search_source.get_origin_prefix()
-        _, self.email = self.review_manager.get_committer()
-
-    def _get_search_source(
-        self, settings: typing.Optional[dict]
-    ) -> colrev.settings.SearchSource:
-
-        # DBLP as a search_source
-        if settings:
-            return self.settings_class(**settings)
-
-        # DBLP as an md-prep source
-        dblp_md_filename = Path("data/search/md_dblp.bib")
-        dblp_md_source_l = [
-            s
-            for s in self.review_manager.settings.sources
-            if s.filename == dblp_md_filename
-        ]
-        if dblp_md_source_l:
-            return dblp_md_source_l[0]
-
-        return colrev.settings.SearchSource(
-            endpoint=self.endpoint,
-            filename=dblp_md_filename,
-            search_type=SearchType.MD,
-            search_parameters={},
-            comment="",
+        _, self.email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
         )
 
     @classmethod
@@ -126,9 +110,10 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+        path: Path,
+        logger: Optional[logging.Logger] = None,
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -140,13 +125,25 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     key, value = item.split("=")
                     params_dict[key] = value
 
-        search_type = operation.select_search_type(
+        search_type = colrev.utils.select_search_type(
             search_types=cls.search_types, params=params_dict
+        )
+        filename = colrev.utils.get_unique_filename(
+            base_path=path,
+            file_path_string="dblp",
         )
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.create_api_source(endpoint=cls.endpoint)
+                search_source = create_api_source(platform=cls.endpoint, path=path)
+                url = (
+                    "https://dblp.org/search/publ/api?q=" + search_source.search_string
+                )
+                search_source.search_parameters = {
+                    "query": url,
+                }
+                search_source.version = cls.CURRENT_SYNTAX_VERSION
+                search_source.search_string = ""
 
             # pylint: disable=colrev-missed-constant-usage
             elif "url" in params_dict:
@@ -157,37 +154,51 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     .replace("https://dblp.org/search/publ?q=", api_url)
                 )
 
-                filename = operation.get_unique_filename(file_path_string="dblp")
-                search_source = colrev.settings.SearchSource(
-                    endpoint=cls.endpoint,
-                    filename=filename,
+                search_source = colrev.search_file.ExtendedSearchFile(
+                    platform=cls.endpoint,
+                    search_results_path=filename,
                     search_type=SearchType.API,
-                    search_parameters={"query": query},
+                    search_string="",
+                    search_parameters={
+                        "query": query,
+                    },
                     comment="",
+                    version=cls.CURRENT_SYNTAX_VERSION,
                 )
+
             else:
                 raise NotImplementedError
 
-        # elif search_type == SearchType.TOC:
+        elif search_type == SearchType.TOC:
+            url = input("Paste the URL of the DBLP venue (e.g. conference):")
+            assert url.startswith("https://dblp.org/db/journals/")
+            venue_key = url.split("/")[-2].replace(".html", "")
+            search_source = colrev.search_file.ExtendedSearchFile(
+                platform=cls.endpoint,
+                search_results_path=filename,
+                search_type=SearchType.TOC,
+                search_string="",
+                search_parameters={
+                    "scope": {
+                        "venue_key": venue_key,
+                    }
+                },
+                comment="",
+                version=cls.CURRENT_SYNTAX_VERSION,
+            )
+
         else:
             raise colrev_exceptions.PackageParameterError(
                 f"Cannot add dblp endpoint with query {params}"
             )
-
-        operation.add_source_and_search(search_source)
         return search_source
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check status (availability) of DBLP API"""
-        if self.review_manager.force_mode:
-            return
-
         api = dblp_api.DBLPAPI(
             params={},
             email=self.email,
-            session=self.review_manager.get_cached_session(),
+            session=colrev.utils.get_cached_session(),
             timeout=self._timeout,
         )
         api.check_availability()
@@ -201,7 +212,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         api = dblp_api.DBLPAPI(
             params={},
             email=self.email,
-            session=self.review_manager.get_cached_session(),
+            session=colrev.utils.get_cached_session(),
             rerun=True,
             timeout=self._timeout,
         )
@@ -235,17 +246,15 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         api = dblp_api.DBLPAPI(
             params=self.search_source.search_parameters,
             email=self.email,
-            session=self.review_manager.get_cached_session(),
+            session=colrev.utils.get_cached_session(),
             rerun=(len(dblp_feed.feed_records) < 100 or rerun),
             timeout=self._timeout,
         )
 
         total = api.total
-        self.review_manager.logger.info(f"Total: {total:,}")
+        self.logger.info(f"Total: {total:,}")
         if not rerun and len(dblp_feed.feed_records) > 0:
-            self.review_manager.logger.info(
-                "Retrieving latest results (no estimate available)"
-            )
+            self.logger.info("Retrieving latest results (no estimate available)")
         elif total > 0 and rerun:
             seconds = 10 + (total / 10)
             if total > 1000:
@@ -259,9 +268,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 + str(int(seconds % 60)).zfill(2)
             )
 
-            self.review_manager.logger.info(
-                f"Estimated runtime [hh:mm:ss]: {formatted_time}"
-            )
+            self.logger.info("Estimated runtime [hh:mm:ss]: %s", formatted_time)
 
         while True:
             api.set_next_url()
@@ -269,15 +276,22 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
             for retrieved_record in api.retrieve_records():
                 try:
 
+                    # Check if the scope is respected (key starts with venue_key)
                     if "scope" in self.search_source.search_parameters and (
                         f"{self.search_source.search_parameters['scope']['venue_key']}/"
                         not in retrieved_record.data["dblp_key"]
-                        or retrieved_record.data.get(Fields.ENTRYTYPE, "")
-                        not in [
-                            "article",
-                            "inproceedings",
-                        ]
                     ):
+                        continue
+
+                    if retrieved_record.data.get(Fields.ENTRYTYPE, "") not in [
+                        "article",
+                        "inproceedings",
+                    ]:
+                        # warn
+                        self.logger.warning(
+                            "DBLP: Unknown type: %s",
+                            retrieved_record.data.get(Fields.ENTRYTYPE, ""),
+                        )
                         continue
 
                     dblp_feed.add_update_record(retrieved_record)
@@ -294,7 +308,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
         assert source.search_type in self.search_types
 
@@ -319,17 +333,19 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "scope or query required in search_parameters"
             )
 
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def search(self, rerun: bool) -> None:
         """Run a search of DBLP"""
 
         self._validate_source()
 
-        dblp_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        dblp_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
         if self.search_source.search_type == SearchType.MD:
             self._run_md_search(dblp_feed=dblp_feed)
@@ -343,31 +359,30 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         else:
             raise NotImplementedError
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
                 if "timestamp" in record_dict:
-                    record_dict[f"{cls.endpoint}.timestamp"] = record_dict.pop(
+                    record_dict[f"{self.endpoint}.timestamp"] = record_dict.pop(
                         "timestamp"
                     )
                 if "biburl" in record_dict:
-                    record_dict[f"{cls.endpoint}.biburl"] = record_dict.pop("biburl")
+                    record_dict[f"{self.endpoint}.biburl"] = record_dict.pop("biburl")
                 if "bibsource" in record_dict:
-                    record_dict[f"{cls.endpoint}.bibsource"] = record_dict.pop(
+                    record_dict[f"{self.endpoint}.bibsource"] = record_dict.pop(
                         "bibsource"
                     )
                 if "dblp_key" in record_dict:
                     record_dict[Fields.DBLP_KEY] = record_dict.pop("dblp_key")
 
             records = colrev.loader.load_utils.load(
-                filename=filename,
+                filename=self.search_source.search_results_path,
                 unique_id_field="ID",
                 field_mapper=field_mapper,
-                logger=logger,
+                logger=self.logger,
             )
             return records
 
@@ -376,8 +391,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
-    ) -> colrev.record.record_prep.PrepRecord:
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for DBLP"""
 
         if record.data.get(Fields.AUTHOR, FieldValues.UNKNOWN) != FieldValues.UNKNOWN:
@@ -414,12 +428,15 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             # Note: queries combining title+author/journal do not seem to work any more
             api = dblp_api.DBLPAPI(
-                params={"query": record.data[Fields.TITLE]},
+                params={
+                    "query": colrev.utils.remove_stopwords(record.data[Fields.TITLE])
+                },
                 email=self.email,
-                session=self.review_manager.get_cached_session(),
+                session=colrev.utils.get_cached_session(),
                 timeout=timeout,
             )
 
+            api.set_url_from_query()
             retrieved_records = api.retrieve_records()
             if not retrieved_records:
                 return record
@@ -436,11 +453,14 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
 
                 # Note : need to reload file
                 # because the object is not shared between processes
-                dblp_feed = self.search_source.get_api_feed(
-                    review_manager=self.review_manager,
+                dblp_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                     source_identifier=self.source_identifier,
+                    search_source=self.search_source,
                     update_only=False,
                     prep_mode=True,
+                    records=prep_operation.review_manager.dataset.load_records_dict(),
+                    logger=self.logger,
+                    verbose_mode=self.verbose_mode,
                 )
 
                 dblp_feed.add_update_record(retrieved_record)
@@ -454,10 +474,6 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     retrieved_record,
                     default_source=retrieved_record.data[Fields.ORIGIN][0],
                 )
-                record.set_masterdata_complete(
-                    source=retrieved_record.data[Fields.ORIGIN][0],
-                    masterdata_repository=self.review_manager.settings.is_curated_repo(),
-                )
                 record.set_status(RecordState.md_prepared)
                 if "Withdrawn (according to DBLP)" in record.data.get(
                     "colrev.dblp.warning", ""
@@ -465,16 +481,17 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     record.prescreen_exclude(reason=FieldValues.RETRACTED)
                     # record.remove_field(key="warning")
 
+                prep_operation.review_manager.dataset.save_records_dict(
+                    dblp_feed.get_records(),
+                )
                 dblp_feed.save()
                 self.dblp_lock.release()
 
             except (colrev_exceptions.NotFeedIdentifiableException,):
                 self.dblp_lock.release()
 
-        except requests.exceptions.RequestException:
-            pass
         except colrev_exceptions.ServiceNotAvailableException:
-            if self.review_manager.force_mode:
-                self.review_manager.logger.error("Service not available: DBLP")
+            if prep_operation.review_manager.force_mode:
+                self.logger.error("Service not available: DBLP")
 
         return record

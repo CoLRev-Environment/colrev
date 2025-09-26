@@ -15,7 +15,7 @@ colrev.record.record\_similarity
       :toctree:
       :nosignatures:
 
-      container_is_abbreviated
-      get_record_change_score
-      get_record_similarity
-      matches
+      colrev.record.record_similarity.container_is_abbreviated
+      colrev.record.record_similarity.get_record_change_score
+      colrev.record.record_similarity.get_record_similarity
+      colrev.record.record_similarity.matches

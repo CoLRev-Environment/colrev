@@ -1,9 +1,7 @@
 colrev.env.local\_index\_sqlite.SQLiteIndexTOC
 ==============================================
 
-.. currentmodule:: colrev.env.local_index_sqlite
-
-.. autoclass:: SQLiteIndexTOC
+.. autoclass:: colrev.env.local_index_sqlite.SQLiteIndexTOC
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,10 +14,10 @@ colrev.env.local\_index\_sqlite.SQLiteIndexTOC
    .. autosummary::
       :nosignatures:
 
-      ~SQLiteIndexTOC.add
-      ~SQLiteIndexTOC.commit
-      ~SQLiteIndexTOC.exists
-      ~SQLiteIndexTOC.get_toc_items
+      ~colrev.env.local_index_sqlite.SQLiteIndexTOC.add
+      ~colrev.env.local_index_sqlite.SQLiteIndexTOC.commit
+      ~colrev.env.local_index_sqlite.SQLiteIndexTOC.exists
+      ~colrev.env.local_index_sqlite.SQLiteIndexTOC.get_toc_items
 
 
 
@@ -29,10 +27,10 @@ colrev.env.local\_index\_sqlite.SQLiteIndexTOC
 
    .. autosummary::
 
-      ~SQLiteIndexTOC.CREATE_TABLE_QUERY
-      ~SQLiteIndexTOC.INDEX_NAME
-      ~SQLiteIndexTOC.INSERT_MANY_QUERY
-      ~SQLiteIndexTOC.KEYS
-      ~SQLiteIndexTOC.SELECT_ALL_QUERY
-      ~SQLiteIndexTOC.SELECT_KEY_QUERY
-      ~SQLiteIndexTOC.connection
+      ~colrev.env.local_index_sqlite.SQLiteIndexTOC.CREATE_TABLE_QUERY
+      ~colrev.env.local_index_sqlite.SQLiteIndexTOC.INDEX_NAME
+      ~colrev.env.local_index_sqlite.SQLiteIndexTOC.INSERT_MANY_QUERY
+      ~colrev.env.local_index_sqlite.SQLiteIndexTOC.KEYS
+      ~colrev.env.local_index_sqlite.SQLiteIndexTOC.SELECT_ALL_QUERY
+      ~colrev.env.local_index_sqlite.SQLiteIndexTOC.SELECT_KEY_QUERY
+      ~colrev.env.local_index_sqlite.SQLiteIndexTOC.connection

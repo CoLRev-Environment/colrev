@@ -15,4 +15,4 @@ colrev.hooks.share
       :toctree:
       :nosignatures:
 
-      main
+      colrev.hooks.share.main

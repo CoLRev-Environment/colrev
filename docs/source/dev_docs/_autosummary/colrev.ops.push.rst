@@ -20,4 +20,4 @@ colrev.ops.push
       :template: custom-class-template.rst
       :nosignatures:
 
-      Push
+      colrev.ops.push.Push

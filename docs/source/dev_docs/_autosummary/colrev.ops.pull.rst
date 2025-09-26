@@ -20,4 +20,4 @@ colrev.ops.pull
       :template: custom-class-template.rst
       :nosignatures:
 
-      Pull
+      colrev.ops.pull.Pull

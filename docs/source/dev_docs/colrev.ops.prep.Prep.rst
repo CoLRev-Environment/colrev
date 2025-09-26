@@ -1,9 +1,7 @@
 colrev.ops.prep.Prep
 ====================
 
-.. currentmodule:: colrev.ops.prep
-
-.. autoclass:: Prep
+.. autoclass:: colrev.ops.prep.Prep
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,14 +14,14 @@ colrev.ops.prep.Prep
    .. autosummary::
       :nosignatures:
 
-      ~Prep.check_precondition
-      ~Prep.conclude
-      ~Prep.decorate
-      ~Prep.main
-      ~Prep.notify
-      ~Prep.prepare
-      ~Prep.set_ids
-      ~Prep.setup_custom_script
+      ~colrev.ops.prep.Prep.check_precondition
+      ~colrev.ops.prep.Prep.conclude
+      ~colrev.ops.prep.Prep.decorate
+      ~colrev.ops.prep.Prep.main
+      ~colrev.ops.prep.Prep.notify
+      ~colrev.ops.prep.Prep.prepare
+      ~colrev.ops.prep.Prep.set_ids
+      ~colrev.ops.prep.Prep.setup_custom_script
 
 
 
@@ -33,11 +31,11 @@ colrev.ops.prep.Prep
 
    .. autosummary::
 
-      ~Prep.max_retries_on_error
-      ~Prep.pad
-      ~Prep.polish
-      ~Prep.timeout
-      ~Prep.type
-      ~Prep.first_round
-      ~Prep.last_round
-      ~Prep.prep_package_endpoints
+      ~colrev.ops.prep.Prep.max_retries_on_error
+      ~colrev.ops.prep.Prep.pad
+      ~colrev.ops.prep.Prep.polish
+      ~colrev.ops.prep.Prep.timeout
+      ~colrev.ops.prep.Prep.type
+      ~colrev.ops.prep.Prep.first_round
+      ~colrev.ops.prep.Prep.last_round
+      ~colrev.ops.prep.Prep.prep_package_endpoints

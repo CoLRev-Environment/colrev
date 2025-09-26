@@ -15,7 +15,7 @@ colrev.process.status
       :toctree:
       :nosignatures:
 
-      get_status_stats
+      colrev.process.status.get_status_stats
 
 
 
@@ -28,6 +28,6 @@ colrev.process.status
       :template: custom-class-template.rst
       :nosignatures:
 
-      StatusStats
-      StatusStatsCurrently
-      StatusStatsOverall
+      colrev.process.status.StatusStats
+      colrev.process.status.StatusStatsCurrently
+      colrev.process.status.StatusStatsOverall

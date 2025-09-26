@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.name\_particles.NameParticlesChecker
 ==============================================================
 
-.. currentmodule:: colrev.record.qm.checkers.name_particles
-
-.. autoclass:: NameParticlesChecker
+.. autoclass:: colrev.record.qm.checkers.name_particles.NameParticlesChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.name\_particles.NameParticlesChecker
    .. autosummary::
       :nosignatures:
 
-      ~NameParticlesChecker.run
+      ~colrev.record.qm.checkers.name_particles.NameParticlesChecker.run
 
 
 
@@ -26,5 +24,5 @@ colrev.record.qm.checkers.name\_particles.NameParticlesChecker
 
    .. autosummary::
 
-      ~NameParticlesChecker.fields_to_check
-      ~NameParticlesChecker.msg
+      ~colrev.record.qm.checkers.name_particles.NameParticlesChecker.fields_to_check
+      ~colrev.record.qm.checkers.name_particles.NameParticlesChecker.msg

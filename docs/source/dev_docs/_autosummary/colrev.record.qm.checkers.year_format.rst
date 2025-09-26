@@ -15,7 +15,7 @@ colrev.record.qm.checkers.year\_format
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.year_format.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.year\_format
       :template: custom-class-template.rst
       :nosignatures:
 
-      YearFormatChecker
+      colrev.record.qm.checkers.year_format.YearFormatChecker

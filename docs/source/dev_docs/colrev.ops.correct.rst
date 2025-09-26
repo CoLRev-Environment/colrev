@@ -20,4 +20,4 @@ colrev.ops.correct
       :template: custom-class-template.rst
       :nosignatures:
 
-      Corrections
+      colrev.ops.correct.Corrections

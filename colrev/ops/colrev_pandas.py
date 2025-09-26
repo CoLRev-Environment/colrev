@@ -256,7 +256,7 @@ def save(records_df: pd.DataFrame) -> None:
     review_manager = colrev.review_manager.ReviewManager(
         path_str=project_path, force_mode=True
     )
-    records = records_df.to_dict(orient="index")
+    records: dict = records_df.to_dict(orient="index")
     for rec_id, record in records.items():
         for key in list(record.keys()):
             if isinstance(record[key], (list, dict)):

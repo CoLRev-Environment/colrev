@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.inconsistent\_with\_doi\_metadata.InconsistentWithDOIMetadataChecker
 ==============================================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.inconsistent_with_doi_metadata
-
-.. autoclass:: InconsistentWithDOIMetadataChecker
+.. autoclass:: colrev.record.qm.checkers.inconsistent_with_doi_metadata.InconsistentWithDOIMetadataChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.inconsistent\_with\_doi\_metadata.InconsistentWithDOIM
    .. autosummary::
       :nosignatures:
 
-      ~InconsistentWithDOIMetadataChecker.run
+      ~colrev.record.qm.checkers.inconsistent_with_doi_metadata.InconsistentWithDOIMetadataChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.inconsistent\_with\_doi\_metadata.InconsistentWithDOIM
 
    .. autosummary::
 
-      ~InconsistentWithDOIMetadataChecker.msg
+      ~colrev.record.qm.checkers.inconsistent_with_doi_metadata.InconsistentWithDOIMetadataChecker.msg

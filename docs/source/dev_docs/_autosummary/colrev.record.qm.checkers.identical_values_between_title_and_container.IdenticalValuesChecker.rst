@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.identical\_values\_between\_title\_and\_container.IdenticalValuesChecker
 ==================================================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.identical_values_between_title_and_container
-
-.. autoclass:: IdenticalValuesChecker
+.. autoclass:: colrev.record.qm.checkers.identical_values_between_title_and_container.IdenticalValuesChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.identical\_values\_between\_title\_and\_container.Iden
    .. autosummary::
       :nosignatures:
 
-      ~IdenticalValuesChecker.run
+      ~colrev.record.qm.checkers.identical_values_between_title_and_container.IdenticalValuesChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.identical\_values\_between\_title\_and\_container.Iden
 
    .. autosummary::
 
-      ~IdenticalValuesChecker.msg
+      ~colrev.record.qm.checkers.identical_values_between_title_and_container.IdenticalValuesChecker.msg

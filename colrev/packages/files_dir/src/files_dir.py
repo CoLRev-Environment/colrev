@@ -6,30 +6,31 @@ import logging
 import re
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pymupdf
-import requests
 from pydantic import Field
 
-import colrev.env.local_index
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.check
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.packages.pdf_backward_search.src.pdf_backward_search as bws
-import colrev.record.qm.checkers.missing_field
 import colrev.record.record
 import colrev.record.record_pdf
 import colrev.record.record_prep
 import colrev.record.record_similarity
+import colrev.search_file
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import FieldValues
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
-from colrev.packages.crossref.src import crossref_api
+from colrev.packages.crossref.src.crossref_api import query_doi
 from colrev.writer.write_utils import write_file
 
 # pylint: disable=unused-argument
@@ -39,9 +40,9 @@ from colrev.writer.write_utils import write_file
 class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Files directories (PDFs based on GROBID)"""
 
-    # pylint: disable=too-many-instance-attributes
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+    # pylint: disable=too-many-instance-attributes
 
     endpoint = "colrev.files_dir"
     source_identifier = Fields.FILE
@@ -55,23 +56,19 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     rerun: bool
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
-        self.review_manager = source_operation.review_manager
-        self.source_operation = source_operation
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
 
-        self.search_source = (
-            colrev.package_manager.package_settings.DefaultSourceSettings(**settings)
-        )
+        self.search_source = search_file
 
-        if not self.review_manager.in_ci_environment():
-            self.pdf_preparation_operation = self.review_manager.get_pdf_prep_operation(
-                notify_state_transition_operation=False
-            )
-
-        self.pdfs_path = self.review_manager.path / Path(
-            self.search_source.search_parameters["scope"]["path"]
-        )
+        # self.review_manager.path /
+        self.pdfs_path = Path(search_file.search_parameters["scope"]["path"])
 
         self.subdir_pattern: re.Pattern = re.compile("")
         self.r_subdir_pattern: re.Pattern = re.compile("")
@@ -79,9 +76,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.subdir_pattern = self.search_source.search_parameters["scope"][
                 "subdir_pattern"
             ]
-            self.review_manager.logger.info(
-                f"Activate subdir_pattern: {self.subdir_pattern}"
-            )
+            self.logger.info(f"Activate subdir_pattern: {self.subdir_pattern}")
             if self.subdir_pattern == Fields.YEAR:
                 self.r_subdir_pattern = re.compile("([1-3][0-9]{3})")
             if self.subdir_pattern == "volume_number":
@@ -89,7 +84,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             if self.subdir_pattern == Fields.VOLUME:
                 self.r_subdir_pattern = re.compile("([0-9]{1,4})")
 
-        self.crossref_api = crossref_api.CrossrefAPI(params={})
         self.local_index = colrev.env.local_index.LocalIndex()
 
     def _update_if_pdf_renamed(
@@ -97,7 +91,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         *,
         record_dict: dict,
         records: dict,
-        search_source: Path,
+        search_results_path: Path,
     ) -> bool:
         updated = True
         not_updated = False
@@ -105,7 +99,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         c_rec_l = [
             r
             for r in records.values()
-            if f"{search_source}/{record_dict['ID']}" in r[Fields.ORIGIN]
+            if f"{search_results_path}/{record_dict['ID']}" in r[Fields.ORIGIN]
         ]
         if len(c_rec_l) == 1:
             c_rec = c_rec_l.pop()
@@ -131,16 +125,16 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         return not_updated
 
     def _remove_records_if_pdf_no_longer_exists(self) -> None:
-        # search_operation.review_manager.logger.debug(
+        # self.logger.debug(
         #     "Checking for PDFs that no longer exist"
         # )
 
-        if not self.search_source.filename.is_file():
+        if not self.search_source.search_results_path.is_file():
             return
 
         search_rd = colrev.loader.load_utils.load(
-            filename=self.search_source.filename,
-            logger=self.review_manager.logger,
+            filename=self.search_source.search_results_path,
+            logger=self.logger,
             unique_id_field="ID",
         )
 
@@ -155,12 +149,12 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                     updated = self._update_if_pdf_renamed(
                         record_dict=record_dict,
                         records=records,
-                        search_source=self.search_source.filename,
+                        search_results_path=self.search_source.search_results_path,
                     )
                     if updated:
                         continue
                 to_remove.append(
-                    f"{self.search_source.filename.name}/{record_dict['ID']}"
+                    f"{self.search_source.search_results_path.name}/{record_dict['ID']}"
                 )
                 files_removed.append(record_dict[Fields.FILE])
 
@@ -172,7 +166,9 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if len(search_rd.values()) != 0:
 
-            write_file(records_dict=search_rd, filename=self.search_source.filename)
+            write_file(
+                records_dict=search_rd, filename=self.search_source.search_results_path
+            )
 
         if records:
             for record_dict in records.values():
@@ -180,11 +176,12 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                     if origin_to_remove in record_dict[Fields.ORIGIN]:
                         record_dict[Fields.ORIGIN].remove(origin_to_remove)
             if to_remove:
-                self.review_manager.logger.info(
+                self.logger.info(
                     f" {Colors.RED}Removed {len(to_remove)} records "
                     f"(PDFs no longer available){Colors.END}"
                 )
-                print(" " + "\n ".join(files_removed))
+                for file_removed in files_removed:
+                    self.logger.info(f" {Colors.RED}{file_removed}{Colors.END}")
             records = {k: v for k, v in records.items() if v[Fields.ORIGIN]}
             self.review_manager.dataset.save_records_dict(records)
 
@@ -276,8 +273,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
         except (
             FileNotFoundError,
-            requests.exceptions.ReadTimeout,
-            requests.exceptions.ConnectionError,
             colrev_exceptions.TEITimeoutException,
         ):
             return record_dict
@@ -356,9 +351,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         file_path: Path,
     ) -> bool:
         if ";" in str(file_path):
-            self.review_manager.logger.error(
-                f'skipping PDF with ";" in filepath: \n{file_path}'
-            )
+            self.logger.error(f'skipping PDF with ";" in filepath: \n{file_path}')
             return True
 
         if (
@@ -367,9 +360,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             or "_with_lp.pdf" == str(file_path)[-10:]
             or "_backup.pdf" == str(file_path)[-11:]
         ):
-            self.review_manager.logger.info(
-                f"Skipping PDF with _ocr.pdf/_with_cp.pdf: {file_path}"
-            )
+            self.logger.info(f"Skipping PDF with _ocr.pdf/_with_cp.pdf: {file_path}")
             return True
 
         return False
@@ -379,7 +370,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         source = self.search_source
 
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
         assert source.search_type == SearchType.FILES
 
@@ -407,7 +398,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             raise colrev_exceptions.InvalidQueryException(
                 "path required in search_parameters/scope"
             )
-        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
+        self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def _add_md_string(self, *, record_dict: dict) -> dict:
         # To identify potential duplicates
@@ -518,9 +509,10 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         linked_file_paths: list,
     ) -> dict:
         new_record: dict = {}
+        relative_path = file_path.relative_to(self.review_manager.path)
 
         file_path_abs = self.review_manager.path / file_path
-        if self._is_broken_filepath(file_path=file_path_abs):
+        if self._is_broken_filepath(file_path=relative_path):
             return new_record
 
         if not self.review_manager.force_mode:
@@ -533,7 +525,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if not self.rerun:
 
-            if file_path in [
+            if relative_path in [
                 Path(r[Fields.FILE])
                 for r in files_dir_feed.feed_records.values()
                 if Fields.FILE in r
@@ -541,7 +533,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                 return new_record
         # otherwise: reindex all
 
-        self.review_manager.logger.info(f" extract metadata from {file_path}")
+        self.logger.info(" extract metadata from %s", relative_path)
         try:
             if not self.review_manager.settings.is_curated_masterdata_repo():
                 # retrieve_based_on_colrev_pdf_id
@@ -558,7 +550,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             else:
                 new_record = self._get_grobid_metadata(file_path=file_path)
         except FileNotFoundError:
-            self.review_manager.logger.error(f"File not found: {file_path} (skipping)")
+            self.logger.error("File not found: %s (skipping)", relative_path)
             return {}
         except (
             colrev_exceptions.PDFHashError,
@@ -568,8 +560,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             new_record = self._get_grobid_metadata(file_path=file_path_abs)
 
         self._fix_grobid_errors(new_record)
-
-        new_record[Fields.FILE] = str(file_path)
+        new_record[Fields.FILE] = str(relative_path)
         new_record = self._add_md_string(record_dict=new_record)
 
         # Note: identical md_string as a heuristic for duplicates
@@ -580,10 +571,24 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             and not r[Fields.FILE] == new_record[Fields.FILE]
         ]
         if potential_duplicates:
-            self.review_manager.logger.warning(
-                f" {Colors.RED}skip record (PDF potential duplicate): "
-                f"{new_record['file']} {Colors.END} "
-                f"({','.join([r['file'] for r in potential_duplicates])})"
+            self.logger.warning(
+                " %sskip record (PDF potential duplicate):%s",
+                Colors.RED,
+                Colors.END,
+            )
+
+            self.logger.warning(
+                " %s %s %s",
+                Colors.RED,
+                new_record["file"],
+                Colors.END,
+            )
+
+            self.logger.warning(
+                " %s %s %s",
+                Colors.RED,
+                ",".join([r["file"] for r in potential_duplicates]),
+                Colors.END,
             )
 
         return new_record
@@ -604,9 +609,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         for suffix in types:
             files_grabbed.extend(self.pdfs_path.glob(suffix))
 
-        files_to_index = [
-            x.relative_to(self.review_manager.path) for x in files_grabbed
-        ]
+        files_to_index = [self.review_manager.path / x for x in files_grabbed]
 
         file_batches = [
             files_to_index[i * self._batch_size : (i + 1) * self._batch_size]
@@ -688,15 +691,21 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     def search(self, rerun: bool) -> None:
         """Run a search of a Files directory"""
 
+        # TODO / TBD: replace review_manager?
+        import colrev.review_manager
+
+        self.review_manager = colrev.review_manager.ReviewManager()
+        colrev.ops.check.CheckOperation(self.review_manager)
+
         self.rerun = rerun
         self._validate_source()
 
         # Do not run in continuous-integration environment
-        if self.review_manager.in_ci_environment():
+        if utils.in_ci_environment():
             raise colrev_exceptions.SearchNotAutomated("PDFs Dir Search not automated.")
 
         if self.review_manager.force_mode:  # i.e., reindex all
-            self.review_manager.logger.info("Reindex all")
+            self.logger.info("Reindex all")
 
         # Removing records/origins for which PDFs were removed makes sense for curated repositories
         # In regular repositories, it may be confusing (e.g., if PDFs are renamed)
@@ -705,10 +714,12 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             self._remove_records_if_pdf_no_longer_exists()
 
         records = self.review_manager.dataset.load_records_dict()
-        files_dir_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        files_dir_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         linked_file_paths = [
@@ -737,21 +748,25 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+        path: Path,
+        logger: Optional[logging.Logger] = None,
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        filename = operation.get_unique_filename(file_path_string="files")
+        filename = utils.get_unique_filename(
+            base_path=path,
+            file_path_string="files",
+        )
         # pylint: disable=no-value-for-parameter
-        search_source = colrev.settings.SearchSource(
-            endpoint="colrev.files_dir",
-            filename=filename,
+        search_source = colrev.search_file.ExtendedSearchFile(
+            version=cls.CURRENT_SYNTAX_VERSION,
+            platform="colrev.files_dir",
+            search_results_path=filename,
             search_type=SearchType.FILES,
-            search_parameters={"scope": {"path": "data/pdfs"}},
+            search_string="",
             comment="",
         )
-        operation.add_source_and_search(search_source)
         return search_source
 
     @classmethod
@@ -759,8 +774,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         if Fields.DOI not in record_dict:
             return
         try:
-            api = crossref_api.CrossrefAPI(params={})
-            retrieved_record = api.query_doi(
+            retrieved_record = query_doi(
                 doi=record_dict[Fields.DOI],
             )
 
@@ -783,28 +797,27 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         except (colrev_exceptions.RecordNotFoundInPrepSourceException,):
             pass
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
                 if "note" in record_dict:
-                    record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
+                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
 
             records = colrev.loader.load_utils.load(
-                filename=filename,
+                filename=self.search_source.search_results_path,
                 unique_id_field="ID",
                 field_mapper=field_mapper,
-                logger=logger,
+                logger=self.logger,
             )
 
             for record_dict in records.values():
                 if Fields.GROBID_VERSION in record_dict:
                     del record_dict[Fields.GROBID_VERSION]
 
-                cls._update_based_on_doi(record_dict=record_dict)
+                self._update_based_on_doi(record_dict=record_dict)
 
             return records
 
@@ -873,7 +886,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for files"""
 
@@ -881,6 +893,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             return record
 
         if Path(record.data[Fields.FILE]).suffix == ".pdf":
+
             record.format_if_mostly_upper(Fields.TITLE, case="sentence")
             record.format_if_mostly_upper(Fields.JOURNAL, case=Fields.TITLE)
             record.format_if_mostly_upper(Fields.BOOKTITLE, case=Fields.TITLE)
@@ -905,8 +918,22 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             ):
                 record.remove_field(key=Fields.TITLE, source="files_dir_prepare")
                 record.set_status(RecordState.md_needs_manual_preparation)
+
             self._fix_title_suffix(record=record)
             self._fix_special_chars(record=record)
             self._fix_special_outlets(record=record)
+
+            if record.data.get(Fields.TITLE, "").startswith("Microsoft Word"):
+                record.data[Fields.TITLE] = FieldValues.UNKNOWN
+                record.set_status(RecordState.md_needs_manual_preparation)
+            if any(
+                x in record.data.get(Fields.TITLE, "").lower()
+                for x in [
+                    "reproduced with permission",
+                    "further reproduction prohibited",
+                ]
+            ):
+                record.data[Fields.TITLE] = FieldValues.UNKNOWN
+                record.set_status(RecordState.md_needs_manual_preparation)
 
         return record

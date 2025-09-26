@@ -80,7 +80,6 @@ class HTTPRequest:
             / self.rate_limits["x-rate-limit-limit"]
         )
 
-    # pylint: disable=too-many-positional-arguments
     def retrieve(
         self,
         endpoint: str,
@@ -279,10 +278,10 @@ class PlosAPI:
     def __init__(
         self,
         *,
-        params: dict,
+        url: str,
         rerun: bool = False,
     ):
-        self.params = params
+        self.url = url
 
         _, self.email = (
             colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
@@ -292,10 +291,7 @@ class PlosAPI:
     def get_url(self) -> str:
         "Get the url from the Plos API"
 
-        if "url" not in self.params:
-            raise ValueError("No url in params")
-
-        url = self.params["url"]
+        url = self.url
         if not self.rerun and self.last_updated:
             # Changes the last updated date
 
@@ -314,7 +310,7 @@ class PlosAPI:
     def get_len_total(self) -> int:
         "Get the total number of records from Plos based on the parameters"
 
-        endpoint = Endpoint(self.params["url"], email=self.email)
+        endpoint = Endpoint(self.url, email=self.email)
 
         return endpoint.get_nr()
 

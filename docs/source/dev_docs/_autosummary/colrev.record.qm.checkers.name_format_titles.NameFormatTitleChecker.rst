@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.name\_format\_titles.NameFormatTitleChecker
 =====================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.name_format_titles
-
-.. autoclass:: NameFormatTitleChecker
+.. autoclass:: colrev.record.qm.checkers.name_format_titles.NameFormatTitleChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.name\_format\_titles.NameFormatTitleChecker
    .. autosummary::
       :nosignatures:
 
-      ~NameFormatTitleChecker.run
+      ~colrev.record.qm.checkers.name_format_titles.NameFormatTitleChecker.run
 
 
 
@@ -26,6 +24,6 @@ colrev.record.qm.checkers.name\_format\_titles.NameFormatTitleChecker
 
    .. autosummary::
 
-      ~NameFormatTitleChecker.fields_to_check
-      ~NameFormatTitleChecker.msg
-      ~NameFormatTitleChecker.titles
+      ~colrev.record.qm.checkers.name_format_titles.NameFormatTitleChecker.fields_to_check
+      ~colrev.record.qm.checkers.name_format_titles.NameFormatTitleChecker.msg
+      ~colrev.record.qm.checkers.name_format_titles.NameFormatTitleChecker.titles

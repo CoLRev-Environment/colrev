@@ -1,9 +1,7 @@
 colrev.package\_manager.package\_base\_classes.ReviewTypePackageBaseClass
 =========================================================================
 
-.. currentmodule:: colrev.package_manager.package_base_classes
-
-.. autoclass:: ReviewTypePackageBaseClass
+.. autoclass:: colrev.package_manager.package_base_classes.ReviewTypePackageBaseClass
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.package\_manager.package\_base\_classes.ReviewTypePackageBaseClass
    .. autosummary::
       :nosignatures:
 
-      ~ReviewTypePackageBaseClass.initialize
+      ~colrev.package_manager.package_base_classes.ReviewTypePackageBaseClass.initialize
 
 
 
@@ -26,4 +24,4 @@ colrev.package\_manager.package\_base\_classes.ReviewTypePackageBaseClass
 
    .. autosummary::
 
-      ~ReviewTypePackageBaseClass.ci_supported
+      ~colrev.package_manager.package_base_classes.ReviewTypePackageBaseClass.ci_supported

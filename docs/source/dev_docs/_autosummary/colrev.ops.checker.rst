@@ -20,4 +20,4 @@ colrev.ops.checker
       :template: custom-class-template.rst
       :nosignatures:
 
-      Checker
+      colrev.ops.checker.Checker

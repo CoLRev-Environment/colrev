@@ -15,5 +15,5 @@ colrev.writer.excel
       :toctree:
       :nosignatures:
 
-      to_dataframe
-      write_file
+      colrev.writer.excel.to_dataframe
+      colrev.writer.excel.write_file
