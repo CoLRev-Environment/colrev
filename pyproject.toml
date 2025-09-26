@@ -41,7 +41,7 @@ dependencies = [
     "imagehash>=4.3.1",
     "rapidfuzz>=3.5.2",
     "bib-dedupe>=0.10.0",                   # required in record_similarity
-    "lxml>=5.2.0",                          # required by tei_parser
+    "defusedxml>=0.7.1",                    # required for XML parsing
     "pandas>=2.2",
     "openpyxl>=3.1.2",                      # required by pandas for Excel
     "PyYAML>=6.0.0",
@@ -116,7 +116,6 @@ exclude = [
 ]
 
 [tool.pylint.MAIN]
-extension-pkg-whitelist = "lxml.etree"
 load-plugins = [
     "colrev.linter.colrev_direct_status_assign",
     "colrev.linter.colrev_missed_constant_usage",
