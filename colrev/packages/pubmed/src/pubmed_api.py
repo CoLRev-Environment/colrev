@@ -5,12 +5,11 @@ import logging
 import time
 import typing
 from sqlite3 import OperationalError
-from xml.etree import ElementTree  # nosec
 from xml.etree.ElementTree import Element  # nosec
+from xml.etree.ElementTree import ParseError
 
 import requests
-from lxml import etree
-from lxml.etree import XMLSyntaxError
+from defusedxml import ElementTree as DefusedET
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
@@ -68,10 +67,10 @@ class PubmedAPI:
         return authors_string
 
     @classmethod
-    def _get_author_string(cls, *, root) -> str:  # type: ignore
+    def _get_author_string(cls, *, root: Element) -> str:
         authors_list = []
-        for author_node in root.xpath(
-            "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/AuthorList/Author"
+        for author_node in root.findall(
+            "./PubmedArticle/MedlineCitation/Article/AuthorList/Author"
         ):
             authors_list.append(
                 cls._get_author_string_from_node(author_node=author_node)
@@ -79,30 +78,29 @@ class PubmedAPI:
         return " and ".join(authors_list)
 
     @classmethod
-    def _get_title_string(cls, *, root) -> str:  # type: ignore
-        title = root.xpath(
-            "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/ArticleTitle"
+    def _get_title_string(cls, *, root: Element) -> str:
+        title_text = root.findtext(
+            "./PubmedArticle/MedlineCitation/Article/ArticleTitle", ""
         )
-        if title:
-            if title[0].text:
-                title = title[0].text.strip().rstrip(".")
-                if title.startswith("[") and title.endswith("]"):
-                    title = title[1:-1]
-                return title
+        if title_text:
+            title_text = title_text.strip().rstrip(".")
+            if title_text.startswith("[") and title_text.endswith("]"):
+                title_text = title_text[1:-1]
+            return title_text
         return ""
 
     @classmethod
-    def _get_abstract_string(cls, *, root) -> str:  # type: ignore
-        abstract = root.xpath(
-            "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/Abstract"
+    def _get_abstract_string(cls, *, root: Element) -> str:
+        abstract = root.find(
+            "./PubmedArticle/MedlineCitation/Article/Abstract"
         )
-        if abstract:
-            return ElementTree.tostring(abstract[0], encoding="unicode")
+        if abstract is not None:
+            return DefusedET.tostring(abstract, encoding="unicode")
         return ""
 
     # pylint: disable=colrev-missed-constant-usage
     @classmethod
-    def _pubmed_xml_to_record(cls, *, root) -> dict:  # type: ignore
+    def _pubmed_xml_to_record(cls, *, root: Element) -> dict:
         retrieved_record_dict: dict = {Fields.ENTRYTYPE: "misc"}
 
         pubmed_article = root.find("PubmedArticle")
@@ -114,37 +112,41 @@ class PubmedAPI:
         retrieved_record_dict[Fields.TITLE] = cls._get_title_string(root=root)
         retrieved_record_dict[Fields.AUTHOR] = cls._get_author_string(root=root)
 
-        journal_path = "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/Journal"
-        journal_name = root.xpath(journal_path + "/ISOAbbreviation")
-        if journal_name:
-            retrieved_record_dict[Fields.ENTRYTYPE] = "article"
-            retrieved_record_dict[Fields.JOURNAL] = journal_name[0].text
+        journal = root.find(
+            "./PubmedArticle/MedlineCitation/Article/Journal"
+        )
+        if journal is not None:
+            journal_name = journal.findtext("ISOAbbreviation")
+            if journal_name:
+                retrieved_record_dict[Fields.ENTRYTYPE] = "article"
+                retrieved_record_dict[Fields.JOURNAL] = journal_name
 
-        volume = root.xpath(journal_path + "/JournalIssue/Volume")
-        if volume:
-            retrieved_record_dict[Fields.VOLUME] = volume[0].text
+            volume = journal.findtext("JournalIssue/Volume")
+            if volume:
+                retrieved_record_dict[Fields.VOLUME] = volume
 
-        number = root.xpath(journal_path + "/JournalIssue/Issue")
-        if number:
-            retrieved_record_dict[Fields.NUMBER] = number[0].text
+            number = journal.findtext("JournalIssue/Issue")
+            if number:
+                retrieved_record_dict[Fields.NUMBER] = number
 
-        year = root.xpath(journal_path + "/JournalIssue/PubDate/Year")
-        if year:
-            retrieved_record_dict[Fields.YEAR] = year[0].text
+            year = journal.findtext("JournalIssue/PubDate/Year")
+            if year:
+                retrieved_record_dict[Fields.YEAR] = year
 
         retrieved_record_dict[Fields.ABSTRACT] = cls._get_abstract_string(root=root)
 
-        article_id_list = root.xpath(
-            "/PubmedArticleSet/PubmedArticle/PubmedData/ArticleIdList"
+        article_id_list = root.find(
+            "./PubmedArticle/PubmedData/ArticleIdList"
         )
-        for article_id in article_id_list[0]:
-            id_type = article_id.attrib.get("IdType")
-            if article_id.attrib.get("IdType") == "pubmed":
-                retrieved_record_dict["pubmedid"] = article_id.text.upper()
-            elif article_id.attrib.get("IdType") == "doi":
-                retrieved_record_dict[Fields.DOI] = article_id.text.upper()
-            else:
-                retrieved_record_dict[id_type] = article_id.text
+        if article_id_list is not None:
+            for article_id in article_id_list:
+                id_type = article_id.attrib.get("IdType")
+                if id_type == "pubmed" and article_id.text:
+                    retrieved_record_dict["pubmedid"] = article_id.text.upper()
+                elif id_type == "doi" and article_id.text:
+                    retrieved_record_dict[Fields.DOI] = article_id.text.upper()
+                elif id_type and article_id.text:
+                    retrieved_record_dict[id_type] = article_id.text
 
         retrieved_record_dict = {
             k: v for k, v in retrieved_record_dict.items() if v != ""
@@ -184,7 +186,7 @@ class PubmedAPI:
                         "Pubmed record not found"
                     )
 
-                root = etree.fromstring(str.encode(ret.text))
+                root = DefusedET.fromstring(ret.content)
                 retrieved_record_dict = self._pubmed_xml_to_record(root=root)
                 if not retrieved_record_dict:
                     self.logger.warning(
@@ -198,7 +200,7 @@ class PubmedAPI:
                 return retrieved_record
         except requests.exceptions.RequestException as exc:
             raise PubmedAPIError from exc
-        except XMLSyntaxError as exc:
+        except ParseError as exc:
             raise colrev_exceptions.RecordNotParsableException(
                 "Error parsing xml"
             ) from exc
