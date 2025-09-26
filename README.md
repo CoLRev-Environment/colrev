@@ -38,11 +38,7 @@ The following features stand out:
 - Operates a model for data quality, content curation, and reuse
 - Enables typological and methodological pluralism throughout the process
 
-![Demo](https://colrev-environment.github.io/colrev/_static/demo.gif)
-<!--
-This version was not displayed on pypi:
 ![Demo](https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/source/_static/demo.gif)
--->
 
 For details, consult the [documentation](https://colrev-environment.github.io/colrev/).
 
