@@ -5,13 +5,13 @@ from __future__ import annotations
 import re
 import typing
 from pathlib import Path
-
-import requests
-from defusedxml import ElementTree as DefusedET
 from xml.etree.ElementTree import ElementTree as StdElementTree
 from xml.etree.ElementTree import ParseError
 from xml.etree.ElementTree import register_namespace
 from xml.etree.ElementTree import tostring
+
+import requests
+from defusedxml import ElementTree as DefusedET
 
 import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
