@@ -38,7 +38,11 @@ The following features stand out:
 - Operates a model for data quality, content curation, and reuse
 - Enables typological and methodological pluralism throughout the process
 
+![Demo](https://colrev-environment.github.io/colrev/_static/demo.gif)
+<!--
+This version was not displayed on pypi:
 ![Demo](https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/source/_static/demo.gif)
+-->
 
 For details, consult the [documentation](https://colrev-environment.github.io/colrev/).
 
@@ -63,37 +67,37 @@ present short version, long version in the docs
 | **Criteria**                                  | **CoLRev**                        | [**LitStudy**](https://github.com/NLeSC/litstudy)  | [**BUHOS**](https://github.com/clbustos/buhos)  | [**Covidence**](https://www.covidence.org/)   |
 |-----------------------------------------------|-----------------------------------|----------------------------------|---------------------------------|---------------------------------|
 | **Review types**                              |                                   |                                  |                                 |                                 |
-| Supports different genres of review methods   | ![yes]                            | ![no]                            | ![no]                           | ![no]                           |
-| Extensibility                                 | ![yes]                            | ![maybe]                         | ![maybe]                        | ![no]                           |
+| Supports different genres of review methods   | ✅                                 | ❌                               | ❌                               | ❌                               |
+| Extensibility                                 | ✅                                 | ⚠️                               | ⚠️                               | ❌                               |
 | **Process steps**                             |                                   |                                  |                                 |                                 |
-| Review objectives and protocol                | ![yes]                            | ![yes]                           | ![yes]                          | ![yes]                          |
-| Search                                        | ![yes]                            | ![yes]                           | ![yes]                          | ![yes]                          |
-| Duplicate handling                            | ![yes]                            | ![no]                            | ![maybe]                        | ![maybe]                        |
-| (Pre)Screen                                   | ![yes]                            | ![maybe]                         | ![yes]                          | ![yes]                          |
-| Data extraction                               | ![yes]                            | ![maybe]                         | ![yes]                          | ![yes]                          |
-| Data analysis and quality appraisal           | ![yes]                            | ![maybe]                         | ![yes]                          | ![yes]                          |
-| Synthesis and reporting                       | ![yes]                            | ![yes]                           | ![yes]                          | ![yes]                          |
+| Review objectives and protocol                | ✅                                 | ✅                               | ✅                               | ✅                               |
+| Search                                        | ✅                                 | ✅                               | ✅                               | ✅                               |
+| Duplicate handling                            | ✅                                 | ❌                               | ⚠️                               | ⚠️                               |
+| (Pre)Screen                                   | ✅                                 | ⚠️                               | ✅                               | ✅                               |
+| Data extraction                               | ✅                                 | ⚠️                               | ✅                               | ✅                               |
+| Data analysis and quality appraisal           | ✅                                 | ⚠️                               | ✅                               | ✅                               |
+| Synthesis and reporting                       | ✅                                 | ✅                               | ✅                               | ✅                               |
 | **Process qualities**                         |                                   |                                  |                                 |                                 |
-| Extensibility                                 | ![yes]                            | ![yes]                           | ![no]                           | ![no]                           |
+| Extensibility                                 | ✅                                 | ✅                               | ❌                               | ❌                               |
 | Extensions                                    | [106](https://colrev-environment.github.io/colrev/manual/packages.html) | 0                                | 0                               | 0                               |
-| Search updates                                | ![yes]                            | ![no]                            | ![maybe]                        | ![maybe]                        |
-| Search: APIs                                  | ![yes] ([19](https://colrev-environment.github.io/colrev/manual/metadata_retrieval/search.html#api-searches))    | ![yes] (7)                       | ![no]                           | ![no]                           |
-| Metadata preparation                          | ![yes]                            | ![yes]                           | ![yes]                          | ![maybe]                        |
-| Retract checks                                | ![yes]                            | ![no]                            | ![no]                           | ![yes]                          |
-| PDF retrieval                                 | ![yes]                            | ![no]                            | ![no]                           | ![yes]                          |
-| PDF preparation                               | ![yes]                            | ![no]                            | ![maybe]                        | ![maybe]                        |
-| Status tracking                               | ![yes]                            | ![no]                            | ![yes]                          | ![yes]                          |
+| Search updates                                | ✅                                 | ❌                               | ⚠️                               | ⚠️                               |
+| Search: APIs                                  | ✅ ([19](https://colrev-environment.github.io/colrev/manual/metadata_retrieval/search.html#api-searches)) | ✅ (7)                           | ❌                               | ❌                               |
+| Metadata preparation                          | ✅                                 | ✅                               | ✅                               | ⚠️                               |
+| Retract checks                                | ✅                                 | ❌                               | ❌                               | ✅                               |
+| PDF retrieval                                 | ✅                                 | ❌                               | ❌                               | ✅                               |
+| PDF preparation                               | ✅                                 | ❌                               | ⚠️                               | ⚠️                               |
+| Status tracking                               | ✅                                 | ❌                               | ✅                               | ✅                               |
 | **Collaboration**                             |                                   |                                  |                                 |                                 |
-| Large teams                                   | ![yes]                            | ![maybe]                         | ![maybe]                        | ![maybe]                        |
-| Algorithms                                    | ![yes]                            | ![yes]                           | ![maybe]                        | ![maybe]                        |
+| Large teams                                   | ✅                                 | ⚠️                               | ⚠️                               | ⚠️                               |
+| Algorithms                                    | ✅                                 | ✅                               | ⚠️                               | ⚠️                               |
 | **Data management**                           |                                   |                                  |                                 |                                 |
-| Transparency                                  | ![yes]                            | ![no]                            | ![no]                           | ![no]                           |
-| Validation                                    | ![yes]                            | ![no]                            | ![no]                           | ![no]                           |
-| Reporting (e.g., PRISMA)                      | ![yes]                            | ![no]                            | ![yes]                          | ![yes]                          |
-| Publication of review                         | ![yes]                            | ![yes]                           | ![no]                           | ![no]                           |
+| Transparency                                  | ✅                                 | ❌                               | ❌                               | ❌                               |
+| Validation                                    | ✅                                 | ❌                               | ❌                               | ❌                               |
+| Reporting (e.g., PRISMA)                      | ✅                                 | ❌                               | ✅                               | ✅                               |
+| Publication of review                         | ✅                                 | ✅                               | ❌                               | ❌                               |
 | **Platform**                                  |                                   |                                  |                                 |                                 |
-| OSI-approved license                          | ![yes]                            | ![yes]                           | ![yes]                          | ![no]                           |
-| Peer-reviewed                                 | ![no]                             | ![yes]                           | ![yes]                          | ![no]                           |
+| OSI-approved license                          | ✅                                 | ✅                               | ✅                               | ❌                               |
+| Peer-reviewed                                 | ❌                                 | ✅                               | ✅                               | ❌                               |
 | Technology                                    | Python                            | Python                           | Ruby                            | Proprietary                     |
 | Setup                                         | Local or cloud                    | Local or cloud                   | Server                          | Server                          |
 | Interface                                     | CLI, Programmatic (GUI planned)   | Jupyter Notebook                 | Web-UI                          | Web-UI                          |
@@ -198,7 +202,3 @@ If you contribute to the project, you agree to share your contribution following
 Please cite the project as follows:
 
 Wagner, G. and Prester, J. (2024) CoLRev - An open-source environment for Collaborative Literature Reviews. Available at https://github.com/CoLRev-Environment/colrev. doi:[10.5281/zenodo.11668338](https://dx.doi.org/10.5281/zenodo.11668338)
-
-[yes]: ./docs/figures/yes.svg
-[no]: ./docs/figures/no.svg
-[maybe]: ./docs/figures/maybe.svg
