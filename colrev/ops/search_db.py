@@ -139,6 +139,7 @@ def create_db_source(
         package_type=EndpointType.search_source,
         package_identifier=platform,
     )
+    # pylint: disable=broad-exception-caught
     try:
         version = getattr(search_source_class, "CURRENT_SYNTAX_VERSION", "0.1.0")
     except Exception:  # pragma: no cover - fall back to default

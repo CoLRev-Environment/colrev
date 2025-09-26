@@ -119,11 +119,11 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if not any(x in query for x in [Fields.TITLE, Fields.ABSTRACT]):
             self.logger.warning("Adding title to query because no field specified")
-            self.logger.warning(f"Original query: {query}")
+            self.logger.warning("Original query: %s", query)
             query = f'title LIKE "%{query}%"'
-            self.logger.warning(f"Modified query: {query}")
+            self.logger.warning("Modified query: %s", query)
 
-        self.logger.info(f"Querying local index: {query}")
+        self.logger.info("Querying local index: %s", query)
 
         returned_records = self.local_index.search(query)
 

@@ -8,6 +8,8 @@ import requests_mock
 import colrev.record.record_prep
 from colrev.packages.plos.src import plos_api
 
+# flake8: noqa
+
 
 # pylint: disable=line-too-long
 @pytest.mark.parametrize(

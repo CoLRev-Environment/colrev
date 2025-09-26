@@ -25,6 +25,9 @@ class OSFApiQuery:
             key: value for key, value in parameters.items() if key in self.fields
         }
 
+        # tiny cache for user lookups
+        self._user_cache: dict = {}
+
     def _create_record_dict(self, item: dict) -> dict:
         attributes = item["attributes"]
         year = attributes["date_created"]
@@ -55,6 +58,7 @@ class OSFApiQuery:
         response = requests.get(url, headers=self.headers, timeout=60)
         return response.text
 
+    # pylint: disable=broad-exception-caught
     def _resolve_authors(self, record: dict) -> None:
         """Resolve OSF authors for a single record (in place).
 
@@ -68,10 +72,6 @@ class OSFApiQuery:
         href = record.get(Fields.AUTHOR)
         if not href or not isinstance(href, str):
             return
-
-        # tiny cache for user lookups
-        if not hasattr(self, "_user_cache"):
-            self._user_cache: dict = {}
 
         def _name_from_attrs(uattr: dict) -> str:
             given = (uattr.get("given_name") or "").strip()

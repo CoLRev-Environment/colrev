@@ -41,6 +41,7 @@ def create_api_source(
         file_path_string=f"{platform.replace('colrev.', '')}",
     )
     package_manager = PackageManager()
+    # pylint: disable=broad-exception-caught
     try:
         search_source_class = package_manager.get_package_endpoint_class(
             package_type=EndpointType.search_source,

@@ -52,6 +52,7 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
     def validate_source(
         cls, search_source: colrev.search_file.ExtendedSearchFile
     ) -> None:
+        """Validate the search source"""
 
         if search_source.search_type == SearchType.DB:
             print(f"Validating search string: {search_source.search_string}")
@@ -95,7 +96,7 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         # params_dict = {params.split("=")[0]: params.split("=")[1]}
-        params_dict = {}
+        params_dict: dict = {}
 
         search_source = create_db_source(
             path=path,

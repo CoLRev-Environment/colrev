@@ -84,7 +84,8 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if search_source.version != cls.CURRENT_SYNTAX_VERSION:
             raise colrev_exceptions.InvalidQueryException(
-                f"PubMed version should be {cls.CURRENT_SYNTAX_VERSION}, found {search_source.version}"
+                f"PubMed version should be {cls.CURRENT_SYNTAX_VERSION}, "
+                f"found {search_source.version}"
             )
 
         # if source.search_results_path.name != self._pubmed_md_filename.name:

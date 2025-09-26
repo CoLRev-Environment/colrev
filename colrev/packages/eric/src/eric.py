@@ -99,6 +99,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         field_value = f"{field}%3A%22{urllib.parse.quote(value)}%22"
         return field_value
 
+    # pylint: disable=too-many-locals
     @classmethod
     def add_endpoint(
         cls,

@@ -54,6 +54,7 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
     def validate_source(
         cls, search_source: colrev.search_file.ExtendedSearchFile
     ) -> None:
+        """Validate the search source"""
 
         if search_source.search_type == SearchType.DB:
             print(f"Validating search string: {search_source.search_string}")

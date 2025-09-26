@@ -62,7 +62,7 @@ NO_CUSTOM_SOURCE = None
             "colrev.pubmed",
             colrev.search_file.ExtendedSearchFile(
                 platform="colrev.pubmed",
-                search_results_path=Path("data/search/pubmed_bib.bib"),
+                search_results_path=Path("data/search/pubmed_csv.csv"),
                 search_type=SearchType.DB,
                 search_string="digital[ti]",
                 comment="",
@@ -81,7 +81,7 @@ NO_CUSTOM_SOURCE = None
             "colrev.ebsco_host",
             colrev.search_file.ExtendedSearchFile(
                 platform="colrev.ebsco_host",
-                search_results_path=Path("data/search/ebsco_host_bib.bib"),
+                search_results_path=Path("data/search/ebsco_bib.bib"),
                 search_type=SearchType.DB,
                 search_string="TI digital",
                 comment="",
@@ -227,6 +227,12 @@ def test_source(  # type: ignore
 ) -> None:
     """Test the source_specific prep"""
 
+    if custom_source is not None:
+        assert (
+            custom_source.search_results_path
+            == Path("data/search") / search_results_path
+        )
+
     review_manager_helpers.reset_commit(
         base_repo_review_manager, commit="changed_settings_commit"
     )
@@ -257,6 +263,10 @@ def test_source(  # type: ignore
         search_operation.add_most_likely_sources()
 
     base_repo_review_manager.save_settings()
+
+    base_repo_review_manager.dataset.git_repo.repo.git.add(A=True)
+    base_repo_review_manager.create_commit(msg="add search files")
+
     load_operation = base_repo_review_manager.get_load_operation()
     load_operation.main()
 

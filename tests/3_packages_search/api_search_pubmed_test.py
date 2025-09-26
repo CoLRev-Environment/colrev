@@ -1,9 +1,11 @@
 #! /usr/bin/env python
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pytest
 from pytest_mock import MockerFixture
+from typing_extensions import Protocol
 
 import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
@@ -14,12 +16,18 @@ from colrev.constants import SearchType
 from colrev.packages.pubmed.src.pubmed import PubMedSearchSource
 
 
+class BuildFactory(Protocol):
+    def __call__(
+        self, version_marker: Optional[str], include_version_param: bool = ...
+    ) -> colrev.search_file.ExtendedSearchFile: ...
+
+
 @pytest.fixture()
-def pubmed_search_file_factory() -> typing.Callable:
+def pubmed_search_file_factory() -> BuildFactory:
     """Return a factory to build PubMed search files for validation tests."""
 
     def _build(
-        version_marker: str, include_version_param: bool = True
+        version_marker: Optional[str], include_version_param: bool = True
     ) -> colrev.search_file.ExtendedSearchFile:
         search_file = colrev.search_file.ExtendedSearchFile(
             platform="colrev.pubmed",
@@ -30,7 +38,7 @@ def pubmed_search_file_factory() -> typing.Callable:
             version="0.1.0",
         )
 
-        search_parameters = {
+        search_parameters: dict[str, typing.Any] = {
             "url": "https://pubmed.ncbi.nlm.nih.gov/?term=validation",
         }
         if include_version_param and version_marker is not None:
@@ -49,15 +57,14 @@ def pubmed_search_file_factory() -> typing.Callable:
 
 
 def test_pubmed_validate_accepts_current_version(
-    pubmed_search_file_factory: colrev.search_file.ExtendedSearchFile,
+    pubmed_search_file_factory: BuildFactory,
 ) -> None:
     search_file = pubmed_search_file_factory("0.1.0")
-
     PubMedSearchSource(search_file=search_file)
 
 
 def test_pubmed_validate_rejects_missing_version(
-    pubmed_search_file_factory: colrev.search_file.ExtendedSearchFile,
+    pubmed_search_file_factory: BuildFactory,
 ) -> None:
     search_file = pubmed_search_file_factory(
         version_marker=None, include_version_param=False
@@ -70,7 +77,7 @@ def test_pubmed_validate_rejects_missing_version(
 
 
 def test_pubmed_validate_rejects_mismatched_version(
-    pubmed_search_file_factory: colrev.search_file.ExtendedSearchFile,
+    pubmed_search_file_factory: BuildFactory,
 ) -> None:
     search_file = pubmed_search_file_factory("9.9.9")
 
@@ -108,13 +115,13 @@ def test_pubmed_search_persists_api_results(
         return_value=("Test User", "test@example.com"),
     )
 
-    fake_esearch_response = {
+    fake_esearch_response: dict[str, typing.Any] = {
         "esearchresult": {
             "count": "1",
             "idlist": ["37000000"],
         }
     }
-    fake_esearch_empty_response = {
+    fake_esearch_empty_response: dict[str, typing.Any] = {
         "esearchresult": {
             "count": "1",
             "idlist": [],
@@ -162,12 +169,18 @@ def test_pubmed_search_persists_api_results(
 """.strip()
 
     class FakeResponse:
-        def __init__(self, *, status_code: int, json_data=None, text: str = "") -> None:
+        def __init__(
+            self,
+            *,
+            status_code: int,
+            json_data: Optional[dict[str, typing.Any]] = None,
+            text: str = "",
+        ) -> None:
             self.status_code = status_code
             self._json_data = json_data
             self.text = text
 
-        def json(self):
+        def json(self) -> dict[str, typing.Any]:
             if self._json_data is None:
                 raise ValueError("JSON data was not provided for this response")
             return self._json_data
@@ -178,7 +191,14 @@ def test_pubmed_search_persists_api_results(
 
     esearch_url = "https://pubmed.ncbi.nlm.nih.gov/?term=fitbit"
 
-    def fake_request(self, method, url, params=None, headers=None, timeout=None):
+    def fake_request(
+        self: typing.Any,
+        method: str,
+        url: str,
+        params: Optional[dict[str, typing.Any]] = None,
+        headers: Optional[dict[str, str]] = None,
+        timeout: Optional[float] = None,
+    ) -> "FakeResponse":
         del self  # unused
         if url == esearch_url:
             retstart = int((params or {}).get("retstart", 0))

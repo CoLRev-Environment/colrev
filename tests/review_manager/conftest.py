@@ -76,7 +76,9 @@ def run_around_tests(  # type: ignore
     yield  # run test-code
 
     # post-test-code
-    print("Post-test teardown: Restore repository state")
+    print(
+        "Post-test teardown: Restore repository state (in colrev/tests/review_manager/conftest.py)"
+    )
     os.chdir(str(base_repo_review_manager.path))
     base_repo_review_manager.load_settings()
     base_repo_review_manager.notified_next_operation = None

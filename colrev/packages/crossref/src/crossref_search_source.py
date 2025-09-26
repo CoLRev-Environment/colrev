@@ -98,7 +98,6 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         if source.search_type == SearchType.API:
             self._validate_api_params()
 
-        # TODO : use search-query to validate queries and print linter messages
         self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def _validate_api_params(self) -> None:
