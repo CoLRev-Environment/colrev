@@ -4,7 +4,7 @@
         <img src="https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png" alt="Logo" width="400"><br><br>
 
     <h1>Collaborative Literature Reviews</h1>
-    
+
     <a href="https://zenodo.org/badge/latestdoi/363073613" target="_blank" rel="noopener noreferrer">
       <img src="https://zenodo.org/badge/363073613.svg" alt="Zenodo DOI">
     </a>
@@ -26,7 +26,7 @@
     </a>
 
     </div><br>
-        
+
 ..
     Test comment
 
