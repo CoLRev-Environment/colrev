@@ -93,7 +93,8 @@ class ReviewManagerNotNotifiedError(CoLRevException):
             "Instantiate the intended operation so the review manager can "
             "run its precondition checks before accessing records.\n"
             "More details: "
-            "https://colrev-environment.github.io/colrev/dev_docs/colrev.exceptions.ReviewManagerNotNotifiedError.html"
+            "https://colrev-environment.github.io/colrev/"
+            "dev_docs/colrev.exceptions.ReviewManagerNotNotifiedError.html"
         )
         super().__init__(self.message)
 
