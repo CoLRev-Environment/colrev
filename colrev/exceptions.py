@@ -90,8 +90,10 @@ class ReviewManagerNotNotifiedError(CoLRevException):
 
     def __init__(self) -> None:
         self.message = (
-            "Create an operation and inform the review manager in advance"
-            + " to avoid conflicts."
+            "Instantiate the intended operation so the review manager can "
+            "run its precondition checks before accessing records.\n"
+            "More details: "
+            "https://colrev-environment.github.io/colrev/dev_docs/colrev.exceptions.ReviewManagerNotNotifiedError.html"
         )
         super().__init__(self.message)
 
