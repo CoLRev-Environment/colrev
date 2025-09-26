@@ -1827,10 +1827,10 @@ def test_tei_mark_references(tei_doc, tmp_path) -> None:  # type: ignore
         }
     )
     actual = tei_doc.get_tei_str()
-    expected = '<biblStruct xml:id="b118" ID="TEST_ID">'
+    expected = '<tei:biblStruct xml:id="b118" ID="TEST_ID">'
     assert expected in actual
 
-    expected = 'theoretical rationale <ref type="bibr" target="#b118" ID="TEST_ID">(Whetten, 1989)</ref>, which is critical '
+    expected = 'theoretical rationale <tei:ref type="bibr" target="#b118" ID="TEST_ID">(Whetten, 1989)</tei:ref>, which is critical '
     assert expected in actual
 
     assert "NO_TITLE" not in actual
