@@ -5,10 +5,10 @@ from __future__ import annotations
 import re
 import typing
 from pathlib import Path
+from xml.etree.ElementTree import ParseError
 
 import requests
 from defusedxml import ElementTree as DefusedET
-from xml.etree.ElementTree import ParseError
 
 import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions

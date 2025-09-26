@@ -91,9 +91,7 @@ class PubmedAPI:
 
     @classmethod
     def _get_abstract_string(cls, *, root: Element) -> str:
-        abstract = root.find(
-            "./PubmedArticle/MedlineCitation/Article/Abstract"
-        )
+        abstract = root.find("./PubmedArticle/MedlineCitation/Article/Abstract")
         if abstract is not None:
             return DefusedET.tostring(abstract, encoding="unicode")
         return ""
@@ -112,9 +110,7 @@ class PubmedAPI:
         retrieved_record_dict[Fields.TITLE] = cls._get_title_string(root=root)
         retrieved_record_dict[Fields.AUTHOR] = cls._get_author_string(root=root)
 
-        journal = root.find(
-            "./PubmedArticle/MedlineCitation/Article/Journal"
-        )
+        journal = root.find("./PubmedArticle/MedlineCitation/Article/Journal")
         if journal is not None:
             journal_name = journal.findtext("ISOAbbreviation")
             if journal_name:
@@ -135,9 +131,7 @@ class PubmedAPI:
 
         retrieved_record_dict[Fields.ABSTRACT] = cls._get_abstract_string(root=root)
 
-        article_id_list = root.find(
-            "./PubmedArticle/PubmedData/ArticleIdList"
-        )
+        article_id_list = root.find("./PubmedArticle/PubmedData/ArticleIdList")
         if article_id_list is not None:
             for article_id in article_id_list:
                 id_type = article_id.attrib.get("IdType")
