@@ -72,7 +72,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         if self.search_source.search_type == SearchType.MD:
             url = self._api_url
         else:
-            self.search_source.search_parameters["url"]
+            url = self.search_source.search_parameters["url"]
 
         self.api = crossref_api.CrossrefAPI(url=url)
 
