@@ -68,9 +68,13 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.crossref_lock = Lock()
         self.language_service = colrev.env.language_service.LanguageService()
 
-        self.api = crossref_api.CrossrefAPI(
-            url=self.search_source.search_parameters["url"]
-        )
+        url = ""
+        if self.search_source.search_type == SearchType.MD:
+            url = self._api_url
+        else:
+            self.search_source.search_parameters["url"]
+
+        self.api = crossref_api.CrossrefAPI(url=url)
 
     def _validate_source(self) -> None:
         # validate version and migrate if needed

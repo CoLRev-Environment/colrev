@@ -211,7 +211,10 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
                     source="CROSSREF(average)",
                     note="",
                 )
-        except requests.exceptions.RequestException:
+        except (
+            requests.exceptions.RequestException,
+            colrev_exceptions.NotEnoughDataToIdentifyException,
+        ):
             pass
 
     # pylint: disable=unused-argument
