@@ -35,6 +35,7 @@ from colrev.writer.write_utils import write_file
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
+# pylint: disable=too-many-instance-attributes
 
 
 class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
@@ -181,7 +182,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                     f"(PDFs no longer available){Colors.END}"
                 )
                 for file_removed in files_removed:
-                    self.logger.info(f" {Colors.RED}{file_removed}{Colors.END}")
+                    self.logger.info(" %s%s%s", Colors.RED, file_removed, Colors.END)
             records = {k: v for k, v in records.items() if v[Fields.ORIGIN]}
             self.review_manager.dataset.save_records_dict(records)
 
