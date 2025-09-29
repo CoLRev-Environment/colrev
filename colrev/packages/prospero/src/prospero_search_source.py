@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """SearchSource: PROSPERO
+import colrev.search_file
 
 A CoLRev SearchSource plugin to scrape and import records from PROSPERO.
 """
@@ -8,29 +9,29 @@ from __future__ import annotations
 import logging
 import typing
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
-import colrev.ops.load
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_settings
 import colrev.packages.prospero.src.prospero_api
 import colrev.process
-import colrev.settings
+import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
-from colrev.ops.search import Search
-from colrev.settings import SearchSource
+from colrev.ops.search_api_feed import create_api_source
 
 
 class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Prospero Search Source for retrieving protocol data"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     endpoint = "colrev.prospero"
     source_identifier = Fields.PROSPERO_ID
 
@@ -42,57 +43,46 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     def __init__(
         self,
         *,
-        source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
         """Initialize the ProsperoSearchSource plugin."""
 
-        self.search_source = self._get_search_source(settings)
-        self.review_manager = source_operation.review_manager
-        self.operation = source_operation
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
+        self.search_source = search_file
         self.search_word: typing.Optional[str] = None
-
-    def _get_search_source(
-        self, settings: typing.Optional[dict]
-    ) -> colrev.settings.SearchSource:
-        """Retrieve and configure the search source based on provided settings."""
-        if settings:
-            return self.settings_class(**settings)
-
-        fallback_filename = Path("data/search/prospero.bib")
-        return SearchSource(
-            endpoint="colrev.prospero",
-            filename=fallback_filename,
-            search_type=SearchType.API,
-            search_parameters={},
-            comment="fallback search_source",
-        )
 
     @classmethod
     def add_endpoint(
-        cls, operation: Search, params: str
-    ) -> colrev.settings.SearchSource:
+        cls,
+        params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Adds Prospero as a search source endpoint based on user-provided parameters."""
         if len(params) == 0:
-            search_source = operation.create_api_source(endpoint=cls.endpoint)
-            search_source.search_parameters[Fields.URL] = (
-                cls.db_url + "search?" + "#searchadvanced"
+            search_source = create_api_source(platform=cls.endpoint, path=path)
+            search_source.search_string[Fields.URL] = (
+                cls.db_url + "search?" + search_source.search_string + "#searchadvanced"
             )
-            search_source.search_parameters["version"] = "0.1.0"
-            operation.add_source_and_search(search_source)
+            search_source.version = cls.CURRENT_SYNTAX_VERSION
             return search_source
 
-        query = {"query": params}
-        filename = operation.get_unique_filename(file_path_string="prospero_results")
+        filename = colrev.utils.get_unique_filename(
+            base_path=path,
+            file_path_string="prospero_results",
+        )
 
-        new_search_source = SearchSource(
-            endpoint=cls.endpoint,
-            filename=filename,
+        new_search_source = colrev.search_file.ExtendedSearchFile(
+            version=cls.CURRENT_SYNTAX_VERSION,
+            platform=cls.endpoint,
+            search_results_path=filename,
             search_type=SearchType.API,
-            search_parameters=query,
+            search_string=params,
             comment="Search source for Prospero protocols",
         )
-        operation.add_source_and_search(new_search_source)
         return new_search_source
 
     # pylint: disable=unused-argument
@@ -112,9 +102,9 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
                 f"Prospero search_type must be one of {self.search_types}, "
                 f"not {self.search_source.search_type}"
             )
-        if self.review_manager.logger:
-            self.review_manager.logger.debug(
-                "Validate SearchSource %s", self.search_source.filename
+        if self.logger:
+            self.logger.debug(
+                "Validate SearchFile %s", self.search_source.search_results_path
             )
 
     def get_search_word(self) -> str:
@@ -125,16 +115,14 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         if self.search_word is not None:
             return self.search_word
 
-        if "query" in (self.search_source.search_parameters or {}):
-            self.search_word = self.search_source.search_parameters["query"]
-            self.review_manager.logger.debug(
+        if "query" in (self.search_source.search_string or {}):
+            self.search_word = self.search_source.search_string["query"]
+            self.logger.debug(
                 "Using query from search_parameters: %s", self.search_word
             )
         else:
             self.search_word = input("Enter your search query: ").strip()
-            self.review_manager.logger.debug(
-                "Using user-input query: %s", self.search_word
-            )
+            self.logger.debug("Using user-input query: %s", self.search_word)
 
         return self.search_word
 
@@ -142,22 +130,18 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         self, *, prospero_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
         """Add newly scraped records to the feed."""
-        if rerun and self.review_manager:
-            self.review_manager.logger.info(
-                "Performing a search of the full history (may take time)"
-            )
+        if rerun:
+            self.logger.info("Performing a search of the full history (may take time)")
 
         search_word = self.get_search_word()
-        self.review_manager.logger.info("Prospero search with query: %s", search_word)
+        self.logger.info("Prospero search with query: %s", search_word)
 
         prospero_api = colrev.packages.prospero.src.prospero_api.PROSPEROAPI(
-            search_word, logger=self.review_manager.logger
+            search_word, logger=self.logger
         )
 
         for record_dict in prospero_api.get_next_record():
-            self.review_manager.logger.info(
-                f"retrieve record: {record_dict[Fields.URL]}"
-            )
+            self.logger.info("retrieve record: %s", record_dict[Fields.URL])
 
             try:
                 if not record_dict.get(Fields.AUTHOR, "") and not record_dict.get(
@@ -176,10 +160,12 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self._validate_source()
 
-        prospero_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        prospero_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=False,
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         self.run_api_search(prospero_feed=prospero_feed, rerun=rerun)
@@ -205,15 +191,16 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
     # pylint: disable=unused-argument
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """
         The interface requires a load method.
         We only handle .bib files here,
         so we raise NotImplementedError for other formats.
         """
-        if filename.suffix == ".bib":
-            return cls._load_bib(filename=filename, logger=logger)
+        if self.search_source.search_results_path.suffix == ".bib":
+            return self._load_bib(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
         raise NotImplementedError(
             "Only .bib loading is implemented for ProsperoSearchSource."
         )
@@ -222,7 +209,9 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        source: colrev.settings.SearchSource,
-    ) -> colrev.record.record_prep.PrepRecord:
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
+    ) -> colrev.record.record.Record:
         """Map fields to standardized fields for CoLRev (matching interface signature)."""
         return record

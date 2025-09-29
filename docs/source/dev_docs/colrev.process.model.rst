@@ -20,4 +20,4 @@ colrev.process.model
       :template: custom-class-template.rst
       :nosignatures:
 
-      ProcessModel
+      colrev.process.model.ProcessModel

@@ -16,6 +16,8 @@ from colrev.constants import EndpointType
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
+from colrev.env.environment_manager import EnvironmentManager
+from colrev.package_manager.package_manager import PackageManager
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
@@ -49,7 +51,7 @@ class Advisor:
         colrev.ops.check.CheckOperation(self.review_manager)
         self.records = self.review_manager.dataset.load_records_dict()
         self.status_stats = review_manager.get_status_stats(records=self.records)
-        self.environment_manager = self.review_manager.get_environment_manager()
+        self.environment_manager = EnvironmentManager()
 
     def _append_merge_conflict_warning(
         self, collaboration_instructions: dict, *, git_repo: git.Repo
@@ -98,7 +100,7 @@ class Advisor:
         share_stat_req = self.review_manager.settings.project.share_stat_req
         collaboration_instructions["SHARE_STAT_REQ"] = share_stat_req
 
-        if self.review_manager.dataset.behind_remote():
+        if self.review_manager.dataset.git_repo.behind_remote():
             item = {
                 "title": "Remote changes available on the server",
                 "level": "WARNING",
@@ -109,7 +111,7 @@ class Advisor:
             }
             collaboration_instructions["items"].append(item)
 
-        if self.review_manager.dataset.remote_ahead():
+        if self.review_manager.dataset.git_repo.remote_ahead():
             item = {
                 "title": "Local changes not yet on the server",
                 "level": "WARNING",
@@ -195,7 +197,7 @@ class Advisor:
         """Get instructions related to collaboration"""
 
         collaboration_instructions: dict = {"items": []}
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
 
         remote_connected = 0 != len(git_repo.remotes)
         if remote_connected:
@@ -252,7 +254,7 @@ class Advisor:
         self, review_instructions: list
     ) -> None:
         # If changes in RECORDS_FILE are staged, we need to detect the process type
-        if self.review_manager.dataset.records_changed():
+        if self.review_manager.dataset.git_repo.records_changed():
             # Detect and validate transitions
             transitioned_records = self.status_stats.get_transitioned_records(
                 self.review_manager
@@ -387,7 +389,7 @@ class Advisor:
                         review_instructions.remove(item)
                         break
 
-                package_manager = self.review_manager.get_package_manager()
+                package_manager = PackageManager()
                 check_operation = colrev.ops.check.CheckOperation(self.review_manager)
                 for (
                     data_package_endpoint
@@ -467,7 +469,7 @@ class Advisor:
             self.status_stats.completeness_condition
             and self.status_stats.currently.md_retrieved > 0
         ):
-            if not self.review_manager.dataset.has_untracked_search_records():
+            if not self.review_manager.dataset.git_repo.has_untracked_search_records():
                 instruction = {
                     "info": "Review iteration completed.",
                     "msg": "To start the next iteration of the review, run the search",
@@ -497,7 +499,7 @@ class Advisor:
             return nr_commits_behind > 0 and nr_commits_ahead > 0
 
         try:
-            # Note : registered_path are other repositories (don't load from dataset.get_repo())
+            # Note : registered_path are other repositories (don't load from dataset.git_repo)
             git_repo = git.Repo(registered_path)
             # https://github.com/gitpython-developers/GitPython/issues/652#issuecomment-610511311
             origin = git_repo.remotes.origin

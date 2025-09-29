@@ -13,6 +13,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.prep
 import colrev.process.operation
 import colrev.record.record_prep
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 
@@ -62,7 +63,7 @@ class PrepDebug(colrev.ops.prep.Prep):
         if diffs:
             change_report = (
                 f"{prep_package_endpoint} changed:\n"
-                f"{Colors.ORANGE}{self.review_manager.p_printer.pformat(diffs)}{Colors.END}\n"
+                f"{Colors.ORANGE}{colrev.utils.pformat(diffs)}{Colors.END}\n"
             )
 
             self.review_manager.logger.info(change_report)
@@ -81,7 +82,7 @@ class PrepDebug(colrev.ops.prep.Prep):
         print("\n")
 
     def _retrieve_records_from_history(self, original_records: list[dict]) -> list:
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
 
         if self.commit_sha == "":
             self.commit_sha = git_repo.git.rev_parse("HEAD")
@@ -104,20 +105,20 @@ class PrepDebug(colrev.ops.prep.Prep):
     # overrides _load_prep_data
     def _load_prep_data(self) -> dict:
 
-        records = []
+        records_list = []
         original_records = list(
             self.review_manager.dataset.read_next_record(
                 conditions=[{Fields.ID: ID} for ID in self.debug_ids]
             )
         )
-        records = self._retrieve_records_from_history(original_records)
-        if len(records) == 0:
+        records_list = self._retrieve_records_from_history(original_records)
+        if len(records_list) == 0:
             prep_data = {"nr_tasks": 0, "PAD": 0, "items": []}
         else:
             prep_data = {
                 "nr_tasks": len(self.debug_ids),
                 "PAD": len(self.debug_ids),
-                "items": records,
+                "items": records_list,
             }
         return prep_data
 
@@ -154,7 +155,7 @@ class PrepDebug(colrev.ops.prep.Prep):
                 for item in preparation_data:
                     record = self.prepare(item)
                     self.review_manager.logger.info(
-                        f"Result:\n" f"{self.review_manager.p_printer.pformat(record)}"
+                        f"Result:\n" f"{colrev.utils.pformat(record)}"
                     )
         except requests_ConnectionError as exc:
             if "OSError(24, 'Too many open files" in str(exc):

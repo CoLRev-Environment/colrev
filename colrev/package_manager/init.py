@@ -348,13 +348,6 @@ def _generate_method_signatures(module_path: str, class_name: str) -> str:
         \"\"\"{docstring}\"\"\"\n"""
         )
 
-    # Temporary fix
-    if class_name == "SearchSourcePackageBaseClass":
-        method_signatures.append(
-            """    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        \"\"\"Load records from the SearchSource.\"\"\""""
-        )
-
     return "\n".join(method_signatures)
 
 
@@ -364,9 +357,7 @@ def _get_package_imports(plugin: str) -> str:
     if plugin == "review_type":
         return "import colrev.ops.data"
     if plugin == "search_source":
-        return """from pathlib import Path
-import logging
-import colrev.process.operation"""
+        return """import colrev.search_file"""
     if plugin == "prep":
         return "import colrev.ops.prep"
     if plugin == "prep_man":
@@ -413,13 +404,15 @@ def generate_module_content(
     baseclass = BASECLASS_MAP[endpoint_type]
     method_signatures = _generate_method_signatures(module_path, baseclass)
     package_imports = _get_package_imports(endpoint_type)
-    if endpoint_type == "search_source":
-        package_imports = "import typing\n\n" + package_imports
+    # if endpoint_type == "search_source":
+    #     package_imports = "import typing\n\n" + package_imports
 
     module_content = f'''#! /usr/bin/env python
 """{class_name}"""
+import logging
+from typing import Optional
+
 {package_imports}
-import colrev.package_manager.package_settings
 from colrev.package_manager.package_base_classes import {baseclass}
 
 class {class_name}({baseclass}):

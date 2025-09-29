@@ -20,4 +20,4 @@ colrev.env.tei\_parser
       :template: custom-class-template.rst
       :nosignatures:
 
-      TEIParser
+      colrev.env.tei_parser.TEIParser

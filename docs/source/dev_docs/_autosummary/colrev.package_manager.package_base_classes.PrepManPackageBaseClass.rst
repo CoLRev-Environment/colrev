@@ -1,9 +1,7 @@
 colrev.package\_manager.package\_base\_classes.PrepManPackageBaseClass
 ======================================================================
 
-.. currentmodule:: colrev.package_manager.package_base_classes
-
-.. autoclass:: PrepManPackageBaseClass
+.. autoclass:: colrev.package_manager.package_base_classes.PrepManPackageBaseClass
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.package\_manager.package\_base\_classes.PrepManPackageBaseClass
    .. autosummary::
       :nosignatures:
 
-      ~PrepManPackageBaseClass.prepare_manual
+      ~colrev.package_manager.package_base_classes.PrepManPackageBaseClass.prepare_manual
 
 
 
@@ -26,5 +24,5 @@ colrev.package\_manager.package\_base\_classes.PrepManPackageBaseClass
 
    .. autosummary::
 
-      ~PrepManPackageBaseClass.ci_supported
-      ~PrepManPackageBaseClass.settings_class
+      ~colrev.package_manager.package_base_classes.PrepManPackageBaseClass.ci_supported
+      ~colrev.package_manager.package_base_classes.PrepManPackageBaseClass.settings_class

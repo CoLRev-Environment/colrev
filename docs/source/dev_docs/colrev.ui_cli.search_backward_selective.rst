@@ -15,4 +15,4 @@ colrev.ui\_cli.search\_backward\_selective
       :toctree:
       :nosignatures:
 
-      main
+      colrev.ui_cli.search_backward_selective.main

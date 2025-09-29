@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.isbn\_not\_matching\_pattern.ISBNPatternChecker
 =========================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.isbn_not_matching_pattern
-
-.. autoclass:: ISBNPatternChecker
+.. autoclass:: colrev.record.qm.checkers.isbn_not_matching_pattern.ISBNPatternChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.isbn\_not\_matching\_pattern.ISBNPatternChecker
    .. autosummary::
       :nosignatures:
 
-      ~ISBNPatternChecker.run
+      ~colrev.record.qm.checkers.isbn_not_matching_pattern.ISBNPatternChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.isbn\_not\_matching\_pattern.ISBNPatternChecker
 
    .. autosummary::
 
-      ~ISBNPatternChecker.msg
+      ~colrev.record.qm.checkers.isbn_not_matching_pattern.ISBNPatternChecker.msg

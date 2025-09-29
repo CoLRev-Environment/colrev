@@ -15,7 +15,7 @@ colrev.record.qm.checkers.inconsistent\_content
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.inconsistent_content.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.inconsistent\_content
       :template: custom-class-template.rst
       :nosignatures:
 
-      InconsistentContentChecker
+      colrev.record.qm.checkers.inconsistent_content.InconsistentContentChecker

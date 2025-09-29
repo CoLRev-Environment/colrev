@@ -15,7 +15,7 @@ colrev.record.qm.checkers.mostly\_all\_caps
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.mostly_all_caps.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.mostly\_all\_caps
       :template: custom-class-template.rst
       :nosignatures:
 
-      MostlyAllCapsFieldChecker
+      colrev.record.qm.checkers.mostly_all_caps.MostlyAllCapsFieldChecker

@@ -18,15 +18,50 @@ The user can select the search type by navigating through the list with `uparrow
 
 ### DB search
 
+Format of the search-history file (DB search):
+
+```json
+{
+    "search_string": "keyword:\"microsourcing\"",
+    "platform": "colrev.springer_link",
+    "search_results_path": "data/search/springer_link.bib",
+    "search_type": "DB",
+    "version": "0.1.0"
+}
+```
+
 ### API search
+
+Format of the search-history file (API search):
+
+```json
+{
+    "search_string": "",
+    "platform": "colrev.springer_link",
+    "search_results_path": "data/search/springer_link.bib",
+    "search_type": "API",
+    "field": "",
+    "version": "0.1.0",
+    "search_parameters": {
+        "subject": "",
+        "search_string": "microsourcing",
+        "language": "",
+        "year": "",
+        "type": ""
+    }
+}
+```
 
 ℹ️ Restriction: Springer Link only allows a daily quota of 500 requests. This might lead to the site being unavailable with a response code of 403.
 
 #### API search: API key for Springer Link
 
 After selecting API search the user is asked to enter an API key for Springer Link (available upon [registration](https://dev.springernature.com/)).
-If an API key is already stored, the user can change the key with the first prompted question by navigating through the list with `downarrow` and selecting `yes`. Pressing `enter` will confirm this selection.
-The use of an API key is mandatory.
+Set the API-KEY using
+
+```
+export SPRINGER_API_KEY="your-api-key"
+```
 
 The user can choose between `complete_search_string` for searching with a complex query or `interactively` to enter search parameters interactively.
 

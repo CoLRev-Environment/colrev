@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
+import typing
 from sqlite3 import OperationalError
 from urllib.parse import unquote
 
 import requests
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.package_manager
 import colrev.record.record
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
@@ -33,17 +35,18 @@ class DOIConnector:
     def retrieve_doi_metadata(
         cls,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         record: colrev.record.record_prep.PrepRecord,
         timeout: int = 60,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.record.record.Record:
         """Retrieve the metadata from DOI.org based on a record (similarity)"""
 
         if Fields.DOI not in record.data:
             return record
 
+        logger = logger or logging.getLogger(__name__)
         try:
-            session = review_manager.get_cached_session()
+            session = colrev.utils.get_cached_session()
 
             # for testing:
             # curl -iL -H "accept: application/vnd.citationstyles.csl+json"
@@ -51,12 +54,12 @@ class DOIConnector:
 
             try:
                 url = "http://dx.doi.org/" + record.data[Fields.DOI]
-                # review_manager.logger.debug(url)
+                # logger.debug(url)
                 headers = {"accept": "application/vnd.citationstyles.csl+json"}
                 ret = session.request("GET", url, headers=headers, timeout=timeout)
                 ret.raise_for_status()
                 if ret.status_code != 200:
-                    review_manager.report_logger.info(
+                    logger.info(
                         f" {record.data[Fields.ID]}"
                         + "metadata for "
                         + f"doi  {record.data[Fields.DOI]} not (yet) available"
@@ -74,10 +77,6 @@ class DOIConnector:
             retrieved_record = record_transformer.json_to_record(item=retrieved_json)
             retrieved_record.add_provenance_all(source=url)
             record.merge(retrieved_record, default_source=url)
-            record.set_masterdata_complete(
-                source=url,
-                masterdata_repository=review_manager.settings.is_curated_repo(),
-            )
             record.set_status(RecordState.md_prepared)
             if FieldValues.RETRACTED in record.data.get("warning", ""):
                 record.prescreen_exclude(reason=FieldValues.RETRACTED)
@@ -95,7 +94,6 @@ class DOIConnector:
     def get_link_from_doi(
         cls,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         record: colrev.record.record.Record,
         timeout: int = 30,
     ) -> None:
@@ -148,7 +146,7 @@ class DOIConnector:
         try:
             url = doi_url
 
-            session = review_manager.get_cached_session()
+            session = colrev.utils.get_cached_session()
 
             requests_headers = {
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "

@@ -20,4 +20,4 @@ colrev.loader.load\_utils\_formatter
       :template: custom-class-template.rst
       :nosignatures:
 
-      LoadFormatter
+      colrev.loader.load_utils_formatter.LoadFormatter

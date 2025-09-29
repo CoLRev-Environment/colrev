@@ -1,9 +1,7 @@
 colrev.env.docker\_manager.DockerManager
 ========================================
 
-.. currentmodule:: colrev.env.docker_manager
-
-.. autoclass:: DockerManager
+.. autoclass:: colrev.env.docker_manager.DockerManager
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,5 +14,5 @@ colrev.env.docker\_manager.DockerManager
    .. autosummary::
       :nosignatures:
 
-      ~DockerManager.build_docker_image
-      ~DockerManager.check_docker_installed
+      ~colrev.env.docker_manager.DockerManager.build_docker_image
+      ~colrev.env.docker_manager.DockerManager.check_docker_installed

@@ -5,6 +5,7 @@ import pylint.testutils
 
 import colrev.linter.colrev_direct_status_assign
 import colrev.linter.colrev_records_variable_naming_convention
+import colrev.linter.colrev_search_source_requests_import
 
 
 class TestDirectStatusAssignmentChecker(pylint.testutils.CheckerTestCase):
@@ -193,4 +194,52 @@ class TestRecordsVariableNamingConventionChecker(pylint.testutils.CheckerTestCas
         )
 
         self.checker.visit_assign(assignment_node)
+        self.assertNoMessages()
+
+
+class TestSearchSourceRequestsImportChecker(pylint.testutils.CheckerTestCase):
+    """SearchSourceRequestsImportChecker class"""
+
+    CHECKER_CLASS = (
+        colrev.linter.colrev_search_source_requests_import.SearchSourceRequestsImportChecker
+    )
+
+    def test_finds_requests_import(self) -> None:
+        """Test whether the pylint checker finds requests imports in SearchSource packages"""
+
+        module_node = astroid.parse(
+            """
+        import requests
+        from colrev.package_manager.package_base_classes import SearchSourcePackageBaseClass
+
+        class MySearchSource(SearchSourcePackageBaseClass):
+            pass
+        """
+        )
+
+        with self.assertAddsMessages(
+            pylint.testutils.MessageTest(
+                msg_id="colrev-search-source-requests-import",
+                node=module_node.body[0],
+                line=2,
+                col_offset=0,
+                end_line=2,
+                end_col_offset=15,
+            ),
+        ):
+            self.checker.visit_module(module_node)
+
+    def test_no_requests_import(self) -> None:
+        """Test checker when requests is not imported"""
+
+        module_node = astroid.parse(
+            """
+        from colrev.package_manager.package_base_classes import SearchSourcePackageBaseClass
+
+        class MySearchSource(SearchSourcePackageBaseClass):
+            pass
+        """
+        )
+
+        self.checker.visit_module(module_node)
         self.assertNoMessages()

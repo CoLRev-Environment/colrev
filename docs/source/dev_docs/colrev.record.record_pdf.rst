@@ -20,4 +20,4 @@ colrev.record.record\_pdf
       :template: custom-class-template.rst
       :nosignatures:
 
-      PDFRecord
+      colrev.record.record_pdf.PDFRecord

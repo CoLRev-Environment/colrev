@@ -1,9 +1,7 @@
 colrev.settings.ScreenSettings
 ==============================
 
-.. currentmodule:: colrev.settings
-
-.. autoclass:: ScreenSettings
+.. autoclass:: colrev.settings.ScreenSettings
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,6 +17,6 @@ colrev.settings.ScreenSettings
 
    .. autosummary::
 
-      ~ScreenSettings.explanation
-      ~ScreenSettings.criteria
-      ~ScreenSettings.screen_package_endpoints
+      ~colrev.settings.ScreenSettings.explanation
+      ~colrev.settings.ScreenSettings.criteria
+      ~colrev.settings.ScreenSettings.screen_package_endpoints

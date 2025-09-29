@@ -1,9 +1,7 @@
 colrev.record.qm.pdf\_checkers.no\_text\_in\_pdf.TextInPDFChecker
 =================================================================
 
-.. currentmodule:: colrev.record.qm.pdf_checkers.no_text_in_pdf
-
-.. autoclass:: TextInPDFChecker
+.. autoclass:: colrev.record.qm.pdf_checkers.no_text_in_pdf.TextInPDFChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.pdf\_checkers.no\_text\_in\_pdf.TextInPDFChecker
    .. autosummary::
       :nosignatures:
 
-      ~TextInPDFChecker.run
+      ~colrev.record.qm.pdf_checkers.no_text_in_pdf.TextInPDFChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.pdf\_checkers.no\_text\_in\_pdf.TextInPDFChecker
 
    .. autosummary::
 
-      ~TextInPDFChecker.msg
+      ~colrev.record.qm.pdf_checkers.no_text_in_pdf.TextInPDFChecker.msg

@@ -3,19 +3,17 @@
 from __future__ import annotations
 
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
+from typing import Optional
 
-import requests
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
-import colrev.record.record_prep
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -28,45 +26,27 @@ from colrev.packages.open_alex.src import open_alex_api
 class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
     """OpenAlex API"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+    CURRENT_SYNTAX_VERSION = "0.1.0"
+
     endpoint = "colrev.open_alex"
     source_identifier = "openalex_id"
     search_types = [SearchType.MD]
 
     ci_supported: bool = Field(default=True)
     heuristic_status = SearchSourceHeuristicStatus.oni
-
-    _open_alex_md_filename = Path("data/search/md_open_alex.bib")
+    _availability_exception_message = "OpenAlex"
 
     def __init__(
         self,
         *,
-        source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
-        self.review_manager = source_operation.review_manager
-        # Note: not yet implemented
-        # Note : once this is implemented, add "colrev.open_alex" to the default settings
-        # if settings:
-        #     # OpenAlex as a search_source
-        #     self.search_source = self.settings_class(**settings)
-        # else:
-        # OpenAlex as an md-prep source
-        open_alex_md_source_l = [
-            s
-            for s in self.review_manager.settings.sources
-            if s.filename == self._open_alex_md_filename
-        ]
-        if open_alex_md_source_l:
-            self.search_source = open_alex_md_source_l[0]
-        else:
-            self.search_source = colrev.settings.SearchSource(
-                endpoint="colrev.open_alex",
-                filename=self._open_alex_md_filename,
-                search_type=SearchType.MD,
-                search_parameters={},
-                comment="",
-            )
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
+
+        self.search_source = search_file
 
         self.open_alex_lock = Lock()
 
@@ -81,26 +61,45 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+        path: Path,
+        logger: Optional[logging.Logger] = None,
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         raise colrev_exceptions.PackageParameterError(
             f"Cannot add OpenAlex endpoint with query {params}"
         )
 
-    def check_availability(
-        self, *, source_operation: colrev.process.operation.Operation
-    ) -> None:
+    def check_availability(self) -> None:
         """Check status (availability) of the OpenAlex API"""
 
+        try:
+            _, email = (
+                colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+            )
+            api = open_alex_api.OpenAlexAPI(email=email)
+            retrieved_record = api.get_record(open_alex_id="W2741809807")
+            if not retrieved_record.data:
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    self._availability_exception_message
+                )
+        except (open_alex_api.OpenAlexAPIError, KeyError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                self._availability_exception_message
+            ) from exc
+
     def _get_masterdata_record(
-        self, *, record: colrev.record.record.Record
+        self,
+        *,
+        record: colrev.record.record.Record,
+        prep_operation: colrev.ops.prep.Prep,
     ) -> colrev.record.record.Record:
         try:
 
-            _, email = self.review_manager.get_committer()
+            _, email = (
+                colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+            )
             api = open_alex_api.OpenAlexAPI(email=email)
             retrieved_record = api.get_record(
                 open_alex_id=record.data["colrev.open_alex.id"]
@@ -109,27 +108,32 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
             self.open_alex_lock.acquire(timeout=120)
 
             # Note : need to reload file because the object is not shared between processes
-            open_alex_feed = self.search_source.get_api_feed(
-                review_manager=self.review_manager,
+            open_alex_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier=self.source_identifier,
+                search_source=self.search_source,
                 update_only=False,
                 prep_mode=True,
+                records=prep_operation.review_manager.dataset.load_records_dict(),
+                logger=self.logger,
+                verbose_mode=self.verbose_mode,
             )
 
             open_alex_feed.add_update_record(retrieved_record)
             record.change_entrytype(
                 new_entrytype=retrieved_record.data[Fields.ENTRYTYPE],
-                qm=self.review_manager.get_qm(),
             )
 
             record.merge(
                 retrieved_record,
                 default_source=retrieved_record.data[Fields.ORIGIN][0],
             )
+            prep_operation.review_manager.dataset.save_records_dict(
+                open_alex_feed.get_records(),
+            )
             open_alex_feed.save()
         except (
             colrev_exceptions.RecordNotParsableException,
-            requests.exceptions.RequestException,
+            open_alex_api.OpenAlexAPIError,
         ):
             pass
         except Exception as exc:
@@ -157,7 +161,9 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
             # if len(record.data.get(Fields.TITLE, "")) < 35 and Fields.DOI not in record.data:
             #     return record
             # record = self._check_doi_masterdata(record=record)
-            record = self._get_masterdata_record(record=record)
+            record = self._get_masterdata_record(
+                record=record, prep_operation=prep_operation
+            )
 
         return record
 
@@ -168,21 +174,21 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         raise NotImplementedError
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=filename,
-                logger=logger,
+                filename=self.search_source.search_results_path,
+                logger=self.logger,
             )
             return records
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for OpenAlex"""
 

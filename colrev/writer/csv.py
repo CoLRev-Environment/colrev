@@ -44,7 +44,7 @@ def to_dataframe(
 
     if drop_empty_fields:
         df = df.dropna(axis=1, how="all")
-        df = df.loc[:, (df != "").any(axis=0)]
+        df = df.loc[:, (df != "").any(axis=0)]  # pylint: disable=no-member
 
     return df
 

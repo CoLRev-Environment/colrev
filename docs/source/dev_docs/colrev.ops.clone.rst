@@ -20,4 +20,4 @@ colrev.ops.clone
       :template: custom-class-template.rst
       :nosignatures:
 
-      Clone
+      colrev.ops.clone.Clone

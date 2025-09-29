@@ -1,9 +1,7 @@
 colrev.constants.ExitCodes
 ==========================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: ExitCodes
+.. autoclass:: colrev.constants.ExitCodes
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,5 +17,5 @@ colrev.constants.ExitCodes
 
    .. autosummary::
 
-      ~ExitCodes.FAIL
-      ~ExitCodes.SUCCESS
+      ~colrev.constants.ExitCodes.FAIL
+      ~colrev.constants.ExitCodes.SUCCESS

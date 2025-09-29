@@ -15,5 +15,5 @@ colrev.env.local\_index\_prep
       :toctree:
       :nosignatures:
 
-      prepare_record_for_indexing
-      prepare_record_for_return
+      colrev.env.local_index_prep.prepare_record_for_indexing
+      colrev.env.local_index_prep.prepare_record_for_return

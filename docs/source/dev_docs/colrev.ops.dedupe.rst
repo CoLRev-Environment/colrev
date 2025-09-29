@@ -20,4 +20,4 @@ colrev.ops.dedupe
       :template: custom-class-template.rst
       :nosignatures:
 
-      Dedupe
+      colrev.ops.dedupe.Dedupe

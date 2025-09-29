@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.mostly\_all\_caps.MostlyAllCapsFieldChecker
 =====================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.mostly_all_caps
-
-.. autoclass:: MostlyAllCapsFieldChecker
+.. autoclass:: colrev.record.qm.checkers.mostly_all_caps.MostlyAllCapsFieldChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.mostly\_all\_caps.MostlyAllCapsFieldChecker
    .. autosummary::
       :nosignatures:
 
-      ~MostlyAllCapsFieldChecker.run
+      ~colrev.record.qm.checkers.mostly_all_caps.MostlyAllCapsFieldChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.mostly\_all\_caps.MostlyAllCapsFieldChecker
 
    .. autosummary::
 
-      ~MostlyAllCapsFieldChecker.msg
+      ~colrev.record.qm.checkers.mostly_all_caps.MostlyAllCapsFieldChecker.msg

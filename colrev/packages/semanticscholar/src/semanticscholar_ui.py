@@ -49,7 +49,7 @@ class SemanticScholarUI:
                 self.keyword_ui()
                 run = False
 
-            elif fwd_value == "Exit Program":
+            elif fwd_value == "Exit":
                 print("\nThanks for using Colrev! This Program will close.")
                 raise colrev_exceptions.ServiceNotAvailableException("Regular exit.")
 

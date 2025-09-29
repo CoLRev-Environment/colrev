@@ -20,4 +20,4 @@ colrev.ops.status
       :template: custom-class-template.rst
       :nosignatures:
 
-      Status
+      colrev.ops.status.Status

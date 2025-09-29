@@ -15,7 +15,7 @@ colrev.record.qm.checkers.name\_particles
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.name_particles.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.name\_particles
       :template: custom-class-template.rst
       :nosignatures:
 
-      NameParticlesChecker
+      colrev.record.qm.checkers.name_particles.NameParticlesChecker

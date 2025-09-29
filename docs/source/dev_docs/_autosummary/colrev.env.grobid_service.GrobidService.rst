@@ -1,9 +1,7 @@
 colrev.env.grobid\_service.GrobidService
 ========================================
 
-.. currentmodule:: colrev.env.grobid_service
-
-.. autoclass:: GrobidService
+.. autoclass:: colrev.env.grobid_service.GrobidService
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,8 +14,8 @@ colrev.env.grobid\_service.GrobidService
    .. autosummary::
       :nosignatures:
 
-      ~GrobidService.check_grobid_availability
-      ~GrobidService.start
+      ~colrev.env.grobid_service.GrobidService.check_grobid_availability
+      ~colrev.env.grobid_service.GrobidService.start
 
 
 
@@ -27,5 +25,5 @@ colrev.env.grobid\_service.GrobidService
 
    .. autosummary::
 
-      ~GrobidService.GROBID_IMAGE
-      ~GrobidService.GROBID_URL
+      ~colrev.env.grobid_service.GrobidService.GROBID_IMAGE
+      ~colrev.env.grobid_service.GrobidService.GROBID_URL

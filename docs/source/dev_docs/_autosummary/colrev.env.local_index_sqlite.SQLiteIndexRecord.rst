@@ -1,9 +1,7 @@
 colrev.env.local\_index\_sqlite.SQLiteIndexRecord
 =================================================
 
-.. currentmodule:: colrev.env.local_index_sqlite
-
-.. autoclass:: SQLiteIndexRecord
+.. autoclass:: colrev.env.local_index_sqlite.SQLiteIndexRecord
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,12 +14,12 @@ colrev.env.local\_index\_sqlite.SQLiteIndexRecord
    .. autosummary::
       :nosignatures:
 
-      ~SQLiteIndexRecord.commit
-      ~SQLiteIndexRecord.exists
-      ~SQLiteIndexRecord.get
-      ~SQLiteIndexRecord.insert
-      ~SQLiteIndexRecord.search
-      ~SQLiteIndexRecord.update
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.commit
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.exists
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.get
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.insert
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.search
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.update
 
 
 
@@ -31,12 +29,12 @@ colrev.env.local\_index\_sqlite.SQLiteIndexRecord
 
    .. autosummary::
 
-      ~SQLiteIndexRecord.CREATE_TABLE_QUERY
-      ~SQLiteIndexRecord.GLOBAL_KEYS
-      ~SQLiteIndexRecord.INDEX_NAME
-      ~SQLiteIndexRecord.INSERT_QUERY
-      ~SQLiteIndexRecord.KEYS
-      ~SQLiteIndexRecord.SELECT_ALL_QUERY
-      ~SQLiteIndexRecord.SELECT_KEY_QUERIES
-      ~SQLiteIndexRecord.UPDATE_RECORD_QUERY
-      ~SQLiteIndexRecord.connection
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.CREATE_TABLE_QUERY
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.GLOBAL_KEYS
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.INDEX_NAME
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.INSERT_QUERY
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.KEYS
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.SELECT_ALL_QUERY
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.SELECT_KEY_QUERIES
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.UPDATE_RECORD_QUERY
+      ~colrev.env.local_index_sqlite.SQLiteIndexRecord.connection

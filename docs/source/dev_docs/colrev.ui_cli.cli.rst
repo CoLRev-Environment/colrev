@@ -15,10 +15,10 @@ colrev.ui\_cli.cli
       :toctree:
       :nosignatures:
 
-      catch_exception
-      get_review_manager
-      get_search_files
-      select_format
+      colrev.ui_cli.cli.catch_exception
+      colrev.ui_cli.cli.get_review_manager
+      colrev.ui_cli.cli.get_search_files
+      colrev.ui_cli.cli.select_format
 
 
 
@@ -31,4 +31,4 @@ colrev.ui\_cli.cli
       :template: custom-class-template.rst
       :nosignatures:
 
-      SpecialHelpOrder
+      colrev.ui_cli.cli.SpecialHelpOrder

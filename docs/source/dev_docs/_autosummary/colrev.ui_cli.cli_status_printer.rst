@@ -15,8 +15,8 @@ colrev.ui\_cli.cli\_status\_printer
       :toctree:
       :nosignatures:
 
-      print_collaboration_instructions
-      print_environment_instructions
-      print_progress
-      print_project_status
-      print_review_instructions
+      colrev.ui_cli.cli_status_printer.print_collaboration_instructions
+      colrev.ui_cli.cli_status_printer.print_environment_instructions
+      colrev.ui_cli.cli_status_printer.print_progress
+      colrev.ui_cli.cli_status_printer.print_project_status
+      colrev.ui_cli.cli_status_printer.print_review_instructions

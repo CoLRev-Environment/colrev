@@ -1,9 +1,7 @@
 colrev.constants.SortedEnumMeta
 ===============================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: SortedEnumMeta
+.. autoclass:: colrev.constants.SortedEnumMeta
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,4 +14,4 @@ colrev.constants.SortedEnumMeta
    .. autosummary::
       :nosignatures:
 
-      ~SortedEnumMeta.mro
+      ~colrev.constants.SortedEnumMeta.mro

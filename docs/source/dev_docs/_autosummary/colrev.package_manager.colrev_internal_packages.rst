@@ -15,4 +15,4 @@ colrev.package\_manager.colrev\_internal\_packages
       :toctree:
       :nosignatures:
 
-      get_internal_packages_dict
+      colrev.package_manager.colrev_internal_packages.get_internal_packages_dict

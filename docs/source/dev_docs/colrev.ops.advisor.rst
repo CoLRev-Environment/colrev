@@ -20,4 +20,4 @@ colrev.ops.advisor
       :template: custom-class-template.rst
       :nosignatures:
 
-      Advisor
+      colrev.ops.advisor.Advisor

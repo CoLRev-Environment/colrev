@@ -15,7 +15,7 @@ colrev.record.qm.checkers.erroneous\_term\_in\_field
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.erroneous_term_in_field.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.erroneous\_term\_in\_field
       :template: custom-class-template.rst
       :nosignatures:
 
-      ErroneousTermInFieldChecker
+      colrev.record.qm.checkers.erroneous_term_in_field.ErroneousTermInFieldChecker

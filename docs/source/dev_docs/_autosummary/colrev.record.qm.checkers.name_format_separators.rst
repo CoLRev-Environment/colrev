@@ -15,7 +15,7 @@ colrev.record.qm.checkers.name\_format\_separators
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.name_format_separators.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.name\_format\_separators
       :template: custom-class-template.rst
       :nosignatures:
 
-      NameFormatSeparatorsChecker
+      colrev.record.qm.checkers.name_format_separators.NameFormatSeparatorsChecker

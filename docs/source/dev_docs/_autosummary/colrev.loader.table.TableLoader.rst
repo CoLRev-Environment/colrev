@@ -1,9 +1,7 @@
 colrev.loader.table.TableLoader
 ===============================
 
-.. currentmodule:: colrev.loader.table
-
-.. autoclass:: TableLoader
+.. autoclass:: colrev.loader.table.TableLoader
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,6 +14,6 @@ colrev.loader.table.TableLoader
    .. autosummary::
       :nosignatures:
 
-      ~TableLoader.get_nr_records
-      ~TableLoader.load
-      ~TableLoader.load_records_list
+      ~colrev.loader.table.TableLoader.get_nr_records
+      ~colrev.loader.table.TableLoader.load
+      ~colrev.loader.table.TableLoader.load_records_list

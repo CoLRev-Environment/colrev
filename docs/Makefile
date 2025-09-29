@@ -16,6 +16,7 @@ help:
 
 clean:
 	rm -rfv "$(SOURCEDIR)/dev_docs/_autosummary"
+	rm -fv $(SOURCEDIR)/dev_docs/colrev.*
 	$(SPHINXBUILD)  -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 # Catch-all target: route all unknown targets to Sphinx using the new

@@ -59,8 +59,18 @@ DB search
 
 Download search results and store in ``data/search/`` directory. API-access not yet available.
 
+API search
+^^^^^^^^^^
+
+Get an API key and set it using
+
+.. code-block::
+
+   export SCOPUS_API_KEY="your-api-key"
+
 Links
 -----
 
 
 * `Scopus <http://www.scopus.com>`_
+* `Search <https://dev.elsevier.com/sd_search_example.html>`_

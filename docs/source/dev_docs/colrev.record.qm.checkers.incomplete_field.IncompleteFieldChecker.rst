@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.incomplete\_field.IncompleteFieldChecker
 ==================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.incomplete_field
-
-.. autoclass:: IncompleteFieldChecker
+.. autoclass:: colrev.record.qm.checkers.incomplete_field.IncompleteFieldChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.incomplete\_field.IncompleteFieldChecker
    .. autosummary::
       :nosignatures:
 
-      ~IncompleteFieldChecker.run
+      ~colrev.record.qm.checkers.incomplete_field.IncompleteFieldChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.incomplete\_field.IncompleteFieldChecker
 
    .. autosummary::
 
-      ~IncompleteFieldChecker.msg
+      ~colrev.record.qm.checkers.incomplete_field.IncompleteFieldChecker.msg

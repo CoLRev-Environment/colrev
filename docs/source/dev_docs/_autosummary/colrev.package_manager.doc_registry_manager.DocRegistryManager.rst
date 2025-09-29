@@ -1,9 +1,7 @@
 colrev.package\_manager.doc\_registry\_manager.DocRegistryManager
 =================================================================
 
-.. currentmodule:: colrev.package_manager.doc_registry_manager
-
-.. autoclass:: DocRegistryManager
+.. autoclass:: colrev.package_manager.doc_registry_manager.DocRegistryManager
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.package\_manager.doc\_registry\_manager.DocRegistryManager
    .. autosummary::
       :nosignatures:
 
-      ~DocRegistryManager.update
+      ~colrev.package_manager.doc_registry_manager.DocRegistryManager.update
 
 
 
@@ -26,11 +24,11 @@ colrev.package\_manager.doc\_registry\_manager.DocRegistryManager
 
    .. autosummary::
 
-      ~DocRegistryManager.docs_for_index
-      ~DocRegistryManager.docs_package_endpoints_json_file
-      ~DocRegistryManager.docs_packages_index_path
-      ~DocRegistryManager.docs_packages_overview_json_file
-      ~DocRegistryManager.docs_search_source_types_json_file
-      ~DocRegistryManager.package_endpoints_json
-      ~DocRegistryManager.packages_data
-      ~DocRegistryManager.pypi_ignored_packages_file
+      ~colrev.package_manager.doc_registry_manager.DocRegistryManager.docs_for_index
+      ~colrev.package_manager.doc_registry_manager.DocRegistryManager.docs_package_endpoints_json_file
+      ~colrev.package_manager.doc_registry_manager.DocRegistryManager.docs_packages_index_path
+      ~colrev.package_manager.doc_registry_manager.DocRegistryManager.docs_packages_overview_json_file
+      ~colrev.package_manager.doc_registry_manager.DocRegistryManager.docs_search_source_types_json_file
+      ~colrev.package_manager.doc_registry_manager.DocRegistryManager.package_endpoints_json
+      ~colrev.package_manager.doc_registry_manager.DocRegistryManager.packages_data
+      ~colrev.package_manager.doc_registry_manager.DocRegistryManager.pypi_ignored_packages_file

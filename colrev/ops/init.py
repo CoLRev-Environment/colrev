@@ -22,12 +22,14 @@ import colrev.env.environment_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
-import colrev.package_manager.package_manager
 import colrev.review_manager
+import colrev.search_file
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import EndpointType
-from colrev.constants import Fields
+from colrev.constants import SearchType
+from colrev.env.environment_manager import EnvironmentManager
+from colrev.package_manager.package_manager import PackageManager
 
 # pylint: disable=too-few-public-methods
 
@@ -48,7 +50,7 @@ class Initializer:
         light: bool = False,
         exact_call: str = "",
     ) -> None:
-        p_man = colrev.package_manager.package_manager.PackageManager()
+        p_man = PackageManager()
         self.review_type = self._format_review_type(review_type)
         if not p_man.is_installed(self.review_type):
             print(
@@ -100,13 +102,13 @@ class Initializer:
 
         self._git_rm_settings()
 
-        self.review_manager.dataset.create_commit(
+        self.review_manager.create_commit(
             msg="Init: Create CoLRev repository",
             manual_author=True,
             skip_hooks=True,
         )
         self._add_colrev_project_details()
-        self.review_manager.dataset.create_commit(
+        self.review_manager.create_commit(
             msg="Init: Create CoLRev project",
             manual_author=True,
             skip_hooks=True,
@@ -114,15 +116,13 @@ class Initializer:
 
         self._register_repo(example=example)
 
-        self._post_commit_edits()
-
         self.review_manager.logger.info(
             "%sCompleted init operation%s", Colors.GREEN, Colors.END
         )
 
     def _git_rm_settings(self) -> None:
         colrev.ops.check.CheckOperation(self.review_manager)
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
         git_repo.index.remove([self.review_manager.paths.settings])
 
     def _add_colrev_project_details(self) -> None:
@@ -133,7 +133,7 @@ class Initializer:
         )
         data_operation.main(silent_mode=True)
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
         git_repo.git.add(all=True)
 
     def _format_review_type(self, review_type: str) -> str:
@@ -198,7 +198,7 @@ class Initializer:
                 filepath=self.target_path, content=cur_content
             )
 
-        environment_manager = colrev.env.environment_manager.EnvironmentManager()
+        environment_manager = EnvironmentManager()
         environment_manager.get_name_mail_from_git()
 
         try:
@@ -219,7 +219,7 @@ class Initializer:
         git.Repo.init()
 
         # To check if git actors are set
-        environment_manager = colrev.env.environment_manager.EnvironmentManager()
+        environment_manager = EnvironmentManager()
         environment_manager.get_name_mail_from_git()
 
         logging.info("Install latest pre-commmit hooks")
@@ -323,13 +323,27 @@ class Initializer:
             colrev.env.utils.retrieve_package_file(
                 template_file=retrieval_path, target=target_path
             )
+        files_dir_search_history = colrev.search_file.ExtendedSearchFile(
+            platform="colrev.files_dir",
+            search_results_path=Path("data/search/files.bib"),
+            search_type=SearchType.FILES,
+            search_string="",
+            search_parameters={"scope": {"path": "data/pdfs"}},
+            comment="",
+            version="0.1.0",
+        )
+        files_dir_search_history.save(
+            search_history_path=Path("data/search/files_search_history.json")
+        )
 
     def _setup_settings(self) -> None:
 
         self.review_manager = colrev.review_manager.ReviewManager()
         settings = self.review_manager.settings
 
-        committer, email = self.review_manager.get_committer()
+        committer, email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
         settings.project.authors = [
             colrev.settings.Author(
                 name=committer,
@@ -348,7 +362,7 @@ class Initializer:
 
         # Principle: adapt values provided by the default SETTINGS_FILE
         # instead of creating a new SETTINGS_FILE
-        package_manager = self.review_manager.get_package_manager()
+        package_manager = PackageManager()
         review_type_class = package_manager.get_package_endpoint_class(
             package_type=EndpointType.review_type,
             package_identifier=self.review_type,
@@ -360,6 +374,7 @@ class Initializer:
         )
 
         settings = review_type_object.initialize(settings=settings)
+        self.review_manager.settings = settings
         self.review_manager.save_settings()
 
         project_title = self.review_manager.settings.project.title
@@ -370,7 +385,7 @@ class Initializer:
                 new_string=project_title.rstrip(" ").capitalize(),
             )
         else:
-            package_manager = self.review_manager.get_package_manager()
+            package_manager = PackageManager()
             r_type_suffix = str(review_type_object)
 
             colrev.env.utils.inplace_change(
@@ -387,7 +402,7 @@ class Initializer:
                 if x["endpoint"] not in ["colrev.paper_md"]
             ]
             settings.sources = [
-                x for x in settings.sources if x.endpoint not in ["colrev.files_dir"]
+                x for x in settings.sources if x.platform not in ["colrev.files_dir"]
             ]
 
             settings.pdf_prep.pdf_prep_package_endpoints = [
@@ -401,7 +416,6 @@ class Initializer:
                     "colrev.grobid_tei",
                 ]
             ]
-
         self.review_manager.save_settings()
 
     def _finalize(self) -> None:
@@ -411,7 +425,7 @@ class Initializer:
 
         for source in settings.sources:
             self.review_manager.logger.info(
-                " add search %s", source.endpoint.replace("colrev.", "")
+                " add search %s", source.platform.replace("colrev.", "")
             )
 
         for data_package_endpoint in settings.data.data_package_endpoints:
@@ -427,56 +441,17 @@ class Initializer:
 
         self._fix_pre_commit_hooks_windows()
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
         git_repo.git.add(all=True)
 
     def _register_repo(self, *, example: bool) -> None:
         if example or "pytest" in os.getcwd():
             return
         self.review_manager.logger.info("Register CoLRev repository")
-        environment_manager = self.review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         environment_manager.register_repo(
             self.target_path, logger=self.review_manager.logger
         )
-
-    def _post_commit_edits(self) -> None:
-        if self.review_type != "colrev.curated_masterdata":
-            return
-
-        self.review_manager.logger.info("Post-commit edits")
-        self.review_manager.settings.project.curation_url = "TODO"
-        self.review_manager.settings.project.curated_fields = [
-            Fields.URL,
-            Fields.DOI,
-            "TODO",
-        ]
-
-        pdf_source_l = [
-            s
-            for s in self.review_manager.settings.sources
-            if "data/search/pdfs.bib" == str(s.filename)
-        ]
-        if pdf_source_l:
-            pdf_source = pdf_source_l[0]
-            pdf_source.search_parameters = {
-                "scope": {
-                    "path": "pdfs",
-                    Fields.JOURNAL: "TODO",
-                    "subdir_pattern": "TODO:volume_number|year",
-                }
-            }
-
-        crossref_source_l = [
-            s
-            for s in self.review_manager.settings.sources
-            if "data/search/CROSSREF.bib" == str(s.filename)
-        ]
-        if crossref_source_l:
-            crossref_source = crossref_source_l[0]
-            crossref_source.search_parameters = {"scope": {"journal_issn": "TODO"}}
-
-        self.review_manager.save_settings()
-        self.review_manager.logger.info("Completed setup.")
 
     def _create_example_repo(self) -> None:
         """The example repository is intended to provide an initial illustration
@@ -489,7 +464,7 @@ class Initializer:
             target=Path("data/search/30_example_records.bib"),
         )
 
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
         git_repo.index.add(["data/search/30_example_records.bib"])
 
         with open(self.review_manager.paths.settings, encoding="utf-8") as file:
@@ -498,12 +473,10 @@ class Initializer:
         settings["dedupe"]["dedupe_package_endpoints"] = [{"endpoint": "colrev.dedupe"}]
         settings["sources"] = [
             {
-                "endpoint": "colrev.unknown_source",
-                "filename": str(Path("data/search/30_example_records.bib")),
+                "platform": "colrev.unknown_source",
+                "search_results_path": "data/search/30_example_records.bib",
                 "search_type": "DB",
-                "search_parameters": {
-                    "query_file": str(Path("data/search/30_example_records_query.txt"))
-                },
+                "search_string": "",
                 "comment": "",
             }
         ]

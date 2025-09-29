@@ -2,14 +2,15 @@
 """Exclude records based on language as a prep operation"""
 from __future__ import annotations
 
+import logging
 import re
 import statistics
+import typing
 
 from pydantic import Field
 
 import colrev.env.language_service
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
@@ -30,14 +31,21 @@ class ExcludeLanguagesPrep(base_classes.PrepPackageBaseClass):
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, prep_operation: colrev.ops.prep.Prep, settings: dict) -> None:
+    def __init__(
+        self,
+        *,
+        prep_operation: colrev.ops.prep.Prep,
+        settings: dict,
+        logger: typing.Optional[logging.Logger] = None,
+    ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
 
         # Note : the following objects have heavy memory footprints and should be
         # class (not object) properties to keep parallel processing as
         # efficient as possible (the object is passed to each thread)
         languages_to_include = ["eng"]
-        # if not prep_operation.review_manager.in_ci_environment():
+        # if not utils.in_ci_environment():
         self.language_service = colrev.env.language_service.LanguageService()
 
         prescreen_package_endpoints = (
@@ -68,8 +76,13 @@ class ExcludeLanguagesPrep(base_classes.PrepPackageBaseClass):
             return True
         return False
 
+    # pylint: disable=unused-argument
     def prepare(
-        self, record: colrev.record.record_prep.PrepRecord
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
     ) -> colrev.record.record.Record:
         """Prepare the record by excluding records whose metadata is not in English"""
 

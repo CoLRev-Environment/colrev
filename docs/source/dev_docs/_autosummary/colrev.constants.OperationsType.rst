@@ -1,9 +1,7 @@
 colrev.constants.OperationsType
 ===============================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: OperationsType
+.. autoclass:: colrev.constants.OperationsType
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.constants.OperationsType
    .. autosummary::
       :nosignatures:
 
-      ~OperationsType.get_manual_extra_operations
+      ~colrev.constants.OperationsType.get_manual_extra_operations
 
 
 
@@ -26,17 +24,17 @@ colrev.constants.OperationsType
 
    .. autosummary::
 
-      ~OperationsType.search
-      ~OperationsType.load
-      ~OperationsType.prep
-      ~OperationsType.prep_man
-      ~OperationsType.dedupe
-      ~OperationsType.prescreen
-      ~OperationsType.pdf_get
-      ~OperationsType.pdf_get_man
-      ~OperationsType.pdf_prep
-      ~OperationsType.pdf_prep_man
-      ~OperationsType.screen
-      ~OperationsType.data
-      ~OperationsType.format
-      ~OperationsType.check
+      ~colrev.constants.OperationsType.search
+      ~colrev.constants.OperationsType.load
+      ~colrev.constants.OperationsType.prep
+      ~colrev.constants.OperationsType.prep_man
+      ~colrev.constants.OperationsType.dedupe
+      ~colrev.constants.OperationsType.prescreen
+      ~colrev.constants.OperationsType.pdf_get
+      ~colrev.constants.OperationsType.pdf_get_man
+      ~colrev.constants.OperationsType.pdf_prep
+      ~colrev.constants.OperationsType.pdf_prep_man
+      ~colrev.constants.OperationsType.screen
+      ~colrev.constants.OperationsType.data
+      ~colrev.constants.OperationsType.format
+      ~colrev.constants.OperationsType.check

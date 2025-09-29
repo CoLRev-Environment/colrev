@@ -14,13 +14,10 @@ from __future__ import annotations
 
 import logging
 import os
-import pprint
 import typing
-from datetime import timedelta
 from pathlib import Path
 
 import git
-import requests_cache
 import yaml
 
 import colrev.dataset
@@ -29,9 +26,10 @@ import colrev.logger
 import colrev.ops.checker
 import colrev.record.qm.quality_model
 import colrev.settings
+import colrev.utils
 from colrev.constants import Colors
-from colrev.constants import Filepaths
 from colrev.constants import OperationsType
+from colrev.env.environment_manager import EnvironmentManager
 from colrev.paths import PathManager
 
 
@@ -76,7 +74,7 @@ class ReviewManager:
         # Note : mostly for formatting output
 
         if navigate_to_home_dir:
-            self.path = self._get_project_home_dir(path_str=path_str)
+            self.path = colrev.utils.get_project_home_dir(path_str=path_str)
         else:
             self.path = Path.cwd()
 
@@ -95,9 +93,8 @@ class ReviewManager:
             self.report_logger = report_logger
             self.logger = logger
 
-            self.environment_manager = self.get_environment_manager()
+            self.environment_manager = EnvironmentManager()
 
-            self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             # run update before settings/data (which may require changes/fail without update)
             if not skip_upgrade:  # pragma: no cover
                 self._check_update()
@@ -154,30 +151,6 @@ class ReviewManager:
         upgrade_operation = self.get_upgrade()
         upgrade_operation.main()
 
-    def get_committer(self) -> typing.Tuple[str, str]:
-        """Get the committer name and email"""
-        return self.environment_manager.get_name_mail_from_git()
-
-    def _get_project_home_dir(self, *, path_str: typing.Optional[str] = None) -> Path:
-        if path_str:
-            original_dir = Path(path_str)
-        else:
-            original_dir = Path.cwd()
-
-        while ".git" not in [f.name for f in original_dir.iterdir() if f.is_dir()]:
-            if original_dir.parent == original_dir:  # reached root
-                break
-            original_dir = original_dir.parent
-
-        if original_dir.parent == original_dir:  # reached root
-            raise colrev.exceptions.RepoSetupError(
-                "Failed to locate a .git directory. "
-                "Ensure you are within a Git repository, "
-                "or set navigate_to_home_dir=False for init."
-            )
-
-        return original_dir
-
     def load_settings(self) -> colrev.settings.Settings:
         """Load the settings"""
         self.settings = colrev.settings.load_settings(settings_path=self.paths.settings)
@@ -186,6 +159,28 @@ class ReviewManager:
     def save_settings(self) -> None:
         """Save the settings"""
         colrev.settings.save_settings(review_manager=self)
+
+    # pylint: disable=too-many-arguments
+    def create_commit(
+        self,
+        *,
+        msg: str,
+        manual_author: bool = False,
+        script_call: str = "",
+        saved_args: typing.Optional[dict] = None,
+        skip_status_yaml: bool = False,
+        skip_hooks: bool = True,
+    ) -> bool:
+        """Create a commit in the git repository"""
+        return self.dataset.git_repo.create_commit(
+            msg=msg,
+            review_manager=self,
+            manual_author=manual_author,
+            script_call=script_call,
+            saved_args=saved_args,
+            skip_status_yaml=skip_status_yaml,
+            skip_hooks=skip_hooks,
+        )
 
     def reset_report_logger(self) -> None:
         """Reset the report logger"""
@@ -236,7 +231,7 @@ class ReviewManager:
         with open(self.paths.status, "w", encoding="utf8") as file:
             yaml.dump(exported_dict, file, allow_unicode=True)
         if add_to_git:
-            self.dataset.add_changes(self.paths.STATUS_FILE)
+            self.dataset.git_repo.add_changes(self.paths.STATUS_FILE)
 
     def get_upgrade(self) -> colrev.ops.upgrade.Upgrade:  # pragma: no cover
         """Get an upgrade object"""
@@ -315,42 +310,6 @@ class ReviewManager:
         """Get the completeness condition"""
         status_stats = self.get_status_stats()
         return status_stats.completeness_condition
-
-    @classmethod
-    def get_package_manager(
-        cls,
-    ) -> colrev.package_manager.package_manager.PackageManager:  # pragma: no cover
-        """Get a package manager object"""
-
-        import colrev.package_manager.package_manager
-
-        return colrev.package_manager.package_manager.PackageManager()
-
-    @classmethod
-    def get_environment_manager(
-        cls,
-    ) -> colrev.env.environment_manager.EnvironmentManager:  # pragma: no cover
-        """Get an environment manager"""
-        import colrev.env.environment_manager
-
-        return colrev.env.environment_manager.EnvironmentManager()
-
-    @classmethod
-    def get_cached_session(cls) -> requests_cache.CachedSession:  # pragma: no cover
-        """Get a cached session"""
-
-        return requests_cache.CachedSession(
-            str(Filepaths.PREP_REQUESTS_CACHE_FILE),
-            backend="sqlite",
-            expire_after=timedelta(days=30),
-        )
-
-    @classmethod
-    def get_resources(cls) -> colrev.env.resources.Resources:  # pragma: no cover
-        """Get a resources object"""
-        import colrev.env.resources
-
-        return colrev.env.resources.Resources()
 
     def get_search_operation(
         self, *, notify_state_transition_operation: bool = True
@@ -567,17 +526,3 @@ class ReviewManager:
         """Check whether CoLRev runs in a test environment"""
 
         return "pytest" in os.getcwd()
-
-    @classmethod
-    def in_ci_environment(
-        cls,
-    ) -> bool:
-        """Check whether CoLRev runs in a continuous-integration environment"""
-
-        identifier_list = [
-            "GITHUB_ACTIONS",
-            "CIRCLECI",
-            "TRAVIS",
-            "GITLAB_CI",
-        ]
-        return any("true" == os.getenv(x) for x in identifier_list)

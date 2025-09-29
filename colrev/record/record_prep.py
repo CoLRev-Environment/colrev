@@ -69,9 +69,10 @@ class PrepRecord(colrev.record.record.Record):
         elif input_string.count(";") > 1:
             names = input_string.split(";")
         elif input_string.count(",") > 1:
-            names = input_string.split(" ")
+            names = input_string.split(",")
         else:
             names = [input_string]
+
         author_string = ""
         for name in names:
             # Note: https://github.com/derek73/python-nameparser

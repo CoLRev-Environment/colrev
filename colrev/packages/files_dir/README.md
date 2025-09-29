@@ -14,21 +14,22 @@ colrev search --add colrev.files_dir
 
 For metadata curations, i.e., repositories containing all PDFs organized in directories for volumes/issues, it is possible to set the `scope` parameter in the `settings.json`, ensuring that the journal name, entrytype, and volume/issue is set automatically.
 
-```
-    {
-        "endpoint": "colrev.files_dir",
-        "filename": "data/search/pdfs.bib",
-        "search_type": "FILES",
-        "search_parameters": {
-            "scope": {
-                "subdir_pattern": "volume_number",
-                "type": "journal",
-                "journal": "MIS Quarterly",
-                "path": "data/pdfs"
-            }
+```json
+{
+    "platform": "colrev.files_dir",
+    "search_results_path": "data/search/pdfs.bib",
+    "search_type": "FILES",
+    "search_string": "",
+    "search_parameters": {
+        "scope": {
+            "subdir_pattern": "volume_number",
+            "type": "journal",
+            "journal": "MIS Quarterly",
+            "path": "data/pdfs"
         },
-        "comment": ""
     },
+    "version": "0.1.0"
+}
 ```
 
 <!-- ## Links -->

@@ -8,10 +8,12 @@ from pathlib import Path
 
 import colrev.env.tei_parser
 import colrev.process.operation
-import colrev.settings
+import colrev.search_file
+import colrev.utils
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import SearchType
+from colrev.env.environment_manager import EnvironmentManager
 from colrev.writer.write_utils import write_file
 
 
@@ -31,7 +33,7 @@ class Distribute(colrev.process.operation.Operation):
 
     def get_environment_registry(self) -> list:
         """Get the environment registry (excluding curated_metadata)"""
-        environment_manager = self.review_manager.get_environment_manager()
+        environment_manager = EnvironmentManager()
         return [
             x
             for x in environment_manager.local_repos()
@@ -91,7 +93,7 @@ class Distribute(colrev.process.operation.Operation):
                 shutil.copyfile(path, target_pdf_path)
 
                 self.review_manager.logger.info(
-                    f"append {self.review_manager.p_printer.pformat(record)} "
+                    f"append {colrev.utils.pformat(record)} "
                     "to data/search/local_import.bib"
                 )
                 target_bib_file = target / Path("data/search/local_import.bib")
@@ -107,12 +109,13 @@ class Distribute(colrev.process.operation.Operation):
                 else:
                     import_records = []
 
-                    new_source = colrev.settings.SearchSource(
-                        endpoint="colrev.unknown_source",
-                        filename=Path("search") / target_bib_file.name,
+                    new_source = colrev.search_file.ExtendedSearchFile(
+                        platform="colrev.unknown_source",
+                        search_results_path=Path("search") / target_bib_file.name,
                         search_type=SearchType.OTHER,
-                        search_parameters={},
+                        search_string="",
                         comment="",
+                        version="0.1.0",
                     )
 
                     self.review_manager.settings.sources.append(new_source)
@@ -130,4 +133,4 @@ class Distribute(colrev.process.operation.Operation):
 
                 write_file(records_dict=import_records_dict, filename=target_bib_file)
 
-                self.review_manager.dataset.add_changes(target_bib_file)
+                self.review_manager.dataset.git_repo.add_changes(target_bib_file)

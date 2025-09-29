@@ -2,9 +2,11 @@
 """OCR as a PDF preparation operation"""
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 from pathlib import Path
+from typing import Optional
 
 import docker
 from pydantic import Field
@@ -15,6 +17,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+from colrev import utils
 from colrev.constants import Fields
 from colrev.constants import PDFDefectCodes
 
@@ -34,11 +37,13 @@ class OCRMyPDF(base_classes.PDFPrepPackageBaseClass):
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = pdf_prep_operation.review_manager
 
-        if not self.review_manager.in_ci_environment():
+        if not utils.in_ci_environment():
             colrev.env.docker_manager.DockerManager.build_docker_image(
                 imagename=self.OCRMYPDF_IMAGE
             )

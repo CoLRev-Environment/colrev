@@ -1,9 +1,7 @@
 colrev.ops.prep\_man.PrepMan
 ============================
 
-.. currentmodule:: colrev.ops.prep_man
-
-.. autoclass:: PrepMan
+.. autoclass:: colrev.ops.prep_man.PrepMan
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,15 +14,15 @@ colrev.ops.prep\_man.PrepMan
    .. autosummary::
       :nosignatures:
 
-      ~PrepMan.check_precondition
-      ~PrepMan.conclude
-      ~PrepMan.decorate
-      ~PrepMan.get_data
-      ~PrepMan.main
-      ~PrepMan.notify
-      ~PrepMan.prep_man_langs
-      ~PrepMan.prep_man_stats
-      ~PrepMan.set_data
+      ~colrev.ops.prep_man.PrepMan.check_precondition
+      ~colrev.ops.prep_man.PrepMan.conclude
+      ~colrev.ops.prep_man.PrepMan.decorate
+      ~colrev.ops.prep_man.PrepMan.get_data
+      ~colrev.ops.prep_man.PrepMan.main
+      ~colrev.ops.prep_man.PrepMan.notify
+      ~colrev.ops.prep_man.PrepMan.prep_man_langs
+      ~colrev.ops.prep_man.PrepMan.prep_man_stats
+      ~colrev.ops.prep_man.PrepMan.set_data
 
 
 
@@ -34,4 +32,4 @@ colrev.ops.prep\_man.PrepMan
 
    .. autosummary::
 
-      ~PrepMan.type
+      ~colrev.ops.prep_man.PrepMan.type

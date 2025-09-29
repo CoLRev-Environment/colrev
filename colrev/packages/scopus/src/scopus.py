@@ -3,19 +3,25 @@
 from __future__ import annotations
 
 import logging
+import typing
 from pathlib import Path
 
 from pydantic import Field
 
 import colrev.loader.bib
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.record.record_prep
+import colrev.utils
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
+from colrev.ops.search_db import create_db_source
+from colrev.ops.search_db import run_db_search
+from colrev.packages.scopus.src import scopus_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -24,64 +30,126 @@ from colrev.constants import SearchType
 class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Scopus"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
-    endpoint = "colrev.scopus"
-    # pylint: disable=colrev-missed-constant-usage
-    source_identifier = "url"
-    search_types = [SearchType.DB]
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
+    endpoint = "colrev.scopus"
+    source_identifier = "scopus.eid"
+    search_types = [SearchType.DB, SearchType.API]
     ci_supported: bool = Field(default=False)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
     db_url = "https://www.scopus.com/search/form.uri?display=advanced"
 
     def __init__(
-        self, *, source_operation: colrev.process.operation.Operation, settings: dict
+        self,
+        *,
+        search_file: colrev.search_file.ExtendedSearchFile,
+        logger: typing.Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
-        self.review_manager = source_operation.review_manager
-        self.search_source = self.settings_class(**settings)
-        self.quality_model = self.review_manager.get_qm()
-        self.operation = source_operation
+        self.logger = logger or logging.getLogger(__name__)
+        self.search_source = search_file
+        self.verbose_mode = verbose_mode
+        self.api = scopus_api.ScopusAPI(logger=self.logger)
+
+    # ------------------------
+    # API search + integration
+    # ------------------------
+    def _simple_api_search(self, query: str, rerun: bool) -> None:
+
+        if not self.api.has_api_key():
+            self.logger.info(
+                'No API key found. Set API key using: export SCOPUS_API_KEY="XXXXX"'
+            )
+            return
+
+        scopus_feed = colrev.ops.search_api_feed.SearchAPIFeed(
+            source_identifier=self.source_identifier,
+            search_source=self.search_source,
+            update_only=(not rerun),
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
+        )
+
+        try:
+            for record in self.api.iter_records(query=query):
+                scopus_feed.add_update_record(retrieved_record=record)
+
+        except ValueError as exc:
+            self.logger.info("API search error: %s", str(exc))
+
+        scopus_feed.save()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Scopus"""
-
         result = {"confidence": 0.0}
         if "source={Scopus}," in data:
             result["confidence"] = 1.0
-            return result
-
-        if "www.scopus.com" in data:
+        elif "www.scopus.com" in data:
             if data.count("www.scopus.com") >= data.count("\n@"):
                 result["confidence"] = 1.0
-
         return result
 
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+        path: Path,
+        logger: typing.Optional[logging.Logger] = None,
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
-        params_dict = {params.split("=")[0]: params.split("=")[1]}
+        # params_dict = {params.split("=")[0]: params.split("=")[1]}
 
-        search_source = operation.create_db_source(
-            search_source_cls=cls,
-            params=params_dict,
+        # search_source = create_db_source(
+        #     path=path,
+        #     platform=cls.endpoint,
+        #     params=params_dict,
+        #     add_to_git=True,
+        #     logger=logger,
+        # )
+
+        params_dict: dict = {}
+        search_type = colrev.utils.select_search_type(
+            search_types=cls.search_types, params=params_dict
         )
-        operation.add_source_and_search(search_source)
+
+        if search_type == SearchType.API:
+            search_source = create_api_source(platform=cls.endpoint, path=path)
+            search_source.search_parameters = {"query": search_source.search_string}
+            search_source.search_string = ""
+
+        elif search_type == SearchType.DB:
+            search_source = create_db_source(
+                path=path,
+                platform=cls.endpoint,
+                params=params_dict,
+                add_to_git=True,
+                logger=logger,
+            )
+        else:
+            raise NotImplementedError(
+                f"Search type {search_type} not implemented for {cls.endpoint}"
+            )
+
         return search_source
 
     def search(self, rerun: bool) -> None:
-        """Run a search of Scopus"""
+        query = self.search_source.search_parameters.get("query", "")
+
+        if not query:
+            raise ValueError("No query provided. Use --query when adding source.")
+
+        if self.search_source.search_type == SearchType.API:
+            self.logger.info(f"Running Scopus API search with: {query}")
+            self._simple_api_search(query, rerun)
+            return
 
         if self.search_source.search_type == SearchType.DB:
-            self.operation.run_db_search(  # type: ignore
-                search_source_cls=self.__class__,
+            run_db_search(
+                db_url=self.db_url,
                 source=self.search_source,
+                add_to_git=True,
             )
             return
 
@@ -94,25 +162,20 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
         return record
 
     @classmethod
     def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-
         def entrytype_setter(record_dict: dict) -> None:
             if "document_type" in record_dict:
                 if record_dict["document_type"] == "Conference Paper":
                     record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
-
                 elif record_dict["document_type"] == "Conference Review":
                     record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.PROCEEDINGS
-
                 elif record_dict["document_type"] == "Article":
                     record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
 
         def field_mapper(record_dict: dict) -> None:
-
             if record_dict[Fields.ENTRYTYPE] in [
                 ENTRYTYPES.INPROCEEDINGS,
                 ENTRYTYPES.PROCEEDINGS,
@@ -147,10 +210,7 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
                 ):
                     record_dict[Fields.PAGES] = (
                         record_dict["Start_Page"] + "--" + record_dict["End_Page"]
-                    )
-                    record_dict[Fields.PAGES] = record_dict[Fields.PAGES].replace(
-                        ".0", ""
-                    )
+                    ).replace(".0", "")
                     del record_dict["Start_Page"]
                     del record_dict["End_Page"]
 
@@ -162,21 +222,23 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
             field_mapper=field_mapper,
             logger=logger,
         )
-
         return records
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".bib":
-            return cls._load_bib(filename=filename, logger=logger)
+        if self.search_source.search_results_path.suffix == ".bib":
+            return self._load_bib(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        quality_model: typing.Optional[
+            colrev.record.qm.quality_model.QualityModel
+        ] = None,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for Scopus"""
-
         return record

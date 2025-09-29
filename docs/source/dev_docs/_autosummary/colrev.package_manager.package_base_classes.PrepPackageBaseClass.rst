@@ -1,9 +1,7 @@
 colrev.package\_manager.package\_base\_classes.PrepPackageBaseClass
 ===================================================================
 
-.. currentmodule:: colrev.package_manager.package_base_classes
-
-.. autoclass:: PrepPackageBaseClass
+.. autoclass:: colrev.package_manager.package_base_classes.PrepPackageBaseClass
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.package\_manager.package\_base\_classes.PrepPackageBaseClass
    .. autosummary::
       :nosignatures:
 
-      ~PrepPackageBaseClass.prepare
+      ~colrev.package_manager.package_base_classes.PrepPackageBaseClass.prepare
 
 
 
@@ -26,7 +24,7 @@ colrev.package\_manager.package\_base\_classes.PrepPackageBaseClass
 
    .. autosummary::
 
-      ~PrepPackageBaseClass.ci_supported
-      ~PrepPackageBaseClass.settings_class
-      ~PrepPackageBaseClass.source_correction_hint
-      ~PrepPackageBaseClass.always_apply_changes
+      ~colrev.package_manager.package_base_classes.PrepPackageBaseClass.ci_supported
+      ~colrev.package_manager.package_base_classes.PrepPackageBaseClass.settings_class
+      ~colrev.package_manager.package_base_classes.PrepPackageBaseClass.source_correction_hint
+      ~colrev.package_manager.package_base_classes.PrepPackageBaseClass.always_apply_changes

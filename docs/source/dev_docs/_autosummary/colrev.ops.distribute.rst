@@ -20,4 +20,4 @@ colrev.ops.distribute
       :template: custom-class-template.rst
       :nosignatures:
 
-      Distribute
+      colrev.ops.distribute.Distribute

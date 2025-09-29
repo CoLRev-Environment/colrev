@@ -1,9 +1,7 @@
 colrev.constants.EndpointType
 =============================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: EndpointType
+.. autoclass:: colrev.constants.EndpointType
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,16 +17,16 @@ colrev.constants.EndpointType
 
    .. autosummary::
 
-      ~EndpointType.review_type
-      ~EndpointType.search_source
-      ~EndpointType.prep
-      ~EndpointType.prep_man
-      ~EndpointType.dedupe
-      ~EndpointType.prescreen
-      ~EndpointType.pdf_get
-      ~EndpointType.pdf_get_man
-      ~EndpointType.pdf_prep
-      ~EndpointType.pdf_prep_man
-      ~EndpointType.screen
-      ~EndpointType.data
-      ~EndpointType.na
+      ~colrev.constants.EndpointType.review_type
+      ~colrev.constants.EndpointType.search_source
+      ~colrev.constants.EndpointType.prep
+      ~colrev.constants.EndpointType.prep_man
+      ~colrev.constants.EndpointType.dedupe
+      ~colrev.constants.EndpointType.prescreen
+      ~colrev.constants.EndpointType.pdf_get
+      ~colrev.constants.EndpointType.pdf_get_man
+      ~colrev.constants.EndpointType.pdf_prep
+      ~colrev.constants.EndpointType.pdf_prep_man
+      ~colrev.constants.EndpointType.screen
+      ~colrev.constants.EndpointType.data
+      ~colrev.constants.EndpointType.na

@@ -20,4 +20,4 @@ colrev.package\_manager.package
       :template: custom-class-template.rst
       :nosignatures:
 
-      Package
+      colrev.package_manager.package.Package

@@ -9,9 +9,9 @@ import inquirer
 
 from colrev.constants import Colors
 from colrev.constants import EndpointType
+from colrev.package_manager.package_manager import PackageManager
 
 if typing.TYPE_CHECKING:
-    import colrev.settings
     import colrev.ops.search
 
 # pylint: disable=too-few-public-methods
@@ -23,16 +23,17 @@ class CLISourceAdder:
     def __init__(self, *, search_operation: colrev.ops.search.Search) -> None:
         self.search_operation = search_operation
         self.review_manager = search_operation.review_manager
-        self.package_manager = self.review_manager.get_package_manager()
+        self.package_manager = PackageManager()
 
     def _select_source(
         self,
         *,
         source_candidates: list,
     ) -> dict:
+
         choices = [
             (
-                f"{heuristic_source['source_candidate'].endpoint} "
+                f"{heuristic_source['source_candidate'].platform} "
                 f"(confidence: {round(heuristic_source['confidence'], 2)}): ",
                 heuristic_source,
             )
@@ -52,40 +53,40 @@ class CLISourceAdder:
 
     def _select_source_from_heuristics(
         self, *, filename: Path, source_candidates: list
-    ) -> colrev.settings.SearchSource:
+    ) -> colrev.search_file.ExtendedSearchFile:
         if 1 == len(source_candidates):
             heuristic_source_dict = source_candidates[0]
             self.search_operation.review_manager.logger.info(
-                f"Automatically selected {heuristic_source_dict['source_candidate'].endpoint}"
+                f"Automatically selected {heuristic_source_dict['source_candidate'].platform}"
             )
         else:
             heuristic_source_dict = self._select_source(
                 source_candidates=source_candidates
             )
             self.search_operation.review_manager.logger.info(
-                f"Selected {heuristic_source_dict['source_candidate'].endpoint}"
+                f"Selected {heuristic_source_dict['source_candidate'].platform}"
             )
 
-        candidate: colrev.settings.SearchSource = heuristic_source_dict[
+        candidate: colrev.search_file.ExtendedSearchFile = heuristic_source_dict[
             "source_candidate"
         ]
         search_source_class = self.package_manager.get_package_endpoint_class(
             package_type=EndpointType.search_source,
-            package_identifier=candidate.endpoint,
+            package_identifier=candidate.platform,
         )
         endpoint = search_source_class(
-            source_operation=self,
-            settings=candidate.model_dump(),
+            search_file=candidate,
         )
 
         params = f"search_file={filename}"
         source = endpoint.add_endpoint(
-            operation=self.search_operation,
             params=params,
+            path=self.review_manager.path,
+            logger=self.review_manager.logger,
         )
         return source
 
-    def add_new_sources(self) -> typing.List[colrev.settings.SearchSource]:
+    def add_new_sources(self) -> typing.List[colrev.search_file.ExtendedSearchFile]:
         """Select the new source from the heuristic_result_list."""
 
         new_search_files = self.search_operation.get_new_search_files()
@@ -93,7 +94,7 @@ class CLISourceAdder:
 
         for filename in new_search_files:
             self.search_operation.review_manager.logger.info(
-                f"Discover and add new DB source: {filename}"
+                f"Detect and add new DB source: {filename}"
             )
             heuristic_list = self.search_operation.get_new_source_heuristic(filename)
             for source_candidates in heuristic_list:

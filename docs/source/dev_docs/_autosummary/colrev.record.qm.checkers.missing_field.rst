@@ -15,7 +15,7 @@ colrev.record.qm.checkers.missing\_field
       :toctree:
       :nosignatures:
 
-      register
+      colrev.record.qm.checkers.missing_field.register
 
 
 
@@ -28,4 +28,4 @@ colrev.record.qm.checkers.missing\_field
       :template: custom-class-template.rst
       :nosignatures:
 
-      MissingFieldChecker
+      colrev.record.qm.checkers.missing_field.MissingFieldChecker

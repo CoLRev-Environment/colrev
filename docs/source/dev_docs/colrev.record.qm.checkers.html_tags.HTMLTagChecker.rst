@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.html\_tags.HTMLTagChecker
 ===================================================
 
-.. currentmodule:: colrev.record.qm.checkers.html_tags
-
-.. autoclass:: HTMLTagChecker
+.. autoclass:: colrev.record.qm.checkers.html_tags.HTMLTagChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.html\_tags.HTMLTagChecker
    .. autosummary::
       :nosignatures:
 
-      ~HTMLTagChecker.run
+      ~colrev.record.qm.checkers.html_tags.HTMLTagChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.html\_tags.HTMLTagChecker
 
    .. autosummary::
 
-      ~HTMLTagChecker.msg
+      ~colrev.record.qm.checkers.html_tags.HTMLTagChecker.msg

@@ -1,9 +1,7 @@
 colrev.record.qm.pdf\_checkers.author\_not\_in\_pdf.AuthorNotInPDFChecker
 =========================================================================
 
-.. currentmodule:: colrev.record.qm.pdf_checkers.author_not_in_pdf
-
-.. autoclass:: AuthorNotInPDFChecker
+.. autoclass:: colrev.record.qm.pdf_checkers.author_not_in_pdf.AuthorNotInPDFChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.pdf\_checkers.author\_not\_in\_pdf.AuthorNotInPDFChecker
    .. autosummary::
       :nosignatures:
 
-      ~AuthorNotInPDFChecker.run
+      ~colrev.record.qm.pdf_checkers.author_not_in_pdf.AuthorNotInPDFChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.pdf\_checkers.author\_not\_in\_pdf.AuthorNotInPDFChecker
 
    .. autosummary::
 
-      ~AuthorNotInPDFChecker.msg
+      ~colrev.record.qm.pdf_checkers.author_not_in_pdf.AuthorNotInPDFChecker.msg

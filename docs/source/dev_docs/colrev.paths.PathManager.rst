@@ -1,9 +1,7 @@
 colrev.paths.PathManager
 ========================
 
-.. currentmodule:: colrev.paths
-
-.. autoclass:: PathManager
+.. autoclass:: colrev.paths.PathManager
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,20 +17,20 @@ colrev.paths.PathManager
 
    .. autosummary::
 
-      ~PathManager.CORRECTIONS_DIR
-      ~PathManager.DATA_DIR
-      ~PathManager.DEDUPE_DIR
-      ~PathManager.GIT_IGNORE_FILE
-      ~PathManager.OUTPUT_DIR
-      ~PathManager.PDF_DIR
-      ~PathManager.PREP_DIR
-      ~PathManager.PRESCREEN_DIR
-      ~PathManager.PRE_COMMIT_CONFIG
-      ~PathManager.README_FILE
-      ~PathManager.RECORDS_FILE
-      ~PathManager.RECORDS_FILE_GIT
-      ~PathManager.REPORT_FILE
-      ~PathManager.SCREEN_DIR
-      ~PathManager.SEARCH_DIR
-      ~PathManager.SETTINGS_FILE
-      ~PathManager.STATUS_FILE
+      ~colrev.paths.PathManager.CORRECTIONS_DIR
+      ~colrev.paths.PathManager.DATA_DIR
+      ~colrev.paths.PathManager.DEDUPE_DIR
+      ~colrev.paths.PathManager.GIT_IGNORE_FILE
+      ~colrev.paths.PathManager.OUTPUT_DIR
+      ~colrev.paths.PathManager.PDF_DIR
+      ~colrev.paths.PathManager.PREP_DIR
+      ~colrev.paths.PathManager.PRESCREEN_DIR
+      ~colrev.paths.PathManager.PRE_COMMIT_CONFIG
+      ~colrev.paths.PathManager.README_FILE
+      ~colrev.paths.PathManager.RECORDS_FILE
+      ~colrev.paths.PathManager.RECORDS_FILE_GIT
+      ~colrev.paths.PathManager.REPORT_FILE
+      ~colrev.paths.PathManager.SCREEN_DIR
+      ~colrev.paths.PathManager.SEARCH_DIR
+      ~colrev.paths.PathManager.SETTINGS_FILE
+      ~colrev.paths.PathManager.STATUS_FILE

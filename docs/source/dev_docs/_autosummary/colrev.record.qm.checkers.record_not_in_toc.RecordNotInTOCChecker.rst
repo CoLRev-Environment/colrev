@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.record\_not\_in\_toc.RecordNotInTOCChecker
 ====================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.record_not_in_toc
-
-.. autoclass:: RecordNotInTOCChecker
+.. autoclass:: colrev.record.qm.checkers.record_not_in_toc.RecordNotInTOCChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.record\_not\_in\_toc.RecordNotInTOCChecker
    .. autosummary::
       :nosignatures:
 
-      ~RecordNotInTOCChecker.run
+      ~colrev.record.qm.checkers.record_not_in_toc.RecordNotInTOCChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.record\_not\_in\_toc.RecordNotInTOCChecker
 
    .. autosummary::
 
-      ~RecordNotInTOCChecker.msg
+      ~colrev.record.qm.checkers.record_not_in_toc.RecordNotInTOCChecker.msg

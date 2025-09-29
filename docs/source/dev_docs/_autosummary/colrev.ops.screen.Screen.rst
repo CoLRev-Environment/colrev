@@ -1,9 +1,7 @@
 colrev.ops.screen.Screen
 ========================
 
-.. currentmodule:: colrev.ops.screen
-
-.. autoclass:: Screen
+.. autoclass:: colrev.ops.screen.Screen
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,22 +14,22 @@ colrev.ops.screen.Screen
    .. autosummary::
       :nosignatures:
 
-      ~Screen.add_abstracts_from_tei
-      ~Screen.add_criterion
-      ~Screen.check_precondition
-      ~Screen.conclude
-      ~Screen.create_screen_split
-      ~Screen.decorate
-      ~Screen.delete_criterion
-      ~Screen.get_data
-      ~Screen.get_screening_criteria
-      ~Screen.include_all_in_screen
-      ~Screen.main
-      ~Screen.notify
-      ~Screen.screen
-      ~Screen.set_screening_criteria
-      ~Screen.setup_custom_script
-      ~Screen.to_screen
+      ~colrev.ops.screen.Screen.add_abstracts_from_tei
+      ~colrev.ops.screen.Screen.add_criterion
+      ~colrev.ops.screen.Screen.check_precondition
+      ~colrev.ops.screen.Screen.conclude
+      ~colrev.ops.screen.Screen.create_screen_split
+      ~colrev.ops.screen.Screen.decorate
+      ~colrev.ops.screen.Screen.delete_criterion
+      ~colrev.ops.screen.Screen.get_data
+      ~colrev.ops.screen.Screen.get_screening_criteria
+      ~colrev.ops.screen.Screen.include_all_in_screen
+      ~colrev.ops.screen.Screen.main
+      ~colrev.ops.screen.Screen.notify
+      ~colrev.ops.screen.Screen.screen
+      ~colrev.ops.screen.Screen.set_screening_criteria
+      ~colrev.ops.screen.Screen.setup_custom_script
+      ~colrev.ops.screen.Screen.to_screen
 
 
 
@@ -41,4 +39,4 @@ colrev.ops.screen.Screen
 
    .. autosummary::
 
-      ~Screen.type
+      ~colrev.ops.screen.Screen.type

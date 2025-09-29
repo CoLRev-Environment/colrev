@@ -1,9 +1,7 @@
 colrev.constants.IDPattern
 ==========================
 
-.. currentmodule:: colrev.constants
-
-.. autoclass:: IDPattern
+.. autoclass:: colrev.constants.IDPattern
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.constants.IDPattern
    .. autosummary::
       :nosignatures:
 
-      ~IDPattern.get_options
+      ~colrev.constants.IDPattern.get_options
 
 
 
@@ -26,5 +24,5 @@ colrev.constants.IDPattern
 
    .. autosummary::
 
-      ~IDPattern.first_author_year
-      ~IDPattern.three_authors_year
+      ~colrev.constants.IDPattern.first_author_year
+      ~colrev.constants.IDPattern.three_authors_year

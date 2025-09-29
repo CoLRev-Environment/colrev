@@ -15,7 +15,7 @@ colrev.record.record\_prep
       :toctree:
       :nosignatures:
 
-      capitalize_entities
+      colrev.record.record_prep.capitalize_entities
 
 
 
@@ -28,4 +28,4 @@ colrev.record.record\_prep
       :template: custom-class-template.rst
       :nosignatures:
 
-      PrepRecord
+      colrev.record.record_prep.PrepRecord

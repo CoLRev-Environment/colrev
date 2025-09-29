@@ -15,4 +15,4 @@ colrev.package\_manager.check
       :toctree:
       :nosignatures:
 
-      main
+      colrev.package_manager.check.main

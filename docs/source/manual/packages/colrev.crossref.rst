@@ -85,6 +85,21 @@ It is possible to copy the url from the `search.crossref.org <https://search.cro
 
 
 
+Format of the search-history file:
+
+.. code-block:: json
+
+   {
+       "search_string": "",
+       "platform": "colrev.crossref",
+       "search_results_path": "data/search/crossref.bib",
+       "search_type": "API",
+       "search_parameters": {
+           "url": "https://api.crossref.org/works?query.bibliographic=microsourcing",
+       },
+       "version": "0.1.0"
+   }
+
 TOC search
 ^^^^^^^^^^
 
@@ -93,6 +108,21 @@ Whole journals can be added based on their issn:
 .. code-block::
 
    colrev search --add colrev.crossref -p "issn=2162-9730"
+
+Format of the search-history file:
+
+.. code-block:: json
+
+   {
+       "search_string": "",
+       "platform": "colrev.crossref",
+       "search_results_path": "data/search/CROSSREF.bib",
+       "search_type": "TOC",
+       "search_parameters": {
+           "url": "https://api.crossref.org/journals/0276-7783/works",
+       },
+       "version": "0.1.0"
+   }
 
 prep
 ----

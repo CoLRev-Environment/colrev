@@ -1,9 +1,7 @@
 colrev.env.environment\_manager.EnvironmentManager
 ==================================================
 
-.. currentmodule:: colrev.env.environment_manager
-
-.. autoclass:: EnvironmentManager
+.. autoclass:: colrev.env.environment_manager.EnvironmentManager
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,17 +14,17 @@ colrev.env.environment\_manager.EnvironmentManager
    .. autosummary::
       :nosignatures:
 
-      ~EnvironmentManager.check_git_installed
-      ~EnvironmentManager.get_curated_outlets
-      ~EnvironmentManager.get_environment_details
-      ~EnvironmentManager.get_name_mail_from_git
-      ~EnvironmentManager.get_settings_by_key
-      ~EnvironmentManager.load_environment_registry
-      ~EnvironmentManager.local_repos
-      ~EnvironmentManager.register_ports
-      ~EnvironmentManager.register_repo
-      ~EnvironmentManager.save_environment_registry
-      ~EnvironmentManager.update_registry
+      ~colrev.env.environment_manager.EnvironmentManager.check_git_installed
+      ~colrev.env.environment_manager.EnvironmentManager.get_curated_outlets
+      ~colrev.env.environment_manager.EnvironmentManager.get_environment_details
+      ~colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git
+      ~colrev.env.environment_manager.EnvironmentManager.get_settings_by_key
+      ~colrev.env.environment_manager.EnvironmentManager.load_environment_registry
+      ~colrev.env.environment_manager.EnvironmentManager.local_repos
+      ~colrev.env.environment_manager.EnvironmentManager.register_ports
+      ~colrev.env.environment_manager.EnvironmentManager.register_repo
+      ~colrev.env.environment_manager.EnvironmentManager.save_environment_registry
+      ~colrev.env.environment_manager.EnvironmentManager.update_registry
 
 
 
@@ -36,4 +34,4 @@ colrev.env.environment\_manager.EnvironmentManager
 
    .. autosummary::
 
-      ~EnvironmentManager.load_yaml
+      ~colrev.env.environment_manager.EnvironmentManager.load_yaml

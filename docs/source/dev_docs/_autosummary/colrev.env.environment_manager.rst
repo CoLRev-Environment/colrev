@@ -20,4 +20,4 @@ colrev.env.environment\_manager
       :template: custom-class-template.rst
       :nosignatures:
 
-      EnvironmentManager
+      colrev.env.environment_manager.EnvironmentManager

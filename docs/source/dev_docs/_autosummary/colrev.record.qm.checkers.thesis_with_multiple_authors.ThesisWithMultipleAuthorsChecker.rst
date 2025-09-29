@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.thesis\_with\_multiple\_authors.ThesisWithMultipleAuthorsChecker
 ==========================================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.thesis_with_multiple_authors
-
-.. autoclass:: ThesisWithMultipleAuthorsChecker
+.. autoclass:: colrev.record.qm.checkers.thesis_with_multiple_authors.ThesisWithMultipleAuthorsChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.thesis\_with\_multiple\_authors.ThesisWithMultipleAuth
    .. autosummary::
       :nosignatures:
 
-      ~ThesisWithMultipleAuthorsChecker.run
+      ~colrev.record.qm.checkers.thesis_with_multiple_authors.ThesisWithMultipleAuthorsChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.thesis\_with\_multiple\_authors.ThesisWithMultipleAuth
 
    .. autosummary::
 
-      ~ThesisWithMultipleAuthorsChecker.msg
+      ~colrev.record.qm.checkers.thesis_with_multiple_authors.ThesisWithMultipleAuthorsChecker.msg

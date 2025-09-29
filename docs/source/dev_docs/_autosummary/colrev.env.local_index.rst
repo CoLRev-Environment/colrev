@@ -20,4 +20,4 @@ colrev.env.local\_index
       :template: custom-class-template.rst
       :nosignatures:
 
-      LocalIndex
+      colrev.env.local_index.LocalIndex

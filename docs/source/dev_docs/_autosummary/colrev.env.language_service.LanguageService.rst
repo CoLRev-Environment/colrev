@@ -1,9 +1,7 @@
 colrev.env.language\_service.LanguageService
 ============================================
 
-.. currentmodule:: colrev.env.language_service
-
-.. autoclass:: LanguageService
+.. autoclass:: colrev.env.language_service.LanguageService
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.env.language\_service.LanguageService
    .. autosummary::
       :nosignatures:
 
-      ~LanguageService.compute_language
-      ~LanguageService.compute_language_confidence_values
-      ~LanguageService.unify_to_iso_639_3_language_codes
-      ~LanguageService.validate_iso_639_3_language_codes
+      ~colrev.env.language_service.LanguageService.compute_language
+      ~colrev.env.language_service.LanguageService.compute_language_confidence_values
+      ~colrev.env.language_service.LanguageService.unify_to_iso_639_3_language_codes
+      ~colrev.env.language_service.LanguageService.validate_iso_639_3_language_codes

@@ -20,4 +20,4 @@ colrev.record.qm.quality\_model
       :template: custom-class-template.rst
       :nosignatures:
 
-      QualityModel
+      colrev.record.qm.quality_model.QualityModel

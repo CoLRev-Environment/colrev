@@ -2,6 +2,7 @@
 """Creation of a markdown paper as part of the data operations"""
 from __future__ import annotations
 
+import logging
 import os
 import re
 import shutil
@@ -10,6 +11,7 @@ import typing
 from collections import Counter
 from pathlib import Path
 from threading import Timer
+from typing import Optional
 
 import docker
 import requests
@@ -18,13 +20,12 @@ from pydantic import BaseModel
 from pydantic import Field
 
 import colrev.env.docker_manager
+import colrev.env.environment_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.check
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
+from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -91,7 +92,11 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
         self.data_operation = data_operation
         self.review_manager = data_operation.review_manager
 
@@ -119,7 +124,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
 
         self._create_non_sample_references_bib()
 
-        if not self.review_manager.in_ci_environment():
+        if not utils.in_ci_environment():
             self.pandoc_image = "pandoc/latex:3.2.0"
             colrev.env.docker_manager.DockerManager.build_docker_image(
                 imagename=self.pandoc_image
@@ -160,11 +165,9 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             with open(template_name, "wb") as file:
                 file.write(filedata)
         else:
-            self.review_manager.logger.error(
-                f"Could not retrieve {template_name} from the package"
-            )
+            self.logger.error("Could not retrieve %s from the package", template_name)
             return False
-        self.review_manager.dataset.add_changes(template_name)
+        self.review_manager.dataset.git_repo.add_changes(template_name)
         return True
 
     def _retrieve_default_csl(self) -> None:
@@ -185,9 +188,11 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 old_string=f'csl: "{csl_link}"',
                 new_string=f'csl: "{csl_filename}"',
             )
-            self.review_manager.dataset.add_changes(self.settings.paper_path)
-            self.review_manager.dataset.add_changes(Path(csl_filename))
-            self.review_manager.logger.debug("Downloaded csl file for offline use")
+            self.review_manager.dataset.git_repo.repo.add_changes(
+                self.settings.paper_path
+            )
+            self.review_manager.dataset.git_repo.repo.add_changes(Path(csl_filename))
+            self.logger.debug("Downloaded csl file for offline use")
 
     def _check_new_record_source_tag(
         self,
@@ -201,7 +206,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         )
 
     def _authorship_heuristic(self) -> str:
-        git_repo = self.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.git_repo.repo
         try:
             commits_list = list(git_repo.iter_commits())
             commits_authors = []
@@ -215,7 +220,9 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 # mail = git_repo.git.show("-s", "--format=%ae", commit.hexsha)
             author = ", ".join(dict(Counter(commits_authors)))
         except ValueError:
-            author, _ = self.review_manager.get_committer()
+            author, _ = (
+                colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+            )
         return author
 
     def _get_data_page_missing(self, *, paper: Path, record_id_list: list) -> list:
@@ -244,22 +251,16 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             + "the document."
         )
         self.review_manager.report_logger.warning(msg)
-        self.review_manager.logger.warning(msg)
+        self.logger.warning(msg)
         if line != "\n":
             writer.write("\n")
         marker = f"{self.NEW_RECORD_SOURCE_TAG}_Records to synthesize_:\n\n"
         writer.write(marker)
         for missing_record in missing_records:
             writer.write(missing_record)
-            self.review_manager.report_logger.info(
-                # f" {missing_record}".ljust(self._PAD, " ") + " added"
-                f" {missing_record} added"
-            )
+            self.review_manager.report_logger.info(" %s added", missing_record)
             if not silent_mode:
-                self.review_manager.logger.info(
-                    # f" {missing_record}".ljust(self._PAD, " ") + " added"
-                    f" {missing_record} added"
-                )
+                self.logger.info(" %s added", missing_record)
 
     # pylint: disable=too-many-arguments
     def _update_new_records_source_section(
@@ -286,27 +287,30 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
 
         for paper_id in paper_ids_added:
             self.review_manager.report_logger.info(
-                # f" {missing_record}".ljust(self._PAD, " ")
-                f" {paper_id}"
-                + f" added to {paper_path.name}"
+                " %s added to %s",
+                paper_id,
+                paper_path.name,
             )
         nr_records_added = len(missing_records)
         self.review_manager.report_logger.info(
-            f"{nr_records_added} records added to {self.settings.paper_path.name}"
+            "%s records added to %s",
+            nr_records_added,
+            self.settings.paper_path.name,
         )
 
         for paper_id_added in paper_ids_added:
             if not silent_mode:
-                self.review_manager.logger.info(
-                    f" {Colors.GREEN}{paper_id_added}".ljust(45)
-                    + f"add to paper{Colors.END}"
+                self.logger.info(
+                    " %sadd to paper%s",
+                    f"{Colors.GREEN}{paper_id_added}".ljust(45),
+                    Colors.END,
                 )
 
         if not silent_mode:
-            self.review_manager.logger.info(
-                f"Added to {paper_path.name}".ljust(24)
-                + f"{nr_records_added}".rjust(15, " ")
-                + " records"
+            self.logger.info(
+                "%s%s records",
+                f"Added to {paper_path.name}".ljust(24),
+                f"{nr_records_added}".rjust(15, " "),
             )
 
         # skip empty lines between to connect lists
@@ -368,7 +372,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
     def _create_paper(self, silent_mode: bool) -> None:
         if not silent_mode:
             self.review_manager.report_logger.info("Create paper")
-            self.review_manager.logger.info("Create paper")
+            self.logger.info("Create paper")
 
         title = "Paper template"
         readme_file = self.review_manager.paths.readme
@@ -381,7 +385,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
 
         review_type = self.review_manager.settings.project.review_type
 
-        # package_manager = self.review_manager.get_package_manager()
+        # package_manager = PackageManager()
         # check_operation = colrev.ops.check.CheckOperation(self.review_manager)
 
         # review_type_class = package_manager.get_package_endpoint_class(
@@ -479,10 +483,10 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                         screening_criteria="NA",
                     )
 
-                    self.review_manager.logger.info(f"Excluded {record_id}")
-                    self.review_manager.report_logger.info(f"Excluded {record_id}")
+                    self.logger.info("Excluded %s", record_id)
+                    self.review_manager.report_logger.info("Excluded %s", record_id)
                 else:
-                    self.review_manager.logger.error(f"Did not find ID {record_id}")
+                    self.logger.error("Did not find ID %s", record_id)
                     writer.write(line)
                     line = reader.readline()
                     continue
@@ -499,7 +503,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             record_id_list=list(synthesized_record_status_matrix.keys()),
         )
         missing_records = sorted(missing_records)
-        # review_manager.logger.debug(f"missing_records: {missing_records}")
+        # self.logger.debug(f"missing_records: {missing_records}")
 
         self._check_new_record_source_tag()
 
@@ -508,15 +512,13 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 self.review_manager.report_logger.info(
                     f"All records included in {self.settings.paper_path.name}"
                 )
-            # review_manager.logger.debug(
+            # self.logger.debug(
             #     f"All records included in {self.settings.paper_path.name}"
             # )
         else:
             if not silent_mode:
                 self.review_manager.report_logger.info("Update paper")
-                self.review_manager.logger.info(
-                    f"Update paper ({self.settings.paper_path.name})"
-                )
+                self.logger.info("Update paper (%s)", self.settings.paper_path.name)
             self._add_missing_records_to_paper(
                 missing_records=missing_records,
                 silent_mode=silent_mode,
@@ -531,13 +533,13 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
 
             non_sample_records = colrev.loader.load_utils.load(
                 filename=self.non_sample_references,
-                logger=self.review_manager.logger,
+                logger=self.logger,
             )
 
             records_to_add = colrev.loader.load_utils.loads(
                 load_string=filedata.decode("utf-8"),
                 implementation="bib",
-                logger=self.review_manager.logger,
+                logger=self.logger,
             )
 
             # maybe prefix "non_sample_NameYear"? (also avoid conflicts with records.bib)
@@ -553,7 +555,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 k: v for k, v in records_to_add.items() if k not in non_sample_records
             }
             if duplicated_keys:
-                self.review_manager.logger.error(
+                self.logger.error(
                     f"{Colors.RED}Cannot add {duplicated_keys} to "
                     f"{self.NON_SAMPLE_REFERENCES_RELATIVE}, "
                     f"please change ID and add manually:{Colors.END}"
@@ -567,7 +569,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 records_dict=non_sample_records, filename=self.non_sample_references
             )
 
-            self.review_manager.dataset.add_changes(
+            self.review_manager.dataset.git_repo.add_changes(
                 Path("data/data/") / self.NON_SAMPLE_REFERENCES_RELATIVE
             )
 
@@ -580,7 +582,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         if prisma_endpoint_l:
             if "PRISMA.png" not in self.settings.paper_path.read_text(encoding="UTF-8"):
                 if not silent_mode:
-                    self.review_manager.logger.info("Add PRISMA diagram to paper")
+                    self.logger.info("Add PRISMA diagram to paper")
                 self._append_to_non_sample_references(
                     module="colrev.packages.prisma",
                     filepath=Path("prisma/prisma-refs.bib"),
@@ -640,7 +642,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
 
         self._add_prisma_if_available(silent_mode=silent_mode)
 
-        review_manager.dataset.add_changes(self.settings.paper_path)
+        review_manager.dataset.git_repo.add_changes(self.settings.paper_path)
 
         return records
 
@@ -655,7 +657,9 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                     template_file=retrieval_path,
                     target=self.non_sample_references,
                 )
-                self.review_manager.dataset.add_changes(self.non_sample_references)
+                self.review_manager.dataset.git_repo.add_changes(
+                    self.non_sample_references
+                )
             except AttributeError:
                 pass
 
@@ -666,7 +670,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             records[record_id] = record_dict
 
         write_file(records_dict=records, filename=self.sample_references)
-        self.review_manager.dataset.add_changes(self.sample_references)
+        self.review_manager.dataset.git_repo.add_changes(self.sample_references)
 
     def _call_docker_build_process(self, *, script: str) -> None:
         try:
@@ -696,7 +700,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             container.remove()
 
         except docker.errors.ImageNotFound:
-            self.review_manager.logger.error("Docker image not found")
+            self.logger.error("Docker image not found")
         except docker.errors.ContainerError as exc:
             if "Temporary failure in name resolution" in str(exc):
                 raise colrev_exceptions.ServiceNotAvailableException(
@@ -715,10 +719,8 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             self.review_manager.paths.records.touch()
 
         if not self.settings.paper_path.is_file():
-            self.review_manager.logger.error(
-                "File %s does not exist.", self.settings.paper_path
-            )
-            self.review_manager.logger.info("Complete processing and use colrev data")
+            self.logger.error("File %s does not exist.", self.settings.paper_path)
+            self.logger.info("Complete processing and use colrev data")
             return
 
         self._retrieve_default_csl()
@@ -728,7 +730,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         word_template = self.settings.word_template
 
         if not self._retrieve_default_word_template(word_template):
-            self.review_manager.logger.error(f"Word template {word_template} not found")
+            self.logger.error("Word template %s not found", word_template)
             return
 
         output_relative_path = self.settings.paper_output.relative_to(
@@ -736,14 +738,16 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         )
 
         if (
-            not self.review_manager.dataset.has_changes(self.paper_relative_path)
+            not self.review_manager.dataset.git_repo.has_changes(
+                self.paper_relative_path
+            )
             and self.settings.paper_output.is_file()
         ):
-            self.review_manager.logger.debug("Skipping paper build (no changes)")
+            self.logger.debug("Skipping paper build (no changes)")
             return
 
-        if self.review_manager.verbose_mode:
-            self.review_manager.logger.info("Build paper")
+        if self.verbose_mode:
+            self.logger.info("Build paper")
 
         script = (
             f"{self.paper_relative_path.as_posix()} --filter pandoc-crossref --citeproc "
@@ -766,12 +770,12 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         """Update the data/paper"""
 
         if (
-            self.review_manager.dataset.repo_initialized()
-            and self.review_manager.dataset.has_changes(
+            self.review_manager.dataset.git_repo.repo_initialized()
+            and self.review_manager.dataset.git_repo.has_changes(
                 self.paper_relative_path, change_type="unstaged"
             )
         ):
-            self.review_manager.logger.warning(
+            self.logger.warning(
                 f"{Colors.RED}Skipping updates of "
                 f"{self.paper_relative_path} due to unstaged changes{Colors.END}"
             )
@@ -782,7 +786,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 silent_mode=silent_mode,
             )
 
-        if not self.review_manager.in_ci_environment() and not silent_mode:
+        if not utils.in_ci_environment() and not silent_mode:
             self.build_paper()
 
     def _get_to_synthesize(self, *, paper: Path, records_for_synthesis: list) -> list:

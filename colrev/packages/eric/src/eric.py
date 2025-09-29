@@ -3,21 +3,25 @@
 from __future__ import annotations
 
 import logging
-import typing
 import urllib.parse
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.record.record
+import colrev.search_file
+import colrev.utils
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
+from colrev.ops.search_db import create_db_source
+from colrev.ops.search_db import run_db_search
 from colrev.packages.eric.src import eric_api
 
 # pylint: disable=unused-argument
@@ -27,11 +31,11 @@ from colrev.packages.eric.src import eric_api
 class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
     """ERIC API"""
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
-    search_types = [SearchType.API]
+    search_types = [SearchType.API, SearchType.DB]
     endpoint = "colrev.eric"
 
     db_url = "https://eric.ed.gov/"
@@ -42,20 +46,23 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
     def __init__(
         self,
         *,
-        source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        search_file: Optional[colrev.search_file.ExtendedSearchFile] = None,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
-        self.review_manager = source_operation.review_manager
-        self.source_operation = source_operation
-        if settings:
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
+
+        if search_file:
             # ERIC as a search_source
-            self.search_source = self.settings_class(**settings)
+            self.search_source = search_file
         else:
-            self.search_source = colrev.settings.SearchSource(
-                endpoint=self.endpoint,
-                filename=Path("data/search/eric.bib"),
+            self.search_source = colrev.search_file.ExtendedSearchFile(
+                version=self.CURRENT_SYNTAX_VERSION,
+                platform=self.endpoint,
+                search_results_path=Path("data/search/eric.bib"),
                 search_type=SearchType.OTHER,
-                search_parameters={},
+                search_string="",
                 comment="",
             )
 
@@ -92,12 +99,14 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         field_value = f"{field}%3A%22{urllib.parse.quote(value)}%22"
         return field_value
 
+    # pylint: disable=too-many-locals
     @classmethod
     def add_endpoint(
         cls,
-        operation: colrev.ops.search.Search,
         params: str,
-    ) -> colrev.settings.SearchSource:
+        path: Path,
+        logger: Optional[logging.Logger] = None,
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
 
         params_dict = {}
@@ -109,37 +118,51 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
                     key, value = item.split("=")
                     params_dict[key] = value
 
-        # all API searches
+        search_type = colrev.utils.select_search_type(
+            search_types=cls.search_types, params=params_dict
+        )
 
-        if len(params_dict) == 0:
-            search_source = operation.create_db_source(
-                search_source_cls=cls, params=params_dict
+        if search_type == SearchType.DB:
+            search_source = create_db_source(
+                path=path,
+                platform=cls.endpoint,
+                params=params_dict,
+                add_to_git=True,
+                logger=logger,
             )
 
-        # pylint: disable=colrev-missed-constant-usage
-        elif "https://api.ies.ed.gov/eric/?" in params_dict["url"]:
-            url_parsed = urllib.parse.urlparse(params_dict["url"])
-            new_query = urllib.parse.parse_qs(url_parsed.query)
-            search = new_query.get("search", [""])[0]
-            start = new_query.get("start", ["0"])[0]
-            rows = new_query.get("rows", ["2000"])[0]
-            if ":" in search:
-                search = ERICSearchSource._search_split(search)
-            filename = operation.get_unique_filename(file_path_string=f"eric_{search}")
-            search_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
-                search_type=SearchType.API,
-                search_parameters={"query": search, "start": start, "rows": rows},
-                comment="",
-            )
+        if search_type == SearchType.API:
+            # pylint: disable=colrev-missed-constant-usage
+            if params_dict and "https://api.ies.ed.gov/eric/?" in params_dict["url"]:
+                url_parsed = urllib.parse.urlparse(params_dict["url"])
+                new_query = urllib.parse.parse_qs(url_parsed.query)
+                search = new_query.get("search", [""])[0]
+                start = new_query.get("start", ["0"])[0]
+                rows = new_query.get("rows", ["2000"])[0]
+                if ":" in search:
+                    search = ERICSearchSource._search_split(search)
+                filename = colrev.utils.get_unique_filename(
+                    base_path=path,
+                    file_path_string=f"eric_{search}",
+                )
+                search_source = colrev.search_file.ExtendedSearchFile(
+                    version=cls.CURRENT_SYNTAX_VERSION,
+                    platform=cls.endpoint,
+                    search_results_path=filename,
+                    search_type=SearchType.API,
+                    search_string="",
+                    search_parameters={"query": search, "start": start, "rows": rows},
+                    comment="",
+                )
+            else:
+                search_source = create_api_source(platform=cls.endpoint, path=path)
+                search_source.search_parameters = {"query": search_source.search_string}
+                search_source.search_string = ""
 
         else:
             raise colrev_exceptions.PackageParameterError(
                 f"Cannot add ERIC endpoint with query {params_dict}"
             )
-
-        operation.add_source_and_search(search_source)
         return search_source
 
     def _run_api_search(
@@ -155,18 +178,21 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
     def search(self, rerun: bool) -> None:
         """Run a search of ERIC"""
 
-        eric_feed = self.search_source.get_api_feed(
-            review_manager=self.review_manager,
+        eric_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
+            search_source=self.search_source,
             update_only=(not rerun),
+            logger=self.logger,
+            verbose_mode=self.verbose_mode,
         )
 
         if self.search_source.search_type == SearchType.API:
             self._run_api_search(eric_feed=eric_feed, rerun=rerun)
         elif self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
-                search_source_cls=self.__class__,
+            run_db_search(
+                db_url=self.db_url,
                 source=self.search_source,
+                add_to_git=True,
             )
         else:
             raise NotImplementedError
@@ -247,24 +273,26 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         return records
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".nbib":
-            return cls._load_nbib(filename=filename, logger=logger)
+        if self.search_source.search_results_path.suffix == ".nbib":
+            return self._load_nbib(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
-        if filename.suffix == ".bib":
+        if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
-                filename=filename,
-                logger=logger,
+                filename=self.search_source.search_results_path,
+                logger=self.logger,
             )
             return records
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for ERIC"""
 

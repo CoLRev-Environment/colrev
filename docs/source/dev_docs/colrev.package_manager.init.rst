@@ -15,7 +15,7 @@ colrev.package\_manager.init
       :toctree:
       :nosignatures:
 
-      generate_module_content
-      main
-      validate_module_name
-      validate_version
+      colrev.package_manager.init.generate_module_content
+      colrev.package_manager.init.main
+      colrev.package_manager.init.validate_module_name
+      colrev.package_manager.init.validate_version

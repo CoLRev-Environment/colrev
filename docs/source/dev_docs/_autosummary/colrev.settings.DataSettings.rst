@@ -1,9 +1,7 @@
 colrev.settings.DataSettings
 ============================
 
-.. currentmodule:: colrev.settings
-
-.. autoclass:: DataSettings
+.. autoclass:: colrev.settings.DataSettings
    :members:
    :show-inheritance:
    :inherited-members:
@@ -19,4 +17,4 @@ colrev.settings.DataSettings
 
    .. autosummary::
 
-      ~DataSettings.data_package_endpoints
+      ~colrev.settings.DataSettings.data_package_endpoints

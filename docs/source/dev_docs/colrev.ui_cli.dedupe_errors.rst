@@ -15,5 +15,5 @@ colrev.ui\_cli.dedupe\_errors
       :toctree:
       :nosignatures:
 
-      load_dedupe_false_negatives
-      load_dedupe_false_positives
+      colrev.ui_cli.dedupe_errors.load_dedupe_false_negatives
+      colrev.ui_cli.dedupe_errors.load_dedupe_false_positives

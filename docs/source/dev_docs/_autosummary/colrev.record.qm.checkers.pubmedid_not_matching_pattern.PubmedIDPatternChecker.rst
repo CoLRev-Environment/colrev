@@ -1,9 +1,7 @@
 colrev.record.qm.checkers.pubmedid\_not\_matching\_pattern.PubmedIDPatternChecker
 =================================================================================
 
-.. currentmodule:: colrev.record.qm.checkers.pubmedid_not_matching_pattern
-
-.. autoclass:: PubmedIDPatternChecker
+.. autoclass:: colrev.record.qm.checkers.pubmedid_not_matching_pattern.PubmedIDPatternChecker
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +14,7 @@ colrev.record.qm.checkers.pubmedid\_not\_matching\_pattern.PubmedIDPatternChecke
    .. autosummary::
       :nosignatures:
 
-      ~PubmedIDPatternChecker.run
+      ~colrev.record.qm.checkers.pubmedid_not_matching_pattern.PubmedIDPatternChecker.run
 
 
 
@@ -26,4 +24,4 @@ colrev.record.qm.checkers.pubmedid\_not\_matching\_pattern.PubmedIDPatternChecke
 
    .. autosummary::
 
-      ~PubmedIDPatternChecker.msg
+      ~colrev.record.qm.checkers.pubmedid_not_matching_pattern.PubmedIDPatternChecker.msg

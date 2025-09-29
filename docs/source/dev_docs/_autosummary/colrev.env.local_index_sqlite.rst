@@ -20,7 +20,7 @@ colrev.env.local\_index\_sqlite
       :template: custom-class-template.rst
       :nosignatures:
 
-      SQLiteIndex
-      SQLiteIndexRankings
-      SQLiteIndexRecord
-      SQLiteIndexTOC
+      colrev.env.local_index_sqlite.SQLiteIndex
+      colrev.env.local_index_sqlite.SQLiteIndexRankings
+      colrev.env.local_index_sqlite.SQLiteIndexRecord
+      colrev.env.local_index_sqlite.SQLiteIndexTOC

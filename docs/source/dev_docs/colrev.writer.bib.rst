@@ -15,5 +15,5 @@ colrev.writer.bib
       :toctree:
       :nosignatures:
 
-      to_string
-      write_file
+      colrev.writer.bib.to_string
+      colrev.writer.bib.write_file

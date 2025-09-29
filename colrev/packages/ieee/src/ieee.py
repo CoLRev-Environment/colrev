@@ -3,23 +3,28 @@
 from __future__ import annotations
 
 import logging
-import typing
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pydantic import Field
 
+import colrev.env.environment_manager
 import colrev.ops.prep
+import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
-import colrev.package_manager.package_settings
 import colrev.packages.ieee.src.ieee_api
 import colrev.record.record
 import colrev.record.record_prep
+import colrev.search_file
+import colrev.utils
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.search_api_feed import create_api_source
+from colrev.ops.search_db import create_db_source
+from colrev.ops.search_db import run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -28,13 +33,13 @@ from colrev.constants import SearchType
 class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
     """IEEEXplore"""
 
-    flag = True
+    CURRENT_SYNTAX_VERSION = "0.1.0"
 
-    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
+    flag = True
 
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
-    search_types = [SearchType.API]
+    search_types = [SearchType.API, SearchType.DB]
     endpoint = "colrev.ieee"
 
     ci_supported: bool = Field(default=True)
@@ -48,22 +53,26 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
     def __init__(
         self,
         *,
-        source_operation: colrev.process.operation.Operation,
-        settings: typing.Optional[dict] = None,
+        search_file: Optional[colrev.search_file.ExtendedSearchFile] = None,
+        logger: Optional[logging.Logger] = None,
+        verbose_mode: bool = False,
     ) -> None:
-        self.review_manager = source_operation.review_manager
+        self.logger = logger or logging.getLogger(__name__)
+        self.verbose_mode = verbose_mode
 
-        if settings:
-            self.search_source = self.settings_class(**settings)
+        self.environment_manager = colrev.env.environment_manager.EnvironmentManager()
+
+        if search_file:
+            self.search_source = search_file
         else:
-            self.search_source = colrev.settings.SearchSource(
-                endpoint=self.endpoint,
-                filename=Path("data/search/ieee.bib"),
+            self.search_source = colrev.search_file.ExtendedSearchFile(
+                version=self.CURRENT_SYNTAX_VERSION,
+                platform=self.endpoint,
+                search_results_path=Path("data/search/ieee.bib"),
                 search_type=SearchType.OTHER,
-                search_parameters={},
+                search_string="",
                 comment="",
             )
-        self.source_operation = source_operation
 
     # For run_search, a Python SDK would be available:
     # https://developer.ieee.org/Python_Software_Development_Kit
@@ -80,10 +89,14 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         return result
 
+    # pylint: disable=too-many-locals
     @classmethod
     def add_endpoint(
-        cls, operation: colrev.ops.search.Search, params: str
-    ) -> colrev.settings.SearchSource:
+        cls,
+        params: str,
+        path: Path,
+        logger: Optional[logging.Logger] = None,
+    ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 
         params_dict = {}
@@ -95,13 +108,15 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
                     key, value = item.split("=")
                     params_dict[key] = value
 
-        search_type = operation.select_search_type(
+        search_type = colrev.utils.select_search_type(
             search_types=cls.search_types, params=params_dict
         )
 
         if search_type == SearchType.API:
             if len(params_dict) == 0:
-                search_source = operation.create_api_source(endpoint=cls.endpoint)
+                search_source = create_api_source(platform=cls.endpoint, path=path)
+                search_source.search_parameters = {"query": search_source.search_string}
+                search_source.search_string = ""
 
             # pylint: disable=colrev-missed-constant-usage
             elif (
@@ -124,14 +139,17 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
 
                 last_value = list(search_parameters.values())[-1]
 
-                filename = operation.get_unique_filename(
-                    file_path_string=f"ieee_{last_value}"
+                filename = colrev.utils.get_unique_filename(
+                    base_path=path,
+                    file_path_string=f"ieee_{last_value}",
                 )
 
-                search_source = colrev.settings.SearchSource(
-                    endpoint=cls.endpoint,
-                    filename=filename,
+                search_source = colrev.search_file.ExtendedSearchFile(
+                    version=cls.CURRENT_SYNTAX_VERSION,
+                    platform=cls.endpoint,
+                    search_results_path=filename,
                     search_type=SearchType.API,
+                    search_string="",
                     search_parameters=search_parameters,
                     comment="",
                 )
@@ -139,45 +157,45 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
                 raise NotImplementedError
 
         elif search_type == SearchType.DB:
-            search_source = operation.create_db_source(
-                search_source_cls=cls,
+            search_source = create_db_source(
+                path=path,
+                platform=cls.endpoint,
                 params=params_dict,
+                add_to_git=True,
+                logger=logger,
             )
         else:
             raise NotImplementedError
-
-        operation.add_source_and_search(search_source)
         return search_source
 
     def search(self, rerun: bool) -> None:
         """Run a search of IEEEXplore"""
 
         if self.search_source.search_type == SearchType.API:
-            ieee_feed = self.search_source.get_api_feed(
-                review_manager=self.review_manager,
+            ieee_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier=self.source_identifier,
+                search_source=self.search_source,
                 update_only=(not rerun),
+                logger=self.logger,
+                verbose_mode=self.verbose_mode,
             )
             self._run_api_search(ieee_feed=ieee_feed, rerun=rerun)
 
         elif self.search_source.search_type == SearchType.DB:
-            self.source_operation.run_db_search(  # type: ignore
-                search_source_cls=self.__class__,
+            run_db_search(
+                db_url=self.db_url,
                 source=self.search_source,
+                add_to_git=True,
             )
 
         else:
             raise NotImplementedError
 
     def _get_api_key(self) -> str:
-        api_key = self.review_manager.environment_manager.get_settings_by_key(
-            self.SETTINGS["api_key"]
-        )
+        api_key = self.environment_manager.get_settings_by_key(self.SETTINGS["api_key"])
         if api_key is None or len(api_key) != 24:
             api_key = input("Please enter api key: ")
-            self.review_manager.environment_manager.update_registry(
-                self.SETTINGS["api_key"], api_key
-            )
+            self.environment_manager.update_registry(self.SETTINGS["api_key"], api_key)
         return api_key
 
     def _run_api_search(
@@ -346,29 +364,31 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
         return records
 
-    @classmethod
-    def load(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def load(self) -> dict:
         """Load the records from the SearchSource file"""
 
-        if filename.suffix == ".ris":
-            return cls._load_ris(filename=filename, logger=logger)
+        if self.search_source.search_results_path.suffix == ".ris":
+            return self._load_ris(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
-        if filename.suffix == ".csv":
-            return cls._load_csv(filename=filename, logger=logger)
+        if self.search_source.search_results_path.suffix == ".csv":
+            return self._load_csv(
+                filename=self.search_source.search_results_path, logger=self.logger
+            )
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for IEEEXplore"""
 
-        if source.filename.suffix == ".csv":
-            if Fields.AUTHOR in record.data:
-                record.data[Fields.AUTHOR] = (
-                    colrev.record.record_prep.PrepRecord.format_author_field(
-                        record.data[Fields.AUTHOR]
-                    )
+        if Fields.AUTHOR in record.data:
+            record.data[Fields.AUTHOR] = (
+                colrev.record.record_prep.PrepRecord.format_author_field(
+                    record.data[Fields.AUTHOR]
                 )
-            return record
+            )
         return record

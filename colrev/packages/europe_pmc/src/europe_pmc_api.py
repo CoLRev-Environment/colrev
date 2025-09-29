@@ -4,7 +4,7 @@ import typing
 from xml.etree.ElementTree import Element  # nosec
 
 import requests
-from lxml import etree
+from defusedxml import ElementTree as DefusedET
 
 import colrev.env.language_service
 import colrev.record.record_prep
@@ -12,6 +12,10 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
+
+
+class EuropePMCAPIError(Exception):
+    """Exception raised for Europe PMC API errors."""
 
 
 class EPMCAPI:
@@ -31,15 +35,25 @@ class EPMCAPI:
     def get_records(self) -> typing.Iterator[colrev.record.record_prep.PrepRecord]:
         """Get records from the Europe PMC API"""
 
-        ret = self.session.request("GET", self.url, headers=self.headers, timeout=60)
-        ret.raise_for_status()
+        try:
+            ret = self.session.request(
+                "GET", self.url, headers=self.headers, timeout=60
+            )
+            ret.raise_for_status()
+        except requests.exceptions.RequestException as exc:  # pragma: no cover
+            raise EuropePMCAPIError from exc
+
         if ret.status_code != 200:
             # review_manager.logger.debug(
             #     f"europe_pmc failed with status {ret.status_code}"
             # )
             return
 
-        root = etree.fromstring(str.encode(ret.text))
+        response_content = getattr(ret, "content", None)
+        if response_content is None:
+            response_text = getattr(ret, "text", "")
+            response_content = response_text.encode("utf-8")
+        root = DefusedET.fromstring(response_content)
         if not root.findall("resultList"):
             return
         result_list = root.findall("resultList")[0]
