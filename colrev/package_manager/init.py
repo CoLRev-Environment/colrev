@@ -410,7 +410,7 @@ def generate_module_content(
     module_content = f'''#! /usr/bin/env python
 """{class_name}"""
 import logging
-from typing import Optional
+import typing
 
 {package_imports}
 from colrev.package_manager.package_base_classes import {baseclass}

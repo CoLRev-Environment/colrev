@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """Umbrella review"""
 import logging
-from typing import Optional
+import typing
 
 from pydantic import Field
 
@@ -25,7 +25,7 @@ class UmbrellaReview(base_classes.ReviewTypePackageBaseClass):
         *,
         operation: colrev.process.operation.Operation,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)

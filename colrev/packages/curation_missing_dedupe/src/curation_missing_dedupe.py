@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import typing
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 from pydantic import Field
@@ -36,7 +35,7 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ):
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)

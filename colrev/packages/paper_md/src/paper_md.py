@@ -11,7 +11,6 @@ import typing
 from collections import Counter
 from pathlib import Path
 from threading import Timer
-from typing import Optional
 
 import docker
 import requests
@@ -92,7 +91,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)

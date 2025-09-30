@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 import shutil
+import typing
 from pathlib import Path
-from typing import Optional
 
 import bib_dedupe.cluster
 import bib_dedupe.maybe_cases
@@ -36,7 +36,7 @@ class Dedupe(base_classes.DedupePackageBaseClass):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ):
         self.logger = logger or logging.getLogger(__name__)

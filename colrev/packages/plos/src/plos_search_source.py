@@ -2,9 +2,9 @@
 """SearchSource: plos"""
 import datetime
 import logging
+import typing
 from multiprocessing import Lock
 from pathlib import Path
-from typing import Optional
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
@@ -44,7 +44,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
@@ -81,7 +81,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)
         params:

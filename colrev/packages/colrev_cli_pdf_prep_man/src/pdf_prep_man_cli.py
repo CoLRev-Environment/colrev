@@ -8,8 +8,8 @@ import platform
 import re
 import subprocess
 import textwrap
+import typing
 from pathlib import Path
-from typing import Optional
 
 import inquirer
 from pydantic import Field
@@ -39,7 +39,7 @@ class CoLRevCLIPDFManPrep(base_classes.PDFPrepManPackageBaseClass):
         *,
         pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)

@@ -2,7 +2,7 @@
 """Springer Link API helper."""
 from __future__ import annotations
 
-from typing import Optional
+import typing
 
 import requests
 
@@ -14,7 +14,7 @@ class SpringerLinkAPIError(Exception):
 class SpringerLinkAPI:
     """Handle HTTP interactions with the Springer Link API."""
 
-    def __init__(self, *, session: Optional[requests.Session] = None) -> None:
+    def __init__(self, *, session: typing.Optional[requests.Session] = None) -> None:
         self.session = session or requests.Session()
 
     def get_json(self, url: str, *, timeout: int) -> dict:

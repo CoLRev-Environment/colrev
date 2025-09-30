@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """DataPackageBaseClass: RefCheck"""
 import logging
-from typing import Optional
+import typing
 
 import colrev.ops.data
 import colrev.package_manager.package_settings
@@ -18,7 +18,7 @@ class RefCheck(DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.data_operation = data_operation

@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 import typing
 from pathlib import Path
-from typing import Any
-from typing import Optional
 
 import search_query
 
@@ -26,7 +24,7 @@ class ExtendedSearchFile(search_query.SearchFile):
         search_results_path: Path,
         search_type: SearchType,
         version: str,
-        **kwargs: Any,
+        **kwargs: typing.Any,
     ) -> None:
 
         # Mandatory attribute
@@ -102,7 +100,7 @@ class ExtendedSearchFile(search_query.SearchFile):
 
     # pylint: disable=unused-argument
     def get_search_history_path(
-        self, search_history_path: Optional[str | Path] = None
+        self, search_history_path: typing.Optional[str | Path] = None
     ) -> Path:
         """Get the search history path."""
         assert search_history_path is None
@@ -113,7 +111,7 @@ class ExtendedSearchFile(search_query.SearchFile):
 
     def save(
         self,
-        search_history_path: Optional[str | Path] = None,
+        search_history_path: typing.Optional[str | Path] = None,
         git_repo: typing.Optional[colrev.git_repo.GitRepo] = None,
     ) -> None:
         """Save the search file to a JSON file."""

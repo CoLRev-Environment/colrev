@@ -1,14 +1,14 @@
 #! /usr/bin/env python
 """CustomName"""
 import logging
-from typing import Optional
+import typing
 
 import colrev.search_file
 from colrev.package_manager.package_base_classes import SearchSourcePackageBaseClass
 
 class CustomName(SearchSourcePackageBaseClass):
 
-    def __init__(self, *, search_file: 'colrev.search_file.ExtendedSearchFile', logger: 'Optional[logging.Logger]' = None, verbose_mode: 'bool' = False) -> 'None':
+    def __init__(self, *, search_file: 'colrev.search_file.ExtendedSearchFile', logger: 'typing.Optional[logging.Logger]' = None, verbose_mode: 'bool' = False) -> 'None':
         """Initialize self.  See help(type(self)) for accurate signature."""
 
     def load(self) -> 'dict':

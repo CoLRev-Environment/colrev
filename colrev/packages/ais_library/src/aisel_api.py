@@ -2,9 +2,8 @@
 """AISeL API client."""
 from __future__ import annotations
 
+import typing
 import urllib.parse
-from typing import Dict
-from typing import Optional
 
 import requests
 
@@ -25,8 +24,8 @@ class AISeLAPI:
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        session: Optional[requests.Session] = None,
-        headers: Optional[Dict[str, str]] = None,
+        session: typing.Optional[requests.Session] = None,
+        headers: typing.Optional[typing.Dict[str, str]] = None,
     ) -> None:
         self.search_file = search_file
         self.session = session or requests.Session()

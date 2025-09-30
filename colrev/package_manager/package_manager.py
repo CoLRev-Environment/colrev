@@ -7,7 +7,6 @@ import json
 import subprocess
 import sys
 import typing
-from typing import Any
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.colrev_internal_packages
@@ -31,7 +30,7 @@ class PackageManager:
 
     def _load_type_identifier_endpoint_dict(self) -> dict:
         type_identifier_endpoint_dict: typing.Dict[
-            EndpointType, typing.Dict[str, Any]
+            EndpointType, typing.Dict[str, typing.Any]
         ] = {endpoint_type: {} for endpoint_type in EndpointType}
 
         for package_identifier in self._get_package_identifiers():

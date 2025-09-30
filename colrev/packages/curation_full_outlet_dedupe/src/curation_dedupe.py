@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
+import typing
 
 import numpy as np
 import pandas as pd
@@ -46,7 +46,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ):
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)

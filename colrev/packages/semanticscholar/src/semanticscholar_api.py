@@ -2,8 +2,7 @@
 """Semantic Scholar API wrapper."""
 from __future__ import annotations
 
-from typing import Iterable
-from typing import Optional
+import typing
 
 import requests
 from semanticscholar import SemanticScholar
@@ -17,7 +16,7 @@ class SemanticScholarAPIError(Exception):
 class SemanticScholarAPI:
     """Light wrapper around the Semantic Scholar client."""
 
-    def __init__(self, *, api_key: Optional[str] = None) -> None:
+    def __init__(self, *, api_key: typing.Optional[str] = None) -> None:
         self._client = (
             SemanticScholar(api_key=api_key) if api_key else SemanticScholar()
         )
@@ -39,12 +38,12 @@ class SemanticScholarAPI:
     def search_paper(
         self,
         *,
-        query: Optional[str] = None,
-        year: Optional[str] = None,
-        publication_types: Optional[Iterable[str]] = None,
-        venue: Optional[str] = None,
-        fields_of_study: Optional[Iterable[str]] = None,
-        open_access_pdf: Optional[bool] = None,
+        query: typing.Optional[str] = None,
+        year: typing.Optional[str] = None,
+        publication_types: typing.Optional[typing.Iterable[str]] = None,
+        venue: typing.Optional[str] = None,
+        fields_of_study: typing.Optional[typing.Iterable[str]] = None,
+        open_access_pdf: typing.Optional[bool] = None,
     ) -> PaginatedResults:
         """Search for papers matching the given criteria."""
         try:
@@ -59,14 +58,14 @@ class SemanticScholarAPI:
         except requests.exceptions.RequestException as exc:
             raise SemanticScholarAPIError from exc
 
-    def get_papers(self, paper_ids: Iterable[str]) -> PaginatedResults:
+    def get_papers(self, paper_ids: typing.Iterable[str]) -> PaginatedResults:
         """Get multiple papers by their Semantic Scholar IDs."""
         try:
             return self._client.get_papers(paper_ids)
         except requests.exceptions.RequestException as exc:
             raise SemanticScholarAPIError from exc
 
-    def get_authors(self, author_ids: Iterable[str]) -> PaginatedResults:
+    def get_authors(self, author_ids: typing.Iterable[str]) -> PaginatedResults:
         """Get multiple authors by their Semantic Scholar IDs."""
         try:
             return self._client.get_authors(author_ids)

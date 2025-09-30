@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import logging
 import re
+import typing
 from multiprocessing import Lock
 from pathlib import Path
-from typing import Optional
 
 import inquirer
 from github import Auth
@@ -62,7 +62,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
@@ -96,7 +96,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 

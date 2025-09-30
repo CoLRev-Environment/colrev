@@ -2,7 +2,7 @@
 """OpenLibrary API client."""
 from __future__ import annotations
 
-from typing import Optional
+import typing
 
 import requests
 
@@ -19,8 +19,8 @@ class OpenLibraryAPI:
     def __init__(
         self,
         *,
-        session: Optional[requests.Session] = None,
-        headers: Optional[dict] = None,
+        session: typing.Optional[requests.Session] = None,
+        headers: typing.Optional[dict] = None,
     ) -> None:
         self.session = session or requests.Session()
         self.headers = headers or {}

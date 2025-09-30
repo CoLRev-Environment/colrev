@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import typing
 from pathlib import Path
-from typing import Optional
 
 from pydantic import Field
 
@@ -34,7 +33,7 @@ class GROBIDTEI(base_classes.PDFPrepPackageBaseClass):
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)

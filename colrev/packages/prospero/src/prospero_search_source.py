@@ -9,7 +9,6 @@ from __future__ import annotations
 import logging
 import typing
 from pathlib import Path
-from typing import Optional
 
 from pydantic import Field
 
@@ -44,7 +43,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the ProsperoSearchSource plugin."""
@@ -59,7 +58,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Adds Prospero as a search source endpoint based on user-provided parameters."""
         if len(params) == 0:

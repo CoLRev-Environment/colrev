@@ -6,7 +6,6 @@ import logging
 import re
 import typing
 from pathlib import Path
-from typing import Optional
 
 from pydantic import Field
 
@@ -38,7 +37,7 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.search_source = search_file
@@ -60,7 +59,7 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 

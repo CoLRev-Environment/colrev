@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import copy
 import logging
+import typing
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 import inquirer
 from pydantic import BaseModel
@@ -64,7 +64,7 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.review_manager = data_operation.review_manager

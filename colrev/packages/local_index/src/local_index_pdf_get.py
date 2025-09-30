@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 import shutil
+import typing
 from pathlib import Path
-from typing import Optional
 
 from pydantic import Field
 
@@ -31,7 +31,7 @@ class LocalIndexPDFGet(base_classes.PDFGetPackageBaseClass):
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)

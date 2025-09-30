@@ -8,8 +8,6 @@ import typing
 from abc import ABC
 from abc import abstractmethod
 from pathlib import Path
-from typing import Optional
-from typing import Type
 
 import colrev.package_manager.package_settings
 from colrev.constants import EndpointType
@@ -42,7 +40,7 @@ class ReviewTypePackageBaseClass(abc.ABC):
         *,
         operation: colrev.process.operation.Operation,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         pass
@@ -79,7 +77,7 @@ class SearchSourcePackageBaseClass(ABC):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         pass
@@ -92,7 +90,7 @@ class SearchSourcePackageBaseClass(ABC):
     @classmethod
     @abstractmethod
     def add_endpoint(
-        cls, params: str, path: Path, logger: Optional[logging.Logger] = None
+        cls, params: str, path: Path, logger: typing.Optional[logging.Logger] = None
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add the SearchSource as an endpoint."""
 
@@ -138,7 +136,7 @@ class PrepPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
     source_correction_hint: str
     always_apply_changes: bool
 
@@ -148,7 +146,7 @@ class PrepPackageBaseClass(ABC):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         pass
@@ -171,7 +169,7 @@ class PrepManPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -179,7 +177,7 @@ class PrepManPackageBaseClass(ABC):
         *,
         prep_man_operation: colrev.ops.prep_man.PrepMan,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         pass
@@ -199,7 +197,7 @@ class DedupePackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -207,7 +205,7 @@ class DedupePackageBaseClass(ABC):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ):
         pass
@@ -226,7 +224,7 @@ class PrescreenPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
     settings: colrev.package_manager.package_settings.DefaultSettings
 
     @abstractmethod
@@ -235,7 +233,7 @@ class PrescreenPackageBaseClass(ABC):
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         pass
@@ -255,7 +253,7 @@ class PDFGetPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -263,7 +261,7 @@ class PDFGetPackageBaseClass(ABC):
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         pass
@@ -284,7 +282,7 @@ class PDFGetManPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -292,7 +290,7 @@ class PDFGetManPackageBaseClass(ABC):
         *,
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         pass
@@ -312,7 +310,7 @@ class PDFPrepPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -320,7 +318,7 @@ class PDFPrepPackageBaseClass(ABC):
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         pass
@@ -342,7 +340,7 @@ class PDFPrepManPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -350,7 +348,7 @@ class PDFPrepManPackageBaseClass(ABC):
         *,
         pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         pass
@@ -371,7 +369,7 @@ class ScreenPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -379,7 +377,7 @@ class ScreenPackageBaseClass(ABC):
         *,
         screen_operation: colrev.ops.screen.Screen,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         pass
@@ -399,7 +397,7 @@ class DataPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -407,7 +405,7 @@ class DataPackageBaseClass(ABC):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         pass

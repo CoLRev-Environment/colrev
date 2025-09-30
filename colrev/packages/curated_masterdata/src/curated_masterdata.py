@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """Curated metadata project"""
 import logging
+import typing
 from pathlib import Path
-from typing import Optional
 
 from pydantic import Field
 
@@ -27,7 +27,7 @@ class CuratedMasterdata(base_classes.ReviewTypePackageBaseClass):
         *,
         operation: colrev.process.operation.Operation,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
