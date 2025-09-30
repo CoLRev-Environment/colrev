@@ -1,9 +1,6 @@
 #! /usr/bin/env python
 """CustomName"""
-import logging
-from typing import Optional
 
-import colrev.search_file
 from colrev.package_manager.package_base_classes import SearchSourcePackageBaseClass
 
 class CustomName(SearchSourcePackageBaseClass):

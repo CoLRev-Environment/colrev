@@ -12,7 +12,6 @@ from pydantic import Field
 
 import colrev.env.utils
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev import utils

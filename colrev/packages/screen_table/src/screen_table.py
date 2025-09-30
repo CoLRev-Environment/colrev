@@ -12,7 +12,6 @@ import pandas as pd
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.packages.screen_utils as util_cli_screen
 import colrev.record.record

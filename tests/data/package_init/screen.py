@@ -1,9 +1,6 @@
 #! /usr/bin/env python
 """CustomName"""
-import logging
-from typing import Optional
 
-import colrev.ops.screen
 from colrev.package_manager.package_base_classes import ScreenPackageBaseClass
 
 class CustomName(ScreenPackageBaseClass):

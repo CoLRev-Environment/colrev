@@ -10,10 +10,7 @@ import pandas as pd
 from pydantic import BaseModel
 from pydantic import Field
 
-import colrev.env.docker_manager
-import colrev.env.utils
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 from colrev.constants import Fields
 from colrev.constants import FieldValues
