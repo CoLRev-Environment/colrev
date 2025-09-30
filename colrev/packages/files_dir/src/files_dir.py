@@ -13,7 +13,6 @@ from pydantic import Field
 
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.check
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.packages.pdf_backward_search.src.pdf_backward_search as bws
