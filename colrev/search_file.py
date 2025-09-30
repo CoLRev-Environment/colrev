@@ -133,5 +133,37 @@ class ExtendedSearchFile(search_query.SearchFile):
         if git_repo:
             git_repo.add_changes(path)
 
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"platform={self.platform!r}, "
+            f"search_results_path={str(self.search_results_path)!r}, "
+            f"search_type={self.search_type.value!r}, "
+            f"version={self.version!r})"
+        )
+
+    def __str__(self) -> str:
+        try:
+            payload = self.to_dict()
+        except Exception:
+            payload = {
+                "platform": self.platform,
+                "search_results_path": str(self.search_results_path),
+                "search_type": self.search_type.value,
+            }
+
+        # Ensure Paths/Enums/sets etc. are serializable
+        def _default(o) -> str:  # type: ignore
+            from pathlib import Path
+            from enum import Enum
+
+            if isinstance(o, Path):
+                return str(o)
+            if isinstance(o, Enum):
+                return o.value
+            return str(o)
+
+        return json.dumps(payload, indent=2, ensure_ascii=False, default=_default)
+
 
 load_search_file = search_query.load_search_file
