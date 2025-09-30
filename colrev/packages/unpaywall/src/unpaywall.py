@@ -2,11 +2,11 @@
 """Retrieval of PDFs from the unpaywall API"""
 from __future__ import annotations
 
+import typing
 import json
 import logging
 import os
 from pathlib import Path
-from typing import Optional
 
 import pymupdf
 import requests
@@ -37,7 +37,7 @@ class Unpaywall(base_classes.PDFGetPackageBaseClass):
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)

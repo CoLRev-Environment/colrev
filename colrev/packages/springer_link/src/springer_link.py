@@ -8,7 +8,6 @@ import re
 import typing
 import urllib.parse
 from pathlib import Path
-from typing import Optional
 from urllib.parse import parse_qs
 from urllib.parse import urlparse
 
@@ -60,7 +59,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
@@ -92,7 +91,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
 

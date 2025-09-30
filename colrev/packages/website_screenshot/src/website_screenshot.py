@@ -2,11 +2,11 @@
 """Creation of screenshots (PDFs) for online ENTRYTYPES"""
 from __future__ import annotations
 
+import typing
 import logging
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import docker
 import requests
@@ -37,7 +37,7 @@ class WebsiteScreenshot(base_classes.PDFGetPackageBaseClass):
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)

@@ -7,7 +7,6 @@ import logging
 import typing
 from dataclasses import asdict
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 from git.exc import GitCommandError
@@ -71,7 +70,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.review_manager = data_operation.review_manager

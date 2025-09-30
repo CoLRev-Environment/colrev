@@ -6,7 +6,6 @@ import logging
 import platform
 import typing
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 import pymupdf
@@ -75,7 +74,7 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
         *,
         prep_man_operation: colrev.ops.prep_man.PrepMan,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         if "pdf_handling_mode" not in settings:

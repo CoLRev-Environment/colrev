@@ -6,7 +6,6 @@ import logging
 import os
 import typing
 from pathlib import Path
-from typing import Optional
 
 import docker
 import pandas as pd
@@ -50,7 +49,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.review_manager = data_operation.review_manager

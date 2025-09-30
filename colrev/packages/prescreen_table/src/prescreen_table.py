@@ -2,10 +2,10 @@
 """Prescreen based on a table"""
 from __future__ import annotations
 
+import typing
 import csv
 import logging
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 from pydantic import Field
@@ -34,7 +34,7 @@ class TablePrescreen(base_classes.PrescreenPackageBaseClass):
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.review_manager = prescreen_operation.review_manager

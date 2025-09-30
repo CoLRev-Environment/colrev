@@ -9,9 +9,6 @@ import re
 import string
 import typing
 from pathlib import Path
-from typing import Any
-from typing import Dict
-from typing import List
 
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.loader
@@ -182,8 +179,8 @@ def extract_content(text: str) -> str:
 
 
 def handle_new_entry(
-    records: List[Dict[str, Any]], current_record: Dict[str, Any], line: str
-) -> Dict[str, Any]:
+    records: typing.List[typing.Dict[str, typing.Any]], current_record: typing.Dict[str, typing.Any], line: str
+) -> typing.Dict[str, typing.Any]:
     """Handles a new record entry."""
     if current_record:
         records.append(current_record)
@@ -200,7 +197,7 @@ def handle_new_entry(
 
 
 def process_key_value(
-    current_record: Dict[str, Any], current_key: str, current_value: str, line: str
+    current_record: typing.Dict[str, typing.Any], current_key: str, current_value: str, line: str
 ) -> tuple[str, str]:
     """Processes a key-value pair inside an entry."""
     if re.match(r"^\s*[a-zA-Z0-9._-]+\s*=", line):
@@ -212,7 +209,7 @@ def process_key_value(
 
 
 def store_current_key_value(
-    current_record: Dict[str, Any], current_key: str, current_value: str
+    current_record: typing.Dict[str, typing.Any], current_key: str, current_value: str
 ) -> None:
     """Stores the processed key-value pair into the current entry."""
     if not current_key or not current_record:
@@ -236,7 +233,7 @@ def store_current_key_value(
 
 def process_lines(
     file: typing.TextIO, header_only: bool = False
-) -> List[Dict[str, Any]]:
+) -> typing.List[typing.Dict[str, typing.Any]]:
     """Processes each line of the file and constructs records.
 
     Args:
@@ -247,8 +244,8 @@ def process_lines(
         List[Dict[str, Any]]: Parsed records.
     """
 
-    records: List[Dict[str, Any]] = []
-    current_record: Dict[str, Any] = {}
+    records: typing.List[typing.Dict[str, typing.Any]] = []
+    current_record: typing.Dict[str, typing.Any] = {}
     current_key = ""
     current_value = ""
     inside_record = False
@@ -369,7 +366,7 @@ class BIBLoader(colrev.loader.loader.Loader):
         record_header_list = self.load_records_list(header_only=True)
         return {r[Fields.ID]: r for r in record_header_list}
 
-    def load_records_list(self, header_only: bool = False) -> List[Dict[str, Any]]:
+    def load_records_list(self, header_only: bool = False) -> typing.List[typing.Dict[str, typing.Any]]:
         """Parses the file and returns either full records or just header fields."""
         records_list = []
         check_valid_bib(self.filename, self.logger)

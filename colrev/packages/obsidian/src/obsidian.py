@@ -2,10 +2,10 @@
 """Creation of an Obsidian database as part of the data operations"""
 from __future__ import annotations
 
+import typing
 import logging
 from collections import Counter
 from pathlib import Path
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -56,7 +56,7 @@ class Obsidian(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.review_manager = data_operation.review_manager

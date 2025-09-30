@@ -2,28 +2,25 @@
 """Scopus record transformer."""
 from __future__ import annotations
 
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
 
+import typing
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
 
-def _to_int(x: Any, default: int = 0) -> int:
+def _to_int(x: typing.Any, default: int = 0) -> int:
     try:
         return int(str(x).strip())
     except (ValueError, AttributeError):
         return default
 
 
-def _year_from_coverdate(entry: Dict[str, Any]) -> str:
+def _year_from_coverdate(entry: typing.Dict[str, typing.Any]) -> str:
     cd = entry.get("prism:coverDate") or entry.get("coverDate") or ""
     return cd[:4] if isinstance(cd, str) and len(cd) >= 4 else ""
 
 
-def _scopus_id(entry: Dict[str, Any]) -> str:
+def _scopus_id(entry: typing.Dict[str, typing.Any]) -> str:
     """Return the plain Scopus ID (digits only)."""
     dcid = entry.get("dc:identifier", "")
     if isinstance(dcid, str) and dcid.startswith("SCOPUS_ID:"):
@@ -44,7 +41,7 @@ def _scopus_id(entry: Dict[str, Any]) -> str:
     return ""
 
 
-def _eid(entry: Dict[str, Any]) -> str:
+def _eid(entry: typing.Dict[str, typing.Any]) -> str:
     eid = entry.get("eid", "")
     if isinstance(eid, str) and eid:
         return eid
@@ -52,21 +49,21 @@ def _eid(entry: Dict[str, Any]) -> str:
     return f"2-s2.0-{sid}" if sid else ""
 
 
-def _open_access(entry: Dict[str, Any]) -> bool:
+def _open_access(entry: typing.Dict[str, typing.Any]) -> bool:
     flag = entry.get("openaccessFlag")
     if isinstance(flag, bool):
         return flag
     return str(entry.get("openaccess", "")).strip() in {"1", "true", "True"}
 
 
-def _normalize_pages(entry: Dict[str, Any]) -> Optional[str]:
+def _normalize_pages(entry: typing.Dict[str, typing.Any]) -> typing.Optional[str]:
     pages = entry.get("prism:pageRange") or ""
     if not isinstance(pages, str) or not pages.strip():
         return None
     return pages.replace("-", "--")
 
 
-def _parse_authors(entry: Dict[str, Any]) -> str:
+def _parse_authors(entry: typing.Dict[str, typing.Any]) -> str:
     """
     Return compact author string like 'Surname, G.; Second, H.'.
     Handles Scopus variants:
@@ -76,7 +73,7 @@ def _parse_authors(entry: Dict[str, Any]) -> str:
     """
     # pylint: disable=too-many-branches
 
-    authors: List[Any] = []
+    authors: typing.List[typing.Any] = []
 
     # Preferred structured variants
     if isinstance(entry.get("author"), list):
@@ -97,7 +94,7 @@ def _parse_authors(entry: Dict[str, Any]) -> str:
         if isinstance(dc_creator, str) and dc_creator.strip():
             return dc_creator.strip()
 
-    norm: List[str] = []
+    norm: typing.List[str] = []
     for a in authors:
         if isinstance(a, str):
             s = a.strip()
@@ -133,7 +130,7 @@ def _parse_authors(entry: Dict[str, Any]) -> str:
     return "; ".join(n for n in norm if n)
 
 
-_SUBTYPE_MAP: Dict[str, Dict[str, str]] = {
+_SUBTYPE_MAP: typing.Dict[str, typing.Dict[str, str]] = {
     # subtype -> {label, entrytype}
     "cp": {"label": "conference-paper", "entrytype": ENTRYTYPES.INPROCEEDINGS},
     "cr": {"label": "conference-review", "entrytype": ENTRYTYPES.PROCEEDINGS},
@@ -150,7 +147,7 @@ _SUBTYPE_MAP: Dict[str, Dict[str, str]] = {
 }
 
 
-def _clean_isbn_value(v: Any) -> Optional[str]:
+def _clean_isbn_value(v: typing.Any) -> typing.Optional[str]:
     """Scopus often returns prism:isbn as [{'@_fa':'true', '$':'[978...]}]."""
     if isinstance(v, str):
         return v.strip("[] ").strip() or None
@@ -161,7 +158,7 @@ def _clean_isbn_value(v: Any) -> Optional[str]:
     return None
 
 
-def _extract_isbn_list(entry: Dict[str, Any]) -> List[str]:
+def _extract_isbn_list(entry: typing.Dict[str, typing.Any]) -> typing.List[str]:
     v = entry.get("prism:isbn")
     if not v:
         return []
@@ -172,7 +169,7 @@ def _extract_isbn_list(entry: Dict[str, Any]) -> List[str]:
     return [one] if one else []
 
 
-def _classify_scopus(entry: Dict[str, Any]) -> Dict[str, Optional[str]]:
+def _classify_scopus(entry: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Optional[str]]:
     """Return label/entrytype based on subtype (primary) and aggregationType (fallback)."""
     subtype = (entry.get("subtype") or "").strip().lower()
     agg = (
@@ -214,7 +211,7 @@ def _classify_scopus(entry: Dict[str, Any]) -> Dict[str, Optional[str]]:
 
 
 def _apply_container_fields(
-    rec: Dict[str, Any], entry: Dict[str, Any], entrytype: str
+    rec: typing.Dict[str, typing.Any], entry: typing.Dict[str, typing.Any], entrytype: str
 ) -> None:
     """
     Set container-specific fields:
@@ -288,7 +285,7 @@ def transform_record(entry: dict) -> dict:
     klass = _classify_scopus(entry)
     entrytype = klass["entrytype"] or "article"
 
-    record_dict: Dict[str, Any] = {
+    record_dict: typing.Dict[str, typing.Any] = {
         Fields.ID: scopus_id,
         Fields.TITLE: entry.get("dc:title", "") or entry.get("title", ""),
         Fields.AUTHOR: _parse_authors(entry),

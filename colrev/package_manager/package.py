@@ -2,14 +2,12 @@
 """CoLRev package."""
 from __future__ import annotations
 
+import typing
 import importlib.util
 from importlib.metadata import distribution
 from importlib.metadata import distributions
 from importlib.metadata import PackageNotFoundError
 from pathlib import Path
-from typing import Any
-from typing import cast
-from typing import Type
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
@@ -73,14 +71,14 @@ class Package:
 
     def _verify_endpoint(
         self,
-        endpoint_class: Any,
+        endpoint_class: typing.Any,
         endpoint_type: EndpointType,
         identifier: str,
     ) -> None:
         # baseclass_definition = BASECLASS_OVERVIEW[endpoint_type]["import_name"]
 
-        baseclass_definition = cast(
-            Type, BASECLASS_OVERVIEW[endpoint_type]["import_name"]
+        baseclass_definition = typing.cast(
+            typing.Type, BASECLASS_OVERVIEW[endpoint_type]["import_name"]
         )
         if not issubclass(endpoint_class, baseclass_definition):
             raise TypeError(
@@ -88,7 +86,7 @@ class Package:
                 f"all abstract methods of {baseclass_definition}!"
             )
 
-    def get_endpoint_class(self, package_type: EndpointType) -> Any:
+    def get_endpoint_class(self, package_type: EndpointType) -> typing.Any:
         """Get the endpoint class for a package type"""
         if not self.has_endpoint(package_type):
             raise colrev_exceptions.MissingDependencyError(

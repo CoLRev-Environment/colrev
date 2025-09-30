@@ -6,7 +6,6 @@ import csv
 import logging
 import typing
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 from pydantic import Field
@@ -34,7 +33,7 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
         *,
         screen_operation: colrev.ops.screen.Screen,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.review_manager = screen_operation.review_manager

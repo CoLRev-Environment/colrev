@@ -5,8 +5,6 @@ from __future__ import annotations
 import logging
 import typing
 from pathlib import Path
-from typing import Any
-from typing import Optional
 
 import colrev.exceptions as colrev_exceptions
 import colrev.search_file
@@ -38,8 +36,8 @@ def run_db_search(
     db_url: str,
     source: colrev.search_file.ExtendedSearchFile,
     add_to_git: bool = False,
-    project_root: Optional[Path] = None,
-    **kwargs: Any,
+    project_root: typing.Optional[Path] = None,
+    **kwargs: typing.Any,
 ) -> None:
     """Run the database search.
 
@@ -80,7 +78,7 @@ def get_query_filename(
     instantiate: bool = False,
     interactive: bool = False,
     add_to_git: bool = False,
-    project_root: Optional[Path] = None,
+    project_root: typing.Optional[Path] = None,
 ) -> Path:
     """Get the corresponding filename for the search query"""
 

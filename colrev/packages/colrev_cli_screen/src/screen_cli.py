@@ -2,8 +2,8 @@
 """Screen based on CLI"""
 from __future__ import annotations
 
+import typing
 import logging
-from typing import Optional
 
 from inquirer import Checkbox
 from inquirer import prompt
@@ -34,7 +34,7 @@ class CoLRevCLIScreen(base_classes.ScreenPackageBaseClass):
         *,
         screen_operation: colrev.ops.screen.Screen,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.review_manager = screen_operation.review_manager

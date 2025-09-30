@@ -2,9 +2,9 @@
 """Prescreen based on CLI"""
 from __future__ import annotations
 
+import typing
 import logging
 import textwrap
-from typing import Optional
 
 from pydantic import Field
 
@@ -31,7 +31,7 @@ class CoLRevCLIPrescreen(base_classes.PrescreenPackageBaseClass):
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)

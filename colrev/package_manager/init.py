@@ -2,6 +2,7 @@
 """Package init."""
 from __future__ import annotations
 
+import typing
 import inspect
 import json
 import os
@@ -410,7 +411,6 @@ def generate_module_content(
     module_content = f'''#! /usr/bin/env python
 """{class_name}"""
 import logging
-from typing import Optional
 
 {package_imports}
 from colrev.package_manager.package_base_classes import {baseclass}

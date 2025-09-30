@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """Critical review"""
+import typing
 import logging
-from typing import Optional
 
 from pydantic import Field
 
@@ -24,7 +24,7 @@ class CriticalReview(base_classes.ReviewTypePackageBaseClass):
         *,
         operation: colrev.process.operation.Operation,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)

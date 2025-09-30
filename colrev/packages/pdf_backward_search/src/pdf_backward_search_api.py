@@ -2,9 +2,8 @@
 """OpenCitations API client for backward PDF searches."""
 from __future__ import annotations
 
-from typing import Dict
-from typing import Optional
 
+import typing
 import requests
 
 # pylint: disable=too-few-public-methods
@@ -20,8 +19,8 @@ class PDFBackwardSearchAPI:
     def __init__(
         self,
         *,
-        session: Optional[requests.Session] = None,
-        headers: Optional[Dict[str, str]] = None,
+        session: typing.Optional[requests.Session] = None,
+        headers: typing.Optional[typing.Dict[str, str]] = None,
     ) -> None:
         self.session = session or requests.Session()
         self.headers = headers or {}

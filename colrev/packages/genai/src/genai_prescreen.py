@@ -2,11 +2,10 @@
 """Prescreen based on GenAI"""
 from __future__ import annotations
 
+import typing
 import csv
 import logging
 from pathlib import Path
-from typing import ClassVar
-from typing import Optional
 
 import pandas as pd
 from litellm import completion
@@ -29,7 +28,7 @@ class PreScreenDecision(BaseModel):
     Class for a prescreen
     """
 
-    SYSTEM_PROMPT: ClassVar[str] = (
+    SYSTEM_PROMPT: typing.ClassVar[str] = (
         "You are an expert screener of scientific literature. "
         "You are tasked with identifying relevant articles for a literature review. "
         "You are provided with the metadata of an article and are asked to determine "
@@ -66,7 +65,7 @@ class GenAIPrescreen(base_classes.PrescreenPackageBaseClass):
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.review_manager = prescreen_operation.review_manager

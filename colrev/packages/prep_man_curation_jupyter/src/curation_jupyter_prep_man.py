@@ -2,9 +2,9 @@
 """Jupyter notebook for prep-man operation"""
 from __future__ import annotations
 
+import typing
 import logging
 from pathlib import Path
-from typing import Optional
 
 from pydantic import Field
 
@@ -27,7 +27,7 @@ class CurationJupyterNotebookManPrep(base_classes.PrepManPackageBaseClass):
         *,
         prep_man_operation: colrev.ops.prep_man.PrepMan,
         settings: dict,
-        logger: Optional[logging.Logger] = None,
+        logger: typing.Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
