@@ -3,6 +3,7 @@
 # pylint: disable=too-few-public-methods
 # pylint: disable=colrev-missed-constant-usage
 import importlib.util
+import re
 import typing
 from enum import Enum
 from enum import EnumMeta
@@ -197,6 +198,12 @@ class Fields:
     GITHUB_LANGUAGE = "colrev.github.language"
     GITHUB_NR_CONTRIBUTORS = "colrev.github.nr_contributors"
     GITHUB_NR_COMMITS = "colrev.github.nr_commits"
+
+
+class FieldsRegex:
+    """Regex patterns for specific fields"""
+
+    DOI = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
 
 
 class LocalIndexFields:

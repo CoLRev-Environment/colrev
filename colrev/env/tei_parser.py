@@ -16,8 +16,10 @@ from defusedxml import ElementTree as DefusedET
 import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
+import colrev.record.record_pdf
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import FieldsRegex
 from colrev.constants import RecordState
 
 # xpath alternative:
@@ -653,3 +655,55 @@ class TEIParser:
             tree.write(str(self.tei_path))
 
         return self.root
+
+
+def _add_doi_from_pdf_if_not_available(record_dict: dict) -> None:
+    try:
+        record = colrev.record.record_pdf.PDFRecord(
+            record_dict, path=Path("")  # self.review_manager.path
+        )
+        if Fields.DOI not in record_dict:
+            record.set_text_from_pdf(first_pages=True)
+            res = re.findall(FieldsRegex.DOI, record.data[Fields.TEXT_FROM_PDF])
+            if res:
+                record.data[Fields.DOI] = res[0].upper()
+        record.data.pop(Fields.TEXT_FROM_PDF, None)
+        record.data.pop(Fields.NR_PAGES_IN_FILE, None)
+    except colrev_exceptions.InvalidPDFException as exc:
+        print(exc)
+
+
+# curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
+# curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
+# -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
+def get_record_from_pdf(file_path: Path, *, add_doi_from_pdf: bool = False) -> dict:
+    if file_path.suffix != ".pdf":
+        return
+
+    record_dict: typing.Dict[str, typing.Any] = {
+        Fields.FILE: str(file_path),
+        Fields.ENTRYTYPE: ENTRYTYPES.MISC,
+    }
+
+    try:
+        tei = colrev.env.tei_parser.TEIParser(
+            pdf_path=file_path,
+        )
+    except (
+        FileNotFoundError,
+        colrev_exceptions.TEITimeoutException,
+    ):
+        return record_dict
+
+    for key, val in tei.get_metadata().items():
+        if val:
+            record_dict[key] = str(val)
+    if Fields.DOI in record_dict:
+        record_dict[Fields.DOI] = record_dict[Fields.DOI].upper()
+
+    # to allow users to update/reindex with newer version:
+    record_dict[Fields.GROBID_VERSION] = "lfoppiano/grobid:" + tei.get_grobid_version()
+    if add_doi_from_pdf:
+        _add_doi_from_pdf_if_not_available(record_dict)
+
+    return record_dict

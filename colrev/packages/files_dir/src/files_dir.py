@@ -50,7 +50,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
     ci_supported: bool = Field(default=False)
     heuristic_status = SearchSourceHeuristicStatus.supported
 
-    _doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
     _batch_size = 20
     rerun: bool
 
@@ -258,51 +257,21 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                 except UnicodeDecodeError:
                     pass
 
-    # curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
-    # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
-    # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
-    def _get_record_from_pdf_grobid(self, *, record_dict: dict) -> dict:
-        if RecordState.md_prepared == record_dict.get(Fields.STATUS, "NA"):
-            return record_dict
-
-        pdf_path = self.review_manager.path / Path(record_dict[Fields.FILE])
-        try:
-            tei = colrev.env.tei_parser.TEIParser(
-                pdf_path=pdf_path,
-            )
-        except (
-            FileNotFoundError,
-            colrev_exceptions.TEITimeoutException,
-        ):
-            return record_dict
-
-        for key, val in tei.get_metadata().items():
-            if val:
-                record_dict[key] = str(val)
-
-        self._get_missing_fields_from_doc_info(record_dict=record_dict)
-
-        if Fields.ABSTRACT in record_dict:
-            del record_dict[Fields.ABSTRACT]
-        if Fields.KEYWORDS in record_dict:
-            del record_dict[Fields.KEYWORDS]
-        if Fields.DOI in record_dict:
-            record_dict[Fields.DOI] = record_dict[Fields.DOI].upper()
-
-        # to allow users to update/reindex with newer version:
-        record_dict[Fields.GROBID_VERSION] = (
-            "lfoppiano/grobid:" + tei.get_grobid_version()
-        )
-
-        return record_dict
-
     def _get_grobid_metadata(self, *, file_path: Path) -> dict:
-        record_dict: typing.Dict[str, typing.Any] = {
-            Fields.FILE: str(file_path),
-            Fields.ENTRYTYPE: ENTRYTYPES.MISC,
-        }
+
         try:
-            record_dict = self._get_record_from_pdf_grobid(record_dict=record_dict)
+            record_dict = colrev.env.tei_parser.get_record_from_pdf(
+                self.review_manager.path / file_path, add_doi_from_pdf=True
+            )
+            record_dict[Fields.FILE] = file_path
+
+            self._get_missing_fields_from_doc_info(record_dict=record_dict)
+
+            if Fields.ABSTRACT in record_dict:
+                del record_dict[Fields.ABSTRACT]
+            if Fields.KEYWORDS in record_dict:
+                del record_dict[Fields.KEYWORDS]
+
             with pymupdf.open(file_path) as doc:
                 pages_in_file = doc.page_count
                 if pages_in_file < 6:
@@ -644,7 +613,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if new_record == {}:
                     continue
 
-                self._add_doi_from_pdf_if_not_available(new_record)
                 retrieved_record = colrev.record.record.Record(new_record)
 
                 # Generally: add to feed but do not "update" records
@@ -669,23 +637,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             last_round = i == len(file_batches) - 1
             files_dir_feed.save(skip_print=not last_round)
-
-    def _add_doi_from_pdf_if_not_available(self, record_dict: dict) -> None:
-        if Path(record_dict[Fields.FILE]).suffix != ".pdf":
-            return
-        try:
-            record = colrev.record.record_pdf.PDFRecord(
-                record_dict, path=self.review_manager.path
-            )
-            if Fields.DOI not in record_dict:
-                record.set_text_from_pdf(first_pages=True)
-                res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])
-                if res:
-                    record.data[Fields.DOI] = res[0].upper()
-            record.data.pop(Fields.TEXT_FROM_PDF, None)
-            record.data.pop(Fields.NR_PAGES_IN_FILE, None)
-        except colrev_exceptions.InvalidPDFException:
-            pass
 
     def search(self, rerun: bool) -> None:
         """Run a search of a Files directory"""
