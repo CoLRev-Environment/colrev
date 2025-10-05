@@ -135,13 +135,18 @@ class Load(colrev.process.operation.Operation):
             set_initial_import_provenance(record)
             record.run_quality_model(self.quality_model)
 
-    def _import_record(self, *, record_dict: dict) -> dict:
+    def import_record(self, *, record_dict: dict, records: dict) -> dict:
+        """Import a record_dict to the records"""
+
         self.review_manager.logger.debug(f"import_record {record_dict[Fields.ID]}: ")
 
         record = colrev.record.record.Record(record_dict)
 
         # For better readability of the git diff:
         self.load_formatter.run(record)
+
+        if Fields.ORIGIN not in record_dict:
+            print(f"Error: {record_dict[Fields.ID]} has no origin")
 
         self._import_provenance(record)
 
@@ -156,6 +161,25 @@ class Load(colrev.process.operation.Operation):
                 f"{Colors.GREEN}Found paper retract: "
                 f"{record.data['ID']}{Colors.END}"
             )
+
+        # Make sure not to replace existing records
+        order = 0
+        letters = list(string.ascii_lowercase)
+        next_unique_id = record.data[Fields.ID]
+        appends: list = []
+        while next_unique_id in records:
+            if len(appends) == 0:
+                order += 1
+                appends = list(itertools.product(letters, repeat=order))
+            next_unique_id = record.data[Fields.ID] + "".join(list(appends.pop(0)))
+        record.data[Fields.ID] = next_unique_id
+
+        records[record.data[Fields.ID]] = record.data
+
+        self.review_manager.logger.info(
+            f" {Colors.GREEN}{record.data['ID']}".ljust(46)
+            + f"md_retrieved →  {record.data['colrev_status']}{Colors.END}"
+        )
 
         return record.get_data()
 
@@ -346,29 +370,9 @@ class Load(colrev.process.operation.Operation):
         self.review_manager.logger.debug(
             f"Import individual source records {source.search_source.get_search_history_path()}"
         )
+
         for source_record in source.search_source.source_records_list:
-            source_record = self._import_record(record_dict=source_record)
-
-            # Make sure not to replace existing records
-            order = 0
-            letters = list(string.ascii_lowercase)
-            next_unique_id = source_record[Fields.ID]
-            appends: list = []
-            while next_unique_id in records:
-                if len(appends) == 0:
-                    order += 1
-                    appends = list(itertools.product(letters, repeat=order))
-                next_unique_id = source_record[Fields.ID] + "".join(
-                    list(appends.pop(0))
-                )
-            source_record[Fields.ID] = next_unique_id
-
-            records[source_record[Fields.ID]] = source_record
-
-            self.review_manager.logger.info(
-                f" {Colors.GREEN}{source_record['ID']}".ljust(46)
-                + f"md_retrieved →  {source_record['colrev_status']}{Colors.END}"
-            )
+            self.import_record(record_dict=source_record, records=records)
 
         self.review_manager.logger.debug(
             f"Save records {source.search_source.get_search_history_path()}"
