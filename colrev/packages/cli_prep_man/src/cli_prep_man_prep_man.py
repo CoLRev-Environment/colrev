@@ -73,7 +73,7 @@ class CliPrepMan(PrepManPackageBaseClass):
         # Use CrossrefAPI to find similar records
         try:
             # `url` gets overwritten internally
-            api = crossref_api.CrossrefAPI(url="")
+            api = crossref_api.CrossrefAPI(url="https://api.crossref.org/")
             similar_records = api.crossref_query(
                 record_input=colrev.record.record_prep.PrepRecord(record)
             )  # top_n=5
