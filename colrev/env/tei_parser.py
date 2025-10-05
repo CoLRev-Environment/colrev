@@ -677,8 +677,9 @@ def _add_doi_from_pdf_if_not_available(record_dict: dict) -> None:
 # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
 # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
 def get_record_from_pdf(file_path: Path, *, add_doi_from_pdf: bool = False) -> dict:
+    """Get a record dict form a pdf file_path"""
     if file_path.suffix != ".pdf":
-        return
+        raise ValueError
 
     record_dict: typing.Dict[str, typing.Any] = {
         Fields.FILE: str(file_path),
