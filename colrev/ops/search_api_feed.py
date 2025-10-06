@@ -466,6 +466,7 @@ class SearchAPIFeed:
             if provenance_key in retrieved_record.data:
                 del retrieved_record.data[provenance_key]
 
+    # TODO : difference to add_record_to_feed ??
     def add_update_record(self, retrieved_record: colrev.record.record.Record) -> bool:
         """Add or update a record in the api_search_feed and records"""
         self._prep_retrieved_record(retrieved_record)
