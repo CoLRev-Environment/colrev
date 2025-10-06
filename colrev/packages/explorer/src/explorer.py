@@ -12,12 +12,14 @@ import inquirer
 
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
+import colrev.record.record
 import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import RecordState
+from colrev.constants import SearchType
 
 SHELL_MODE = True  # mimic CoLRev shell flag
-
 
 # ---------- helpers ----------
 
@@ -130,7 +132,8 @@ def import_from_downloads(review_manager: colrev.review_manager.ReviewManager) -
         pdf_dest_dir = review_manager.paths.pdf
         os.makedirs(pdf_dest_dir, exist_ok=True)
         os.path.join(pdf_dest_dir, file)
-        print("reactivate the following:")
+        # TODO: reactivate the following:
+        # print("reactivate the following:")
         # shutil.move(file_path, dest_path)
         # click.echo(f"Moved PDF to {dest_path}")
 
@@ -155,29 +158,66 @@ def import_cmd(ctx: click.Context, source: str | None) -> None:
     method = "downloads"
     # also: doi , url, reference file (csv, bibtex, ris, ...), reference string (apa, bibtex, ...)
     if method == "downloads":
-        records = import_from_downloads(review_manager)
+        imported_records = import_from_downloads(review_manager)
         # TODO : identify(prevent duplication)
 
-    # TODO : match against crossref/md-prep
-    # TODO assign IDs
+        files_sources = [
+            s
+            for s in review_manager.settings.sources
+            if s.search_type == SearchType.FILES
+        ]
+        assert files_sources
+        files_source = files_sources.pop()
 
-    # TODO : origins/sources
+        # else: reate files_source:
+        # search_source = colrev.search_file.ExtendedSearchFile(
+        #     version="1.0.0",
+        #     platform="colrev.files_dir",
+        #     search_results_path=filename,
+        #     search_type=SearchType.FILES,
+        #     search_string="",
+        #     comment="",
+        # )
 
+        files_dir_feed = colrev.ops.search_api_feed.SearchAPIFeed(
+            source_identifier=Fields.FILE,
+            search_source=files_source,
+            update_only=False,
+            logger=review_manager.logger,
+            verbose_mode=False,
+        )
+        for imported_record in imported_records:
+            files_dir_feed.add_update_record(
+                colrev.record.record.Record(imported_record)
+            )
+            imported_record[Fields.ORIGIN] = [
+                files_source.get_origin_prefix() + "/" + imported_record[Fields.ID]
+            ]
+            imported_record[Fields.STATUS] = RecordState.md_imported
+
+        files_dir_feed.save()
+        review_manager.dataset.git_repo.add_changes(files_source.search_results_path)
+
+    load_operation = review_manager.get_load_operation()
     records = review_manager.dataset.load_records_dict()
+    for imported_record in imported_records:
+        load_operation.import_record(record_dict=imported_record, records=records)
+
+    # TODO : match against crossref/md-prep
+
     # screen (tbd. pre/screen on fulltext)
-    for record_dict in records:
-        print(record_dict)
+    for imported_record in imported_records:
+        print(imported_record)
         screening_decision = inquirer.confirm(
             "Add this record to the review?", default=True
         )
-        print(screening_decision)
         if screening_decision:
-            record_dict[Fields.STATUS] = RecordState.rev_included
-            click.echo(f"Record added: {record_dict.get('ID', 'N/A')}")
+            imported_record[Fields.STATUS] = RecordState.rev_included
+            click.echo(f"Record added: {imported_record.get('ID', 'N/A')}")
         else:
-            record_dict[Fields.STATUS] = RecordState.rev_excluded
+            imported_record[Fields.STATUS] = RecordState.rev_excluded
 
-    print(records)
+    review_manager.dataset.save_records_dict(records)
 
 
 @cli.command()
