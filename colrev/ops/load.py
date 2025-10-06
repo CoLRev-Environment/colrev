@@ -138,7 +138,9 @@ class Load(colrev.process.operation.Operation):
     def import_record(self, *, record_dict: dict, records: dict) -> dict:
         """Import a record_dict to the records"""
 
-        self.review_manager.logger.debug(f"import_record {record_dict[Fields.ID]}: ")
+        self.review_manager.logger.debug(
+            f"import_record {record_dict.get(Fields.ID, "")}: "
+        )
 
         record = colrev.record.record.Record(record_dict)
 
@@ -146,7 +148,7 @@ class Load(colrev.process.operation.Operation):
         self.load_formatter.run(record)
 
         if Fields.ORIGIN not in record_dict:
-            print(f"Error: {record_dict[Fields.ID]} has no origin")
+            print(f"Error: {record_dict.get(Fields.ID, '')} has no origin")
 
         self._import_provenance(record)
 
