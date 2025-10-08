@@ -139,7 +139,7 @@ class Load(colrev.process.operation.Operation):
         """Import a record_dict to the records"""
 
         self.review_manager.logger.debug(
-            f"import_record {record_dict.get(Fields.ID, "")}: "
+            f"import_record {record_dict.get(Fields.ID, '')}: "
         )
 
         record = colrev.record.record.Record(record_dict)
