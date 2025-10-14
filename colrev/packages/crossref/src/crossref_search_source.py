@@ -556,6 +556,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         try:
             retrieved_record = query_doi(doi=record.data[Fields.DOI])
             if not colrev.record.record_similarity.matches(record, retrieved_record):
+                self.logger.info(" remove DOI (not matching metadata)")
                 record.remove_field(key=Fields.DOI)
 
         except (
