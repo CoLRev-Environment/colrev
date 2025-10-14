@@ -12,8 +12,8 @@ import inquirer
 
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.search_api_feed
 import colrev.record.record
+import colrev.record.record_prep
 import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -134,13 +134,18 @@ def import_from_downloads(review_manager: colrev.review_manager.ReviewManager) -
         os.path.join(pdf_dest_dir, file)
         # TODO: reactivate the following:
         # print("reactivate the following:")
-        # shutil.move(file_path, dest_path)
-        # click.echo(f"Moved PDF to {dest_path}")
+        dest_path = pdf_dest_dir / Path(file).name
 
         # record_dict = colrev.env.tei_parser.get_record_from_pdf(review_manager.path / file)
         record_dict = colrev.env.tei_parser.get_record_from_pdf(
             Path(downloads_folder) / file, add_doi_from_pdf=True
         )
+
+        import shutil
+
+        shutil.move(file_path, dest_path)
+        click.echo(f"Moved PDF to {dest_path}")
+        record_dict[Fields.FILE] = dest_path.relative_to(review_manager.path)
         # print(record_dict)
         records.append(record_dict)
 
@@ -178,6 +183,7 @@ def import_cmd(ctx: click.Context, source: str | None) -> None:
         #     search_string="",
         #     comment="",
         # )
+        import colrev.ops.search_api_feed
 
         files_dir_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=Fields.FILE,
@@ -201,9 +207,28 @@ def import_cmd(ctx: click.Context, source: str | None) -> None:
     load_operation = review_manager.get_load_operation()
     records = review_manager.dataset.load_records_dict()
     for imported_record in imported_records:
-        load_operation.import_record(record_dict=imported_record, records=records)
+        load_operation.import_record(
+            record_dict=imported_record, records=records, set_id=True
+        )
 
     # TODO : match against crossref/md-prep
+
+    if "y" == input("Prep with crossref?"):
+        import colrev.packages.crossref.src.crossref_prep
+
+        review_manager.force_mode = True
+        prep_operation = review_manager.get_prep_operation()
+        c_prep = colrev.packages.crossref.src.crossref_prep.CrossrefMetadataPrep(
+            prep_operation=prep_operation,
+            settings={"endpoint": "colrev.crossref"},
+            logger=review_manager.logger,
+        )
+        for imported_record in imported_records:
+            print(imported_record)
+            c_prep.prepare(colrev.record.record_prep.PrepRecord(imported_record))
+            input("done")
+
+    # TODO : reset ID and rename PDFs?
 
     # screen (tbd. pre/screen on fulltext)
     for imported_record in imported_records:

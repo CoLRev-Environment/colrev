@@ -471,14 +471,22 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.record.record.Record:
         try:
             try:
+                print(record.data)
+                print(Fields.DOI in record.data)
                 retrieved_record = query_doi(doi=record.data[Fields.DOI])
-            except (colrev_exceptions.RecordNotFoundInPrepSourceException, KeyError):
+                print(retrieved_record)
+            except (
+                colrev_exceptions.RecordNotFoundInPrepSourceException,
+                KeyError,
+            ) as exc:
+                print(exc)
 
                 retrieved_records = self.api.crossref_query(
                     record_input=record,
                     jour_vol_iss_list=False,
                 )
                 retrieved_record = retrieved_records.pop()
+                print(retrieved_record)
 
                 retries = 0
                 while (
@@ -555,6 +563,9 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.record.record.Record:
         try:
             retrieved_record = query_doi(doi=record.data[Fields.DOI])
+            print(record)
+            print(retrieved_record)
+            input(colrev.record.record_similarity.matches(record, retrieved_record))
             if not colrev.record.record_similarity.matches(record, retrieved_record):
                 self.logger.info(" remove DOI (not matching metadata)")
                 record.remove_field(key=Fields.DOI)
