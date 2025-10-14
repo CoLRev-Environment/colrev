@@ -46,6 +46,11 @@ class Load(colrev.process.operation.Operation):
 
         self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
 
+        self.id_setter = colrev.record.record_id_setter.IDSetter(
+            id_pattern=self.review_manager.settings.project.id_pattern,
+            skip_local_index=self.review_manager.settings.is_curated_masterdata_repo(),
+        )
+
         if not hide_load_explanation:
             self.review_manager.logger.info("Load")
             self.review_manager.logger.info(
@@ -135,7 +140,9 @@ class Load(colrev.process.operation.Operation):
             set_initial_import_provenance(record)
             record.run_quality_model(self.quality_model)
 
-    def import_record(self, *, record_dict: dict, records: dict) -> dict:
+    def import_record(
+        self, *, record_dict: dict, records: dict, set_id: bool = False
+    ) -> dict:
         """Import a record_dict to the records"""
 
         self.review_manager.logger.debug(
@@ -177,6 +184,12 @@ class Load(colrev.process.operation.Operation):
         record.data[Fields.ID] = next_unique_id
 
         records[record.data[Fields.ID]] = record.data
+
+        if set_id:
+            records = self.id_setter.set_ids(
+                records=records,
+                selected_ids=[record_dict[Fields.ID]],
+            )
 
         self.review_manager.logger.info(
             f" {Colors.GREEN}{record.data['ID']}".ljust(46)
