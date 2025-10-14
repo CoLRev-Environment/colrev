@@ -589,6 +589,11 @@ class Record:
             return self.data.get(Fields.BOOKTITLE, na_string)
         if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK:
             return self.data.get(Fields.TITLE, na_string)
+        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.MISC:
+            if Fields.JOURNAL in self.data:
+                return self.data[Fields.JOURNAL]
+            if Fields.BOOKTITLE in self.data:
+                return self.data[Fields.BOOKTITLE]
         return na_string
 
     def set_masterdata_curated(self, source: str) -> None:
