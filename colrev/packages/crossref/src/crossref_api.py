@@ -508,11 +508,13 @@ class CrossrefAPI:
         *,
         record_input: colrev.record.record.Record,
         jour_vol_iss_list: bool = False,
+        top_n: int = 1,
     ) -> list:
         """Retrieve records from Crossref based on a query"""
 
         record = record_input.copy_prep_rec()
-        record_list, most_similar, most_similar_record = [], 0.0, {}
+        record_list: list[colrev.record.record.Record] = []
+        candidates: list[colrev.record.record.Record] = []
 
         url = self._create_query_url(record=record, jour_vol_iss_list=jour_vol_iss_list)
 
@@ -537,26 +539,51 @@ class CrossrefAPI:
                 similarity = self._get_similarity(
                     record=record, retrieved_record_dict=retrieved_record.data
                 )
-
+                retrieved_record.data["_similarity_score"] = similarity
                 if jour_vol_iss_list:
                     record_list.append(retrieved_record)
-                elif most_similar < similarity:
-                    most_similar = similarity
-                    most_similar_record = retrieved_record.get_data()
+                else:
+                    candidates.append(retrieved_record)
+
             except colrev_exceptions.RecordNotParsableException:
                 pass
             counter += 1
             if jour_vol_iss_list and counter > 200:
                 break
-            if not jour_vol_iss_list and counter > 5:
+            if not jour_vol_iss_list and counter > top_n + 10:
                 break
 
-        if not jour_vol_iss_list:
-            if most_similar_record:
-                record_list = [
-                    colrev.record.record_prep.PrepRecord(most_similar_record)
-                ]
+        def _norm_doi(doi: str) -> str:
+            doi = doi.strip().lower()
+            for p in ("https://doi.org/", "http://doi.org/", "doi:", "doi.org/"):
+                if doi.startswith(p):
+                    return doi[len(p) :]
+            return doi
 
+        if not jour_vol_iss_list:
+            # keep only the best (highest similarity) per DOI
+            best_by_doi: typing.Dict[str, colrev.record.record.Record] = {}
+            for rec in candidates:
+                key = _norm_doi(rec.data["doi"])
+                if key not in best_by_doi or rec.data.get(
+                    "_similarity_score", 0.0
+                ) > best_by_doi[key].data.get("_similarity_score", 0.0):
+                    best_by_doi[key] = rec
+
+            deduped = list(best_by_doi.values())
+            deduped.sort(
+                key=lambda r: r.data.get("_similarity_score", 0.0), reverse=True
+            )
+
+            result = []
+            for rec in deduped[: max(1, top_n)]:
+                rec.data.pop("_similarity_score", None)
+                result.append(colrev.record.record_prep.PrepRecord(rec.get_data()))
+            return result
+
+        # For jour_vol_iss_list=True, optionally strip similarity before returning
+        for rec in record_list:
+            rec.data.pop("_similarity_score", None)
         return record_list
 
 
