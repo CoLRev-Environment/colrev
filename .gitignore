@@ -76,6 +76,9 @@ analysis/__pycache__/*
 # PyCharm
 .idea/
 
+# Sphinx autosummary outputs
+docs/**/_autosummary/
+
 \# unignore the web build
 !/colrev/ui\_web/build
 /.pre-commit-config-local.yaml
