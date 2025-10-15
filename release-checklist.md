@@ -2,17 +2,16 @@
 
 Additional checks for major releasese:
 
-- Update the Github milestones, close current one, make plans for the next milestones
-- Go through the [cli/help pages](https://colrev.readthedocs.io/en/latest/manual/cli.html) and check the order etc.
+- Update the [Github milestones](https://github.com/CoLRev-Environment/colrev/milestones), close current one, make plans for the next milestones
 - Update Docker image versions and test.
 
 For all releases:
 
-- Run `make linkcheck` in the docs, check `docs/build/linkcheck/output.txt` and fix broken links.
+- Run `make linkcheck` in the docs, check `docs/build/linkcheck/output.txt` and fix broken links. Use Codex to fix links.
 - Change released to `True` for the migration script in `ops/upgrade.py`, add a new migration script.
 - Update `settings.py - _add_missing_attributes()` to prevent exceptions.
 - Update the version in `pyproject.toml`. Check whether other parts of the `pyproject.toml` need to be updated. Check whether dependencies can be removed.
-- Update version in `tests/0_core/review_manager_test.py`
+- Update version in `tests/review_manager/0_core/review_manager_test.py`
 - Update number of extensions and api searches in `README.md`
 - Run `colrev env --update_package_list`.
 - Collect release notes and update the `CHANGELOG.md`.

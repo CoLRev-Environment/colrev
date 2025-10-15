@@ -60,22 +60,22 @@ focus on "workflow platforms", i.e., software that supports the search, selectio
 present short version, long version in the docs
 -->
 
-| **Criteria**                                  | **CoLRev**                        | [**LitStudy**](https://github.com/NLeSC/litstudy)  | [**BUHOS**](https://github.com/clbustos/buhos)  | [**Covidence**](https://www.covidence.org/)   |
-|-----------------------------------------------|-----------------------------------|----------------------------------|---------------------------------|---------------------------------|
-| **Review types**                              |                                   |                                  |                                 |                                 |
+| **Criteria**                                  | **CoLRev**                         | [**LitStudy**](https://github.com/NLeSC/litstudy)| [**BUHOS**](https://github.com/clbustos/buhos)  | [**Covidence**](https://www.covidence.org/)   |
+|-----------------------------------------------|------------------------------------|----------------------------------|----------------------------------|----------------------------------|
+| **Review types**                              |                                    |                                  |                                  |                                  |
 | Supports different genres of review methods   | ✅                                 | ❌                               | ❌                               | ❌                               |
 | Extensibility                                 | ✅                                 | ⚠️                               | ⚠️                               | ❌                               |
-| **Process steps**                             |                                   |                                  |                                 |                                 |
+| **Process steps**                             |                                    |                                  |                                  |                                  |
 | Review objectives and protocol                | ✅                                 | ✅                               | ✅                               | ✅                               |
 | Search                                        | ✅                                 | ✅                               | ✅                               | ✅                               |
-| Duplicate handling                            | ✅                                 | ❌                               | ⚠️                               | ⚠️                               |
+| Duplicate handling                            | ✅                                 | ⚠️                               | ⚠️                               | ⚠️                               |
 | (Pre)Screen                                   | ✅                                 | ⚠️                               | ✅                               | ✅                               |
 | Data extraction                               | ✅                                 | ⚠️                               | ✅                               | ✅                               |
 | Data analysis and quality appraisal           | ✅                                 | ⚠️                               | ✅                               | ✅                               |
 | Synthesis and reporting                       | ✅                                 | ✅                               | ✅                               | ✅                               |
-| **Process qualities**                         |                                   |                                  |                                 |                                 |
+| **Process qualities**                         |                                    |                                  |                                  |                                  |
 | Extensibility                                 | ✅                                 | ✅                               | ❌                               | ❌                               |
-| Extensions                                    | [106](https://colrev-environment.github.io/colrev/manual/packages.html) | 0                                | 0                               | 0                               |
+| Extensions                                    | [111](https://colrev-environment.github.io/colrev/manual/packages.html) | 0                              | 0                                | 0                               |
 | Search updates                                | ✅                                 | ❌                               | ⚠️                               | ⚠️                               |
 | Search: APIs                                  | ✅ ([19](https://colrev-environment.github.io/colrev/manual/metadata_retrieval/search.html#api-searches)) | ✅ (7)                           | ❌                               | ❌                               |
 | Metadata preparation                          | ✅                                 | ✅                               | ✅                               | ⚠️                               |

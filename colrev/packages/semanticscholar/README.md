@@ -87,6 +87,6 @@ Semantic scholar can be used to link metadata to existing records.
 ## Links
 
 - [SemanticScholar](https://www.semanticscholar.org)
-- [SemanticScholarAPI](https://www.semanticscholar.org/product/api/tutorial#searching-and-retrieving-paper-details)
+- [SemanticScholar API tutorial](https://www.semanticscholar.org/product/api/tutorial)
 - [SemanticScholarAPIDocumentation](https://api.semanticscholar.org/api-docs/)
 - [SemanticScholarPythonClient](https://github.com/danielnsilva/semanticscholar)

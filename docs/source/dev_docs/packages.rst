@@ -2,7 +2,7 @@ Package development
 =====================
 
 CoLRev packages are Python packages that extend CoLRev by relying on its shared data structure and standard process.
-Specifically, a CoLRev package can extend package base classes, such as the `ReviewTypePackageBaseClass <packages/package_base_classes.html#base_classes.ReviewTypePackageBaseClass>`_, or the `SearchSourcePackageBaseClass <packages/package_base_classes.html#base_classes.SearchSourcePackageBaseClass>`_, to implement custom functionality for a specific task or data source.
+Specifically, a CoLRev package can extend package base classes, such as the `ReviewTypePackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.ReviewTypePackageBaseClass>`_, or the `SearchSourcePackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.SearchSourcePackageBaseClass>`_, to implement custom functionality for a specific task or data source.
 In addition, packages can provide complementary functionalities (e.g., for ad-hoc data exploration and visualization) without extending a specific base class.
 
 The following guide explains how to develop built-in packages, i.e., packages that reside in the `packages <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages>`_ directory. Built-in packages should also be registered as a dependency in the `pyproject.toml <https://github.com/CoLRev-Environment/colrev/blob/main/pyproject.toml>`_.
@@ -204,29 +204,29 @@ The following endpoint - abstract base class pairs are available:
    * - Endpoint
      - Abstract base class
    * - review_type
-     - `ReviewTypePackageBaseClass <packages/package_base_classes.html#base_classes.ReviewTypePackageBaseClass>`_
+     - `ReviewTypePackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.ReviewTypePackageBaseClass>`_
    * - search_source
-     - `SearchSourcePackageBaseClass <packages/package_base_classes.html#base_classes.SearchSourcePackageBaseClass>`_
+     - `SearchSourcePackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.SearchSourcePackageBaseClass>`_
    * - prep
-     - `PrepPackageBaseClass <packages/package_base_classes.html#base_classes.PrepPackageBaseClass>`_
+     - `PrepPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.PrepPackageBaseClass>`_
    * - prep_man
-     - `PrepManPackageBaseClass <packages/package_base_classes.html#base_classes.PrepManPackageBaseClass>`_
+     - `PrepManPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.PrepManPackageBaseClass>`_
    * - dedupe
-     - `DedupePackageBaseClass <packages/package_base_classes.html#base_classes.DedupePackageBaseClass>`_
+     - `DedupePackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.DedupePackageBaseClass>`_
    * - prescreen
-     - `PrescreenPackageBaseClass <packages/package_base_classes.html#base_classes.PrescreenPackageBaseClass>`_
+     - `PrescreenPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.PrescreenPackageBaseClass>`_
    * - pdf_get
-     - `PDFGetPackageBaseClass <packages/package_base_classes.html#base_classes.PDFGetPackageBaseClass>`_
+     - `PDFGetPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.PDFGetPackageBaseClass>`_
    * - pdf_get_man
-     - `PDFGetManPackageBaseClass <packages/package_base_classes.html#base_classes.PDFGetManPackageBaseClass>`_
+     - `PDFGetManPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.PDFGetManPackageBaseClass>`_
    * - pdf_prep
-     - `PDFPrepPackageBaseClass <packages/package_base_classes.html#base_classes.PDFPrepPackageBaseClass>`_
+     - `PDFPrepPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.PDFPrepPackageBaseClass>`_
    * - pdf_prep_man
-     - `PDFPrepManPackageBaseClass <packages/package_base_classes.html#base_classes.PDFPrepManPackageBaseClass>`_
+     - `PDFPrepManPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.PDFPrepManPackageBaseClass>`_
    * - screen
-     - `ScreenPackageBaseClass <packages/package_base_classes.html#base_classes.ScreenPackageBaseClass>`_
+     - `ScreenPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.ScreenPackageBaseClass>`_
    * - data
-     - `DataPackageBaseClass <packages/package_base_classes.html#base_classes.DataPackageBaseClass>`_
+     - `DataPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.DataPackageBaseClass>`_
 
 Documentation
 -----------------
@@ -257,13 +257,13 @@ Publish
 Register
 ----------------
 
-To have a package registered as an official CoLRev package, create a pull-request adding it to the `packages.json <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/package_manager/packages.json>`_.
+To have a package registered as an official CoLRev package, create a pull-request adding it to the `packages.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/package_manager/packages.json>`_.
 
 To integrate the package documentation into the official CoLRev documentation, the CoLRev team
 
 * Reviews the package.
 * Assigns a package status.
-* Runs the ``colrev env --update_package_list`` command. This updates the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/docs/source/manual/package_endpoints.json>`_, and the `search_source_types.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/docs/source/manual/search_source_types.json>`_, which are used to generate the documentation pages.
+* Runs the ``colrev env --update_package_list`` command. This updates the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/docs/source/manual/package_endpoints.json>`_, and the `search_source_types.json <https://github.com/CoLRev-Environment/colrev/blob/main/docs/source/manual/search_source_types.json>`_, which are used to generate the documentation pages.
 
 Package development resources
 ------------------------------

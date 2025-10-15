@@ -1,6 +1,6 @@
 [project]
 name = "colrev"
-version = "0.14.0"
+version = "0.15.0"
 description = "CoLRev: An open-source environment for collaborative reviews"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
@@ -23,6 +23,8 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering",
     "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Environment :: Console",
     "Typing :: Typed"
 ]
 requires-python = ">=3.10, <3.13"  # lingua-language-detector does not yet support python3.13
@@ -42,11 +44,11 @@ dependencies = [
     "rapidfuzz>=3.5.2",
     "bib-dedupe>=0.10.0",                   # required in record_similarity
     "defusedxml>=0.7.1",                    # required for XML parsing
-    "pandas>=2.2",
+    "pandas>=2.2,<3",
     "openpyxl>=3.1.2",                      # required by pandas for Excel
     "PyYAML>=6.0.0",
     "requests>=2.32.0",
-    "requests-cache>=0.9.6",
+    "requests-cache>=1.2.0",
     "lingua-language-detector>=2.0.2",
     "pycountry>=24.6.1",
     "nameparser>=1.1.2",
@@ -60,6 +62,8 @@ dependencies = [
 Homepage = "https://colrev-environment.github.io/colrev/"
 Documentation = "https://colrev-environment.github.io/colrev/"
 Repository = "https://github.com/CoLRev-Environment/colrev"
+Changelog = "https://github.com/CoLRev-Environment/colrev/releases"
+Issues = "https://github.com/CoLRev-Environment/colrev/issues"
 
 [project.optional-dependencies]
 docs = [
@@ -126,10 +130,9 @@ load-plugins = [
 [tool.pylint."MESSAGES CONTROL"]
 disable = ["R0801"]
 
-[pytest]
-norecursedirs = "tests/data/package_init/"
-
 [tool.pytest.ini_options]
+addopts = "-ra"
+norecursedirs = "tests/data/package_init/"
 filterwarnings = [
     "ignore:'DataFrame.swapaxes' is deprecated:FutureWarning",
     "ignore:.*SwigPyPacked.*:DeprecationWarning",
@@ -150,6 +153,7 @@ omit = [
 ]
 
 [tool.coverage.run]
+branch = true
 omit = [
     "colrev/packages/*",
     "/usr/*",

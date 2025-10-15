@@ -152,6 +152,6 @@ Links
 
 
 * `SemanticScholar <https://www.semanticscholar.org>`_
-* `SemanticScholarAPI <https://www.semanticscholar.org/product/api/tutorial#searching-and-retrieving-paper-details>`_
+* `SemanticScholar API tutorial <https://www.semanticscholar.org/product/api/tutorial>`_
 * `SemanticScholarAPIDocumentation <https://api.semanticscholar.org/api-docs/>`_
 * `SemanticScholarPythonClient <https://github.com/danielnsilva/semanticscholar>`_

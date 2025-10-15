@@ -18,13 +18,13 @@ To accomplish this, it is recommended to familiarize with the different genres a
     * - Genre of review
       - Review types
     * - Describing
-      - `Descriptive review <packages/colrev.descriptive_review.html>`__, `Narrative review <packages/colrev.narrative_review.html>`__
+      - :doc:`Descriptive review <packages/colrev.descriptive_review>`, :doc:`Narrative review <packages/colrev.narrative_review>`
     * - Understanding
-      - `Scoping review <packages/colrev.scoping_review.html>`__, `Critical review <packages/colrev.critical_review.html>`__
+      - :doc:`Scoping review <packages/colrev.scoping_review>`, :doc:`Critical review <packages/colrev.critical_review>`
     * - Explaining
-      - `Theoretical review <packages/colrev.theoretical_review.html>`__, Realist review
+      - :doc:`Theoretical review <packages/colrev.theoretical_review>`, Realist review
     * - Testing
-      - `Qualitative systematic review <packages/colrev.qualitative_systematic_review.html>`__, `Meta-analysis <packages/colrev.meta_analysis.html>`__, `Umbrella review <packages/colrev.umbrella.html>`__
+      - :doc:`Qualitative systematic review <packages/colrev.qualitative_systematic_review>`, :doc:`Meta-analysis <packages/colrev.meta_analysis>`, :doc:`Umbrella review <packages/colrev.umbrella>`
 
 ..
    (**TODO: link to resources/classifications/ideally a database overview**).

@@ -278,10 +278,10 @@ Links informing the standard
 -  better `bibtex.eu <https://bibtex.eu/types/>`__
 -  but not consistent across different bibtex manager, e.g. “field” or
    “manual” in following tool:
-   `Bib-it <https://bib-it.sourceforge.net/help/fieldsAndEntryTypes.php>`__
+   Bib-it (SourceForge project documentation)
 -  listing of field variables and in which entry they are required
    https://www.bibtex.com/format/fields/
--  https://www.nlm.nih.gov/bsd/mms/medlineelements.html, examples of
+-  https://www.ncbi.nlm.nih.gov/books/NBK3827/, examples of
    different fields and descriptions
 -  `bibTeX Definition in Web Ontology Language (OWL) Version
    0.2 <https://zeitkunst.org/bibtex/0.2/>`__

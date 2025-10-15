@@ -17,12 +17,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 ### Fixed
 -->
 
-## Changed
+## 0.15.0 - 2025-10-24
 
-- Replaced `lxml` with `defusedxml` + stdlib `ElementTree` (lightweight dependency; no behavior change), simplified parsing (no XPath), and updated deps.
-- Extract search source details to separate search-file (compliance with Haddaway et al. 2022). Upgrades implemented for all search-sources, tested for crossref, dblp, and files_dir. Added structure of search-files to docs.
+### Added
 
-Haddaway, N. R., Rethlefsen, M. L., Davies, M., Glanville, J., McGowan, B., Nyhan, K., & Young, S. (2022). A suggested data structure for transparent and repeatable reporting of bibliographic searching. Campbell systematic reviews, 18(4), e1288.
+- Added the experimental `colrev.enlit` package to support exploratory literature analysis workflows and streamlined backward searches.
+- Added the experimental `colrev.cli_prep_man` package for manual metadata preparation from the command line.
+- Added the experimental `colrev.toc_sync` package for synchronizing tables of contents from services such as Crossref into Markdown notes.
+- Extended the Scopus SearchSource with API support, including heuristics, search-type selection, and record transformation utilities.
+- Added a Pylint checker (`colrev-search-source-requests-import`) that enforces SearchSource packages to move HTTP calls into dedicated `api.py` modules.
+
+### Changed
+
+- Replaced `lxml` with `defusedxml` in the TEI parser and related packages, simplifying XML processing while maintaining functionality and tightening dependency management.
+- Refactored search management to rely on extended search-file metadata and shared database-search helpers, clarifying how search histories are stored and maintained.
+- Improved the Crossref API integration with request caching, throttling, and richer error handling to provide more robust metadata retrieval.
+
+### Fixed
+
+- The search operation now ignores unsupported or temporary files when suggesting new sources, reducing noisy heuristics during source detection.
+- `Record.get_container_title()` now gracefully falls back to available fields for miscellaneous entry types, preventing missing container title errors.
 
 ## 0.14.0 - 2025-02-21
 

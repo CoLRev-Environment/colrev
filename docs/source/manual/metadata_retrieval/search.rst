@@ -3,13 +3,13 @@ colrev search
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 
 In the ``colrev search`` operation, the SearchSource is added to the project settings, and record metadata are retrieved.
 SearchSources keep track of the associated queries, as well as the search results files in the `data/search` directory (see :doc:`SearchSources </foundations/cep/cep003_search_sources>`).
@@ -27,7 +27,7 @@ Two steps are necessary to add a SearchSource and run a search:
     colrev search --select
 
 ..
-    For search result files, `heuristics <https://colrev.readthedocs.io/en/latest/foundations/packages.html#base_classes.SearchSourcePackageBaseClass.heuristic>`_ are used to identify the SearchSource (e.g., GoogleScholar or Web of Science) and users are asked to provide the corresponding search parameters, which are stored in the ``settings.json``.
+    For search result files, `heuristics <../../dev_docs/packages/package_base_classes.html#colrev.package_manager.package_base_classes.SearchSourcePackageBaseClass.heuristic>`_ are used to identify the SearchSource (e.g., GoogleScholar or Web of Science) and users are asked to provide the corresponding search parameters, which are stored in the ``settings.json``.
 
 Updating the search is very easy: simply run `colrev search` again. API searches will be updated automatically, and instructions will be given to update DB searches.
 

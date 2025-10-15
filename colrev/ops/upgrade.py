@@ -213,7 +213,7 @@ class Upgrade(colrev.process.operation.Operation):
                 "version": CoLRevVersion("0.14.0"),
                 "target_version": CoLRevVersion("0.15.0"),
                 "script": self._migrate_0_15_0,
-                "released": False,
+                "released": True,
             },
         ]
         self.review_manager.logger.info(
