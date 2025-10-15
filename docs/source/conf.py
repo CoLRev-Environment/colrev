@@ -21,9 +21,9 @@ except Exception:
 # Problems with imports? Could try `export PYTHONPATH=$PYTHONPATH:`pwd``
 # from root project dir...
 
-path = os.path.abspath("../../colrev")
-if path not in sys.path:
-    sys.path.insert(0, path)
+_pkg_path = os.path.abspath("../../colrev")
+if _pkg_path not in sys.path:
+    sys.path.insert(0, _pkg_path)
 
 # -- Project information -----------------------------------------------------
 

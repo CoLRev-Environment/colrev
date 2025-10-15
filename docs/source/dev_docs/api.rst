@@ -23,7 +23,7 @@ The package interfaces are documented :doc:`here </dev_docs/packages>`.
 **Interfaces**
 
 .. autosummary::
-   :toctree:
+   :toctree: _autosummary
    :template: custom-module-template.rst
    :recursive:
 
@@ -33,7 +33,7 @@ The package interfaces are documented :doc:`here </dev_docs/packages>`.
 **High-level (project)**
 
 .. autosummary::
-   :toctree:
+   :toctree: _autosummary
    :template: custom-module-template.rst
    :recursive:
 
@@ -46,7 +46,7 @@ The package interfaces are documented :doc:`here </dev_docs/packages>`.
 **High-level (environment)**
 
 .. autosummary::
-   :toctree:
+   :toctree: _autosummary
    :template: custom-module-template.rst
    :recursive:
 
@@ -56,7 +56,7 @@ The package interfaces are documented :doc:`here </dev_docs/packages>`.
 **Low-level**
 
 .. autosummary::
-   :toctree:
+   :toctree: _autosummary
    :template: custom-module-template.rst
    :recursive:
 
