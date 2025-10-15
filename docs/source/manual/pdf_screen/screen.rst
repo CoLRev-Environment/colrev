@@ -3,13 +3,13 @@ colrev screen
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 
 In the ``colrev screen`` operation, records transition from ``pdf_prepared`` to ``rev_included`` or ``rev_excluded``. Decisions on individual screening criteria (if any) are reported in the ``screening_criteria`` field.
 The order of screening is defined in the settings file.

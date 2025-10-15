@@ -3,13 +3,13 @@ colrev prescreen
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
+   :target: https://colrev-environment.github.io/colrev/dev_docs/dev_status.html
 
 In the ``colrev prescreen`` operation, the records transition from ``md_processed`` to ``rev_prescreen_included`` or ``rev_prescreen_excluded``.
 The order of prescreening is defined in the settings file.

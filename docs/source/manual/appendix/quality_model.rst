@@ -417,7 +417,7 @@ Pubmed IDs should be formatted correctly (7 or 8 digits).
 | colrev.pubmed.pubmedid  |
 +-------------------------+
 
-- [PMID specification](https://www.nlm.nih.gov/bsd/mms/medlineelements.html#pmid)
+- [PMID specification](https://www.ncbi.nlm.nih.gov/books/NBK3827/#pubmedhelp.MEDLINETagDescriptions)
 
 .. raw:: html
 

@@ -6,8 +6,8 @@
 Collaborative Literature Reviews
 ========================================
 
-.. image:: https://zenodo.org/badge/363073613.svg
-   :target: https://zenodo.org/badge/latestdoi/363073613
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.14906885.svg
+   :target: https://zenodo.org/records/14906885
 
 .. image:: https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg
    :target: https://github.com/CoLRev-Environment/colrev/releases/

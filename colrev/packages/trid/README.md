@@ -8,4 +8,4 @@ Download search results and store in `data/search/` directory. API-access not ye
 
 ## Links
 
-- [TRID](https://trid.trb.org/)
+- [TRID](https://www.trid.trb.org/)

@@ -66,7 +66,7 @@ https://api.plos.org/search?q=DOI:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/plos/LICENSE) file for details.
 
 ## Links
 

@@ -1,6 +1,6 @@
 ## Summary
 
-[PROSPERO](https://www.crd.york.ac.uk/prospero/#searchadvanced) is an international database of prospectively registered systematic reviews in health and social care, welfare, public health, education, crime, justice, and international development, where there is a health related outcome.
+- [PROSPERO](https://www.crd.york.ac.uk/prospero/) is an international database of prospectively registered systematic reviews in health and social care, welfare, public health, education, crime, justice, and international development, where there is a health related outcome.
 
 ### Installation
 
@@ -22,7 +22,7 @@ Format of the search-history file:
 {
     "search_string": {
         "query": "microsourcing",
-        "url": "https://www.crd.york.ac.uk/prospero/search?microsourcing#searchadvanced"
+        "url": "https://www.crd.york.ac.uk/prospero/"
     },
     "platform": "colrev.prospero",
     "search_results_path": "data/search/prospero_results.bib",
@@ -43,4 +43,4 @@ colrev load
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/prospero/LICENSE) file for details.
