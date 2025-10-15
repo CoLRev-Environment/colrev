@@ -62,7 +62,7 @@ Short summary
 * dimensions
 * differences between disciplines
 
-For the data extraction, risk-of-bias assessment, and meta-analysis, established software packages like `RevMan <https://training.cochrane.org/online-learning/core-software/revman>`_ are recommended.
+For the data extraction, risk-of-bias assessment, and meta-analysis, established software packages like `RevMan <https://www.cochrane.org/learn>`_ are recommended.
 
 For the analysis, R packages are recommended.
 

@@ -57,7 +57,7 @@ search
 DB search
 ^^^^^^^^^
 
-Export is available after adding citations to a folder (\ `1 <https://connect.ebsco.com/s/article/How-to-Use-the-Export-Manager?language=en_US>`_\ ).
+Export is available after adding citations to a folder (\ `Using the Export Manager in EBSCOhost <https://help.ebsco.com/interfaces/EBSCOhost/EBSCOhost_User_Guides/Using_the_Export_Manager_in_EBSCOhost>`_\ ).
 Download search results and store in ``data/search/`` directory. API-access not yet available.
 
 Links
@@ -65,4 +65,4 @@ Links
 
 
 * `EBSCOHost <https://search.ebscohost.com/>`_
-* `EBSCOHost APIs <https://developer.ebsco.com/getting-started/available-apis>`_
+* `EBSCOHost APIs <https://developer.ebsco.com/home/docs/available-apis-and-requirements>`_

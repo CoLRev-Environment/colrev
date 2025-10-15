@@ -84,22 +84,22 @@ Data extraction, analysis, and synthesis
 The following packages are automatically set up in a scoping review:
 
 
-* `colrev.prisma <colrev.prisma.html>`_
-* `colrev.structured <colrev.structured.html>`_
-* `colrev.paper_md <colrev.paper_md.html>`_
+* :doc:`colrev.prisma <colrev.prisma>`
+* :doc:`colrev.structured <colrev.structured>`
+* :doc:`colrev.paper_md <colrev.paper_md>`
 
 Examples
 --------
 
-Archer, N., Fevrier-Thomas, U., Lokker, C., McKibbon, K. A., & Straus, S. E. (2011). Personal health records: a scoping review. *Journal of the American Medical Informatics Association*\ , 18(4), 515-522. doi:\ `10.1136/amiajnl-2011-000105 <https://doi.org/10.1136/amiajnl-2011-000105>`_
+Archer, N., Fevrier-Thomas, U., Lokker, C., McKibbon, K. A., & Straus, S. E. (2011). Personal health records: a scoping review. *Journal of the American Medical Informatics Association*\ , 18(4), 515-522. doi: 10.1136/amiajnl-2011-000105
 
-Smith, H. J., Dinev, T., & Xu, H. (2011). Information privacy research: an interdisciplinary review. *MIS Quarterly*\ , 989-1015. doi:\ `10.2307/41409970 <https://doi.org/10.2307/41409970>`_
+Smith, H. J., Dinev, T., & Xu, H. (2011). Information privacy research: an interdisciplinary review. *MIS Quarterly*\ , 989-1015. doi: 10.2307/41409970
 
 Methods papers
 --------------
 
 Arksey, H., & O'Malley, L. (2005). Scoping studies: towards a methodological framework. *International Journal of Social Research Methodology*\ , 8(1), 19-32. doi: `10.1080/1364557032000119616 <https://doi.org/10.1080/1364557032000119616>`_
 
-Levac, D., Colquhoun, H., & O'Brien, K. K. (2010). Scoping studies: advancing the methodology. *Implementation Science*\ , 5, 1-9. doi:\ `10.1186/1748-5908-5-69 <https://doi.org/10.1186/1748-5908-5-69>`_
+Levac, D., Colquhoun, H., & O'Brien, K. K. (2010). Scoping studies: advancing the methodology. *Implementation Science*\ , 5, 1-9. `Article <https://implementationscience.biomedcentral.com/articles/10.1186/1748-5908-5-69>`_
 
-Tricco, A. C. et al. (2018). PRISMA Extension for Scoping Reviews (PRISMA-ScR): Checklist and Explanation. *Annals Internal Medicine* (169:7), pp. 467–473. doi: `10.7326/M18-0850 <https://doi.org/10.7326/M18-0850>`_
+Tricco, A. C. et al. (2018). PRISMA Extension for Scoping Reviews (PRISMA-ScR): Checklist and Explanation. *Annals Internal Medicine* (169:7), pp. 467–473. doi: 10.7326/M18-0850

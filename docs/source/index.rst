@@ -21,10 +21,10 @@ Collaborative Literature Reviews
 .. image:: https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev
 
 .. image:: https://static.pepy.tech/badge/colrev/month
-   :target: https://pepy.tech/project/colrev
+   :target: https://pepy.tech/projects/colrev
 
-.. image:: https://bestpractices.coreinfrastructure.org/projects/7148/badge
-   :target: https://bestpractices.coreinfrastructure.org/projects/7148
+.. image:: https://www.bestpractices.dev/projects/7148/badge
+   :target: https://www.bestpractices.dev/en/projects/7148
 
 .. image:: https://img.shields.io/badge/all_contributors-32-green.svg?style=flat-square
    :target: #contributors

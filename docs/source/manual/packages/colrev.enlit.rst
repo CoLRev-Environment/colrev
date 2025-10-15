@@ -84,4 +84,4 @@ Original repository: `link <https://github.com/digital-work-lab/enlit>`_
 License
 -------
 
-This project is licensed under the MIT License - see the `LICENSE <LICENSE>`_ file for details.
+This project is licensed under the MIT License - see the `LICENSE <https://github.com/digital-work-lab/enlit/blob/main/LICENSE>`_ file for details.

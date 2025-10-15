@@ -79,16 +79,16 @@ Data extraction, analysis, and synthesis
 The following packages are automatically set up in a scoping review:
 
 
-* `colrev.paper_md <colrev.paper_md.html>`_
+* :doc:`colrev.paper_md <colrev.paper_md>`
 
 Examples
 --------
 
-Chan, Y. E., & Reich, B. H. (2007). IT alignment: what have we learned?. *Journal of Information Technology*\ , 22(4), 297-315. doi:\ `10.1057/palgrave.jit.2000109 <https://doi.org/10.1057/palgrave.jit.2000109>`_
+Chan, Y. E., & Reich, B. H. (2007). IT alignment: what have we learned?. *Journal of Information Technology*\ , 22(4), 297-315. `Article <https://link.springer.com/article/10.1057/palgrave.jit.2000109>`_
 
 Methods papers
 --------------
 
 Davies, P. (2000). The relevance of systematic reviews to educational policy and practice. *Oxford Review of Education*\ , 26(3-4), 365-378. doi:\ `10.1080/713688543 <https://doi.org/10.1080/713688543>`_
 
-Green, B. N., Johnson, C. D., & Adams, A. (2006). Writing narrative literature reviews for peer-reviewed journals: secrets of the trade. *Journal of Chiropractic Medicine*\ , 5(3), 101-117. doi:\ `10.1016/S0899-3467(07)60142-6 <https://doi.org/10.1016/S0899-3467(07>`_\ 60142-6)
+Green, B. N., Johnson, C. D., & Adams, A. (2006). Writing narrative literature reviews for peer-reviewed journals: secrets of the trade. *Journal of Chiropractic Medicine*\ , 5(3), 101-117. `Article <https://www.sciencedirect.com/science/article/pii/S0899346707601426>`_

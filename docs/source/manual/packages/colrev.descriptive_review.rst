@@ -76,14 +76,14 @@ Data extraction, analysis, and synthesis
 The following packages are automatically set up in a descriptive review:
 
 
-* `colrev.prisma <colrev.prisma.html>`_
-* `colrev.profile <colrev.profile.html>`_
-* `colrev.structured <colrev.structured.html>`_
-* `colrev.paper_md <colrev.paper_md.html>`_
+* :doc:`colrev.prisma <colrev.prisma>`
+* :doc:`colrev.profile <colrev.profile>`
+* :doc:`colrev.structured <colrev.structured>`
+* :doc:`colrev.paper_md <colrev.paper_md>`
 
 Examples
 --------
 
-Dahlberg, T., Mallat, N., Ondrus, J., & Zmijewska, A. (2008). Past, present and future of mobile payments research: A literature review. *Electronic Commerce Research and Applications*\ , 7(2), 165-181. doi:\ `10.1016/j.elerap.2007.02.001 <https://doi.org/10.1016/j.elerap.2007.02.001>`_
+Dahlberg, T., Mallat, N., Ondrus, J., & Zmijewska, A. (2008). Past, present and future of mobile payments research: A literature review. *Electronic Commerce Research and Applications*\ , 7(2), 165-181. doi: 10.1016/j.elerap.2007.02.001
 
-Sidorova, A., Evangelopoulos, N., Valacich, J. S., & Ramakrishnan, T. (2008). Uncovering the intellectual core of the information systems discipline. *MIS Quarterly* 32(3), 467-482. doi:\ `10.2307/25148852 <https://doi.org/10.2307/25148852>`_
+Sidorova, A., Evangelopoulos, N., Valacich, J. S., & Ramakrishnan, T. (2008). Uncovering the intellectual core of the information systems discipline. *MIS Quarterly* 32(3), 467-482. doi: 10.2307/25148852

@@ -65,4 +65,4 @@ Links
 -----
 
 
-* `ACM Digital Library <https://dl.acm.org/>`_
+* `ACM Digital Library <https://www.acm.org/digital-library>`_

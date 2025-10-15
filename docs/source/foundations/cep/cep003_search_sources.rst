@@ -27,17 +27,17 @@ Abstract
 ------------------------------
 
 SearchSource packages are an essential part of CoLRev.
-A SearchSource package is a CoLRev package implementing the `SearchSourcePackageBaseClass <../../dev_docs/packages/package_interfaces.html#base_classes.SearchSourcePackageBaseClass>`_, e.g., for data sources like Web of Science, Scopus, or Crossref.
+A SearchSource package is a CoLRev package implementing the `SearchSourcePackageBaseClass <../../dev_docs/packages/package_base_classes.html#base_classes.SearchSourcePackageBaseClass>`_, e.g., for data sources like Web of Science, Scopus, or Crossref.
 Distinguishing SearchSources matters because many aspects are source-specific, including:
 
-- Available `search types <../../manual/metadata_retrieval/search.html>`_ (API, DB, BACKWARD, FORWARD, TOC, OTHER, FILES, MD)
+- Available :doc:`search types <../../manual/metadata_retrieval/search>` (API, DB, BACKWARD, FORWARD, TOC, OTHER, FILES, MD)
 - Syntax of search queries (e.g., API and DB searches), or instructions for manual retrieval (e.g., DB searches)
 - Field definitions of records, including the associated mapping to the standard or namespaced fields (see :doc:`CEP002 <cep002_data_schema>`)
 - Unique record identifiers, which are needed for incremental search updates
 - Restrictions, bugs, and potential fixes (see Li and Rainer, 2022)
 - Paths to have metadata corrected (if any)
 
-SearchSource packages must comply with the `SearchSourcePackageBaseClass <../../dev_docs/packages/package_interfaces.html#base_classes.SearchSourcePackageBaseClass>`_ for class and method definitions.
+SearchSource packages must comply with the `SearchSourcePackageBaseClass <../../dev_docs/packages/package_base_classes.html#base_classes.SearchSourcePackageBaseClass>`_ for class and method definitions.
 
 .. _search_source_data:
 
@@ -64,7 +64,7 @@ SearchSource metadata are stored in the settings.json as follows::
   }
 
 - The **endpoint** can be the name of any :doc:`SearchSource package <../../manual/packages>`.
-- The **search_type** can be DB, API, BACKWARD, FORWARD, TOC, OTHER, FILES, or MD (as explained `here <../../manual/metadata_retrieval/search.html>`_)
+- The **search_type** can be DB, API, BACKWARD, FORWARD, TOC, OTHER, FILES, or MD (as explained in the :doc:`search documentation <../../manual/metadata_retrieval/search>`)
 - The **comment** is optional.
 - The **filename** points to the file in which retrieved records are stored. It starts with `data/search/`.
 
@@ -237,4 +237,4 @@ Development roadmap
 References
 -----------------------------
 
-Li, Z., & Rainer, A. (2022). Academic search engines: constraints, bugs, and recommendations. In Proceedings of the 13th International Workshop on Automating Test Case Design, Selection and Evaluation (pp. 25-32). doi: `10.1145/3548659.3561310 <https://dl.acm.org/doi/abs/10.1145/3548659.3561310>`_
+Li, Z., & Rainer, A. (2022). Academic search engines: constraints, bugs, and recommendations. In Proceedings of the 13th International Workshop on Automating Test Case Design, Selection and Evaluation (pp. 25-32). doi: 10.1145/3548659.3561310
