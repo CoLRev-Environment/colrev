@@ -21,6 +21,7 @@ toc-sync
 - add info on "highly cited"
 - "retracted"
 - "award" (based on LLM?)
+- link to example workflow (add option to "tag" colleagues - e.g., in a comment/highlight papers that appear particularly interesting)
 
 ## License
 

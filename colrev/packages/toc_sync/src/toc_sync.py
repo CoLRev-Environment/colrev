@@ -60,7 +60,12 @@ from collections import defaultdict
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any
+from typing import Dict
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 import colrev.record.record
 
@@ -338,7 +343,9 @@ def _render_forthcoming_block(records: List[dict], cfg: TocConfig) -> List[str]:
     return lines
 
 
-def _render_issue_block(vol: str, iss: str, items: List[dict], cfg: TocConfig) -> List[str]:
+def _render_issue_block(
+    vol: str, iss: str, items: List[dict], cfg: TocConfig
+) -> List[str]:
     lines = [f"## Volume {vol} - Number {iss}\n\n"]
     for d in items:
         lines.append(_record_to_md_line(d, cfg) + "\n")
@@ -465,10 +472,14 @@ def _append_incremental(
         return
 
     # ---- Find header end (first "## " or EOF if no headings yet)
-    first_h2_idx = next((i for i, ln in enumerate(lines) if ln.startswith("## ")), len(lines))
+    first_h2_idx = next(
+        (i for i, ln in enumerate(lines) if ln.startswith("## ")), len(lines)
+    )
 
     # Ensure header ends with a blank line
-    if first_h2_idx == len(lines) or (first_h2_idx > 0 and not lines[first_h2_idx - 1].endswith("\n")):
+    if first_h2_idx == len(lines) or (
+        first_h2_idx > 0 and not lines[first_h2_idx - 1].endswith("\n")
+    ):
         pass  # we'll just splice raw; existing newlines are preserved
 
     new_lines = lines[:first_h2_idx] + insertion + lines[first_h2_idx:]
