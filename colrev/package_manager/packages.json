@@ -292,5 +292,8 @@
     },
     "colrev.enlit": {
         "dev_status": "experimental"
+    },
+    "colrev.toc_sync": {
+        "dev_status": "experimental"
     }
 }
