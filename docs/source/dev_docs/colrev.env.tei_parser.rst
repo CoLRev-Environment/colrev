@@ -9,6 +9,14 @@ colrev.env.tei\_parser
 
 
 
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+
+      colrev.env.tei_parser.get_record_from_pdf
+
 
 
 

@@ -28,6 +28,7 @@
       colrev.constants.FieldSet
       colrev.constants.FieldValues
       colrev.constants.Fields
+      colrev.constants.FieldsRegex
       colrev.constants.FileSets
       colrev.constants.Filepaths
       colrev.constants.IDPattern

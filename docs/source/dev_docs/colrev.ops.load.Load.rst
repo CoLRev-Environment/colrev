@@ -18,6 +18,7 @@ colrev.ops.load.Load
       ~colrev.ops.load.Load.conclude
       ~colrev.ops.load.Load.decorate
       ~colrev.ops.load.Load.ensure_append_only
+      ~colrev.ops.load.Load.import_record
       ~colrev.ops.load.Load.load_active_sources
       ~colrev.ops.load.Load.load_source_records
       ~colrev.ops.load.Load.main

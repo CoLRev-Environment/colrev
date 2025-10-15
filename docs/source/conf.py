@@ -2,8 +2,6 @@ import os
 import sys
 from datetime import datetime
 
-import sphinx_rtd_theme
-
 try:
     from colrev import __version__ as colrev_version
 except Exception:
@@ -23,12 +21,9 @@ except Exception:
 # Problems with imports? Could try `export PYTHONPATH=$PYTHONPATH:`pwd``
 # from root project dir...
 
-sys.path.insert(
-    0, os.path.abspath("../../colrev")
-)  # Source code dir relative to this file
-sys.path.insert(
-    0, os.path.abspath("../../colrev")
-)  # Source code dir relative to this file
+path = os.path.abspath("../../colrev")
+if path not in sys.path:
+    sys.path.insert(0, path)
 
 # -- Project information -----------------------------------------------------
 
@@ -72,15 +67,12 @@ templates_path = ["_templates"]
 
 # -- Options for HTML output -------------------------------------------------
 
-# html_theme = "alabaster"
-
 html_baseurl = "https://colrev-environment.github.io/colrev/"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
-# html_logo = "logo_small.png"
 html_favicon = "favicon.png"
 html_css_files = [
     "css/asciinema-player.css",
@@ -96,7 +88,6 @@ html_js_files = [
 ]
 
 html_theme = "sphinx_rtd_theme"
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 html_context = {
     "display_github": True,  # Integrate GitHub
