@@ -21,10 +21,7 @@ What it does
 - If include_forthcoming: true, items missing volume/issue render under a dedicated:
     ## Forthcoming
   section.
-- Re-running the script:
-    - **always refreshes "Forthcoming"** (if enabled)
-    - **appends only strictly newer numeric issues** than the latest one already in the file
-- Can also create a new TOC file interactively with `--new-toc`, and **immediately updates it**.
+- Can also create a new TOC file interactively with `--new-toc`, and immediately updates it.
 
 Requirements
 ------------
@@ -35,17 +32,17 @@ pip install inquirer
 Usage
 -----
 # Update/append TOCs in all *.md files with valid front matter
-python md_toc_generator.py
+toc-sync
 
 # Limit to a file/glob
-python md_toc_generator.py --only journal_toc.md
-python md_toc_generator.py --only "toc-*.md"
+toc-sync --only journal_toc.md
+toc-sync --only "toc-*.md"
 
-# Force a full rewrite (not just append newer issues)
-python md_toc_generator.py --rewrite
+# Force a full rewrite (not just incremental insert at top)
+toc-sync --rewrite
 
 # Create a new TOC interactively (ISSN lookup via Crossref) and update it
-python md_toc_generator.py --new-toc \
+toc-sync --new-toc \
   --out toc-mis-quarterly.md \
   --new-pdfs-dir "/home/user/papers" \
   --new-format title_author_doi \
@@ -63,12 +60,7 @@ from collections import defaultdict
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import colrev.record.record
 
@@ -259,7 +251,7 @@ def _iter_pairs_desc(
 
 
 # -----------------------------
-# Incremental update (append only NEWER numeric issues)
+# Incremental update (insert at TOP after header)
 # + always refresh Forthcoming; normalize legacy headings
 # -----------------------------
 
@@ -338,6 +330,22 @@ def _parse_existing_headings(
     return present, latest_key, has_forthcoming
 
 
+def _render_forthcoming_block(records: List[dict], cfg: TocConfig) -> List[str]:
+    lines = ["## Forthcoming\n\n"]
+    for d in records:
+        lines.append(_record_to_md_line(d, cfg) + "\n")
+    lines.append("\n")
+    return lines
+
+
+def _render_issue_block(vol: str, iss: str, items: List[dict], cfg: TocConfig) -> List[str]:
+    lines = [f"## Volume {vol} - Number {iss}\n\n"]
+    for d in items:
+        lines.append(_record_to_md_line(d, cfg) + "\n")
+    lines.append("\n")
+    return lines
+
+
 def _write_forthcoming_section(
     f: typing.TextIO, records: List[dict], cfg: TocConfig
 ) -> None:
@@ -390,6 +398,12 @@ def _write_full_markdown(
 def _append_incremental(
     grouped: Dict[str, Dict[str, List[dict]]], out_path: Path, cfg: TocConfig
 ) -> None:
+    """
+    Incremental update that:
+      - Removes any existing 'Forthcoming' block and re-inserts a fresh one
+      - Inserts strictly newer issues (vs. latest existing) right AFTER the header
+      - Keeps existing content intact below the inserted block
+    """
     if not out_path.exists():
         _write_full_markdown(grouped, out_path, cfg)
         return
@@ -398,9 +412,12 @@ def _append_incremental(
         lines = f.readlines()
     lines = _normalize_legacy_forthcoming(lines)
 
-    present_pairs, latest_existing, has_forthcoming = _parse_existing_headings(lines)
+    present_pairs, latest_existing, _has_forthcoming = _parse_existing_headings(lines)
 
-    # ---- 1) Always refresh Forthcoming (when configured and available)
+    # ---- Build insertion block (to be placed after header)
+    insertion: List[str] = []
+
+    # 1) Always refresh Forthcoming (when configured and available)
     forthcoming_records = None
     if (
         cfg.include_forthcoming
@@ -415,25 +432,17 @@ def _append_incremental(
         if rng is not None:
             start, end = rng
             del lines[start:end]
-            if lines and not lines[-1].endswith("\n"):
-                lines[-1] += "\n"
+        # Add fresh forthcoming to insertion block
+        insertion.extend(_render_forthcoming_block(forthcoming_records, cfg))
 
-        # Write back without Forthcoming, then append fresh Forthcoming section
-        with out_path.open("w", encoding="utf-8") as f:
-            f.writelines(lines)
-            _write_forthcoming_section(f, forthcoming_records, cfg)
-
-        # Reload lines for step 2
-        with out_path.open("r", encoding="utf-8") as f:
-            lines = f.readlines()
-
-    # ---- 2) Append strictly newer numbered issues
+    # 2) Determine strictly newer numbered issues
     all_pairs_sorted: List[Tuple[str, str]] = []
     for vol, issues in grouped.items():
         for iss in issues.keys():
             if vol == FORTHCOMING_VOL and iss == FORTHCOMING_ISS:
-                continue  # handled already
+                continue  # forthcoming handled above
             all_pairs_sorted.append((vol, iss))
+    # sort ASC by (vol, iss)
     all_pairs_sorted.sort(key=lambda p: _pair_sort_key(*p))
 
     to_add: List[Tuple[str, str]] = []
@@ -445,17 +454,26 @@ def _append_incremental(
         if key > latest_existing:
             to_add.append((vol, iss))
 
-    if not to_add:
+    # Insert newer issues in NEWEST-FIRST order at the top
+    to_add.sort(key=lambda p: _pair_sort_key(*p), reverse=True)
+
+    for vol, iss in to_add:
+        insertion.extend(_render_issue_block(vol, iss, grouped[vol][iss], cfg))
+
+    # If nothing to insert, nothing to do
+    if not insertion:
         return
 
-    with out_path.open("a", encoding="utf-8") as f:
-        if not lines or not lines[-1].endswith("\n"):
-            f.write("\n")
-        for vol, iss in to_add:
-            f.write(f"## Volume {vol} - Number {iss}\n\n")
-            for d in grouped[vol][iss]:
-                f.write(_record_to_md_line(d, cfg) + "\n")
-            f.write("\n")
+    # ---- Find header end (first "## " or EOF if no headings yet)
+    first_h2_idx = next((i for i, ln in enumerate(lines) if ln.startswith("## ")), len(lines))
+
+    # Ensure header ends with a blank line
+    if first_h2_idx == len(lines) or (first_h2_idx > 0 and not lines[first_h2_idx - 1].endswith("\n")):
+        pass  # we'll just splice raw; existing newlines are preserved
+
+    new_lines = lines[:first_h2_idx] + insertion + lines[first_h2_idx:]
+
+    out_path.write_text("".join(new_lines), encoding="utf-8")
 
 
 # -----------------------------
@@ -669,7 +687,7 @@ def main() -> None:
     parser.add_argument(
         "--rewrite",
         action="store_true",
-        help="Rewrite full TOC instead of appending only newer issues",
+        help="Rewrite full TOC instead of incremental insert-at-top",
     )
 
     # New TOC creation options
