@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import typing
 from pathlib import Path
 
@@ -137,11 +138,13 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def _get_api_key(self) -> str:
-        env_man = colrev.env.environment_manager.EnvironmentManager()
-        api_key = env_man.get_settings_by_key(self.SETTINGS["api_key"])
-        if api_key is None or len(api_key) == 0:
-            api_key = input("Please enter api key: ")
-            env_man.update_registry(self.SETTINGS["api_key"], api_key)
+        api_key = os.getenv("OSF_API_KEY")
+        if api_key:
+            return api_key
+
+        api_key = input("Please enter api key: ")
+        if api_key:
+            os.environ["OSF_API_KEY"] = api_key
         return api_key
 
     def search(self, rerun: bool) -> None:

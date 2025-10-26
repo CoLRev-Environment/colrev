@@ -2,6 +2,7 @@
 """API for Unpaywall"""
 from __future__ import annotations
 
+import os
 import re
 import typing
 
@@ -11,7 +12,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-from colrev.env.environment_manager import EnvironmentManager
 from colrev.packages.unpaywall.src import utils
 
 
@@ -165,12 +165,7 @@ class UnpaywallAPI:
         email_param = params.get("email", "")
 
         if email_param and page == 1:
-
-            env_man = EnvironmentManager()
-            path = utils.UNPAYWALL_EMAIL_PATH
-            value_string = email_param
-            print(f"Updating registry settings:\n{path} = {value_string}")
-            env_man.update_registry(path, value_string)
+            os.environ[utils.UNPAYWALL_EMAIL_ENV_VAR] = email_param
 
         email = utils.get_email()
 

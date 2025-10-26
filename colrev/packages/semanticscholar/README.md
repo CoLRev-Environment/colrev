@@ -64,7 +64,7 @@ If the user decides to conduct a search without entering any search parameters, 
 
 #### API search: API key for SemanticScholar
 
-While it is not necessary to enter an API key to conduct a search in SemanticScholar, we highly recommend it. Without an API key, SemanticScholar only allows limited access attempts per minute. This might lead to the site being unavailable for a short time. An API key can be requested via the SemanticScholar API (link below). Once a valid API key was entered, it will be saved in the `SETTINGS` file. Subsequent searches of SematicScholar will now include this API key. Every time a new search is conducted, the user will have the opportunity to change or delete the stored API key via the user interface.
+While it is not necessary to enter an API key to conduct a search in SemanticScholar, we highly recommend it. Without an API key, SemanticScholar only allows limited access attempts per minute. This might lead to the site being unavailable for a short time. An API key can be requested via the SemanticScholar API (link below). Store the key in the environment variable `SEMANTIC_SCHOLAR_API_KEY` (for example by running `export SEMANTIC_SCHOLAR_API_KEY="<your-api-key>"`). If the variable is not set, the search interface will prompt for the key and store it for the current session.
 
 #### API search: Search results
 

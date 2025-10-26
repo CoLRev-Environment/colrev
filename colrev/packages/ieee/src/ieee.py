@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import logging
+import os
 import typing
 from pathlib import Path
 
 import pandas as pd
 from pydantic import Field
 
-import colrev.env.environment_manager
 import colrev.ops.prep
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
@@ -59,8 +59,6 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> None:
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
-
-        self.environment_manager = colrev.env.environment_manager.EnvironmentManager()
 
         if search_file:
             self.search_source = search_file
@@ -192,10 +190,13 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
             raise NotImplementedError
 
     def _get_api_key(self) -> str:
-        api_key = self.environment_manager.get_settings_by_key(self.SETTINGS["api_key"])
-        if api_key is None or len(api_key) != 24:
-            api_key = input("Please enter api key: ")
-            self.environment_manager.update_registry(self.SETTINGS["api_key"], api_key)
+        api_key = os.getenv("IEEE_API_KEY")
+        if api_key and len(api_key) == 24:
+            return api_key
+
+        api_key = input("Please enter api key: ")
+        if api_key:
+            os.environ["IEEE_API_KEY"] = api_key
         return api_key
 
     def _run_api_search(
