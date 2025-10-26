@@ -68,6 +68,12 @@ Get an API key and set it using
 
    export SCOPUS_API_KEY="your-api-key"
 
+.. note::
+
+   Add the ``export`` command to your shell profile (for example ``~/.bashrc``)
+   and reload it with ``source ~/.bashrc`` to keep the key available across
+   sessions.
+
 Links
 -----
 

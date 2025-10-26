@@ -63,6 +63,10 @@ Set the API-KEY using
 export SPRINGER_API_KEY="your-api-key"
 ```
 
+> **Tip:** Add the export line to your shell profile (for example ``~/.bashrc``)
+> and reload it with ``source ~/.bashrc`` to keep the key available in future
+> sessions.
+
 The user can choose between `complete_search_string` for searching with a complex query or `interactively` to enter search parameters interactively.
 
 #### API search: complex query
