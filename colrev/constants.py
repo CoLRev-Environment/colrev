@@ -193,11 +193,31 @@ class Fields:
     EUROPE_PMC_ID = "colrev.europe_pmc.europe_pmc_id"
     PROSPERO_ID = "colrev.prospero.id"
 
+    # --- GitHub fields ---
     GITHUB_VERSION = "colrev.github.version"
     GITHUB_LICENSE = "colrev.github.license"
     GITHUB_LANGUAGE = "colrev.github.language"
     GITHUB_NR_CONTRIBUTORS = "colrev.github.nr_contributors"
     GITHUB_NR_COMMITS = "colrev.github.nr_commits"
+    GITHUB_STAR_COUNT = "colrev.github.star_count"
+    GITHUB_WATCHER_COUNT = "colrev.github.watcher_count"
+    GITHUB_FORK_COUNT = "colrev.github.fork_count"
+    GITHUB_ISSUE_COUNT_OPEN = "colrev.github.issue_count_open"
+    GITHUB_ISSUE_COUNT_CLOSED = "colrev.github.issue_count_closed"
+    GITHUB_ISSUE_COUNT_TOTAL = "colrev.github.issue_count_total"
+    GITHUB_COMMIT_LAST_DATE = "colrev.github.commit_last_date"  # YYYY-MM-DD
+    GITHUB_LATEST_RELEASE_DATE = "colrev.github.latest_release_date"  # YYYY-MM-DD
+    GITHUB_REPO_IS_ARCHIVED = "colrev.github.repo_is_archived"  # bool
+    GITHUB_REPO_IS_ARCHIVED_DATE = (
+        "colrev.github.repo_is_archived_date"  # YYYY-MM-DD (proxy)
+    )
+    GITHUB_LANGUAGES_PCT = "colrev.github.languages_pct"  # {lang: pct}
+    GITHUB_BRANCH_COUNT_ACTIVE = "colrev.github.branch_count_active"
+    GITHUB_BRANCH_COUNT_STALE = "colrev.github.branch_count_stale"
+    GITHUB_BRANCH_COUNT_ALL = "colrev.github.branch_count_all"
+    GITHUB_BASIC_INFO_OWNER = "colrev.github.basic_info_owner"
+    GITHUB_BASIC_INFO_REPO = "colrev.github.basic_info_repo"
+    GITHUB_BASIC_INFO_URL = "colrev.github.basic_info_url"
 
 
 class FieldsRegex:
