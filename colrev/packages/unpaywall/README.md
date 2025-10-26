@@ -7,10 +7,10 @@ The search method provides functionality for searching the Unpaywall database. T
 This package primarily supports the retrieval of PDF documents from the [unpaywall](https://unpaywall.org/) API, which provides access to over 40,000,000 free scholarly articles.
 
 An **email address** is required for API calls for the search and retrieval of PDFs.
-By default, the email address used in the git configuration is added to the unpaywall requests. If you would like to use a different email address, use the following command.
+By default, the email address used in the git configuration is added to the unpaywall requests. To use a different email address, set the environment variable `UNPAYWALL_EMAIL`, for example:
 
 ```
-colrev settings --update-global=packages.pdf_get.colrev.unpaywall.email=<email_address>
+export UNPAYWALL_EMAIL="your@email.com"
 ```
 
 ## search

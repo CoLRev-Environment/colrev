@@ -49,7 +49,7 @@ def pubmed_search_file_factory() -> BuildFactory:
         if version_marker is not None:
             search_file.version = version_marker
         else:
-            search_file.version = None
+            search_file.version = None  # type: ignore
 
         return search_file
 

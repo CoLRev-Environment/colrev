@@ -37,7 +37,7 @@ def test_loading_user_specified_email_with_none_set(  # type: ignore
     cfg_email = utils.get_email()
     assert email == cfg_email
     # now create a new settings
-    test_user = {"email": "test@email.com"}
+    test_user = {"email": "tester@email.de"}
     reg = json.dumps(
         {
             "local_index": {

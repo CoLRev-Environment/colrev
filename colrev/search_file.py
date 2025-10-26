@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import typing
+from enum import Enum
 from pathlib import Path
 
 import search_query
@@ -15,6 +16,8 @@ from colrev.constants import SearchType
 
 class ExtendedSearchFile(search_query.SearchFile):
     """Extended SearchFile with search_results_path and derived search_history_path."""
+
+    version: str
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -141,6 +144,7 @@ class ExtendedSearchFile(search_query.SearchFile):
         )
 
     def __str__(self) -> str:
+        # pylint: disable=broad-exception-caught
         try:
             payload = self.to_dict()
         except Exception:
@@ -152,8 +156,6 @@ class ExtendedSearchFile(search_query.SearchFile):
 
         # Ensure Paths/Enums/sets etc. are serializable
         def _default(o) -> str:  # type: ignore
-            from pathlib import Path
-            from enum import Enum
 
             if isinstance(o, Path):
                 return str(o)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import re
 import typing
 from multiprocessing import Lock
@@ -155,8 +156,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def _get_api_key(cls) -> str:
-        env_man = colrev.env.environment_manager.EnvironmentManager()
-        api_key = env_man.get_settings_by_key(cls.SETTINGS["api_key"])
+        api_key = os.getenv("GITHUB_API_TOKEN")
         if api_key is not None and is_github_api_key({}, api_key):
             return api_key
 
@@ -169,8 +169,8 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         ]
         answers = inquirer.prompt(questions)
         input_key = answers["github_api_key"]
-        env_man.update_registry(cls.SETTINGS["api_key"], input_key)
-        print("API key saved in environment settings.")
+        os.environ["GITHUB_API_TOKEN"] = input_key
+        print("API key saved in environment variables.")
         return input_key
 
     def _run_api_search(
@@ -190,6 +190,8 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         github_connection = Github(auth=auth)
 
         # Searching on Github
+        # TODO : check: does not seem to retrieve all repositories?!
+        # (e.g., for "colrev", it should be 25, but only 19 are retrieved)
         repositories = github_connection.search_repositories(query=query)
 
         # Saving search results

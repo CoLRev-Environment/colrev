@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Importer"""
+import shutil
 from pathlib import Path
 
 import inquirer
@@ -104,6 +105,8 @@ def _import_prescreening_decisions(
     *,
     other_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
+
+    # pylint: disable=colrev-records-variable-naming-convention
     colrev.ops.check.CheckOperation(other_review_manager)
     other_records = other_review_manager.dataset.load_records_dict()
     review_manager.get_prescreen_operation()
@@ -163,6 +166,7 @@ def _import_records(
     colrev.ops.check.CheckOperation(review_manager)
     colrev.ops.check.CheckOperation(other_review_manager)
 
+    # pylint: disable=colrev-records-variable-naming-convention
     other_records = other_review_manager.dataset.load_records_dict()
     records = review_manager.dataset.load_records_dict()
 
@@ -226,7 +230,6 @@ def _import_records(
     print()
 
     matched_df = match(blocked_df, verbosity_level=0)
-    # TODO : mechanism in bib-dedupe to make sure that the cluster function is called?! (data structure!)
     duplicate_id_sets = cluster(matched_df, verbosity_level=0)
 
     for duplicate_id_set in duplicate_id_sets:
@@ -250,7 +253,6 @@ def _import_records(
                 if not target_path.parent.is_dir():
                     target_path.parent.mkdir(parents=True, exist_ok=True)
                 if not target_path.is_file():
-                    import shutil
 
                     shutil.copyfile(original_path, target_path)
                 else:

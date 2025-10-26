@@ -90,15 +90,13 @@ def _update_record_based_on_citation_cff(
     try:
         content = repo.get_contents("CITATION.cff")
         citation_data = content.decoded_content.decode("utf-8")
-
         _set_title(record_dict=record_dict, citation_data=citation_data)
         _set_authors(record_dict=record_dict, citation_data=citation_data)
         _set_year_and_release_date(record_dict=record_dict, citation_data=citation_data)
         _set_version(record_dict, citation_data)
         _set_url(record_dict=record_dict, citation_data=citation_data)
-
     except GithubException:
-        record_dict = {}
+        pass
     return record_dict
 
 
@@ -107,7 +105,6 @@ def repo_to_record(
 ) -> colrev.record.record.Record:
     """Convert a GitHub repository to a record"""
 
-    # Set default values
     record_dict = {
         Fields.ENTRYTYPE: "software",
         Fields.TITLE: repo.name,
@@ -126,6 +123,5 @@ def repo_to_record(
     # Use data from CITATION.cff file (if available)
     _update_record_based_on_citation_cff(record_dict, repo)
 
-    record_dict = {k: v for k, v in record_dict.items() if v}
-
+    record_dict = {k: v for k, v in record_dict.items() if v not in (None, "", [], {})}
     return colrev.record.record.Record(data=record_dict)

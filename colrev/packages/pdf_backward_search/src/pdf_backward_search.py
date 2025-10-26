@@ -64,10 +64,11 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
 
-        # TODO / TBD: replace review_manager?
-        import colrev.review_manager
+        # SearchSource only supported in the context of a CoLRev project
+        # pylint: disable=import-outside-toplevel
+        import colrev.review_manager as colrev_review_manager
 
-        self.review_manager = colrev.review_manager.ReviewManager()
+        self.review_manager = colrev_review_manager.ReviewManager()
 
         if "min_intext_citations" not in search_file.search_parameters:
             search_file.search_parameters["min_intext_citations"] = 3

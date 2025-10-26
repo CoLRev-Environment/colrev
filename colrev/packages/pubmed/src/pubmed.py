@@ -98,14 +98,13 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if search_source.search_type == SearchType.DB:
             print(f"Validating search string: {search_source.search_string}")
-            # TODO : TBD: pass version to search-query?
             parse(search_source.search_string, platform="pubmed")
 
         # if search_source.search_type == SearchType.API:
         #     print(f'Validating search string: {search_source.search_parameters}')
         #     parse(search_source.search_parameters, platform="pubmed_api")
 
-        print("SearchSource %s validated", search_source.search_results_path)
+        print(f"SearchSource {search_source.search_results_path} validated")
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

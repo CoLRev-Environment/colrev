@@ -41,8 +41,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
-    # pylint: disable=too-many-instance-attributes
-
     endpoint = "colrev.files_dir"
     source_identifier = Fields.FILE
     search_types = [SearchType.FILES]
@@ -83,6 +81,13 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                 self.r_subdir_pattern = re.compile("([0-9]{1,4})")
 
         self.local_index = colrev.env.local_index.LocalIndex()
+
+        # SearchSource only supported in the context of a CoLRev project
+        # pylint: disable=import-outside-toplevel
+        import colrev.review_manager as colrev_review_manager
+
+        self.review_manager = colrev_review_manager.ReviewManager()
+        colrev.ops.check.CheckOperation(self.review_manager)
 
     def _update_if_pdf_renamed(
         self,
@@ -640,12 +645,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def search(self, rerun: bool) -> None:
         """Run a search of a Files directory"""
-
-        # TODO / TBD: replace review_manager?
-        import colrev.review_manager
-
-        self.review_manager = colrev.review_manager.ReviewManager()
-        colrev.ops.check.CheckOperation(self.review_manager)
 
         self.rerun = rerun
         self._validate_source()

@@ -67,25 +67,16 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
+import inquirer
+import yaml
+
 import colrev.record.record
-
-# Third-party
-try:
-    import yaml  # type: ignore
-except Exception:  # pragma: no cover
-    yaml = None  # We'll check later and error nicely.
-
-# colrev imports (installed with `pip install colrev`)
-from colrev.packages.crossref.src.crossref_api import CrossrefAPI
-from colrev.packages.crossref.src import crossref_api
 from colrev.constants import Fields
+from colrev.packages.crossref.src import crossref_api
+from colrev.packages.crossref.src.crossref_api import CrossrefAPI
 
-# Optional interactive selector for --new-toc
-try:
-    import inquirer  # type: ignore
-except Exception:  # pragma: no cover
-    inquirer = None
 
+# pylint: disable=broad-exception-caught
 
 # -----------------------------
 # Special constants
@@ -135,6 +126,8 @@ def _pair_sort_key(vol: str, iss: str) -> Tuple[Tuple[int, str], Tuple[int, str]
 
 @dataclass
 class TocConfig:
+    """TocConfig"""
+
     issns: List[str]
     include_forthcoming: bool = False
     pdfs_dir: Optional[Path] = None
@@ -516,7 +509,7 @@ def fetch_records_for_issns(issns: List[str]) -> List[Any]:
 _YAML_FENCE = re.compile(r"^---\s*$")
 
 
-def read_yaml_front_matter(path: Path) -> Tuple[Optional[dict], int]:
+def _read_yaml_front_matter(path: Path) -> Tuple[Optional[dict], int]:
     """Return (yaml_dict_or_None, end_line_index_of_front_matter_or_-1).
     If there is no front matter, returns (None, -1).
     """
@@ -529,14 +522,14 @@ def read_yaml_front_matter(path: Path) -> Tuple[Optional[dict], int]:
         if _YAML_FENCE.match(lines[i]):
             yaml_block = "".join(lines[1:i])
             try:
-                data = yaml.safe_load(yaml_block) if yaml else None
-            except Exception as e:  # pragma: no cover
-                raise RuntimeError(f"YAML parse error in {path}: {e}")
+                data = yaml.safe_load(yaml_block)
+            except Exception as exc:  # pragma: no cover
+                raise RuntimeError(f"YAML parse error in {path}: {exc}") from exc
             return (data or {}), i
     return None, -1
 
 
-def is_toc_file(meta: Optional[dict]) -> bool:
+def _is_toc_file(meta: Optional[dict]) -> bool:
     if not isinstance(meta, dict):
         return False
     if "issn" not in meta:
@@ -545,7 +538,7 @@ def is_toc_file(meta: Optional[dict]) -> bool:
     return isinstance(issn, list) and all(isinstance(x, (str, int)) for x in issn)
 
 
-def cfg_from_meta(meta: dict) -> TocConfig:
+def _cfg_from_meta(meta: dict) -> TocConfig:
     issns = [str(x).strip() for x in meta.get("issn", []) if str(x).strip()]
     include_forthcoming = bool(meta.get("include_forthcoming", False))
     pdfs_dir_val = meta.get("pdfs_dir")
@@ -567,12 +560,7 @@ def create_new_toc(
     pdfs_dir: Optional[str] = None,
     fmt: str = "title_author_doi",
 ) -> Optional[Path]:
-    if inquirer is None:
-        print(
-            "ERROR: python-inquirer is not installed. Please `pip install inquirer`.",
-            file=sys.stderr,
-        )
-        return None
+    """Create a new toc file"""
 
     j_name = input("Enter journal name to lookup the ISSN: ").strip()
     if not j_name:
@@ -643,14 +631,14 @@ def create_new_toc(
 # -----------------------------
 
 
-def process_file(md_path: Path, only_append: bool = True) -> None:
-    meta, _ = read_yaml_front_matter(md_path)
-    if not is_toc_file(meta):
+def _process_file(md_path: Path, only_append: bool = True) -> None:
+    meta, _ = _read_yaml_front_matter(md_path)
+    if not _is_toc_file(meta):
         return
-    cfg = cfg_from_meta(meta or {})
+    cfg = _cfg_from_meta(meta or {})
 
     try:
-        records = fetch_records_for_issns(cfg.issns)
+        records_list = fetch_records_for_issns(cfg.issns)
     except Exception as e:
         print(
             f"ERROR: Failed to fetch Crossref records for {md_path.name}: {e}",
@@ -658,7 +646,7 @@ def process_file(md_path: Path, only_append: bool = True) -> None:
         )
         return
 
-    grouped = _group_records(records, include_forthcoming=cfg.include_forthcoming)
+    grouped = _group_records(records_list, include_forthcoming=cfg.include_forthcoming)
     if not grouped:
         print(
             f"WARNING: No records grouped for {md_path.name} (skipping)",
@@ -681,11 +669,7 @@ def process_file(md_path: Path, only_append: bool = True) -> None:
 
 
 def main() -> None:
-    if yaml is None:
-        print(
-            "ERROR: pyyaml not installed. Please `pip install pyyaml`.", file=sys.stderr
-        )
-        sys.exit(1)
+    """Main entry point"""
 
     parser = argparse.ArgumentParser(
         description="Update or create journal TOC markdown files from Crossref"
@@ -741,7 +725,7 @@ def main() -> None:
             fmt=args.new_format,
         )
         if created is not None:
-            process_file(created, only_append=False)  # full write on first creation
+            _process_file(created, only_append=False)  # full write on first creation
         return
 
     # Otherwise update/append existing TOCs
@@ -749,7 +733,7 @@ def main() -> None:
     if args.only:
         paths = [Path(p) for p in glob.glob(args.only)]
     else:
-        paths = [p for p in Path.cwd().glob("*.md")]
+        paths = list(Path.cwd().glob("*.md"))
 
     if not paths:
         print("No markdown files found.")
@@ -758,12 +742,12 @@ def main() -> None:
     processed_any = False
     for p in paths:
         try:
-            meta, _ = read_yaml_front_matter(p)
+            meta, _ = _read_yaml_front_matter(p)
         except Exception as e:
             print(f"WARNING: Skipping {p}: {e}", file=sys.stderr)
             continue
-        if is_toc_file(meta):
-            process_file(p, only_append=(not args.rewrite))
+        if _is_toc_file(meta):
+            _process_file(p, only_append=not args.rewrite)
             processed_any = True
 
     if not processed_any:

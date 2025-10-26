@@ -41,7 +41,6 @@ class DBLPSearchSourceSettings(colrev.search_file.ExtendedSearchFile, BaseModel)
     filepath: Path
     search_type: SearchType
     search_parameters: dict
-    version: typing.Optional[str]
     comment: typing.Optional[str]
 
     _details = {

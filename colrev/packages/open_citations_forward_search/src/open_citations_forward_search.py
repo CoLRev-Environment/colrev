@@ -51,10 +51,11 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.verbose_mode = verbose_mode
         self.search_source = search_file
 
-        # TODO / TBD: replace review_manager?
-        import colrev.review_manager
+        # SearchSource only supported in the context of a CoLRev project
+        # pylint: disable=import-outside-toplevel
+        import colrev.review_manager as colrev_review_manager
 
-        self.review_manager = colrev.review_manager.ReviewManager()
+        self.review_manager = colrev_review_manager.ReviewManager()
         colrev.ops.check.CheckOperation(self.review_manager)
         self.api = open_citations_api.OpenCitationsAPI()
 

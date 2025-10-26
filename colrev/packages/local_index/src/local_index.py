@@ -864,9 +864,14 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         # TBD: other modes of accepting changes?
         # e.g., only-metadata, no-changes, all(including optional fields)
-        import colrev.review_manager
 
-        check_review_manager = colrev.review_manager.ReviewManager(path_str=source_url)
+        # SearchSource only supported in the context of a CoLRev project
+        # pylint: disable=import-outside-toplevel
+        import colrev.review_manager as colrev_review_manager
+
+        # self.review_manager = colrev_review_manager.ReviewManager()
+
+        check_review_manager = colrev_review_manager.ReviewManager(path_str=source_url)
         check_operation = colrev.ops.check.CheckOperation(check_review_manager)
 
         git_repo = check_review_manager.dataset.git_repo

@@ -572,6 +572,7 @@ class Record:
             return ignore_code in notes
         return False
 
+    # pylint: disable=too-many-return-statements
     def get_container_title(self, *, na_string: str = "NA") -> str:
         """Get the record's container title (journal name, booktitle, etc.)"""
 

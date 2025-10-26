@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import typing
 from multiprocessing import Lock
 from pathlib import Path
@@ -55,6 +56,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     SETTINGS = {
         "api_key": "packages.search_source.colrev.semanticscholar.api_key",
     }
+    _ENV_API_KEY = "SEMANTIC_SCHOLAR_API_KEY"
 
     _availability_exception_message = (
         f"Semantic Scholar ({Colors.ORANGE}check "
@@ -255,25 +257,15 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def _get_api_key(self) -> str:
         """Method to request an API key from the settings file - or, if empty, from user input"""
-        api_key = (
-            colrev.env.environment_manager.EnvironmentManager().get_settings_by_key(
-                self.SETTINGS["api_key"]
-            )
-        )
+        api_key = os.getenv(self._ENV_API_KEY, "")
 
         if api_key:
-            api_key = self._s2_UI.get_api_key(api_key)
-        else:
-            api_key = self._s2_UI.get_api_key()
+            return api_key
+
+        api_key = self._s2_UI.get_api_key()
 
         if api_key:
-            colrev.env.environment_manager.EnvironmentManager().update_registry(
-                self.SETTINGS["api_key"], api_key
-            )
-        else:
-            colrev.env.environment_manager.EnvironmentManager().update_registry(
-                self.SETTINGS["api_key"], ""
-            )
+            os.environ[self._ENV_API_KEY] = api_key
 
         return api_key
 

@@ -97,6 +97,7 @@ class PubmedAPI:
         return ""
 
     # pylint: disable=colrev-missed-constant-usage
+    # pylint: disable=too-many-branches
     @classmethod
     def _pubmed_xml_to_record(cls, *, root: Element) -> dict:
         retrieved_record_dict: dict = {Fields.ENTRYTYPE: "misc"}

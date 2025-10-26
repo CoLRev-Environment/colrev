@@ -107,9 +107,10 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
         Repo.clone_from(project_url, temp_path, depth=1)
 
         try:
-            import colrev.review_manager
+            # pylint: disable=import-outside-toplevel
+            import colrev.review_manager as colrev_review_manager
 
-            project_review_manager = colrev.review_manager.ReviewManager(
+            project_review_manager = colrev_review_manager.ReviewManager(
                 path_str=str(temp_path)
             )
         except colrev_exceptions.RepoSetupError as exc:
