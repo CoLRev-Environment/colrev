@@ -14,6 +14,10 @@ To set the open-AI key, run
 export OPENAI_API_KEY="your_api_key_here"
 ```
 
+To keep the key available in future shell sessions, append the ``export`` line
+to your shell profile (for example ``~/.bashrc``) and reload it with
+``source ~/.bashrc``.
+
 ## prescreen
 
 Note: This document is currently under development. It will contain the following elements.
