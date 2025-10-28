@@ -25,8 +25,9 @@ def test_invalid_git_repository_error(
     git_folder.rename(temp_git_folder)
 
     try:
+        dataset = colrev.dataset.Dataset(review_manager=base_repo_review_manager)
         with pytest.raises(colrev_exceptions.RepoSetupError):
-            colrev.dataset.Dataset(review_manager=base_repo_review_manager)
+            _ = dataset.git_repo
     finally:  # to avoid side-effects on other tests
         temp_git_folder.rename(git_folder)
 
