@@ -87,7 +87,6 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         import colrev.review_manager as colrev_review_manager
 
         self.review_manager = colrev_review_manager.ReviewManager()
-        colrev.ops.check.CheckOperation(self.review_manager)
 
     def _update_if_pdf_renamed(
         self,
@@ -656,6 +655,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         if self.review_manager.force_mode:  # i.e., reindex all
             self.logger.info("Reindex all")
 
+        colrev.ops.check.CheckOperation(self.review_manager)
         # Removing records/origins for which PDFs were removed makes sense for curated repositories
         # In regular repositories, it may be confusing (e.g., if PDFs are renamed)
         # In these cases, we may simply print a warning instead of modifying/removing records?

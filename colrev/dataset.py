@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import tempfile
 import typing
+from functools import cached_property
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
@@ -27,7 +28,10 @@ class Dataset:
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager
-        self.git_repo = GitRepo(path=review_manager.path)
+
+    @cached_property
+    def git_repo(self) -> GitRepo:
+        return GitRepo(path=self.review_manager.path)
 
     def get_origin_state_dict(self, records_string: str = "") -> dict:
         """Get the origin_state_dict (to determine state transitions efficiently)
