@@ -566,7 +566,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         preferred_masterdata_sources = [
             s
             for s in self.review_manager.settings.sources
-            if s.endpoint != "colrev.files_dir"
+            if s.platform != "colrev.files_dir"
         ]
         self.dedupe_operation.apply_merges(
             id_sets=decision_list,
