@@ -10,8 +10,7 @@ from pathlib import Path
 import colrev.record.record
 from colrev.constants import Fields
 
-if typing.TYPE_CHECKING:
-    import colrev.record.record_pdf
+import colrev.record.record_pdf
 
 
 class QualityModel:
