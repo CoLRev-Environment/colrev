@@ -314,7 +314,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                 )
 
         except colrev_exceptions.TEIException:
-            pass
+            return {}
 
         return record_dict
 
