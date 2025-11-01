@@ -465,16 +465,28 @@ class CrossrefAPI:
                 print(record.data)
                 raise AssertionError
 
-            bibl = (
-                record.data[Fields.TITLE].replace("-", "_")
-                + " "
-                + record.data.get(Fields.YEAR, "")
-            )
+            bibl = ""
+            if Fields.TITLE in record.data and record.data[Fields.TITLE] not in [
+                "",
+                "NA",
+                "UNKNOWN",
+            ]:
+                bibl += record.data[Fields.TITLE]
+            if Fields.YEAR in record.data and record.data[Fields.YEAR] not in [
+                "",
+                "NA",
+                "UNKNOWN",
+            ]:
+                bibl += record.data[Fields.YEAR]
+
             bibl = re.sub(r"[\W]+", "", bibl.replace(" ", "_"))
             params["query.bibliographic"] = bibl.replace("_", " ").rstrip("+")
-
             container_title = record.get_container_title()
-            if "." not in container_title:
+            if "." not in container_title and container_title not in [
+                "NA",
+                "",
+                "UNKNOWN",
+            ]:
                 container_title = container_title.replace(" ", "_")
                 container_title = re.sub(r"[\W]+", "", container_title)
                 params["query.container-title"] = container_title.replace("_", " ")
