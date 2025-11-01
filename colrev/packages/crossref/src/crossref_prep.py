@@ -59,7 +59,7 @@ class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
                 platform="colrev.crossref",
                 search_results_path=crossref_md_filename,
                 search_type=SearchType.MD,
-                search_string="https://api.crossref.org/",  # dummy
+                search_string="",
                 comment="",
                 version=(
                     crossref_connector.CrossrefSearchSource.CURRENT_SYNTAX_VERSION
