@@ -56,7 +56,7 @@ class PubmedMetadataPrep(base_classes.PrepPackageBaseClass):
                 search_results_path=self._pubmed_md_filename,
                 search_type=SearchType.MD,
                 search_string="",
-                search_parameters = {"url":""},
+                search_parameters={"url": ""},
                 comment="",
                 version="0.1.0",
             )
