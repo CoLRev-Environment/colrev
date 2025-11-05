@@ -414,7 +414,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                 except colrev_exceptions.NotFeedIdentifiableException:
                     pass
         except RuntimeError as exc:
-            print(exc)
+            self.logger.debug(f"Exception: {exc}")
 
         crossref_feed.save()
 
@@ -472,7 +472,11 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         try:
             try:
                 retrieved_record = query_doi(doi=record.data[Fields.DOI])
-            except (colrev_exceptions.RecordNotFoundInPrepSourceException, KeyError):
+            except (
+                colrev_exceptions.RecordNotFoundInPrepSourceException,
+                KeyError,
+            ) as exc:
+                self.logger.debug(exc)
 
                 retrieved_records = self.api.crossref_query(
                     record_input=record,
