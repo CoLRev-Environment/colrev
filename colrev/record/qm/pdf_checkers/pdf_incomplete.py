@@ -114,6 +114,9 @@ class PDFIncompletenessChecker:
             if "--" in pages_str:
                 start_page, end_page = map(int, pages_str.split("--"))
                 nr_pages = end_page - start_page + 1
+            elif "-" in pages_str:
+                start_page, end_page = map(int, pages_str.split("-"))
+                nr_pages = end_page - start_page + 1
             else:
                 nr_pages = 1
             return nr_pages
