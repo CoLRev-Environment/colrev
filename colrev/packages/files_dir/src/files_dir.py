@@ -278,14 +278,19 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             with pymupdf.open(file_path) as doc:
                 pages_in_file = doc.page_count
-                if pages_in_file < 6:
-                    record = colrev.record.record_pdf.PDFRecord(
-                        record_dict, path=self.review_manager.path
-                    )
-                    record.set_text_from_pdf(first_pages=True)
-                    record_dict = record.get_data()
-                    if Fields.TEXT_FROM_PDF in record_dict:
-                        text: str = record_dict[Fields.TEXT_FROM_PDF]
+                record = colrev.record.record_pdf.PDFRecord(
+                    record_dict, path=self.review_manager.path
+                )
+                record.set_text_from_pdf(first_pages=True)
+                record_dict = record.get_data()
+                if Fields.TEXT_FROM_PDF in record_dict:
+                    text: str = record_dict[Fields.TEXT_FROM_PDF]
+                    if "conference" in text.replace(" ", "").lower():
+                        record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+                    if "journal" in text.replace(" ", "").lower():
+                        record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+
+                    if pages_in_file < 6:
                         if "bookreview" in text.replace(" ", "").lower():
                             record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
                             record_dict["note"] = "Book review"
@@ -301,9 +306,11 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                         if "withdrawal" in text.replace(" ", "").lower():
                             record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
                             record_dict["note"] = "Withdrawal"
-                        del record_dict[Fields.TEXT_FROM_PDF]
                     # else:
                     #     print(f'text extraction error in {record_dict[Fields.ID]}')
+
+                    record_dict.pop(Fields.TEXT_FROM_PDF, None)
+                    record_dict.pop(Fields.NR_PAGES_IN_FILE, None)
 
                 record_dict = {k: v for k, v in record_dict.items() if v is not None}
                 record_dict = {k: v for k, v in record_dict.items() if v != "NA"}
@@ -885,4 +892,26 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                 record.data[Fields.TITLE] = FieldValues.UNKNOWN
                 record.set_status(RecordState.md_needs_manual_preparation)
 
+        self._prep_journal_specific(record)
+
         return record
+
+    def _prep_journal_specific(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> None:
+
+        try:
+            pdf_record = colrev.record.record_pdf.PDFRecord(
+                record.data, path=self.review_manager.path
+            )
+            first_page = pdf_record.extract_text_by_page(pages=[0])
+            if (
+                record.data.get(Fields.DOI, "").startswith("10.17705/1CAIS")
+                or record.data.get(Fields.JOURNAL, "")
+                == "Communications of the Association for Information Systems"
+            ):
+                if "Education Article" in first_page:
+                    record.data["category"] = "Education Article"
+
+        except colrev_exceptions.InvalidPDFException:
+            pass
