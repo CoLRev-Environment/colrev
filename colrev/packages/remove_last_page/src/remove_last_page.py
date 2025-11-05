@@ -104,6 +104,15 @@ class PDFLastPage(base_classes.PDFPrepPackageBaseClass):
             ):
                 last_pages.append(last_page_nr)
 
+            # JISE last page / editorial board
+            if all(
+                x in last_page_text
+                for x in [
+                    "statementofpeerreviewintegrityallpaperspublishedinthejournalofinformationsystemseducationhave"
+                ]
+            ):
+                last_pages.append(last_page_nr)
+
             return list(set(last_pages))
 
         last_pages = _get_last_pages(pdf=record.data[Fields.FILE])

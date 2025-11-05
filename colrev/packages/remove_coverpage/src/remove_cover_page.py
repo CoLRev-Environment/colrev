@@ -73,6 +73,18 @@ class PDFCoverPage(base_classes.PDFPrepPackageBaseClass):
         ):
             coverpages.append(0)
 
+    def _check_jise_first_page(self, *, page0: str, coverpages: list) -> None:
+        if (
+            "findarchivedpapers,submissioninstructions,termsofuse,andmuchmoreatthejisewebsite:https://jise.org"
+            in page0
+        ):
+            coverpages.append(0)
+        if (
+            "fulltermsandconditionsofaccessanduse,archivedpapers,submissioninstructions,asearchtool,andmuchmorecanbefoundonthejisewebsite:http://jise.org"
+            in page0
+        ):
+            coverpages.append(0)
+
     def _check_informs_first_page(
         self, *, page0: str, page1: str, coverpages: list
     ) -> None:
@@ -156,6 +168,7 @@ class PDFCoverPage(base_classes.PDFPrepPackageBaseClass):
         self._check_informs_first_page(page0=page0, page1=page1, coverpages=coverpages)
         self._check_ais_first_page(page0=page0, coverpages=coverpages)
         self._check_tandf_first_page(page0=page0, page1=page1, coverpages=coverpages)
+        self._check_jise_first_page(page0=page0, coverpages=coverpages)
 
         return list(set(coverpages))
 
