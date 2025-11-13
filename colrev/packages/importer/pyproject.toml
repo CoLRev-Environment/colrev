@@ -17,8 +17,8 @@ repository = "https://github.com/CoLRev-Environment/colrev/tree/main/colrev/pack
 [project.scripts]
 colrev-importer = "colrev.packages.importer.src.importer:main"
 
-[[tool.poetry.packages]]
-include = "src"
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.colrev]
 colrev_doc_description = "TODO"
