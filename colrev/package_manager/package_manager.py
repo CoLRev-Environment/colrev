@@ -205,5 +205,10 @@ class PackageManager:
             for p in colrev_packages
         ] + packages
 
-        install_args += all_packages
-        subprocess.run(install_args, check=True)
+        for selected_package in all_packages:
+            try:
+                # install_args += all_packages
+                subprocess.run(install_args + [selected_package], check=True)
+            except Exception as e:
+                print(f"Installation failed: {selected_package}")
+                print(e)
