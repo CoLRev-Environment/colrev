@@ -8,9 +8,8 @@ from multiprocessing import Lock
 from pathlib import Path
 
 import colrev.record.record
-from colrev.constants import Fields
-
 import colrev.record.record_pdf
+from colrev.constants import Fields
 
 
 class QualityModel:

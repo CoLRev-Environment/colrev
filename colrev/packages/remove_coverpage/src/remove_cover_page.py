@@ -75,12 +75,15 @@ class PDFCoverPage(base_classes.PDFPrepPackageBaseClass):
 
     def _check_jise_first_page(self, *, page0: str, coverpages: list) -> None:
         if (
-            "findarchivedpapers,submissioninstructions,termsofuse,andmuchmoreatthejisewebsite:https://jise.org"
+            "findarchivedpapers,submissioninstructions,termsofuse,"
+            "andmuchmoreatthejisewebsite:https://jise.org"
             in page0
         ):
             coverpages.append(0)
         if (
-            "fulltermsandconditionsofaccessanduse,archivedpapers,submissioninstructions,asearchtool,andmuchmorecanbefoundonthejisewebsite:http://jise.org"
+            "fulltermsandconditionsofaccessanduse,archivedpapers,"
+            "submissioninstructions,asearchtool,andmuchmorecanbe"
+            "foundonthejisewebsite:http://jise.org"
             in page0
         ):
             coverpages.append(0)

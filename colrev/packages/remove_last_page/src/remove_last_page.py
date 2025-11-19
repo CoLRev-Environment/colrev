@@ -108,7 +108,8 @@ class PDFLastPage(base_classes.PDFPrepPackageBaseClass):
             if all(
                 x in last_page_text
                 for x in [
-                    "statementofpeerreviewintegrityallpaperspublishedinthejournalofinformationsystemseducationhave"
+                    "statementofpeerreviewintegrityallpapers"
+                    "publishedinthejournalofinformationsystemseducationhave"
                 ]
             ):
                 last_pages.append(last_page_nr)
