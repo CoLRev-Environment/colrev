@@ -23,12 +23,12 @@ def script_loc(request) -> Path:  # type: ignore
     return Path(request.fspath).parents[0]
 
 
-@pytest.mark.skipif(
-    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
-)
 @pytest.fixture(scope="module")
 def tei_doc(script_loc) -> colrev.env.tei_parser.TEIParser:  # type: ignore
     """Return the tei_doc"""
+
+    if platform.system() != "Linux":
+        pytest.skip("Docker tests only run on Linux runners")
 
     tei_file = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.tei.xml")
 
@@ -36,11 +36,12 @@ def tei_doc(script_loc) -> colrev.env.tei_parser.TEIParser:  # type: ignore
     return tei_doc
 
 
-@pytest.mark.skipif(
-    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
-)
 def test_tei_creation(script_loc) -> None:  # type: ignore
     """Test the tei"""
+
+    if platform.system() != "Linux":
+        pytest.skip("Docker tests only run on Linux runners")
+
     tei_file = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.tei.xml")
     pdf_path = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.pdf")
 
@@ -68,19 +69,17 @@ def test_tei_creation(script_loc) -> None:  # type: ignore
         raise exc
 
 
-@pytest.mark.skipif(
-    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
-)
 def test_tei_version(tei_doc) -> None:  # type: ignore
     """Test the tei version"""
+    if platform.system() != "Linux":
+        pytest.skip("Docker tests only run on Linux runners")
     assert "0.8.2" == tei_doc.get_grobid_version()
 
 
-@pytest.mark.skipif(
-    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
-)
 def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
     """Test the tei version"""
+    if platform.system() != "Linux":
+        pytest.skip("Docker tests only run on Linux runners")
     assert (
         "Artificial intelligence (AI) is beginning to transform traditional research practices in many areas. In this context, literature reviews stand out because they operate on large and rapidly growing volumes of documents, that is, partially structured (meta)data, and pervade almost every type of paper published in information systems research or related social science disciplines. To familiarize researchers with some of the recent trends in this area, we outline how AI can expedite individual steps of the literature review process. Considering that the use of AI in this context is in an early stage of development, we propose a comprehensive research agenda for AI-based literature reviews (AILRs) in our field. With this agenda, we would like to encourage design science research and a broader constructive discourse on shaping the future of AILRs in research."
         == tei_doc.get_abstract()
@@ -118,11 +117,10 @@ def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
     ] == tei_doc.get_author_details()
 
 
-@pytest.mark.skipif(
-    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
-)
 def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
     """Test the tei extraction of references"""
+    if platform.system() != "Linux":
+        pytest.skip("Docker tests only run on Linux runners")
 
     assert [
         {
@@ -1560,11 +1558,11 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
     ] == tei_doc.get_references(add_intext_citation_count=True)
 
 
-@pytest.mark.skipif(
-    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
-)
 def test_tei_citations_per_section(tei_doc, tmp_path) -> None:  # type: ignore
     """Test the tei citations per section method."""
+
+    if platform.system() != "Linux":
+        pytest.skip("Docker tests only run on Linux runners")
 
     assert {
         "introduction": [
@@ -1783,12 +1781,11 @@ def test_tei_citations_per_section(tei_doc, tmp_path) -> None:  # type: ignore
     } == tei_doc.get_citations_per_section()
 
 
-@pytest.mark.skipif(
-    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
-)
 def test_tei_mark_references(tei_doc, tmp_path) -> None:  # type: ignore
     """Test the tei extraction of references"""
 
+    if platform.system() != "Linux":
+        pytest.skip("Docker tests only run on Linux runners")
     # change tei_path to prevent changes to the original tei file
     tei_doc.tei_path = tmp_path / Path("test.tei.xml")
     tei_doc.mark_references(
@@ -1838,11 +1835,9 @@ def test_tei_mark_references(tei_doc, tmp_path) -> None:  # type: ignore
     assert "NOT_INCLUDED" not in actual
 
 
-@pytest.mark.skipif(
-    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
-)
 def test_tei_exception(tmp_path) -> None:  # type: ignore
-
+    if platform.system() != "Linux":
+        pytest.skip("Docker tests only run on Linux runners")
     tei_path = tmp_path / Path("erroneous_tei.tei.xml")
 
     with open(tei_path, "wb") as f:
@@ -1852,10 +1847,9 @@ def test_tei_exception(tmp_path) -> None:  # type: ignore
         colrev.env.tei_parser.TEIParser(tei_path=tei_path)
 
 
-@pytest.mark.skipif(
-    platform.system() != "Linux", reason="Docker tests only run on Linux runners"
-)
 def test_tei_pdf_not_exists() -> None:
+    if platform.system() != "Linux":
+        pytest.skip("Docker tests only run on Linux runners")
 
     pdf_path = Path("data/non_existent.pdf")
 
