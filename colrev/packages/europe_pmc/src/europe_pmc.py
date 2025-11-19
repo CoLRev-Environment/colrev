@@ -230,10 +230,11 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         assert source.search_type in self.search_types
 
-        if "query" not in source.search_parameters:
-            raise colrev_exceptions.InvalidQueryException(
-                "Query required in search_parameters"
-            )
+        if source.search_type != SearchType.MD:
+            if "query" not in source.search_parameters:
+                raise colrev_exceptions.InvalidQueryException(
+                    "Query required in search_parameters"
+                )
 
         self.logger.debug("SearchSource %s validated", source.search_results_path)
 
