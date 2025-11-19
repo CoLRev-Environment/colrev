@@ -265,6 +265,9 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 add_to_git=True,
             )
 
+        elif self.search_source.search_type == SearchType.MD:
+            self.logger.info("Update of MD sources not yet available.")
+
         # if self.search_source.search_type == colrev.search_file.ExtendedSearchFile.MD:
         # self._run_md_search_update(
         #     search_operation=search_operation,
