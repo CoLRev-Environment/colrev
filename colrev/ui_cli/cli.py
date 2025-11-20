@@ -3140,9 +3140,9 @@ def select_format() -> str:
     "-o",
     "--format",
     "output_format",
-    type=click.Choice(["bib", "csv", "xlsx", "ris"], case_sensitive=False),
+    type=click.Choice(["bib", "csv", "xlsx", "ris", "md"], case_sensitive=False),
     default=None,
-    help="Optional output format (bib, csv, xlsx)",
+    help="Optional output format (bib, csv, xlsx, ris, md)",
 )
 @click.pass_context
 def convert(
@@ -3173,6 +3173,10 @@ def convert(
         records = id_setter.set_ids(
             records=records,
         )
+    if output_format == "md":
+        for record_dict in records.values():
+            record_dict.pop(Fields.MD_PROV, None)
+            record_dict.pop(Fields.D_PROV, None)
 
     write_file(
         records_dict=records, filename=Path(input_file).with_suffix(f".{output_format}")
