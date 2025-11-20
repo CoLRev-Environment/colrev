@@ -2348,6 +2348,12 @@ def _print_environment_status(
     "-i", "--index", is_flag=True, default=False, help="Create the LocalIndex"
 )
 @click.option(
+    "--index_tei",
+    is_flag=True,
+    default=True,
+    help="Index TEI files when creating the LocalIndex",
+)
+@click.option(
     "--install",
     help="Install a new resource providing its url "
     + "(e.g., a curated metadata repository)",
@@ -2386,6 +2392,7 @@ def _print_environment_status(
 def env(
     ctx: click.core.Context,
     index: bool,
+    index_tei: bool,
     install: str,
     pull: bool,
     status: bool,
@@ -2422,7 +2429,6 @@ def env(
         print("Index rankings")
         import colrev.env.local_index_builder
 
-        index_tei = input("Index TEI files (y/n)?") == "y"
         local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder(
             index_tei=index_tei, verbose_mode=verbose
         )
