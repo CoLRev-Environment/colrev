@@ -83,8 +83,11 @@ class Unpaywall(base_classes.PDFGetPackageBaseClass):
         return best_loc["url_for_pdf"]
 
     def _is_pdf(self, *, path_to_file: Path) -> bool:
-        with pymupdf.open(path_to_file) as doc:
-            doc.load_page(0).get_text()
+        try:
+            with pymupdf.open(path_to_file) as doc:
+                doc.load_page(0).get_text()
+        except pymupdf.FileDataError:
+            return False
         return True
 
     def get_pdf(
