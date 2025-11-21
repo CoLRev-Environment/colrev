@@ -19,24 +19,31 @@ if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.record.record
 
 
+def _norm(value: str) -> str:
+    if value is None:
+        return ""
+    v = str(value).strip()
+    return "" if v.upper() in {"UNKNOWN", "NA", "N/A"} else v
+
+
+def _record_str(record) -> str:
+    d = record.data
+    return (
+        f"{_norm(d.get(Fields.AUTHOR, ''))} ({_norm(d.get(Fields.YEAR, ''))}) "
+        f"{_norm(d.get(Fields.TITLE, ''))}. "
+        f"{_norm(d.get(Fields.JOURNAL, ''))}{_norm(d.get(Fields.BOOKTITLE, ''))}, "
+        f"{_norm(d.get(Fields.VOLUME, ''))} ({_norm(d.get(Fields.NUMBER, ''))})"
+    )
+
+
 def get_record_change_score(
     record_a: colrev.record.record.Record, record_b: colrev.record.record.Record
 ) -> float:
     """Determine how much records changed"""
 
     # At some point, this may become more sensitive to major changes
-    str_a = (
-        f"{record_a.data.get(Fields.AUTHOR, '')} ({record_a.data.get(Fields.YEAR, '')}) "
-        + f"{record_a.data.get(Fields.TITLE, '')}. "
-        + f"{record_a.data.get(Fields.JOURNAL, '')}{record_a.data.get(Fields.BOOKTITLE, '')}, "
-        + f"{record_a.data.get(Fields.VOLUME, '')} ({record_a.data.get(Fields.NUMBER, '')})"
-    )
-    str_b = (
-        f"{record_b.data.get(Fields.AUTHOR, '')} ({record_b.data.get(Fields.YEAR, '')}) "
-        + f"{record_b.data.get(Fields.TITLE, '')}. "
-        + f"{record_b.data.get(Fields.JOURNAL, '')}{record_b.data.get(Fields.BOOKTITLE, '')}, "
-        + f"{record_b.data.get(Fields.VOLUME, '')} ({record_b.data.get(Fields.NUMBER, '')})"
-    )
+    str_a = _record_str(record_a)
+    str_b = _record_str(record_b)
     return 1 - fuzz.ratio(str_a.lower(), str_b.lower()) / 100
 
 

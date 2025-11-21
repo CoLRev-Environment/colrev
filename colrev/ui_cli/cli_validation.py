@@ -60,6 +60,7 @@ def print_diff(origin: dict, record_dict: dict) -> None:
             print(f"  diff {key}: {Colors.RED}{record_dict.get(key, '')}{Colors.END}")
             continue
         if origin[key] == record_dict[key]:
+            print(f"  diff {key}: {record_dict.get(key, '')}")
             continue
 
         similarity = fuzz.partial_ratio(origin[key], record_dict[key]) / 100

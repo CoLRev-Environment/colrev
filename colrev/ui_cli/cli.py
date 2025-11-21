@@ -2189,12 +2189,15 @@ def validate(
         properties=properties,
     )
 
-    if validation_details:
-        colrev.ui_cli.cli_validation.validate(
-            validate_operation=validate_operation,
-            validation_details=validation_details,
-            threshold=threshold,
-        )
+    if not validation_details:
+        review_manager.logger.info("%sNothing to validate%s", Colors.GREEN, Colors.END)
+        return
+
+    colrev.ui_cli.cli_validation.validate(
+        validate_operation=validate_operation,
+        validation_details=validation_details,
+        threshold=threshold,
+    )
 
     review_manager.logger.info("%sCompleted validation%s", Colors.GREEN, Colors.END)
 
