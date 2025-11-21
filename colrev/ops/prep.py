@@ -35,6 +35,7 @@ from colrev.constants import RecordState
 from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
+import git
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.package_manager.package_base_classes as base_classes
@@ -932,7 +933,10 @@ class Prep(colrev.process.operation.Operation):
             {r[Fields.ID]: r for r in prepared_records}, partial=True
         )
         self._log_commit_details(prepared_records)
-        self.review_manager.dataset.git_repo.add_changes("data/search/md_*")
+        try:
+            self.review_manager.dataset.git_repo.repo.git.add("data/search/md_*")
+        except git.GitCommandError:
+            pass
         self.review_manager.create_commit(
             msg="Prep: improve record metadata",
         )
