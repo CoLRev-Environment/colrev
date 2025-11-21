@@ -160,10 +160,15 @@ def bib_entrytype_setter(entrytype: dict) -> None:
         entrytype[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
 
+def _noop_entrytype_setter(entrytype: dict) -> None:
+    """Default for non-BibTeX loaders: do nothing."""
+    return
+
+
 def load(  # type: ignore
     filename: Path,
     *,
-    entrytype_setter: typing.Callable = lambda x: x,
+    entrytype_setter: typing.Callable[[dict], None] | None = None,
     field_mapper: typing.Callable = lambda x: x,
     id_labeler: typing.Callable = lambda x: x,
     unique_id_field: str = "",
@@ -183,6 +188,8 @@ def load(  # type: ignore
 
     if filename.suffix == ".bib":
         parser = colrev.loader.bib.BIBLoader  # type: ignore
+        if entrytype_setter is None:
+            entrytype_setter = bib_entrytype_setter
     elif filename.suffix in [".csv", ".xls", ".xlsx"]:
         parser = colrev.loader.table.TableLoader  # type: ignore
     elif filename.suffix == ".ris":
@@ -197,6 +204,10 @@ def load(  # type: ignore
         parser = colrev.loader.json.JSONLoader  # type: ignore
     else:
         raise NotImplementedError(f"Unsupported file type: {filename.suffix}")
+
+    # For non-bib files, if still None, use a no-op setter
+    if entrytype_setter is None:
+        entrytype_setter = _noop_entrytype_setter
 
     return parser(
         filename=filename,

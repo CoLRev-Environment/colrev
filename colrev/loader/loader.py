@@ -63,14 +63,14 @@ class Loader:
         assert all(
             Fields.ENTRYTYPE in r for r in records_dict.values()
         ), "ENTRYTYPE not set in all records"
-        invalid_entrytypes = [
-            r[Fields.ENTRYTYPE]
-            for r in records_dict.values()
-            if r[Fields.ENTRYTYPE] not in ENTRYTYPES.get_all()
-        ]
-        assert (
-            len(invalid_entrytypes) == 0
-        ), f"Invalid ENTRYTYPE in some records: {invalid_entrytypes}"
+
+        for r in records_dict.values():
+            if r[Fields.ENTRYTYPE] in ENTRYTYPES.get_all():
+                continue
+            self.logger.warning(
+                f"Invalid ENTRYTYPE in {r[Fields.ID]}: {r[Fields.ENTRYTYPE]}, setting to misc"
+            )
+            r[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
     def _set_fields(self, records_dict: dict) -> None:
         for record_dict in records_dict.values():
