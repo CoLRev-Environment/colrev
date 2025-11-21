@@ -28,6 +28,7 @@ from colrev.constants import FieldValues
 from colrev.constants import RecordState
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
+from colrev.ops.pdf_get import relink_pdfs_in_source
 from colrev.packages.crossref.src.crossref_api import query_doi
 from colrev.writer.write_utils import write_file
 
@@ -668,6 +669,16 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         # In these cases, we may simply print a warning instead of modifying/removing records?
         if self.review_manager.settings.is_curated_masterdata_repo():
             self._remove_records_if_pdf_no_longer_exists()
+
+        # Relink to avoid adding duplicate records for the same pdf (with different filenames)
+        records = self.review_manager.dataset.load_records_dict()
+        relink_pdfs_in_source(
+            source=self.search_source,
+            records=records,
+            pdf_dir=self.review_manager.paths.pdf,
+            logger=self.review_manager.logger,
+        )
+        self.review_manager.dataset.save_records_dict(records)
 
         records = self.review_manager.dataset.load_records_dict()
         files_dir_feed = colrev.ops.search_api_feed.SearchAPIFeed(

@@ -2,6 +2,7 @@
 """CoLRev pdf_get operation: Get PDF documents."""
 from __future__ import annotations
 
+import logging
 import shutil
 import typing
 from glob import glob
@@ -21,6 +22,146 @@ from colrev.constants import PDFPathType
 from colrev.constants import RecordState
 from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import write_file
+
+
+def relink_pdfs_in_source(
+    *,
+    source: colrev.search_file.ExtendedSearchFile,
+    records: dict,
+    pdf_dir: Path,
+    logger: logging.Logger,
+) -> None:
+
+    # pylint: disable=too-many-locals
+
+    def get_pdf_candidates() -> dict:
+        logger.info("Calculate CPIDs to link PDF file(s)")
+        candidates: dict[str, Path] = {}
+        for pdf_candidate in pdf_dir.glob("**/*.pdf"):
+            colrev_pdf_id = colrev.record.record_pdf.PDFRecord.get_colrev_pdf_id(
+                pdf_candidate
+            )
+            relative_path = pdf_candidate.relative_to(home_path)
+            candidates[colrev_pdf_id] = relative_path
+        return candidates
+
+    logger.info(
+        "Checking PDFs in same directory to reassign when "
+        f"the cpid is identical ({source.search_results_path})"
+    )
+
+    home_path = pdf_dir.parent.parent
+
+    pdf_candidates: typing.Dict[str, Path] = {}
+
+    source_records_dict = colrev.loader.load_utils.load(
+        filename=source.search_results_path,
+        logger=logger,
+    )
+    source_records = list(source_records_dict.values())
+    if len(source_records) == 0:
+        logger.info("No records to relink")
+        return
+
+    logger.info("Start relinking procedure")
+
+    corresponding_origin = str(source.get_origin_prefix())
+    for record in records.values():
+
+        if Fields.FILE not in record:
+            continue
+
+        # Note: we check the source_records based on the cpids
+        # in the record because cpids are not stored in the source_record
+        # (pdf hashes may change after import/preparation)
+        source_rec = {}
+        if corresponding_origin != "":
+            source_origin_l = [
+                o for o in record[Fields.ORIGIN] if corresponding_origin in o
+            ]
+            if len(source_origin_l) == 1:
+                source_origin = source_origin_l[0]
+                source_origin = source_origin.replace(f"{corresponding_origin}/", "")
+                source_rec_l = [
+                    s for s in source_records if s[Fields.ID] == source_origin
+                ]
+                if len(source_rec_l) == 1:
+                    source_rec = source_rec_l[0]
+
+        if not source_rec and (home_path / Path(record[Fields.FILE])).is_file():
+            continue
+
+        if not (home_path / Path(record[Fields.FILE])).is_file():
+            logger.info(
+                f"Primary record ({record[Fields.ID]}): "
+                f"Broken file path {Colors.RED}{record[Fields.FILE]}{Colors.END}"
+            )
+        if not (home_path / Path(source_rec[Fields.FILE])).is_file():
+            logger.info(
+                f"Source record ({source.search_results_path}{source_rec[Fields.ID]}) "
+                f"of {record[Fields.ID]}: Broken file path {Colors.RED}{source_rec[Fields.FILE]}{Colors.END}"
+            )
+
+        if (home_path / Path(record[Fields.FILE])).is_file() and (
+            home_path / Path(source_rec[Fields.FILE])
+        ).is_file():
+            if record[Fields.FILE] != source_rec[Fields.FILE]:
+                logger.warning(
+                    f"{Colors.ORANGE}Source record has {source_rec[Fields.FILE]} "
+                    f"but primary record has {record[Fields.FILE]} (both exist) "
+                    f"- Resolve manually.{Colors.END}"
+                )
+            continue
+
+        if not source_rec and not (home_path / Path(record[Fields.FILE])).is_file():
+            if not pdf_candidates:
+                pdf_candidates = get_pdf_candidates()
+
+            record_cpid = record.get("colrev_pdf_id")
+            if record_cpid and record_cpid in pdf_candidates:
+                pdf_candidate = pdf_candidates[record_cpid]
+                logger.info(
+                    "- Primary record: Updated path to file with matching CPID: "
+                    f"{Colors.GREEN}{pdf_candidate}{Colors.END}"
+                )
+                record[Fields.FILE] = str(pdf_candidate)
+            else:
+                logger.warning(
+                    f"{Colors.RED}- Primary record: Did not find the PDF file based on CPID.{Colors.END}"
+                )
+            continue
+
+        id_named_pdf = "data/pdfs/" + record[Fields.ID] + ".pdf"
+        if (
+            not (home_path / Path(record[Fields.FILE])).is_file()
+            and (home_path / Path(id_named_pdf)).is_file()
+        ):
+
+            logger.info(
+                "- Primary record: Updated path to match existing file: "
+                f"{Colors.GREEN}{record[Fields.ID]}.pdf{Colors.END}"
+            )
+            record[Fields.FILE] = Path(id_named_pdf)
+            if source_rec and str(source_rec[Fields.FILE]) != id_named_pdf:
+                logger.info(
+                    "- Source record: Updated path to match existing file: "
+                    f"{Colors.GREEN}{record[Fields.ID]}.pdf{Colors.END}"
+                )
+                source_rec[Fields.FILE] = Path(id_named_pdf)
+
+        if (home_path / Path(record[Fields.FILE])).is_file() and not (
+            home_path / Path(source_rec[Fields.FILE])
+        ).is_file():
+            logger.info(
+                "- Source record: Updated to path from primary record: "
+                f"{Colors.GREEN}{record[Fields.FILE]}{Colors.END}"
+            )
+            source_rec[Fields.FILE] = record[Fields.FILE]
+            continue
+
+    logger.info("Relinking completed. Save results.")
+    source_records_dict = {r[Fields.ID]: r for r in source_records}
+    write_file(records_dict=source_records_dict, filename=source.search_results_path)
 
 
 class PDFGet(colrev.process.operation.Operation):
@@ -247,88 +388,6 @@ class PDFGet(colrev.process.operation.Operation):
                 broken_symlink.unlink()
                 broken_symlink.symlink_to(new_file)
 
-    def _relink_pdfs_in_source(
-        self, source: colrev.search_file.ExtendedSearchFile
-    ) -> None:
-
-        # pylint: disable=too-many-locals
-
-        self.review_manager.logger.info(
-            "Checking PDFs in same directory to reassign when "
-            f"the cpid is identical {source.search_results_path}"
-        )
-
-        pdf_dir = self.review_manager.paths.pdf
-        pdf_candidates = {}
-        for pdf_candidate in list(pdf_dir.glob("**/*.pdf")):
-            colrev_pdf_id = colrev.record.record_pdf.PDFRecord.get_colrev_pdf_id(
-                pdf_candidate
-            )
-            relative_path = pdf_candidate.relative_to(self.review_manager.path)
-            pdf_candidates[relative_path] = colrev_pdf_id
-
-        source_records_dict = colrev.loader.load_utils.load(
-            filename=source.search_results_path,
-            logger=self.review_manager.logger,
-        )
-        source_records = list(source_records_dict.values())
-        corresponding_origin = str(source.get_origin_prefix())
-        records = self.review_manager.dataset.load_records_dict()
-        for record in records.values():
-            if Fields.FILE not in record:
-                continue
-
-            # Note: we check the source_records based on the cpids
-            # in the record because cpids are not stored in the source_record
-            # (pdf hashes may change after import/preparation)
-            source_rec = {}
-            if corresponding_origin != "":
-                source_origin_l = [
-                    o for o in record[Fields.ORIGIN] if corresponding_origin in o
-                ]
-                if len(source_origin_l) == 1:
-                    source_origin = source_origin_l[0]
-                    source_origin = source_origin.replace(
-                        f"{corresponding_origin}/", ""
-                    )
-                    source_rec_l = [
-                        s for s in source_records if s[Fields.ID] == source_origin
-                    ]
-                    if len(source_rec_l) == 1:
-                        source_rec = source_rec_l[0]
-
-            if source_rec:
-                if (
-                    self.review_manager.path / Path(record[Fields.FILE])
-                ).is_file() and (
-                    self.review_manager.path / Path(source_rec[Fields.FILE])
-                ).is_file():
-                    continue
-            else:
-                if (self.review_manager.path / Path(record[Fields.FILE])).is_file():
-                    continue
-
-            self.review_manager.logger.info(record[Fields.ID])
-
-            for pdf_candidate, cpid in pdf_candidates.items():
-                if record.get("colrev_pdf_id", "") == cpid:
-                    record[Fields.FILE] = str(pdf_candidate)
-                    source_rec[Fields.FILE] = str(pdf_candidate)
-
-                    self.review_manager.logger.info(
-                        f"Found and linked PDF: {pdf_candidate}"
-                    )
-                    break
-
-        if len(source_records) > 0:
-            source_records_dict = {r[Fields.ID]: r for r in source_records}
-            write_file(
-                records_dict=source_records_dict, filename=source.search_results_path
-            )
-
-        self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.git_repo.add_changes(source.search_results_path)
-
     def relink_pdfs(self) -> None:
         """Relink record files to the corresponding PDFs (if available)"""
 
@@ -339,8 +398,18 @@ class PDFGet(colrev.process.operation.Operation):
             for s in self.review_manager.settings.sources
             if s.platform == "colrev.files_dir" and s.search_results_path.is_file()
         ]
+        records = self.review_manager.dataset.load_records_dict()
+
         for source in sources:
-            self._relink_pdfs_in_source(source)
+            relink_pdfs_in_source(
+                source=source,
+                records=records,
+                pdf_dir=self.review_manager.paths.pdf,
+                logger=self.review_manager.logger,
+            )
+            self.review_manager.dataset.git_repo.add_changes(source.search_results_path)
+
+        self.review_manager.dataset.save_records_dict(records)
 
         self.review_manager.create_commit(msg="Relink PDFs")
 
