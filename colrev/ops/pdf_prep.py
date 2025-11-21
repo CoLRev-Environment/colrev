@@ -8,6 +8,7 @@ import shutil
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
+import pymupdf
 import requests
 
 import colrev.exceptions as colrev_exceptions
@@ -21,7 +22,7 @@ from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.package_manager.package_manager import PackageManager
-import pymupdf
+
 
 class PDFPrep(colrev.process.operation.Operation):
     """Prepare PDFs"""

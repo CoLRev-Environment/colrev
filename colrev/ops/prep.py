@@ -16,6 +16,7 @@ from multiprocessing import Value
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
+import git
 from requests.exceptions import ConnectionError as requests_ConnectionError
 from requests.exceptions import ReadTimeout
 
@@ -35,7 +36,6 @@ from colrev.constants import RecordState
 from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
-import git
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.package_manager.package_base_classes as base_classes
