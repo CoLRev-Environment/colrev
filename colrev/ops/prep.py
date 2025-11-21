@@ -932,6 +932,7 @@ class Prep(colrev.process.operation.Operation):
             {r[Fields.ID]: r for r in prepared_records}, partial=True
         )
         self._log_commit_details(prepared_records)
+        self.review_manager.dataset.git_repo.add_changes("data/search/md_*")
         self.review_manager.create_commit(
             msg="Prep: improve record metadata",
         )
