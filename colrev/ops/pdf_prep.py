@@ -21,7 +21,7 @@ from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.package_manager.package_manager import PackageManager
-
+import pymupdf
 
 class PDFPrep(colrev.process.operation.Operation):
     """Prepare PDFs"""
@@ -139,7 +139,12 @@ class PDFPrep(colrev.process.operation.Operation):
             record_dict, path=self.review_manager.path
         )
         if record_dict[Fields.FILE].endswith(".pdf"):
-            record.set_text_from_pdf(first_pages=True)
+            try:
+                record.set_text_from_pdf(first_pages=True)
+            except pymupdf.FileDataError:
+                record_dict[Fields.STATUS] = RecordState.pdf_needs_manual_preparation
+                return record_dict
+
         original_filename = record_dict[Fields.FILE]
 
         self.review_manager.logger.debug(f"Start PDF prep of {record_dict[Fields.ID]}")
