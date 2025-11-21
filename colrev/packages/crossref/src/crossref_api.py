@@ -378,7 +378,7 @@ class CrossrefAPI:
             # "Notes on incremental metadata updates"
 
             last_updated = self.last_updated.split("T", maxsplit=1)[0]
-            url = url + f"&filter=from-index-date:{last_updated}"
+            url = url + f"?filter=from-index-date:{last_updated}"
 
         return url
 
