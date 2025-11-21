@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import typing
 
+import bib_dedupe.exception as bib_dedupe_exception
 import pandas as pd
 from bib_dedupe.bib_dedupe import block
 from bib_dedupe.bib_dedupe import match
@@ -26,7 +27,7 @@ def _norm(value: str) -> str:
     return "" if v.upper() in {"UNKNOWN", "NA", "N/A"} else v
 
 
-def _record_str(record) -> str:
+def _record_str(record: colrev.record.record.Record) -> str:
     d = record.data
     return (
         f"{_norm(d.get(Fields.AUTHOR, ''))} ({_norm(d.get(Fields.YEAR, ''))}) "
@@ -261,11 +262,19 @@ def matches(
     """Determine whether two records match (correspond to the same entity)."""
     record_a_dict = record_a.copy().get_data()
     record_b_dict = record_b.copy().get_data()
+
+    # add REQUIRED_FIELDS = [ID, ENTRYTYPE, TITLE, AUTHOR, YEAR]
+
     record_a_dict[Fields.ID] = "a"
     record_b_dict[Fields.ID] = "b"
 
     records_df = pd.DataFrame([record_a_dict, record_b_dict])
-    records_df = prep(records_df, verbosity_level=0, cpu=1)
+
+    try:
+        records_df = prep(records_df, verbosity_level=0, cpu=1)
+    except bib_dedupe_exception.MissingRequiredFieldsError:
+        return False
+
     blocked_df = block(records_df, verbosity_level=0, cpu=1)
     matched_df = match(blocked_df, verbosity_level=0, cpu=1)
     duplicate_label = matched_df["duplicate_label"]
