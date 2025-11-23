@@ -182,6 +182,8 @@ class SearchAPIFeed:
         """Add a record to the feed and set its colrev_origin"""
 
         self._set_id(record)
+        if Fields.ENTRYTYPE not in record.data:
+            record.data[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
         feed_record_dict = record.data.copy()
         added_new = True
