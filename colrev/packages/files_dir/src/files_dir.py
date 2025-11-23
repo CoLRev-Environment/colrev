@@ -839,6 +839,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             for suffix in [
                 "completed research paper",
                 "completed research",
+                "research paper",
                 "complete research",
                 "full research paper",
                 "research in progress",
