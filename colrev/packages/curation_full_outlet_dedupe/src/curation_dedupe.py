@@ -12,13 +12,12 @@ from pydantic import Field
 from rapidfuzz import fuzz
 from tqdm import tqdm
 
+import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
-import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
-
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods
@@ -61,8 +60,11 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         record_b: colrev.record.record.Record,
     ) -> bool:
         """Check if a record has an overlapping colrev_id with the other record"""
-        own_colrev_ids = record_a.get_colrev_id()
-        other_colrev_ids = record_b.get_colrev_id()
+        try:
+            own_colrev_ids = record_a.get_colrev_id()
+            other_colrev_ids = record_b.get_colrev_id()
+        except colrev_exceptions.NotEnoughDataToIdentifyException:
+            return False
         if len(own_colrev_ids) > 0 and len(other_colrev_ids) > 0:
             if any(cid in own_colrev_ids for cid in other_colrev_ids):
                 return True
