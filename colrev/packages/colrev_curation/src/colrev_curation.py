@@ -245,6 +245,9 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
         # alternatively: get sources from search_sources.filename (name/stem?)
         sources = []
         for record_dict in records.values():
+            if Fields.ORIGIN not in record_dict:
+                self.logger.warning(f"Missing origin in {record_dict[Fields.ID]}")
+                continue
             for origin in record_dict[Fields.ORIGIN]:
                 source = origin.split("/")[0]
                 if source not in sources:
