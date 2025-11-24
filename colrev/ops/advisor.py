@@ -381,7 +381,7 @@ class Advisor:
             or self.review_manager.settings.is_curated_masterdata_repo()
         ):
             if (
-                "colrev data" in [ri["cmd"] for ri in review_instructions]
+                "colrev data" in [ri.get("cmd", "") for ri in review_instructions]
                 or self.review_manager.settings.is_curated_masterdata_repo()
             ):
                 for item in review_instructions.copy():
