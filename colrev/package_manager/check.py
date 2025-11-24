@@ -13,6 +13,7 @@ import toml
 
 import colrev.package_manager.package_base_classes as base_classes
 from colrev.constants import Colors
+from colrev.package_manager.package import Package
 from colrev.package_manager.package_base_classes import BASECLASS_MAP
 
 
@@ -22,8 +23,10 @@ def _check_package_installed(data: dict) -> bool:
         subprocess.check_output(["pip", "show", package_name])
     except subprocess.CalledProcessError:
         print(
-            f"Navigate to {Path.cwd()} and run: {Colors.GREEN} pip install -e .{Colors.END}"
+            f"Navigate to {Path.cwd()} and run: "
+            f"{Colors.GREEN}pip install -e .{Colors.END}"
         )
+        return False
 
     return True
 
@@ -83,7 +86,6 @@ def _check_project_plugins_colrev_classes(data: dict) -> bool:
         package, module_path = module_path.split(".", 1)
 
         try:
-
             package_spec = util.find_spec(package)
             if not package_spec:
                 return False
@@ -97,15 +99,15 @@ def _check_project_plugins_colrev_classes(data: dict) -> bool:
 
             module = import_module(f"{package}.{module_path}")
             module_spec.loader.exec_module(module)  # type: ignore
-            cls = getattr(module, class_name)  # type: ignore
-            baseclass: str = BASECLASS_MAP.get(interface_identifier)  # type: ignore
+            cls = getattr(module, class_name)  # type: ignore[attr-defined]
+            baseclass: str = BASECLASS_MAP.get(interface_identifier)  # type: ignore[assignment]
 
             baseclass_class = getattr(base_classes, baseclass)
             if not issubclass(cls, baseclass_class):
                 raise TypeError(
                     f"{cls} must implement all abstract methods of {baseclass_class}!"
                 )
-        except (ImportError, AttributeError) as exc:
+        except (ImportError, AttributeError, FileNotFoundError, TypeError) as exc:
             print(exc)
             return False
     return True
@@ -113,6 +115,26 @@ def _check_project_plugins_colrev_classes(data: dict) -> bool:
 
 def _check_build_system(data: dict) -> bool:
     return _check_key_exists(data, "build-system")
+
+
+def _check_colrev_discovers_package(data: dict) -> bool:
+    """Check whether CoLRev can discover this package as a CoLRev package."""
+
+    package_name = data.get("project", {}).get("name")
+    if not package_name:
+        print("No project.name found – cannot check CoLRev package discovery.")
+        return False
+
+    try:
+        Package(package_name)
+    except Exception as exc:  # noqa: BLE001
+        print(
+            f"{Colors.RED}CoLRev could not discover the package '{package_name}': "
+            f"{exc}{Colors.END}"
+        )
+        return False
+
+    return True
 
 
 # Define checks with preconditions
@@ -144,22 +166,26 @@ checks = {
     },
     "check_project_plugins_colrev_keys": {
         "method": _check_project_entry_points_colrev_keys,
-        "preconditions": ["_check_project_plugins_colrev"],
+        "preconditions": ["check_project_plugins_colrev"],
     },
     "check_project_plugins_colrev_classes": {
         "method": _check_project_plugins_colrev_classes,
-        "preconditions": ["_check_project_plugins_colrev"],
+        "preconditions": ["check_project_plugins_colrev"],
     },
     "check_package_installed": {
         "method": _check_package_installed,
-        "preconditions": [],
+        "preconditions": ["check_project", "check_project_name"],
+    },
+    "check_colrev_discovers_package": {
+        "method": _check_colrev_discovers_package,
+        "preconditions": ["check_package_installed", "check_project_plugins_colrev"],
     },
     "check_build_system": {"method": _check_build_system, "preconditions": []},
 }
 
 
-def _validate_structure(data: dict, checks_dict: dict) -> list:
-    failed_checks = []
+def _validate_structure(data: dict, checks_dict: dict) -> list[str]:
+    failed_checks: list[str] = []
     for check_name, check in checks_dict.items():
         precondition_failed = any(
             precondition in failed_checks for precondition in check["preconditions"]
@@ -194,8 +220,13 @@ def main() -> None:
             print("The pyproject.toml file structure is invalid. Failed checks:")
             for check in failed_checks:
                 print(f" - {check}")
+            sys.exit(1)
         else:
             print("Check passed: check_pyproject_valid_structure")
     except Exception as exc:  # pylint: disable=broad-except
         print(f"Error reading pyproject.toml: {exc}")
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
