@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 import typing
-
 from pathlib import Path
+
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
