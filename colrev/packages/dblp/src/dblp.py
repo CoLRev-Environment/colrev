@@ -8,7 +8,7 @@ import typing
 from multiprocessing import Lock
 from pathlib import Path
 
-import requests # pylint: disable=colrev-search-source-requests-import
+import requests  # pylint: disable=colrev-search-source-requests-import
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -220,7 +220,9 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         for feed_record_dict in dblp_feed.feed_records.values():
             if Fields.TITLE not in feed_record_dict:
                 continue
-            api.params = {"query": feed_record_dict[Fields.TITLE]}
+            api.params = {
+                "query": colrev.utils.remove_stopwords(feed_record_dict[Fields.TITLE])
+            }
             api.set_url_from_query()
             for retrieved_record in api.retrieve_records():
                 try:
@@ -359,7 +361,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             else:
                 raise NotImplementedError
-        except requests.exceptions.ConnectTimeout:
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.HTTPError):
             self.logger.warning(
                 f"{Colors.RED}Skipping DBLP search (API currently not available){Colors.END}"
             )
