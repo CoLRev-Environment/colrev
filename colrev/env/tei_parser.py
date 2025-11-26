@@ -570,6 +570,81 @@ class TEIParser:
         ref_rec = {k: v for k, v in ref_rec.items() if v != ""}
         return ref_rec
 
+    def iter_paragraphs(
+        self,
+        *,
+        min_chars: int = 40,
+        exclude_sections: typing.Iterable[str] = (
+            "references",
+            "reference",
+            "bibliography",
+            "acknowledgment",
+            "acknowledgement",
+            "appendix",
+        ),
+    ) -> typing.Iterator[str]:
+        """Iterate over body paragraphs in reading order.
+
+        Args:
+            min_chars: Minimum number of characters for a paragraph to be yielded.
+                       Shorter chunks (e.g., headings, figure labels) are skipped.
+            exclude_sections: Section names (case-insensitive) whose paragraphs
+                              should be excluded (e.g., references, appendix).
+
+        Yields:
+            Cleaned paragraph texts in the order they appear in the body.
+        """
+        # Get <text>/<body> as the main content region
+        text_node = self.root.find(f".//{self.ns['tei']}text")
+        if text_node is None:
+            return
+
+        body_node = text_node.find(f"{self.ns['tei']}body")
+        if body_node is None:
+            # Fallback: use whole text_node if body is missing
+            body_node = text_node
+
+        # Build parent map so we can walk up the ancestor chain for each <p>
+        parent_map = {child: parent for parent in body_node.iter() for child in parent}
+
+        exclude_section_names = {s.lower() for s in exclude_sections}
+
+        def is_in_excluded_section(p_elem: Element) -> bool:
+            """Check whether <p> lives under a section we want to exclude."""
+            node = p_elem
+            while node in parent_map:
+                node = parent_map[node]
+                tag = node.tag
+                # Skip based on element types (bibliography lists, notes, figures, tables)
+                if tag in {
+                    f"{self.ns['tei']}listBibl",
+                    f"{self.ns['tei']}note",
+                    f"{self.ns['tei']}figure",
+                    f"{self.ns['tei']}table",
+                }:
+                    return True
+
+                # If this node has a section heading, check whether it's excluded
+                head = node.find(f"{self.ns['tei']}head")
+                if head is not None and head.text:
+                    if head.text.strip().lower() in exclude_section_names:
+                        return True
+            return False
+
+        for p in body_node.iter(f"{self.ns['tei']}p"):
+            if is_in_excluded_section(p):
+                continue
+
+            # Collect all text inside <p>, including nested tags like <ref>, <hi>, etc.
+            text_chunks = [t for t in p.itertext()]
+            paragraph_text = " ".join(text_chunks)
+            paragraph_text = " ".join(paragraph_text.split())  # normalize whitespace
+
+            if len(paragraph_text) < min_chars:
+                continue
+
+            yield paragraph_text
+
     def get_references(self, *, add_intext_citation_count: bool = False) -> list:
         """Get the bibliography (references section) as a list of record dicts"""
         # Note : could also allow top-10 % of most frequent in-text citations
