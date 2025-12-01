@@ -17,6 +17,93 @@ from colrev.package_manager.package import Package
 from colrev.package_manager.package_base_classes import BASECLASS_MAP
 
 
+HELP_MESSAGES: dict[str, str] = {
+    "check_project": (
+        "The [project] table is missing in your pyproject.toml.\n"
+        "Add at least a minimal project section, for example:\n\n"
+        "[project]\n"
+        'name = "my-colrev-package"\n'
+        'version = "0.1.0"\n'
+        'description = "Short description of the package"\n'
+        'requires-python = ">=3.10"\n'
+    ),
+    "check_project_name": (
+        "The project name is missing.\n"
+        "Add a name in the [project] section of pyproject.toml, e.g.:\n\n"
+        "[project]\n"
+        'name = "my-colrev-package"\n'
+    ),
+    "check_project_description": (
+        "The project description is missing.\n"
+        "Add a description in the [project] section, e.g.:\n\n"
+        "[project]\n"
+        'description = "Short description of what this CoLRev package does."\n'
+    ),
+    "check_project_version": (
+        "The project version is missing.\n"
+        "Add a version in the [project] section, e.g.:\n\n"
+        "[project]\n"
+        'version = "0.1.0"\n'
+    ),
+    "check_project_license": (
+        "The project license is missing.\n"
+        "Add a license in the [project] section of pyproject.toml, for example:\n\n"
+        "[project]\n"
+        'license = { text = "MIT" }\n'
+        "# or (when you have a LICENSE file):\n"
+        'license = { file = "LICENSE" }\n'
+    ),
+    "check_project_authors": (
+        "The project authors are missing.\n"
+        "Add an authors list in the [project] section, e.g.:\n\n"
+        "[project]\n"
+        "authors = [\n"
+        '  { name = "Your Name", email = "you@example.com" },\n'
+        "]\n"
+    ),
+    "check_project_plugins_colrev": (
+        "No CoLRev entry-points were found.\n"
+        'Define them under [project.entry-points."colrev"], for example:\n\n'
+        '[project.entry-points."colrev"]\n'
+        '# interface_identifier = "your_package.module:YourEndpointClass"\n'
+        '"colrev.operations.built_in" = "my_colrev_package.operations:MyOperation"\n'
+    ),
+    "check_project_plugins_colrev_keys": (
+        "Some CoLRev entry-point keys are not valid BASECLASS_MAP keys.\n"
+        'Ensure that all keys under [project.entry-points."colrev"] correspond\n'
+        "to supported CoLRev interfaces. Example structure:\n\n"
+        '[project.entry-points."colrev"]\n'
+        '"colrev.built_in.search_source" = "my_colrev_package.search_source:MySource"\n"'
+    ),
+    "check_project_plugins_colrev_classes": (
+        "At least one CoLRev plugin class could not be imported or does not implement\n"
+        "the required CoLRev base class.\n"
+        "Check that your entry-points point to existing classes and that these classes\n"
+        "subclass the correct CoLRev base class from colrev.package_manager.package_base_classes.\n"
+    ),
+    "check_package_installed": (
+        "The package does not appear to be installed in editable mode.\n"
+        "From the project root, run:\n\n"
+        "  pip install -e .\n"
+    ),
+    "check_colrev_discovers_package": (
+        "CoLRev could not discover this package by its project.name.\n"
+        "Make sure the package is installed in the active environment and that\n"
+        "the CoLRev package metadata is correctly configured.\n"
+        "Typical workflow from the project root:\n\n"
+        "  pip install -e .\n"
+        "  colrev env --help  # to verify that CoLRev is installed and working\n"
+    ),
+    "check_build_system": (
+        "The [build-system] table is missing.\n"
+        "Add a standard build system configuration to pyproject.toml, for example:\n\n"
+        "[build-system]\n"
+        'requires = ["setuptools>=61", "wheel"]\n'
+        'build-backend = "setuptools.build_meta"\n'
+    ),
+}
+
+
 def _check_package_installed(data: dict) -> bool:
     package_name = data["project"]["name"]
     try:
@@ -199,6 +286,10 @@ def _validate_structure(data: dict, checks_dict: dict) -> list[str]:
 
         if not result:
             print(f"{Colors.RED}Check failed: {check_name}{Colors.END}")
+            help_msg = HELP_MESSAGES.get(check_name)
+            if help_msg:
+                print(f"{Colors.GREEN}How to fix {check_name}:{Colors.END}")
+                print(help_msg)
             failed_checks.append(check_name)
         else:
             print(f"Check passed: {check_name}")
@@ -222,7 +313,8 @@ def main() -> None:
                 print(f" - {check}")
             sys.exit(1)
         else:
-            print("Check passed: check_pyproject_valid_structure")
+            print()
+            print(f"{Colors.GREEN}✅ The package is a valid CoLRev plugin!{Colors.END}")
     except Exception as exc:  # pylint: disable=broad-except
         print(f"Error reading pyproject.toml: {exc}")
         sys.exit(1)
