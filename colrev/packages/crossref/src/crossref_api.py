@@ -45,9 +45,10 @@ class MaxOffsetError(CrossrefAPIError):
 class HTTPRequest:
     """HTTP Request"""
 
-    def __init__(self, *, timeout: int) -> None:
+    def __init__(self, *, timeout: int, cache: bool = True) -> None:
         self.rate_limits = {"x-rate-limit-limit": 50, "x-rate-limit-interval": 1}
         self.timeout = timeout
+        self.cache = cache
 
     def _update_rate_limits(self, headers: dict) -> None:
 
@@ -84,14 +85,13 @@ class HTTPRequest:
         data: typing.Optional[dict] = None,
         only_headers: bool = False,
         skip_throttle: bool = False,
-        cache: bool = True,
     ) -> requests.Response:
         """Retrieve data from a given endpoint."""
 
         if only_headers is True:
             return requests.head(endpoint, timeout=2)
 
-        if cache:
+        if self.cache:
             result = SESSION.get(
                 endpoint, params=data, timeout=self.timeout, headers=headers
             )
@@ -117,10 +117,11 @@ class Endpoint:
         request_url: str,
         *,
         email: str = "",
+        cache: bool = True,
         crossref_plus_token: str = "",
     ) -> None:
 
-        self.retrieve = HTTPRequest(timeout=60).retrieve
+        self.httpr = HTTPRequest(timeout=60, cache=cache)
 
         self.headers = {
             "user-agent": f"colrev/{version('colrev')} "
@@ -138,7 +139,7 @@ class Endpoint:
     def _rate_limits(self) -> dict:
         request_url = str(self.request_url)
 
-        result = self.retrieve(
+        result = self.httpr.retrieve(
             request_url,
             only_headers=True,
             headers=self.headers,
@@ -169,7 +170,7 @@ class Endpoint:
         request_params = dict(self.request_params)
         request_url = str(self.request_url)
 
-        result = self.retrieve(
+        result = self.httpr.retrieve(
             request_url,
             data=request_params,
             headers=self.headers,
@@ -184,7 +185,7 @@ class Endpoint:
         request_params["rows"] = "0"
 
         try:
-            result = self.retrieve(
+            result = self.httpr.retrieve(
                 request_url,
                 data=request_params,
                 headers=self.headers,
@@ -202,7 +203,7 @@ class Endpoint:
         request_url = str(self.request_url)
 
         try:
-            result = self.retrieve(
+            result = self.httpr.retrieve(
                 request_url,
                 data=request_params,
                 headers=self.headers,
@@ -234,7 +235,7 @@ class Endpoint:
         request_url = str(self.request_url)
 
         if request_url.startswith("https://api.crossref.org/works/"):
-            result = self.retrieve(
+            result = self.httpr.retrieve(
                 request_url,
                 headers=self.headers,
             )
@@ -254,12 +255,13 @@ class Endpoint:
             request_params["rows"] = str(LIMIT)
             while True:
 
-                result = self.retrieve(
+                self.httpr.cache = False
+                result = self.httpr.retrieve(
                     request_url,
                     data=request_params,
                     headers=self.headers,
-                    cache=False,
                 )
+                self.httpr.cache = True
 
                 if result.status_code == 404:
                     return
@@ -278,7 +280,7 @@ class Endpoint:
             request_params["offset"] = "0"
             request_params["rows"] = str(LIMIT)
             while True:
-                result = self.retrieve(
+                result = self.httpr.retrieve(
                     request_url,
                     data=request_params,
                     headers=self.headers,
@@ -326,6 +328,7 @@ class CrossrefAPI:
         *,
         url: str,
         rerun: bool = False,
+        cache: bool = True,
     ):
         assert url.startswith(self._api_url)
         self.url = url
@@ -334,6 +337,7 @@ class CrossrefAPI:
             colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
         )
         self.rerun = rerun
+        self.cache = cache
 
     def check_availability(self) -> None:
         """Check the availability of the API"""
@@ -385,13 +389,13 @@ class CrossrefAPI:
     def get_len_total(self) -> int:
         """Get the total number of records from Crossref based on the parameters"""
 
-        endpoint = Endpoint(self.url, email=self.email)
+        endpoint = Endpoint(self.url, email=self.email, cache=self.cache)
         return endpoint.get_nr()
 
     def get_number_of_records(self) -> int:
         """Get the number of records from Crossref based on the parameters"""
 
-        endpoint = Endpoint(self.get_url(), email=self.email)
+        endpoint = Endpoint(self.get_url(), email=self.email, cache=self.cache)
         return endpoint.get_nr()
 
     def get_records(self) -> typing.Iterator[colrev.record.record.Record]:
@@ -399,7 +403,7 @@ class CrossrefAPI:
 
         url = self.get_url()
 
-        endpoint = Endpoint(url, email=self.email)
+        endpoint = Endpoint(url, email=self.email, cache=self.cache)
         if self.get_number_of_records() > 10000:
             endpoint.cursor_as_iter_method = True
 
@@ -518,7 +522,7 @@ class CrossrefAPI:
 
         url = self._create_query_url(record=record, jour_vol_iss_list=jour_vol_iss_list)
 
-        endpoint = Endpoint(url, email=self.email)
+        endpoint = Endpoint(url, email=self.email, cache=self.cache)
         if jour_vol_iss_list:
             endpoint.request_params["rows"] = "50"
         else:
