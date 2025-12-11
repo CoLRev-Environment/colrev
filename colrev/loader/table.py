@@ -45,7 +45,7 @@ class TableLoader(colrev.loader.loader.Loader):
     def get_nr_records(cls, filename: Path) -> int:
         """Get the number of records in the file"""
         if filename.name.endswith(".csv"):
-            data = pd.read_csv(filename)
+            data = pd.read_csv(filename, dtype=str, keep_default_na=False)
         elif filename.name.endswith((".xls", ".xlsx")):
             data = pd.read_excel(filename, dtype=str)
         else:
@@ -68,6 +68,8 @@ class TableLoader(colrev.loader.loader.Loader):
             raise colrev_exceptions.ImportException(
                 f"Error: Not a valid file? {self.filename.name}"
             ) from exc
+
+        data = data.fillna("").astype(str)
 
         records_list = data.to_dict("records")
         return records_list
