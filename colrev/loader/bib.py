@@ -205,7 +205,7 @@ def process_key_value(
     line: str,
 ) -> tuple[str, str]:
     """Processes a key-value pair inside an entry."""
-    if re.match(r"^\s*[a-zA-Z0-9._-]+\s*=", line):
+    if re.match(r"^\s*[a-zA-Z0-9._:+-]+\s*=", line):
         if current_key:
             store_current_key_value(current_record, current_key, current_value)
         key, value = map(str.strip, line.split("=", 1))
