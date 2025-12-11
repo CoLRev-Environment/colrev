@@ -15,7 +15,6 @@ from colrev.constants import RecordState
 
 KEYS_TO_REMOVE = (
     Fields.ORIGIN,
-    Fields.FULLTEXT,
     Fields.GROBID_VERSION,
     Fields.SCREENING_CRITERIA,
     Fields.METADATA_SOURCE_REPOSITORY_PATHS,
@@ -167,6 +166,8 @@ def prepare_record_for_return(
     if not include_file:
         colrev.record.record.Record(record_dict).remove_field(key=Fields.FILE)
         colrev.record.record.Record(record_dict).remove_field(key=Fields.PDF_ID)
+        colrev.record.record.Record(record_dict).remove_field(key=Fields.FULLTEXT)
+        colrev.record.record.Record(record_dict).remove_field(key=LocalIndexFields.TEI)
 
     record = colrev.record.record.Record(record_dict)
     record.set_status(RecordState.md_prepared)

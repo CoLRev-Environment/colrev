@@ -94,6 +94,10 @@ class SQLiteIndex:
         )
 
         retrieved_record = list(records_dict.values())[0]
+        if LocalIndexFields.TEI in row:
+            retrieved_record[LocalIndexFields.TEI] = row[LocalIndexFields.TEI]
+        if Fields.FULLTEXT in row:
+            retrieved_record[Fields.FULLTEXT] = row[Fields.FULLTEXT]
         return retrieved_record
 
 
