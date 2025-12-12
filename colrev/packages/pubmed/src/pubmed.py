@@ -260,6 +260,9 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 logger=self.logger,
             )
 
+            if "pubmedid" not in record.data:
+                return record
+
             retrieved_record = api.query_id(pubmed_id=record.data["pubmedid"])
 
             if not retrieved_record:
