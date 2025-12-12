@@ -146,7 +146,9 @@ from colrev.constants import RecordState
             {
                 Fields.ID: "001",
                 Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-                Fields.MD_PROV: {Fields.AUTHOR: {"source": "ORIGINAL", "note": ""}},
+                Fields.MD_PROV: {
+                    Fields.AUTHOR: {"source": "md_crossref.bib/001", "note": ""}
+                },
                 Fields.D_PROV: {},
                 Fields.ORIGIN: ["md_crossref.bib/001", "pubmed.bib/001"],
                 Fields.AUTHOR: "Rai, Arun and Coauthor, Second",
@@ -187,7 +189,7 @@ from colrev.constants import RecordState
                     Fields.TITLE: {"note": "language-unknown", "source": "ORIGINAL"}
                 },
                 Fields.D_PROV: {
-                    "literature_review": {"source": "ORIGINAL", "note": ""}
+                    "literature_review": {"source": "md_dblp.bib/001", "note": ""}
                 },
                 Fields.ORIGIN: ["md_crossref.bib/001", "md_dblp.bib/001"],
                 Fields.AUTHOR: "Rai, Arun",
@@ -235,6 +237,69 @@ from colrev.constants import RecordState
                 Fields.VOLUME: "45",
                 Fields.NUMBER: "1",
                 Fields.JOURNAL: "MIS Quarterly",
+            },
+        ),
+        # Upgrade ENTRYTYPE (misc -> inproceedings) when incoming record is higher-quality
+        (
+            {
+                Fields.ID: "SuhrHilgardLakkaraju2021",
+                Fields.ENTRYTYPE: ENTRYTYPES.MISC,
+                Fields.ORIGIN: ["import.csv/000037"],
+                Fields.STATUS: RecordState.md_imported,
+                Fields.MD_PROV: {
+                    Fields.AUTHOR: {
+                        "source": "import.csv/000037",
+                        "note": "incomplete-field,name-format-separators",
+                    },
+                    Fields.TITLE: {
+                        "source": "import.csv/000037",
+                        "note": "language-unknown",
+                    },
+                    Fields.YEAR: {"source": "import.csv/000037", "note": ""},
+                },
+                Fields.AUTHOR: "T. Sühr; S. Hilgard; H. Lakkaraju",
+                Fields.TITLE: "Does Fair Ranking Improve Minority Outcomes? Understanding the Interplay of Human and Algorithmic Biases in Online Hiring",
+                Fields.YEAR: "2021",
+            },
+            {
+                Fields.ID: "000032",
+                Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
+                Fields.ORIGIN: ["md_acm.bib/000032"],
+                Fields.AUTHOR: "Sühr, Tom and Hilgard, Sophie and Lakkaraju, Himabindu",
+                Fields.TITLE: "Does Fair Ranking Improve Minority Outcomes? Understanding the Interplay of Human and Algorithmic Biases in Online Hiring",
+                Fields.YEAR: "2021",
+                Fields.PAGES: "989--999",
+                Fields.DOI: "10.1145/3461702.3462602",
+                Fields.BOOKTITLE: "Proceedings of the 2021 AAAI/ACM Conference on AI, Ethics, and Society",
+            },
+            [],
+            {
+                Fields.ID: "SuhrHilgardLakkaraju2021",
+                Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,  # <-- key assertion
+                Fields.ORIGIN: ["import.csv/000037", "md_acm.bib/000032"],
+                Fields.STATUS: RecordState.md_imported,
+                Fields.MD_PROV: {
+                    Fields.AUTHOR: {
+                        "source": "md_acm.bib/000032",
+                        "note": "",
+                    },
+                    Fields.TITLE: {
+                        "source": "import.csv/000037",
+                        "note": "language-unknown",
+                    },
+                    Fields.YEAR: {"source": "import.csv/000037", "note": ""},
+                    Fields.BOOKTITLE: {"source": "md_acm.bib/000032", "note": ""},
+                    Fields.PAGES: {"source": "md_acm.bib/000032", "note": ""},
+                },
+                Fields.D_PROV: {
+                    Fields.DOI: {"source": "md_acm.bib/000032", "note": ""},
+                },
+                Fields.AUTHOR: "Sühr, Tom and Hilgard, Sophie and Lakkaraju, Himabindu",
+                Fields.TITLE: "Does Fair Ranking Improve Minority Outcomes? Understanding the Interplay of Human and Algorithmic Biases in Online Hiring",
+                Fields.YEAR: "2021",
+                Fields.PAGES: "989--999",
+                Fields.DOI: "10.1145/3461702.3462602",
+                Fields.BOOKTITLE: "Proceedings of the 2021 AAAI/ACM Conference on AI, Ethics, and Society",
             },
         ),
     ],
@@ -397,6 +462,7 @@ def test_fuse_fields(
         main_record,
         merging_record=colrev.record.record.Record(merging_record_dict),
         key=key,
+        default_source="ORIGINAL",
     )
     print(main_record_dict)
     print(merging_record_dict)

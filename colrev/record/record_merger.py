@@ -17,11 +17,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 def _get_merging_triple(
     merging_record: colrev.record.record.Record, *, key: str, default_source: str
-) -> typing.Tuple[
-    str,
-    str,
-    str,
-]:
+) -> typing.Tuple[str, str, str]:
     val = merging_record.data.get(key, "")
 
     # do not override provenance, ID, ... fields
@@ -49,7 +45,6 @@ def _merge_origins(
     merging_record: colrev.record.record.Record,
 ) -> None:
     """Merge the origins with those of the merging_record"""
-
     if Fields.ORIGIN in merging_record.data:
         origins = main_record.data[Fields.ORIGIN] + merging_record.data[Fields.ORIGIN]
         main_record.data[Fields.ORIGIN] = sorted(list(set(origins)))
@@ -60,7 +55,6 @@ def _merge_status(
     merging_record: colrev.record.record.Record,
 ) -> None:
     """Merge the status with the merging_record"""
-
     if Fields.STATUS in merging_record.data:
         # Set both status to the latter in the state model
         if main_record.data[Fields.STATUS] < merging_record.data[Fields.STATUS]:
@@ -89,10 +83,8 @@ def _select_year(
     year_pattern = r"\d{4}"
     if (
         re.match(year_pattern, merging_record.data[Fields.YEAR])
-        or not re.match(
-            year_pattern, record.data[Fields.YEAR]
-        )  # could be "forthcoming" or "UNKNOWN"
-        # record.data[Fields.YEAR] == "forthcoming"
+        or not re.match(year_pattern, record.data[Fields.YEAR])
+        # could be "forthcoming" or "UNKNOWN"
     ):
         return merging_record.data[Fields.YEAR]
     return record.data[Fields.YEAR]
@@ -180,11 +172,19 @@ CUSTOM_FIELD_SELECTORS = {
 }
 
 
+def _get_merging_source_note(
+    merging_record: colrev.record.record.Record, *, key: str, default_source: str
+) -> tuple[str, str]:
+    fp = merging_record.get_field_provenance(key=key, default_source=default_source)
+    return fp["source"], fp["note"]
+
+
 def fuse_fields(
     main_record: colrev.record.record.Record,
     *,
     merging_record: colrev.record.record.Record,
     key: str,
+    default_source: str,
 ) -> None:
     """Fuse fields based on quality heuristics"""
     # Note : the assumption is that we need masterdata_provenance notes
@@ -203,6 +203,10 @@ def fuse_fields(
     quality_model.run(record=merging_record)
 
     if key in CUSTOM_FIELD_SELECTORS:
+        source, _note = _get_merging_source_note(
+            merging_record, key=key, default_source=default_source
+        )
+
         if key in main_record.data:
             best_value = CUSTOM_FIELD_SELECTORS[key](
                 main_record,
@@ -212,14 +216,14 @@ def fuse_fields(
                 main_record.update_field(
                     key=key,
                     value=best_value,
-                    source=merging_record.get_field_provenance_source(key),
+                    source=source,
                     append_edit=False,
                 )
         else:
             main_record.update_field(
                 key=key,
                 value=merging_record.data[key],
-                source=merging_record.get_field_provenance_source(key),
+                source=source,
                 append_edit=False,
             )
 
@@ -230,6 +234,7 @@ def fuse_fields(
             )
         else:
             main_record.data[key] = merging_record.data[key]
+
     elif key in [Fields.URL]:
         if (
             key in main_record.data
@@ -237,10 +242,13 @@ def fuse_fields(
             != merging_record.data[key].rstrip("/")
             and "https" not in main_record.data[key]
         ):
+            source, _note = _get_merging_source_note(
+                merging_record, key=key, default_source=default_source
+            )
             main_record.update_field(
                 key=key,
                 value=merging_record.data[key],
-                source=merging_record.get_field_provenance_source(key),
+                source=source,
                 append_edit=False,
             )
 
@@ -250,10 +258,13 @@ def fuse_fields(
     ] and merging_record.data.get(key, "") not in ["", FieldValues.UNKNOWN]:
         if _preserve_ignore_missing(main_record, key=key):
             return
+        source, _note = _get_merging_source_note(
+            merging_record, key=key, default_source=default_source
+        )
         main_record.update_field(
             key=key,
             value=merging_record.data[key],
-            source=merging_record.get_field_provenance_source(key),
+            source=source,
             append_edit=False,
         )
 
@@ -273,13 +284,12 @@ def _merging_record_preferred(
 ) -> bool:
     if Fields.ORIGIN not in merging_record.data:
         return False
-    merging_record_preferred = False
     if any(
         any(ps in origin for ps in preferred_masterdata_source_prefixes)
         for origin in merging_record.data[Fields.ORIGIN]
     ):
-        merging_record_preferred = True
-    return merging_record_preferred
+        return True
+    return False
 
 
 def _prep_incoming_masterdata_merge(
@@ -299,6 +309,15 @@ def _prep_incoming_masterdata_merge(
                 del main_record.data[k]
 
 
+def _incoming_md_default_source(
+    merging_record: colrev.record.record.Record, *, fallback: str
+) -> str:
+    origins = merging_record.data.get(Fields.ORIGIN, [])
+    if len(origins) == 1 and origins[0].startswith("md_"):
+        return origins[0]
+    return fallback
+
+
 def merge(
     main_record: colrev.record.record.Record,
     merging_record: colrev.record.record.Record,
@@ -309,13 +328,17 @@ def merge(
     """General-purpose record merging
     for preparation, curated/non-curated records and records with origins
 
-
     Apply heuristics to create a fusion of the best fields based on
-    quality heuristics"""
+    quality heuristics
+    """
 
     merging_record_preferred = _merging_record_preferred(
         merging_record,
         preferred_masterdata_source_prefixes=preferred_masterdata_source_prefixes,
+    )
+
+    incoming_default_source = _incoming_md_default_source(
+        merging_record, fallback=default_source
     )
 
     _merge_origins(main_record, merging_record)
@@ -325,7 +348,7 @@ def merge(
 
     for key in list(merging_record.data.keys()):
         val, source, note = _get_merging_triple(
-            merging_record, key=key, default_source=default_source
+            merging_record, key=key, default_source=incoming_default_source
         )
         if val == "":
             continue
@@ -347,22 +370,40 @@ def merge(
         if key in FieldSet.IDENTIFYING_FIELD_KEYS:
             if merging_record_preferred:
                 main_record.update_field(
-                    key=key, value=str(val), source=source, append_edit=False
+                    key=key,
+                    value=str(val),
+                    source=source,
+                    append_edit=False,
                 )
-
-            # Fuse best fields if none is curated
             else:
                 fuse_fields(
                     main_record,
                     merging_record=merging_record,
                     key=key,
+                    default_source=incoming_default_source,
                 )
 
         # Part 2: other fields
         else:
+            # Special-case: upgrade ENTRYTYPE (e.g., misc -> article)
+            if key == Fields.ENTRYTYPE:
+                main_et = main_record.data.get(Fields.ENTRYTYPE, "")
+                incoming_et = merging_record.data.get(Fields.ENTRYTYPE, "")
+                if main_et in ["", "misc"] and incoming_et not in ["", "misc"]:
+                    main_record.update_field(
+                        key=Fields.ENTRYTYPE,
+                        value=incoming_et,
+                        source=source,
+                        note=note,
+                        keep_source_if_equal=True,
+                        append_edit=False,
+                    )
+                continue
+
             # keep existing values per default
             if key in main_record.data:
                 continue
+
             main_record.update_field(
                 key=key,
                 value=str(val),
