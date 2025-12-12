@@ -87,6 +87,7 @@ def test_prepare_record_for_indexing(record_dict: dict, expected: dict) -> None:
                 Fields.YEAR: "2014",
                 "literature_review": "yes",
                 Fields.JOURNAL: "MIS Quarterly",
+                "fulltext": "https://wiley.com/doi/10.25300/MISQ/2018/13239",
                 Fields.AUTHOR: "Abbas, Ahmed and Zhou, Yilu and Deng, Shasha and Zhang, Pengzhu",
                 Fields.TITLE: "Text Analytics to Support Sense-Making in Social Media: A Language-Action Perspective",
                 # Fields.FULLTEXT: "https://wiley.com/doi/10.25300/MISQ/2018/13239",

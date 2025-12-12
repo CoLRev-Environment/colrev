@@ -78,11 +78,13 @@ def test_retrieve_based_on_colrev_pdf_id(local_index) -> None:  # type: ignore
             Fields.STATUS: RecordState.md_prepared,
             Fields.PDF_ID: "cpid2:fffffffffcffffffe007ffffc0020003e0f20007fffffffff000000fff8001fffffc3fffffe007ffffc003fffe00007ffffffffff800001ff800001ff80003fff920725ff800001ff800001ff800001ff84041fff81fffffffffffffe000afffe0018007efff8007e2bd8007efff8007e00fffffffffffffffffffffffffffff",
             Fields.DBLP_KEY: "https://dblp.org/rec/journals/misq/AbbasiAVH12",
+            "fulltext": "",
             Fields.JOURNAL: "MIS Quarterly",
             Fields.TITLE: "MetaFraud - A Meta-Learning Framework for Detecting Financial Fraud",
             Fields.YEAR: "2012",
             Fields.VOLUME: "36",
             Fields.NUMBER: "4",
+            "tei": "",
             Fields.URL: "http://misq.org/metafraud-a-meta-learning-framework-for-detecting-financial-fraud.html",
             Fields.LANGUAGE: "eng",
             Fields.AUTHOR: "Abbasi, Ahmed and Albrecht, Conan and Vance, Anthony and Hansen, James",
@@ -90,7 +92,7 @@ def test_retrieve_based_on_colrev_pdf_id(local_index) -> None:  # type: ignore
         }
     )
     actual = local_index.retrieve_based_on_colrev_pdf_id(colrev_pdf_id=colrev_pdf_id)
-    assert expected == actual
+    assert expected.data == actual.data
 
 
 def test_retrieve_from_toc(local_index) -> None:  # type: ignore

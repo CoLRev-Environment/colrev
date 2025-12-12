@@ -319,7 +319,10 @@ class SearchAPIFeed:
                 if self._missing_ignored_field(main_record, key):
                     continue
                 colrev.record.record_merger.fuse_fields(
-                    main_record, merging_record=record, key=key
+                    main_record,
+                    merging_record=record,
+                    key=key,
+                    default_source="ORIGINAL",
                 )
 
             else:
@@ -329,7 +332,10 @@ class SearchAPIFeed:
                 ].replace(" - ", ": "):
                     continue
                 colrev.record.record_merger.fuse_fields(
-                    main_record, merging_record=record, key=key
+                    main_record,
+                    merging_record=record,
+                    key=key,
+                    default_source="ORIGINAL",
                 )
 
     def _forthcoming_published(
