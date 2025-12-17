@@ -74,8 +74,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         else:
             url = self.search_source.search_parameters["url"]
 
-        cache = not colrev.utils.in_ci_environment()
-        self.api = crossref_api.CrossrefAPI(url=url, cache=cache)
+        self.api = crossref_api.CrossrefAPI(url=url)
 
     def _validate_source(self) -> None:
         # validate version and migrate if needed

@@ -18,6 +18,7 @@ from rapidfuzz import fuzz
 import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record_prep
+import colrev.utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -328,7 +329,7 @@ class CrossrefAPI:
         *,
         url: str,
         rerun: bool = False,
-        cache: bool = True,
+        cache: typing.Optional[bool] = None,
     ):
         assert url.startswith(self._api_url)
         self.url = url
@@ -337,7 +338,11 @@ class CrossrefAPI:
             colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
         )
         self.rerun = rerun
-        self.cache = cache
+        # default: disable cache in CI; but allow explicit override
+        if cache is None:
+            self.cache = not colrev.utils.in_ci_environment()
+        else:
+            self.cache = cache
 
     def check_availability(self) -> None:
         """Check the availability of the API"""
