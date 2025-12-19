@@ -48,8 +48,8 @@ class TEIParser:
     def __init__(
         self,
         *,
-        pdf_path: typing.Optional[Path] = None,
-        tei_path: typing.Optional[Path] = None,
+        pdf_path: typing.Optional[typing.Union[Path, str]] = None,
+        tei_path: typing.Optional[typing.Union[Path, str]] = None,
     ):
         """Creates a TEI file
         modes of operation:
@@ -60,8 +60,13 @@ class TEIParser:
         # pylint: disable=consider-using-with
         assert pdf_path is not None or tei_path is not None
         if pdf_path is not None:
+            pdf_path = Path(pdf_path)
             if pdf_path.is_symlink():  # pragma: no cover
                 pdf_path = pdf_path.resolve()
+
+        if tei_path is not None:
+            tei_path = Path(tei_path)
+
         self.pdf_path = pdf_path
         self.tei_path = tei_path
         if pdf_path is not None and not pdf_path.is_file():
