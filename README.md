@@ -1,6 +1,6 @@
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/figures/logo_small.png" width="400">
+<img src="https://raw.githubusercontent.com/CoLRev-Environment/colrev/main/docs/figures/logo_small.png" width="400">
 </p>
 
 <div align="center">
@@ -8,13 +8,13 @@
 [![DOI](https://zenodo.org/badge/363073613.svg)](https://zenodo.org/badge/latestdoi/363073613)
 [![PyPI - Version](https://img.shields.io/pypi/v/colrev?color=blue)](https://pypi.org/project/colrev/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/colrev)
-[![License](https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Environment/colrev/releases/)
-![Documentation Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/docs_deploy.yml?label=documentation)
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/tests.yml?label=tests)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/CoLRev-Ecosystem/colrev/main.svg)](https://results.pre-commit.ci/latest/github/CoLRev-Ecosystem/colrev/main)
-![Coverage](https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/tests/coverage.svg)
+[![License](https://img.shields.io/github/license/CoLRev-Environment/colrev.svg)](https://github.com/CoLRev-Environment/colrev/releases/)
+![Documentation Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Environment/colrev/docs_deploy.yml?label=documentation)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Environment/colrev/tests.yml?label=tests)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/CoLRev-Environment/colrev/main.svg)](https://results.pre-commit.ci/latest/github/CoLRev-Environment/colrev/main)
+![Coverage](https://raw.githubusercontent.com/CoLRev-Environment/colrev/main/tests/coverage.svg)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/bd4e44c6cda646e4b9e494c4c4d9487b)](https://app.codacy.com/gh/CoLRev-Environment/colrev/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-![GitHub last commit](https://img.shields.io/github/last-commit/CoLRev-Ecosystem/colrev)
+![GitHub last commit](https://img.shields.io/github/last-commit/CoLRev-Environment/colrev)
 [![Downloads](https://static.pepy.tech/badge/colrev/month)](https://pepy.tech/project/colrev)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7148/badge)](https://bestpractices.coreinfrastructure.org/projects/7148)
 [![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/CoLRev-Environment/colrev/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/CoLRev-Environment/colrev/)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
@@ -38,7 +38,7 @@ The following features stand out:
 - Operates a model for data quality, content curation, and reuse
 - Enables typological and methodological pluralism throughout the process
 
-![Demo](https://raw.githubusercontent.com/CoLRev-Ecosystem/colrev/main/docs/source/_static/demo.gif)
+![Demo](https://raw.githubusercontent.com/CoLRev-Environment/colrev/main/docs/source/_static/demo.gif)
 
 For details, consult the [documentation](https://colrev-environment.github.io/colrev/).
 
