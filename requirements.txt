@@ -157,7 +157,7 @@ urllib3==2.6.0
     #   docker
     #   requests
     #   requests-cache
-virtualenv==20.29.3
+virtualenv==20.36.1
     # via pre-commit
 wcwidth==0.2.13
     # via
