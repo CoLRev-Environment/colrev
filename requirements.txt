@@ -44,7 +44,7 @@ et-xmlfile==2.0.0
     # via openpyxl
 face==24.0.0
     # via glom
-filelock==3.20.1
+filelock==3.20.3
     # via virtualenv
 gitdb==4.0.12
     # via gitpython
