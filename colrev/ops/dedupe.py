@@ -23,6 +23,29 @@ from colrev.constants import RecordState
 from colrev.package_manager.package_manager import PackageManager
 
 
+def same_source_merge(
+    *,
+    main_record: colrev.record.record.Record,
+    dupe_record: colrev.record.record.Record,
+) -> bool:
+    main_rec_sources = [x.split("/")[0] for x in main_record.data[Fields.ORIGIN]]
+    dupe_rec_sources = [x.split("/")[0] for x in dupe_record.data[Fields.ORIGIN]]
+    same_sources = set(main_rec_sources).intersection(set(dupe_rec_sources))
+
+    if len(same_sources) == 0:
+        return False
+
+    main_rec_same_source_origins = [
+        x for x in main_record.data[Fields.ORIGIN] if x.split("/")[0] in same_sources
+    ]
+    dupe_rec_same_source_origins = [
+        x for x in dupe_record.data[Fields.ORIGIN] if x.split("/")[0] in same_sources
+    ]
+    if set(main_rec_same_source_origins) == set(dupe_rec_same_source_origins):
+        return False
+    return True
+
+
 class Dedupe(colrev.process.operation.Operation):
     """Deduplicate records (entity resolution)"""
 
@@ -171,37 +194,6 @@ class Dedupe(colrev.process.operation.Operation):
 
         return [main_record, dupe_record]
 
-    def _same_source_merge(
-        self,
-        *,
-        main_record: colrev.record.record.Record,
-        dupe_record: colrev.record.record.Record,
-    ) -> bool:
-        main_rec_sources = [x.split("/")[0] for x in main_record.data[Fields.ORIGIN]]
-        dupe_rec_sources = [x.split("/")[0] for x in dupe_record.data[Fields.ORIGIN]]
-        same_sources = set(main_rec_sources).intersection(set(dupe_rec_sources))
-
-        if len(same_sources) == 0:
-            return False
-
-        # don't raise unproblematic same-source merges
-        # if same_sources start with md_... AND have same IDs: no same-source merge.
-        if all(x.startswith("md_") for x in same_sources):
-            main_rec_same_source_origins = [
-                x
-                for x in main_record.data[Fields.ORIGIN]
-                if x.split("/")[0] in same_sources
-            ]
-            dupe_rec_same_source_origins = [
-                x
-                for x in dupe_record.data[Fields.ORIGIN]
-                if x.split("/")[0] in same_sources
-            ]
-            if set(main_rec_same_source_origins) == set(dupe_rec_same_source_origins):
-                return False
-            return True
-        return True
-
     def _notify_on_merge(
         self,
         *,
@@ -209,9 +201,7 @@ class Dedupe(colrev.process.operation.Operation):
         dupe_record: colrev.record.record.Record,
     ) -> None:
         merge_info = main_record.data[Fields.ID] + " - " + dupe_record.data[Fields.ID]
-        if not self._same_source_merge(
-            main_record=main_record, dupe_record=dupe_record
-        ):
+        if not same_source_merge(main_record=main_record, dupe_record=dupe_record):
             self.review_manager.logger.info(
                 f" merge {main_record.data[Fields.ID]} - {dupe_record.data[Fields.ID]}"
             )
@@ -335,7 +325,7 @@ class Dedupe(colrev.process.operation.Operation):
             return True
 
         # if (
-        #     self._same_source_merge(main_record=main_record, dupe_record=dupe_record)
+        #     same_source_merge(main_record=main_record, dupe_record=dupe_record)
         #     and self.policy == colrev.settings.SameSourceMergePolicy.prevent
         # ):
         #     self.review_manager.logger.info(

@@ -6,7 +6,10 @@ from pathlib import Path
 
 import pytest
 
+import colrev.record.record
 import colrev.review_manager
+from colrev.constants import Fields
+from colrev.ops.dedupe import same_source_merge
 
 
 @pytest.fixture(scope="session", name="dedupe_test_setup")
@@ -114,3 +117,51 @@ def test_dedupe_skip_prescreen(
     dedupe_test_setup.settings.prescreen.prescreen_package_endpoints = []
     dedupe_operation.main()
     # TODO : add testing of results
+
+
+def _rec(origins):
+    """Helper to build a minimal Record with ORIGIN set."""
+    return colrev.record.record.Record(data={Fields.ORIGIN: origins})
+
+
+@pytest.mark.parametrize(
+    "main_origins, dupe_origins, expected",
+    [
+        # no overlap in source prefixes -> False
+        (["wos/0001"], ["scopus/0002"], False),
+        # overlap with non-md_ source prefix -> True
+        (["wos/0001"], ["wos/0009"], True),
+        # overlap with md_ source prefix, but exact same origin IDs -> False
+        (["md_pubmed/123", "md_arxiv/999"], ["md_pubmed/123"], False),
+        # overlap with md_ source prefix, different origin IDs -> True
+        (["md_pubmed/123"], ["md_pubmed/456"], True),
+        # mixed overlap (md_ + non-md_) -> True (falls through to final True)
+        (["md_pubmed/123", "wos/0001"], ["md_pubmed/123", "wos/9999"], True),
+        # overlap exists but only via md_ subset, and md_ IDs differ -> True
+        (["md_pubmed/123", "scopus/0002"], ["md_pubmed/456", "wos/0001"], True),
+        (
+            ["CROSSREF.bib/004518", "DBLP.bib/003711", "pdfs.bib/003823"],
+            ["DBLP.bib/003711"],
+            False,
+        ),
+    ],
+)
+def test_same_source_merge(main_origins, dupe_origins, expected, capsys):
+    main_record = _rec(main_origins)
+    dupe_record = _rec(dupe_origins)
+
+    result = same_source_merge(main_record=main_record, dupe_record=dupe_record)
+
+    # optional: silence / assert on debug prints if you want
+    capsys.readouterr()
+
+    assert result is expected
+
+
+def test_same_source_merge_requires_origin_field():
+    # If your code assumes ORIGIN exists, assert that behavior explicitly
+    main_record = colrev.record.record.Record(data={})
+    dupe_record = _rec(["wos/0001"])
+
+    with pytest.raises(KeyError):
+        same_source_merge(main_record=main_record, dupe_record=dupe_record)
