@@ -891,14 +891,14 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             self._fix_special_chars(record=record)
             self._fix_special_outlets(record=record)
 
-            if record.data.get(Fields.TITLE, "").startswith("Microsoft Word"):
-                record.data[Fields.TITLE] = FieldValues.UNKNOWN
-                record.set_status(RecordState.md_needs_manual_preparation)
             if any(
                 x in record.data.get(Fields.TITLE, "").lower()
                 for x in [
                     "reproduced with permission",
                     "further reproduction prohibited",
+                    "microsoft word",
+                    "presenter information",
+                    "recommended citation",
                 ]
             ):
                 record.data[Fields.TITLE] = FieldValues.UNKNOWN
