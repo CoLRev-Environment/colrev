@@ -136,8 +136,8 @@ class Dedupe(colrev.process.operation.Operation):
                     main_record = rec_1
                     dupe_record = rec_2
                 else:
-                    dupe_record = rec_2
-                    main_record = rec_1
+                    main_record = rec_2
+                    dupe_record = rec_1
             else:
                 main_record = rec_2
                 dupe_record = rec_1
