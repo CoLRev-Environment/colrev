@@ -4,7 +4,6 @@ import os
 
 from colrev.env.environment_manager import EnvironmentManager
 
-
 UNPAYWALL_EMAIL_ENV_VAR = "UNPAYWALL_EMAIL"
 
 

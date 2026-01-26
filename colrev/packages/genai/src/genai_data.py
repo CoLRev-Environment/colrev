@@ -17,7 +17,6 @@ import colrev.record.record_pdf
 from colrev.constants import Fields
 from colrev.constants import RecordState
 
-
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
 

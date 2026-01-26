@@ -18,7 +18,6 @@ import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import RecordState
 
-
 # dash dependencies optional
 # install with pip install colrev[ui_web]
 # will fail if not installed

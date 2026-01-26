@@ -5,7 +5,6 @@ from pathlib import Path
 import colrev.review_manager
 from colrev.constants import PDFPathType
 
-
 # def test_pdf_get(  # type: ignore
 #     base_repo_review_manager: colrev.review_manager.ReviewManager, review_manager_helpers
 # ) -> None:

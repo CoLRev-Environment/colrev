@@ -14,7 +14,6 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.packages.unpaywall.src import utils
 
-
 ENTRYTYPE_MAPPING = {
     "journal-article": ENTRYTYPES.ARTICLE,
     "book": ENTRYTYPES.BOOK,

@@ -16,7 +16,6 @@ import colrev.search_file
 from colrev.constants import Fields
 from colrev.constants import SearchType
 
-
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
 

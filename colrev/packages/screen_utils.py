@@ -8,7 +8,6 @@ from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
 
-
 __FULL_SCREEN_EXPLANATION = (
     "Explanation: Screening criteria can be used "
     + """to include or exclude records based on specific reasons.

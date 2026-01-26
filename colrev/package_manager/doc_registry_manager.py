@@ -19,7 +19,6 @@ from colrev.constants import EndpointType
 from colrev.constants import Filepaths
 from colrev.constants import SearchType
 
-
 INTERNAL_PACKAGES = (
     colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
 )

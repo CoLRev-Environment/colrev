@@ -13,7 +13,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 
-
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
 # pylint: disable=unused-argument

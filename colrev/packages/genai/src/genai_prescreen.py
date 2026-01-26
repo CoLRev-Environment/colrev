@@ -18,7 +18,6 @@ import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import RecordState
 
-
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
 

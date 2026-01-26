@@ -9,7 +9,6 @@ from pathlib import Path
 
 import colrev.loader.loader
 
-
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-instance-attributes

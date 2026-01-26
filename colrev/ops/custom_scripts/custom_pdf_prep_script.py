@@ -11,7 +11,6 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
 
-
 # pylint: disable=too-few-public-methods
 
 

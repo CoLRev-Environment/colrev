@@ -15,7 +15,6 @@ from colrev.constants import SearchType
 from colrev.git_repo import GitRepo
 from colrev.package_manager.package_manager import PackageManager
 
-
 # pylint: disable=too-few-public-methods
 
 

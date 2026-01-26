@@ -7,7 +7,6 @@ from pathlib import Path
 
 from colrev.constants import Fields
 
-
 RECORDS_FIELD_ORDER = [
     Fields.ORIGIN,  # must be in second line
     Fields.STATUS,

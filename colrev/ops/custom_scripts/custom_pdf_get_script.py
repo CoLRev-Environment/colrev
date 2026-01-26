@@ -7,7 +7,6 @@ import colrev.package_manager.package_settings
 import colrev.process.operation
 from colrev.constants import Fields
 
-
 # pylint: disable=too-few-public-methods
 
 

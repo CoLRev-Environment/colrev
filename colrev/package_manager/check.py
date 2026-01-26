@@ -16,7 +16,6 @@ from colrev.constants import Colors
 from colrev.package_manager.package import Package
 from colrev.package_manager.package_base_classes import BASECLASS_MAP
 
-
 HELP_MESSAGES: dict[str, str] = {
     "check_project": (
         "The [project] table is missing in your pyproject.toml.\n"

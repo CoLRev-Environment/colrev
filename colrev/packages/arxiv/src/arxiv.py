@@ -24,7 +24,6 @@ from colrev.constants import SearchType
 from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.arxiv.src import arxiv_api
 
-
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 

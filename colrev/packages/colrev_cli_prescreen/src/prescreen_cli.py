@@ -15,7 +15,6 @@ from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
-
 # pylint: disable=too-few-public-methods
 
 

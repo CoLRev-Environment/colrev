@@ -19,7 +19,6 @@ from colrev.constants import PDFPathType
 from colrev.constants import ScreenCriterionType
 from colrev.constants import ShareStatReq
 
-
 if typing.TYPE_CHECKING:
     import colrev.review_manager
 

@@ -15,7 +15,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 from colrev.constants import Fields
 
-
 # pylint: disable=too-few-public-methods
 
 

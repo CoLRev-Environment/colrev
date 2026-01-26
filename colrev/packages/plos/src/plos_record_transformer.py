@@ -13,7 +13,6 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
-
 TAG_RE = re.compile(r"<[a-z/][^<>]{0,12}>")
 
 

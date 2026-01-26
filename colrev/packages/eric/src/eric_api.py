@@ -10,7 +10,6 @@ import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
-
 # pylint: disable=too-few-public-methods
 
 

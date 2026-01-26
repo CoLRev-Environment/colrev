@@ -11,7 +11,6 @@ import pandas as pd
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.loader
 
-
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-arguments
 

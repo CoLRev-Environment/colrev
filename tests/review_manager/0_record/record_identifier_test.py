@@ -13,7 +13,6 @@ import colrev.record.record
 import colrev.record.record_identifier
 import colrev.review_manager
 
-
 # pylint: disable=line-too-long
 # flake8: noqa
 

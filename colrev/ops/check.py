@@ -7,7 +7,6 @@ import typing
 import colrev.process.operation
 from colrev.constants import OperationsType
 
-
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
 

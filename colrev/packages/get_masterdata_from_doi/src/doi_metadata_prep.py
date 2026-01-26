@@ -13,7 +13,6 @@ import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.record.record
 from colrev.constants import Fields
 
-
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
 

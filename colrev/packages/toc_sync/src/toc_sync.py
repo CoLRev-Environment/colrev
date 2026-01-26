@@ -75,7 +75,6 @@ from colrev.constants import Fields
 from colrev.packages.crossref.src import crossref_api
 from colrev.packages.crossref.src.crossref_api import CrossrefAPI
 
-
 # pylint: disable=broad-exception-caught
 
 # -----------------------------
