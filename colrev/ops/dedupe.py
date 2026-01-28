@@ -289,9 +289,6 @@ class Dedupe(colrev.process.operation.Operation):
     def _apply_records_merges(
         self, *, records: dict, removed_duplicates: list, complete_dedupe: bool
     ) -> list:
-        for record in records.values():
-            if "MOVED_DUPE_ID" in record:
-                del record["MOVED_DUPE_ID"]
         for removed_duplicate in removed_duplicates:
             if removed_duplicate in records:
                 del records[removed_duplicate]
@@ -413,7 +410,6 @@ class Dedupe(colrev.process.operation.Operation):
                 main_record=main_record,
                 dupe_record=dupe_record,
             )
-            dupe_record.data["MOVED_DUPE_ID"] = main_record.data[Fields.ID]
             main_record.merge(
                 dupe_record,
                 default_source="merged",
@@ -438,24 +434,41 @@ class Dedupe(colrev.process.operation.Operation):
     def _get_records_to_merge(
         self, *, records: dict, id_sets: list
     ) -> typing.Iterable[tuple]:
-        """Resolves multiple/chained duplicates (by following the MOVED_DUPE_ID mark)
-        and returns tuples with the primary merge record in the first position."""
+        """Return merge pairs for the provided id_sets.
+
+        Note:
+            The id_sets are expected to be *already resolved* (no chained duplicates).
+            Therefore, we do not follow temporary merge markers to resolve chains.
+        """
+
+        removed_in_run: set[str] = set()
 
         for id_set in id_sets:
-            recs_to_merge = [r for r in records.values() if r[Fields.ID] in id_set]
+            # Collect records by ID (faster + more explicit than scanning records.values()).
+            recs_to_merge: list[dict] = []
+            for rid in id_set:
+                if rid not in records:
+                    raise colrev_exceptions.RecordNotFoundException(
+                        f"Did not find record with ID {rid} for merge"
+                    )
+                if rid in removed_in_run:
+                    # This record has already been merged away earlier in this apply_merges run.
+                    continue
+                recs_to_merge.append(records[rid])
 
-            # Simple way of implementing the closure
-            # cases where the main_record has already been merged into another record
-            for ind, rec_to_merge in enumerate(recs_to_merge):
-                cur_rec = rec_to_merge
-                while "MOVED_DUPE_ID" in cur_rec:
-                    cur_rec = records[cur_rec["MOVED_DUPE_ID"]]
-                recs_to_merge[ind] = cur_rec
+            # De-duplicate within the id_set (defensive)
+            unique: dict[str, dict] = {}
+            for rec in recs_to_merge:
+                unique[rec[Fields.ID]] = rec
+            recs_to_merge = list(unique.values())
 
-            if all(recs_to_merge[0][Fields.ID] == r[Fields.ID] for r in recs_to_merge):
+            if len(recs_to_merge) < 2:
                 continue
 
             for rec_1, rec_2 in combinations(recs_to_merge, 2):
+                if rec_1[Fields.ID] == rec_2[Fields.ID]:
+                    continue
+
                 main_record_dict, dupe_record_dict = self._select_primary_merge_record(
                     rec_1, rec_2
                 )
@@ -464,6 +477,9 @@ class Dedupe(colrev.process.operation.Operation):
                 dupe_record = colrev.record.record.Record(dupe_record_dict)
 
                 yield (main_record, dupe_record)
+
+                # Track duplicates removed within this run so we don't attempt to merge them again
+                removed_in_run.add(dupe_record.data[Fields.ID])
 
     def _get_origins_for_current_ids(self, current_record_ids: list) -> dict:
         """
