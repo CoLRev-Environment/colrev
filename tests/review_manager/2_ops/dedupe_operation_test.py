@@ -119,7 +119,7 @@ def test_dedupe_skip_prescreen(
     # TODO : add testing of results
 
 
-def _rec(origins):
+def _rec(origins: list[str]) -> colrev.record.record.Record:
     """Helper to build a minimal Record with ORIGIN set."""
     return colrev.record.record.Record(data={Fields.ORIGIN: origins})
 
@@ -146,19 +146,18 @@ def _rec(origins):
         ),
     ],
 )
-def test_same_source_merge(main_origins, dupe_origins, expected, capsys):
+def test_same_source_merge(
+    main_origins: list, dupe_origins: list, expected: bool
+) -> None:
     main_record = _rec(main_origins)
     dupe_record = _rec(dupe_origins)
 
     result = same_source_merge(main_record=main_record, dupe_record=dupe_record)
 
-    # optional: silence / assert on debug prints if you want
-    capsys.readouterr()
-
     assert result is expected
 
 
-def test_same_source_merge_requires_origin_field():
+def test_same_source_merge_requires_origin_field() -> None:
     # If your code assumes ORIGIN exists, assert that behavior explicitly
     main_record = colrev.record.record.Record(data={})
     dupe_record = _rec(["wos/0001"])
