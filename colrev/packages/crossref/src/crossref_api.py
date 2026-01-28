@@ -16,7 +16,6 @@ import requests
 import requests_cache
 from rapidfuzz import fuzz
 
-import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record_prep
 import colrev.utils
@@ -329,15 +328,21 @@ class CrossrefAPI:
         self,
         *,
         url: str,
+        email: str = "my@email.edu",
         rerun: bool = False,
         cache: typing.Optional[bool] = None,
     ):
         assert url.startswith(self._api_url)
         self.url = url
 
-        _, self.email = (
-            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
-        )
+        self.email = email
+        if email == "my@email.edu":
+            # warn
+            print(
+                "Warning: Using default email for Crossref API. "
+                "Please set a valid email to comply with Crossref's polite usage policy."
+            )
+
         self.rerun = rerun
         # default: disable cache in CI; but allow explicit override
         if cache is None:
@@ -597,13 +602,12 @@ class CrossrefAPI:
         return record_list
 
 
-def query_doi(*, doi: str) -> colrev.record.record_prep.PrepRecord:
+def query_doi(
+    *, doi: str, email: str = "my@email.edu"
+) -> colrev.record.record_prep.PrepRecord:
     """Get records from Crossref based on a doi query"""
 
     try:
-        _, email = (
-            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
-        )
         endpoint = Endpoint("https://api.crossref.org/works/" + doi, email=email)
 
         crossref_query_return = next(iter(endpoint))

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import inquirer
 from pydantic import Field
-
+import colrev.env.environment_manager
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_api_feed
@@ -75,7 +75,10 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         else:
             url = self.search_source.search_parameters["url"]
 
-        self.api = crossref_api.CrossrefAPI(url=url)
+        _, email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
+        self.api = crossref_api.CrossrefAPI(url=url, email=email)
 
     def _validate_source(self) -> None:
         # validate version and migrate if needed
