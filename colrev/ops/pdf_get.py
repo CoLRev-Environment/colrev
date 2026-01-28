@@ -96,6 +96,9 @@ def relink_pdfs_in_source(
                 f"Primary record ({record[Fields.ID]}): "
                 f"Broken file path {Colors.RED}{record[Fields.FILE]}{Colors.END}"
             )
+        if Fields.FILE not in source_rec:
+            logger.warning(f"Missing file in {source_rec}")
+            continue
         if not (home_path / Path(source_rec[Fields.FILE])).is_file():
             logger.info(
                 f"Source record ({source.search_results_path}{source_rec[Fields.ID]}) "
