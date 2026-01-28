@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Consolidation of metadata based on OpenAlex API as a prep operation"""
+
 from __future__ import annotations
 
 import logging
@@ -15,7 +16,6 @@ import colrev.record.record
 import colrev.search_file
 from colrev.constants import Fields
 from colrev.constants import SearchType
-
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code

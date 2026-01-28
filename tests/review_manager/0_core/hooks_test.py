@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests for the review_manager"""
+
 import colrev.hooks.check
 import colrev.hooks.share
 import colrev.review_manager

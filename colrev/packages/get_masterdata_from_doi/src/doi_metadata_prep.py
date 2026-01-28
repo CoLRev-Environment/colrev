@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Consolidation of metadata based on DOI metadata as a prep operation"""
+
 from __future__ import annotations
 
 import logging
@@ -12,7 +13,6 @@ import colrev.package_manager.package_settings
 import colrev.packages.doi_org.src.doi_org as doi_connector
 import colrev.record.record
 from colrev.constants import Fields
-
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code

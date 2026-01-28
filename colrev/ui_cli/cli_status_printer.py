@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Scripts to print the CoLRev status (cli)."""
+
 from __future__ import annotations
 
 import sys

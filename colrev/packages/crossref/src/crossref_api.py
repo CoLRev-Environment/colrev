@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Crossref API"""
+
 from __future__ import annotations
 
 import contextlib

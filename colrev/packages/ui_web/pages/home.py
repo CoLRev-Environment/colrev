@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 """Burn Down Chart is created here"""
+
 from __future__ import annotations
 
 from datetime import datetime

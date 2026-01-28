@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Utility to transform crossref/doi.org items to records"""
+
 from __future__ import annotations
 
 import html

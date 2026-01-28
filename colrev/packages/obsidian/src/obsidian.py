@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Creation of an Obsidian database as part of the data operations"""
+
 from __future__ import annotations
 
 import logging

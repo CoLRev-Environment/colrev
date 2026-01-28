@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Adding of journal rankings to metadata"""
+
 from __future__ import annotations
 
 import logging

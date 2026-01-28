@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Class to handle PDFs associated with a record."""
+
 from __future__ import annotations
 
 import logging

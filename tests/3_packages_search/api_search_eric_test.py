@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test the eric SearchSource"""
+
 from pathlib import Path
 
 import requests_mock

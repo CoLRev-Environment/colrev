@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Function to write Markdown (table) files"""
+
 from __future__ import annotations
 
 import pandas as pd

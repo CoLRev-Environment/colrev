@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """OpenLibrary API client."""
+
 from __future__ import annotations
 
 import typing

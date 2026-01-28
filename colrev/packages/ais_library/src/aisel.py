@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: AIS electronic Library"""
+
 from __future__ import annotations
 
 import logging

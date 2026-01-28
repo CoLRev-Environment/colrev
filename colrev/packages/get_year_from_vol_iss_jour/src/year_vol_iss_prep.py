@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Completion of metadata based on year-volume-issue dependency as a prep operation"""
+
 from __future__ import annotations
 
 import logging

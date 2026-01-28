@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Linter for CoLRev – records/record naming and (light) type conventions"""
+
 from __future__ import annotations
 
 import typing

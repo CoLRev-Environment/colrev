@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Scopus API helper module."""
+
 from __future__ import annotations
 
 import logging

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Checker for isbn-not-matching-pattern."""
+
 from __future__ import annotations
 
 import re

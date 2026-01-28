@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Extended SearchFile with search_results_path and derived search_history_path."""
+
 from __future__ import annotations
 
 import json

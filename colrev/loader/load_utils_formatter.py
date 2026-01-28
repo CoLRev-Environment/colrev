@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Function for load formatting"""
+
 from __future__ import annotations
 
 import html

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Database search operations"""
+
 from __future__ import annotations
 
 import logging
@@ -14,7 +15,6 @@ from colrev.constants import EndpointType
 from colrev.constants import SearchType
 from colrev.git_repo import GitRepo
 from colrev.package_manager.package_manager import PackageManager
-
 
 # pylint: disable=too-few-public-methods
 

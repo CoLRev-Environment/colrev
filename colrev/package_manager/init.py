@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Package init."""
+
 from __future__ import annotations
 
 import inspect
@@ -343,10 +344,8 @@ def _generate_method_signatures(module_path: str, class_name: str) -> str:
     for name, method in abstract_methods.items():
         sig = inspect.signature(method)
         docstring = inspect.getdoc(method) or "TODO: Add docstring."
-        method_signatures.append(
-            f"""    def {name}{sig}:
-        \"\"\"{docstring}\"\"\"\n"""
-        )
+        method_signatures.append(f"""    def {name}{sig}:
+        \"\"\"{docstring}\"\"\"\n""")
 
     return "\n".join(method_signatures)
 
@@ -426,12 +425,10 @@ class {class_name}({baseclass}):
 def _create_src_init(package_data: dict) -> None:
 
     with open("src/__init__.py", "w", encoding="utf-8") as file:
-        file.write(
-            f'''"""Package for {package_data['name']}."""
+        file.write(f'''"""Package for {package_data['name']}."""
 
 __author__ = "{package_data['author']['name']}"
-__email__ = "{package_data['author']['email']}"'''
-        )
+__email__ = "{package_data['author']['email']}"''')
 
 
 def _create_docs_readme() -> None:

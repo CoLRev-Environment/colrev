@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Testing docker manager"""
+
 import os
 from pathlib import Path
 

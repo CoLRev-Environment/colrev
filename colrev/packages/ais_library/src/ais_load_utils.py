@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Load utils for AIS"""
+
 from __future__ import annotations
 
 from colrev.constants import ENTRYTYPES

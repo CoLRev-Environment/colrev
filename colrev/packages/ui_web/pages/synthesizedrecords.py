@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 """Dashboard table and graphs for synthesized records."""
+
 from __future__ import annotations
 
 import dash  # pylint: disable=import-error
@@ -17,7 +18,6 @@ import colrev.record.record
 import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import RecordState
-
 
 # dash dependencies optional
 # install with pip install colrev[ui_web]

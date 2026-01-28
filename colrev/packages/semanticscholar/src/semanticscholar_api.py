@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Semantic Scholar API wrapper."""
+
 from __future__ import annotations
 
 import typing

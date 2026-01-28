@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test the colrev project settings"""
+
 import colrev.settings
 from colrev.constants import IDPattern
 from colrev.constants import OperationsType

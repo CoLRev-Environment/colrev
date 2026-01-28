@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 """CoLRev dashboard operation: track project progress through dashboard"""
+
 from __future__ import annotations
 
 import dash  # pylint: disable=import-error

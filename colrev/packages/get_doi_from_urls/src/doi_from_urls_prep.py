@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Retrieving DOIs from a papers website/url as a prep operation"""
+
 from __future__ import annotations
 
 import collections

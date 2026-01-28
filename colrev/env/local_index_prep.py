@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Prep for LocalIndex."""
+
 from __future__ import annotations
 
 import hashlib

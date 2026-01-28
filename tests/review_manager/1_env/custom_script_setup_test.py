@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the custom script setup"""
+
 from __future__ import annotations
 
 import colrev.ui_cli.setup_custom_scripts

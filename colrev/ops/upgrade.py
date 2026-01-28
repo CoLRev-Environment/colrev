@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Upgrades CoLRev projects."""
+
 from __future__ import annotations
 
 import json
@@ -213,6 +214,12 @@ class Upgrade(colrev.process.operation.Operation):
                 "version": CoLRevVersion("0.14.0"),
                 "target_version": CoLRevVersion("0.15.0"),
                 "script": self._migrate_0_15_0,
+                "released": True,
+            },
+            {
+                "version": CoLRevVersion("0.15.0"),
+                "target_version": CoLRevVersion("0.16.0"),
+                "script": self._migrate_0_16_0,
                 "released": True,
             },
         ]
@@ -927,6 +934,9 @@ class Upgrade(colrev.process.operation.Operation):
         self._extract_search_files()
 
         return self.repo.is_dirty()
+
+    def _migrate_0_16_0(self) -> bool:
+        return False
 
 
 # Note: we can ask users to make decisions (when defaults are not clear)

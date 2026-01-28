@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Colrev curated data as part of the data operations"""
+
 from __future__ import annotations
 
 import collections

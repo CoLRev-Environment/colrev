@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Clone CoLRev repositories."""
+
 import os
 from pathlib import Path
 

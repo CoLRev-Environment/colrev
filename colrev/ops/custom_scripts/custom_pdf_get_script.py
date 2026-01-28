@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 """Template for a custom PDFGet PackageEndpoint"""
+
 from __future__ import annotations
 
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.process.operation
 from colrev.constants import Fields
-
 
 # pylint: disable=too-few-public-methods
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests for the dataset"""
+
 import pytest
 
 import colrev.review_manager

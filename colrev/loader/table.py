@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Function to load tabular files (csv, xlsx)"""
+
 from __future__ import annotations
 
 import logging
@@ -10,7 +11,6 @@ import pandas as pd
 
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.loader
-
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-arguments

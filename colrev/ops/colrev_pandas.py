@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Connector for pandas"""
+
 from __future__ import annotations
 
 import os

@@ -4,6 +4,7 @@ import colrev.search_file
 
 A CoLRev SearchSource plugin to scrape and import records from PROSPERO.
 """
+
 from __future__ import annotations
 
 import logging

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Remove records, ... from CoLRev projects."""
+
 from __future__ import annotations
 
 from pathlib import Path

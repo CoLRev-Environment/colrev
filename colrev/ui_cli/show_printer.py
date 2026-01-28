@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Scripts printing information for the colrev show command"""
+
 import platform
 from pathlib import Path
 

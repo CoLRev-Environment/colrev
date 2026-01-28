@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Function to write Excel files with flexible field handling"""
+
 from __future__ import annotations
 
 import pandas as pd

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test the colrev upgrade"""
+
 import colrev.ops.upgrade
 
 

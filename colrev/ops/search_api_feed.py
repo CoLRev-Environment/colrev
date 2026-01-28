@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """CoLRev search feed: store and update origin records and update main records."""
+
 from __future__ import annotations
 
 import logging

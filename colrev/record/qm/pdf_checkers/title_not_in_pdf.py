@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Checker for title-not-in-pdf."""
+
 from __future__ import annotations
 
 import re

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """CoLRev pdf_get operation: Get PDF documents."""
+
 from __future__ import annotations
 
 import logging
@@ -31,6 +32,7 @@ def relink_pdfs_in_source(
     pdf_dir: Path,
     logger: logging.Logger,
 ) -> None:
+    """Relink PDFs in the given source based on CPIDs"""
 
     # pylint: disable=too-many-locals
 

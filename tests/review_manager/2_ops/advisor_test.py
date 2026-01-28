@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the CoLRev check operation"""
+
 import colrev.review_manager
 
 # flake8: noqa

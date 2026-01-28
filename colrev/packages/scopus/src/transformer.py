@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Scopus record transformer."""
+
 from __future__ import annotations
 
 import typing

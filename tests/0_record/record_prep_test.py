@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the PrepRecord class"""
+
 import pytest
 
 import colrev.exceptions as colrev_exceptions

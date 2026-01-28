@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """CoLRev prep operation: Prepare record metadata."""
+
 from __future__ import annotations
 
 import inspect

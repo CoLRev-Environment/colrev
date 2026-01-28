@@ -31,8 +31,7 @@ def test_install_curated_resource_with_records(tmp_path, mocker):  # type: ignor
 
     def patched_clone_from(curated_repo, repo_dir, depth):  # type: ignore
         (repo_dir / Path("README.md")).parent.mkdir(parents=True, exist_ok=True)
-        (repo_dir / Path("README.md")).write_text(
-            """# Readme
+        (repo_dir / Path("README.md")).write_text("""# Readme
 
 To install this curation, run
 colrev env --install example/repo
@@ -40,8 +39,7 @@ colrev env --install example/repo
 The following repositories are part of the curation:
 
 colrev env --install example/repo2
-"""
-        )
+""")
         return True
 
     mocker.patch(

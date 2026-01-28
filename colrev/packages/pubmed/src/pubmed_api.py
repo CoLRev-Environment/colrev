@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Pubmed API"""
+
 import datetime
 import logging
 import time
@@ -14,7 +15,6 @@ from defusedxml import ElementTree as DefusedET
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 from colrev.constants import Fields
-
 
 # pylint: disable=too-few-public-methods
 

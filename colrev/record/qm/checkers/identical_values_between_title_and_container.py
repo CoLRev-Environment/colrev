@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Checker for identical-values-between-title-and-container."""
+
 from __future__ import annotations
 
 import colrev.record.qm.quality_model

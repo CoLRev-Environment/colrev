@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Repare CoLRev projects."""
+
 from __future__ import annotations
 
 import os

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Linter for CoLRev - missed constant usage"""
+
 from __future__ import annotations
 
 import typing

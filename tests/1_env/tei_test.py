@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test the tei parser"""
+
 import platform
 import re
 from pathlib import Path

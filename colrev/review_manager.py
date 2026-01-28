@@ -10,6 +10,7 @@ Key responsibilities of the `ReviewManager` include:
 - Initializing and validating the project repository
 - Loading, saving, and validating project settings
 - Providing access to the dataset (`colrev.dataset.Dataset`)"""
+
 from __future__ import annotations
 
 import logging

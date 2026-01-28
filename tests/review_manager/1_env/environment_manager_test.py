@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Testing environment manager settings"""
+
 import json
 import os
 from collections import namedtuple

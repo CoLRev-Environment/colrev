@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Scipt to screen for deduplication errors."""
+
 from __future__ import annotations
 
 import typing

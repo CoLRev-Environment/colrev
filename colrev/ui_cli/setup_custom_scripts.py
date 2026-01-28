@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Custom script setup."""
+
 import typing
 from pathlib import Path
 

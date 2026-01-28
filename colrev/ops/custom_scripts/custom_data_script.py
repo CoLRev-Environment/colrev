@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Template for a custom data PackageEndpoint"""
+
 from __future__ import annotations
 
 import colrev.package_manager.package_base_classes as base_classes

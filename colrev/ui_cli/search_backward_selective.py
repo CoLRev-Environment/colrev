@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Scripts to run a selective backward search."""
+
 from __future__ import annotations
 
 import typing

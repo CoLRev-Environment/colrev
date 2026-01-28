@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Module emulating an API for Prospero results pages."""
+
 import logging
 import math
 import time

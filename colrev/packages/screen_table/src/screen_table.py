@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Screen based on a table"""
+
 from __future__ import annotations
 
 import csv

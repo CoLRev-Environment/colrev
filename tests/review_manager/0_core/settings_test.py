@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test the colrev project settings"""
+
 import os
 from pathlib import Path
 

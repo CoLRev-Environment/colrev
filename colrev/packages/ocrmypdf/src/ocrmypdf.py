@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """OCR as a PDF preparation operation"""
+
 from __future__ import annotations
 
 import logging

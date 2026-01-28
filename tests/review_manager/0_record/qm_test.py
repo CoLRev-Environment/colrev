@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests for the quality model"""
+
 from __future__ import annotations
 
 import pytest

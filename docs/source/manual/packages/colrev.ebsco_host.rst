@@ -57,12 +57,12 @@ search
 DB search
 ^^^^^^^^^
 
-Export is available after adding citations to a folder (\ `1 <https://connect.ebsco.com/s/article/How-to-Use-the-Export-Manager-in-EBSCOhost?language=en_US>`_\ ).
+Export is available after adding citations to a folder (\ `1 <https://connect.ebsco.com/s/article/How-to-Use-the-Export-Manager?language=en_US>`_\ ).
 Download search results and store in ``data/search/`` directory. API-access not yet available.
 
 Links
 -----
 
 
-* `EBSCOHost <https://www.ebsco.com/products/research-databases/ebscohost-research-platform>`_
+* `EBSCOHost <https://search.ebscohost.com/>`_
 * `EBSCOHost APIs <https://developer.ebsco.com/getting-started/available-apis>`_

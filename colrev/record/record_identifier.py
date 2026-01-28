@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Record identifier."""
+
 from __future__ import annotations
 
 import logging

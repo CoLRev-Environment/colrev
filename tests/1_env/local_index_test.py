@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test the local_index"""
+
 import pytest
 
 import colrev.record.record

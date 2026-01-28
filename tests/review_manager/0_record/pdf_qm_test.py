@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests for the PDF quality model"""
+
 from __future__ import annotations
 
 from pathlib import Path

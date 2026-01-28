@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Advises users on the workflow (operations and collaboration)."""
+
 from __future__ import annotations
 
 import typing

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Methodological review"""
+
 import logging
 import typing
 

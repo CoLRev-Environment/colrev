@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of record merger functionality"""
+
 import pytest
 
 import colrev.record.record_merger

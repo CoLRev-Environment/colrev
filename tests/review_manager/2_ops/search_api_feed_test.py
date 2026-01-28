@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the CoLRev search feeds"""
+
 from __future__ import annotations
 
 import logging

@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 """Utility helpers for CoLRev."""
+
 from __future__ import annotations
 
 import os

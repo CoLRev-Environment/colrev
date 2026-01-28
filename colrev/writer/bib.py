@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 """Function to write bib files"""
+
 from __future__ import annotations
 
 from copy import deepcopy
 from pathlib import Path
 
 from colrev.constants import Fields
-
 
 RECORDS_FIELD_ORDER = [
     Fields.ORIGIN,  # must be in second line

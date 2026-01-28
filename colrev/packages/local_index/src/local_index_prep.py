@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Conslidation of metadata based on LocalIndex as a prep operation"""
+
 from __future__ import annotations
 
 import logging

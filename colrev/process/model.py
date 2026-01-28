@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """The process model."""
+
 from __future__ import annotations
 
 import logging

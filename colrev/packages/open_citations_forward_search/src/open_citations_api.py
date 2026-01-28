@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """OpenCitations API client for forward searches."""
+
 from __future__ import annotations
 
 import typing

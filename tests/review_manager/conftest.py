@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Conftest file containing fixtures to set up tests efficiently"""
+
 from __future__ import annotations
 
 import os

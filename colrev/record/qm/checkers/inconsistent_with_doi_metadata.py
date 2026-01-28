@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Checker for inconsistent-with-doi-metadata."""
+
 from __future__ import annotations
 
 from rapidfuzz import fuzz

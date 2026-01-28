@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the CoLRev dedupe operation"""
+
 import difflib
 import shutil
 from pathlib import Path

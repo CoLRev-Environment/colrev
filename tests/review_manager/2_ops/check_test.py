@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the CoLRev checks"""
+
 import json as stdjson
 import platform
 import typing

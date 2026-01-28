@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """CoLRev pdf_get_man operation: Get PDF documents manually."""
+
 from __future__ import annotations
 
 import csv

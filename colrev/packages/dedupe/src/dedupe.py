@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Default deduplication module for CoLRev"""
+
 from __future__ import annotations
 
 import logging

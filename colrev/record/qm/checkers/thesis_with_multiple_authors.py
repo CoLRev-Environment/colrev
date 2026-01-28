@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Checker for thesis-with-multiple-authors."""
+
 from __future__ import annotations
 
 import colrev.record.qm.quality_model

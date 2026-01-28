@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Function for name formatting"""
+
 from __future__ import annotations
 
 import re

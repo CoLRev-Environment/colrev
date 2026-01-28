@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Checker for missing fields."""
+
 from __future__ import annotations
 
 import colrev.env.utils

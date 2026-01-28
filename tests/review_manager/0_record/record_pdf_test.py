@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the Record class"""
+
 from pathlib import Path
 
 import imagehash

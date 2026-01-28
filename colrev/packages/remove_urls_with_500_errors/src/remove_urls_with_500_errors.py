@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Removal of broken URLs (error 500) a prep operation"""
+
 from __future__ import annotations
 
 import logging
@@ -13,7 +14,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.utils
 from colrev.constants import Fields
-
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code

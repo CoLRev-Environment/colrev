@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Check operation."""
+
 from __future__ import annotations
 
 import typing
 
 import colrev.process.operation
 from colrev.constants import OperationsType
-
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager

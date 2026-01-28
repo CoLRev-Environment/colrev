@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Scientometric study"""
+
 import logging
 import typing
 

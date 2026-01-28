@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: Transport Research International Documentation"""
+
 from __future__ import annotations
 
 import logging

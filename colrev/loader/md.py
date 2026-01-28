@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Load conversion of reference sections (bibliographies) in md-documents based on GROBID"""
+
 from __future__ import annotations
 
 import logging

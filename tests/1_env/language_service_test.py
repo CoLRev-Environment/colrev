@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test the language service"""
+
 import pytest
 
 import colrev.env.language_service

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Validates commits in a CoLRev project."""
+
 from __future__ import annotations
 
 import datetime

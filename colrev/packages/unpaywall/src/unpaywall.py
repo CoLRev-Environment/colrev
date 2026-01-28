@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Retrieval of PDFs from the unpaywall API"""
+
 from __future__ import annotations
 
 import json

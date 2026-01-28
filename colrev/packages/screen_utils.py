@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Screening utilities"""
+
 from __future__ import annotations
 
 import colrev.record.record
@@ -7,7 +8,6 @@ import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
-
 
 __FULL_SCREEN_EXPLANATION = (
     "Explanation: Screening criteria can be used "

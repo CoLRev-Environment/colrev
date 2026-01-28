@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Testing environment manager settings"""
+
 from pathlib import Path
 
 import pytest

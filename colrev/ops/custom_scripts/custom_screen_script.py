@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Template for a custom Screen PackageEndpoint"""
+
 from __future__ import annotations
 
 import random

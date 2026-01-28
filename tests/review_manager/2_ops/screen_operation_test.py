@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the CoLRev screen operation"""
+
 import pytest
 
 import colrev.review_manager

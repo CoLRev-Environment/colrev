@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Checker for fields that are inconsistent with the ENTRYTYPE."""
+
 from __future__ import annotations
 
 import colrev.record.qm.quality_model

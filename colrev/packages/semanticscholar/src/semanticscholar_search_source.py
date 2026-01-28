@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: Semantic Scholar"""
+
 from __future__ import annotations
 
 import logging

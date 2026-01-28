@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the CoLRev prep-man operation"""
+
 import shutil
 from unittest.mock import patch
 

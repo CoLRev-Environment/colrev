@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Exclude records based on language as a prep operation"""
+
 from __future__ import annotations
 
 import logging
@@ -16,7 +17,6 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
-
 
 # pylint: disable=too-few-public-methods
 

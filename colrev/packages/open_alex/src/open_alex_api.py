@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Open Alex API"""
+
 import pyalex
 import requests
 from pyalex import Works

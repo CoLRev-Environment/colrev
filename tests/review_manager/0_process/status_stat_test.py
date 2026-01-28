@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests for the status stats"""
+
 import colrev.process.status
 from colrev.constants import Colors
 from colrev.constants import Fields

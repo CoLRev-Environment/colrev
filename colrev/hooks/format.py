@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Hook to format CoLRev repositories"""
+
 import colrev.review_manager
 
 

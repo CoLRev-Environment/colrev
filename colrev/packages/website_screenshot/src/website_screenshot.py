@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Creation of screenshots (PDFs) for online ENTRYTYPES"""
+
 from __future__ import annotations
 
 import logging

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test the exclude_languages prep package"""
+
 import pytest
 
 import colrev.ops.prep

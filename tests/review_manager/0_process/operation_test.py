@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test the colrev operation"""
+
 import pytest
 
 import colrev.exceptions as colrev_exceptions

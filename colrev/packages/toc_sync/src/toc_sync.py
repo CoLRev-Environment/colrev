@@ -48,6 +48,7 @@ toc-sync --new-toc \
   --new-format title_author_doi \
   --new-include-forthcoming
 """
+
 from __future__ import annotations
 
 import argparse
@@ -74,7 +75,6 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.packages.crossref.src import crossref_api
 from colrev.packages.crossref.src.crossref_api import CrossrefAPI
-
 
 # pylint: disable=broad-exception-caught
 

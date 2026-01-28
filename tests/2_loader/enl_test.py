@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the enl load utils"""
+
 import logging
 import os
 from pathlib import Path

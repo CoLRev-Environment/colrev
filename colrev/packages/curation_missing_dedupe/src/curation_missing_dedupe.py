@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Deduplication of remaining records in curated metadata repositories"""
+
 from __future__ import annotations
 
 import logging
@@ -17,7 +18,6 @@ import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
-
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods

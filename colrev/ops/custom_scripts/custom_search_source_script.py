@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Template for a custom SearchSource PackageEndpoint"""
+
 from __future__ import annotations
 
 import logging

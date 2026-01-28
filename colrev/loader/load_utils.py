@@ -127,6 +127,7 @@ Example json record:
     ]
 
 """
+
 from __future__ import annotations
 
 import logging

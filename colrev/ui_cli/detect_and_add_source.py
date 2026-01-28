@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Scripts for the load process."""
+
 from __future__ import annotations
 
 import typing

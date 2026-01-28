@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """ERIC API"""
+
 import typing
 
 import requests
@@ -9,7 +10,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-
 
 # pylint: disable=too-few-public-methods
 

@@ -3,6 +3,7 @@
 
 Network I/O should be extracted to a dedicated :mod:`api` module.
 """
+
 from __future__ import annotations
 
 import typing

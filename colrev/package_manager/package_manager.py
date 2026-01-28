@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Discovering and using packages."""
+
 from __future__ import annotations
 
 import importlib.metadata

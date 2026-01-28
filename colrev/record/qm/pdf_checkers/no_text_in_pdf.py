@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Checker for no-text-in-pdf."""
+
 from __future__ import annotations
 
 from pathlib import Path

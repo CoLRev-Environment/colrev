@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Exclude complementary materials as a prep operation"""
+
 from __future__ import annotations
 
 import logging

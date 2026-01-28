@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 """CoLRev status stats."""
+
 from __future__ import annotations
 
 import typing

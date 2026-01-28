@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """API for Unpaywall"""
+
 from __future__ import annotations
 
 import os
@@ -13,7 +14,6 @@ import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.packages.unpaywall.src import utils
-
 
 ENTRYTYPE_MAPPING = {
     "journal-article": ENTRYTYPES.ARTICLE,

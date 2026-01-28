@@ -13,6 +13,7 @@ Usage::
     colrev.writer.write_utils.write_file(records, filename=filename)
 
 """
+
 from __future__ import annotations
 
 from pathlib import Path

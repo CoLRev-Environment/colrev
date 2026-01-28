@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Theoretical review"""
+
 import logging
 import typing
 

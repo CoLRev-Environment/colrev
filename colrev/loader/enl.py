@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Function to load ENL files"""
+
 from __future__ import annotations
 
 import logging

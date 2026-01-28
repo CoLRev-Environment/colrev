@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Logger"""
+
 from __future__ import annotations
 
 import logging

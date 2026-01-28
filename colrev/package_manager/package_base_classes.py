@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Package interfaces."""
+
 from __future__ import annotations
 
 import abc

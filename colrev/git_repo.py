@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Git repository wrapper for CoLRev"""
+
 from __future__ import annotations
 
 import time

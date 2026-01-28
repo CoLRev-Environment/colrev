@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Collection of utility functions"""
+
 import operator
 import pkgutil
 import re

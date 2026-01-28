@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Linter for CoLRev - direct status assignment"""
+
 from __future__ import annotations
 
 import typing

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Connector to doi.org (API)"""
+
 from __future__ import annotations
 
 import json

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Template for a custom Prep PackageEndpoint"""
+
 from __future__ import annotations
 
 import typing
@@ -7,7 +8,6 @@ import typing
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 from colrev.constants import Fields
-
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=unused-argument

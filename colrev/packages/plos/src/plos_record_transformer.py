@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Utility to transform plos/doi.org items to records"""
+
 from __future__ import annotations
 
 import html
@@ -12,7 +13,6 @@ import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
 
 TAG_RE = re.compile(r"<[a-z/][^<>]{0,12}>")
 

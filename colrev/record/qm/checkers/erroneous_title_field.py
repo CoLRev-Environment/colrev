@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Checker for erroneous-title-field."""
+
 from __future__ import annotations
 
 import colrev.record.qm.quality_model

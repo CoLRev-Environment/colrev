@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the record similarity functionality"""
+
 import pytest
 
 import colrev.record.record_prep

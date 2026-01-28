@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Checker for pdf-incomplete."""
+
 from __future__ import annotations
 
 import re

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Quality model for records."""
+
 from __future__ import annotations
 
 import importlib

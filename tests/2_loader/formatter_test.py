@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of load formatters"""
+
 import unittest
 
 from colrev.loader.load_utils_formatter import LoadFormatter

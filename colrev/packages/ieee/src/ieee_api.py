@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """IEEE Xplore API"""
+
 import json
 import math
 import urllib.parse

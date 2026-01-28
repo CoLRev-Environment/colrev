@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Critical review"""
+
 import logging
 import typing
 

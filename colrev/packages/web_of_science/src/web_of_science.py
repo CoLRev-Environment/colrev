@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: Web of Science"""
+
 from __future__ import annotations
 
 import logging

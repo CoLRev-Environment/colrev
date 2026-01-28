@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test the exclude_complementary_materials prep package"""
+
 from copy import deepcopy
 
 import pytest

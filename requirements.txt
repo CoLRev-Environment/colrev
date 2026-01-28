@@ -44,7 +44,7 @@ et-xmlfile==2.0.0
     # via openpyxl
 face==24.0.0
     # via glom
-filelock==3.20.1
+filelock==3.20.3
     # via virtualenv
 gitdb==4.0.12
     # via gitpython
@@ -152,12 +152,12 @@ tzdata==2025.1
     # via pandas
 url-normalize==1.4.3
     # via requests-cache
-urllib3==2.6.0
+urllib3==2.6.3
     # via
     #   docker
     #   requests
     #   requests-cache
-virtualenv==20.29.3
+virtualenv==20.36.1
     # via pre-commit
 wcwidth==0.2.13
     # via

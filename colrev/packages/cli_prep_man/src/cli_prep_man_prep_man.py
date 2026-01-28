@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """CliPrepMan"""
+
 import logging
 import typing
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test the crossref SearchSource"""
+
 from pathlib import Path
 
 import pytest

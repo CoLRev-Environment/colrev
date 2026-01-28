@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the CoLRev validate operation"""
+
 import colrev.review_manager
 from colrev.constants import OperationsType
 from colrev.constants import RecordState

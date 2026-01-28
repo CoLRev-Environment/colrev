@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Service to detect languages and handle language codes"""
+
 from __future__ import annotations
 
 import re

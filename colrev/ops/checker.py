@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Checkers for CoLRev repositories"""
+
 from __future__ import annotations
 
 import os

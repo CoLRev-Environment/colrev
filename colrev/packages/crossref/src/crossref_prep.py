@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Consolidation of metadata based on Crossref API as a prep operation"""
+
 from __future__ import annotations
 
 import logging

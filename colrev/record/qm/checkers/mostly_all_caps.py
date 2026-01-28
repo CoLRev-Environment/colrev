@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Checker for mostly-all-caps fields."""
+
 from __future__ import annotations
 
 import colrev.env.utils

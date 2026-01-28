@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """CoLRev push operation: Push project and record corrections."""
+
 from __future__ import annotations
 
 import json

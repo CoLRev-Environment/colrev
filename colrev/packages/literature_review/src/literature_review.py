@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Simple literature review"""
+
 import logging
 import typing
 

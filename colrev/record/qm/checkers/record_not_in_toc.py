@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Checker for record-not-in-toc."""
+
 from __future__ import annotations
 
 import colrev.env.local_index

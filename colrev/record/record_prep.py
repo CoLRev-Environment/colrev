@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Class for the preparation of records."""
+
 from __future__ import annotations
 
 import re
@@ -11,7 +12,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
 
 NO_CAPS = ["of", "for", "the", "and"]
 ALL_CAPS = ["IEEE", "ACM", "M&A", "B2B", "B2C", "C2C", "I"]

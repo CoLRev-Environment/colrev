@@ -55,3 +55,12 @@ prescreen
 ---------
 
 Interactively prescreen records using the CLI.
+
+Prescreening BibTex
+-------------------
+
+The following cli tool supports pre-screening outside of CoLRev projects:
+
+.. code-block:: sh
+
+   colrev-cli-prescreen

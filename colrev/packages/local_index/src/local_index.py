@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: LocalIndex"""
+
 from __future__ import annotations
 
 import difflib

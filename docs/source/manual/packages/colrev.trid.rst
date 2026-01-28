@@ -63,4 +63,4 @@ Links
 -----
 
 
-* `TRID <https://www.trid.trb.org/>`_
+* `TRID <https://trid.trb.org/>`_

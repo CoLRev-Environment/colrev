@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Record ID setter."""
+
 from __future__ import annotations
 
 import itertools

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Europe PMC API"""
+
 import typing
 from xml.etree.ElementTree import Element  # nosec
 

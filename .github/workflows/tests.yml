@@ -71,18 +71,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: "pyproject.toml"
-
-      - name: List files after clone
-        run: find . -type f
-
       - name: Install dependencies with uv
         run: |
           uv sync --all-extras --dev
-          colrev install --uv ${{ env.COLREV_PACKAGES }}
+          uv run colrev install --uv ${{ env.COLREV_PACKAGES }}
 
       - name: Setup git
         run: |
@@ -110,15 +102,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: "pyproject.toml"
-
       - name: Install dependencies with uv
         run: |
           uv sync --all-extras --dev
-          colrev install --uv ${{ env.COLREV_PACKAGES }}
+          uv run colrev install --uv ${{ env.COLREV_PACKAGES }}
 
       - name: Setup git
         run: |
@@ -134,14 +121,14 @@ jobs:
     needs: test-minimal-deps
     strategy:
       matrix:
-        platform: [ubuntu-latest,  macos-latest, windows-latest]
+        platform: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ['3.10', '3.11', '3.12']
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Consolidation of metadata based on Europe PMC API as a prep operation"""
+
 from __future__ import annotations
 
 import logging
@@ -14,7 +15,6 @@ import colrev.packages.europe_pmc.src.europe_pmc as europe_pmc_connector
 import colrev.record.record
 import colrev.search_file
 from colrev.constants import SearchType
-
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code

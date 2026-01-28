@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Curated metadata project"""
+
 import logging
 import typing
 from pathlib import Path

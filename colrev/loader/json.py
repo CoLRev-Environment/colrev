@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Function to load JSON files"""
+
 from __future__ import annotations
 
 import json
@@ -8,7 +9,6 @@ import typing
 from pathlib import Path
 
 import colrev.loader.loader
-
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-arguments

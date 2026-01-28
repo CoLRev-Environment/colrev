@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: Springer Link"""
+
 from __future__ import annotations
 
 import logging

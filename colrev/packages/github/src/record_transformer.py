@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Utility to transform github repositories into records"""
+
 from __future__ import annotations
 
 import re

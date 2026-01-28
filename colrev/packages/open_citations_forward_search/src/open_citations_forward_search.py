@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: OpenCitations"""
+
 from __future__ import annotations
 
 import json

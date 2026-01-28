@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Function to load bib files"""
+
 from __future__ import annotations
 
 import itertools

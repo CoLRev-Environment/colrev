@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests for the process model"""
+
 import pytest
 
 from colrev.constants import OperationsType

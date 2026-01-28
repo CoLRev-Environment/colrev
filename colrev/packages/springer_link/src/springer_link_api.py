@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Springer Link API helper."""
+
 from __future__ import annotations
 
 import typing

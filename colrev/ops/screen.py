@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """CoLRev screen operation: Screen documents."""
+
 from __future__ import annotations
 
 import math

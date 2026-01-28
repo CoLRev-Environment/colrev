@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Cover-page removal as a PDF preparation operation"""
+
 from __future__ import annotations
 
 import logging

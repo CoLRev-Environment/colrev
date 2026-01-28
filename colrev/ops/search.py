@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """CoLRev search operation: Search for relevant records."""
+
 from __future__ import annotations
 
 import typing

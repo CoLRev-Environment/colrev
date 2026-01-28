@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """CLI interface for manual retrieval of PDFs"""
+
 from __future__ import annotations
 
 import logging

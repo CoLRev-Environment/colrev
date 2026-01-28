@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Blank literature review"""
+
 import logging
 import typing
 

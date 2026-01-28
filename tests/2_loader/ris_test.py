@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the load utils for ris files"""
+
 import os
 from pathlib import Path
 

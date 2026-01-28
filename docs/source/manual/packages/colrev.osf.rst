@@ -69,7 +69,7 @@ Data from the OSF open platform can be retrieved with the URL from the `https://
 
 The retrieved data, including detailed project metadata and resources, is processed and made available for further actions within CoLRev, such as analysis or reporting.
 
-It is not necessary to pass an API key as a parameter here. In order to keep the key secret, you will be prompted to enter it through user input if it is not already stored in the settings. The api key can be requested via the `OSF settings page <https://accounts.osf.io/login?service=https://osf.io/settings/tokens/>`_.
+It is not necessary to pass an API key as a parameter here. In order to keep the key secret, set it in the ``OSF_API_KEY`` environment variable (for example with ``export OSF_API_KEY="<your-api-key>"``\ ). The api key can be requested via the `OSF settings page <https://accounts.osf.io/login?service=https://osf.io/settings/tokens/>`_. If the variable is not defined, colrev will prompt for the key and store it for the current session.
 
 The search can be filtered by changing the filter parameter to one of the following parameters: title, id, type, category, year, description, tags, data_created. For each of these, change "filter[parameter]=value" in the URL.
 

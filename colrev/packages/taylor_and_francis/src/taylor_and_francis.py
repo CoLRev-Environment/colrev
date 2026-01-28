@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: Taylor and Francis"""
+
 from __future__ import annotations
 
 import logging

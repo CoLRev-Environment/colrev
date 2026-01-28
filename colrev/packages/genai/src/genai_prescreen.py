@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Prescreen based on GenAI"""
+
 from __future__ import annotations
 
 import csv
@@ -17,7 +18,6 @@ import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import RecordState
-
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test the year_vol_iss prep"""
+
 import pytest
 
 import colrev.ops.prep

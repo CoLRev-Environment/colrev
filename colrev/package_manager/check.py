@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Package check."""
+
 from __future__ import annotations
 
 import subprocess
@@ -15,7 +16,6 @@ import colrev.package_manager.package_base_classes as base_classes
 from colrev.constants import Colors
 from colrev.package_manager.package import Package
 from colrev.package_manager.package_base_classes import BASECLASS_MAP
-
 
 HELP_MESSAGES: dict[str, str] = {
     "check_project": (

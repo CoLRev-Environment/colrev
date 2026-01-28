@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Discovering and using packages."""
+
 from __future__ import annotations
 
 import json
@@ -18,7 +19,6 @@ import colrev.package_manager.colrev_internal_packages
 from colrev.constants import EndpointType
 from colrev.constants import Filepaths
 from colrev.constants import SearchType
-
 
 INTERNAL_PACKAGES = (
     colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()

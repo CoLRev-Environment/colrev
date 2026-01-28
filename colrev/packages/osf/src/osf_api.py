@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """OSF API Query class for querying the OSF API."""
+
 import json
 import typing
 

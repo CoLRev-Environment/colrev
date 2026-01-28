@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Types and model of CoLRev operations."""
+
 from __future__ import annotations
 
 import typing

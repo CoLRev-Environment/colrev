@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the CoLRev status operation"""
+
 from pathlib import Path
 
 import colrev.ops.check

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Functionality to merge records."""
+
 from __future__ import annotations
 
 import re

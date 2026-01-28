@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the CoLRev data operation"""
+
 import colrev.review_manager
 
 

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """CoLRev dedupe operation: identify and merge duplicate records."""
+
 from __future__ import annotations
 
 import string
@@ -28,6 +29,7 @@ def same_source_merge(
     main_record: colrev.record.record.Record,
     dupe_record: colrev.record.record.Record,
 ) -> bool:
+    """Same source merge check"""
     main_rec_sources = [x.split("/")[0] for x in main_record.data[Fields.ORIGIN]]
     dupe_rec_sources = [x.split("/")[0] for x in dupe_record.data[Fields.ORIGIN]]
     same_sources = set(main_rec_sources).intersection(set(dupe_rec_sources))

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """AISeL API client."""
+
 from __future__ import annotations
 
 import typing

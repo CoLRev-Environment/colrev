@@ -17,6 +17,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 ### Fixed
 -->
 
+## 0.16.0 - 2026-01-28
+
+### Added
+
+- tei-parser: add iter_paragraphs()
+- prescreen-cli (entrypoint1)
+
+### Changed
+
+- loader/bib: allow keys with :/+
+- Dependency update: search-query 0.14.1 and bib-dedupe 0.11.0
+- dblp: handle timeout gracefully
+- package --check: test whether colrev loads the package
+- search-api-feed: add ENTRYTYPE if missing
+- pdf-prep and unpaywall: handle pymupdf.FileDataError
+- package-manager: install packages individually
+- crossref: ignore NA/UNKNOWN in url generation
+- Dataset: lazy-load git-repo
+- github: export more fields
+
 ## 0.15.0 - 2025-10-24
 
 ### Added

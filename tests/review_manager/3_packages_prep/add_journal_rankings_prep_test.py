@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test the add_journal_ranking prep package"""
+
 import warnings
 from pathlib import Path
 

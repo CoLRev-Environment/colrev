@@ -1,10 +1,12 @@
 #! /usr/bin/env python
 """Prescreen based on CLI"""
+
 from __future__ import annotations
 
 import logging
 import textwrap
 import typing
+from pathlib import Path
 
 from pydantic import Field
 
@@ -15,7 +17,6 @@ from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
-
 
 # pylint: disable=too-few-public-methods
 
@@ -168,7 +169,7 @@ def cli() -> None:
     import colrev.writer.write_utils
 
     # TODO: allow custom file selection
-    filename = "records.bib"
+    filename = Path("records.bib")
     records_dict = colrev.loader.load_utils.load(filename=filename)
     for record_dict in records_dict.values():
         if record_dict["colrev_status"] != RecordState.md_processed:

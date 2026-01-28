@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Export of references in different bibliographical formats as a data operation"""
+
 from __future__ import annotations
 
 import copy

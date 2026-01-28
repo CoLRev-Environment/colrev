@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Conceptual review"""
+
 import logging
 import typing
 

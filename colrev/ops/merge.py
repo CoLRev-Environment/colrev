@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Merge branches of CoLRev projects."""
+
 from __future__ import annotations
 
 import copy

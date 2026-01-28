@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 """Command-line interface for CoLRev."""
+
 from __future__ import annotations
 
 import logging

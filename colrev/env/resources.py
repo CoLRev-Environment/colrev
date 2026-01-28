@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Install curated CoLRev resources."""
+
 from __future__ import annotations
 
 from pathlib import Path

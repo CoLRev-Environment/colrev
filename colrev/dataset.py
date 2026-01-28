@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Dataset class providing functionality for data/records.bib and git repository."""
+
 from __future__ import annotations
 
 import os
@@ -31,6 +32,7 @@ class Dataset:
 
     @cached_property
     def git_repo(self) -> GitRepo:
+        """Get the GitRepo object for the review_manager path"""
         return GitRepo(path=self.review_manager.path)
 
     def get_origin_state_dict(self, records_string: str = "") -> dict:

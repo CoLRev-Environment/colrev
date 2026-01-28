@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Service parsing metadata from PDFs/TEIs (created by GROBID)."""
+
 from __future__ import annotations
 
 import re
@@ -641,7 +642,7 @@ class TEIParser:
                 continue
 
             # Collect all text inside <p>, including nested tags like <ref>, <hi>, etc.
-            text_chunks = [t for t in p.itertext()]
+            text_chunks = list(p.itertext())
             paragraph_text = " ".join(text_chunks)
             paragraph_text = " ".join(paragraph_text.split())  # normalize whitespace
 

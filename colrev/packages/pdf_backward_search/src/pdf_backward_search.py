@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: backward search (based on PDFs and GROBID)"""
+
 from __future__ import annotations
 
 import json

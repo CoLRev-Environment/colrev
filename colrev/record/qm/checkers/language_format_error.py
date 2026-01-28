@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Checker for language-format-error."""
+
 from __future__ import annotations
 
 import colrev.env.language_service

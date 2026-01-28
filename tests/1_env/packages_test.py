@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests for the colrev package manager"""
+
 from pathlib import Path
 
 import pytest

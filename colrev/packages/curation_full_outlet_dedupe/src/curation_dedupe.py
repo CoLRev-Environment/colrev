@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Dedupe functionality dedicated to curated metadata repositories"""
+
 from __future__ import annotations
 
 import logging

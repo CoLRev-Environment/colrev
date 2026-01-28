@@ -74,7 +74,7 @@ Data from the IEEE database can be retrieved with the URL from the `https://www.
 
 All configured metadata fields, the abstract and the document text are queried.
 
-It is not necessary to pass an API key as a parameter here. In order to keep the key secret, you will be prompted to enter it through user input if it is not already stored in the settings. The api key can be requested via the `IEEE Xplore API Portal <https://developer.ieee.org/member/register>`_.
+It is not necessary to pass an API key as a parameter here. In order to keep the key secret, set it in the ``IEEE_API_KEY`` environment variable (for example with ``export IEEE_API_KEY="<your-api-key>"``\ ). The api key can be requested via the `IEEE Xplore API Portal <https://developer.ieee.org/member/register>`_. If the variable is not defined, colrev will prompt for the key and store it for the current session.
 
 Specific parameters can also be searched for, such as issn, isbn, doi, article_number, author, publication_year. For each of these, append "parameter=value" to the URL.
 

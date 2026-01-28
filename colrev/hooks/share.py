@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Hook for sharing in CoLRev repositories"""
+
 import colrev.review_manager
 from colrev.constants import OperationsType
 

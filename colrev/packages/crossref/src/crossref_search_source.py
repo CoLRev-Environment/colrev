@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """SearchSource: Crossref"""
+
 from __future__ import annotations
 
 import datetime
@@ -414,7 +415,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
                 except colrev_exceptions.NotFeedIdentifiableException:
                     pass
         except RuntimeError as exc:
-            self.logger.debug(f"Exception: {exc}")
+            self.logger.debug("Exception: %s", exc)
 
         crossref_feed.save()
 

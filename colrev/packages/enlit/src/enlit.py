@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """ENLIT"""
+
 from pathlib import Path
 
 import pandas as pd

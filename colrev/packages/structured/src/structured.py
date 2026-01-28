@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Structured data extraction as part of the data operations"""
+
 from __future__ import annotations
 
 import csv
@@ -19,7 +20,6 @@ import colrev.package_manager.package_base_classes as base_classes
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
-
 
 # pylint: disable=too-few-public-methods
 

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """Narrative review"""
+
 import logging
 import typing
 

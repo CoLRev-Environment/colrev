@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """CoLRev package."""
+
 from __future__ import annotations
 
 import importlib.util
