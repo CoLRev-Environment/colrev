@@ -11,7 +11,6 @@ import unicodedata
 from datetime import timedelta
 from pathlib import Path
 
-import inquirer
 import requests_cache
 
 import colrev.exceptions as colrev_exceptions
@@ -88,6 +87,9 @@ def get_unique_filename(
 
 def select_search_type(*, search_types: list, params: dict) -> SearchType:
     """Select the SearchType (interactively if neccessary)"""
+
+    # pylint: disable=import-outside-toplevel
+    import inquirer
 
     if Fields.URL in params:
         return SearchType.API
