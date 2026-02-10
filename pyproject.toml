@@ -4,14 +4,18 @@ version = "0.16.1"
 description = "CoLRev: An open-source environment for collaborative reviews"
 authors = [
     { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
-    { name = "Julian Prester", email = "julian.prester@sydney.edu.au" }
+    { name = "Julian Prester", email = "julian.prester@sydney.edu.au" },
 ]
-license = {text = "MIT"}
+license = { text = "MIT" }
 readme = "README.md"
 keywords = [
-    "research", "reproducible research", "open science",
-    "literature", "literature review", "systematic review",
-    "systematic literature review"
+    "research",
+    "reproducible research",
+    "open science",
+    "literature",
+    "literature review",
+    "systematic review",
+    "systematic literature review",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -25,9 +29,9 @@ classifiers = [
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
     "Environment :: Console",
-    "Typing :: Typed"
+    "Typing :: Typed",
 ]
-requires-python = ">=3.10, <3.13"  # lingua-language-detector does not yet support python3.13
+requires-python = ">=3.10, <3.15"
 dependencies = [
     "click>=8.1.6",
     "click-repl>=0.3.0",
@@ -37,19 +41,19 @@ dependencies = [
     "tqdm>=4.64.1",
     "GitPython>=3.1.29",
     "pre-commit>=3.2.0",
-    "docker==7.1.0",                        # required in init to determine whether Docker is available
+    "docker==7.1.0",                   # required in init to determine whether Docker is available
     "pydantic>=2.9.1",
     "dictdiffer>=0.9.0",
     "imagehash>=4.3.1",
     "rapidfuzz>=3.5.2",
-    "bib-dedupe>=0.11.0",                   # required in record_similarity
-    "defusedxml>=0.7.1",                    # required for XML parsing
+    "bib-dedupe>=0.11.0",              # required in record_similarity
+    "defusedxml>=0.7.1",               # required for XML parsing
     "pandas>=2.2,<3",
-    "openpyxl>=3.1.2",                      # required by pandas for Excel
+    "openpyxl>=3.1.2",                 # required by pandas for Excel
     "PyYAML>=6.0.0",
     "requests>=2.32.0",
     "requests-cache>=1.2.0",
-    "lingua-language-detector>=2.0.2",
+    "lingua-language-detector>=2.1.0",
     "pycountry>=24.6.1",
     "nameparser>=1.1.2",
     "number-parser>=0.3.2",
@@ -67,17 +71,17 @@ Issues = "https://github.com/CoLRev-Environment/colrev/issues"
 
 [project.optional-dependencies]
 docs = [
-  "sphinx==7.3.7",
-  "sphinx-autodoc-typehints<2.0",        # e.g., 1.25.3
-  "sphinx-click>=6.0.0",                 # supports Sphinx >=4
-  "sphinx-rtd-theme>=2.0.0",
-  "sphinxcontrib.datatemplates>=0.9.2",
-  "sphinx_collapse>=0.1.2",
-  "sphinx-design>=0.5.0",
-  "sphinx-copybutton>=0.5.2",
-  "docutils>=0.21.2,<0.22",              # Sphinx <8.3 doesn’t support 0.22
-  "m2r>=0.3.1",
-  "beautifulsoup4>=4.11.1"
+    "sphinx==7.3.7",
+    "sphinx-autodoc-typehints<2.0",       # e.g., 1.25.3
+    "sphinx-click>=6.0.0",                # supports Sphinx >=4
+    "sphinx-rtd-theme>=2.0.0",
+    "sphinxcontrib.datatemplates>=0.9.2",
+    "sphinx_collapse>=0.1.2",
+    "sphinx-design>=0.5.0",
+    "sphinx-copybutton>=0.5.2",
+    "docutils>=0.21.2,<0.22",             # Sphinx <8.3 doesn’t support 0.22
+    "m2r>=0.3.1",
+    "beautifulsoup4>=4.11.1",
 ]
 
 dev = [
@@ -90,7 +94,7 @@ dev = [
     "pytest-skip-slow>=0.0.5",
     "mypy==1.12.0",
     "coverage-badge>=1.1.0",
-    "uv>=0.7.0"
+    "uv>=0.7.0",
 ]
 
 [project.scripts]
@@ -107,24 +111,18 @@ warn_unused_configs = true
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = [
-    "requests.*",
-    "yaml.*",
-    "pkg_resources.*"
-]
+module = ["requests.*", "yaml.*", "pkg_resources.*"]
 ignore_missing_imports = true
 
 [tool.flake8]
-exclude = [
-    "tests/data/package_init/*",
-]
+exclude = ["tests/data/package_init/*"]
 
 [tool.pylint.MAIN]
 load-plugins = [
     "colrev.linter.colrev_direct_status_assign",
     "colrev.linter.colrev_missed_constant_usage",
     "colrev.linter.colrev_records_variable_naming_convention",
-    "colrev.linter.colrev_search_source_requests_import"
+    "colrev.linter.colrev_search_source_requests_import",
 ]
 
 [tool.pylint."MESSAGES CONTROL"]
@@ -137,7 +135,7 @@ filterwarnings = [
     "ignore:'DataFrame.swapaxes' is deprecated:FutureWarning",
     "ignore:.*SwigPyPacked.*:DeprecationWarning",
     "ignore:.*SwigPyObject.*:DeprecationWarning",
-    "ignore:.*swigvarlink.*:DeprecationWarning"
+    "ignore:.*swigvarlink.*:DeprecationWarning",
 ]
 
 [tool.coverage.report]
@@ -162,7 +160,7 @@ omit = [
     "colrev/ops/upgrade.py",
     "/tmp/*",
     "tests/*",
-    "*/bib-dedupe/bib_dedupe/*"
+    "*/bib-dedupe/bib_dedupe/*",
 ]
 
 [tool.ruff]
