@@ -23,6 +23,7 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchType
 from colrev.process.model import ProcessModel
+from unittest import mock
 
 # Note : the following produces different relative paths locally/on github.
 # Path(colrev.__file__).parents[1]
@@ -147,7 +148,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     temp_sqlite = review_manager.path.parent / Path("sqlite_index_test.db")
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
-        with session_mocker.patch.object(
+        with mock.patch.object(
             colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
         ):
             test_records_dict = load_test_records(helpers.test_data_path)
