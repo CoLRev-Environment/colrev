@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Test the add_journal_ranking prep package"""
 
-import warnings
 from pathlib import Path
 
 import pytest
@@ -27,18 +26,12 @@ def elp(  # type: ignore
         "sqlite_index_test.db"
     )
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore",
-            message=".*pathlib\\.Path\\.__enter__.*",
-            category=DeprecationWarning,
-        )
-        with session_mocker.patch.object(
-            colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
-        ):
-            local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder(
-                verbose_mode=True
-            )
+    session_mocker.patch.object(
+        colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
+    )
+    local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder(
+        verbose_mode=True
+    )
     local_index_builder.index_journal_rankings()
 
     return ajr_instance
