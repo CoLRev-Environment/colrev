@@ -33,7 +33,7 @@ repos:
         language_version: python3
         exclude: "tests/data/package_init/"
 -   repo: https://github.com/PyCQA/autoflake
-    rev: v2.3.1
+    rev: v2.3.3
     hooks:
     -   id: autoflake
 -   repo: https://github.com/PyCQA/flake8
@@ -56,7 +56,7 @@ repos:
         additional_dependencies: [types-toml]
         exclude: "tests/data/package_init/"
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.14.14
+  rev: v0.15.2
   hooks:
     - id: ruff # runs faster than pylint
       args: [--fix, --exit-non-zero-on-fix]
