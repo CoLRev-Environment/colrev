@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 ### Fixed
 -->
 
+## 0.16.2 - 2026-02-24
+
+- Activate search-query validation for pubmed
+- Add support for Python 3.13
+- Simplify setup (activate `crossref` per default, `dblp`, `pubmed` are optional)
+
 ## 0.16.1 - 2026-01-28
 
 - Refactor `crossref_api` to run in Jupyter notebooks.
