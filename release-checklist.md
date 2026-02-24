@@ -29,17 +29,17 @@ For all releases:
 - Run `git push --atomic origin main $VERSION`.
 
 - Create [new release on Github](https://github.com/CoLRev-Environment/colrev/releases/new)
-    - Select new tag
-    - Enter the release notes
-    - Publish the release
-    - The PyPI version is published through a [github action](https://github.com/CoLRev-Environment/colrev/actions/workflows/publish.yml):  ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/publish.yml)
-    - The zenodo version is published automatically
-    - Trigger/test the Github-action in a curated metadata repository (using ``colrev-batch-gh-api.py``)
+  - Select new tag
+  - Enter the release notes
+  - Publish the release
+  - The PyPI version is published through a [github action](https://github.com/CoLRev-Environment/colrev/actions/workflows/publish.yml):  ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/CoLRev-Ecosystem/colrev/publish.yml)
+  - The zenodo version is published automatically
+  - Trigger/test the Github-action in a curated metadata repository (using ``colrev-batch-gh-api.py``)
 
 - Update [example repository](https://github.com/CoLRev-Environment/example) if necessary
 - Update the release in the devcontainer of [colrev-template](https://github.com/CoLRev-Environment/colrev-template)
 
-```
+```sh
 mkdir example && cd example
 colrev init --example
 colrev load
