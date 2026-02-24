@@ -98,5 +98,5 @@ Links
 -----
 
 
-* `Data field descriptions <https://www.nlm.nih.gov/bsd/mms/medlineelements.html>`_
+* `Data field descriptions <https://www.nlm.nih.gov/bsd/licensee/elements_descriptions.html>`_
 * `Pubmed <https://pubmed.ncbi.nlm.nih.gov/>`_

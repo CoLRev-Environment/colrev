@@ -76,10 +76,10 @@ Data extraction, analysis, and synthesis
 The following packages are automatically set up in a descriptive review:
 
 
-* `colrev.prisma <colrev.prisma.html>`_
-* `colrev.profile <colrev.profile.html>`_
-* `colrev.structured <colrev.structured.html>`_
-* `colrev.paper_md <colrev.paper_md.html>`_
+*  :doc:`colrev.prisma <colrev.prisma>`
+*  :doc:`colrev.profile <colrev.profile>`
+*  :doc:`colrev.structured <colrev.structured>`
+*  :doc:`colrev.paper_md <colrev.paper_md>`
 
 Examples
 --------

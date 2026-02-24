@@ -53,7 +53,7 @@ Summary
 
 A critical review is a form of research synthesis that rigorously evaluates existing literature to identify weaknesses, contradictions, and inconsistencies. It assesses each piece of literature against specific criteria to gauge its adequacy, thereby highlighting areas where current knowledge may be unreliable. This approach aids in directing future research by pinpointing specific problems and discrepancies that need to be addressed. Critical reviews are typically either selective or representative in nature, often omitting a comprehensive literature search, and may use various data synthesis methods rooted in either positivist or interpretivist epistemological positions.
 
-If the focus is on research methods, a `critical methodological review <colrev.methodological_review.html>`_ may be appropriate.
+If the focus is on research methods, a  :doc:`critical methodological review <colrev.methodological_review>` may be appropriate.
 
 Characteristics
 ---------------
@@ -78,8 +78,8 @@ Data extraction, analysis, and synthesis
 The following packages are automatically set up in a critical review:
 
 
-* `colrev.prisma <colrev.prisma.html>`_
-* `colrev.paper_md <colrev.paper_md.html>`_
+*  :doc:`colrev.prisma <colrev.prisma>`
+*  :doc:`colrev.paper_md <colrev.paper_md>`
 
 Examples
 --------

@@ -68,10 +68,10 @@ Links
 -----
 
 
-.. image:: https://img.shields.io/github/commit-activity/y/kermitt2/grobid?color=green&style=plastic
-   :target: https://img.shields.io/github/commit-activity/y/kermitt2/grobid?color=green&style=plastic
+.. image:: https://img.shields.io/github/commit-activity/y/grobidOrg/grobid?color=green&style=plastic
+   :target: https://img.shields.io/github/commit-activity/y/grobidOrg/grobid?color=green&style=plastic
    :alt: grobidactivity
 
 
 
-* `GRBOBID <https://github.com/kermitt2/grobid>`_\ : parsing annotated PDF content (License: `Apache 2.0 <https://github.com/kermitt2/grobid/blob/master/LICENSE>`_\ )
+* `GROBID <https://github.com/grobidOrg/grobid>`_\ : parsing annotated PDF content (License: `Apache 2.0 <https://github.com/grobidOrg/grobid/blob/master/LICENSE>`_\ )

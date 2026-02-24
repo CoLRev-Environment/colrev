@@ -143,6 +143,6 @@ Links
 
 
 * `Crossref <https://www.crossref.org/>`_
-* `License <https://www.crossref.org/documentation/retrieve-metadata/rest-api/rest-api-metadata-license-information/>`_
+* `License <https://www.crossref.org/documentation/retrieve-metadata/rest-api/tips-for-using-the-crossref-rest-api/>`_
 * `Crossref types <https://api.crossref.org/types>`_
 * `Issue: AND Operators not yet supported <https://github.com/fabiobatalha/crossrefapi/issues/20>`_

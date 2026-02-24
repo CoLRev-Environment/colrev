@@ -108,6 +108,14 @@ linkcheck_ignore = [
     + r"|https://ieeexploreapi.ieee.org"
     + r"|https://ieeexplore.ieee.org"
     + r"|http://www.scopus.com"
+    + r"|https://api.plos.org.*"
+    + r"|https://dl.acm.org/.*"
+    + r"|https://connect.ebsco.com/.*"
+    + r"|https://misq.umn.edu/.*"
+    + r"|https://academic.oup.com/jamia/article-lookup/doi/.*"
+    + r"|https://www.acpjournals.org/doi/.*"
+    + r"|https://journals.sagepub.com/doi/10.1057/palgrave.jit.2000109"
+    + r"|https://aisel.aisnet.org/ecis2020_rp/44/"
 ]
 
 

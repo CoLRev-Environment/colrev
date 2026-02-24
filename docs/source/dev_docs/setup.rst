@@ -26,7 +26,7 @@ Although we only support the systems listed in the table below, useful hints for
 For best performance and user experience, it is recommended to run CoLRev natively on a machine with Ubuntu 22.04 installed.
 
 CoLRev runs natively on **Linux** distributions and the step-by-step instructions apply to Linux systems.
-They are tested for `Ubuntu 22.04 “Jammy” <https://releases.ubuntu.com/jammy/>`__ and `Debian 11.7 “Bullseye” <https://www.debian.org/releases/bullseye/debian-installer/index.en.html>`__.
+They are tested for `Ubuntu 22.04 “Jammy” <https://releases.ubuntu.com/jammy/>`__ and `Debian 11.7 “Bullseye” <https://www.debian.org/releases/bullseye/>`__.
 Please note that newer versions of Ubuntu (22.10, 23.04, 23.10, 24.04) and Debian 12 “Bookworm” are not supported due to a change in the handling of the `pip package manager <https://itsfoss.com/install-pipx-ubuntu/>`__.
 
 Windows machines can run CoLRev via WSL2 with Ubuntu 22.04 installed.

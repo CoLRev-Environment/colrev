@@ -24,7 +24,7 @@ Collaborative Literature Reviews
    :target: https://pepy.tech/projects/colrev
 
 .. image:: https://www.bestpractices.dev/projects/7148/badge
-   :target: https://www.bestpractices.dev/en/projects/7148
+   :target: https://www.bestpractices.dev/en/projects/7148/passing
 
 .. image:: https://img.shields.io/badge/all_contributors-32-green.svg?style=flat-square
    :target: #contributors

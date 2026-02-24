@@ -62,7 +62,7 @@ colrev search --add colrev.pdf_backward_search:min_intext_citations=2
 
 Citation data is automatically consolidated with open-citations data to improve data quality.
 
-based on `GROBID <https://github.com/kermitt2/grobid>`_
+based on `GROBID <https://github.com/grobidOrg/grobid>`_
 
 .. code-block::
 

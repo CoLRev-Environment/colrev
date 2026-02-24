@@ -84,9 +84,9 @@ Data extraction, analysis, and synthesis
 The following packages are automatically set up in a scoping review:
 
 
-* `colrev.prisma <colrev.prisma.html>`_
-* `colrev.structured <colrev.structured.html>`_
-* `colrev.paper_md <colrev.paper_md.html>`_
+*  :doc:`colrev.prisma <colrev.prisma>`
+*  :doc:`colrev.structured <colrev.structured>`
+*  :doc:`colrev.paper_md <colrev.paper_md>`
 
 Examples
 --------

@@ -222,4 +222,4 @@ Links
 
 * `SpringerLink <https://link.springer.com/>`_
 * `SpringerLink API <https://dev.springernature.com/>`_
-* `SpringerLink API Documentation <https://docs-dev.springernature.com/docs/>`_
+* `SpringerLink API Documentation <https://dev.springernature.com/docs/introduction/>`_

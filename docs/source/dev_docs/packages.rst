@@ -2,7 +2,7 @@ Package development
 =====================
 
 CoLRev packages are Python packages that extend CoLRev by relying on its shared data structure and standard process.
-Specifically, a CoLRev package can extend package base classes, such as the `ReviewTypePackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.ReviewTypePackageBaseClass>`_, or the `SearchSourcePackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.SearchSourcePackageBaseClass>`_, to implement custom functionality for a specific task or data source.
+Specifically, a CoLRev package can extend package base classes, such as the `ReviewTypePackageBaseClass <packages/package_base_classes.html>`_, or the `SearchSourcePackageBaseClass <packages/package_base_classes.html>`_, to implement custom functionality for a specific task or data source.
 In addition, packages can provide complementary functionalities (e.g., for ad-hoc data exploration and visualization) without extending a specific base class.
 
 The following guide explains how to develop built-in packages, i.e., packages that reside in the `packages <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages>`_ directory. Built-in packages should also be registered as a dependency in the `pyproject.toml <https://github.com/CoLRev-Environment/colrev/blob/main/pyproject.toml>`_.

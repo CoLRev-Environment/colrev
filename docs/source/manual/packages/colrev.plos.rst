@@ -108,7 +108,7 @@ In order to test the metada provided for a specific ``DOI`` it can be used the f
 License
 -------
 
-This project is licensed under the MIT License - see the `LICENSE <LICENSE>`_ file for details.
+This project is licensed under the MIT License - see the `LICENSE <https://github.com/CoLRev-Environment/colrev/blob/main/LICENSE>`_ file for details.
 
 Links
 -----

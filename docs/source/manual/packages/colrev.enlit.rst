@@ -79,9 +79,9 @@ Cite
 
 Wagner, G., Empl, P., & Schryen, G. (2020, May). Designing a novel strategy for exploring literature corpora. In *Proceedings of the European Conference on Information Systems*. https://aisel.aisnet.org/ecis2020_rp/44/
 
-Original repository: `link <https://github.com/digital-work-lab/enlit>`_
+Original repository: `link <https://github.com/fs-ise/enlit>`_
 
 License
 -------
 
-This project is licensed under the MIT License - see the `LICENSE <LICENSE>`_ file for details.
+This project is licensed under the MIT License - see the `LICENSE <https://github.com/CoLRev-Environment/colrev/blob/main/LICENSE>`_ file for details.
