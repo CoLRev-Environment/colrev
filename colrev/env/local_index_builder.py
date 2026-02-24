@@ -332,9 +332,10 @@ class LocalIndexBuilder:
         )
         # Note : lambda is necessary to prevent immediate function call
         # pylint: disable=unnecessary-lambda
-        Timer(0.1, lambda: session.remove_expired_responses()).start()
+        Timer(0.1, lambda: _cleanup_cache(session)).start()
 
         if self._outlets_duplicated():
+            print("Outlets duplicated. Exiting.")
             return
 
         self.reinitialize_sqlite_db()
@@ -406,3 +407,24 @@ class LocalIndexBuilder:
             )
             sqlite_index_ranking = colrev.env.local_index_sqlite.SQLiteIndexRankings()
             sqlite_index_ranking.insert_df(data_frame)
+
+
+def _cleanup_cache(session):
+    # Old API (requests-cache < 1.0)
+    if hasattr(session, "remove_expired_responses"):
+        session.remove_expired_responses()
+        return
+
+    # New API (requests-cache >= 1.0)
+    cache = getattr(session, "cache", None)
+    if cache and hasattr(cache, "delete_expired_responses"):
+        cache.delete_expired_responses()
+        return
+
+    # Ultimate fallback: clear expired entries if supported
+    if cache and hasattr(cache, "clear"):
+        try:
+            cache.clear(expired=True)
+        except TypeError:
+            # Very old versions: clear() has no keyword arguments
+            cache.clear()
