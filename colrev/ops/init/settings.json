@@ -36,12 +36,6 @@
                         "endpoint": "colrev.exclude_complementary_materials"
                     },
                     {
-                        "endpoint": "colrev.local_index"
-                    },
-                    {
-                        "endpoint": "colrev.exclude_languages"
-                    },
-                    {
                         "endpoint": "colrev.remove_urls_with_500_errors"
                     },
                     {
@@ -55,18 +49,6 @@
                     },
                     {
                         "endpoint": "colrev.crossref"
-                    },
-                    {
-                        "endpoint": "colrev.pubmed"
-                    },
-                    {
-                        "endpoint": "colrev.europe_pmc"
-                    },
-                    {
-                        "endpoint": "colrev.dblp"
-                    },
-                    {
-                        "endpoint": "colrev.open_library"
                     }
                 ]
             }
