@@ -409,7 +409,7 @@ class LocalIndexBuilder:
             sqlite_index_ranking.insert_df(data_frame)
 
 
-def _cleanup_cache(session):
+def _cleanup_cache(session: requests_cache.CachedSession) -> None:
     # Old API (requests-cache < 1.0)
     if hasattr(session, "remove_expired_responses"):
         session.remove_expired_responses()
