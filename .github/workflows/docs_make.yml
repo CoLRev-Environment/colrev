@@ -54,15 +54,14 @@ jobs:
         run: rm -rf docs/source/dev_docs/_autosummary/*
 
       - name: Run docs update
-        run: colrev env --update_package_list
+        run: uv run colrev env --update_package_list
 
       - name: Build documentation with Sphinx
-        run: sphinx-build -b html docs/source docs/build
+        run: uv run sphinx-build -b html docs/source docs/build
 
       - name: Run pre-commit hooks excluding black
         continue-on-error: true
-        run: |
-          pre-commit run --all-files
+        run: uv run pre-commit run --all-files
 
       - name: Commit changes and create pull request
         continue-on-error: true
