@@ -85,7 +85,7 @@ openpyxl==3.1.5
     # via colrev (pyproject.toml)
 pandas==2.2.3
     # via colrev (pyproject.toml)
-pillow==11.1.0
+pillow==12.1.1
     # via imagehash
 platformdirs==4.3.7
     # via
