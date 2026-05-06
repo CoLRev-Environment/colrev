@@ -19,6 +19,7 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import IDPattern
 from colrev.constants import RecordState
+import colrev.record.record_prep
 
 # pylint: disable=too-few-public-methods
 
