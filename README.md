@@ -5,7 +5,7 @@
 
 <div align="center">
 
-[![DOI](https://zenodo.org/badge/363073613.svg)](https://zenodo.org/badge/latestdoi/363073613)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18762354.svg)](https://doi.org/10.5281/zenodo.18762354)
 [![PyPI - Version](https://img.shields.io/pypi/v/colrev?color=blue)](https://pypi.org/project/colrev/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/colrev)
 [![License](https://img.shields.io/github/license/CoLRev-Environment/colrev.svg)](https://github.com/CoLRev-Environment/colrev/releases/)
