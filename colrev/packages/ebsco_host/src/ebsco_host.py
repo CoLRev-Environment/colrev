@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: EBSCOHost"""
+"""SearchSource: EBSCOHost."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from colrev.ops.search_db import run_db_search
 
 
 class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """EBSCOHost"""
+    """EBSCOHost."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -55,16 +55,14 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
     def validate_source(
         cls, search_source: colrev.search_file.ExtendedSearchFile
     ) -> None:
-        """Validate the search source"""
-
+        """Validate the search source."""
         if search_source.search_type == SearchType.DB:
             print(f"Validating search string: {search_source.search_string}")
             parse(search_source.search_string, platform="ebsco")
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for EBSCOHost"""
-
+        """Source heuristic for EBSCOHost."""
         result = {"confidence": 0.0}
 
         if data.count("@") >= 1:
@@ -81,8 +79,7 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint"""
-
+        """Add SearchSource as an endpoint."""
         params_dict = {}
         if params:
             params_dict = {params.split("=")[0]: params.split("=")[1]}
@@ -96,8 +93,7 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def search(self, rerun: bool) -> None:
-        """Run a search of EbscoHost"""
-
+        """Run a search of EbscoHost."""
         if self.search_source.search_type == SearchType.DB:
             run_db_search(
                 db_url=self.db_url,
@@ -114,7 +110,7 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     @classmethod
@@ -134,8 +130,7 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
         return records
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             return self._load_bib(
                 filename=self.search_source.search_results_path, logger=self.logger
@@ -147,8 +142,7 @@ class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for EBSCOHost"""
-
+        """Source-specific preparation for EBSCOHost."""
         record.format_if_mostly_upper(Fields.AUTHOR, case=Fields.TITLE)
         record.format_if_mostly_upper(Fields.TITLE, case=Fields.TITLE)
 

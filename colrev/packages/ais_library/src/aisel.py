@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: AIS electronic Library"""
+"""SearchSource: AIS electronic Library."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ from colrev.packages.ais_library.src import aisel_api
 
 
 class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
-    """AIS electronic Library (AISeL)"""
+    """AIS electronic Library (AISeL)."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -87,8 +87,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for AIS electronic Library (AISeL)"""
-
+        """Source heuristic for AIS electronic Library (AISeL)."""
         result = {"confidence": 0.0}
         # TBD: aisel does not return bibtex?!
         nr_ais_links = data.count("https://aisel.aisnet.org/")
@@ -170,7 +169,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
         if params:
             if params.startswith("http"):
@@ -225,8 +224,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def _validate_source(self) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-
+        """Validate the SearchSource (parameters etc.)."""
         source = self.search_source
 
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
@@ -277,8 +275,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         ais_feed.save()
 
     def search(self, rerun: bool) -> None:
-        """Run a search of AISeLibrary"""
-
+        """Run a search of AISeLibrary."""
         self._validate_source()
 
         if self.search_source.search_type == SearchType.API:
@@ -307,7 +304,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     @classmethod
@@ -334,8 +331,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         return records
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         # pylint: disable=colrev-missed-constant-usage
         if self.search_source.search_results_path.suffix in [".txt", ".enl"]:
             return self._load_enl(
@@ -476,8 +472,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for the AIS electronic Library (AISeL)"""
-
+        """Source-specific preparation for the AIS electronic Library (AISeL)."""
         self._fix_entrytype(record=record)
         self._unify_container_titles(record=record)
         self._format_fields(record=record)

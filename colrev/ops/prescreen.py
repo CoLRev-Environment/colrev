@@ -23,7 +23,7 @@ ConditionalPrescreen = (
 
 
 class Prescreen(colrev.process.operation.Operation):
-    """Prescreen records (based on metadata)"""
+    """Prescreen records (based on metadata)."""
 
     type = OperationsType.prescreen
 
@@ -42,8 +42,7 @@ class Prescreen(colrev.process.operation.Operation):
         self.verbose = True
 
     def export_table(self, *, export_table_format: str = "csv") -> None:
-        """Export a table with records to prescreen"""
-
+        """Export a table with records to prescreen."""
         endpoint = colrev.packages.prescreen_table.src.prescreen_table.TablePrescreen(
             prescreen_operation=self, settings={"endpoint": "export_table"}
         )
@@ -55,8 +54,7 @@ class Prescreen(colrev.process.operation.Operation):
         )
 
     def import_table(self, *, import_table_path: str) -> None:
-        """Import a table with prescreened records"""
-
+        """Import a table with prescreened records."""
         endpoint = colrev.packages.prescreen_table.src.prescreen_table.TablePrescreen(
             prescreen_operation=self, settings={"endpoint": "import_table"}
         )
@@ -86,8 +84,7 @@ class Prescreen(colrev.process.operation.Operation):
 
     @colrev.process.operation.Operation.decorate()
     def include_all_in_prescreen(self, *, persist: bool) -> None:
-        """Include all records in the prescreen"""
-
+        """Include all records in the prescreen."""
         if persist:
             self.review_manager.settings.prescreen.prescreen_package_endpoints = []
             self.review_manager.save_settings()
@@ -109,13 +106,11 @@ class Prescreen(colrev.process.operation.Operation):
         self._print_stats(selected_record_ids=selected_record_ids)
 
     def include_records(self, *, ids: str) -> None:
-        """Include records in the prescreen"""
-
+        """Include records in the prescreen."""
         self._prescreen_records(ids=ids, include=True)
 
     def exclude_records(self, *, ids: str) -> None:
-        """Exclude records in the prescreen"""
-
+        """Exclude records in the prescreen."""
         self._prescreen_records(ids=ids, include=False)
 
     def _prescreen_records(self, *, ids: str, include: bool) -> None:
@@ -150,8 +145,7 @@ class Prescreen(colrev.process.operation.Operation):
         )
 
     def get_data(self) -> dict:
-        """Get the data for prescreen"""
-
+        """Get the data for prescreen."""
         # pylint: disable=duplicate-code
 
         records_headers = self.review_manager.dataset.load_records_dict(
@@ -176,8 +170,7 @@ class Prescreen(colrev.process.operation.Operation):
         return prescreen_data
 
     def create_prescreen_split(self, *, create_split: int) -> list:
-        """Split the prescreen between researchers"""
-
+        """Split the prescreen between researchers."""
         prescreen_splits = []
 
         data = self.get_data()
@@ -197,8 +190,7 @@ class Prescreen(colrev.process.operation.Operation):
         return prescreen_splits
 
     def setup_custom_script(self) -> None:
-        """Setup a custom prescreen script"""
-
+        """Setup a custom prescreen script."""
         filedata = colrev.env.utils.get_package_file_content(
             module="colrev.ops",
             filename=Path("custom_scripts/custom_prescreen_script.py"),
@@ -286,7 +278,7 @@ class Prescreen(colrev.process.operation.Operation):
         prescreen_inclusion: bool,
         PAD: int = 40,
     ) -> None:
-        """Save the prescreen decision"""
+        """Save the prescreen decision."""
         if prescreen_inclusion:
             self.review_manager.report_logger.info(
                 f" {record.data['ID']}".ljust(PAD, " ") + "Included in prescreen"
@@ -328,8 +320,7 @@ class Prescreen(colrev.process.operation.Operation):
 
     @colrev.process.operation.Operation.decorate()
     def main(self, *, split_str: str = "NA") -> None:
-        """Prescreen records (main entrypoint)"""
-
+        """Prescreen records (main entrypoint)."""
         # pylint: disable=duplicate-code
         split = []
         if split_str != "NA":

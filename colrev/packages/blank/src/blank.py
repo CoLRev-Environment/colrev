@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Blank literature review"""
+"""Blank literature review."""
 
 import logging
 import typing
@@ -15,7 +15,7 @@ import colrev.package_manager.package_settings
 
 
 class BlankReview(base_classes.ReviewTypePackageBaseClass):
-    """Blank review"""
+    """Blank review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=True)
@@ -36,8 +36,7 @@ class BlankReview(base_classes.ReviewTypePackageBaseClass):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
-        """Initialize a blank review"""
-
+        """Initialize a blank review."""
         settings.data.data_package_endpoints = []
         settings.sources = []
         settings.prep.prep_rounds[0].prep_package_endpoints = []

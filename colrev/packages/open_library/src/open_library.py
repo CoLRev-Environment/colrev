@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Connector to OpenLibrary (API)"""
+"""Connector to OpenLibrary (API)."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ from colrev.packages.open_library.src import open_library_api
 
 
 class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
-    """OpenLibrary API"""
+    """OpenLibrary API."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -69,8 +69,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
     def check_availability(self) -> None:
-        """Check the status (availability) of the OpenLibrary API"""
-
+        """Check the status (availability) of the OpenLibrary API."""
         test_rec = {
             Fields.ENTRYTYPE: "book",
             Fields.ISBN: "9781446201435",
@@ -200,8 +199,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for OpenLibrary"""
-
+        """Source heuristic for OpenLibrary."""
         result = {"confidence": 0.0}
 
         return result
@@ -213,11 +211,11 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         raise NotImplementedError
 
     def search(self, rerun: bool) -> None:
-        """Run a search of OpenLibrary"""
+        """Run a search of OpenLibrary."""
 
         # if self.search_source.search_type == SearchType.DB:
         #     if utils.in_ci_environment():
@@ -232,8 +230,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Retrieve masterdata from OpenLibrary based on similarity with the record provided"""
-
+        """Retrieve masterdata from OpenLibrary based on similarity with the record provided."""
         if any(self.origin_prefix in o for o in record.data[Fields.ORIGIN]):
             # Already linked to an open-library record
             return record
@@ -274,8 +271,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.search_results_path,
@@ -289,6 +285,5 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for OpenLibrary"""
-
+        """Source-specific preparation for OpenLibrary."""
         return record

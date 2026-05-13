@@ -176,8 +176,7 @@ def _get_colrev_id_from_record(record: colrev.record.record.Record) -> str:
 
 
 def get_colrev_id(record: colrev.record.record.Record, *, assume_complete: bool) -> str:
-    """Create the colrev_id"""
-
+    """Create the colrev_id."""
     _check_colrev_id_preconditions(
         record,
         assume_complete=assume_complete,
@@ -219,8 +218,7 @@ def _get_colrev_pdf_id_cpid2(pdf_path: Path) -> str:
 
 
 def get_colrev_pdf_id(pdf_path: Path, *, cpid_version: str = "cpid2") -> str:
-    """Get the PDF hash"""
-
+    """Get the PDF hash."""
     pdf_path = pdf_path.resolve()
     try:
         file_size = os.path.getsize(pdf_path)
@@ -237,8 +235,7 @@ def get_colrev_pdf_id(pdf_path: Path, *, cpid_version: str = "cpid2") -> str:
 
 
 def get_toc_key(record: colrev.record.record.Record) -> str:
-    """Get the record's toc-key"""
-
+    """Get the record's toc-key."""
     try:
         if record.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
             toc_key = (

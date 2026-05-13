@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Linter for CoLRev - missed constant usage"""
+"""Linter for CoLRev - missed constant usage."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class MissedConstantUsageChecker(checkers.BaseChecker):
-    """MissedConstantUsageChecker"""
+    """MissedConstantUsageChecker."""
 
     name = "colrev-missed-constant-usage"
 
@@ -50,10 +50,7 @@ class MissedConstantUsageChecker(checkers.BaseChecker):
 
     @only_required_for_messages("colrev-missed-constant-usage")
     def visit_assign(self, node: nodes.Assign) -> None:
-        """
-        Detect missed constant usage.
-        """
-
+        """Detect missed constant usage."""
         if len(node.targets) != 1:
             return
 
@@ -74,5 +71,4 @@ class MissedConstantUsageChecker(checkers.BaseChecker):
 
 def register(linter: PyLinter) -> None:  # pragma: no cover
     """Required method to auto register this checker."""
-
     linter.register_checker(MissedConstantUsageChecker(linter))

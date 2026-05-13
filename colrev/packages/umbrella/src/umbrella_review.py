@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Umbrella review"""
+"""Umbrella review."""
 
 import logging
 import typing
@@ -15,7 +15,7 @@ import colrev.package_manager.package_settings
 
 
 class UmbrellaReview(base_classes.ReviewTypePackageBaseClass):
-    """Umbrella review"""
+    """Umbrella review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -37,8 +37,7 @@ class UmbrellaReview(base_classes.ReviewTypePackageBaseClass):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
-        """Initialize an umbrella review"""
-
+        """Initialize an umbrella review."""
         settings.data.data_package_endpoints = [
             {
                 "endpoint": "colrev.paper_md",

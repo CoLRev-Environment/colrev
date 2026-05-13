@@ -65,12 +65,11 @@ def _normalize_pages(entry: typing.Dict[str, typing.Any]) -> typing.Optional[str
 
 
 def _parse_authors(entry: typing.Dict[str, typing.Any]) -> str:
-    """
-    Return compact author string like 'Surname, G.; Second, H.'.
+    """Return compact author string like 'Surname, G.; Second, H.'.
     Handles Scopus variants:
       - dc:creator (string)
       - author (list[dict] or dict)
-      - authors.author (list[dict])
+      - authors.author (list[dict]).
     """
     # pylint: disable=too-many-branches
 
@@ -218,13 +217,12 @@ def _apply_container_fields(
     entry: typing.Dict[str, typing.Any],
     entrytype: str,
 ) -> None:
-    """
-    Set container-specific fields:
-      - article -> journal, volume, number
-      - inproceedings -> booktitle (+ series if recognizable)
-      - proceedings -> title already holds proceedings title; add series
-      - incollection -> booktitle (+ series)
-      - book -> (title already set), add series if it is a book series
+    """Set container-specific fields:
+    - article -> journal, volume, number
+    - inproceedings -> booktitle (+ series if recognizable)
+    - proceedings -> title already holds proceedings title; add series
+    - incollection -> booktitle (+ series)
+    - book -> (title already set), add series if it is a book series.
     """
     # pylint: disable=too-many-branches
 
@@ -281,8 +279,7 @@ def _apply_container_fields(
 
 
 def transform_record(entry: dict) -> dict:
-    """Transform a raw Scopus record into a ColRev record"""
-
+    """Transform a raw Scopus record into a ColRev record."""
     scopus_id = _scopus_id(entry)
     eid = _eid(entry)
 

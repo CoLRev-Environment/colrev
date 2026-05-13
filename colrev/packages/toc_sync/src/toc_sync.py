@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-General-purpose Markdown table-of-contents (TOC) creator/updater for journals.
+"""General-purpose Markdown table-of-contents (TOC) creator/updater for journals.
 
 What it does
 ------------
@@ -126,7 +125,7 @@ def _pair_sort_key(vol: str, iss: str) -> Tuple[Tuple[int, str], Tuple[int, str]
 
 @dataclass
 class TocConfig:
-    """TocConfig"""
+    """TocConfig."""
 
     issns: List[str]
     include_forthcoming: bool = False
@@ -398,11 +397,10 @@ def _write_full_markdown(
 def _append_incremental(
     grouped: Dict[str, Dict[str, List[dict]]], out_path: Path, cfg: TocConfig
 ) -> None:
-    """
-    Incremental update that:
-      - Removes any existing 'Forthcoming' block and re-inserts a fresh one
-      - Inserts strictly newer issues (vs. latest existing) right AFTER the header
-      - Keeps existing content intact below the inserted block
+    """Incremental update that:
+    - Removes any existing 'Forthcoming' block and re-inserts a fresh one
+    - Inserts strictly newer issues (vs. latest existing) right AFTER the header
+    - Keeps existing content intact below the inserted block.
     """
     if not out_path.exists():
         _write_full_markdown(grouped, out_path, cfg)
@@ -560,8 +558,7 @@ def create_new_toc(
     pdfs_dir: Optional[str] = None,
     fmt: str = "title_author_doi",
 ) -> Optional[Path]:
-    """Create a new toc file"""
-
+    """Create a new toc file."""
     j_name = input("Enter journal name to lookup the ISSN: ").strip()
     if not j_name:
         print("Aborted: empty journal name.", file=sys.stderr)
@@ -669,8 +666,7 @@ def _process_file(md_path: Path, only_append: bool = True) -> None:
 
 
 def main() -> None:
-    """Main entry point"""
-
+    """Main entry point."""
     parser = argparse.ArgumentParser(
         description="Update or create journal TOC markdown files from Crossref"
     )

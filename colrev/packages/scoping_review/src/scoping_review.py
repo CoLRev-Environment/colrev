@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Scoping review"""
+"""Scoping review."""
 
 import logging
 import typing
@@ -15,7 +15,7 @@ import colrev.package_manager.package_settings
 
 
 class ScopingReview(base_classes.ReviewTypePackageBaseClass):
-    """Scoping review"""
+    """Scoping review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=True)
@@ -36,8 +36,7 @@ class ScopingReview(base_classes.ReviewTypePackageBaseClass):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
-        """Initialize a scoping review"""
-
+        """Initialize a scoping review."""
         settings.data.data_package_endpoints = [
             {"endpoint": "colrev.prisma", "version": "1.0"},
             {

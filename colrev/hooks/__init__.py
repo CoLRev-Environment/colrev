@@ -34,7 +34,8 @@
             entry: colrev-hooks-share
             language: python
             stages: [push]
-            pass_filenames: false"""
+            pass_filenames: false
+"""
 
 __author__ = """Gerit Wagner"""
 __email__ = "gerit.wagner@uni-bamberg.de"

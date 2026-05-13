@@ -27,7 +27,7 @@ INTERNAL_PACKAGES = (
 
 # pylint: disable=too-many-instance-attributes
 class PackageDoc:
-    """PackageDoc"""
+    """PackageDoc."""
 
     package_id: str
     version: str
@@ -129,13 +129,11 @@ class PackageDoc:
         return True
 
     def has_endpoint(self, endpoint_type: EndpointType) -> bool:
-        """Check if the package has a specific endpoint type"""
-
+        """Check if the package has a specific endpoint type."""
         return endpoint_type.value in self.endpoints
 
     def _get_authors_for_docs(self) -> str:
-        """Get the authors for the documentation  (without emails in <>)"""
-
+        """Get the authors for the documentation  (without emails in <>)."""
         return ", ".join(author["name"] for author in self.authors)
 
     def _get_docs_short_description(self) -> str:
@@ -270,8 +268,7 @@ class PackageDoc:
         return header_info
 
     def import_package_docs(self) -> None:
-        """Import the package documentation"""
-
+        """Import the package documentation."""
         with open(
             Filepaths.COLREV_PATH
             / Path(f"docs/source/manual/packages/{self.docs_rst_path}"),
@@ -286,7 +283,7 @@ class PackageDoc:
             file.write(output)
 
     def get_endpoint_item(self, endpoint_type: EndpointType) -> dict:
-        """Get the endpoint item for the package
+        """Get the endpoint item for the package.
 
         Format:
         {
@@ -296,7 +293,6 @@ class PackageDoc:
             "search_types": search_types,
         }
         """
-
         status = (
             self.dev_status.replace("stable", "|STABLE|")
             .replace("maturing", "|MATURING|")
@@ -314,7 +310,7 @@ class PackageDoc:
         return endpoint_item
 
     def get_docs_item(self) -> dict:
-        """Get the documentation item for the package
+        """Get the documentation item for the package.
 
         Format:
         {
@@ -345,7 +341,7 @@ class PackageDoc:
 
 # pylint: disable=too-few-public-methods
 class DocRegistryManager:
-    """DocRegistryManager"""
+    """DocRegistryManager."""
 
     # Overview page of packages: rst
     docs_packages_index_path = Filepaths.COLREV_PATH / Path(
@@ -469,7 +465,6 @@ class DocRegistryManager:
 
     def _write_docs_for_index(self) -> None:
         """Writes data from self.docs_for_index to the packages.rst file."""
-
         docs_packages_index_path_content = self.docs_packages_index_path.read_text(
             encoding="utf-8"
         )
@@ -498,7 +493,7 @@ class DocRegistryManager:
                 file.write(line + "\n")
 
     def _update_pypi_packages(self) -> None:
-        """Retrieves CoLRev packages from PyPI"""
+        """Retrieves CoLRev packages from PyPI."""
 
         def ask_package_action(package_name: str) -> str:
             questions = [
@@ -561,7 +556,6 @@ class DocRegistryManager:
 
     def update(self) -> None:
         """Update the package endpoints and the package status."""
-
         self._update_pypi_packages()
         self._load_packages()
 

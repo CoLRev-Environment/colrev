@@ -195,7 +195,7 @@ class Advisor:
 
     # pylint: disable=colrev-missed-constant-usage
     def _get_collaboration_instructions(self) -> dict:
-        """Get instructions related to collaboration"""
+        """Get instructions related to collaboration."""
         collaboration_instructions: dict = {"items": []}
         git_repo = self.review_manager.dataset.git_repo.repo
 
@@ -565,7 +565,7 @@ class Advisor:
         self,
         environment_instructions: list,
     ) -> None:
-        """Get instructions related to downloading outlets (resources)"""
+        """Get instructions related to downloading outlets (resources)."""
         outlets, outlet_counter = self._extract_outlet_count()
 
         selected = []
@@ -601,7 +601,7 @@ class Advisor:
                 environment_instructions.append(instruction)
 
     def _get_environment_instructions(self) -> list:
-        """Get instructions related to the CoLRev environment"""
+        """Get instructions related to the CoLRev environment."""
         environment_instructions: list[dict] = []
         if self.status_stats.currently.md_imported > 10:
             self._append_download_outlets_instruction(environment_instructions)
@@ -629,7 +629,7 @@ class Advisor:
         return environment_instructions
 
     def get_review_instructions(self) -> list:
-        """Get instructions related to the review (operations)"""
+        """Get instructions related to the review (operations)."""
         review_instructions: typing.List[typing.Dict] = []
         self._append_initial_load_instruction(review_instructions)
         self._append_operation_in_progress_instructions(review_instructions)
@@ -639,7 +639,7 @@ class Advisor:
         return review_instructions
 
     def get_sharing_instructions(self) -> dict:
-        """Get instructions related to sharing the project"""
+        """Get instructions related to sharing the project."""
         collaboration_instructions = self._get_collaboration_instructions()
         return {
             "msg": "\n ".join(
@@ -655,7 +655,7 @@ class Advisor:
         }
 
     def get_instructions(self) -> dict:
-        """Get all instructions on the project"""
+        """Get all instructions on the project."""
         instructions = {
             "review_instructions": self.get_review_instructions(),
             "environment_instructions": self._get_environment_instructions(),

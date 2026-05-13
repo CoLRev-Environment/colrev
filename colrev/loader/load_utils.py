@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function to load files (BiBTeX, RIS, CSV, etc.)
+"""Function to load files (BiBTeX, RIS, CSV, etc.).
 
 Usage::
 
@@ -152,7 +152,7 @@ from colrev.constants import Fields
 
 
 def bib_entrytype_setter(entrytype: dict) -> None:
-    """Set the entrytype for BibTeX records"""
+    """Set the entrytype for BibTeX records."""
     if Fields.ENTRYTYPE not in entrytype:
         entrytype[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
         return
@@ -177,8 +177,7 @@ def load(  # type: ignore
     empty_if_file_not_exists: bool = True,
     format_names: bool = False,
 ) -> dict:
-    """Load a file and return records as a dictionary"""
-
+    """Load a file and return records as a dictionary."""
     if isinstance(filename, str):
         filename = Path(filename)
 
@@ -231,8 +230,7 @@ def loads(  # type: ignore
     unique_id_field: str = "",
     logger: logging.Logger = logging.getLogger(__name__),
 ) -> dict:
-    """Load a string and return records as a dictionary"""
-
+    """Load a string and return records as a dictionary."""
     if implementation not in [
         "bib",
         "csv",
@@ -265,7 +263,7 @@ def loads(  # type: ignore
 def load_df(
     filename: Path,
 ) -> pd.DataFrame:
-    """Load a file and return records as a DataFrame"""
+    """Load a file and return records as a DataFrame."""
     assert isinstance(
         filename, Path
     ), f"filename must be a Path object, not {type(filename)}"
@@ -276,8 +274,7 @@ def load_df(
 def get_nr_records(  # type: ignore
     filename: Path,
 ) -> int:
-    """Get the number of records in a file"""
-
+    """Get the number of records in a file."""
     if not filename.exists():
         return 0
 

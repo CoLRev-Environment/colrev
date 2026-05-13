@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: OpenCitations"""
+"""SearchSource: OpenCitations."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ from colrev.packages.open_citations_forward_search.src import open_citations_api
 
 class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Forward search based on OpenCitations
-    Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
+    Scope: all included papers with colrev_status in (rev_included, rev_synthesized).
     """
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
@@ -62,7 +62,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def get_default_source(cls) -> colrev.search_file.ExtendedSearchFile:
-        """Get the default SearchSource settings"""
+        """Get the default SearchSource settings."""
         return colrev.search_file.ExtendedSearchFile(
             version=cls.CURRENT_SYNTAX_VERSION,
             platform="colrev.open_citations_forward_search",
@@ -76,8 +76,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
     def _validate_source(self) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-
+        """Validate the SearchSource (parameters etc.)."""
         source = self.search_source
 
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
@@ -149,8 +148,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         return forward_citations
 
     def search(self, rerun: bool) -> None:
-        """Run a forward search based on OpenCitations"""
-
+        """Run a forward search based on OpenCitations."""
         # pylint: disable=too-many-branches
 
         self._validate_source()
@@ -207,8 +205,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for forward searches (OpenCitations)"""
-
+        """Source heuristic for forward searches (OpenCitations)."""
         result = {"confidence": 0.0}
 
         return result
@@ -220,8 +217,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint"""
-
+        """Add SearchSource as an endpoint."""
         search_source = cls.get_default_source()
         return search_source
 
@@ -232,12 +228,11 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.search_results_path,
@@ -251,5 +246,5 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for forward searches (OpenCitations)"""
+        """Source-specific preparation for forward searches (OpenCitations)."""
         return record

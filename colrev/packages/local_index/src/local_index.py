@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: LocalIndex"""
+"""SearchSource: LocalIndex."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ from colrev.ops.search_api_feed import create_api_source
 
 
 class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """LocalIndex"""
+    """LocalIndex."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -81,7 +81,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
     def _validate_source(self) -> None:
-        """Validate the SearchSource (parameters etc.)"""
+        """Validate the SearchSource (parameters etc.)."""
         source = self.search_source
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
@@ -190,8 +190,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         local_index_feed.save()
 
     def search(self, rerun: bool) -> None:
-        """Run a search of local-index"""
-
+        """Run a search of local-index."""
         self._validate_source()
 
         local_index_feed = colrev.ops.search_api_feed.SearchAPIFeed(
@@ -217,8 +216,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for local-index"""
-
+        """Source heuristic for local-index."""
         result = {"confidence": 0.0}
         if Fields.CURATION_ID in data:
             result["confidence"] = 1.0
@@ -232,8 +230,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         # always API search
 
         if len(params) == 0:
@@ -261,8 +258,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
@@ -305,8 +301,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for local-index"""
-
+        """Source-specific preparation for local-index."""
         return record
 
     def _add_cpid(self, *, record: colrev.record.record.Record, path: Path) -> bool:
@@ -462,8 +457,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Retrieve masterdata from LocalIndex based on similarity with the record provided"""
-
+        """Retrieve masterdata from LocalIndex based on similarity with the record provided."""
         retrieved_record = self._retrieve_record_from_local_index(
             record, path=prep_operation.review_manager.path
         )
@@ -562,8 +556,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         return selected_changes
 
     def apply_correction(self, *, change_itemsets: list) -> None:
-        """Apply a correction by opening a pull request in the original repository"""
-
+        """Apply a correction by opening a pull request in the original repository."""
         local_base_repos = self._get_local_base_repos(change_itemsets=change_itemsets)
 
         for local_base_repo_url, local_base_repo_path in local_base_repos.items():
@@ -861,8 +854,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         return success
 
     def _apply_correction(self, *, source_url: str, change_list: list) -> None:
-        """Apply a (list of) corrections"""
-
+        """Apply a (list of) corrections."""
         # TBD: other modes of accepting changes?
         # e.g., only-metadata, no-changes, all(including optional fields)
 

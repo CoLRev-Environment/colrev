@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Prescreen based on specified scope"""
+"""Prescreen based on specified scope."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ from colrev.constants import RecordState
 class ScopePrescreenSettings(
     colrev.package_manager.package_settings.DefaultSettings, BaseModel
 ):
-    """Settings for ScopePrescreen"""
+    """Settings for ScopePrescreen."""
 
     # pylint: disable=invalid-name
     # pylint: disable=too-many-instance-attributes
@@ -73,7 +73,7 @@ class ScopePrescreenSettings(
 
 
 class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
-    """Rule-based prescreen (scope)"""
+    """Rule-based prescreen (scope)."""
 
     settings: ScopePrescreenSettings
     ci_supported: bool = Field(default=True)
@@ -269,8 +269,7 @@ class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
 
     @classmethod
     def add_endpoint(cls, *, operation: colrev.ops.search.Search, params: str) -> None:
-        """Add  the scope_prescreen as an endpoint"""
-
+        """Add  the scope_prescreen as an endpoint."""
         if not params:
             print("Interactive mode not yet implemented.")
             return
@@ -331,8 +330,7 @@ class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
         records: dict,
         split: list,  # pylint: disable=unused-argument
     ) -> dict:
-        """Prescreen records based on the scope parameters"""
-
+        """Prescreen records based on the scope parameters."""
         for record_dict in records.values():
             self._conditional_prescreen(
                 record_dict=record_dict,

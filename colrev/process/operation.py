@@ -21,7 +21,7 @@ F = typing.TypeVar("F", bound=typing.Callable[..., typing.Any])
 
 
 class Operation:
-    """Operations correspond to the work steps in a CoLRev project"""
+    """Operations correspond to the work steps in a CoLRev project."""
 
     type: OperationsType
 
@@ -45,7 +45,7 @@ class Operation:
     # pylint: disable=too-many-nested-blocks
     @classmethod
     def decorate(cls) -> typing.Callable:
-        """Decorator for operations"""
+        """Decorator for operations."""
 
         def decorator_func(func: F) -> typing.Callable:
             def wrapper_func(self, *args, **kwargs) -> typing.Any:  # type: ignore
@@ -115,7 +115,7 @@ class Operation:
         return True  # pragma: no cover
 
     def check_precondition(self) -> None:
-        """Check the operation precondition"""
+        """Check the operation precondition."""
         if self.review_manager.force_mode:
             return
 
@@ -159,7 +159,7 @@ class Operation:
         # ie., implicit pass for check, pdf_prep_man
 
     def notify(self, *, state_transition: bool = True) -> None:
-        """Notify the review_manager about the next operation"""
+        """Notify the review_manager about the next operation."""
         self.review_manager.notified_next_operation = self.type
         if state_transition:
             self.check_precondition()

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Creation of a github-page for the review as part of the data operations"""
+"""Creation of a github-page for the review as part of the data operations."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from colrev.writer.write_utils import write_file
 class GHPagesSettings(
     colrev.package_manager.package_settings.DefaultSettings, BaseModel
 ):
-    """Settings for GithubPages"""
+    """Settings for GithubPages."""
 
     endpoint: str
     version: str
@@ -40,7 +40,7 @@ class GHPagesSettings(
 
 
 class GithubPages(base_classes.DataPackageBaseClass):
-    """Export the literature review into a Github Page"""
+    """Export the literature review into a Github Page."""
 
     settings: GHPagesSettings
     settings_class = GHPagesSettings
@@ -72,7 +72,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
     # pylint: disable=unused-argument
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
-        """Add as an endpoint"""
+        """Add as an endpoint."""
         add_source = {
             "endpoint": "colrev.github_pages",
             "version": "0.1",
@@ -239,7 +239,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
         silent_mode: bool,
     ) -> None:
-        """Update the data/github pages"""
+        """Update the data/github pages."""
         # pylint: disable=too-many-branches
 
         if utils.in_ci_environment():
@@ -334,7 +334,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
-        """Update the record_status_matrix"""
+        """Update the record_status_matrix."""
         # Note : automatically set all to True / synthesized
         for syn_id in synthesized_record_status_matrix:
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True

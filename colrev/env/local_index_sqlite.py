@@ -46,7 +46,7 @@ from colrev.constants import LocalIndexFields
 
 # pylint: disable=too-few-public-methods
 class SQLiteIndex:
-    """The SQLiteIndex class implements indexing and retrieval of records locally"""
+    """The SQLiteIndex class implements indexing and retrieval of records locally."""
 
     connection: sqlite3.Connection
     CREATE_TABLE_QUERY: str
@@ -73,13 +73,12 @@ class SQLiteIndex:
         return self.connection.cursor()
 
     def commit(self) -> None:
-        """Commit changes to the SQLITE database"""
+        """Commit changes to the SQLITE database."""
         if self.connection:
             self.connection.commit()
 
     def _reinitialize_db(self) -> None:
-        """Reinitialize the SQLITE database"""
-
+        """Reinitialize the SQLITE database."""
         cur = self._get_cursor()
         cur.execute(f"drop table if exists {self.index_name}")
         cur.execute(self.CREATE_TABLE_QUERY)
@@ -103,7 +102,7 @@ class SQLiteIndex:
 
 
 class SQLiteIndexRecord(SQLiteIndex):
-    """The SQLiteIndexRecord class implements indexing and retrieval of records locally"""
+    """The SQLiteIndexRecord class implements indexing and retrieval of records locally."""
 
     INDEX_NAME = "record_index"
     KEYS = [
@@ -164,7 +163,7 @@ class SQLiteIndexRecord(SQLiteIndex):
         *,
         local_index_id: str,
     ) -> bool:
-        """Check if a record exists in the index"""
+        """Check if a record exists in the index."""
         cur = self._get_cursor()
         cur.execute(
             self.SELECT_KEY_QUERIES[LocalIndexFields.ID],
@@ -176,7 +175,7 @@ class SQLiteIndexRecord(SQLiteIndex):
         return True
 
     def insert(self, item: dict) -> None:
-        """Insert a record into the index"""
+        """Insert a record into the index."""
         # May raise sqlite3.IntegrityError
         cur = self._get_cursor()
         cur.execute(self.INSERT_QUERY, item)
@@ -188,7 +187,7 @@ class SQLiteIndexRecord(SQLiteIndex):
         key: str,
         value: str,
     ) -> dict:
-        """Get a record from the index"""
+        """Get a record from the index."""
         try:
             cur = self._get_cursor()
             cur.execute(self.SELECT_KEY_QUERIES[key], (value,))
@@ -237,12 +236,12 @@ class SQLiteIndexRecord(SQLiteIndex):
         return retrieved_record
 
     def update(self, local_index_id: str, bibtex: str) -> None:
-        """Update a record in the index"""
+        """Update a record in the index."""
         cur = self._get_cursor()
         cur.execute(self.UPDATE_RECORD_QUERY, (bibtex, local_index_id))
 
     def search(self, query: str) -> list:
-        """Search for records in the index"""
+        """Search for records in the index."""
         cur = self._get_cursor()
         records_to_return = []
 
@@ -257,7 +256,8 @@ class SQLiteIndexRecord(SQLiteIndex):
 
 class SQLiteIndexRankings(SQLiteIndex):
     """The SQLiteIndexRankings class implements indexing and retrieval
-    of journal rankings locally"""
+    of journal rankings locally.
+    """
 
     INDEX_NAME = "rankings"
     KEYS: typing.List[str] = []
@@ -273,15 +273,14 @@ class SQLiteIndexRankings(SQLiteIndex):
         )
 
     def insert_df(self, data_frame: pd.DataFrame) -> None:
-        """Insert a dataframe of journal rankings into the index"""
+        """Insert a dataframe of journal rankings into the index."""
         conn = sqlite3.connect(str(Filepaths.LOCAL_INDEX_SQLITE_FILE))
         data_frame.to_sql(self.INDEX_NAME, conn, if_exists="replace", index=False)
         conn.commit()
         conn.close()
 
     def select(self, journal: str) -> list:
-        """Select journal rankings from the index"""
-
+        """Select journal rankings from the index."""
         cur = self._get_cursor()
         cur.execute(self.SELECT_QUERY, (journal,))
         rankings = cur.fetchall()
@@ -289,7 +288,7 @@ class SQLiteIndexRankings(SQLiteIndex):
 
 
 class SQLiteIndexTOC(SQLiteIndex):
-    """The SQLiteIndexTOC class implements indexing and retrieval of TOC items locally"""
+    """The SQLiteIndexTOC class implements indexing and retrieval of TOC items locally."""
 
     INDEX_NAME = "toc_index"
     KEYS: typing.List[str] = []
@@ -314,7 +313,7 @@ class SQLiteIndexTOC(SQLiteIndex):
         )
 
     def exists(self, toc_item: str) -> bool:
-        """Check if TOC item exists in the index"""
+        """Check if TOC item exists in the index."""
         cur = self._get_cursor()
         cur.execute(
             self.SELECT_KEY_QUERY[LocalIndexFields.TOC_KEY],
@@ -326,7 +325,7 @@ class SQLiteIndexTOC(SQLiteIndex):
         return True
 
     def get_toc_items(self, toc_key: str = "", partial_toc_key: str = "") -> list:
-        """Get TOC items from the index"""
+        """Get TOC items from the index."""
         if partial_toc_key != "":
             query = f"{self.SELECT_ALL_QUERY} {LocalIndexFields.TOC_KEY} LIKE ?"
             argument = partial_toc_key + "%"
@@ -356,7 +355,7 @@ class SQLiteIndexTOC(SQLiteIndex):
         return toc_items
 
     def add(self, toc_to_index: dict) -> None:
-        """Add TOC items to the index"""
+        """Add TOC items to the index."""
         list_to_add = list((k, v) for k, v in toc_to_index.items() if v != "DROPPED")
         cur = self._get_cursor()
         try:

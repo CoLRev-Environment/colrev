@@ -25,22 +25,21 @@ from colrev.writer.write_utils import to_string
 
 
 class Dataset:
-    """The CoLRev dataset (records and their history in git)"""
+    """The CoLRev dataset (records and their history in git)."""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager
 
     @cached_property
     def git_repo(self) -> GitRepo:
-        """Get the GitRepo object for the review_manager path"""
+        """Get the GitRepo object for the review_manager path."""
         return GitRepo(path=self.review_manager.path)
 
     def get_origin_state_dict(self, records_string: str = "") -> dict:
-        """Get the origin_state_dict (to determine state transitions efficiently)
+        """Get the origin_state_dict (to determine state transitions efficiently).
 
         {'30_example_records.bib/Staehr2010': <RecordState.pdf_not_available: 10>,}
         """
-
         current_origin_states_dict = {}
         if records_string != "":
             with tempfile.NamedTemporaryFile(
@@ -65,7 +64,7 @@ class Dataset:
         return current_origin_states_dict
 
     def get_committed_origin_state_dict(self) -> dict:
-        """Get the committed origin_state_dict"""
+        """Get the committed origin_state_dict."""
         revlist = (
             (
                 commit.hexsha,
@@ -85,21 +84,22 @@ class Dataset:
         return committed_origin_state_dict
 
     def load_records_from_history(self, commit_sha: str = "") -> typing.Iterator[dict]:
-        """
-        Iterates through Git history, yielding records file contents as dictionaries.
+        """Iterates through Git history, yielding records file contents as dictionaries.
 
         Starts iteration from a provided commit SHA.
         Skips commits where the records file is unchanged.
         Useful for tracking dataset changes over time.
 
-        Parameters:
+        Parameters
+        ----------
             commit_sha (str, optional): Start iteration from this commit SHA.
             Defaults to beginning of Git history if not provided.
 
-        Yields:
+        Yields
+        ------
             dict: Records file contents at a specific Git history point, as a dictionary.
-        """
 
+        """
         reached_target_commit = False  # if no commit_sha provided
         for current_commit in self.git_repo.repo.iter_commits(
             paths=self.review_manager.paths.RECORDS_FILE_GIT
@@ -130,7 +130,7 @@ class Dataset:
         *,
         header_only: bool = False,
     ) -> dict[str, dict[str, typing.Any]]:
-        """Load the records
+        """Load the records.
 
         header_only:
 
@@ -142,7 +142,6 @@ class Dataset:
         'colrev_data_provenance': {Fields.AUTHOR:{"source":"...", "note":"..."}}},
         }
         """
-
         if self.review_manager.notified_next_operation is None:
             raise colrev_exceptions.ReviewManagerNotNotifiedError()
 
@@ -170,7 +169,7 @@ class Dataset:
         return records_dict
 
     def save_records_dict_to_file(self, records: dict) -> None:
-        """Save the records dict"""
+        """Save the records dict."""
         # Note : this classmethod function can be called by CoLRev scripts
         # operating outside a CoLRev repo (e.g., sync)
 
@@ -240,7 +239,7 @@ class Dataset:
         self.git_repo.add_changes(self.review_manager.paths.RECORDS_FILE)
 
     def save_records_dict(self, records: dict, *, partial: bool = False) -> None:
-        """Save the records dict in RECORDS_FILE"""
+        """Save the records dict in RECORDS_FILE."""
         if not records:
             return
         if partial:
@@ -249,8 +248,7 @@ class Dataset:
         self.save_records_dict_to_file(records)
 
     def read_next_record(self, *, conditions: list) -> typing.Iterator[dict]:
-        """Read records (Iterator) based on condition"""
-
+        """Read records (Iterator) based on condition."""
         # Note : matches conditions connected with 'OR'
         records = self.load_records_dict()
 
@@ -263,8 +261,7 @@ class Dataset:
         yield from records_list
 
     def format_records_file(self) -> dict:
-        """Format the records file (Entrypoint for pre-commit hooks)"""
-
+        """Format the records file (Entrypoint for pre-commit hooks)."""
         if (
             not self.review_manager.paths.records.is_file()
             or not self.git_repo.records_changed()
@@ -304,15 +301,14 @@ class Dataset:
         return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
     def reset_log_if_no_changes(self) -> None:
-        """Reset the report log file if there are not changes"""
+        """Reset the report log file if there are not changes."""
         if not self.git_repo.repo.is_dirty():
             self.review_manager.reset_report_logger()
 
     # ID creation, update and lookup ---------------------------------------
 
     def propagated_id(self, *, record_id: str) -> bool:
-        """Check whether an ID is propagated (i.e., its record's status is beyond md_processed)"""
-
+        """Check whether an ID is propagated (i.e., its record's status is beyond md_processed)."""
         for record in self.load_records_dict(header_only=True).values():
             if record[Fields.ID] == record_id:
                 if record[Fields.STATUS] in RecordState.get_post_x_states(
@@ -324,7 +320,8 @@ class Dataset:
 
     def set_ids(self, selected_ids: typing.Optional[list] = None) -> dict:
         """Set the IDs of records according to predefined formats or
-        according to the LocalIndex"""
+        according to the LocalIndex.
+        """
         id_setter = colrev.record.record_id_setter.IDSetter(
             id_pattern=self.review_manager.settings.project.id_pattern,
             skip_local_index=self.review_manager.settings.is_curated_masterdata_repo(),

@@ -19,7 +19,7 @@ if typing.TYPE_CHECKING:
 
 
 class CLISourceAdder:
-    """CLI utility to add SearchSources"""
+    """CLI utility to add SearchSources."""
 
     def __init__(self, *, search_operation: colrev.ops.search.Search) -> None:
         self.search_operation = search_operation
@@ -89,7 +89,6 @@ class CLISourceAdder:
 
     def add_new_sources(self) -> typing.List[colrev.search_file.ExtendedSearchFile]:
         """Select the new source from the heuristic_result_list."""
-
         new_search_files = self.search_operation.get_new_search_files()
         sources_added = []
 

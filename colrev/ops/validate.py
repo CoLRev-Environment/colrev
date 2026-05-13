@@ -20,7 +20,7 @@ from colrev.writer.write_utils import write_file
 
 
 class Validate(colrev.process.operation.Operation):
-    """Validate changes"""
+    """Validate changes."""
 
     type = OperationsType.check
 
@@ -33,7 +33,7 @@ class Validate(colrev.process.operation.Operation):
         self.cpus = 4
 
     def _load_prior_records_dict(self, *, commit_sha: str) -> dict:
-        """If commit is "": return the last committed version of records"""
+        """If commit is "": return the last committed version of records."""
         git_repo = self.review_manager.dataset.git_repo.repo
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
         records_file_path = self.review_manager.paths.RECORDS_FILE_GIT
@@ -131,8 +131,7 @@ class Validate(colrev.process.operation.Operation):
         return change_diff
 
     def _validate_prep_changes(self, *, report: dict) -> None:
-        """Validate preparation changes"""
-
+        """Validate preparation changes."""
         self.review_manager.logger.info("Load records...")
 
         load_operation = self.review_manager.get_load_operation(
@@ -186,8 +185,7 @@ class Validate(colrev.process.operation.Operation):
             merge_candidates_file.unlink()
 
     def _validate_dedupe_changes(self, *, report: dict, commit_sha: str) -> None:
-        """Validate dedupe changes"""
-
+        """Validate dedupe changes."""
         # at some point, we may allow users to validate
         # all duplicates/non-duplicates (across commits)
 
@@ -278,8 +276,7 @@ class Validate(colrev.process.operation.Operation):
         report["dedupe"] = change_diff
 
     def _get_changed_records(self, *, target_commit: str) -> typing.List[dict]:
-        """Get the records that changed in a selected commit"""
-
+        """Get the records that changed in a selected commit."""
         dataset = self.review_manager.dataset
         git_repo = dataset.git_repo.repo
         revlist = (
@@ -331,7 +328,7 @@ class Validate(colrev.process.operation.Operation):
     def _load_changed_records(
         self, *, commit_sha: typing.Optional[str] = None
     ) -> list[dict]:
-        """Load the records that were changed in the target commit"""
+        """Load the records that were changed in the target commit."""
         if commit_sha is None:
             self.review_manager.logger.info("Loading data...")
             records = self.review_manager.dataset.load_records_dict()
@@ -345,8 +342,7 @@ class Validate(colrev.process.operation.Operation):
         return changed_records
 
     def _validate_properties(self, *, commit_sha: str) -> dict:
-        """Validate properties"""
-
+        """Validate properties."""
         # option: --history: check all preceding commits (create a list...)
 
         git_repo = self.review_manager.dataset.git_repo.repo
@@ -486,8 +482,7 @@ class Validate(colrev.process.operation.Operation):
         # current_branch_name: str = "",
         # other_branch_name: str = "",
     ) -> dict:
-        """Validate presceen/screen between merged branches"""
-
+        """Validate presceen/screen between merged branches."""
         prescreen_validation = {"commit_sha": commit_sha, "prescreen": []}
         for rid, record_dict in current_branch_records.items():
             prescreen_validation["prescreen"].append(  # type: ignore
@@ -511,8 +506,7 @@ class Validate(colrev.process.operation.Operation):
         return prescreen_validation
 
     def _validate_merge_changes(self) -> dict:
-        """Validate merge changes (reconciliation between branches)"""
-
+        """Validate merge changes (reconciliation between branches)."""
         merge_validation = []
 
         git_repo = self.review_manager.dataset.git_repo.repo
@@ -574,8 +568,7 @@ class Validate(colrev.process.operation.Operation):
         return {"merge": merge_validation}
 
     def _get_target_commit(self, *, scope: str, filter_setting: str = "") -> str:
-        """Get the commit from commit sha or tree hash"""
-
+        """Get the commit from commit sha or tree hash."""
         commit = ""
         if filter_setting == "contributor":
             return commit
@@ -691,8 +684,7 @@ class Validate(colrev.process.operation.Operation):
         )
 
     def remove_md_origins(self, origins_to_remove: dict) -> None:
-        """Remove origin records for md_ files"""
-
+        """Remove origin records for md_ files."""
         records = self.review_manager.dataset.load_records_dict()
         origins_in_use = [
             o for record in records.values() for o in record[Fields.ORIGIN]
@@ -722,8 +714,7 @@ class Validate(colrev.process.operation.Operation):
         filter_setting: str,
         properties: bool = False,
     ) -> dict:
-        """Validate a commit (main entrypoint)"""
-
+        """Validate a commit (main entrypoint)."""
         target_commit = self._get_target_commit(
             scope=scope, filter_setting=filter_setting
         )

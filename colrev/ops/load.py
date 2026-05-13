@@ -25,7 +25,7 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class Load(colrev.process.operation.Operation):
-    """Load the records"""
+    """Load the records."""
 
     type = OperationsType.load
 
@@ -111,7 +111,7 @@ class Load(colrev.process.operation.Operation):
         self,
         record: colrev.record.record.Record,
     ) -> None:
-        """Set the provenance for an imported record"""
+        """Set the provenance for an imported record."""
 
         def set_initial_import_provenance(record: colrev.record.record.Record) -> None:
             # Initialize Fields.MD_PROV
@@ -549,7 +549,7 @@ class Load(colrev.process.operation.Operation):
         *,
         keep_ids: bool = False,
     ) -> None:
-        """Load records (main entrypoint)"""
+        """Load records (main entrypoint)."""
         if not self.review_manager.high_level_operation:
             print()
 

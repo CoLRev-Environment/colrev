@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scripts printing information for the colrev show command"""
+"""Scripts printing information for the colrev show command."""
 
 import platform
 from pathlib import Path
@@ -12,8 +12,7 @@ from colrev.constants import RecordState
 
 
 def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
-    """Print the sample on cli"""
-
+    """Print the sample on cli."""
     colrev.ops.check.CheckOperation(review_manager)
     records = review_manager.dataset.load_records_dict()
     sample = [
@@ -33,8 +32,7 @@ def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
 
 
 def print_venv_notes() -> None:
-    """Print the virtual environment details on cli"""
-
+    """Print the virtual environment details on cli."""
     current_platform = platform.system()
     if current_platform == "Linux":
         print("Detected platform: Linux")

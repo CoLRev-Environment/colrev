@@ -23,7 +23,7 @@ from colrev.writer.write_utils import write_file
 
 
 class Repare(colrev.process.operation.Operation):
-    """Repare a CoLRev project"""
+    """Repare a CoLRev project."""
 
     type = OperationsType.check
 
@@ -443,7 +443,7 @@ class Repare(colrev.process.operation.Operation):
 
     @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
-        """Repare a CoLRev project (main entrypoint)"""
+        """Repare a CoLRev project (main entrypoint)."""
         # Try: open settings, except: notify & start repare
 
         # ...

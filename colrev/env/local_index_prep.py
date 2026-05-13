@@ -155,7 +155,6 @@ def prepare_record_for_return(
     include_colrev_ids: bool = False,
 ) -> colrev.record.record.Record:
     """Prepare record for return from LocalIndex."""
-
     # Note: record['file'] should be an absolute path by definition
     # when stored in the LocalIndex
     if Fields.FILE in record_dict and not Path(record_dict[Fields.FILE]).is_file():

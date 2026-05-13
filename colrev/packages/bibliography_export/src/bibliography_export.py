@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Export of references in different bibliographical formats as a data operation"""
+"""Export of references in different bibliographical formats as a data operation."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from colrev.writer.write_utils import write_file
 
 
 class BibFormats(Enum):
-    """Enum of available bibliography formats"""
+    """Enum of available bibliography formats."""
 
     # pylint: disable=invalid-name
     zotero = "zotero"
@@ -42,7 +42,7 @@ class BibFormats(Enum):
 class BibliographyExportSettings(
     colrev.package_manager.package_settings.DefaultSettings, BaseModel
 ):
-    """Settings for BibliographyExport"""
+    """Settings for BibliographyExport."""
 
     endpoint: str
     version: str
@@ -50,7 +50,7 @@ class BibliographyExportSettings(
 
 
 class BibliographyExport(base_classes.DataPackageBaseClass):
-    """Export the sample references in Endpoint format"""
+    """Export the sample references in Endpoint format."""
 
     settings: BibliographyExportSettings
     settings_class = BibliographyExportSettings
@@ -114,8 +114,7 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
 
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
-        """Add bibliography as an endpoint"""
-
+        """Add bibliography as an endpoint."""
         add_package = {
             "endpoint": "colrev.bibliography_export",
             "version": "0.1",
@@ -158,8 +157,7 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> None:
-        """Update the data/bibliography"""
-
+        """Update the data/bibliography."""
         if silent_mode:
             return
 
@@ -199,7 +197,7 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
-        """Update the record_status_matrix"""
+        """Update the record_status_matrix."""
         # Note : automatically set all to True / synthesized
         for syn_id in list(synthesized_record_status_matrix.keys()):
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
@@ -207,8 +205,7 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
     def get_advice(
         self,
     ) -> dict:
-        """Get advice on the next steps (for display in the colrev status)"""
-
+        """Get advice on the next steps (for display in the colrev status)."""
         data_endpoint = "Data operation [bibliography export data endpoint]: "
 
         advice = {

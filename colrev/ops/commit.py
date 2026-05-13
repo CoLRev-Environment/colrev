@@ -23,7 +23,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Commit:
-    """Create commits"""
+    """Create commits."""
 
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-arguments
@@ -145,7 +145,7 @@ class Commit:
         return processing_report
 
     def create(self, *, skip_status_yaml: bool = False) -> bool:
-        """Create a commit (including the commit message and details)"""
+        """Create a commit (including the commit message and details)."""
         status_operation = self.review_manager.get_status_operation()
         git_repo = self.review_manager.dataset.git_repo.repo
         try:
@@ -213,7 +213,7 @@ class Commit:
         return True
 
     def update_report(self, *, msg_file: Path) -> None:
-        """Update the report"""
+        """Update the report."""
         status_operation = self.review_manager.get_status_operation()
         report = self._get_commit_report(status_operation)
         with open(msg_file, "a", encoding="utf8") as file:

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Template for a custom Prescreen PackageEndpoint"""
+"""Template for a custom Prescreen PackageEndpoint."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ import colrev.record.record
 
 
 class CustomPrescreen(base_classes.PrescreenPackageBaseClass):
-    """Class for custom prescreen scripts"""
+    """Class for custom prescreen scripts."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -32,8 +32,7 @@ class CustomPrescreen(base_classes.PrescreenPackageBaseClass):
         records: dict,
         split: list,  # pylint: disable=unused-argument
     ) -> dict:
-        """Prescreen the record"""
-
+        """Prescreen the record."""
         for record in records.values():
             if random.random() < 0.5:  # nosec
                 self.prescreen_operation.prescreen(

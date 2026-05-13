@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Screen based on GenAI"""
+"""Screen based on GenAI."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from colrev.constants import RecordState
 
 
 class GenAIScreen(base_classes.ScreenPackageBaseClass):
-    """Screen documents using GenAI"""
+    """Screen documents using GenAI."""
 
     ci_supported: bool = Field(default=False)
     export_todos_only: bool = True
@@ -38,8 +38,7 @@ class GenAIScreen(base_classes.ScreenPackageBaseClass):
 
     # pylint: disable=unused-argument
     def run_screen(self, records: dict, split: list) -> dict:
-        """Screen records based on GenAI"""
-
+        """Screen records based on GenAI."""
         # screening_criteria = self.review_manager.settings.screen.criteria
         for record_dict in records.values():
             record = colrev.record.record.Record(record_dict)

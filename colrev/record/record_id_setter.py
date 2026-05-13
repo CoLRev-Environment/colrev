@@ -25,7 +25,7 @@ import colrev.record.record_prep
 
 
 class IDSetter:
-    """The IDSetter class"""
+    """The IDSetter class."""
 
     def __init__(
         self,
@@ -93,8 +93,7 @@ class IDSetter:
         *,
         existing_ids: list,
     ) -> str:
-        """Get the next unique ID"""
-
+        """Get the next unique ID."""
         order = 0
         letters = list(string.ascii_lowercase)
         next_unique_id = temp_id
@@ -113,8 +112,7 @@ class IDSetter:
         *,
         existing_ids: typing.Optional[list] = None,
     ) -> str:
-        """Generate a blacklist to avoid setting duplicate IDs"""
-
+        """Generate a blacklist to avoid setting duplicate IDs."""
         if self.skip_local_index:
             temp_id = self._generate_id_from_pattern(record_dict)
         else:
@@ -138,8 +136,7 @@ class IDSetter:
     def set_ids(
         self, records: dict, *, selected_ids: typing.Optional[list] = None
     ) -> dict:
-        """Set the IDs for the records in the dataset"""
-
+        """Set the IDs for the records in the dataset."""
         id_list = list(records.keys())
 
         for record_id in tqdm(list(records.keys())):

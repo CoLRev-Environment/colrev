@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: ACM Digital Library"""
+"""SearchSource: ACM Digital Library."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ if typing.TYPE_CHECKING:
 
 
 class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
-    """ACM digital Library"""
+    """ACM digital Library."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -51,8 +51,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for ACM dDigital Library"""
-
+        """Source heuristic for ACM dDigital Library."""
         result = {"confidence": 0.0}
         # Simple heuristic:
         if "publisher = {Association for Computing Machinery}," in data:
@@ -65,8 +64,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     def add_endpoint(
         cls, params: str, path: Path, logger: typing.Optional[logging.Logger] = None
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
         if params:
             for item in params.split(";"):
@@ -93,8 +91,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def search(self, rerun: bool) -> None:
-        """Run a search of ACM Digital Library"""
-
+        """Run a search of ACM Digital Library."""
         if self.search_source.search_type == SearchType.DB:
             if self.search_source.search_results_path.suffix in [".bib"]:
                 run_db_search(
@@ -114,12 +111,11 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
@@ -155,6 +151,5 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for ACM Digital Library"""
-
+        """Source-specific preparation for ACM Digital Library."""
         return record

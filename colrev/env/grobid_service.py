@@ -13,7 +13,7 @@ import colrev.env.docker_manager
 
 
 class GrobidService:
-    """An environment service for machine readability/annotation (PDF to TEI conversion)"""
+    """An environment service for machine readability/annotation (PDF to TEI conversion)."""
 
     GROBID_URL = "http://localhost:8070"
     # Important: do not use :latest versions or :SNAPSHOT versions
@@ -39,7 +39,7 @@ class GrobidService:
             raise Exception  # pylint: disable=broad-exception-raised
 
     def check_grobid_availability(self, *, wait: bool = True) -> bool:
-        """Check whether the GROBID service is available"""
+        """Check whether the GROBID service is available."""
         i = 0
         while True:
             i += 1
@@ -62,7 +62,7 @@ class GrobidService:
         return True
 
     def start(self) -> None:
-        """Start the GROBID service"""
+        """Start the GROBID service."""
         # pylint: disable=consider-using-with
 
         try:

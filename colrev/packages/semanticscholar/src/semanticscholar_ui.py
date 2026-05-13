@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Console UI for Semantic Scholar"""
+"""Console UI for Semantic Scholar."""
 
 import datetime
 import re
@@ -12,7 +12,7 @@ from colrev.constants import Fields
 
 
 class SemanticScholarUI:
-    """Implements the User Interface for the SemanticScholar API Search within colrev"""
+    """Implements the User Interface for the SemanticScholar API Search within colrev."""
 
     search_params: dict
 
@@ -21,8 +21,7 @@ class SemanticScholarUI:
         self.search_subject = ""
 
     def main_ui(self) -> None:
-        """Display the main Menu and choose the search type"""
-
+        """Display the main Menu and choose the search type."""
         run = True
 
         print("\nWelcome to SemanticScholar! \n\n")
@@ -61,8 +60,7 @@ class SemanticScholarUI:
             )
 
     def paper_ui(self) -> bool:
-        """Ask user to enter search parameters for distinctive paper search"""
-
+        """Ask user to enter search parameters for distinctive paper search."""
         paper_id_list = []
 
         while True:
@@ -129,8 +127,7 @@ class SemanticScholarUI:
                 return True
 
     def author_ui(self) -> bool:
-        """Ask user to enter search parameters for distinctive author search"""
-
+        """Ask user to enter search parameters for distinctive author search."""
         author_id_list = []
 
         while True:
@@ -171,8 +168,7 @@ class SemanticScholarUI:
                 return True
 
     def keyword_ui(self) -> None:
-        """Ask user to enter Searchstring and limitations for Keyword search"""
-
+        """Ask user to enter Searchstring and limitations for Keyword search."""
         query = self.enter_text(msg="Please enter the query for your keyword search ")
         while not (query and isinstance(query, str)):
             query = self.enter_text(
@@ -208,8 +204,7 @@ class SemanticScholarUI:
             self.search_params["open_access_pdf"] = False
 
     def get_api_key(self, existing_key: typing.Optional[str] = "") -> str:
-        """Method to get API key from user input"""
-
+        """Method to get API key from user input."""
         ask_again = True
 
         if existing_key:
@@ -264,8 +259,7 @@ class SemanticScholarUI:
         return api_key
 
     def enter_year(self) -> str:
-        """Method to ask a specific year span in the format allowed by the SemanticScholar API"""
-
+        """Method to ask a specific year span in the format allowed by the SemanticScholar API."""
         examples = (
             "Examples for valid year spans: '2019'; '2012-2020'; '-2022'; '2015-'"
         )
@@ -312,8 +306,8 @@ class SemanticScholarUI:
 
     def enter_study_fields(self) -> list:
         """Method to ask a selection of fields of
-        study that are allowed by the Semantic Scholar API"""
-
+        study that are allowed by the Semantic Scholar API.
+        """
         msg = (
             "If you want to restrict your search to certain study fields, "
             "select them here or press Enter"
@@ -353,8 +347,7 @@ class SemanticScholarUI:
         msg: str,
         options: list,
     ) -> str:
-        """Method to display a question with single choice answers to the console using inquirer"""
-
+        """Method to display a question with single choice answers to the console using inquirer."""
         question = [
             inquirer.List(
                 name="Choice",
@@ -374,8 +367,8 @@ class SemanticScholarUI:
         options: list,
     ) -> list:
         """Method to display a question with multiple
-        choice answers to the console using inquirer"""
-
+        choice answers to the console using inquirer.
+        """
         question = [
             inquirer.Checkbox(
                 name="Choice",
@@ -394,8 +387,8 @@ class SemanticScholarUI:
         msg: str,
     ) -> str:
         """Method to display a question with free text
-        entry answer to the console using inquirer."""
-
+        entry answer to the console using inquirer.
+        """
         question = [
             inquirer.Text(
                 name="Entry",
@@ -412,15 +405,14 @@ class SemanticScholarUI:
         id_value: str,
         regex: str,
     ) -> bool:
-        """Method to validate ID formats using a regex as an argument"""
-
+        """Method to validate ID formats using a regex as an argument."""
         if re.match(regex, id_value):
             return True
 
         return False
 
     def check_format(self, *, param: str, value: str) -> bool:
-        """Method to validate certain ID formats"""
+        """Method to validate certain ID formats."""
         if param == "S2PaperId":
             if self.id_validation_with_regex(id_value=value, regex=r"^[a-zA-Z0-9]+$"):
                 return True

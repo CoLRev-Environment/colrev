@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Retrieval of PDFs from the LocalIndex"""
+"""Retrieval of PDFs from the LocalIndex."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from colrev.constants import Fields
 
 
 class LocalIndexPDFGet(base_classes.PDFGetPackageBaseClass):
-    """Get PDFs from LocalIndex"""
+    """Get PDFs from LocalIndex."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=False)
@@ -44,8 +44,7 @@ class LocalIndexPDFGet(base_classes.PDFGetPackageBaseClass):
     def get_pdf(
         self, record: colrev.record.record.Record
     ) -> colrev.record.record.Record:
-        """Get PDFs from the local-index"""
-
+        """Get PDFs from the local-index."""
         local_index = colrev.env.local_index.LocalIndex(verbose_mode=self.verbose_mode)
 
         try:

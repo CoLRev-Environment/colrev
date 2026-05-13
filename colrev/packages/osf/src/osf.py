@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Searchsource:OSF"""
+"""Searchsource:OSF."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ from colrev.packages.osf.src.osf_api import OSFApiQuery
 
 
 class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """OSF"""
+    """OSF."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -71,8 +71,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for OSF"""
-
+        """Source heuristic for OSF."""
         result = {"confidence": 0.1}
 
         return result
@@ -84,8 +83,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search -a)."""
         params_dict: typing.Dict[str, str] = {}
         if params and isinstance(params, str) and params.startswith("http"):
             params_dict = {Fields.URL: params}
@@ -149,7 +147,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         return api_key
 
     def search(self, rerun: bool) -> None:
-        """Run a search of OSF"""
+        """Run a search of OSF."""
         osf_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
             search_source=self.search_source,
@@ -186,21 +184,18 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 60,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
-
+        """Not implemented."""
         return record
 
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Needs manual preparation"""
-
+        """Needs manual preparation."""
         return record
 
     def load(self) -> dict:
         """Load the records."""
-
         if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.search_results_path,

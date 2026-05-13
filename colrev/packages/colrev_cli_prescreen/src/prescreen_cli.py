@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Prescreen based on CLI"""
+"""Prescreen based on CLI."""
 
 from __future__ import annotations
 
@@ -22,8 +22,7 @@ from colrev.constants import RecordState
 
 
 def _print_prescreen_record(record_dict: dict) -> None:
-    """Print the record for prescreen operations"""
-
+    """Print the record for prescreen operations."""
     ret_str = f"  ID: {record_dict['ID']} ({record_dict[Fields.ENTRYTYPE]})"
     ret_str += (
         f"\n  {Colors.GREEN}{record_dict.get(Fields.TITLE, 'no title')}{Colors.END}"
@@ -54,7 +53,7 @@ def _print_prescreen_record(record_dict: dict) -> None:
 
 
 class CoLRevCLIPrescreen(base_classes.PrescreenPackageBaseClass):
-    """CLI-based prescreen"""
+    """CLI-based prescreen."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -133,8 +132,7 @@ class CoLRevCLIPrescreen(base_classes.PrescreenPackageBaseClass):
         records: dict,
         split: list,
     ) -> dict:
-        """Prescreen records based on a cli"""
-
+        """Prescreen records based on a cli."""
         if not split:
             split = []
 

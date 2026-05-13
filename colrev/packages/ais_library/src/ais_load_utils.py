@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Load utils for AIS"""
+"""Load utils for AIS."""
 
 from __future__ import annotations
 
@@ -34,7 +34,6 @@ def enl_entrytype_setter(record_dict: dict) -> None:
 
 def bib_field_mapper(record_dict: dict) -> None:
     """Map the fields for BibTeX files."""
-
     record_dict.pop("type", None)
     record_dict.pop("IG", None)
 

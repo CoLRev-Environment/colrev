@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Utility to transform github repositories into records"""
+"""Utility to transform github repositories into records."""
 
 from __future__ import annotations
 
@@ -19,14 +19,14 @@ from colrev.constants import Fields
 
 
 def _set_title(*, record_dict: dict, citation_data: str) -> None:
-    """Set repository title"""
+    """Set repository title."""
     title = re.search(r"^\s*title:\s*(.+)\s*$", citation_data, re.M)
     if title:
         record_dict[Fields.TITLE] = title.group(1).strip().replace('"', "")
 
 
 def _set_authors(*, record_dict: dict, citation_data: str) -> None:
-    """Set repository authors"""
+    """Set repository authors."""
     authors = re.findall(
         r'- family-names:\s*"(.+)"\s*\n\s*given-names:\s*"(.+)"',
         citation_data,
@@ -40,14 +40,14 @@ def _set_authors(*, record_dict: dict, citation_data: str) -> None:
 
 
 def _set_url(*, record_dict: dict, citation_data: str) -> None:
-    """Set repository URL"""
+    """Set repository URL."""
     url = re.search(r"^\s*url:\s*(.+)\s*$", citation_data, re.M)
     if url:
         record_dict[Fields.URL] = url.group(1).strip().replace('"', "")
 
 
 def _set_year_and_release_date(*, record_dict: dict, citation_data: str) -> None:
-    """Set release date"""
+    """Set release date."""
     release_date = re.search(r"^\s*date-released:\s*(.+)\s*$", citation_data, re.M)
     if release_date:
         record_dict[Fields.DATE] = release_date.group(1).strip()
@@ -55,7 +55,7 @@ def _set_year_and_release_date(*, record_dict: dict, citation_data: str) -> None
 
 
 def _set_version(record_dict: dict, citation_data: str) -> None:
-    """Set current software version"""
+    """Set current software version."""
     version = re.search(r"^\s*version:\s*(.+)\s*$", citation_data, re.M)
     if version:
         record_dict[Fields.GITHUB_VERSION] = version.group(1).strip()
@@ -225,8 +225,7 @@ def _update_record_based_on_citation_cff(
 def repo_to_record(
     *, repo: Github.Repository.Repository
 ) -> colrev.record.record.Record:
-    """Convert a GitHub repository to a record"""
-
+    """Convert a GitHub repository to a record."""
     record_dict = {
         Fields.ENTRYTYPE: "software",
         Fields.TITLE: repo.name,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hook for reporting in CoLRev projects"""
+"""Hook for reporting in CoLRev projects."""
 
 import sys
 from pathlib import Path
@@ -11,8 +11,7 @@ from colrev.constants import ExitCodes
 
 
 def main() -> int:
-    """Main entrypoint for the reporting"""
-
+    """Main entrypoint for the reporting."""
     print(sys.argv)
     msgfile = Path(sys.argv[1])
     review_manager = colrev.review_manager.ReviewManager()

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""API for Unpaywall"""
+"""API for Unpaywall."""
 
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ ENTRYTYPE_MAPPING = {
 
 
 class UnpaywallAPI:
-    """API for Unpaywall"""
+    """API for Unpaywall."""
 
     def __init__(self, search_parameters: dict) -> None:
         self.search_parameters = search_parameters
@@ -79,7 +79,7 @@ class UnpaywallAPI:
         return list(affiliations)
 
     def create_record(self, article: dict) -> colrev.record.record.Record:
-        """Build record"""
+        """Build record."""
         doi = article.get("doi", "").upper()
         record_dict = {Fields.ID: doi}
 
@@ -124,7 +124,7 @@ class UnpaywallAPI:
         return record
 
     def get_query_records(self) -> typing.Iterator[colrev.record.record.Record]:
-        """Get the records from a query"""
+        """Get the records from a query."""
         all_results = []
         page = 1
         results_per_page = 50
@@ -173,7 +173,7 @@ class UnpaywallAPI:
 
     @classmethod
     def decode_html_url_encoding_to_string(cls, query: str) -> str:
-        """Decode URL encoding to string"""
+        """Decode URL encoding to string."""
         query = query.replace("AND", "%20")
         query = re.sub(r"(%20)+", "%20", query).strip()
         query = query.replace("%20OR%20", " OR ")

@@ -11,7 +11,7 @@ from colrev.constants import Fields
 
 
 class NameAbbreviatedChecker:
-    """The NameAbbreviatedChecker"""
+    """The NameAbbreviatedChecker."""
 
     fields_to_check = [Fields.AUTHOR, Fields.EDITOR]
     abbreviations = ["and others", "et al", "..."]
@@ -24,8 +24,7 @@ class NameAbbreviatedChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the name-abbreviated checks"""
-
+        """Run the name-abbreviated checks."""
         for key in self.fields_to_check:
             if key not in record.data or record.ignored_defect(
                 key=key, defect=self.msg
@@ -45,5 +44,5 @@ class NameAbbreviatedChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(NameAbbreviatedChecker(quality_model))

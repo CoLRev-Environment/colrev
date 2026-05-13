@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Utility to transform plos/doi.org items to records"""
+"""Utility to transform plos/doi.org items to records."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ def _get_year(*, item: dict) -> str:
 
 
 def format_author(author: str) -> str:
-    """Convert authors to colrev format"""
+    """Convert authors to colrev format."""
     particles = {"de", "del", "la", "van", "von", "der", "di", "da", "le"}
 
     if author.startswith("{{") and author.endswith("}}"):
@@ -183,7 +183,7 @@ def _format_fields(*, record_dict: dict) -> dict:
 
 
 def json_to_record(*, item: dict) -> colrev.record.record_prep.PrepRecord:
-    "Convert a PLOS item to a record dict"
+    """Convert a PLOS item to a record dict."""
     try:
         record_dict = _item_to_record(item=deepcopy(item))
         record_dict = _set_forthcoming(record_dict=record_dict)

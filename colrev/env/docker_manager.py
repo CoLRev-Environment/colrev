@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Manages Docker"""
+"""Manages Docker."""
 
 from __future__ import annotations
 
@@ -15,14 +15,14 @@ from colrev.constants import Colors
 
 class DockerManager:
     """The DockerManager manages everything related to Docker
-    (e.g. building images, running containers)"""
+    (e.g. building images, running containers).
+    """
 
     @classmethod
     def build_docker_image(
         cls, *, imagename: str, dockerfile: typing.Optional[Path] = None
     ) -> None:
-        """Build a docker image"""
-
+        """Build a docker image."""
         try:
             client = docker.from_env()
             repo_tags = [t for image in client.images.list() for t in image.tags]
@@ -52,8 +52,7 @@ class DockerManager:
 
     @classmethod
     def check_docker_installed(cls) -> None:  # pragma: no cover
-        """Check whether Docker is installed"""
-
+        """Check whether Docker is installed."""
         try:
             client = docker.from_env()
             _ = client.version()

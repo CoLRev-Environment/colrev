@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: arXiv"""
+"""SearchSource: arXiv."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ from colrev.packages.arxiv.src import arxiv_api
 
 
 class ArXivSource(base_classes.SearchSourcePackageBaseClass):
-    """arXiv"""
+    """arXiv."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -64,7 +64,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for ArXiv"""
+        """Source heuristic for ArXiv."""
         result = {"confidence": 0.0}
 
         return result
@@ -76,7 +76,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
         if params:
             if params.startswith("http"):
@@ -122,7 +122,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         search_operation: colrev.ops.search.Search,
         source: colrev.search_file.ExtendedSearchFile,
     ) -> None:
-        """Validate the SearchSource (parameters etc.)"""
+        """Validate the SearchSource (parameters etc.)."""
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
         if source.search_results_path.name != self._arxiv_md_filename.name:
@@ -137,7 +137,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         self.logger.debug(f"SearchSource {source.search_results_path} validated")
 
     def check_availability(self) -> None:
-        """Check status (availability) of the ArXiv API"""
+        """Check status (availability) of the ArXiv API."""
         try:
             self.api.check_availability(timeout=30)
         except arxiv_api.ArxivAPIError as exc:
@@ -152,7 +152,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Retrieve masterdata fromArXiv based on similarity with the record provided"""
+        """Retrieve masterdata fromArXiv based on similarity with the record provided."""
         # https://info.arxiv.org/help/api/user-manual.html#_query_interface
         # id_list
         return record
@@ -232,7 +232,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
     #     arxiv_feed.save()
 
     def search(self, rerun: bool) -> None:
-        """Run a search of ArXiv"""
+        """Run a search of ArXiv."""
         arxiv_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
             search_source=self.search_source,
@@ -253,7 +253,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
             )
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
+        """Load the records from the SearchSource file."""
         # for API-based searches
         if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
@@ -279,7 +279,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for ArXiv"""
+        """Source-specific preparation for ArXiv."""
         if Fields.AUTHOR in record.data:
             record.data[Fields.AUTHOR] = (
                 colrev.record.record_prep.PrepRecord.format_author_field(

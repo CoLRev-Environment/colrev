@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function for load formatting"""
+"""Function for load formatting."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from colrev.constants import RecordState
 
 
 class LoadFormatter:
-    """Load formatter class"""
+    """Load formatter class."""
 
     # Based on
     # https://en.wikibooks.org/wiki/LaTeX/Special_Characters
@@ -175,8 +175,7 @@ class LoadFormatter:
             ]
 
     def run(self, record: colrev.record.record.Record) -> None:
-        """Run the load formatter"""
-
+        """Run the load formatter."""
         self._apply_strict_requirements(record=record)
 
         if (

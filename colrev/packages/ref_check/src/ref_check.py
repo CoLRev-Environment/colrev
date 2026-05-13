@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""DataPackageBaseClass: RefCheck"""
+"""DataPackageBaseClass: RefCheck."""
 
 import logging
 import typing
@@ -12,7 +12,7 @@ from colrev.package_manager.package_base_classes import DataPackageBaseClass
 
 
 class RefCheck(DataPackageBaseClass):
-    """RefCheck Class"""
+    """RefCheck Class."""
 
     def __init__(
         self,
@@ -31,15 +31,16 @@ class RefCheck(DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> None:
-        """
-        Update the data by running the data operation. This includes data extraction,
+        """Update the data by running the data operation. This includes data extraction,
         analysis, and synthesis.
 
-        Parameters:
+        Parameters
+        ----------
         records (dict): The records to be updated.
         synthesized_record_status_matrix (dict): The status matrix for the synthesized records.
         silent_mode (bool): Whether the operation is run in silent mode
         (for checks of review_manager/status).
+
         """
 
     def update_record_status_matrix(
@@ -48,9 +49,8 @@ class RefCheck(DataPackageBaseClass):
         endpoint_identifier: str,
     ) -> None:
         """Update the record status matrix,
-        i.e., indicate whether the record is rev_synthesized for the given endpoint_identifier
+        i.e., indicate whether the record is rev_synthesized for the given endpoint_identifier.
         """
-
         records = self.review_manager.dataset.load_records_dict()
 
         for syn_id in synthesized_record_status_matrix:
@@ -64,8 +64,7 @@ class RefCheck(DataPackageBaseClass):
     def get_advice(
         self,
     ) -> dict:
-        """Get advice on how to operate the data package endpoint"""
-
+        """Get advice on how to operate the data package endpoint."""
         advice = {
             "msg": "Data operation [ref_check endpoint]: "
             + "\n    Prepare record metadata (or mark as IGNORE:...)",

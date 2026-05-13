@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: GitHub"""
+"""SearchSource: GitHub."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ from colrev.packages.github.src import record_transformer
 
 
 def is_github_api_key(previous: dict, answer: str) -> bool:
-    """Validate GitHub API key format"""
+    """Validate GitHub API key format."""
     api_key_pattern = re.compile(r"[a-zA-Z0-9_-]{40}")
     if api_key_pattern.fullmatch(answer):
         return True
@@ -39,7 +39,7 @@ def is_github_api_key(previous: dict, answer: str) -> bool:
 
 
 class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """GitHub API"""
+    """GitHub API."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -74,8 +74,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for GitHub"""
-
+        """Source heuristic for GitHub."""
         result = {"confidence": 0.0}
 
         return result
@@ -100,8 +99,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         cls._get_api_key()
         params_dict = {}
         if params:
@@ -205,8 +203,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         github_connection.close()
 
     def search(self, rerun: bool = False) -> None:
-        """Run a search on GitHub"""
-
+        """Run a search on GitHub."""
         if self.search_source.search_type == SearchType.API:
             github_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier=self.source_identifier,
@@ -218,7 +215,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
             self._run_api_search(github_feed)
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.search_results_path,
@@ -233,7 +230,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for GitHub"""
+        """Source-specific preparation for GitHub."""
         return record
 
     def prep_link_md(
@@ -243,8 +240,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Prepare the record based on GitHub"""
-
+        """Prepare the record based on GitHub."""
         if Fields.URL not in record.data:
             return record
 

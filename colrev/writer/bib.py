@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function to write bib files"""
+"""Function to write bib files."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ RECORDS_FIELD_ORDER = [
 
 
 def _sanitize_string_for_dict(input_string: str) -> str:
-    """Sanitize a string for dict keys"""
+    """Sanitize a string for dict keys."""
     return (
         input_string.replace(";", "_")
         .replace("=", "_")
@@ -102,7 +102,7 @@ def _get_stringified_record(*, record_dict: dict) -> dict:
 
 
 def to_string(*, records_dict: dict) -> str:
-    """Convert a records dict to a bibtex string"""
+    """Convert a records dict to a bibtex string."""
     # Note: we need a deepcopy because the parsing modifies dicts
     recs_dict = deepcopy(records_dict)
 
@@ -139,7 +139,7 @@ def to_string(*, records_dict: dict) -> str:
 
 
 def write_file(*, records_dict: dict, filename: Path) -> None:
-    """Write a bib file from a records dict"""
+    """Write a bib file from a records dict."""
     bibtexstr = to_string(records_dict=records_dict)
     with open(filename, "w", encoding="utf-8") as file:
         file.write(bibtexstr)

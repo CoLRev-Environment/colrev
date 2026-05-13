@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Creation of TEI as a PDF preparation operation"""
+"""Creation of TEI as a PDF preparation operation."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ if typing.TYPE_CHECKING:
 
 
 class GROBIDTEI(base_classes.PDFPrepPackageBaseClass):
-    """Prepare PDFs by creating an annotated TEI document"""
+    """Prepare PDFs by creating an annotated TEI document."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -51,8 +51,7 @@ class GROBIDTEI(base_classes.PDFPrepPackageBaseClass):
         record: colrev.record.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
     ) -> colrev.record.record_pdf.PDFRecord:
-        """Prepare the analysis of PDFs by creating a TEI (based on GROBID)"""
-
+        """Prepare the analysis of PDFs by creating a TEI (based on GROBID)."""
         if not record.data.get(Fields.FILE, "NA").endswith(".pdf"):
             return record
 
@@ -67,8 +66,7 @@ class GROBIDTEI(base_classes.PDFPrepPackageBaseClass):
 
 
 def convert(pdf_dir: Path, tei_dir: Path) -> None:
-    """Convenience function to convert PDFs to TEI using GROBID"""
-
+    """Convenience function to convert PDFs to TEI using GROBID."""
     print(f"Converting PDFs in {pdf_dir} to TEI in {tei_dir}...")
 
     # pylint: disable=import-outside-toplevel

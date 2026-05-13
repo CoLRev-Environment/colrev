@@ -11,7 +11,7 @@ from colrev.constants import Fields
 
 
 class ErroneousSymbolInFieldChecker:
-    """The ErroneousSymbolInFieldChecker"""
+    """The ErroneousSymbolInFieldChecker."""
 
     fields_to_check = [
         Fields.AUTHOR,
@@ -29,8 +29,7 @@ class ErroneousSymbolInFieldChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the erroneous-symbol-in-field checks"""
-
+        """Run the erroneous-symbol-in-field checks."""
         for key in self.fields_to_check:
             if key not in record.data or record.ignored_defect(
                 key=key, defect=self.msg
@@ -46,5 +45,5 @@ class ErroneousSymbolInFieldChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(ErroneousSymbolInFieldChecker(quality_model))

@@ -14,7 +14,7 @@ from colrev.constants import FieldValues
 
 
 class MissingFieldChecker:
-    """The MissingFieldChecker"""
+    """The MissingFieldChecker."""
 
     # book, inbook: author <- editor
 
@@ -26,8 +26,7 @@ class MissingFieldChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the missing-field checks"""
-
+        """Run the missing-field checks."""
         if record.data[Fields.ENTRYTYPE] not in ENTRYTYPE_FIELD_REQUIREMENTS:
             return
 
@@ -81,5 +80,5 @@ class MissingFieldChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(MissingFieldChecker(quality_model))

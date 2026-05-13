@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Creation of screenshots (PDFs) for online ENTRYTYPES"""
+"""Creation of screenshots (PDFs) for online ENTRYTYPES."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from colrev.constants import RecordState
 
 
 class WebsiteScreenshot(base_classes.PDFGetPackageBaseClass):
-    """Get PDFs from website screenshot (for "online" ENTRYTYPES)"""
+    """Get PDFs from website screenshot (for "online" ENTRYTYPES)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=False)
@@ -50,8 +50,7 @@ class WebsiteScreenshot(base_classes.PDFGetPackageBaseClass):
         pdf_get_operation.docker_images_to_stop.append(self.CHROME_BROWSERLESS_IMAGE)
 
     def _start_screenshot_service(self) -> None:
-        """Start the screenshot service"""
-
+        """Start the screenshot service."""
         # pylint: disable=duplicate-code
 
         if self.screenshot_service_available():
@@ -86,8 +85,7 @@ class WebsiteScreenshot(base_classes.PDFGetPackageBaseClass):
         return
 
     def screenshot_service_available(self) -> bool:
-        """Check if the screenshot service is available"""
-
+        """Check if the screenshot service is available."""
         content_type_header = {"Content-type": "text/plain"}
 
         browserless_chrome_available = False
@@ -109,8 +107,7 @@ class WebsiteScreenshot(base_classes.PDFGetPackageBaseClass):
     def _add_screenshot(
         self, *, record: colrev.record.record.Record, pdf_filepath: Path
     ) -> colrev.record.record.Record:
-        """Add a PDF screenshot to the record"""
-
+        """Add a PDF screenshot to the record."""
         if Fields.URL not in record.data:
             return record
 
@@ -153,8 +150,7 @@ class WebsiteScreenshot(base_classes.PDFGetPackageBaseClass):
     def get_pdf(
         self, record: colrev.record.record.Record
     ) -> colrev.record.record.Record:
-        """Get a PDF of the website (screenshot)"""
-
+        """Get a PDF of the website (screenshot)."""
         if record.data[Fields.ENTRYTYPE] != "online":
             return record
 

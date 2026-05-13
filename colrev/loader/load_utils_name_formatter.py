@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function for name formatting"""
+"""Function for name formatting."""
 
 from __future__ import annotations
 
@@ -12,8 +12,7 @@ from colrev.constants import Fields
 def split_tex_string(
     string: str, sep: str = "", strip: bool = True, filter_empty: bool = False
 ) -> list:
-    """Split a string by a separator"""
-
+    """Split a string by a separator."""
     if sep == "":
         sep = r"[\s~]+"
         filter_empty = True
@@ -45,7 +44,7 @@ def split_tex_string(
 
 
 class NameParser:
-    """Parse a name string"""
+    """Parse a name string."""
 
     def __init__(self, name: str) -> None:
         self._first: list[str] = []
@@ -56,7 +55,7 @@ class NameParser:
         self.parse_string(name)
 
     def parse_string(self, name: str) -> None:
-        """Parse the name string"""
+        """Parse the name string."""
         name = name.strip()
         parts = split_tex_string(name, ",")
 
@@ -103,7 +102,7 @@ class NameParser:
         return " ".join(getattr(self, f"_{part_type}", []))
 
     def format_name(self) -> str:
-        """Format the name"""
+        """Format the name."""
 
         def join(name_list: list) -> str:
             return " ".join([name for name in name_list if name])
@@ -124,7 +123,7 @@ class NameParser:
 
 
 def parse_names(names: str) -> str:
-    """Parse names"""
+    """Parse names."""
     if "," in names:
         return names
     name_list = re.split(r"\s+and\s+|;", names)
@@ -133,12 +132,11 @@ def parse_names(names: str) -> str:
 
 
 def parse_names_in_records(records_dict: dict) -> None:
-    """Parse names in records
+    """Parse names in records.
 
     Note: requires fields to be Fields.AUTHOR/Fields.EDITOR
 
     """
-
     for record in records_dict.values():
         if Fields.AUTHOR in record:
             record[Fields.AUTHOR] = parse_names(record[Fields.AUTHOR])

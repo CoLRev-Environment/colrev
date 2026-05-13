@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function to write Excel files with flexible field handling"""
+"""Function to write Excel files with flexible field handling."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def to_dataframe(
     sort_fields_first: bool = True,
     drop_empty_fields: bool = True,
 ) -> pd.DataFrame:
-    """Convert a records dict to a pandas DataFrame"""
+    """Convert a records dict to a pandas DataFrame."""
     all_keys = {k for v in records_dict.values() for k in v.keys()}
     additional_fields = sorted(all_keys - set(FIELDS))
     fields = FIELDS + additional_fields if sort_fields_first else sorted(all_keys)
@@ -57,7 +57,7 @@ def write_file(
     sort_fields_first: bool = True,
     drop_empty_fields: bool = True,
 ) -> None:
-    """Write an Excel file from a records dict"""
+    """Write an Excel file from a records dict."""
     data_frame = to_dataframe(
         records_dict=records_dict,
         sort_fields_first=sort_fields_first,

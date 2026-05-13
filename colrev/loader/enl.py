@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function to load ENL files"""
+"""Function to load ENL files."""
 
 from __future__ import annotations
 
@@ -16,15 +16,15 @@ import colrev.loader.loader
 
 
 class NextLine(Exception):
-    """NextLineException"""
+    """NextLineException."""
 
 
 class ParseError(Exception):
-    """Parsing error"""
+    """Parsing error."""
 
 
 class ENLLoader(colrev.loader.loader.Loader):
-    """Loads enl files"""
+    """Loads enl files."""
 
     PATTERN = r"^%[A-Z]{1,3} "
 
@@ -56,7 +56,7 @@ class ENLLoader(colrev.loader.loader.Loader):
 
     @classmethod
     def get_nr_records(cls, filename: Path) -> int:
-        """Get the number of records in the file"""
+        """Get the number of records in the file."""
         count = 0
         with open(filename, encoding="utf-8") as file:
             for line in file:
@@ -69,7 +69,7 @@ class ENLLoader(colrev.loader.loader.Loader):
         return line[1:3].rstrip()
 
     def _get_content(self, line: str) -> str:
-        """Get the content from a line"""
+        """Get the content from a line."""
         return line[2:].strip()
 
     def _add_tag(self, tag: str, line: str) -> None:
@@ -100,8 +100,7 @@ class ENLLoader(colrev.loader.loader.Loader):
                 continue
 
     def load_records_list(self) -> list:
-        """Loads enl entries"""
-
+        """Loads enl entries."""
         # based on
         # https://github.com/MrTango/rispy/blob/main/rispy/parser.py
         # Note: skip-tags and unknown-tags can be handled

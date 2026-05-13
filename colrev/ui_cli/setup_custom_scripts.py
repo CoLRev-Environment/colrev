@@ -15,8 +15,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 def setup_custom_search_script(
     *, review_manager: colrev.review_manager.ReviewManager
 ) -> None:
-    """Setup a custom search script"""
-
+    """Setup a custom search script."""
     filedata = colrev.env.utils.get_package_file_content(
         module="colrev.ops",
         filename=Path("custom_scripts/custom_search_source_script.py"),

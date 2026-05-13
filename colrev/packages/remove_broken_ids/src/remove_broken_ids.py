@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Removal of broken IDs as a prep operation"""
+"""Removal of broken IDs as a prep operation."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from colrev.constants import Fields
 
 
 class RemoveBrokenIDPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records by removing invalid IDs DOIs/ISBNs"""
+    """Prepares records by removing invalid IDs DOIs/ISBNs."""
 
     ci_supported: bool = Field(default=True)
 
@@ -49,8 +49,7 @@ class RemoveBrokenIDPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare the record by removing broken IDs (invalid DOIs/ISBNs)"""
-
+        """Prepare the record by removing broken IDs (invalid DOIs/ISBNs)."""
         if self.prep_operation.polish and not self.review_manager.force_mode:
             return record
 

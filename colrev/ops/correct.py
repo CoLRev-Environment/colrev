@@ -18,7 +18,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Corrections:
-    """Handling corrections of metadata"""
+    """Handling corrections of metadata."""
 
     # pylint: disable=duplicate-code
     essential_md_keys = [
@@ -175,8 +175,7 @@ class Corrections:
             json.dump(dict_to_save, corrections_file, indent=4)
 
     def check_corrections_of_records(self) -> None:
-        """Check for corrections of records"""
-
+        """Check for corrections of records."""
         # to test run
         # colrev-hooks-report .report.log
 

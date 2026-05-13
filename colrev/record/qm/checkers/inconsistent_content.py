@@ -11,7 +11,7 @@ from colrev.constants import Fields
 
 
 class InconsistentContentChecker:
-    """The InconsistentContentChecker"""
+    """The InconsistentContentChecker."""
 
     msg = DefectCodes.INCONSISTENT_CONTENT
 
@@ -21,8 +21,7 @@ class InconsistentContentChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the inconsistent-content checks"""
-
+        """Run the inconsistent-content checks."""
         for key in [Fields.JOURNAL, Fields.BOOKTITLE, Fields.AUTHOR]:
             if key not in record.data or record.ignored_defect(
                 key=key, defect=self.msg
@@ -56,5 +55,5 @@ class InconsistentContentChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(InconsistentContentChecker(quality_model))

@@ -17,7 +17,7 @@ from colrev.constants import PDFDefectCodes
 
 
 class TitleNotInPDFChecker:
-    """The TitleNotInPDFChecker"""
+    """The TitleNotInPDFChecker."""
 
     msg = PDFDefectCodes.TITLE_NOT_IN_PDF
 
@@ -27,8 +27,7 @@ class TitleNotInPDFChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the title-not-in-pdf checks"""
-
+        """Run the title-not-in-pdf checks."""
         if (
             Fields.FILE not in record.data
             or Path(record.data[Fields.FILE]).suffix != ".pdf"
@@ -65,5 +64,5 @@ class TitleNotInPDFChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(TitleNotInPDFChecker(quality_model))

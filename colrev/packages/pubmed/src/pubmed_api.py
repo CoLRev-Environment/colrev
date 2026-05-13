@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Pubmed API"""
+"""Pubmed API."""
 
 import datetime
 import logging
@@ -24,7 +24,7 @@ class PubmedAPIError(Exception):
 
 
 class PubmedAPI:
-    """Connector for the Pubmed API"""
+    """Connector for the Pubmed API."""
 
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-instance-attributes
@@ -155,8 +155,7 @@ class PubmedAPI:
         return retrieved_record_dict
 
     def query_id(self, *, pubmed_id: str) -> colrev.record.record.Record:
-        """Retrieve records from Pubmed based on a query"""
-
+        """Retrieve records from Pubmed based on a query."""
         try:
             database = "pubmed"
             url = (
@@ -237,7 +236,6 @@ class PubmedAPI:
 
     def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
         """Retrieve records from PubMed based on self.url (term already included)."""
-
         total_results = None
         seen = set()
 

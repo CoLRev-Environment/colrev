@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""CLI interface for manual retrieval of PDFs"""
+"""CLI interface for manual retrieval of PDFs."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from colrev.constants import RecordState
 
 
 class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
-    """Get PDFs manually based on a CLI"""
+    """Get PDFs manually based on a CLI."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=False)
@@ -185,8 +185,7 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
         )
 
     def print_record(self, *, record_dict: dict) -> None:
-        """Print the record for pdf-get-man (cli)"""
-
+        """Print the record for pdf-get-man (cli)."""
         ret_str = f"  ID:       {record_dict['ID']} ({record_dict['ENTRYTYPE']})"
         ret_str += (
             f"\n  title:    {Colors.GREEN}{record_dict.get('title', 'no title')}{Colors.END}"
@@ -263,8 +262,7 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
         self.review_manager.update_status_yaml()
 
     def pdf_get_man(self, records: dict) -> dict:
-        """Get the PDF manually based on a cli"""
-
+        """Get the PDF manually based on a cli."""
         self.logger.info("Retrieve PDFs manually")
         pdf_get_operation = self.review_manager.get_pdf_get_operation()
         pdf_dir = self.pdf_dir

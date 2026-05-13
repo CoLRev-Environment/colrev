@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: Taylor and Francis"""
+"""SearchSource: Taylor and Francis."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from colrev.ops.search_db import run_db_search
 
 
 class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """Taylor and Francis"""
+    """Taylor and Francis."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -45,8 +45,7 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Taylor and Francis"""
-
+        """Source heuristic for Taylor and Francis."""
         result = {"confidence": 0.0}
 
         if data.count("\n@") > 1:
@@ -62,8 +61,7 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {params.split("=")[0]: params.split("=")[1]}
 
         search_source = create_db_source(
@@ -76,8 +74,7 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def search(self, rerun: bool) -> None:
-        """Run a search of TaylorAndFrancis"""
-
+        """Run a search of TaylorAndFrancis."""
         if self.search_source.search_type == SearchType.DB:
             run_db_search(
                 db_url=self.db_url,
@@ -95,7 +92,7 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     @classmethod
@@ -120,8 +117,7 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         return records
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             return self._load_bib(
                 filename=self.search_source.search_results_path, logger=self.logger
@@ -136,8 +132,7 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for Taylor and Francis"""
-
+        """Source-specific preparation for Taylor and Francis."""
         # remove eprint and URL fields (they only have dois...)
         record.remove_field(key="colrev.taylor_and_francis.eprint")
         if "colrev.taylor_and_francis.note" in record.data and re.match(

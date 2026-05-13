@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Jupyter notebook for prep-man operation"""
+"""Jupyter notebook for prep-man operation."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ import colrev.record.record
 
 
 class CurationJupyterNotebookManPrep(base_classes.PrepManPackageBaseClass):
-    """Manual preparation based on a Jupyter Notebook"""
+    """Manual preparation based on a Jupyter Notebook."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=False)
@@ -45,8 +45,7 @@ class CurationJupyterNotebookManPrep(base_classes.PrepManPackageBaseClass):
             )
 
     def prepare_manual(self, records: dict) -> dict:
-        """Prepare records manually based on  a Jupyter notebeook"""
-
+        """Prepare records manually based on  a Jupyter notebeook."""
         input(
             "Navigate to the jupyter notebook available at\n"
             "prep_man/prep_man_curation.ipynb\n"

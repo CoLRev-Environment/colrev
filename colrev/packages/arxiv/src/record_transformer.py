@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Utility to transform items from arXiv into records"""
+"""Utility to transform items from arXiv into records."""
 
 from __future__ import annotations
 
@@ -24,8 +24,7 @@ FIELDS_TO_REMOVE = [
 
 
 def parse_record(entry: dict) -> dict:
-    """Transform an arXiv item into a record"""
-
+    """Transform an arXiv item into a record."""
     entry[Fields.ENTRYTYPE] = "techreport"
     entry["arxivid"] = entry.pop("id").replace("http://arxiv.org/abs/", "")
     entry[Fields.AUTHOR] = " and ".join([a["name"] for a in entry.pop("authors")])

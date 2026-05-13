@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: Springer Link"""
+"""SearchSource: Springer Link."""
 
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ DEFAULT_PAGE_SIZE = 10
 
 
 class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """Springer Link"""
+    """Springer Link."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -74,8 +74,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Springer Link"""
-
+        """Source heuristic for Springer Link."""
         result = {"confidence": 0.0}
 
         if filename.suffix == ".csv":
@@ -94,8 +93,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict: dict = {}  # {params.split("=")[0]: params.split("=")[1]}
         search_type = colrev.utils.select_search_type(
             search_types=cls.search_types, params=params_dict
@@ -123,8 +121,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def search(self, rerun: bool) -> None:
-        """Run a search of SpringerLink"""
-
+        """Run a search of SpringerLink."""
         if self.search_source.search_type == SearchType.DB:
             run_db_search(
                 db_url=self.db_url,
@@ -259,7 +256,6 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def build_query(self, search_parameters: dict) -> str:
         """Build API query."""
-
         if "query" in search_parameters:
             query = search_parameters["query"]
 
@@ -306,7 +302,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     # pylint: disable=too-many-locals
     def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
-        """Get the records from an API search"""
+        """Get the records from an API search."""
         query = self.build_query(self.search_source.search_parameters)
         api_key = self.get_api_key()
 
@@ -372,7 +368,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         springer_feed.save()
 
     def _create_record(self, doc: dict) -> colrev.record.record.Record:
-        """Fieldmapper API search"""
+        """Fieldmapper API search."""
         record_dict = {Fields.ID: doc["identifier"]}
         record_dict[Fields.ENTRYTYPE] = "misc"
 
@@ -440,7 +436,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     @classmethod
@@ -499,8 +495,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         return records
 
     def api_ui(self) -> None:
-        """User API key insertion"""
-
+        """User API key insertion."""
         api_key = self.get_api_key()
 
         if not api_key:
@@ -524,14 +519,14 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
             return
 
     def get_api_key(self) -> str:
-        """Get API key from settings"""
+        """Get API key from settings."""
         api_key = os.getenv("SPRINGER_API_KEY")
         if api_key:
             return api_key
         return ""
 
     def _is_springer_link_api_key(self, previous: dict, answer: str) -> bool:
-        """Validate SpringerLink API key format"""
+        """Validate SpringerLink API key format."""
         api_key_pattern = re.compile(r"[a-z0-9]{32}")
         if not api_key_pattern.fullmatch(answer):
             raise inquirer.errors.ValidationError(
@@ -553,15 +548,14 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         return True
 
     def _is_year(self, previous: dict, answer: str) -> bool:
-        """Validate year format"""
+        """Validate year format."""
         year_pattern = re.compile(r"\d{4}")
         if not year_pattern.fullmatch(answer) and not answer == "":
             raise inquirer.errors.ValidationError("", reason="Invalid year format.")
         return True
 
     def _api_key_ui(self) -> None:
-        """User Interface to enter API key"""
-
+        """User Interface to enter API key."""
         questions = [
             inquirer.Text(
                 "springer_api_key",
@@ -585,8 +579,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         return records
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".csv":
             return self._load_csv(
                 filename=self.search_source.search_results_path, logger=self.logger
@@ -606,6 +599,5 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for Springer Link"""
-
+        """Source-specific preparation for Springer Link."""
         return record

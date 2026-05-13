@@ -35,7 +35,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class TEIParser:
-    """Environment service for TEI parsing"""
+    """Environment service for TEI parsing."""
 
     ns = {
         "tei": "{http://www.tei-c.org/ns/1.0}",
@@ -56,7 +56,7 @@ class TEIParser:
         modes of operation:
         - pdf_path: create TEI and temporarily store in self.data
         - pfd_path and tei_path: create TEI and save in tei_path
-        - tei_path: read TEI from file
+        - tei_path: read TEI from file.
         """
         # pylint: disable=consider-using-with
         assert pdf_path is not None or tei_path is not None
@@ -89,7 +89,7 @@ class TEIParser:
             self.root = self._read_from_tei()  # type: ignore
 
     def _read_from_tei(self):  # type: ignore
-        """Read a TEI from file"""
+        """Read a TEI from file."""
         with open(self.tei_path, "rb") as data:
             xslt_content = data.read()
 
@@ -99,7 +99,7 @@ class TEIParser:
         return DefusedET.fromstring(xslt_content)
 
     def _create_tei(self) -> None:
-        """Create the TEI (based on GROBID)"""
+        """Create the TEI (based on GROBID)."""
         grobid_service = colrev.env.grobid_service.GrobidService()
         grobid_service.start()
         # Note: we have more control and transparency over the consolidation
@@ -154,7 +154,7 @@ class TEIParser:
             raise colrev_exceptions.TEITimeoutException() from exc
 
     def get_tei_str(self) -> str:
-        """Get the TEI string"""
+        """Get the TEI string."""
         try:
             register_namespace("tei", "http://www.tei-c.org/ns/1.0")
             return tostring(self.root, encoding="unicode")
@@ -162,7 +162,7 @@ class TEIParser:
             raise colrev_exceptions.TEIException from exc
 
     def get_grobid_version(self) -> str:
-        """Get the GROBID version used for TEI creation"""
+        """Get the GROBID version used for TEI creation."""
         grobid_version = ""
         encoding_description = self.root.find(".//" + self.ns["tei"] + "encodingDesc")
         if encoding_description is not None:
@@ -251,7 +251,7 @@ class TEIParser:
         return doi
 
     def get_abstract(self) -> str:
-        """Get the abstract"""
+        """Get the abstract."""
         html_tag_regex = re.compile("<.*?>")
 
         def cleanhtml(raw_html: str) -> str:
@@ -271,7 +271,7 @@ class TEIParser:
         return abstract_text
 
     def get_metadata(self) -> dict:
-        """Get the metadata of the PDF (title, author, ...) as a dict"""
+        """Get the metadata of the PDF (title, author, ...) as a dict."""
         reference = self.root.find(".//" + self.ns["tei"] + "sourceDesc").find(
             ".//" + self.ns["tei"] + "biblStruct"
         )
@@ -302,7 +302,7 @@ class TEIParser:
         return keywords
 
     def get_author_details(self) -> list:
-        """Get the author details"""
+        """Get the author details."""
         author_details = []
 
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
@@ -651,7 +651,7 @@ class TEIParser:
             yield paragraph_text
 
     def get_references(self, *, add_intext_citation_count: bool = False) -> list:
-        """Get the bibliography (references section) as a list of record dicts"""
+        """Get the bibliography (references section) as a list of record dicts."""
         # Note : could also allow top-10 % of most frequent in-text citations
 
         #  https://epidoc.stoa.org/gl/latest/ref-title.html
@@ -671,7 +671,7 @@ class TEIParser:
         return tei_bib_db
 
     def get_citations_per_section(self) -> dict:
-        """Get a dict of section-names and list-of-citations"""
+        """Get a dict of section-names and list-of-citations."""
         section_citations = {}
         parent_map = {c: p for p in self.root.iter() for c in p}
         sections = self.root.iter(f'{self.ns["tei"]}head')
@@ -691,7 +691,7 @@ class TEIParser:
         return section_citations
 
     def mark_references(self, *, records: dict):  # type: ignore
-        """Mark references with the additional record ID"""
+        """Mark references with the additional record ID."""
         tei_records = self.get_references()
         for record_dict in tei_records:
             if Fields.TITLE not in record_dict:
@@ -756,7 +756,7 @@ def _add_doi_from_pdf_if_not_available(record_dict: dict) -> None:
 # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
 # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
 def get_record_from_pdf(file_path: Path, *, add_doi_from_pdf: bool = False) -> dict:
-    """Get a record dict form a pdf file_path"""
+    """Get a record dict form a pdf file_path."""
     if file_path.suffix != ".pdf":
         raise ValueError
 

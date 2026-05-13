@@ -13,7 +13,7 @@ from colrev.constants import Fields
 
 
 class PubmedIDPatternChecker:
-    """The PubmedIDPatternChecker"""
+    """The PubmedIDPatternChecker."""
 
     msg = DefectCodes.PUBMED_ID_NOT_MATCHING_PATTERN
 
@@ -25,8 +25,7 @@ class PubmedIDPatternChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the pubmedid-not-matching-pattern checks"""
-
+        """Run the pubmedid-not-matching-pattern checks."""
         if Fields.PUBMED_ID not in record.data or record.ignored_defect(
             key=Fields.PUBMED_ID, defect=self.msg
         ):
@@ -39,5 +38,5 @@ class PubmedIDPatternChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(PubmedIDPatternChecker(quality_model))

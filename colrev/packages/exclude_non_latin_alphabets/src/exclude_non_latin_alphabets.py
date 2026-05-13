@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Exclude records with non-latin alphabets as a prep operation"""
+"""Exclude records with non-latin alphabets as a prep operation."""
 
 from __future__ import annotations
 
@@ -20,7 +20,8 @@ from colrev.constants import Fields
 
 class ExcludeNonLatinAlphabetsPrep(base_classes.PrepPackageBaseClass):
     """Prepares records by excluding ones that have a non-latin alphabet
-    (in the title, author, journal, or booktitle field)"""
+    (in the title, author, journal, or booktitle field).
+    """
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -57,8 +58,7 @@ class ExcludeNonLatinAlphabetsPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare the records by excluding records whose metadata is not in Latin alphabet"""
-
+        """Prepare the records by excluding records whose metadata is not in Latin alphabet."""
         if self.prep_operation.polish:
             return record
 

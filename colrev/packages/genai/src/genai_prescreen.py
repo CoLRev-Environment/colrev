@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Prescreen based on GenAI"""
+"""Prescreen based on GenAI."""
 
 from __future__ import annotations
 
@@ -24,9 +24,7 @@ from colrev.constants import RecordState
 
 
 class PreScreenDecision(BaseModel):
-    """
-    Class for a prescreen
-    """
+    """Class for a prescreen."""
 
     SYSTEM_PROMPT: typing.ClassVar[str] = (
         "You are an expert screener of scientific literature. "
@@ -42,7 +40,7 @@ class PreScreenDecision(BaseModel):
 
 
 class GenAIPrescreen(base_classes.PrescreenPackageBaseClass):
-    """GenAI-based prescreen"""
+    """GenAI-based prescreen."""
 
     ci_supported: bool = Field(default=True)
     export_todos_only: bool = True
@@ -50,7 +48,7 @@ class GenAIPrescreen(base_classes.PrescreenPackageBaseClass):
     class GenAIPrescreenSettings(
         colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
-        """Settings for GenAIPrescreen"""
+        """Settings for GenAIPrescreen."""
 
         # pylint: disable=invalid-name
         # pylint: disable=too-many-instance-attributes
@@ -81,8 +79,7 @@ class GenAIPrescreen(base_classes.PrescreenPackageBaseClass):
         records: dict,
         split: list,
     ) -> dict:
-        """Prescreen records based on GenAI"""
-
+        """Prescreen records based on GenAI."""
         if self.review_manager.settings.prescreen.explanation == "":
             print(
                 f"\n{Colors.ORANGE}Provide a short explanation of the prescreen{Colors.END} "

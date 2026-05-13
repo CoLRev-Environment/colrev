@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Consolidation of metadata based on OpenLibrary API as a prep operation"""
+"""Consolidation of metadata based on OpenLibrary API as a prep operation."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from colrev.constants import SearchType
 
 
 class OpenLibraryMetadataPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records based on openlibrary.org metadata"""
+    """Prepares records based on openlibrary.org metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=True)
@@ -64,7 +64,7 @@ class OpenLibraryMetadataPrep(base_classes.PrepPackageBaseClass):
         )
 
     def check_availability(self) -> None:
-        """Check status (availability) of the OpenLibrary API"""
+        """Check status (availability) of the OpenLibrary API."""
         self.open_library_connector.check_availability()
 
     # pylint: disable=unused-argument
@@ -75,8 +75,7 @@ class OpenLibraryMetadataPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare the record metadata based on OpenLibrary"""
-
+        """Prepare the record metadata based on OpenLibrary."""
         if record.data.get(Fields.ENTRYTYPE, "NA") != "book":
             return record
 

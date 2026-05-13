@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""DBLP API"""
+"""DBLP API."""
 
 import html
 import json
@@ -19,7 +19,7 @@ from colrev.constants import Fields
 
 
 class DBLPAPI:
-    """Connector for the DBLP API"""
+    """Connector for the DBLP API."""
 
     # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
     _api_url_venues = "https://dblp.org/search/venue/api?q="
@@ -54,8 +54,7 @@ class DBLPAPI:
         self.set_total()
 
     def check_availability(self) -> None:
-        """Check if the DBLP API is available"""
-
+        """Check if the DBLP API is available."""
         try:
             # pylint: disable=duplicate-code
             test_rec = {
@@ -228,8 +227,7 @@ class DBLPAPI:
         return item
 
     def get_query_url(self) -> str:
-        """Get the query"""
-
+        """Get the query."""
         if "scope" in self.params:
             # Note : journal_abbreviated is the abbreviated venue_key
             query = self.params["scope"]["journal_abbreviated"]
@@ -243,8 +241,7 @@ class DBLPAPI:
         raise ValueError("No query or scope provided")
 
     def set_next_url(self) -> None:
-        """Set the next URL"""
-
+        """Set the next URL."""
         self.url = self.get_query_url()
         if self.total > self.batch_size:
             self.url += "+" + str(self.year)
@@ -257,14 +254,13 @@ class DBLPAPI:
         self.url += f"&format=json&h={self.batch_size}&f={self.batch_size_cumulative}"
 
     def processed_all_urls(self) -> bool:
-        """Check if all URLs have been processed"""
-
+        """Check if all URLs have been processed."""
         if self.total < self.batch_size:
             return True
         return self.year > datetime.now().year
 
     def set_total(self) -> None:
-        """Get the total number of records"""
+        """Get the total number of records."""
         total = -1
         try:
             ret = self.session.request(
@@ -288,8 +284,7 @@ class DBLPAPI:
         self.total = total
 
     def retrieve_records(self) -> list:
-        """Retrieve records from DBLP"""
-
+        """Retrieve records from DBLP."""
         # try:
         while True:
             # print(self.url)
@@ -353,7 +348,7 @@ class DBLPAPI:
         return retrieved_records
 
     def set_url_from_query(self) -> None:
-        """Set the URL from a query"""
+        """Set the URL from a query."""
         query = re.sub(
             r"[\W]+", " ", self.params["query"].replace(" ", "+").replace("-", "+")
         )

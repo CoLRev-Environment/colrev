@@ -25,7 +25,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class ReviewTypePackageBaseClass(abc.ABC):
-    """The base class for ReviewType packages
+    """The base class for ReviewType packages.
 
     The following cli command calls the initialize method of a ReviewType package:
 
@@ -48,11 +48,11 @@ class ReviewTypePackageBaseClass(abc.ABC):
 
     @abstractmethod
     def initialize(self, settings: colrev.settings.Settings) -> dict:
-        """Initialize the review type"""
+        """Initialize the review type."""
 
 
 class SearchSourcePackageBaseClass(ABC):
-    """The base class for SearchSource packages
+    """The base class for SearchSource packages.
 
     The following cli commands call specific methods of a SearchSource package:
 
@@ -221,7 +221,8 @@ class PrescreenPackageBaseClass(ABC):
 
     The following cli command calls the run_prescreen method of a Prescreen package:
 
-    ``colrev prescreen`` -> calls ``package.run_prescreen()``"""
+    ``colrev prescreen`` -> calls ``package.run_prescreen()``
+    """
 
     ci_supported: bool
 
@@ -279,7 +280,8 @@ class PDFGetManPackageBaseClass(ABC):
 
     The following cli command calls the pdf_get_man method of a PDFGetMan package:
 
-    ``colrev pdf-get-man`` -> calls ``package.pdf_get_man()``"""
+    ``colrev pdf-get-man`` -> calls ``package.pdf_get_man()``
+    """
 
     ci_supported: bool
 

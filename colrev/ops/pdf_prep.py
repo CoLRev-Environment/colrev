@@ -26,7 +26,7 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class PDFPrep(colrev.process.operation.Operation):
-    """Prepare PDFs"""
+    """Prepare PDFs."""
 
     to_prepare: int
     pdf_prepared: int
@@ -117,8 +117,7 @@ class PDFPrep(colrev.process.operation.Operation):
 
     # Note : no named arguments (multiprocessing)
     def prepare_pdf(self, item: dict) -> dict:
-        """Prepare a PDF (based on package_endpoints in the settings)"""
-
+        """Prepare a PDF (based on package_endpoints in the settings)."""
         record_dict = item["record"]
 
         if (
@@ -297,7 +296,7 @@ class PDFPrep(colrev.process.operation.Operation):
         return record_dict
 
     def update_colrev_pdf_ids(self) -> None:
-        """Update the colrev-pdf-ids"""
+        """Update the colrev-pdf-ids."""
         self.review_manager.logger.info("Update colrev_pdf_ids")
         records = self.review_manager.dataset.load_records_dict()
         pool = Pool(self.cpus)
@@ -351,8 +350,7 @@ class PDFPrep(colrev.process.operation.Operation):
         self.review_manager.logger.info(not_prepared_string)
 
     def setup_custom_script(self) -> None:
-        """Setup a custom pdf-prep script"""
-
+        """Setup a custom pdf-prep script."""
         filedata = colrev.env.utils.get_package_file_content(
             module="colrev.ops",
             filename=Path("custom_scripts/custom_pdf_prep_script.py"),
@@ -373,8 +371,7 @@ class PDFPrep(colrev.process.operation.Operation):
         self.review_manager.save_settings()
 
     def generate_tei(self) -> None:
-        """Generate TEI documents for included records"""
-
+        """Generate TEI documents for included records."""
         self.review_manager.logger.info(
             "Generate TEI documents for records with status=rev_included|rev_synthesized"
         )
@@ -406,8 +403,7 @@ class PDFPrep(colrev.process.operation.Operation):
         reprocess: bool = False,
         batch_size: int = 0,
     ) -> None:
-        """Prepare PDFs (main entrypoint)"""
-
+        """Prepare PDFs (main entrypoint)."""
         if utils.in_ci_environment() and not self.review_manager.in_test_environment():
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev pdf-prep",

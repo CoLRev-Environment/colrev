@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: Unpaywall"""
+"""SearchSource: Unpaywall."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from colrev.packages.unpaywall.src.api import UnpaywallAPI
 
 
 class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """Unpaywall Search Source"""
+    """Unpaywall Search Source."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -65,7 +65,7 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Unpaywall"""
+        """Source heuristic for Unpaywall."""
         result = {"confidence": 0.0}
         return result
 
@@ -76,8 +76,7 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search -a )."""
         params_dict = {}
         if params:
             if params.startswith("http"):
@@ -145,8 +144,7 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
         unpaywall_feed.save()
 
     def search(self, rerun: bool) -> None:
-        """Run a search of Unpaywall"""
-
+        """Run a search of Unpaywall."""
         unpaywall_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
             search_source=self.search_source,
@@ -161,8 +159,7 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
             raise NotImplementedError
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.search_results_path,
@@ -179,7 +176,7 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     def prepare(
@@ -189,5 +186,5 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for Unpaywall"""
+        """Source-specific preparation for Unpaywall."""
         return record

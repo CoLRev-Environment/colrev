@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function to load JSON files"""
+"""Function to load JSON files."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ import colrev.loader.loader
 
 
 class JSONLoader(colrev.loader.loader.Loader):
-    """Loads json files"""
+    """Loads json files."""
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -42,15 +42,14 @@ class JSONLoader(colrev.loader.loader.Loader):
 
     @classmethod
     def get_nr_records(cls, filename: Path) -> int:
-        """Get the number of records in the file"""
+        """Get the number of records in the file."""
         with open(filename, encoding="utf-8-sig") as file:
             records_list = json.load(file)
 
         return len(records_list)
 
     def load_records_list(self) -> list:
-        """Load json entries"""
-
+        """Load json entries."""
         with open(self.filename, encoding="utf-8-sig") as file:
             records_list = json.load(file)
 

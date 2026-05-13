@@ -15,7 +15,7 @@ from colrev.constants import FieldValues
 
 
 class NameFormatSeparatorsChecker:
-    """The NameFormatSeparatorsChecker"""
+    """The NameFormatSeparatorsChecker."""
 
     msg = DefectCodes.NAME_FORMAT_SEPARTORS
 
@@ -25,7 +25,7 @@ class NameFormatSeparatorsChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the name-format-separators checks"""
+        """Run the name-format-separators checks."""
         for key in [Fields.AUTHOR, Fields.EDITOR]:
             if (
                 key not in record.data
@@ -78,5 +78,5 @@ class NameFormatSeparatorsChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(NameFormatSeparatorsChecker(quality_model))

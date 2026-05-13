@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Exclude collections as a prep operation"""
+"""Exclude collections as a prep operation."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from colrev.constants import Fields
 
 
 class ExcludeCollectionsPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records by excluding collection entries (e.g., proceedings)"""
+    """Prepares records by excluding collection entries (e.g., proceedings)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -45,8 +45,7 @@ class ExcludeCollectionsPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare records by excluding collections (proceedings)"""
-
+        """Prepare records by excluding collections (proceedings)."""
         if record.data[Fields.ENTRYTYPE].lower() == "proceedings":
             record.prescreen_exclude(reason="collection/proceedings")
 

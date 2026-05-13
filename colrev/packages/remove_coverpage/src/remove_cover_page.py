@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Cover-page removal as a PDF preparation operation"""
+"""Cover-page removal as a PDF preparation operation."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from colrev.constants import Filepaths
 
 
 class PDFCoverPage(base_classes.PDFPrepPackageBaseClass):
-    """Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers)"""
+    """Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -179,8 +179,7 @@ class PDFCoverPage(base_classes.PDFPrepPackageBaseClass):
         record: colrev.record.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
     ) -> colrev.record.record_pdf.PDFRecord:
-        """Prepare the PDF by removing coverpages (if any)"""
-
+        """Prepare the PDF by removing coverpages (if any)."""
         if not record.data[Fields.FILE].endswith(".pdf"):
             return record
 

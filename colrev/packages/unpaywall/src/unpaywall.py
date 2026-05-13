@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Retrieval of PDFs from the unpaywall API"""
+"""Retrieval of PDFs from the unpaywall API."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from colrev.packages.unpaywall.src import utils
 
 
 class Unpaywall(base_classes.PDFGetPackageBaseClass):
-    """Get PDFs from unpaywall.org"""
+    """Get PDFs from unpaywall.org."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=False)
@@ -94,8 +94,7 @@ class Unpaywall(base_classes.PDFGetPackageBaseClass):
     def get_pdf(
         self, record: colrev.record.record.Record
     ) -> colrev.record.record.Record:
-        """Get PDFs from unpaywall"""
-
+        """Get PDFs from unpaywall."""
         if Fields.DOI not in record.data:
             return record
 

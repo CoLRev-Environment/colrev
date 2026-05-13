@@ -52,7 +52,6 @@ def empty_figure() -> object:
 
 def plot_time(data_input: pd.DataFrame) -> object:
     """Create graph about papers published over time."""
-
     # check for data_input
     if data_input.empty:
         return empty_figure()
@@ -101,7 +100,6 @@ def plot_time(data_input: pd.DataFrame) -> object:
 
 def plot_journals(data_input: pd.DataFrame) -> px.bar:
     """Create graph about papers published per journal."""
-
     # check for data_input
     if data_input.empty:
         return empty_figure()

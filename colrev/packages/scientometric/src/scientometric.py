@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Scientometric study"""
+"""Scientometric study."""
 
 import logging
 import typing
@@ -15,7 +15,7 @@ import colrev.package_manager.package_settings
 
 
 class ScientometricReview(base_classes.ReviewTypePackageBaseClass):
-    """Scientometric study"""
+    """Scientometric study."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=True)
@@ -36,8 +36,7 @@ class ScientometricReview(base_classes.ReviewTypePackageBaseClass):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
-        """Initialize a scientometric study"""
-
+        """Initialize a scientometric study."""
         settings.data.data_package_endpoints = [
             {
                 "endpoint": "colrev.paper_md",

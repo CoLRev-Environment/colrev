@@ -33,8 +33,7 @@ def p_print(obj: typing.Any) -> None:
 
 
 def get_cached_session() -> requests_cache.CachedSession:  # pragma: no cover
-    """Get a cached session"""
-
+    """Get a cached session."""
     return requests_cache.CachedSession(
         str(Filepaths.PREP_REQUESTS_CACHE_FILE),
         backend="sqlite",
@@ -44,7 +43,6 @@ def get_cached_session() -> requests_cache.CachedSession:  # pragma: no cover
 
 def in_ci_environment() -> bool:
     """Return True if running in a CI environment (e.g., GitHub Actions)."""
-
     identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
     return any("true" == os.getenv(x) for x in identifier_list)
 
@@ -56,8 +54,7 @@ def get_unique_filename(
     suffix: str = ".bib",
     prefix: str = "data/search/",
 ) -> Path:
-    """Get a unique filename for a (new) SearchSource"""
-
+    """Get a unique filename for a (new) SearchSource."""
     base_path = base_path / Path(prefix)
     existing_filenames = []
     for search_file_path in base_path.glob("*_search_history.json"):
@@ -86,8 +83,7 @@ def get_unique_filename(
 
 
 def select_search_type(*, search_types: list, params: dict) -> SearchType:
-    """Select the SearchType (interactively if neccessary)"""
-
+    """Select the SearchType (interactively if neccessary)."""
     # pylint: disable=import-outside-toplevel
     import inquirer
 
@@ -113,7 +109,8 @@ def select_search_type(*, search_types: list, params: dict) -> SearchType:
 
 def get_project_home_dir(*, path_str: typing.Optional[str] = None) -> Path:
     """Get the root directory of the CoLRev project
-    (i.e., the directory containing the .git directory)"""
+    (i.e., the directory containing the .git directory).
+    """
     if path_str:
         original_dir = Path(path_str)
     else:
@@ -194,7 +191,7 @@ def _strip_diacritics(text: str) -> str:
 def remove_stopwords(
     input_str: str, stopwords: typing.Optional[typing.Set[str]] = None
 ) -> str:
-    """Remove stopwords from a string"""
+    """Remove stopwords from a string."""
     if stopwords is None:
         stopwords = STOPWORDS
     text = _strip_diacritics(input_str)

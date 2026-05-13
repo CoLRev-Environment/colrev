@@ -16,7 +16,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class ProcessModel:
-    """The ProcessModel describes transitions between RecordStates"""
+    """The ProcessModel describes transitions between RecordStates."""
 
     transitions = [
         {
@@ -108,14 +108,13 @@ class ProcessModel:
 
     @classmethod
     def get_valid_transitions(cls, *, state: RecordState) -> set:
-        """Get the list of valid transitions"""
+        """Get the list of valid transitions."""
         logging.getLogger("transitions").setLevel(logging.WARNING)
         return set({x["trigger"] for x in cls.transitions if x["source"] == state})
 
     @classmethod
     def get_preceding_states(cls, *, state: RecordState) -> set:
-        """Get the states preceding the state that is given as a parameter"""
-
+        """Get the states preceding the state that is given as a parameter."""
         logging.getLogger("transitions").setLevel(logging.WARNING)
         preceding_states: set[RecordState] = set()
         added = True
@@ -135,7 +134,7 @@ class ProcessModel:
     def check_operation_precondition(
         cls, operation: colrev.process.operation.Operation
     ) -> None:
-        """Check the preconditions for an operation"""
+        """Check the preconditions for an operation."""
 
         def get_states_set() -> set:
             records_headers = operation.review_manager.dataset.load_records_dict(

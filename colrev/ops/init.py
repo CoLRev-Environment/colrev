@@ -36,7 +36,7 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class Initializer:
-    """Initialize a CoLRev project"""
+    """Initialize a CoLRev project."""
 
     review_manager: colrev.review_manager.ReviewManager
 
@@ -457,8 +457,8 @@ class Initializer:
     def _create_example_repo(self) -> None:
         """The example repository is intended to provide an initial illustration
         of CoLRev. It focuses on a quick overview of the process and does
-        not cover advanced features or special cases."""
-
+        not cover advanced features or special cases.
+        """
         self.review_manager.logger.info("Include 30_example_records.bib")
         colrev.env.utils.retrieve_package_file(
             template_file=Path("ops/init/30_example_records.bib"),

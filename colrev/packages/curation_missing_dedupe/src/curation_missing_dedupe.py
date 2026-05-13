@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Deduplication of remaining records in curated metadata repositories"""
+"""Deduplication of remaining records in curated metadata repositories."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from colrev.constants import RecordState
 
 
 class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
-    """Deduplication of remaining records in a curated metadata repository"""
+    """Deduplication of remaining records in a curated metadata repository."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=False)
@@ -280,8 +280,7 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
         return results
 
     def run_dedupe(self) -> None:
-        """Run the dedupe procedure for remaining records in curations"""
-
+        """Run the dedupe procedure for remaining records in curations."""
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
 

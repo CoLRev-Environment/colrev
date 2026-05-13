@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: Pubmed"""
+"""SearchSource: Pubmed."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ from colrev.packages.pubmed.src import pubmed_api
 
 
 class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """Pubmed"""
+    """Pubmed."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -78,8 +78,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     def validate_source(
         cls, search_source: colrev.search_file.ExtendedSearchFile
     ) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-
+        """Validate the SearchSource (parameters etc.)."""
         print(f"Validate SearchSource {search_source.search_results_path}")
 
         if search_source.version != cls.CURRENT_SYNTAX_VERSION:
@@ -110,8 +109,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Pubmed"""
-
+        """Source heuristic for Pubmed."""
         result = {"confidence": 0.0}
 
         # Simple heuristic:
@@ -135,8 +133,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
         if params:
             if params.startswith("http"):
@@ -215,8 +212,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def check_availability(self) -> None:
-        """Check status (availability) of the Pubmed API"""
-
+        """Check status (availability) of the Pubmed API."""
         try:
             # pylint: disable=duplicate-code
             test_rec = {
@@ -334,8 +330,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Retrieve masterdata from Pubmed based on similarity with the record provided"""
-
+        """Retrieve masterdata from Pubmed based on similarity with the record provided."""
         # To test the metadata provided for a particular pubmed-id use:
         # https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=10075143&rettype=xml&retmode=text
 
@@ -436,8 +431,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         pubmed_feed.save()
 
     def search(self, rerun: bool) -> None:
-        """Run a search of Pubmed"""
-
+        """Run a search of Pubmed."""
         pubmed_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
             search_source=self.search_source,
@@ -526,8 +520,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         return records
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".csv":
             return self._load_csv(
                 filename=self.search_source.search_results_path, logger=self.logger
@@ -549,8 +542,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for Pubmed"""
-
+        """Source-specific preparation for Pubmed."""
         if "colrev.pubmed.first_author" in record.data:
             record.remove_field(key="colrev.pubmed.first_author")
 

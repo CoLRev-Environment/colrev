@@ -13,7 +13,7 @@ from colrev.constants import Fields
 
 
 class HTMLTagChecker:
-    """The HTMLTagChecker"""
+    """The HTMLTagChecker."""
 
     msg = DefectCodes.HTML_TAGS
     _fields_to_check = [
@@ -31,8 +31,7 @@ class HTMLTagChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the html-tags checks"""
-
+        """Run the html-tags checks."""
         for key in self._fields_to_check:
             if key not in record.data or record.ignored_defect(
                 key=key, defect=self.msg
@@ -47,5 +46,5 @@ class HTMLTagChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(HTMLTagChecker(quality_model))

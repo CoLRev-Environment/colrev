@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Consolidation of metadata based on Crossref API as a prep operation"""
+"""Consolidation of metadata based on Crossref API as a prep operation."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from colrev.constants import SearchType
 
 
 class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records based on crossref.org metadata"""
+    """Prepares records based on crossref.org metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -78,7 +78,7 @@ class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
         ]
 
     def check_availability(self) -> None:
-        """Check status (availability) of the Crossref API"""
+        """Check status (availability) of the Crossref API."""
         self.crossref_source.check_availability()
 
     # pylint: disable=unused-argument
@@ -89,8 +89,7 @@ class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare a record based on Crossref metadata"""
-
+        """Prepare a record based on Crossref metadata."""
         if any(
             crossref_prefix in o
             for crossref_prefix in self.crossref_prefixes

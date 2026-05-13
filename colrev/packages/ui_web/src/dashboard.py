@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-"""CoLRev dashboard operation: track project progress through dashboard"""
+"""CoLRev dashboard operation: track project progress through dashboard."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ import colrev.exceptions as colrev_exceptions
 
 
 class Dashboard:
-    """Dashboard class"""
+    """Dashboard class."""
 
     def make_dashboard(self) -> Dash:
         """Create dashboard header and general structure."""
@@ -45,8 +45,7 @@ class Dashboard:
 
 
 def main() -> None:
-    """Main method for the dashboard"""
-
+    """Main method for the dashboard."""
     try:
         dashboard = Dashboard()
         app = dashboard.make_dashboard()

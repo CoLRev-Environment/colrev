@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Service to detect languages and handle language codes"""
+"""Service to detect languages and handle language codes."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from colrev.constants import Fields
 
 
 class LanguageService:
-    """Service to detect languages and handle language codes"""
+    """Service to detect languages and handle language codes."""
 
     _eng_false_negatives = ["editorial", "introduction"]
 
@@ -84,7 +84,7 @@ class LanguageService:
         return ""  # pragma: no cover
 
     def compute_language(self, *, text: str) -> str:
-        """Compute the most likely language code"""
+        """Compute the most likely language code."""
         if text.lower() in self._eng_false_negatives:
             return "eng"
 
@@ -115,7 +115,7 @@ class LanguageService:
         return predictions_unified
 
     def validate_iso_639_3_language_codes(self, *, lang_code_list: list) -> None:
-        """Validates whether a list of language codes complies with the ISO 639-3 standard"""
+        """Validates whether a list of language codes complies with the ISO 639-3 standard."""
         assert isinstance(lang_code_list, list)
 
         invalid_language_codes = [x for x in lang_code_list if 3 != len(x)]

@@ -29,7 +29,7 @@ def same_source_merge(
     main_record: colrev.record.record.Record,
     dupe_record: colrev.record.record.Record,
 ) -> bool:
-    """Same source merge check"""
+    """Same source merge check."""
     main_rec_sources = [x.split("/")[0] for x in main_record.data[Fields.ORIGIN]]
     dupe_rec_sources = [x.split("/")[0] for x in dupe_record.data[Fields.ORIGIN]]
     same_sources = set(main_rec_sources).intersection(set(dupe_rec_sources))
@@ -49,7 +49,7 @@ def same_source_merge(
 
 
 class Dedupe(colrev.process.operation.Operation):
-    """Deduplicate records (entity resolution)"""
+    """Deduplicate records (entity resolution)."""
 
     NON_DUPLICATE_FILE_XLSX = Path("non_duplicates_to_validate.xlsx")
     NON_DUPLICATE_FILE_TXT = Path("non_duplicates_to_validate.txt")
@@ -92,14 +92,14 @@ class Dedupe(colrev.process.operation.Operation):
 
     @classmethod
     def connected_components(cls, id_sets: list) -> list:
-        """
-        Find the connected components in a graph.
+        """Find the connected components in a graph.
 
         Args:
             id_sets (list): A list of id sets.
 
         Returns:
             list: A list of connected components.
+
         """
         graph = defaultdict(list)
 
@@ -124,7 +124,7 @@ class Dedupe(colrev.process.operation.Operation):
     def get_records_for_dedupe(
         cls, *, records_df: pd.DataFrame, verbosity_level: int = 0
     ) -> pd.DataFrame:
-        """Get (pre-processed) records for dedupe"""
+        """Get (pre-processed) records for dedupe."""
         return prep(records_df=records_df, verbosity_level=verbosity_level)
 
     def _select_primary_merge_record(self, rec_1: dict, rec_2: dict) -> list:
@@ -358,14 +358,13 @@ class Dedupe(colrev.process.operation.Operation):
         complete_dedupe: bool = False,
         preferred_masterdata_sources: typing.Optional[list] = None,
     ) -> None:
-        """Apply deduplication decisions
+        """Apply deduplication decisions.
 
         id_sets : [[ID_1, ID_2, ID_3], ...]
 
         - complete_dedupe: when not all potential duplicates were considered,
         we cannot set records to md_procssed for non-duplicate decisions
         """
-
         preferred_masterdata_source_prefixes = []
         if preferred_masterdata_sources:
             preferred_masterdata_source_prefixes = [
@@ -441,8 +440,8 @@ class Dedupe(colrev.process.operation.Operation):
         Note:
             The id_sets are expected to be *already resolved* (no chained duplicates).
             Therefore, we do not follow temporary merge markers to resolve chains.
-        """
 
+        """
         removed_in_run: set[str] = set()
 
         for id_set in id_sets:
@@ -484,10 +483,7 @@ class Dedupe(colrev.process.operation.Operation):
                 removed_in_run.add(dupe_record.data[Fields.ID])
 
     def _get_origins_for_current_ids(self, current_record_ids: list) -> dict:
-        """
-        For each record ID, get the origins from the most recent history entry.
-        """
-
+        """For each record ID, get the origins from the most recent history entry."""
         ids_origins: typing.Dict[str, typing.List[str]] = {
             rid: [] for rid in current_record_ids
         }
@@ -507,8 +503,7 @@ class Dedupe(colrev.process.operation.Operation):
         return ids_origins
 
     def _remove_merged_records(self, records: dict, ids_origins: dict) -> None:
-        """
-        Remove records that have been merged from the records dictionary.
+        """Remove records that have been merged from the records dictionary.
         These records are identified by their current IDs.
         """
         for rid in ids_origins:
@@ -517,10 +512,7 @@ class Dedupe(colrev.process.operation.Operation):
     def _revert_merge_for_records(
         self, unmerged_records: dict, ids_origins: dict
     ) -> dict:
-        """
-        Attempt to revert the merge operation for each record based on its origins.
-        """
-
+        """Attempt to revert the merge operation for each record based on its origins."""
         for hist_recs in self.review_manager.dataset.load_records_from_history():
             for rid in list(ids_origins.keys()):
                 origins = ids_origins[rid]
@@ -584,8 +576,7 @@ class Dedupe(colrev.process.operation.Operation):
         self.review_manager.dataset.save_records_dict(records)
 
     def fix_errors(self, *, false_positives: list, false_negatives: list) -> None:
-        """Fix lists of errors"""
-
+        """Fix lists of errors."""
         self.unmerge_records(current_record_ids=false_positives)
         self.apply_merges(id_sets=false_negatives, complete_dedupe=False)
 
@@ -596,8 +587,7 @@ class Dedupe(colrev.process.operation.Operation):
             )
 
     def get_info(self) -> dict:
-        """Get info on cuts (overlap of search sources) and same source merges"""
-
+        """Get info on cuts (overlap of search sources) and same source merges."""
         # same_source_merges: typing.Any = []
         # source_overlaps: typing.Any = []
         # info = {
@@ -608,13 +598,11 @@ class Dedupe(colrev.process.operation.Operation):
         raise NotImplementedError
 
     def merge_records(self, *, merge: list) -> None:
-        """Merge records by ID sets"""
-
+        """Merge records by ID sets."""
         self.apply_merges(id_sets=merge)
 
     def merge_based_on_global_ids(self, *, apply: bool = False) -> None:
-        """Merge records based on global IDs (e.g., doi)"""
-
+        """Merge records based on global IDs (e.g., doi)."""
         # pylint: disable=too-many-branches
 
         self.review_manager.logger.info(
@@ -674,8 +662,7 @@ class Dedupe(colrev.process.operation.Operation):
 
     @colrev.process.operation.Operation.decorate()
     def main(self, *, debug: bool = False) -> None:
-        """Dedupe records (main entrypoint)"""
-
+        """Dedupe records (main entrypoint)."""
         self.review_manager.logger.info("Dedupe")
         self.review_manager.logger.info(
             "Identifies duplicate records and merges them (keeping traces to their origins)."

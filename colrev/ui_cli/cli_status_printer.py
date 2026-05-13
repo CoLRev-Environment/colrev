@@ -18,8 +18,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 def print_review_instructions(review_instructions: dict) -> None:
-    """Print the review instructions on cli"""
-
+    """Print the review instructions on cli."""
     print("Next operation")
 
     verbose = False
@@ -94,8 +93,7 @@ def _print_collaboration_instructions_items(
 def print_collaboration_instructions(
     *, status_operation: colrev.ops.status.Status, collaboration_instructions: dict
 ) -> None:
-    """Print the collaboration instructions on cli"""
-
+    """Print the collaboration instructions on cli."""
     if (
         not status_operation.review_manager.verbose_mode
         and collaboration_instructions["items"]
@@ -116,8 +114,7 @@ def print_collaboration_instructions(
 
 
 def print_environment_instructions(environment_instructions: dict) -> None:
-    """Print the environment instructions on cli"""
-
+    """Print the environment instructions on cli."""
     if not environment_instructions:
         return
 
@@ -144,8 +141,7 @@ def print_environment_instructions(environment_instructions: dict) -> None:
 
 
 def print_progress(*, total_atomic_steps: int, completed_steps: int) -> None:
-    """Print the progress bar on cli"""
-
+    """Print the progress bar on cli."""
     # Prints the percentage of atomic processing tasks that have been completed
     # possible extension: estimate the number of manual tasks (making assumptions on
     # frequencies of man-prep, ...)?
@@ -170,8 +166,7 @@ def print_progress(*, total_atomic_steps: int, completed_steps: int) -> None:
 
 
 def print_project_status(status_operation: colrev.ops.status.Status) -> None:
-    """Print the project status on cli"""
-
+    """Print the project status on cli."""
     # pylint: disable=too-many-statements
     # pylint: disable=too-many-branches
 

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Preparation of curations"""
+"""Preparation of curations."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from colrev.constants import RecordState
 
 
 class CurationPrep(base_classes.PrepPackageBaseClass):
-    """Preparation of curations"""
+    """Preparation of curations."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -57,8 +57,7 @@ class CurationPrep(base_classes.PrepPackageBaseClass):
     def _get_applicable_curation_restrictions(
         self, *, record: colrev.record.record.Record
     ) -> dict:
-        """Get the applicable curation restrictions"""
-
+        """Get the applicable curation restrictions."""
         if not str(record.data.get(Fields.YEAR, "NA")).isdigit():
             return {}
 
@@ -80,7 +79,7 @@ class CurationPrep(base_classes.PrepPackageBaseClass):
     def apply_curation_restrictions(
         self, *, record: colrev.record.record.Record
     ) -> None:
-        """Apply the curation restrictions"""
+        """Apply the curation restrictions."""
         applicable_curation_restrictions = self._get_applicable_curation_restrictions(
             record=record
         )
@@ -138,8 +137,7 @@ class CurationPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare records in a CoLRev curation"""
-
+        """Prepare records in a CoLRev curation."""
         record.data.pop(Fields.CITED_BY, None)
 
         if record.data[Fields.STATUS] == RecordState.rev_prescreen_excluded:

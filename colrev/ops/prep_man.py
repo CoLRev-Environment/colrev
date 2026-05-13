@@ -22,7 +22,7 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class PrepMan(colrev.process.operation.Operation):
-    """Prepare records manually (metadata)"""
+    """Prepare records manually (metadata)."""
 
     type = OperationsType.prep_man
 
@@ -174,8 +174,7 @@ class PrepMan(colrev.process.operation.Operation):
         self.review_manager.dataset.save_records_dict(records)
 
     def prep_man_langs(self) -> None:
-        """Add missing language fields based on spreadsheets"""
-
+        """Add missing language fields based on spreadsheets."""
         self.lang_prep_csv_path.parent.mkdir(exist_ok=True, parents=True)
 
         records = self.review_manager.dataset.load_records_dict()
@@ -187,7 +186,7 @@ class PrepMan(colrev.process.operation.Operation):
             self._import_prep_man_langs(records)
 
     def prep_man_stats(self) -> None:
-        """Print statistics on prep_man"""
+        """Print statistics on prep_man."""
         # pylint: disable=duplicate-code
 
         crosstab_df = self._get_crosstab_df()
@@ -215,7 +214,7 @@ class PrepMan(colrev.process.operation.Operation):
             tabulated.to_csv("manual_preparation_statistics.csv")
 
     def get_data(self) -> dict:
-        """Get the data for prep-man"""
+        """Get the data for prep-man."""
         # pylint: disable=duplicate-code
 
         records_headers = self.review_manager.dataset.load_records_dict(
@@ -248,8 +247,7 @@ class PrepMan(colrev.process.operation.Operation):
         return md_prep_man_data
 
     def set_data(self, *, record_dict: dict) -> None:
-        """Set data in the prep_man operation"""
-
+        """Set data in the prep_man operation."""
         record = colrev.record.record_prep.PrepRecord(record_dict)
         record.set_masterdata_complete(
             source="prep_man",
@@ -266,8 +264,7 @@ class PrepMan(colrev.process.operation.Operation):
 
     @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
-        """Manually prepare records (main entrypoint)"""
-
+        """Manually prepare records (main entrypoint)."""
         if utils.in_ci_environment() and not self.review_manager.in_test_environment():
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev prep-man",

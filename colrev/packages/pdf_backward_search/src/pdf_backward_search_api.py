@@ -28,7 +28,6 @@ class PDFBackwardSearchAPI:
 
     def get(self, url: str, *, timeout: int) -> requests.Response:
         """Execute a GET request and raise a custom exception on failure."""
-
         try:
             response = self.session.get(url, headers=self.headers, timeout=timeout)
             response.raise_for_status()

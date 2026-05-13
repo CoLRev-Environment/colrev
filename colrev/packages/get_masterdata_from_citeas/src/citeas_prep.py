@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Consolidation of metadata based on CiteAs API as a prep operation"""
+"""Consolidation of metadata based on CiteAs API as a prep operation."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from colrev.constants import Fields
 
 
 class CiteAsPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records based on citeas.org metadata"""
+    """Prepares records based on citeas.org metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -98,8 +98,7 @@ class CiteAsPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare the record based on citeas"""
-
+        """Prepare the record based on citeas."""
         if record.data.get(Fields.ENTRYTYPE, "NA") not in ["misc", "software"]:
             return record
         if Fields.TITLE not in record.data:

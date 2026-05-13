@@ -11,7 +11,7 @@ from colrev.constants import Fields
 
 
 class ErroneousTitleFieldChecker:
-    """The ErroneousTitleFieldChecker"""
+    """The ErroneousTitleFieldChecker."""
 
     msg = DefectCodes.ERRONEOUS_TITLE_FIELD
 
@@ -21,8 +21,7 @@ class ErroneousTitleFieldChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the erroneous-title-field checks"""
-
+        """Run the erroneous-title-field checks."""
         if Fields.TITLE not in record.data or record.ignored_defect(
             key=Fields.TITLE, defect=self.msg
         ):
@@ -58,5 +57,5 @@ class ErroneousTitleFieldChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(ErroneousTitleFieldChecker(quality_model))

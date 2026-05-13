@@ -12,13 +12,12 @@ from colrev.constants import Filepaths
 
 
 class Resources:
-    """Class for curated CoLRev resourcs (metadata repositories, annotators)"""
+    """Class for curated CoLRev resourcs (metadata repositories, annotators)."""
 
     # pylint: disable=too-few-public-methods
 
     def install_curated_resource(self, *, curated_resource: str) -> bool:
-        """Install a curated resource"""
-
+        """Install a curated resource."""
         if "http" not in curated_resource:
             curated_resource = "https://github.com/" + curated_resource
         Filepaths.CURATIONS_PATH.mkdir(exist_ok=True, parents=True)

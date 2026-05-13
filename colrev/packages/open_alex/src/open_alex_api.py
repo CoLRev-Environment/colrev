@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Open Alex API"""
+"""Open Alex API."""
 
 import pyalex
 import requests
@@ -123,7 +123,7 @@ class OpenAlexAPI:
         return record
 
     def get_record(self, *, open_alex_id: str) -> colrev.record.record.Record:
-        """Get a record from OpenAlex"""
+        """Get a record from OpenAlex."""
         try:
             item = Works()[open_alex_id]
         except requests.exceptions.RequestException as exc:  # pragma: no cover

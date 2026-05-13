@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Curated metadata project"""
+"""Curated metadata project."""
 
 import logging
 import typing
@@ -18,7 +18,7 @@ from colrev.constants import SearchType
 
 
 class CuratedMasterdata(base_classes.ReviewTypePackageBaseClass):
-    """Curated masterdata"""
+    """Curated masterdata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=True)
@@ -40,8 +40,7 @@ class CuratedMasterdata(base_classes.ReviewTypePackageBaseClass):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
-        """Initialize a curated masterdata repository"""
-
+        """Initialize a curated masterdata repository."""
         self.logger.info("Initializing curated masterdata repository")
 
         # replace readme

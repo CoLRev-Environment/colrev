@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Completion of metadata based on year-volume-issue dependency as a prep operation"""
+"""Completion of metadata based on year-volume-issue dependency as a prep operation."""
 
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ def _index_record(record: dict, vol_nr_dict: dict) -> None:
 
 
 class YearVolIssPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records based on year-volume-issue dependency"""
+    """Prepares records based on year-volume-issue dependency."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=True)
@@ -226,8 +226,7 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare a record based on year-volume-issue dependency"""
-
+        """Prepare a record based on year-volume-issue dependency."""
         if record.data.get(Fields.YEAR, "NA").isdigit():
             return record
 

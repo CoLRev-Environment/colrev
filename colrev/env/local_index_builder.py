@@ -36,7 +36,7 @@ from colrev.writer.write_utils import to_string
 
 
 class LocalIndexBuilder:
-    """The LocalIndexBuilder implements indexing functionality"""
+    """The LocalIndexBuilder implements indexing functionality."""
 
     def __init__(
         self,
@@ -50,8 +50,7 @@ class LocalIndexBuilder:
         self.thread_lock = Lock()
 
     def reinitialize_sqlite_db(self) -> None:
-        """Reinitialize the SQLITE database ()"""
-
+        """Reinitialize the SQLITE database ()."""
         Filepaths.LOCAL_INDEX_SQLITE_FILE.unlink(missing_ok=True)
         colrev.env.local_index_sqlite.SQLiteIndexRecord(reinitialize=True)
         colrev.env.local_index_sqlite.SQLiteIndexTOC(reinitialize=True)
@@ -134,8 +133,7 @@ class LocalIndexBuilder:
         item_to_add: dict,
         curated_fields: list,
     ) -> None:
-        """Adds layered fields to amend existing records"""
-
+        """Adds layered fields to amend existing records."""
         item_record_dict = colrev.loader.load_utils.loads(
             load_string=item_to_add[LocalIndexFields.BIBTEX],
             implementation="bib",
@@ -176,8 +174,7 @@ class LocalIndexBuilder:
         curated_masterdata: bool,
         curated_fields: list,
     ) -> None:
-        """Index a CoLRev project"""
-
+        """Index a CoLRev project."""
         recs_to_index = []
         toc_to_index: typing.Dict[str, str] = {}
         for record_dict in tqdm(records.values()):
@@ -263,7 +260,7 @@ class LocalIndexBuilder:
         return masterdata_curations
 
     def index_colrev_project(self, repo_source_path: Path) -> None:  # pragma: no cover
-        """Index a CoLRev project"""
+        """Index a CoLRev project."""
         try:
             if not Path(repo_source_path).is_dir():
                 print(f"Warning {repo_source_path} not a directory")
@@ -322,8 +319,7 @@ class LocalIndexBuilder:
             print(exc)
 
     def index(self) -> None:  # pragma: no cover
-        """Index all registered CoLRev projects"""
-
+        """Index all registered CoLRev projects."""
         # Note : this task takes long and does not need to run often
         session = requests_cache.CachedSession(
             str(Filepaths.PREP_REQUESTS_CACHE_FILE),
@@ -396,8 +392,7 @@ class LocalIndexBuilder:
         )
 
     def index_journal_rankings(self) -> None:
-        """Indexes journal rankings in sqlite database"""
-
+        """Indexes journal rankings in sqlite database."""
         filedata = colrev.env.utils.get_package_file_content(
             module="colrev.env", filename=Path("journal_rankings.csv")
         )

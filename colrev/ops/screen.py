@@ -19,7 +19,7 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class Screen(colrev.process.operation.Operation):
-    """Screen records (based on PDFs)"""
+    """Screen records (based on PDFs)."""
 
     type = OperationsType.screen
 
@@ -38,9 +38,7 @@ class Screen(colrev.process.operation.Operation):
         self.verbose = True
 
     def to_screen(self, record_dict: dict) -> bool:
-        """
-        This method checks if the record needs to be screened.
-        """
+        """This method checks if the record needs to be screened."""
         if RecordState.pdf_prepared == record_dict[Fields.STATUS]:
             return True
         if (
@@ -70,8 +68,7 @@ class Screen(colrev.process.operation.Operation):
         return True
 
     def include_all_in_screen(self, *, persist: bool) -> None:
-        """Include all records in the screen"""
-
+        """Include all records in the screen."""
         if persist:
             self.review_manager.settings.screen.screen_package_endpoints = []
             self.review_manager.save_settings()
@@ -116,20 +113,18 @@ class Screen(colrev.process.operation.Operation):
         )
 
     def get_screening_criteria(self) -> list:
-        """Get the list of screening criteria from settings"""
-
+        """Get the list of screening criteria from settings."""
         return list(self.review_manager.settings.screen.criteria.keys())
 
     def set_screening_criteria(
         self, screening_criteria: dict[str, colrev.settings.ScreenCriterion]
     ) -> None:
-        """Set the screening criteria in the settings"""
+        """Set the screening criteria in the settings."""
         self.review_manager.settings.screen.criteria = screening_criteria
         self.review_manager.save_settings()
 
     def get_data(self) -> dict:
-        """Get the data (records to screen)"""
-
+        """Get the data (records to screen)."""
         # pylint: disable=duplicate-code
         records = self.review_manager.dataset.load_records_dict()
 
@@ -148,8 +143,7 @@ class Screen(colrev.process.operation.Operation):
     def add_criterion(
         self, *, criterion_name: str, criterion: colrev.settings.ScreenCriterion
     ) -> None:
-        """Add a screening criterion to the records and settings"""
-
+        """Add a screening criterion to the records and settings."""
         if criterion_name in self.review_manager.settings.screen.criteria:
             print(f"Error: criterion {criterion_name} already in settings")
             return
@@ -200,7 +194,7 @@ class Screen(colrev.process.operation.Operation):
         print()
 
     def delete_criterion(self, criterion_to_delete: str) -> None:
-        """Delete a screening criterion from the records and settings"""
+        """Delete a screening criterion from the records and settings."""
         records = self.review_manager.dataset.load_records_dict()
 
         if criterion_to_delete in self.review_manager.settings.screen.criteria:
@@ -252,8 +246,7 @@ class Screen(colrev.process.operation.Operation):
         )
 
     def create_screen_split(self, *, create_split: int) -> list:
-        """Split the screen between researchers"""
-
+        """Split the screen between researchers."""
         data = self.get_data()
         nrecs = math.floor(data["nr_tasks"] / create_split)
 
@@ -272,8 +265,7 @@ class Screen(colrev.process.operation.Operation):
         return screen_splits
 
     def setup_custom_script(self) -> None:
-        """Setup a custom screen script"""
-
+        """Setup a custom screen script."""
         filedata = colrev.env.utils.get_package_file_content(
             module="colrev.ops",
             filename=Path("custom_scripts/custom_screen_script.py"),
@@ -365,8 +357,7 @@ class Screen(colrev.process.operation.Operation):
         screening_criteria: str,
         PAD: int = 40,
     ) -> None:
-        """Save the screen decision"""
-
+        """Save the screen decision."""
         PAD = 40
         if screen_inclusion:
             screening_criteria_list = self.get_screening_criteria()
@@ -425,8 +416,7 @@ class Screen(colrev.process.operation.Operation):
         return selected_auto_include_ids
 
     def add_abstracts_from_tei(self) -> None:
-        """Add abstracts from TEI files to records without abstracts"""
-
+        """Add abstracts from TEI files to records without abstracts."""
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
             if (
@@ -452,8 +442,7 @@ class Screen(colrev.process.operation.Operation):
 
     @colrev.process.operation.Operation.decorate()
     def main(self, *, split_str: str = "NA") -> None:
-        """Screen records for inclusion (main entrypoint)"""
-
+        """Screen records for inclusion (main entrypoint)."""
         self.review_manager.logger.info("Screen")
         self.review_manager.logger.info(
             "In the screen, records are included or excluded "

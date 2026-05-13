@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Logger"""
+"""Logger."""
 
 from __future__ import annotations
 
@@ -10,8 +10,7 @@ import colrev.exceptions as colrev_exceptions
 
 
 def setup_logger(*, logger_path: Path, level: int = logging.INFO) -> logging.Logger:
-    """Setup the CoLRev logger"""
-
+    """Setup the CoLRev logger."""
     # for logger debugging:
     # from logging_tree import printout
     # printout()
@@ -39,8 +38,7 @@ def setup_logger(*, logger_path: Path, level: int = logging.INFO) -> logging.Log
 def setup_report_logger(
     *, report_path: Path, level: int = logging.INFO
 ) -> logging.Logger:
-    """Setup the report logger (used for git commit report)"""
-
+    """Setup the report logger (used for git commit report)."""
     try:
         report_logger = logging.getLogger(
             f"colrev_report{str(report_path.parent).replace('/', '_')}"
@@ -72,8 +70,7 @@ def setup_report_logger(
 
 
 def reset_report_logger(*, report_path: Path) -> logging.FileHandler:
-    """Reset the report log file (used for the git commit report)"""
-
+    """Reset the report log file (used for the git commit report)."""
     file_handler = logging.FileHandler(report_path, mode="a")
     file_handler.setLevel(logging.INFO)
     formatter = logging.Formatter(

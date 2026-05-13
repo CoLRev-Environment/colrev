@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: Europe PMC"""
+"""SearchSource: Europe PMC."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ from colrev.packages.europe_pmc.src import europe_pmc_api
 
 
 class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """Europe PMC"""
+    """Europe PMC."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -105,8 +105,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         most_similar_only: bool = True,
         timeout: int = 60,
     ) -> list:
-        """Retrieve records from Europe PMC based on a query"""
-
+        """Retrieve records from Europe PMC based on a query."""
         try:
             api = europe_pmc_api.EPMCAPI(
                 params={"query": quote(record_input.data[Fields.TITLE])},
@@ -161,8 +160,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,  # pylint: disable=unused-argument
     ) -> colrev.record.record.Record:
-        """Retrieve masterdata from Europe PMC based on similarity with the record provided"""
-
+        """Retrieve masterdata from Europe PMC based on similarity with the record provided."""
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-return-statements
 
@@ -223,8 +221,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     def _validate_source(self) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-
+        """Validate the SearchSource (parameters etc.)."""
         source = self.search_source
 
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
@@ -240,8 +237,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def search(self, rerun: bool) -> None:
-        """Run a search of Europe PMC"""
-
+        """Run a search of Europe PMC."""
         self._validate_source()
         # https://europepmc.org/RestfulWebService
 
@@ -313,8 +309,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Europe PMC"""
-
+        """Source heuristic for Europe PMC."""
         result = {"confidence": 0.0}
         # pylint: disable=colrev-missed-constant-usage
         if "europe_pmc_id" in data:
@@ -333,8 +328,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
         if params:
             if params.startswith("http"):
@@ -392,8 +386,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         return records
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             return self._load_bib(
                 filename=self.search_source.search_results_path, logger=self.logger
@@ -405,7 +398,7 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for Europe PMC"""
+        """Source-specific preparation for Europe PMC."""
         record.data[Fields.AUTHOR].rstrip(".")
         record.data[Fields.TITLE].rstrip(".")
         return record

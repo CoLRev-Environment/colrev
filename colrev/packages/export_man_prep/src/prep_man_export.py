@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Export of bib/pdfs as a prep-man operation"""
+"""Export of bib/pdfs as a prep-man operation."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ from colrev.writer.write_utils import write_file
 class ExportManPrepSettings(
     colrev.package_manager.package_settings.DefaultSettings, BaseModel
 ):
-    """Settings for ExportManPrep"""
+    """Settings for ExportManPrep."""
 
     endpoint: str
     pdf_handling_mode: str = "symlink"
@@ -44,7 +44,7 @@ class ExportManPrepSettings(
 
 
 class ExportManPrep(base_classes.PrepManPackageBaseClass):
-    """Manual preparation based on exported and imported metadata (and PDFs if any)"""
+    """Manual preparation based on exported and imported metadata (and PDFs if any)."""
 
     settings: ExportManPrepSettings
     ci_supported: bool = Field(default=False)
@@ -373,8 +373,7 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
         print(f"Once completed, run {Colors.ORANGE}colrev prep-man{Colors.END} again.")
 
     def prepare_manual(self, records: dict) -> dict:
-        """Prepare records manually by extracting the subset of records to a separate BiBTex file"""
-
+        """Prepare records manually by extracting the subset of records to a separate BiBTex file."""
         if not self.prep_man_bib_path.is_file():
             self._create_info_dataframe(records=records)
             self._export_prep_man(records=records)

@@ -48,8 +48,7 @@ def print_string_diff(change: tuple) -> str:
 
 
 def print_diff(origin: dict, record_dict: dict) -> None:
-    """Print the diff between two records"""
-
+    """Print the diff between two records."""
     for key in keys:
 
         if key not in origin and key not in record_dict:
@@ -77,8 +76,7 @@ def print_diff(origin: dict, record_dict: dict) -> None:
 
 
 def print_diff_pair(record_pair: list) -> None:
-    """Print the diff between two records"""
-
+    """Print the diff between two records."""
     for key in keys:
         prev_val = "_FIRST_VAL"
         for rec in record_pair:
@@ -384,8 +382,7 @@ def validate(
     validation_details: dict,
     threshold: float,
 ) -> None:
-    """Validate details in the cli"""
-
+    """Validate details in the cli."""
     for key, details in validation_details.items():
         if key == "prep":
             _validate_prep(

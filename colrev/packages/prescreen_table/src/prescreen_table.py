@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Prescreen based on a table"""
+"""Prescreen based on a table."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from colrev.constants import RecordState
 
 
 class TablePrescreen(base_classes.PrescreenPackageBaseClass):
-    """Table-based prescreen (exported and imported)"""
+    """Table-based prescreen (exported and imported)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=False)
@@ -47,8 +47,7 @@ class TablePrescreen(base_classes.PrescreenPackageBaseClass):
         split: list,
         export_table_format: str = "csv",
     ) -> None:
-        """Export a prescreen table"""
-
+        """Export a prescreen table."""
         # gh_issue https://github.com/CoLRev-Environment/colrev/issues/73
         # add delta (records not yet in the table)
         # instead of overwriting
@@ -131,8 +130,7 @@ class TablePrescreen(base_classes.PrescreenPackageBaseClass):
         records: dict,
         import_table_path: str = "prescreen.csv",
     ) -> None:
-        """Import a prescreen table"""
-
+        """Import a prescreen table."""
         # pylint: disable=too-many-branches
 
         self.logger.info("Load %s", import_table_path)
@@ -226,8 +224,7 @@ class TablePrescreen(base_classes.PrescreenPackageBaseClass):
         records: dict,
         split: list,
     ) -> dict:
-        """Prescreen records based on screening tables"""
-
+        """Prescreen records based on screening tables."""
         if input("create prescreen table [y,n]?") == "y":
             self.export_table(records=records, split=split)
 

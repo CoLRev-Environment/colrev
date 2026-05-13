@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Screen based on a table"""
+"""Screen based on a table."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from colrev.constants import RecordState
 
 
 class TableScreen(base_classes.ScreenPackageBaseClass):
-    """Screen documents using tables (exported and imported)"""
+    """Screen documents using tables (exported and imported)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=False)
@@ -114,8 +114,7 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
         split: list,
         export_table_format: str = "csv",
     ) -> None:
-        """Export a screening table"""
-
+        """Export a screening table."""
         # gh_issue https://github.com/CoLRev-Environment/colrev/issues/73
         # add delta (records not yet in the table)
         # instead of overwriting
@@ -150,8 +149,7 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
         records: dict,
         import_table_path: typing.Optional[Path] = None,
     ) -> None:
-        """Import a screening table"""
-
+        """Import a screening table."""
         # pylint: disable=duplicate-code
         if import_table_path is None:
             import_table_path = self.screen_table_path
@@ -200,8 +198,7 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
         self.review_manager.dataset.save_records_dict(records)
 
     def run_screen(self, records: dict, split: list) -> dict:
-        """Screen records based on screening tables"""
-
+        """Screen records based on screening tables."""
         if input("create screen table [y,n]?") == "y":
             self.export_table(records, split)
 

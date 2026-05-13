@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: ABI/INFORM (ProQuest)"""
+"""SearchSource: ABI/INFORM (ProQuest)."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from colrev.writer.write_utils import write_file
 
 
 class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """ABI/INFORM (ProQuest)"""
+    """ABI/INFORM (ProQuest)."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -49,8 +49,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for ABI/INFORM (ProQuest)"""
-
+        """Source heuristic for ABI/INFORM (ProQuest)."""
         result = {"confidence": 0.0}
 
         if "proquest.com" in data:  # nosec
@@ -68,8 +67,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint"""
-
+        """Add SearchSource as an endpoint."""
         params_dict = {params.split("=")[0]: params.split("=")[1]}
 
         search_source = create_db_source(
@@ -82,8 +80,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def search(self, rerun: bool) -> None:
-        """Run a search of ABI/INFORM"""
-
+        """Run a search of ABI/INFORM."""
         if self.search_source.search_type == SearchType.DB:
             run_db_search(
                 db_url=self.db_url,
@@ -131,7 +128,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     @classmethod
@@ -255,8 +252,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
         return records
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.search_results_path,
@@ -279,8 +275,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for ABI/INFORM (ProQuest)"""
-
+        """Source-specific preparation for ABI/INFORM (ProQuest)."""
         if (
             record.data.get(Fields.JOURNAL, "")
             .lower()

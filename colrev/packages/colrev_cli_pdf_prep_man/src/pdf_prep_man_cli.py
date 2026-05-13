@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""CLI interface for manual preparation of PDFs"""
+"""CLI interface for manual preparation of PDFs."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ from colrev.constants import RecordState
 
 
 class CoLRevCLIPDFManPrep(base_classes.PDFPrepManPackageBaseClass):
-    """Manually prepare PDFs based on a CLI (not yet implemented)"""
+    """Manually prepare PDFs based on a CLI (not yet implemented)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=False)
@@ -235,7 +235,7 @@ class CoLRevCLIPDFManPrep(base_classes.PDFPrepManPackageBaseClass):
                 raise QuitPressedException()
 
     def _print_pdf_prep_man(self, record: colrev.record.record.Record) -> None:
-        """Print the record for pdf-prep-man operations"""
+        """Print the record for pdf-prep-man operations."""
         # pylint: disable=too-many-branches
         ret_str = ""
         if Fields.FILE in record.data:
@@ -347,8 +347,7 @@ class CoLRevCLIPDFManPrep(base_classes.PDFPrepManPackageBaseClass):
         return records
 
     def pdf_prep_man(self, records: dict) -> dict:
-        """Prepare PDF manually based on a cli"""
-
+        """Prepare PDF manually based on a cli."""
         self.logger.info("Loading data for pdf_prep_man")
         pdf_prep_man_data = self.pdf_prep_man_operation.get_data()
         records = self.review_manager.dataset.load_records_dict()
@@ -384,4 +383,4 @@ class CoLRevCLIPDFManPrep(base_classes.PDFPrepManPackageBaseClass):
 
 
 class QuitPressedException(Exception):
-    """Quit-pressed exception"""
+    """Quit-pressed exception."""

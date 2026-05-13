@@ -14,7 +14,7 @@ from colrev.constants import FieldValues
 
 
 class YearFormatChecker:
-    """The YearFormatChecker"""
+    """The YearFormatChecker."""
 
     msg = DefectCodes.YEAR_FORMAT
 
@@ -24,8 +24,7 @@ class YearFormatChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the year-format checks"""
-
+        """Run the year-format checks."""
         if (
             Fields.YEAR not in record.data
             or record.ignored_defect(key=Fields.YEAR, defect=self.msg)
@@ -43,5 +42,5 @@ class YearFormatChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(YearFormatChecker(quality_model))

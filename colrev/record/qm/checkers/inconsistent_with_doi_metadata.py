@@ -16,7 +16,7 @@ from colrev.packages.crossref.src.crossref_api import query_doi
 
 
 class InconsistentWithDOIMetadataChecker:
-    """The InconsistentWithDOIMetadataChecker"""
+    """The InconsistentWithDOIMetadataChecker."""
 
     msg = DefectCodes.INCONSISTENT_WITH_DOI_METADATA
     _fields_to_check = [
@@ -34,8 +34,7 @@ class InconsistentWithDOIMetadataChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the inconsistent-with-doi-metadata checks"""
-
+        """Run the inconsistent-with-doi-metadata checks."""
         if Fields.DOI not in record.data or record.ignored_defect(
             key=Fields.DOI, defect=self.msg
         ):
@@ -83,5 +82,5 @@ class InconsistentWithDOIMetadataChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(InconsistentWithDOIMetadataChecker(quality_model))

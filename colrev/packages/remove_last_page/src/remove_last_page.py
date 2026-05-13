@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Last-page removal as a PDF preparation operation"""
+"""Last-page removal as a PDF preparation operation."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ class PDFLastPage(base_classes.PDFPrepPackageBaseClass):
         record: colrev.record.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
     ) -> colrev.record.record_pdf.PDFRecord:
-        """Prepare the PDF by removing additional materials (if any)"""
+        """Prepare the PDF by removing additional materials (if any)."""
         if not record.data[Fields.FILE].endswith(".pdf"):
             return record
 

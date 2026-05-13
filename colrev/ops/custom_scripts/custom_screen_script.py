@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Template for a custom Screen PackageEndpoint"""
+"""Template for a custom Screen PackageEndpoint."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class CustomScreen(base_classes.ScreenPackageBaseClass):
-    """Class for custom screen scripts"""
+    """Class for custom screen scripts."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -33,8 +33,7 @@ class CustomScreen(base_classes.ScreenPackageBaseClass):
         self.screen_operation = screen_operation
 
     def run_screen(self, records: dict, split: list) -> dict:
-        """Screen a record"""
-
+        """Screen a record."""
         screen_data = self.screen_operation.get_data()
         screening_criteria = (
             self.screen_operation.review_manager.settings.screen.criteria

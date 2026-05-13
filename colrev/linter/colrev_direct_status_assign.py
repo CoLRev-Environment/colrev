@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Linter for CoLRev - direct status assignment"""
+"""Linter for CoLRev - direct status assignment."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class DirectStatusAssignmentChecker(checkers.BaseChecker):
-    """DirectStatusAssignmentChecker"""
+    """DirectStatusAssignmentChecker."""
 
     name = "colrev-direct-status-assign"
 
@@ -31,10 +31,7 @@ class DirectStatusAssignmentChecker(checkers.BaseChecker):
 
     @only_required_for_messages("colrev-direct-status-assign")
     def visit_assign(self, node: nodes.Assign) -> None:
-        """
-        Detect direct assignment of colrev_status.
-        """
-
+        """Detect direct assignment of colrev_status."""
         if len(node.targets) != 1 or not hasattr(
             node.targets[0], "slice"
         ):  # pragma: no cover
@@ -47,9 +44,7 @@ class DirectStatusAssignmentChecker(checkers.BaseChecker):
 
     @only_required_for_messages("colrev-direct-status-assign")
     def visit_call(self, node: nodes.Assign) -> None:
-        """
-        Detect direct assignment of colrev_status.
-        """
+        """Detect direct assignment of colrev_status."""
         if isinstance(node.func, nodes.Attribute) and node.func.attrname == "update":
             for keyword in node.keywords:
                 if keyword.arg == "colrev_status":
@@ -58,5 +53,4 @@ class DirectStatusAssignmentChecker(checkers.BaseChecker):
 
 def register(linter: PyLinter) -> None:  # pragma: no cover
     """Required method to auto register this checker."""
-
     linter.register_checker(DirectStatusAssignmentChecker(linter))

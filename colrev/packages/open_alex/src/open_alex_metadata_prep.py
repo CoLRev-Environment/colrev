@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Consolidation of metadata based on OpenAlex API as a prep operation"""
+"""Consolidation of metadata based on OpenAlex API as a prep operation."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from colrev.constants import SearchType
 
 
 class OpenAlexMetadataPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records based on OpenAlex metadata"""
+    """Prepares records based on OpenAlex metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=True)
@@ -70,7 +70,7 @@ class OpenAlexMetadataPrep(base_classes.PrepPackageBaseClass):
         ]
 
     def check_availability(self) -> None:
-        """Check status (availability) of the OpenAlex API"""
+        """Check status (availability) of the OpenAlex API."""
         self.open_alex_source.check_availability()
 
     # pylint: disable=unused-argument
@@ -81,8 +81,7 @@ class OpenAlexMetadataPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare a record based on OpenAlex metadata"""
-
+        """Prepare a record based on OpenAlex metadata."""
         if any(
             crossref_prefix in o
             for crossref_prefix in self.open_alex_prefixes
