@@ -12,4 +12,4 @@ class CustomName(ReviewTypePackageBaseClass):
         """Initialize self.  See help(type(self)) for accurate signature."""
 
     def initialize(self, settings: 'colrev.settings.Settings') -> 'dict':
-        """Initialize the review type"""
+        """Initialize the review type."""
