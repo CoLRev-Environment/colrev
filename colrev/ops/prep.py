@@ -65,6 +65,7 @@ PREP_COUNTER = Value("i", 0)
 
 
 class PreparationBreak(Exception):
+
     """Event interrupting the preparation."""
 
 
@@ -79,6 +80,7 @@ FIELDS_TO_KEEP = FieldSet.STANDARDIZED_FIELD_KEYS + [
 
 # pylint: disable=too-many-instance-attributes
 class Prep(colrev.process.operation.Operation):
+
     """Prepare records (metadata)."""
 
     timeout = 30

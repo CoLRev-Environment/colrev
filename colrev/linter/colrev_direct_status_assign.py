@@ -16,6 +16,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class DirectStatusAssignmentChecker(checkers.BaseChecker):
+
     """DirectStatusAssignmentChecker."""
 
     name = "colrev-direct-status-assign"

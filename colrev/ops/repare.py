@@ -23,6 +23,7 @@ from colrev.writer.write_utils import write_file
 
 
 class Repare(colrev.process.operation.Operation):
+
     """Repare a CoLRev project."""
 
     type = OperationsType.check

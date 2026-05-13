@@ -26,6 +26,7 @@ from colrev.constants import RecordState
 
 # an option: https://pypi.org/project/csv-schema/
 class DataField(BaseModel):
+
     """Field definition."""
 
     name: str
@@ -34,6 +35,7 @@ class DataField(BaseModel):
 
 
 class StructuredDataSettings(BaseModel):
+
     """Settings for StructuredData."""
 
     endpoint: str
@@ -47,6 +49,7 @@ class StructuredDataSettings(BaseModel):
 
 
 class StructuredData(base_classes.DataPackageBaseClass):
+
     """Summarize the literature in a structured data extraction (a table)."""
 
     settings: StructuredDataSettings

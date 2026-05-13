@@ -17,10 +17,12 @@ from colrev.packages.scopus.src import transformer
 
 
 class ScopusAPIError(Exception):
+
     """Scopus API error."""
 
 
 class ScopusAPI:
+
     """Wrapper around the Scopus and Crossref endpoints used by the package."""
 
     _SCOPUS_SEARCH_URL = "https://api.elsevier.com/content/search/scopus"

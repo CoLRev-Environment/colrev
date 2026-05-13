@@ -25,6 +25,7 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class Load(colrev.process.operation.Operation):
+
     """Load the records."""
 
     type = OperationsType.load
@@ -78,7 +79,8 @@ class Load(colrev.process.operation.Operation):
         return imported_origins
 
     def ensure_append_only(self, filename: Path) -> None:
-        """Ensure that the file was only appended to.
+        """
+        Ensure that the file was only appended to.
 
         This method must be called for all packages that work
         with an ex-post assignment of incremental IDs.
@@ -316,7 +318,8 @@ class Load(colrev.process.operation.Operation):
         *,
         select_new_records: bool = True,
     ) -> None:
-        """Prepares a search source for loading records into the review manager's dataset.
+        """
+        Prepares a search source for loading records into the review manager's dataset.
 
         This method initializes the loading process by selecting new records from the source
         based on the `select_new_records` flag. It then prepares the source records for import
@@ -365,7 +368,8 @@ class Load(colrev.process.operation.Operation):
         *,
         keep_ids: bool,
     ) -> None:
-        """Loads records from a specified source into the review manager's dataset.
+        """
+        Loads records from a specified source into the review manager's dataset.
 
         This method prepares the source for loading by calling `setup_source_for_load`
         and then proceeds to load the records. It takes into account whether the IDs
@@ -439,7 +443,8 @@ class Load(colrev.process.operation.Operation):
                 )
 
     def load_active_sources(self, *, include_md: bool = False) -> list:
-        """Loads and returns a list of active source endpoints from the settings.
+        """
+        Loads and returns a list of active source endpoints from the settings.
 
         Returns:
             list: A list of active source endpoint objects.

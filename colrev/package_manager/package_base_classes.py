@@ -25,7 +25,9 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class ReviewTypePackageBaseClass(abc.ABC):
-    """The base class for ReviewType packages.
+
+    """
+    The base class for ReviewType packages.
 
     The following cli command calls the initialize method of a ReviewType package:
 
@@ -52,7 +54,9 @@ class ReviewTypePackageBaseClass(abc.ABC):
 
 
 class SearchSourcePackageBaseClass(ABC):
-    """The base class for SearchSource packages.
+
+    """
+    The base class for SearchSource packages.
 
     The following cli commands call specific methods of a SearchSource package:
 
@@ -128,7 +132,9 @@ class SearchSourcePackageBaseClass(ABC):
 
 
 class PrepPackageBaseClass(ABC):
-    """The base class for Prep packages.
+
+    """
+    The base class for Prep packages.
 
     The following cli command calls the prepare method of a Prep package:
 
@@ -160,7 +166,9 @@ class PrepPackageBaseClass(ABC):
 
 
 class PrepManPackageBaseClass(ABC):
-    """The base class for PrepMan packages.
+
+    """
+    The base class for PrepMan packages.
 
     The following cli command calls the prepare_manual method of a PrepMan package:
 
@@ -189,7 +197,9 @@ class PrepManPackageBaseClass(ABC):
 
 
 class DedupePackageBaseClass(ABC):
-    """The base class for Dedupe packages.
+
+    """
+    The base class for Dedupe packages.
 
     The following cli command calls the dedupe method of a Dedupe package:
 
@@ -217,7 +227,9 @@ class DedupePackageBaseClass(ABC):
 
 
 class PrescreenPackageBaseClass(ABC):
-    """The base class for Prescreen packages.
+
+    """
+    The base class for Prescreen packages.
 
     The following cli command calls the run_prescreen method of a Prescreen package:
 
@@ -246,7 +258,9 @@ class PrescreenPackageBaseClass(ABC):
 
 
 class PDFGetPackageBaseClass(ABC):
-    """The base class for PDFGet packages.
+
+    """
+    The base class for PDFGet packages.
 
     The following cli command calls the pdf_get method of a PDFGet package:
 
@@ -276,7 +290,9 @@ class PDFGetPackageBaseClass(ABC):
 
 
 class PDFGetManPackageBaseClass(ABC):
-    """The base class for PDFGetMan packages.
+
+    """
+    The base class for PDFGetMan packages.
 
     The following cli command calls the pdf_get_man method of a PDFGetMan package:
 
@@ -304,7 +320,9 @@ class PDFGetManPackageBaseClass(ABC):
 
 
 class PDFPrepPackageBaseClass(ABC):
-    """The base class for PDFPrep packages.
+
+    """
+    The base class for PDFPrep packages.
 
     The following cli command calls the prep_pdf method of a PDFPrep package:
 
@@ -334,7 +352,9 @@ class PDFPrepPackageBaseClass(ABC):
 
 
 class PDFPrepManPackageBaseClass(ABC):
-    """The base class for PDFPrepMan packages.
+
+    """
+    The base class for PDFPrepMan packages.
 
     The following cli command calls the pdf_prep_man method of a PDFPrepMan package:
 
@@ -362,7 +382,9 @@ class PDFPrepManPackageBaseClass(ABC):
 
 
 class ScreenPackageBaseClass(ABC):
-    """The base class for Screen packages.
+
+    """
+    The base class for Screen packages.
 
     The following cli command calls the run_screen method of a Screen package:
 
@@ -391,7 +413,9 @@ class ScreenPackageBaseClass(ABC):
 
 
 class DataPackageBaseClass(ABC):
-    """The base class for Data packages.
+
+    """
+    The base class for Data packages.
 
     The following cli command calls the update_data method of a Data package:
 

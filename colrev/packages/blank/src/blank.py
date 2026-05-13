@@ -15,6 +15,7 @@ import colrev.package_manager.package_settings
 
 
 class BlankReview(base_classes.ReviewTypePackageBaseClass):
+
     """Blank review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

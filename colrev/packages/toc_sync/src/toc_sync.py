@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""General-purpose Markdown table-of-contents (TOC) creator/updater for journals.
+"""
+General-purpose Markdown table-of-contents (TOC) creator/updater for journals.
 
 What it does
 ------------
@@ -125,6 +126,7 @@ def _pair_sort_key(vol: str, iss: str) -> Tuple[Tuple[int, str], Tuple[int, str]
 
 @dataclass
 class TocConfig:
+
     """TocConfig."""
 
     issns: List[str]
@@ -136,7 +138,8 @@ class TocConfig:
 def _group_records(
     records: List[colrev.record.record.Record], include_forthcoming: bool
 ) -> Dict[str, Dict[str, List[dict]]]:
-    """Group by volume -> issue(number) -> list of records.
+    """
+    Group by volume -> issue(number) -> list of records.
 
     If include_forthcoming is True, records missing volume/number are grouped into
     a dedicated "Forthcoming" section (internal keys FORTHCOMING_VOL/ISS).
@@ -397,7 +400,8 @@ def _write_full_markdown(
 def _append_incremental(
     grouped: Dict[str, Dict[str, List[dict]]], out_path: Path, cfg: TocConfig
 ) -> None:
-    """Incremental update that:
+    """
+    Incremental update that:
     - Removes any existing 'Forthcoming' block and re-inserts a fresh one
     - Inserts strictly newer issues (vs. latest existing) right AFTER the header
     - Keeps existing content intact below the inserted block.
@@ -484,7 +488,8 @@ def _append_incremental(
 
 
 def fetch_records_for_issns(issns: List[str]) -> List[Any]:
-    """Use colrev CrossrefAPI to iterate all works for the given ISSNs.
+    """
+    Use colrev CrossrefAPI to iterate all works for the given ISSNs.
     We use the 'journals/{issn}/works' endpoint for each ISSN and merge.
     """
     all_records: List[Any] = []
@@ -508,7 +513,8 @@ _YAML_FENCE = re.compile(r"^---\s*$")
 
 
 def _read_yaml_front_matter(path: Path) -> Tuple[Optional[dict], int]:
-    """Return (yaml_dict_or_None, end_line_index_of_front_matter_or_-1).
+    """
+    Return (yaml_dict_or_None, end_line_index_of_front_matter_or_-1).
     If there is no front matter, returns (None, -1).
     """
     text = path.read_text(encoding="utf-8")

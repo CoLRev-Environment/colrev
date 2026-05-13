@@ -326,7 +326,8 @@ def merge(
     default_source: str,
     preferred_masterdata_source_prefixes: list,
 ) -> None:
-    """General-purpose record merging
+    """
+    General-purpose record merging
     for preparation, curated/non-curated records and records with origins.
 
     Apply heuristics to create a fusion of the best fields based on

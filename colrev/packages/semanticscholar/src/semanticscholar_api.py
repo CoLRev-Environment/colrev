@@ -11,10 +11,12 @@ from semanticscholar.PaginatedResults import PaginatedResults
 
 
 class SemanticScholarAPIError(Exception):
+
     """Exception raised when Semantic Scholar requests fail."""
 
 
 class SemanticScholarAPI:
+
     """Light wrapper around the Semantic Scholar client."""
 
     def __init__(self, *, api_key: typing.Optional[str] = None) -> None:

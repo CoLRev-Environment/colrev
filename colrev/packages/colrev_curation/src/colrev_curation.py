@@ -24,6 +24,7 @@ from colrev.constants import RecordState
 class ColrevCurationSettings(
     colrev.package_manager.package_settings.DefaultSettings, BaseModel
 ):
+
     """Colrev Curation settings."""
 
     endpoint: str
@@ -35,6 +36,7 @@ class ColrevCurationSettings(
 
 
 class ColrevCuration(base_classes.DataPackageBaseClass):
+
     """CoLRev Curation."""
 
     settings: ColrevCurationSettings
@@ -262,7 +264,8 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
         )
 
     def _source_comparison(self, *, silent_mode: bool) -> None:
-        """Exports a table to support analyses of records that are not
+        """
+        Exports a table to support analyses of records that are not
         in all sources (for curated repositories).
         """
         dedupe_dir = self.review_manager.paths.dedupe

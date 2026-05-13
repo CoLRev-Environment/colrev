@@ -31,6 +31,7 @@ from colrev.writer.write_utils import write_file
 class ExportManPrepSettings(
     colrev.package_manager.package_settings.DefaultSettings, BaseModel
 ):
+
     """Settings for ExportManPrep."""
 
     endpoint: str
@@ -44,6 +45,7 @@ class ExportManPrepSettings(
 
 
 class ExportManPrep(base_classes.PrepManPackageBaseClass):
+
     """Manual preparation based on exported and imported metadata (and PDFs if any)."""
 
     settings: ExportManPrepSettings

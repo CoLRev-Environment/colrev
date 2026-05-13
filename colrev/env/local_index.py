@@ -23,6 +23,7 @@ from colrev.env.local_index_prep import prepare_record_for_return
 
 
 class LocalIndex:
+
     """The LocalIndex implements indexing and retrieval of records across projects."""
 
     def __init__(
@@ -253,7 +254,8 @@ class LocalIndex:
     def retrieve_based_on_colrev_pdf_id(
         self, *, colrev_pdf_id: str
     ) -> colrev.record.record.Record:
-        """Convenience function to retrieve the indexed record_dict metadata
+        """
+        Convenience function to retrieve the indexed record_dict metadata
         based on a colrev_pdf_id.
         """
         try:
@@ -274,7 +276,8 @@ class LocalIndex:
         include_file: bool = False,
         include_colrev_ids: bool = False,
     ) -> colrev.record.record.Record:
-        """Convenience function to retrieve the indexed record_dict metadata
+        """
+        Convenience function to retrieve the indexed record_dict metadata
         based on another record_dict.
         """
         # To avoid modifications to the original record
@@ -336,7 +339,8 @@ class LocalIndex:
         )
 
     def get_fields_to_remove(self, record_dict: dict) -> list:
-        """Compares the record to available toc items and
+        """
+        Compares the record to available toc items and
         returns fields to remove (if any), such as the volume or number.
         """
         # pylint: disable=too-many-return-statements

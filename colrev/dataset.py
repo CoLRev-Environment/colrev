@@ -25,6 +25,7 @@ from colrev.writer.write_utils import to_string
 
 
 class Dataset:
+
     """The CoLRev dataset (records and their history in git)."""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
@@ -37,7 +38,8 @@ class Dataset:
         return GitRepo(path=self.review_manager.path)
 
     def get_origin_state_dict(self, records_string: str = "") -> dict:
-        """Get the origin_state_dict (to determine state transitions efficiently).
+        """
+        Get the origin_state_dict (to determine state transitions efficiently).
 
         {'30_example_records.bib/Staehr2010': <RecordState.pdf_not_available: 10>,}
         """
@@ -85,7 +87,8 @@ class Dataset:
         return committed_origin_state_dict
 
     def load_records_from_history(self, commit_sha: str = "") -> typing.Iterator[dict]:
-        """Iterates through Git history, yielding records file contents as dictionaries.
+        """
+        Iterates through Git history, yielding records file contents as dictionaries.
 
         Starts iteration from a provided commit SHA.
         Skips commits where the records file is unchanged.
@@ -131,7 +134,8 @@ class Dataset:
         *,
         header_only: bool = False,
     ) -> dict[str, dict[str, typing.Any]]:
-        """Load the records.
+        """
+        Load the records.
 
         header_only:
 
@@ -320,7 +324,8 @@ class Dataset:
         return False
 
     def set_ids(self, selected_ids: typing.Optional[list] = None) -> dict:
-        """Set the IDs of records according to predefined formats or
+        """
+        Set the IDs of records according to predefined formats or
         according to the LocalIndex.
         """
         id_setter = colrev.record.record_id_setter.IDSetter(

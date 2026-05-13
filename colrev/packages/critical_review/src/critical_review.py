@@ -15,6 +15,7 @@ import colrev.package_manager.package_settings
 
 
 class CriticalReview(base_classes.ReviewTypePackageBaseClass):
+
     """Critical review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

@@ -22,6 +22,7 @@ from colrev.constants import Fields
 
 
 class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
+
     """Get PDFs from the website."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

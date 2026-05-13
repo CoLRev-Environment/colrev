@@ -156,6 +156,7 @@ def get_search_files() -> list:
 
 
 class SpecialHelpOrder(click.Group):
+
     """Order for cli commands in help page overview."""
 
     def __init__(self, *args, **kwargs) -> None:  # type: ignore
@@ -178,7 +179,8 @@ class SpecialHelpOrder(click.Group):
         )
 
     def command(self, *args, **kwargs):  # type: ignore
-        """Behaves the same as `click.Group.command()` except capture
+        """
+        Behaves the same as `click.Group.command()` except capture
         a priority for listing command names in help.
         """
         help_priority = kwargs.pop("help_priority", 1)
@@ -216,7 +218,8 @@ def catch_exception(func=None, *, handle) -> typing.Any:  # type: ignore
 @click.group(cls=SpecialHelpOrder)
 @click.pass_context
 def main(ctx: click.core.Context) -> None:
-    r"""CoLRev commands:
+    r"""
+    CoLRev commands:
 
     \b
     status        Shows status, how to proceed, and checks for errors
@@ -246,7 +249,8 @@ def main(ctx: click.core.Context) -> None:
 def get_review_manager(
     ctx: click.core.Context, review_manager_params: dict
 ) -> colrev.review_manager.ReviewManager:
-    """Get review_manager instance. If it's available in ctx object, reuse that
+    """
+    Get review_manager instance. If it's available in ctx object, reuse that
     if not creates a new one, Once created will update the review_manager with
     the given parameters. If params requires review_manager to be reloaded, will
     reload it.
@@ -350,7 +354,8 @@ def init(
     force: bool,
     light: bool,
 ) -> None:
-    """Initialize (define review objectives and type).
+    """
+    Initialize (define review objectives and type).
 
     Docs: https://colrev-environment.github.io/colrev/manual/problem_formulation/init.html
     """
@@ -418,7 +423,8 @@ def retrieve(
     verbose: bool,
     force: bool,
 ) -> None:
-    r"""Retrieve, a high-level operation, consists of search, load, prep, and dedupe.
+    r"""
+    Retrieve, a high-level operation, consists of search, load, prep, and dedupe.
 
     \b
     To retrieve search results:
@@ -551,7 +557,8 @@ def search(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Search for records.
+    """
+    Search for records.
 
     Docs: https://colrev-environment.github.io/colrev/manual/metadata_retrieval/search.html
     """
@@ -674,7 +681,8 @@ def load(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Load records.
+    """
+    Load records.
 
     Docs: https://colrev-environment.github.io/colrev/manual/metadata_retrieval/load.html
     """
@@ -763,7 +771,8 @@ def prep(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Prepare records.
+    """
+    Prepare records.
 
     Docs: https://colrev-environment.github.io/colrev/manual/metadata_retrieval/prep.html
     """
@@ -864,7 +873,8 @@ def prep_man(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Prepare records manually.
+    """
+    Prepare records manually.
 
     Docs: https://colrev-environment.github.io/colrev/manual/metadata_retrieval/prep.html
     """
@@ -982,7 +992,8 @@ def dedupe(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Deduplicate records.
+    """
+    Deduplicate records.
 
     Docs: https://colrev-environment.github.io/colrev/manual/metadata_retrieval/dedupe.html
     """
@@ -1152,7 +1163,8 @@ def prescreen(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Pre-screen exclusion based on metadata (titles and abstracts).
+    """
+    Pre-screen exclusion based on metadata (titles and abstracts).
 
     Docs: https://colrev-environment.github.io/colrev/manual/metadata_prescreen/prescreen.html
     """
@@ -1310,7 +1322,8 @@ def screen(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Screen based on PDFs and inclusion/exclusion criteria.
+    """
+    Screen based on PDFs and inclusion/exclusion criteria.
 
     Docs: https://colrev-environment.github.io/colrev/manual/pdf_screen/screen.html
     """
@@ -1543,7 +1556,8 @@ def pdf_get(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Get PDFs.
+    """
+    Get PDFs.
 
     Docs: https://colrev-environment.github.io/colrev/manual/pdf_retrieval/pdf_get.html
     """
@@ -1640,7 +1654,8 @@ def pdf_get_man(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Get PDFs manually.
+    """
+    Get PDFs manually.
 
     Docs: https://colrev-environment.github.io/colrev/manual/pdf_retrieval/pdf_get.html
     """
@@ -1800,7 +1815,8 @@ def pdf_prep(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Prepare PDFs.
+    """
+    Prepare PDFs.
 
     Docs: https://colrev-environment.github.io/colrev/manual/pdf_retrieval/pdf_prep.html
     """
@@ -1938,7 +1954,8 @@ def pdf_prep_man(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Prepare PDFs manually.
+    """
+    Prepare PDFs manually.
 
     Docs: https://colrev-environment.github.io/colrev/manual/pdf_retrieval/pdf_prep.html
     """
@@ -2034,7 +2051,8 @@ def data(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Complete selected forms of data analysis and synthesis.
+    """
+    Complete selected forms of data analysis and synthesis.
 
     Docs: https://colrev-environment.github.io/colrev/manual/data/data.html
     """
@@ -2148,7 +2166,8 @@ def validate(
     verbose: bool,
     force: bool,
 ) -> None:
-    r"""Validate changes in the given commit (scope).
+    r"""
+    Validate changes in the given commit (scope).
 
     \b
     The validation scope argument can be
@@ -3186,7 +3205,8 @@ def version(
 def install(
     packages: typing.List[str], upgrade: bool, editable: bool, uv: bool
 ) -> None:
-    r"""Install packages.
+    r"""
+    Install packages.
 
     To install all internal packages, run\n
         colrev install all_internal_packages

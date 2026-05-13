@@ -35,6 +35,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class TEIParser:
+
     """Environment service for TEI parsing."""
 
     ns = {
@@ -52,7 +53,8 @@ class TEIParser:
         pdf_path: typing.Optional[typing.Union[Path, str]] = None,
         tei_path: typing.Optional[typing.Union[Path, str]] = None,
     ):
-        """Creates a TEI file
+        """
+        Creates a TEI file
         modes of operation:
         - pdf_path: create TEI and temporarily store in self.data
         - pfd_path and tei_path: create TEI and save in tei_path
@@ -587,7 +589,8 @@ class TEIParser:
             "appendix",
         ),
     ) -> typing.Iterator[str]:
-        """Iterate over body paragraphs in reading order.
+        """
+        Iterate over body paragraphs in reading order.
 
         Args:
             min_chars: Minimum number of characters for a paragraph to be yielded.

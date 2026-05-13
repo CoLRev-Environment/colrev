@@ -36,6 +36,7 @@ from colrev.ops.search_api_feed import create_api_source
 
 
 class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
+
     """LocalIndex."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

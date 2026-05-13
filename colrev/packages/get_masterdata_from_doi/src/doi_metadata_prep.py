@@ -19,6 +19,7 @@ from colrev.constants import Fields
 
 
 class DOIMetadataPrep(base_classes.PrepPackageBaseClass):
+
     """Prepares records based on doi.org metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

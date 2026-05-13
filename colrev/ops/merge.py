@@ -18,6 +18,7 @@ from colrev.constants import OperationsType
 
 
 class Merge(colrev.process.operation.Operation):
+
     """Merge branches of CoLRev project."""
 
     type = OperationsType.check

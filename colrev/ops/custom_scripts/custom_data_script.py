@@ -9,6 +9,7 @@ import colrev.process.operation
 
 
 class CustomData(base_classes.DataPackageBaseClass):
+
     """Class for custom data scripts."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

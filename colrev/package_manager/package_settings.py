@@ -8,6 +8,7 @@ from pydantic import Field
 
 
 class DefaultSettings(BaseModel):
+
     """Endpoint settings."""
 
     endpoint: str = Field()

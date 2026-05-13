@@ -12,6 +12,7 @@ from colrev.constants import Filepaths
 
 
 class Resources:
+
     """Class for curated CoLRev resourcs (metadata repositories, annotators)."""
 
     # pylint: disable=too-few-public-methods

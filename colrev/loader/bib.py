@@ -238,7 +238,8 @@ def store_current_key_value(
 def process_lines(
     file: typing.TextIO, header_only: bool = False
 ) -> typing.List[typing.Dict[str, typing.Any]]:
-    """Processes each line of the file and constructs records.
+    """
+    Processes each line of the file and constructs records.
 
     Args:
         file (TextIO): The file object to read from.
@@ -328,6 +329,7 @@ def run_resolve_crossref(records: dict, *, logger: logging.Logger) -> None:
 
 
 class BIBLoader(colrev.loader.loader.Loader):
+
     """Loads BibTeX files."""
 
     # pylint: disable=too-many-arguments

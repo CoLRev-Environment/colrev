@@ -49,6 +49,7 @@ def same_source_merge(
 
 
 class Dedupe(colrev.process.operation.Operation):
+
     """Deduplicate records (entity resolution)."""
 
     NON_DUPLICATE_FILE_XLSX = Path("non_duplicates_to_validate.xlsx")
@@ -93,7 +94,8 @@ class Dedupe(colrev.process.operation.Operation):
 
     @classmethod
     def connected_components(cls, id_sets: list) -> list:
-        """Find the connected components in a graph.
+        """
+        Find the connected components in a graph.
 
         Args:
             id_sets (list): A list of id sets.
@@ -359,7 +361,8 @@ class Dedupe(colrev.process.operation.Operation):
         complete_dedupe: bool = False,
         preferred_masterdata_sources: typing.Optional[list] = None,
     ) -> None:
-        """Apply deduplication decisions.
+        """
+        Apply deduplication decisions.
 
         id_sets : [[ID_1, ID_2, ID_3], ...]
 
@@ -436,7 +439,8 @@ class Dedupe(colrev.process.operation.Operation):
     def _get_records_to_merge(
         self, *, records: dict, id_sets: list
     ) -> typing.Iterable[tuple]:
-        """Return merge pairs for the provided id_sets.
+        """
+        Return merge pairs for the provided id_sets.
 
         Note:
             The id_sets are expected to be *already resolved* (no chained duplicates).
@@ -504,7 +508,8 @@ class Dedupe(colrev.process.operation.Operation):
         return ids_origins
 
     def _remove_merged_records(self, records: dict, ids_origins: dict) -> None:
-        """Remove records that have been merged from the records dictionary.
+        """
+        Remove records that have been merged from the records dictionary.
         These records are identified by their current IDs.
         """
         for rid in ids_origins:
@@ -553,7 +558,8 @@ class Dedupe(colrev.process.operation.Operation):
         *,
         current_record_ids: list,
     ) -> None:
-        """Unmerge duplicate decision of the records, as identified by their ids.
+        """
+        Unmerge duplicate decision of the records, as identified by their ids.
 
         The current_record_ids identifies the records by their current IDs and
         unmerges their most recent merge in history.

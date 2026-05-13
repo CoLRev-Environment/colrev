@@ -20,6 +20,7 @@ from colrev.writer.write_utils import write_file
 
 
 class Validate(colrev.process.operation.Operation):
+
     """Validate changes."""
 
     type = OperationsType.check

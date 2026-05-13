@@ -39,6 +39,7 @@ DEFAULT_PAGE_SIZE = 10
 
 
 class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
+
     """Springer Link."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

@@ -27,6 +27,7 @@ INTERNAL_PACKAGES = (
 
 # pylint: disable=too-many-instance-attributes
 class PackageDoc:
+
     """PackageDoc."""
 
     package_id: str
@@ -284,7 +285,8 @@ class PackageDoc:
             file.write(output)
 
     def get_endpoint_item(self, endpoint_type: EndpointType) -> dict:
-        """Get the endpoint item for the package.
+        """
+        Get the endpoint item for the package.
 
         Format:
         {
@@ -311,7 +313,8 @@ class PackageDoc:
         return endpoint_item
 
     def get_docs_item(self) -> dict:
-        """Get the documentation item for the package.
+        """
+        Get the documentation item for the package.
 
         Format:
         {
@@ -343,6 +346,7 @@ class PackageDoc:
 
 # pylint: disable=too-few-public-methods
 class DocRegistryManager:
+
     """DocRegistryManager."""
 
     # Overview page of packages: rst

@@ -30,6 +30,7 @@ from colrev.packages.plos.src import plos_api
 
 # pylint: disable=unused-argument
 class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
+
     """PLOS API."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
@@ -84,7 +85,8 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add the SearchSource as an endpoint based on a query.
+        """
+        Add the SearchSource as an endpoint based on a query.
 
         params:
         - search_file="..." to add a DB search.

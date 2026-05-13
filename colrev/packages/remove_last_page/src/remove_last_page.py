@@ -23,6 +23,7 @@ from colrev.constants import Filepaths
 
 
 class PDFLastPage(base_classes.PDFPrepPackageBaseClass):
+
     """Prepare PDFs by removing unnecessary last pages (e.g., copyright notices, cited-by infos)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

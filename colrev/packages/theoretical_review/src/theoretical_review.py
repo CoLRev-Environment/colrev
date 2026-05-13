@@ -15,6 +15,7 @@ import colrev.package_manager.package_settings
 
 
 class TheoreticalReview(base_classes.ReviewTypePackageBaseClass):
+
     """Theoretical review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

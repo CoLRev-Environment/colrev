@@ -50,7 +50,8 @@ def load_df(
 
 
 def load_resolved_papers(other_project_path: str) -> pd.DataFrame:
-    """Loads records from the other project, matches them with the current project,
+    """
+    Loads records from the other project, matches them with the current project,
     and returns a DataFrame of the other records with the corresponding IDs in the current project.
 
     This is useful when integrating datasets and reusing screening decisions or coding.
@@ -153,7 +154,8 @@ def add_from_tei(
     project_path: str = "",
     fields: typing.Optional[typing.List[str]] = None,
 ) -> None:
-    """This function adds data from TEI files to the given DataFrame.
+    """
+    This function adds data from TEI files to the given DataFrame.
 
     Parameters
     ----------
@@ -204,7 +206,8 @@ def add_from_tei(
 def extract_pdfs_for_data_extraction(
     records_df: pd.DataFrame, directory: str, copy_files: bool = False
 ) -> None:
-    """This function creates symlinks or copies the PDFs to the given directory
+    """
+    This function creates symlinks or copies the PDFs to the given directory
     based on the copy_files parameter.
 
     Parameters
@@ -244,7 +247,8 @@ def extract_pdfs_for_data_extraction(
 
 
 def save(records_df: pd.DataFrame) -> None:
-    """This function saves the records from a DataFrame to a dataset.
+    """
+    This function saves the records from a DataFrame to a dataset.
 
     Parameters
     ----------

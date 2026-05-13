@@ -16,6 +16,7 @@ from colrev.constants import RecordState
 
 
 class LoadFormatter:
+
     """Load formatter class."""
 
     # Based on

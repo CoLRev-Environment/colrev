@@ -23,6 +23,7 @@ from colrev.constants import SearchType
 
 
 class PubmedMetadataPrep(base_classes.PrepPackageBaseClass):
+
     """Prepares records based on Pubmed metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

@@ -21,6 +21,7 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class PDFGetMan(colrev.process.operation.Operation):
+
     """Get PDFs manually."""
 
     pdf_get_man_package_endpoints: dict[str, typing.Any]

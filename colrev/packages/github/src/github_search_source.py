@@ -39,6 +39,7 @@ def is_github_api_key(previous: dict, answer: str) -> bool:
 
 
 class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
+
     """GitHub API."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

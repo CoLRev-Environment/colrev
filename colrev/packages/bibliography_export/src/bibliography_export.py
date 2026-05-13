@@ -24,6 +24,7 @@ from colrev.writer.write_utils import write_file
 
 
 class BibFormats(Enum):
+
     """Enum of available bibliography formats."""
 
     # pylint: disable=invalid-name
@@ -42,6 +43,7 @@ class BibFormats(Enum):
 class BibliographyExportSettings(
     colrev.package_manager.package_settings.DefaultSettings, BaseModel
 ):
+
     """Settings for BibliographyExport."""
 
     endpoint: str
@@ -50,6 +52,7 @@ class BibliographyExportSettings(
 
 
 class BibliographyExport(base_classes.DataPackageBaseClass):
+
     """Export the sample references in Endpoint format."""
 
     settings: BibliographyExportSettings

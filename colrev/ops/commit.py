@@ -23,6 +23,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Commit:
+
     """Create commits."""
 
     # pylint: disable=too-many-instance-attributes

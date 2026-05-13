@@ -16,14 +16,17 @@ import colrev.loader.loader
 
 
 class NextLine(Exception):
+
     """NextLineException."""
 
 
 class ParseError(Exception):
+
     """Parsing error."""
 
 
 class RISLoader(colrev.loader.loader.Loader):
+
     """Loads ris files."""
 
     PATTERN = r"^[A-Z0-9]{2,4} "
@@ -115,7 +118,8 @@ class RISLoader(colrev.loader.loader.Loader):
         return "\n".join(lines)
 
     def load_records_list(self, *, content: str = "") -> list:
-        """Load ris entries.
+        """
+        Load ris entries.
 
         The resulting keys should coincide with those in the KEY_MAP
         but they can be adapted before calling the convert_to_records()

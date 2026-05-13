@@ -11,6 +11,7 @@ from colrev.constants import Fields
 
 
 class ErroneousTermInFieldChecker:
+
     """The ErroneousTermInFieldChecker."""
 
     erroneous_terms = {

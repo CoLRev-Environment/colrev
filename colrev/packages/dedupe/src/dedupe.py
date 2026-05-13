@@ -27,6 +27,7 @@ from colrev.constants import RecordState
 
 
 class Dedupe(base_classes.DedupePackageBaseClass):
+
     """Default deduplication."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

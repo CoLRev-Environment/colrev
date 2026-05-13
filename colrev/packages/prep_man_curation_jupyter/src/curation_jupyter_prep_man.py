@@ -18,6 +18,7 @@ import colrev.record.record
 
 
 class CurationJupyterNotebookManPrep(base_classes.PrepManPackageBaseClass):
+
     """Manual preparation based on a Jupyter Notebook."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

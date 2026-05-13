@@ -11,6 +11,7 @@ from colrev.constants import Fields
 
 
 class NameAbbreviatedChecker:
+
     """The NameAbbreviatedChecker."""
 
     fields_to_check = [Fields.AUTHOR, Fields.EDITOR]

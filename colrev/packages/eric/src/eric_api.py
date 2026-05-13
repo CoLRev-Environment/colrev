@@ -15,6 +15,7 @@ from colrev.constants import Fields
 
 
 class ERICAPI:
+
     """Connector for the ERIC API."""
 
     API_FIELDS = [

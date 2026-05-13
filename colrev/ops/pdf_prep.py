@@ -26,6 +26,7 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class PDFPrep(colrev.process.operation.Operation):
+
     """Prepare PDFs."""
 
     to_prepare: int

@@ -41,7 +41,8 @@ def run_db_search(
     project_root: typing.Optional[Path] = None,
     **kwargs: typing.Any,
 ) -> None:
-    """Run the database search.
+    """
+    Run the database search.
 
     add_to_git: when True, stage changes via a locally instantiated GitRepo.
     project_root: optional explicit root path; if not provided, derive from the source.

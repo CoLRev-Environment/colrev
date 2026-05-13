@@ -31,7 +31,9 @@ from colrev.constants import SearchType
 
 
 class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """SYNERGY-datasets.
+
+    """
+    SYNERGY-datasets.
 
     https://github.com/asreview/synergy-dataset
 

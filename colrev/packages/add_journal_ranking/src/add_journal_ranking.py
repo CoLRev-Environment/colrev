@@ -19,6 +19,7 @@ from colrev.constants import Fields
 
 
 class AddJournalRanking(base_classes.PrepPackageBaseClass):
+
     """Prepares records based on journal rankings."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

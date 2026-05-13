@@ -13,6 +13,7 @@ from colrev.constants import Fields
 
 
 class DOIPatternChecker:
+
     """The DOIPatternChecker."""
 
     msg = DefectCodes.DOI_NOT_MATCHING_PATTERN

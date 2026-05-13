@@ -25,6 +25,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Advisor:
+
     """The CoLRev advisor guides users through the review process."""
 
     _next_step_description = {

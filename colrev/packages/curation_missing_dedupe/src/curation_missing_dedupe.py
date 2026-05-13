@@ -25,6 +25,7 @@ from colrev.constants import RecordState
 
 
 class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
+
     """Deduplication of remaining records in a curated metadata repository."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

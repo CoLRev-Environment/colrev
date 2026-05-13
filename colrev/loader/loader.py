@@ -13,6 +13,7 @@ from colrev.loader.load_utils_name_formatter import parse_names_in_records
 
 
 class Loader:
+
     """Loader class."""
 
     def __init__(
@@ -103,7 +104,8 @@ class Loader:
             )
 
     def load_records_list(self) -> list:
-        """The load_records_list must be implemented by the inheriting class
+        """
+        The load_records_list must be implemented by the inheriting class
         (e.g., for ris/bib/...).
         """
         raise NotImplementedError  # pragma: no cover

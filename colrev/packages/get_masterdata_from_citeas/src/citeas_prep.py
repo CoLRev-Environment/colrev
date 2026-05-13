@@ -24,6 +24,7 @@ from colrev.constants import Fields
 
 
 class CiteAsPrep(base_classes.PrepPackageBaseClass):
+
     """Prepares records based on citeas.org metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

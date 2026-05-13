@@ -28,6 +28,7 @@ from colrev.packages.crossref.src import record_transformer
 
 
 class DOIConnector:
+
     """Connector for the DOI.org API."""
 
     heuristic_status = SearchSourceHeuristicStatus.oni

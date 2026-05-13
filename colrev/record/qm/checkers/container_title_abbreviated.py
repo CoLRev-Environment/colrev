@@ -11,6 +11,7 @@ from colrev.constants import Fields
 
 
 class ContainerTitleAbbreviatedChecker:
+
     """The ContainerTitleAbbreviatedChecker."""
 
     fields_to_check = [Fields.JOURNAL, Fields.BOOKTITLE]

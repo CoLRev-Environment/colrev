@@ -24,6 +24,7 @@ from colrev.packages.unpaywall.src import utils
 
 
 class Unpaywall(base_classes.PDFGetPackageBaseClass):
+
     """Get PDFs from unpaywall.org."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

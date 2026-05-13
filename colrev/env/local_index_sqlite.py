@@ -46,6 +46,7 @@ from colrev.constants import LocalIndexFields
 
 # pylint: disable=too-few-public-methods
 class SQLiteIndex:
+
     """The SQLiteIndex class implements indexing and retrieval of records locally."""
 
     connection: sqlite3.Connection
@@ -103,6 +104,7 @@ class SQLiteIndex:
 
 
 class SQLiteIndexRecord(SQLiteIndex):
+
     """The SQLiteIndexRecord class implements indexing and retrieval of records locally."""
 
     INDEX_NAME = "record_index"
@@ -257,7 +259,9 @@ class SQLiteIndexRecord(SQLiteIndex):
 
 
 class SQLiteIndexRankings(SQLiteIndex):
-    """The SQLiteIndexRankings class implements indexing and retrieval
+
+    """
+    The SQLiteIndexRankings class implements indexing and retrieval
     of journal rankings locally.
     """
 
@@ -291,6 +295,7 @@ class SQLiteIndexRankings(SQLiteIndex):
 
 
 class SQLiteIndexTOC(SQLiteIndex):
+
     """The SQLiteIndexTOC class implements indexing and retrieval of TOC items locally."""
 
     INDEX_NAME = "toc_index"

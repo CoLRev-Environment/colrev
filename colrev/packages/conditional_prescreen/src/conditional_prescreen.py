@@ -19,6 +19,7 @@ from colrev.constants import RecordState
 
 
 class ConditionalPrescreen(base_classes.PrescreenPackageBaseClass):
+
     """Conditional prescreen (currently: include all)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

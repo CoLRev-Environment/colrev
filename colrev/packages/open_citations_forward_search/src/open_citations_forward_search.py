@@ -28,7 +28,9 @@ from colrev.packages.open_citations_forward_search.src import open_citations_api
 
 
 class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """Forward search based on OpenCitations
+
+    """
+    Forward search based on OpenCitations
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized).
     """
 

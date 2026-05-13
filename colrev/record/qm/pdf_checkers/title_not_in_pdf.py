@@ -17,6 +17,7 @@ from colrev.constants import PDFDefectCodes
 
 
 class TitleNotInPDFChecker:
+
     """The TitleNotInPDFChecker."""
 
     msg = PDFDefectCodes.TITLE_NOT_IN_PDF

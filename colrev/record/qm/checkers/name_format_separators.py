@@ -15,6 +15,7 @@ from colrev.constants import FieldValues
 
 
 class NameFormatSeparatorsChecker:
+
     """The NameFormatSeparatorsChecker."""
 
     msg = DefectCodes.NAME_FORMAT_SEPARTORS

@@ -16,6 +16,7 @@ from colrev.constants import SearchType
 
 
 class ExtendedSearchFile(search_query.SearchFile):
+
     """Extended SearchFile with search_results_path and derived search_history_path."""
 
     version: str

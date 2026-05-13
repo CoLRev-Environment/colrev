@@ -32,6 +32,7 @@ from colrev.ops.search_db import run_db_search
 
 
 class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
+
     """Unknown SearchSource."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

@@ -14,6 +14,7 @@ from colrev.constants import Fields
 
 
 class QualityModel:
+
     """The quality model for records."""
 
     checkers = []  # type: ignore
@@ -33,7 +34,8 @@ class QualityModel:
         self.path = path
 
     def _register_checkers(self) -> None:
-        """Register checkers from the checker directory, looking for a
+        """
+        Register checkers from the checker directory, looking for a
         'register' function in each one.
         """
         self.checkers = []

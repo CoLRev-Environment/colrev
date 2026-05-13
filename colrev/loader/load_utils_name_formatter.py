@@ -44,6 +44,7 @@ def split_tex_string(
 
 
 class NameParser:
+
     """Parse a name string."""
 
     def __init__(self, name: str) -> None:
@@ -133,7 +134,8 @@ def parse_names(names: str) -> str:
 
 
 def parse_names_in_records(records_dict: dict) -> None:
-    """Parse names in records.
+    """
+    Parse names in records.
 
     Note: requires fields to be Fields.AUTHOR/Fields.EDITOR
 

@@ -22,6 +22,7 @@ from colrev.constants import SearchType
 
 
 class OpenAlexMetadataPrep(base_classes.PrepPackageBaseClass):
+
     """Prepares records based on OpenAlex metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

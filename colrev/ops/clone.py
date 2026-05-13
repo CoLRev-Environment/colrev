@@ -13,6 +13,7 @@ from colrev.env.environment_manager import EnvironmentManager
 
 
 class Clone:
+
     """Clone CoLRev project from git remote repository."""
 
     # pylint: disable=too-few-public-methods

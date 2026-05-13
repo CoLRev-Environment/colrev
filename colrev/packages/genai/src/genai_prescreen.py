@@ -24,6 +24,7 @@ from colrev.constants import RecordState
 
 
 class PreScreenDecision(BaseModel):
+
     """Class for a prescreen."""
 
     SYSTEM_PROMPT: typing.ClassVar[str] = (
@@ -40,6 +41,7 @@ class PreScreenDecision(BaseModel):
 
 
 class GenAIPrescreen(base_classes.PrescreenPackageBaseClass):
+
     """GenAI-based prescreen."""
 
     ci_supported: bool = Field(default=True)
@@ -48,6 +50,7 @@ class GenAIPrescreen(base_classes.PrescreenPackageBaseClass):
     class GenAIPrescreenSettings(
         colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
+
         """Settings for GenAIPrescreen."""
 
         # pylint: disable=invalid-name

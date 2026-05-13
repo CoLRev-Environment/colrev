@@ -14,6 +14,7 @@ import colrev.record.record
 
 
 class CustomPrescreen(base_classes.PrescreenPackageBaseClass):
+
     """Class for custom prescreen scripts."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

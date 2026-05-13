@@ -20,6 +20,7 @@ from colrev.constants import Fields
 
 
 class RemoveError500URLsPrep(base_classes.PrepPackageBaseClass):
+
     """Prepares records by removing urls that are not available."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

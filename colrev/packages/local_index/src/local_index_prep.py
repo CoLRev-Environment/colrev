@@ -24,6 +24,7 @@ from colrev.constants import SearchType
 
 
 class LocalIndexPrep(base_classes.PrepPackageBaseClass):
+
     """Prepares records based on LocalIndex metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

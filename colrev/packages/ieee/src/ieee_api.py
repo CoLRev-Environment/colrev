@@ -15,6 +15,7 @@ from colrev.constants import Fields
 
 
 class XPLORE:
+
     """XPLORE API class."""
 
     # pylint: disable=too-many-instance-attributes
@@ -156,20 +157,23 @@ class XPLORE:
                 self._search_field(key, value)
 
     def startingResult(self, start: int) -> None:
-        """Set the start position in the results
+        """
+        Set the start position in the results
         string start   Start position in the returned data.
         """
         self.startRecord = math.ceil(start) if (start > 0) else 1
 
     def maximumResults(self, maximum: int) -> None:
-        """Set the maximum number of results
+        """
+        Set the maximum number of results
         string maximum   Max number of results to return.
         """
         self.resultSetMax = math.ceil(maximum) if (maximum > 0) else 25
         self.resultSetMax = min(self.resultSetMax, self.resultSetMaxCap)
 
     def resultsFilter(self, filterParam: str, value: str) -> None:
-        """Set a filter on results
+        """
+        Set a filter on results
         string filterParam   Field used for filtering
         string value    Text to filter on.
         """
@@ -185,7 +189,8 @@ class XPLORE:
                 self.resultsSorting("publication_year", "asc")
 
     def resultsSorting(self, field: str, order: str) -> None:
-        """Setting sort order for results
+        """
+        Setting sort order for results
         string field   Data field used for sorting
         string order   Sort order for results (ascending or descending).
         """
@@ -203,7 +208,8 @@ class XPLORE:
         self._add_parameter("article_number", value)
 
     def _search_field(self, field: str, value: str) -> None:
-        """Shortcut method for assigning search parameters and values
+        """
+        Shortcut method for assigning search parameters and values
         string field   Field used for searching
         string value   Text to query.
         """
@@ -244,7 +250,8 @@ class XPLORE:
         self.articleNumber(article)
 
     def _build_open_access_query(self) -> str:
-        """Creates the URL for the Open Access Document API call
+        """
+        Creates the URL for the Open Access Document API call
         return string: full URL for querying the API.
         """
         url = self.OPEN_ACCESS_ENDPOINT
@@ -255,7 +262,8 @@ class XPLORE:
         return url
 
     def _build_query(self) -> str:
-        """Creates the URL for the non-Open Access Document API call
+        """
+        Creates the URL for the non-Open Access Document API call
         return string: full URL for querying the API.
         """
         url = self.ENDPOINT
@@ -295,7 +303,8 @@ class XPLORE:
         return url
 
     def _query_api(self, url: str) -> str:
-        """Creates the URL for the API call
+        """
+        Creates the URL for the API call
         string url  Full URL to pass to API
         return string: Results from API.
         """

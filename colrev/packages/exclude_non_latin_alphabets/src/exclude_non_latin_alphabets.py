@@ -19,7 +19,9 @@ from colrev.constants import Fields
 
 
 class ExcludeNonLatinAlphabetsPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records by excluding ones that have a non-latin alphabet
+
+    """
+    Prepares records by excluding ones that have a non-latin alphabet
     (in the title, author, journal, or booktitle field).
     """
 

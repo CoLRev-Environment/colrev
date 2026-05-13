@@ -19,7 +19,9 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class Data(colrev.process.operation.Operation):
-    """Class supporting structured and unstructured
+
+    """
+    Class supporting structured and unstructured
     data extraction, analysis and synthesis.
     """
 
@@ -202,7 +204,8 @@ class Data(colrev.process.operation.Operation):
         records: typing.Optional[dict] = None,
         silent_mode: bool = False,
     ) -> dict:
-        """Data operation (main entrypoint).
+        """
+        Data operation (main entrypoint).
 
         silent_mode: for review_manager checks
         """

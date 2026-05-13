@@ -1,5 +1,6 @@
 #! /usr/bin/env python
-"""Function to write files (BiBTeX, RIS, CSV, etc.).
+"""
+Function to write files (BiBTeX, RIS, CSV, etc.).
 
 Usage::
 
@@ -26,7 +27,8 @@ import colrev.writer.ris
 
 
 def write_file(records_dict: dict, *, filename: Path, **kw) -> dict:  # type: ignore
-    """Write a file (BiBTex, RIS, or other) from a dictionary of records.
+    """
+    Write a file (BiBTex, RIS, or other) from a dictionary of records.
 
     Note:
         For tabular formats (csv, xlsx, md), the following options are supported:

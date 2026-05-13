@@ -22,6 +22,7 @@ from colrev.constants import RecordState
 
 
 class ExcludeLanguagesPrep(base_classes.PrepPackageBaseClass):
+
     """Prepares records by excluding ones that are not in the languages_to_include."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

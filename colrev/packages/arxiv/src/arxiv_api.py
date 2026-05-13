@@ -16,10 +16,12 @@ if typing.TYPE_CHECKING:
 
 
 class ArxivAPIError(Exception):
+
     """Exception raised when arXiv requests fail."""
 
 
 class ArxivAPI:
+
     """Handle HTTP interactions with the arXiv API."""
 
     def __init__(

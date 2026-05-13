@@ -12,6 +12,7 @@ from colrev.constants import Fields
 
 
 class CustomPDFGet(base_classes.PDFGetPackageBaseClass):
+
     """Class for custom pdf-get scripts."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

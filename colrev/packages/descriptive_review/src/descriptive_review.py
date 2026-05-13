@@ -15,6 +15,7 @@ import colrev.package_manager.package_settings
 
 
 class DescriptiveReview(base_classes.ReviewTypePackageBaseClass):
+
     """Descriptive review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

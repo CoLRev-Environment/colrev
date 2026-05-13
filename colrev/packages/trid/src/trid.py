@@ -27,6 +27,7 @@ from colrev.ops.search_db import run_db_search
 class TransportResearchInternationalDocumentation(
     base_classes.SearchSourcePackageBaseClass
 ):
+
     """Transport Research International Documentation."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

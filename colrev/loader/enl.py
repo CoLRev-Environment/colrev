@@ -16,14 +16,17 @@ import colrev.loader.loader
 
 
 class NextLine(Exception):
+
     """NextLineException."""
 
 
 class ParseError(Exception):
+
     """Parsing error."""
 
 
 class ENLLoader(colrev.loader.loader.Loader):
+
     """Loads enl files."""
 
     PATTERN = r"^%[A-Z]{1,3} "

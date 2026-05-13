@@ -16,10 +16,12 @@ from colrev.constants import FieldValues
 
 
 class OpenAlexAPIError(Exception):
+
     """Exception raised for OpenAlex API errors."""
 
 
 class OpenAlexAPI:
+
     """Connector for the Open Alex API."""
 
     # pylint: disable=too-many-arguments

@@ -21,6 +21,7 @@ from colrev.constants import RecordState
 
 
 class TableScreen(base_classes.ScreenPackageBaseClass):
+
     """Screen documents using tables (exported and imported)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

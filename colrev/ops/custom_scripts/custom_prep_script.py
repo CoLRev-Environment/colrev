@@ -14,6 +14,7 @@ from colrev.constants import Fields
 
 
 class CustomPrep(base_classes.PrepPackageBaseClass):
+
     """Class for custom prep scripts."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

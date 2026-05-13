@@ -25,6 +25,7 @@ from colrev.packages.semanticscholar.src import record_transformer
 
 
 class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
+
     """Prepares records based on SemanticScholar metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

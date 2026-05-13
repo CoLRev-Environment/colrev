@@ -16,6 +16,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class ProcessModel:
+
     """The ProcessModel describes transitions between RecordStates."""
 
     transitions = [

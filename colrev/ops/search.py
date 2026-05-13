@@ -20,6 +20,7 @@ from colrev.writer.write_utils import write_file
 
 
 class Search(colrev.process.operation.Operation):
+
     """Search for new records."""
 
     type = OperationsType.search
@@ -221,7 +222,8 @@ class Search(colrev.process.operation.Operation):
         return results_list
 
     def add_most_likely_sources(self) -> None:
-        """Get the most likely SearchSources.
+        """
+        Get the most likely SearchSources.
 
         returns a dictionary:
         {"filepath": [SearchSource1,..]}
@@ -253,7 +255,8 @@ class Search(colrev.process.operation.Operation):
         self.review_manager.create_commit(msg="Add new search sources")
 
     def get_new_source_heuristic(self, filename: Path) -> list:
-        """Get the heuristic result list of SearchSources candidates.
+        """
+        Get the heuristic result list of SearchSources candidates.
 
         returns a dictionary:
         {"filepath": ({"search_source": SourceCandidate1", "confidence": 0.98},..]}

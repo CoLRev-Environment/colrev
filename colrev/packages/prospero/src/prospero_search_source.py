@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""SearchSource: PROSPERO
+"""
+SearchSource: PROSPERO
 import colrev.search_file.
 
 A CoLRev SearchSource plugin to scrape and import records from PROSPERO.
@@ -28,6 +29,7 @@ from colrev.ops.search_api_feed import create_api_source
 
 
 class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
+
     """Prospero Search Source for retrieving protocol data."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
@@ -106,7 +108,8 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
     def get_search_word(self) -> str:
-        """Get the search query from settings or prompt the user.
+        """
+        Get the search query from settings or prompt the user.
         If there's no 'query' in the search_parameters, we ask the user.
         """
         if self.search_word is not None:
@@ -188,7 +191,8 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     # pylint: disable=unused-argument
     def load(self) -> dict:
-        """The interface requires a load method.
+        """
+        The interface requires a load method.
         We only handle .bib files here,
         so we raise NotImplementedError for other formats.
         """

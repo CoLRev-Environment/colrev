@@ -16,6 +16,7 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class Push(colrev.process.operation.Operation):
+
     """Push the project and record corrections."""
 
     type = OperationsType.check

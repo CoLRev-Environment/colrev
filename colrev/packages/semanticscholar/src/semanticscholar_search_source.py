@@ -37,6 +37,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
+
     """Semantic Scholar API Search Source."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
@@ -125,7 +126,8 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _get_semantic_scholar_api(
         self, *, params: dict, rerun: bool
     ) -> PaginatedResults:
-        """Get Semantic Scholar API depending on
+        """
+        Get Semantic Scholar API depending on
         the search subject and look for search parameters.
         """
         subject = params.pop("search_subject")

@@ -12,6 +12,7 @@ from colrev.constants import Fields
 
 
 class SemanticScholarUI:
+
     """Implements the User Interface for the SemanticScholar API Search within colrev."""
 
     search_params: dict
@@ -306,7 +307,8 @@ class SemanticScholarUI:
         return year_span
 
     def enter_study_fields(self) -> list:
-        """Method to ask a selection of fields of
+        """
+        Method to ask a selection of fields of
         study that are allowed by the Semantic Scholar API.
         """
         msg = (
@@ -367,7 +369,8 @@ class SemanticScholarUI:
         msg: str,
         options: list,
     ) -> list:
-        """Method to display a question with multiple
+        """
+        Method to display a question with multiple
         choice answers to the console using inquirer.
         """
         question = [
@@ -387,7 +390,8 @@ class SemanticScholarUI:
         *,
         msg: str,
     ) -> str:
-        """Method to display a question with free text
+        """
+        Method to display a question with free text
         entry answer to the console using inquirer.
         """
         question = [

@@ -32,6 +32,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Record:
+
     """The Record class provides a range of basic Function."""
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
@@ -851,7 +852,8 @@ class Record:
 
     @classmethod
     def get_record_change_score(cls, record_a: Record, record_b: Record) -> float:
-        """Determine how much records changed.
+        """
+        Determine how much records changed.
 
         This method is less sensitive than get_record_similarity, especially when
         fields are missing. For example, if the journal field is missing in both
@@ -874,7 +876,8 @@ class Record:
         default_source: str,
         preferred_masterdata_source_prefixes: typing.Optional[list] = None,
     ) -> None:
-        """General-purpose record merging
+        """
+        General-purpose record merging
         for preparation, curated/non-curated records and records with origins.
 
         Apply heuristics to create a fusion of the best fields based on

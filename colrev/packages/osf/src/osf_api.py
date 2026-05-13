@@ -12,6 +12,7 @@ from colrev.constants import Fields
 
 
 class OSFApiQuery:
+
     """Class for querying the OSF API."""
 
     base_url = "https://api.osf.io/v2/nodes/?"
@@ -53,7 +54,8 @@ class OSFApiQuery:
         return record_dict
 
     def _query_api(self, url: str) -> str:
-        """Creates the URL for the API call
+        """
+        Creates the URL for the API call
         string url  Full URL to pass to API
         return string: Results from API.
         """
@@ -62,7 +64,8 @@ class OSFApiQuery:
 
     # pylint: disable=broad-exception-caught
     def _resolve_authors(self, record: dict) -> None:
-        """Resolve OSF authors for a single record (in place).
+        """
+        Resolve OSF authors for a single record (in place).
 
         Replaces record[Fields.AUTHOR] (contributors URL) with a BibTeX-style string
         'Family, Given and Family, Given'. Guarantees the URL is not kept:

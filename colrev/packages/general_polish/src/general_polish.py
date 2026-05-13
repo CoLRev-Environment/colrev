@@ -20,6 +20,7 @@ from colrev.constants import Fields
 
 
 class GeneralPolishPrep(base_classes.PrepPackageBaseClass):
+
     """Prepares records by applying polishing rules."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

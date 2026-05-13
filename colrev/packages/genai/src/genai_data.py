@@ -23,6 +23,7 @@ from colrev.constants import RecordState
 
 
 class GenAIData(base_classes.DataPackageBaseClass):
+
     """GenAI-based data."""
 
     ci_supported: bool = Field(default=False)
@@ -30,6 +31,7 @@ class GenAIData(base_classes.DataPackageBaseClass):
     class GenAIDataSettings(
         colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
+
         """GenAI data settings."""
 
         endpoint: str

@@ -14,6 +14,7 @@ from colrev.constants import FieldValues
 
 
 class YearFormatChecker:
+
     """The YearFormatChecker."""
 
     msg = DefectCodes.YEAR_FORMAT

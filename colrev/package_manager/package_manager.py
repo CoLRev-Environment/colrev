@@ -18,6 +18,7 @@ from colrev.constants import Filepaths
 
 
 class PackageManager:
+
     """The PackageManager provides functionality for package lookup and discovery."""
 
     def _get_package_identifiers(self) -> list:

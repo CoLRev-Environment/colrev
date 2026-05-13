@@ -51,6 +51,7 @@ ENTRYTYPE_MAPPING = {
 
 
 class UnpaywallAPI:
+
     """API for Unpaywall."""
 
     def __init__(self, search_parameters: dict) -> None:

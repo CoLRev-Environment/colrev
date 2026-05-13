@@ -15,6 +15,7 @@ import colrev.package_manager.package_settings
 
 
 class MethodologicalReview(base_classes.ReviewTypePackageBaseClass):
+
     """Methodological review."""
 
     ci_supported: bool = Field(default=True)

@@ -14,6 +14,7 @@ from colrev.constants import Fields
 
 
 class LanguageService:
+
     """Service to detect languages and handle language codes."""
 
     _eng_false_negatives = ["editorial", "introduction"]

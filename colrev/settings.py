@@ -31,6 +31,7 @@ if typing.TYPE_CHECKING:
 
 
 class Author(BaseModel):
+
     """Author of the review."""
 
     # pylint: disable=too-many-instance-attributes
@@ -46,12 +47,14 @@ class Author(BaseModel):
 
 
 class Protocol(BaseModel):
+
     """Review protocol."""
 
     url: str
 
 
 class ProjectSettings(BaseModel):
+
     """Project settings."""
 
     # pylint: disable=too-many-instance-attributes
@@ -81,6 +84,7 @@ class ProjectSettings(BaseModel):
 
 
 class SearchSettings(BaseModel):
+
     """Search settings."""
 
     retrieve_forthcoming: bool
@@ -94,6 +98,7 @@ class SearchSettings(BaseModel):
 
 
 class PrepRound(BaseModel):
+
     """Prep round settings."""
 
     name: str
@@ -108,6 +113,7 @@ class PrepRound(BaseModel):
 
 
 class PrepSettings(BaseModel):
+
     """Prep settings."""
 
     fields_to_keep: typing.List[str]
@@ -130,6 +136,7 @@ class PrepSettings(BaseModel):
 
 
 class DedupeSettings(BaseModel):
+
     """Dedupe settings."""
 
     dedupe_package_endpoints: list
@@ -148,6 +155,7 @@ class DedupeSettings(BaseModel):
 
 
 class PrescreenSettings(BaseModel):
+
     """Prescreen settings."""
 
     explanation: str
@@ -167,6 +175,7 @@ class PrescreenSettings(BaseModel):
 
 
 class PDFGetSettings(BaseModel):
+
     """PDF get settings."""
 
     pdf_path_type: PDFPathType
@@ -194,6 +203,7 @@ class PDFGetSettings(BaseModel):
 
 
 class PDFPrepSettings(BaseModel):
+
     """PDF prep settings."""
 
     keep_backup_of_pdfs: bool
@@ -216,6 +226,7 @@ class PDFPrepSettings(BaseModel):
 
 
 class ScreenCriterion(BaseModel):
+
     """Screen criterion."""
 
     explanation: str
@@ -228,6 +239,7 @@ class ScreenCriterion(BaseModel):
 
 
 class ScreenSettings(BaseModel):
+
     """Screen settings."""
 
     explanation: typing.Optional[str] = None
@@ -256,6 +268,7 @@ class ScreenSettings(BaseModel):
 
 
 class DataSettings(BaseModel):
+
     """Data settings."""
 
     data_package_endpoints: list
@@ -271,6 +284,7 @@ class DataSettings(BaseModel):
 
 
 class Settings(BaseModel):
+
     """CoLRev project settings."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)

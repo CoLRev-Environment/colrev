@@ -9,7 +9,8 @@ UNPAYWALL_EMAIL_ENV_VAR = "UNPAYWALL_EMAIL"
 
 
 def get_email() -> str:
-    """Get user's name and email,.
+    """
+    Get user's name and email,.
 
     if user have specified an email in registry, that will be returned
     otherwise it will return the email used in git

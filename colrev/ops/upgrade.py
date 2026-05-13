@@ -32,6 +32,7 @@ from colrev.writer.write_utils import to_string
 
 
 class Upgrade(colrev.process.operation.Operation):
+
     """Upgrade a CoLRev project."""
 
     repo: git.Repo
@@ -75,7 +76,8 @@ class Upgrade(colrev.process.operation.Operation):
         self.repo.index.add(["settings.json"])
 
     def load_records_dict(self) -> dict:
-        """Load the records dictionary from a file and parse it using the bibtex parser.
+        """
+        Load the records dictionary from a file and parse it using the bibtex parser.
 
         Returns:
             dict: The loaded records dictionary.
@@ -89,7 +91,8 @@ class Upgrade(colrev.process.operation.Operation):
         return records
 
     def save_records_dict(self, records: dict) -> None:
-        """Save the records dictionary to a file and add it to the repository index.
+        """
+        Save the records dictionary to a file and add it to the repository index.
 
         Args:
             records (dict): The records dictionary to save.
@@ -943,6 +946,7 @@ class Upgrade(colrev.process.operation.Operation):
 
 
 class CoLRevVersion:
+
     """Class for handling the CoLRev version."""
 
     def __init__(self, version_string: str) -> None:
@@ -979,6 +983,7 @@ class CoLRevVersion:
         return False
 
     def __ge__(self, other) -> bool:  # type: ignore
+        """Return whether this instance is greater than or equal to another."""
         if self.major > other.major:
             return True
         if self.major == other.major and self.minor > other.minor:

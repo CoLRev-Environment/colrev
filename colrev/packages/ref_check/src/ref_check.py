@@ -12,6 +12,7 @@ from colrev.package_manager.package_base_classes import DataPackageBaseClass
 
 
 class RefCheck(DataPackageBaseClass):
+
     """RefCheck Class."""
 
     def __init__(
@@ -32,7 +33,8 @@ class RefCheck(DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> None:
-        """Update the data by running the data operation. This includes data extraction,
+        """
+        Update the data by running the data operation. This includes data extraction,
         analysis, and synthesis.
 
         Parameters
@@ -49,7 +51,8 @@ class RefCheck(DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
-        """Update the record status matrix,
+        """
+        Update the record status matrix,
         i.e., indicate whether the record is rev_synthesized for the given endpoint_identifier.
         """
         records = self.review_manager.dataset.load_records_dict()

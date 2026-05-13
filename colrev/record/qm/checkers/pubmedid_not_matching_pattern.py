@@ -13,6 +13,7 @@ from colrev.constants import Fields
 
 
 class PubmedIDPatternChecker:
+
     """The PubmedIDPatternChecker."""
 
     msg = DefectCodes.PUBMED_ID_NOT_MATCHING_PATTERN

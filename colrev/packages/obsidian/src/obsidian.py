@@ -19,6 +19,7 @@ from colrev.constants import Fields
 
 
 class Obsidian(base_classes.DataPackageBaseClass):
+
     """Export the sample into an Obsidian database."""
 
     ci_supported: bool = Field(default=False)
@@ -26,6 +27,7 @@ class Obsidian(base_classes.DataPackageBaseClass):
     class ObsidianSettings(
         colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
+
         """Settings for Obsidian."""
 
         endpoint: str

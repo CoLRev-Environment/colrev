@@ -21,6 +21,7 @@ from colrev.env.utils import get_by_path
 
 
 class EnvironmentManager:
+
     """The EnvironmentManager manages environment resources and services."""
 
     load_yaml = False
@@ -270,7 +271,8 @@ class EnvironmentManager:
         return True
 
     def get_settings_by_key(self, key: str) -> str | None:
-        """Loads setting by the given key.
+        """
+        Loads setting by the given key.
 
         The registry is stored in /home/username/colrev/registry.json
         """
@@ -281,7 +283,8 @@ class EnvironmentManager:
         return None
 
     def update_registry(self, key: str, value: str) -> None:
-        """Updates a given key in the registry with new value.
+        """
+        Updates a given key in the registry with new value.
 
         The registry is stored in /home/username/colrev/registry.json
         """

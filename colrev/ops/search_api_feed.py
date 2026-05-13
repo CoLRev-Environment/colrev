@@ -64,6 +64,7 @@ def create_api_source(
 
 # Keep in mind the need for lock-mechanisms, e.g., in concurrent prep operations
 class SearchAPIFeed:
+
     """A feed managing results from API searches."""
 
     # pylint: disable=too-many-instance-attributes
@@ -161,7 +162,8 @@ class SearchAPIFeed:
         )
 
     def _set_id(self, record: colrev.record.record.Record) -> None:
-        """Set incremental record ID
+        """
+        Set incremental record ID
         If self.source_identifier is in record_dict, it is updated, otherwise added as a new record.
         """
         if self.source_identifier not in record.data:

@@ -36,6 +36,7 @@ from colrev.writer.write_utils import to_string
 
 
 class LocalIndexBuilder:
+
     """The LocalIndexBuilder implements indexing functionality."""
 
     def __init__(

@@ -20,6 +20,7 @@ from colrev.constants import RecordState
 
 
 class CurationPrep(base_classes.PrepPackageBaseClass):
+
     """Preparation of curations."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

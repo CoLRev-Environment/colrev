@@ -1,5 +1,6 @@
 #! /usr/bin/env python
-"""Function to load files (BiBTeX, RIS, CSV, etc.).
+"""
+Function to load files (BiBTeX, RIS, CSV, etc.).
 
 Usage::
 

@@ -17,6 +17,7 @@ import colrev.loader.loader
 
 
 class TableLoader(colrev.loader.loader.Loader):
+
     """Loads csv and Excel files (based on pandas)."""
 
     def __init__(

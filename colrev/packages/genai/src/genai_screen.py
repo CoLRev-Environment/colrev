@@ -17,6 +17,7 @@ from colrev.constants import RecordState
 
 
 class GenAIScreen(base_classes.ScreenPackageBaseClass):
+
     """Screen documents using GenAI."""
 
     ci_supported: bool = Field(default=False)

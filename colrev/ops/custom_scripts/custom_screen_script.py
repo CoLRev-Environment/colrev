@@ -19,6 +19,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class CustomScreen(base_classes.ScreenPackageBaseClass):
+
     """Class for custom screen scripts."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

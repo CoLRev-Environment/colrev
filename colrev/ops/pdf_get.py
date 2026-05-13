@@ -169,6 +169,7 @@ def relink_pdfs_in_source(
 
 
 class PDFGet(colrev.process.operation.Operation):
+
     """Get the PDFs."""
 
     to_retrieve: int

@@ -40,7 +40,9 @@ from colrev.packages.pdf_backward_search.src import pdf_backward_search_api
 
 
 class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """Backward search extracting references from PDFs using GROBID
+
+    """
+    Backward search extracting references from PDFs using GROBID
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized).
     """
 

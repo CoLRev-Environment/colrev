@@ -16,14 +16,17 @@ import colrev.loader.loader
 
 
 class NextLine(Exception):
+
     """NextLineException."""
 
 
 class ParseError(Exception):
+
     """Parsing error."""
 
 
 class NBIBLoader(colrev.loader.loader.Loader):
+
     """Loads nbib files."""
 
     PATTERN = r"^[A-Z]{2,4}( ){1,2}- "

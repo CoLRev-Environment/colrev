@@ -22,6 +22,7 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
+
     """Prepares records based on the prepare scripts specified by the SearchSource."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

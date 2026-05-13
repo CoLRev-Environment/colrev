@@ -27,6 +27,7 @@ if typing.TYPE_CHECKING:
 
 
 class PRISMA(base_classes.DataPackageBaseClass):
+
     """Create a PRISMA diagram."""
 
     ci_supported: bool = Field(default=False)
@@ -34,6 +35,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
     class PRISMASettings(
         colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
+
         """PRISMA settings."""
 
         endpoint: str

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Linter for CoLRev - SearchSource packages importing requests.
+"""
+Linter for CoLRev - SearchSource packages importing requests.
 
 Network I/O should be extracted to a dedicated :mod:`api` module.
 """
@@ -17,6 +18,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class SearchSourceRequestsImportChecker(checkers.BaseChecker):
+
     """SearchSourceRequestsImportChecker."""
 
     name = "colrev-search-source-requests-import"

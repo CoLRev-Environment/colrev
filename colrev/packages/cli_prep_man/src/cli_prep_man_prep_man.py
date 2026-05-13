@@ -17,6 +17,7 @@ from colrev.packages.crossref.src import crossref_api
 
 
 class CliPrepMan(PrepManPackageBaseClass):
+
     """CLI for manual preparation of records."""
 
     def __init__(
@@ -118,7 +119,8 @@ def main() -> None:
     print("CLI initialized")
 
     def _select_target_ids(records: dict[str, dict]) -> list[str]:
-        """Ask user which records to process and return the selected record_ids.
+        """
+        Ask user which records to process and return the selected record_ids.
 
         Options:
         - All records where Fields.STATUS == RecordState.md_needs_man_prep

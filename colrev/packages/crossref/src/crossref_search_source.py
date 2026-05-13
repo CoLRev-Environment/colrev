@@ -36,6 +36,7 @@ from colrev.packages.crossref.src.crossref_api import query_doi
 
 
 class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
+
     """Crossref API."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
@@ -311,7 +312,8 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         record: colrev.record.record.Record,
         feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
-        """Restore the url from the feed if it exists
+        """
+        Restore the url from the feed if it exists
         (url-resolution is not always available).
         """
         prev_record = feed.get_prev_feed_record(record)

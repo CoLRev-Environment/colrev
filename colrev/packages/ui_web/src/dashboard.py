@@ -18,6 +18,7 @@ import colrev.exceptions as colrev_exceptions
 
 
 class Dashboard:
+
     """Dashboard class."""
 
     def make_dashboard(self) -> Dash:

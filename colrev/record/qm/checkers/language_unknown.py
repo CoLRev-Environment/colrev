@@ -12,6 +12,7 @@ from colrev.constants import FieldValues
 
 
 class LanguageChecker:
+
     """The LanguageChecker."""
 
     msg = DefectCodes.LANGUAGE_UNKNOWN

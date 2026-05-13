@@ -19,7 +19,9 @@ from colrev.constants import Fields
 
 
 class ExcludeComplementaryMaterialsPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records by excluding complementary materials
+
+    """
+    Prepares records by excluding complementary materials
     (tables of contents, editorial boards, about our authors).
     """
 

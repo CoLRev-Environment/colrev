@@ -1,4 +1,5 @@
-"""Pre-commit-hooks interface, automatically set up for every CoLRev project:
+"""
+Pre-commit-hooks interface, automatically set up for every CoLRev project:
 
 .. code-block:: yaml
 

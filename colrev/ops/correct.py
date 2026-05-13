@@ -18,6 +18,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Corrections:
+
     """Handling corrections of metadata."""
 
     # pylint: disable=duplicate-code

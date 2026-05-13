@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Review Manager.
+"""
+Review Manager.
 
 This module provides the core `ReviewManager` class, which acts as the central interface
 for managing a CoLRev project repository. It encapsulates configuration, logging,
@@ -36,6 +37,7 @@ from colrev.paths import PathManager
 
 
 class ReviewManager:
+
     """Class for managing individual CoLRev review project (repositories)."""
 
     # pylint: disable=import-outside-toplevel

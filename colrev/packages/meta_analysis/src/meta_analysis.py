@@ -21,6 +21,7 @@ from colrev.packages.pdf_backward_search.src.pdf_backward_search import (
 
 
 class MetaAnalysis(base_classes.ReviewTypePackageBaseClass):
+
     """Meta-analysis."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

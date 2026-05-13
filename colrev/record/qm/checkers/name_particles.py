@@ -11,6 +11,7 @@ from colrev.constants import Fields
 
 
 class NameParticlesChecker:
+
     """The NameParticlesChecker."""
 
     fields_to_check = [Fields.AUTHOR, Fields.EDITOR]

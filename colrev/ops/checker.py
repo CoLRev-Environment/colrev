@@ -27,6 +27,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Checker:
+
     """The CoLRev checker makes sure the project setup is ok."""
 
     records: typing.Dict[str, typing.Any] = {}
@@ -425,7 +426,8 @@ class Checker:
     def check_change_in_propagated_id(
         self, *, prior_id: str, new_id: str = "TBD", project_context: Path
     ) -> list:
-        """Check whether propagated IDs were changed.
+        """
+        Check whether propagated IDs were changed.
 
         A propagated ID is a record ID that is stored outside the records.bib.
         Propagated IDs should not be changed in the records.bib
@@ -759,7 +761,8 @@ class Checker:
         return failure_items
 
     def check_repo(self) -> dict:
-        """Check whether the repository is in a consistent state
+        """
+        Check whether the repository is in a consistent state
         Entrypoint for pre-commit hooks.
         """
         failure_items = []

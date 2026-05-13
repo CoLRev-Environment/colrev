@@ -19,6 +19,7 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class Screen(colrev.process.operation.Operation):
+
     """Screen records (based on PDFs)."""
 
     type = OperationsType.screen
