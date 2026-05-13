@@ -34,8 +34,12 @@ def test_build_docker_image(tmp_path) -> None:  # type: ignore
         for container in containers:
             container.remove()
 
-    # Do not run on macOS (GH-Actions) as Docker is not available
-    if os.getenv("RUNNER_OS") == "macOS":
+    # Do not run on macOS or Windows (GH-Actions) as Docker is not available
+    if os.getenv("RUNNER_OS") in ("macOS", "Windows"):
+        return
+
+    # Skip if running in CI (Docker not properly available)
+    if not continue_test():
         return
 
     remove_docker_container("hello-world:latest")
@@ -46,9 +50,6 @@ def test_build_docker_image(tmp_path) -> None:  # type: ignore
     remove_docker_container("hello-world:latest")
     remove_docker_image("hello-world:latest")
 
-    # Docker not available on Windows (GH-Actions)
-    if not continue_test():
-        return
 
     # Create a simple Dockerfile
     dockerfile_content = """
