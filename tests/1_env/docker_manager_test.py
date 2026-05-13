@@ -50,7 +50,6 @@ def test_build_docker_image(tmp_path) -> None:  # type: ignore
     remove_docker_container("hello-world:latest")
     remove_docker_image("hello-world:latest")
 
-
     # Create a simple Dockerfile
     dockerfile_content = """
     FROM python:3.9
