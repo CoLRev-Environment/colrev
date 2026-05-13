@@ -59,7 +59,8 @@ class TEIParser:
         - tei_path: read TEI from file.
         """
         # pylint: disable=consider-using-with
-        assert pdf_path is not None or tei_path is not None
+        if pdf_path is None and tei_path is None:
+            raise ValueError("Either pdf_path or tei_path must be provided")
         if pdf_path is not None:
             pdf_path = Path(pdf_path)
             if pdf_path.is_symlink():  # pragma: no cover

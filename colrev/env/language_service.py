@@ -40,7 +40,8 @@ class LanguageService:
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
     def _determine_alphabet(self, str_to_check: str) -> str:
-        assert len(str_to_check) != 0
+        if len(str_to_check) == 0:
+            raise ValueError("str_to_check must not be empty")
 
         str_to_check = re.sub(r"[\s\d\.\:]*", "", str_to_check)
 
@@ -116,7 +117,10 @@ class LanguageService:
 
     def validate_iso_639_3_language_codes(self, *, lang_code_list: list) -> None:
         """Validates whether a list of language codes complies with the ISO 639-3 standard."""
-        assert isinstance(lang_code_list, list)
+        if not isinstance(lang_code_list, list):
+            raise TypeError(
+                f"Expected lang_code_list to be a list, got {type(lang_code_list).__name__}"
+            )
 
         invalid_language_codes = [x for x in lang_code_list if 3 != len(x)]
         if invalid_language_codes:

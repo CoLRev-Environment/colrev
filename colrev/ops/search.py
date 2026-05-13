@@ -54,7 +54,12 @@ class Search(colrev.process.operation.Operation):
                 if s.search_results_path.name in selected_filenames
             ]
 
-        assert len(sources_selected) != 0
+        if len(sources_selected) == 0:
+            raise colrev_exceptions.ParameterError(
+                parameter="select",
+                value=selection_str,
+                options=[str(s.search_results_path) for s in self.sources],
+            )
         return sources_selected
 
     def _remove_forthcoming(

@@ -254,7 +254,10 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _validate_source(self) -> None:
         source = self.search_source
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
-        assert source.search_type == SearchType.API
+        if source.search_type != SearchType.API:
+            raise ValueError(
+                f"Expected search_type {SearchType.API}, got {source.search_type}"
+            )
 
     def search(self, rerun: bool) -> None:
         """Run a search of the SYNERGY datasets."""

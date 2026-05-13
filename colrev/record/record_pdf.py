@@ -160,8 +160,10 @@ class PDFRecord(colrev.record.record.Record):
 
     def get_pdf_hash(self, *, page_nr: int, hash_size: int = 32) -> str:
         """Get the PDF image hash."""
-        assert page_nr > 0
-        assert hash_size in [16, 32]
+        if page_nr <= 0:
+            raise ValueError(f"page_nr must be > 0, got {page_nr}")
+        if hash_size not in [16, 32]:
+            raise ValueError(f"hash_size must be one of [16, 32], got {hash_size}")
 
         pdf_path = self._get_path()
 

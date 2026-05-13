@@ -82,7 +82,10 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
-        assert source.search_type == SearchType.FORWARD_SEARCH
+        if source.search_type != SearchType.FORWARD_SEARCH:
+            raise ValueError(
+                f"Expected search_type {SearchType.FORWARD_SEARCH}, got {source.search_type}"
+            )
 
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(

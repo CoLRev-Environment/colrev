@@ -109,7 +109,10 @@ def _add_screen_criterion_interactively(
 ) -> None:
     """Add screening criterion interactively."""
     if add != "add_interactively":
-        assert add.count(",") == 2
+        if add.count(",") != 2:
+            raise click.BadParameter(
+                "Expected add argument in format: criterion_name,criterion_type,criterion_explanation"
+            )
         (
             criterion_name,
             criterion_type_str,
@@ -1005,7 +1008,8 @@ def dedupe(
         return
 
     if merge:
-        assert "," in merge
+        if "," not in merge:
+            raise click.BadParameter("Expected merge ids separated by commas")
         merge_ids = [i.split(",") for i in merge.split(";")]
 
         dedupe_operation.merge_records(merge=merge_ids)
@@ -1360,7 +1364,8 @@ def _extract_coverpage(*, cover: Path) -> None:
 
     Filepaths.COVERPAGES.mkdir(exist_ok=True)
 
-    assert Path(cover).suffix == ".pdf"
+    if Path(cover).suffix != ".pdf":
+        raise click.BadParameter(f"Expected a .pdf file, got {cover!r}")
     record = colrev.record.record_pdf.PDFRecord(
         {Fields.FILE: cover}, path=Path(cover).parent
     )
@@ -1712,7 +1717,8 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
     doc = pymupdf.Document(pdf_path)
     last_page_nr = doc.page_count
 
-    assert Path(pdf_path).suffix == ".pdf"
+    if Path(pdf_path).suffix != ".pdf":
+        raise click.BadParameter(f"Expected a .pdf file, got {str(pdf_path)!r}")
     record = colrev.record.record_pdf.PDFRecord(
         {Fields.FILE: pdf_path.name, Fields.ID: "NA"}, path=pdf_path.parents[0]
     )

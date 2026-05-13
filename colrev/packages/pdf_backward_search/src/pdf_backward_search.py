@@ -101,7 +101,10 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         source = self.search_source
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
-        assert source.search_type == SearchType.BACKWARD_SEARCH
+        if source.search_type != SearchType.BACKWARD_SEARCH:
+            raise ValueError(
+                f"Expected search_type {SearchType.BACKWARD_SEARCH}, got {source.search_type}"
+            )
 
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
@@ -576,8 +579,14 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         if "min_intext_citations" not in params_dict:
             cls._get_params_from_ui(params=params_dict, path=path)
         else:
-            assert params_dict["min_intext_citations"].isdigit()
-            assert params_dict["min_ref_freq"].isdigit()
+            if not params_dict["min_intext_citations"].isdigit():
+                raise ValueError(
+                    f"min_intext_citations must be numeric, got {params_dict['min_intext_citations']!r}"
+                )
+            if not params_dict["min_ref_freq"].isdigit():
+                raise ValueError(
+                    f"min_ref_freq must be numeric, got {params_dict['min_ref_freq']!r}"
+                )
 
         search_source = cls.get_default_source()
         if "min_intext_citations" in params_dict:

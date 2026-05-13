@@ -98,7 +98,8 @@ class Merge(colrev.process.operation.Operation):
             remote.fetch()
 
         branches = git_repo.heads
-        assert branch in [b.name for b in branches]
+        if branch not in [b.name for b in branches]:
+            raise ValueError(f"Branch does not exist: {branch!r}")
 
         git_branch = [b for b in branches if b.name == branch][0]
         merging_branch_author = git_branch.commit.author
@@ -114,7 +115,10 @@ class Merge(colrev.process.operation.Operation):
         unmerged_blobs = git_repo.index.unmerged_blobs()
 
         # Note : only two-way merges supported for now.
-        assert all(len(v) == 3 for k, v in unmerged_blobs.items())
+        if not all(len(v) == 3 for _, v in unmerged_blobs.items()):
+            raise RuntimeError(
+                "Only two-way merges with three blob stages are supported"
+            )
 
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
         if self.review_manager.paths.RECORDS_FILE_GIT in unmerged_blobs:

@@ -239,7 +239,10 @@ def _import_records(
             continue
         original_id = duplicate_id_set[0]
         other_id = duplicate_id_set[1]
-        assert other_id.startswith("other_")
+        if not other_id.startswith("other_"):
+            raise ValueError(
+                f"Expected other_id to start with 'other_', got {other_id!r}"
+            )
         print(f"{original_id} <-- {other_id}")
 
         # merge

@@ -81,7 +81,10 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         if "pdf_handling_mode" not in settings:
             settings["pdf_handling_mode"] = "symlink"
-        assert settings["pdf_handling_mode"] in ["symlink", "copy_first_page"]
+        if settings["pdf_handling_mode"] not in ["symlink", "copy_first_page"]:
+            raise ValueError(
+                "pdf_handling_mode must be one of ['symlink', 'copy_first_page']"
+            )
 
         self.settings = self.settings_class(**settings)
 

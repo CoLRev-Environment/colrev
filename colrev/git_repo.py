@@ -58,11 +58,8 @@ class GitRepo:
 
     def has_changes(self, relative_path: Path, *, change_type: str = "all") -> bool:
         """Check whether the relative path (or the git repository) has changes."""
-        assert change_type in [
-            "all",
-            "staged",
-            "unstaged",
-        ], "Invalid change_type specified"
+        if change_type not in ["all", "staged", "unstaged"]:
+            raise ValueError(f"Invalid change_type specified: {change_type!r}")
         try:
             bool(self.repo.head.commit)
         except ValueError:
@@ -179,11 +176,10 @@ class GitRepo:
     def get_commit_message(self, *, commit_nr: int) -> str:
         """Get the commit message for commit #."""
         master = self.repo.head.reference
-        assert commit_nr == 0  # extension : implement other cases
-        if commit_nr == 0:
-            cmsg = master.commit.message
-            return cmsg
-        return ""
+        if commit_nr != 0:
+            raise NotImplementedError("Only commit_nr == 0 is currently supported")
+        cmsg = master.commit.message
+        return cmsg
 
     def add_setting_changes(self) -> None:
         """Add changes in settings to git."""

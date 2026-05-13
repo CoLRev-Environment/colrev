@@ -29,7 +29,10 @@ class Loader:
         """Initialize the instance."""
         self.filename = filename
         self.unique_id_field = unique_id_field
-        assert id_labeler is not None or unique_id_field != ""
+        if id_labeler is None and unique_id_field == "":
+            raise ValueError(
+                "Either id_labeler must be provided or unique_id_field must be set"
+            )
         self.id_labeler = id_labeler
         self.entrytype_setter = entrytype_setter
         self.field_mapper = field_mapper
@@ -48,23 +51,22 @@ class Loader:
         else:
             self.id_labeler(records_list)  # type: ignore
 
-        assert all(
-            Fields.ID in record_dict for record_dict in records_list
-        ), "ID not set in all records"
+        if not all(Fields.ID in record_dict for record_dict in records_list):
+            raise ValueError("ID not set in all records")
         unique_ids = {record_dict[Fields.ID] for record_dict in records_list}
         non_unique_ids = [
             id
             for id in unique_ids
             if sum(1 for r in records_list if r[Fields.ID] == id) > 1
         ]
-        assert not non_unique_ids, f"ID is not unique in records: {non_unique_ids}"
+        if non_unique_ids:
+            raise ValueError(f"ID is not unique in records: {non_unique_ids}")
 
     def _set_entrytypes(self, records_dict: dict) -> None:
         for r_dict_val in records_dict.values():
             self.entrytype_setter(r_dict_val)
-        assert all(
-            Fields.ENTRYTYPE in r for r in records_dict.values()
-        ), "ENTRYTYPE not set in all records"
+        if not all(Fields.ENTRYTYPE in r for r in records_dict.values()):
+            raise ValueError("ENTRYTYPE not set in all records")
 
         for r in records_dict.values():
             if r[Fields.ENTRYTYPE] in ENTRYTYPES.get_all():
