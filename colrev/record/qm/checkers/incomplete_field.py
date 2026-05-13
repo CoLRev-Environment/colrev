@@ -19,6 +19,7 @@ class IncompleteFieldChecker:
     def __init__(
         self, quality_model: colrev.record.qm.quality_model.QualityModel
     ) -> None:
+        """Initialize the checker."""
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
@@ -65,6 +66,7 @@ class IncompleteFieldChecker:
     def _institutional_author(
         self, *, key: str, record: colrev.record.record.Record
     ) -> bool:
+        """Determine whether the author field contains an institutional author."""
         if key != Fields.AUTHOR or Fields.AUTHOR not in record.data:
             return False
         if record.data[Fields.AUTHOR].startswith("{") and record.data[

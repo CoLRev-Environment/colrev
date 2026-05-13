@@ -33,7 +33,7 @@ class MarkdownLoader(colrev.loader.loader.Loader):
         logger: logging.Logger = logging.getLogger(__name__),
         format_names: bool = False,
     ):
-
+        """Initialize the markdown loader."""
         super().__init__(
             filename=filename,
             id_labeler=id_labeler,

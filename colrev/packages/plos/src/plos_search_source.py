@@ -48,6 +48,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the PLOS search source."""
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
 
@@ -83,7 +84,8 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)
+        """Add the SearchSource as an endpoint based on a query.
+
         params:
         - search_file="..." to add a DB search.
         """

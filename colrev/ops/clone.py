@@ -18,6 +18,7 @@ class Clone:
     # pylint: disable=too-few-public-methods
 
     def __init__(self, *, git_url: str) -> None:
+        """Initialize the clone operation."""
         self.git_url = git_url
         """The git remote URL"""
 

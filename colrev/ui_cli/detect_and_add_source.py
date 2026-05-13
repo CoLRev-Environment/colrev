@@ -22,6 +22,7 @@ class CLISourceAdder:
     """CLI utility to add SearchSources."""
 
     def __init__(self, *, search_operation: colrev.ops.search.Search) -> None:
+        """Initialize the source adder."""
         self.search_operation = search_operation
         self.review_manager = search_operation.review_manager
         self.package_manager = PackageManager()
