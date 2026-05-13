@@ -13,12 +13,12 @@ colrev install colrev.plos
 ### API search
 To make an API search, first introduce the next command:
 
-```
+```text
 colrev search -a colrev.plos
 ```
 On the menu displayed, select the option API:
 
-```
+```text
 2024-12-20 16:22:31 [INFO] Add search package: colrev.plos
 [?] Select SearchType::
  > API
@@ -26,7 +26,7 @@ On the menu displayed, select the option API:
 ```
 
 Finally introduce a keyword to search:
-```
+```text
 Add colrev.plos as an API SearchSource
 
 Enter the keywords:
@@ -35,7 +35,7 @@ Enter the keywords:
 
 ### Load
 
-```
+```text
 colrev load
 ```
 
@@ -43,7 +43,7 @@ colrev load
 
 In order to test the metada provided for a specific `DOI` it can be used the following link:
 
-```
+```text
 https://api.plos.org/search?q=DOI:
 ```
 

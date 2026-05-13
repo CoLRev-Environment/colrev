@@ -9,7 +9,7 @@ By configuring and using this package, you can retrieve and manage metadata from
 
 The search for is launched with the following command in your ColRev project:
 
-```
+```bash
 colrev search --add colrev.springer_link
 ```
 
@@ -59,7 +59,7 @@ Format of the search-history file (API search):
 After selecting API search the user is asked to enter an API key for Springer Link (available upon [registration](https://dev.springernature.com/)).
 Set the API-KEY using
 
-```
+```bash
 export SPRINGER_API_KEY="your-api-key"
 ```
 

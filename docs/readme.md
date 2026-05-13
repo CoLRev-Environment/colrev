@@ -4,7 +4,7 @@
 
 To build the documentation locally, run
 
-```
+```bash
 make clean
 make html
 make linkcheck
@@ -15,7 +15,7 @@ When errors occur during `make html`, it can help to delete the `colrev/docs/sou
 Once available on Github, the documentation is automatically published at [readthedocs](https://colrev.readthedocs.io/en/latest/) (status information is available [here](https://readthedocs.org/projects/colrev/builds/)).
 
 
-```
+```bash
 python -m sphinx.ext.intersphinx https://colrev.readthedocs.io/en/stable/objects.inv
 ```
 
@@ -25,6 +25,6 @@ Use [asciinema](https://docs.asciinema.org/getting-started/) to record cli sessi
 
 Create the gif based on agg:
 
-```
+```bash
 docker run --rm -it -u $(id -u):$(id -g) -v $PWD:/data agg colrev_demo.cast --font-size 20 --cols 130 demo.gif
 ```

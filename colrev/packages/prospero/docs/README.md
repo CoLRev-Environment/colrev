@@ -11,7 +11,7 @@ colrev install colrev.prospero
 ### search
 
 Download the search results and store them in the data/search/ directory.
-```
+```bash
 colrev search --add colrev.prospero
 ```
 The search is done using keywords that can be entered into the console.
@@ -19,7 +19,7 @@ The search is done using keywords that can be entered into the console.
 ### load
 It is possible to save the records after search. All records that were found during the search will be saved to a data/records.bib file. Load function will add the records to the file or update existing one.
 
-```
+```bash
 colrev load
 ```
 ## Links

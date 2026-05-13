@@ -9,7 +9,7 @@ This package provides functionality aimed at
 
 1. Export the md_needs_manual_preparation cases
 
-```
+```bash
 colrev prep-man
 ```
 
@@ -22,7 +22,7 @@ Error code descriptions are available [here](https://colrev-environment.github.i
 
 3. (Re) import the records
 
-```
+```bash
 colrev prep-man
 ```
 

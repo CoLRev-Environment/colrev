@@ -43,27 +43,27 @@ If you are proposing a feature:
 * Keep the scope as narrow as possible, to make it easier to implement.
 * Remember that this is a volunteer-driven project, and that contributions are welcome :)
 
-## Get Started!
+## Get Started
 
 Ready to contribute? Here's how to set up `colrev` for local development.
 
 1. Fork the `colrev` repo on GitHub.
 2. Clone your fork locally:
 
-    ```
+    ```bash
     git clone git@github.com:your_name_here/colrev.git
     ```
 
 3. Install your local copy into a virtualenv. Assuming you have uv installed, this is how you set up your fork for local development:
 
-    ```
+    ```bash
     uv venv
     uv pip install --editable .
     ```
 
 4. Create a branch for local development:
 
-    ```
+    ```bash
     git checkout -b name-of-your-bugfix-or-feature
     ```
 
@@ -72,14 +72,14 @@ Ready to contribute? Here's how to set up `colrev` for local development.
 5. When you're done making changes, check that your changes pass the
    tests and pre-commit hooks:
 
-    ```
+    ```bash
     pytest
     pre-commit run -a
     ```
 
 6. Commit your changes and push your branch to GitHub:
 
-    ```
+    ```bash
     git add .
     git commit -m "Your detailed description of your changes."
     git push origin name-of-your-bugfix-or-feature
@@ -93,7 +93,7 @@ Ready to contribute? Here's how to set up `colrev` for local development.
 
 Install `pytest-mock`
 
-```
+```bash
 pip install pytest-mock
 ```
 
@@ -107,7 +107,7 @@ Beware, everything inside the folder will be deleted, so make sure you use the f
 
 To test and develop code, it may be helpful to use an example dataset (CoLRev repository) with chained commands, which automatically reset to the previous version and repeat the operation. For example, such a command could look like this:
 
-```
+```bash
 git reset --hard faaf5d7f5e6 && colrev prep && gitk
 ```
 
@@ -128,7 +128,7 @@ Before you submit a pull request, check that it meets these guidelines:
 Colrev uses `@all-contributors` to add contributors. You can add yourself as contributor by commenting on an Issue or
 Pull Request, by asking @all-contributors:
 
-```
+```text
 @all-contributors please add @<username> for <contributions>
 ```
 

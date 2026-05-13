@@ -45,7 +45,7 @@ button:hover {
 }
 
 .header-title {
-    color: #FFFFFF;
+    color: #FFF;
     font-size: 44px;
     font-weight: bold;
     text-align: center;
@@ -53,7 +53,7 @@ button:hover {
 }
 
 .header-subtitle {
-    color: #FFFFFF;
+    color: #FFF;
     font-size: 22px;
     text-align: center;
     margin: 0 auto;

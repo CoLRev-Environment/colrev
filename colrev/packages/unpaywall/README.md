@@ -9,7 +9,7 @@ This package primarily supports the retrieval of PDF documents from the [unpaywa
 An **email address** is required for API calls for the search and retrieval of PDFs.
 By default, the email address used in the git configuration is added to the unpaywall requests. To use a different email address, set the environment variable `UNPAYWALL_EMAIL`, for example:
 
-```
+```bash
 export UNPAYWALL_EMAIL="your@email.com"
 ```
 
@@ -26,7 +26,7 @@ Download search results and store them in the `data/search/` directory. When sea
 #### Option 1: Search with keywords
 
 1. Use the following command to add the endpoint:
-    ```
+    ```bash
     colrev search --add colrev.unpaywall
     ```
 2. Upon entering the command above with no additional parameters, a console interface opens up, in which the user is asked to enter the parameters and query for their search. Enter the keywords for the search by following the [Query & Keyword format](#api-search-query--keyword-format) like described underneath.
@@ -40,23 +40,25 @@ The user can enter a single term or use the Boolean `AND`, `OR`, `NOT` for a spe
 - If you enter two terms without a boolean operator but a whitespace in between, the default is `AND`
 - Search phrases must be enclosed in double quotes `"`
 
-    ##### Examples
+##### Examples
 
-    - A single search term: `thermometry`
-    - Search Phrase: `"hash table"`
-    - Two terms with AND: `cell AND thermometry` equals `cell thermometry`
-    - Two terms with OR: `cell OR thermometry`
-    - Negation of a term: `cell NOT thermometry`
+- A single search term: `thermometry`
+- Search Phrase: `"hash table"`
+- Two terms with AND: `cell AND thermometry` equals `cell thermometry`
+- Two terms with OR: `cell OR thermometry`
+- Negation of a term: `cell NOT thermometry`
 
 #### Option 2: Search with URL for simple single-term query
 
 1. Visit the [Unpaywall Article Search tool](https://unpaywall.org/articles), enter the keyword for a simple single-term query and click on "View in API" to copy the URL.
 
 2. Use the following command to add the endpoint with the copied URL:
-    ##### Example
-   ```
-    colrev search --add colrev.unpaywall -p "https://api.unpaywall.org/v2/search?query=thermometry&is_oa=true&email=unpaywall_01@example.com"
-   ```
+
+##### Example
+
+```bash
+colrev search --add colrev.unpaywall -p "https://api.unpaywall.org/v2/search?query=thermometry&is_oa=true&email=unpaywall_01@example.com"
+```
 
 ##### Unpaywall Query Parameters
 
@@ -98,7 +100,7 @@ Note: This document is currently under development. It will contain the followin
 The unpaywall package is activated by default.
 If it is not yet activated, run
 
-```
+```bash
 colrev pdf-get -a colrev.unpaywall
 ```
 

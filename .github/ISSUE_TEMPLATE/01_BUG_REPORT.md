@@ -28,7 +28,7 @@ assignees: ""
 
 <!-- If you are able to illustrate the bug or feature request with an example, please provide it here. -->
 
-```
+```text
 insert short code snippets here
 ```
 
