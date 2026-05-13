@@ -45,7 +45,6 @@ class ReviewTypePackageBaseClass(abc.ABC):
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
-        pass
 
     @abstractmethod
     def initialize(self, settings: colrev.settings.Settings) -> dict:
@@ -83,7 +82,6 @@ class SearchSourcePackageBaseClass(ABC):
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
-        pass
 
     @classmethod
     @abstractmethod
@@ -153,7 +151,6 @@ class PrepPackageBaseClass(ABC):
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
-        pass
 
     @abstractmethod
     def prepare(
@@ -185,7 +182,6 @@ class PrepManPackageBaseClass(ABC):
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
-        pass
 
     @abstractmethod
     def prepare_manual(self, records: dict) -> dict:
@@ -214,7 +210,6 @@ class DedupePackageBaseClass(ABC):
         verbose_mode: bool = False,
     ):
         """Initialize the instance."""
-        pass
 
     @abstractmethod
     def run_dedupe(self) -> None:
@@ -244,7 +239,6 @@ class PrescreenPackageBaseClass(ABC):
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
-        pass
 
     @abstractmethod
     def run_prescreen(self, records: dict, split: list) -> dict:
@@ -273,7 +267,6 @@ class PDFGetPackageBaseClass(ABC):
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
-        pass
 
     @abstractmethod
     def get_pdf(
@@ -304,7 +297,6 @@ class PDFGetManPackageBaseClass(ABC):
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
-        pass
 
     @abstractmethod
     def pdf_get_man(self, records: dict) -> dict:
@@ -333,7 +325,6 @@ class PDFPrepPackageBaseClass(ABC):
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
-        pass
 
     @abstractmethod
     def prep_pdf(
@@ -364,7 +355,6 @@ class PDFPrepManPackageBaseClass(ABC):
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
-        pass
 
     @abstractmethod
     def pdf_prep_man(self, records: dict) -> dict:
@@ -394,7 +384,6 @@ class ScreenPackageBaseClass(ABC):
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
-        pass
 
     @abstractmethod
     def run_screen(self, records: dict, split: list) -> dict:
@@ -423,7 +412,6 @@ class DataPackageBaseClass(ABC):
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
-        pass
 
     @abstractmethod
     def update_data(
