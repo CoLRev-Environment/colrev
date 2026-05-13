@@ -31,7 +31,6 @@ from colrev.packages.osf.src.osf_api import OSFApiQuery
 
 
 class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
-
     """OSF."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

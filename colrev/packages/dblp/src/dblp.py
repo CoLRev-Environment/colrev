@@ -36,7 +36,6 @@ from colrev.packages.dblp.src import dblp_api
 
 
 class DBLPSearchSourceSettings(colrev.search_file.ExtendedSearchFile, BaseModel):
-
     """Settings for DBLPSearchSource."""
 
     # pylint: disable=duplicate-code
@@ -56,7 +55,6 @@ class DBLPSearchSourceSettings(colrev.search_file.ExtendedSearchFile, BaseModel)
 
 
 class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
-
     """DBLP API."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

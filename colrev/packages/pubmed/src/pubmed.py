@@ -37,7 +37,6 @@ from colrev.packages.pubmed.src import pubmed_api
 
 
 class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
-
     """Pubmed."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

@@ -18,7 +18,6 @@ from colrev.constants import SearchType
 
 
 class CuratedMasterdata(base_classes.ReviewTypePackageBaseClass):
-
     """Curated masterdata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

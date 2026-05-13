@@ -12,7 +12,6 @@ from pathlib import Path
 
 
 class Filepaths:
-
     """Filepaths for CoLRev."""
 
     # Environment-specific paths
@@ -42,7 +41,6 @@ class Filepaths:
 
 
 class FileSets:
-
     """File sets for CoLRev."""
 
     DEFAULT_GIT_IGNORE_ITEMS = [
@@ -75,7 +73,6 @@ class FileSets:
 
 
 class ENTRYTYPES:
-
     """Constants for record ENTRYTYPEs."""
 
     ARTICLE = "article"
@@ -119,7 +116,6 @@ class ENTRYTYPES:
 
 
 class Fields:
-
     """Constant field names."""
 
     ID = "ID"
@@ -226,14 +222,12 @@ class Fields:
 
 
 class FieldsRegex:
-
     """Regex patterns for specific fields."""
 
     DOI = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
 
 
 class LocalIndexFields:
-
     """Fields used in the local index."""
 
     ID = "id"
@@ -245,7 +239,6 @@ class LocalIndexFields:
 
 
 class FieldValues:
-
     """Constant field values."""
 
     UNKNOWN = "UNKNOWN"
@@ -256,7 +249,6 @@ class FieldValues:
 
 
 class FieldSet:
-
     """Constant field sets."""
 
     # """Keys of identifying fields considered for masterdata provenance"""
@@ -391,7 +383,6 @@ ENTRYTYPE_FIELD_REQUIREMENTS = {
 
 
 class RecordState(Enum):
-
     """
     The possible RecordStates stored in the colrev_status field
     (corresponding to the ProcessModel).
@@ -541,7 +532,6 @@ class RecordState(Enum):
 
 
 class DefectCodes:
-
     """Constant defect codes."""
 
     MISSING = "missing"
@@ -574,7 +564,6 @@ class DefectCodes:
 
 
 class PDFDefectCodes:
-
     """Constant PDF defect codes."""
 
     NO_TEXT_IN_PDF = "no-text-in-pdf"
@@ -586,7 +575,6 @@ class PDFDefectCodes:
 
 
 class OperationsType(Enum):
-
     """Operation types correspond to the main state transitions (see ProcessModel)."""
 
     # pylint: disable=invalid-name
@@ -622,7 +610,6 @@ class OperationsType(Enum):
 
 
 class IDPattern(Enum):
-
     """The pattern for generating record IDs."""
 
     # pylint: disable=invalid-name
@@ -637,7 +624,6 @@ class IDPattern(Enum):
 
 
 class SortedEnumMeta(EnumMeta):
-
     """SortedEnumMeta."""
 
     def __init__(
@@ -653,7 +639,6 @@ class SortedEnumMeta(EnumMeta):
 
 
 class SearchType(Enum, metaclass=SortedEnumMeta):
-
     """Type of search source."""
 
     API = "API"  # Keyword-searches
@@ -683,7 +668,6 @@ class SearchType(Enum, metaclass=SortedEnumMeta):
 
 
 class SearchSourceHeuristicStatus(Enum):
-
     """Status of the SearchSource heuristic."""
 
     # pylint: disable=invalid-name
@@ -698,7 +682,6 @@ class SearchSourceHeuristicStatus(Enum):
 
 
 class PDFPathType(Enum):
-
     """Policy for handling PDFs (create symlinks or copy files)."""
 
     # pylint: disable=invalid-name
@@ -713,7 +696,6 @@ class PDFPathType(Enum):
 
 
 class ScreenCriterionType(Enum):
-
     """Type of screening criterion."""
 
     # pylint: disable=invalid-name
@@ -732,7 +714,6 @@ class ScreenCriterionType(Enum):
 
 
 class ShareStatReq(Enum):
-
     """Record status requirements for sharing."""
 
     # pylint: disable=invalid-name
@@ -750,7 +731,6 @@ class ShareStatReq(Enum):
 
 # pylint: disable=colrev-missed-constant-usage
 class EndpointType(Enum):
-
     """An enum for the types of PackageEndpoints."""
 
     # pylint: disable=C0103
@@ -783,7 +763,6 @@ class EndpointType(Enum):
 
 
 class ExitCodes:
-
     """Exit codes."""
 
     SUCCESS = 0
@@ -791,7 +770,6 @@ class ExitCodes:
 
 
 class Colors:
-
     """Colors for CLI printing."""
 
     RED = "\033[91m"

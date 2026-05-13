@@ -36,7 +36,6 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class Initializer:
-
     """Initialize a CoLRev project."""
 
     review_manager: colrev.review_manager.ReviewManager

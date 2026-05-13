@@ -18,7 +18,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Trace(colrev.process.operation.Operation):
-
     """Trace a record through history."""
 
     type = OperationsType.check

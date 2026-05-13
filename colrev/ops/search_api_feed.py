@@ -64,7 +64,6 @@ def create_api_source(
 
 # Keep in mind the need for lock-mechanisms, e.g., in concurrent prep operations
 class SearchAPIFeed:
-
     """A feed managing results from API searches."""
 
     # pylint: disable=too-many-instance-attributes

@@ -23,7 +23,6 @@ from colrev.writer.write_utils import write_file
 
 
 class PDFPrepMan(colrev.process.operation.Operation):
-
     """Prepare PDFs manually."""
 
     type = OperationsType.pdf_prep_man

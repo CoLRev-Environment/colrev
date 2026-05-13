@@ -30,7 +30,6 @@ PREP_COUNTER = Value("i", 0)
 
 # pylint: disable=too-many-instance-attributes
 class PrepDebug(colrev.ops.prep.Prep):
-
     """Debug prepare records (metadata)."""
 
     debug_ids: typing.List[str]

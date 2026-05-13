@@ -21,7 +21,6 @@ from colrev.constants import SearchType
 
 
 class EuropePMCMetadataPrep(base_classes.PrepPackageBaseClass):
-
     """Prepares records based on Europe PCM metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

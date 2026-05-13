@@ -13,7 +13,6 @@ from colrev.constants import FieldValues
 
 
 class MostlyAllCapsFieldChecker:
-
     """The MostlyAllCapsFieldChecker."""
 
     msg = DefectCodes.MOSTLY_ALL_CAPS

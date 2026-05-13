@@ -28,7 +28,6 @@ from colrev.constants import RecordState
 
 
 class CoLRevCLIPDFManPrep(base_classes.PDFPrepManPackageBaseClass):
-
     """Manually prepare PDFs based on a CLI (not yet implemented)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
@@ -385,5 +384,4 @@ class CoLRevCLIPDFManPrep(base_classes.PDFPrepManPackageBaseClass):
 
 
 class QuitPressedException(Exception):
-
     """Quit-pressed exception."""

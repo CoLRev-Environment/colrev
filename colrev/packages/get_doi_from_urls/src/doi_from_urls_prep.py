@@ -28,7 +28,6 @@ from colrev.constants import Fields
 
 
 class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
-
     """Prepares records by retrieving its DOI from the website (URL)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

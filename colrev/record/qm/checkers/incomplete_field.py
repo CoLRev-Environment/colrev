@@ -12,7 +12,6 @@ from colrev.constants import FieldValues
 
 
 class IncompleteFieldChecker:
-
     """The IncompleteFieldChecker."""
 
     msg = DefectCodes.INCOMPLETE_FIELD

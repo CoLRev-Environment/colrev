@@ -18,7 +18,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class RecordsVariableNamingConventionChecker(checkers.BaseChecker):
-
     """RecordsVariableNamingConvention + simple type rules."""
 
     name = "colrev-records-variable-naming-convention"

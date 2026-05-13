@@ -16,7 +16,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class ISBNPatternChecker:
-
     """The ISBNPatternChecker."""
 
     msg = DefectCodes.ISBN_NOT_MATCHING_PATTERN

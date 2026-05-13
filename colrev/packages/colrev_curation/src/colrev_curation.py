@@ -24,7 +24,6 @@ from colrev.constants import RecordState
 class ColrevCurationSettings(
     colrev.package_manager.package_settings.DefaultSettings, BaseModel
 ):
-
     """Colrev Curation settings."""
 
     endpoint: str
@@ -36,7 +35,6 @@ class ColrevCurationSettings(
 
 
 class ColrevCuration(base_classes.DataPackageBaseClass):
-
     """CoLRev Curation."""
 
     settings: ColrevCurationSettings

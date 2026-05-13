@@ -27,7 +27,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Checker:
-
     """The CoLRev checker makes sure the project setup is ok."""
 
     records: typing.Dict[str, typing.Any] = {}

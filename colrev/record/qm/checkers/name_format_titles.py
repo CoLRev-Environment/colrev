@@ -13,7 +13,6 @@ from colrev.constants import Fields
 
 
 class NameFormatTitleChecker:
-
     """The NameFormatTitleChecker."""
 
     fields_to_check = [Fields.AUTHOR, Fields.EDITOR]

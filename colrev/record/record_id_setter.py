@@ -25,7 +25,6 @@ import colrev.record.record_prep
 
 
 class IDSetter:
-
     """The IDSetter class."""
 
     def __init__(

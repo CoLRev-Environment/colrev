@@ -16,12 +16,10 @@ from colrev.constants import Fields
 
 
 class EuropePMCAPIError(Exception):
-
     """Exception raised for Europe PMC API errors."""
 
 
 class EPMCAPI:
-
     """Connector for the Europe PMC API."""
 
     def __init__(self, params: dict, email: str, session: requests.Session) -> None:

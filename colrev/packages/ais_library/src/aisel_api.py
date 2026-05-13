@@ -14,13 +14,11 @@ from colrev.packages.ais_library.src import ais_load_utils
 
 
 class AISeLAPIError(Exception):
-
     """Exception raised when AISeL requests fail."""
 
 
 # pylint: disable=too-few-public-methods
 class AISeLAPI:
-
     """Handle HTTP interactions with the AISeL platform."""
 
     def __init__(

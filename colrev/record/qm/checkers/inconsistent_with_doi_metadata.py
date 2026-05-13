@@ -16,7 +16,6 @@ from colrev.packages.crossref.src.crossref_api import query_doi
 
 
 class InconsistentWithDOIMetadataChecker:
-
     """The InconsistentWithDOIMetadataChecker."""
 
     msg = DefectCodes.INCONSISTENT_WITH_DOI_METADATA

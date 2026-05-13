@@ -23,7 +23,6 @@ BASECLASS_OVERVIEW = base_classes.BASECLASS_OVERVIEW
 
 
 class Package:
-
     """A Python package for CoLRev."""
 
     def __init__(self, package_identifier: str) -> None:

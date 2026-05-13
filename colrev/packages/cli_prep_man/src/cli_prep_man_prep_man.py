@@ -17,7 +17,6 @@ from colrev.packages.crossref.src import crossref_api
 
 
 class CliPrepMan(PrepManPackageBaseClass):
-
     """CLI for manual preparation of records."""
 
     def __init__(

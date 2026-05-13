@@ -11,12 +11,10 @@ import requests
 
 
 class OpenLibraryAPIError(Exception):
-
     """Exception raised for OpenLibrary API errors."""
 
 
 class OpenLibraryAPI:
-
     """Helper around OpenLibrary HTTP interactions."""
 
     def __init__(

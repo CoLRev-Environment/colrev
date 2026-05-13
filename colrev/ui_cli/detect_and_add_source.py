@@ -19,7 +19,6 @@ if typing.TYPE_CHECKING:
 
 
 class CLISourceAdder:
-
     """CLI utility to add SearchSources."""
 
     def __init__(self, *, search_operation: colrev.ops.search.Search) -> None:

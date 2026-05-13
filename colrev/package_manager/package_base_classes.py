@@ -25,7 +25,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class ReviewTypePackageBaseClass(abc.ABC):
-
     """
     The base class for ReviewType packages.
 
@@ -54,7 +53,6 @@ class ReviewTypePackageBaseClass(abc.ABC):
 
 
 class SearchSourcePackageBaseClass(ABC):
-
     """
     The base class for SearchSource packages.
 
@@ -132,7 +130,6 @@ class SearchSourcePackageBaseClass(ABC):
 
 
 class PrepPackageBaseClass(ABC):
-
     """
     The base class for Prep packages.
 
@@ -166,7 +163,6 @@ class PrepPackageBaseClass(ABC):
 
 
 class PrepManPackageBaseClass(ABC):
-
     """
     The base class for PrepMan packages.
 
@@ -197,7 +193,6 @@ class PrepManPackageBaseClass(ABC):
 
 
 class DedupePackageBaseClass(ABC):
-
     """
     The base class for Dedupe packages.
 
@@ -227,7 +222,6 @@ class DedupePackageBaseClass(ABC):
 
 
 class PrescreenPackageBaseClass(ABC):
-
     """
     The base class for Prescreen packages.
 
@@ -258,7 +252,6 @@ class PrescreenPackageBaseClass(ABC):
 
 
 class PDFGetPackageBaseClass(ABC):
-
     """
     The base class for PDFGet packages.
 
@@ -290,7 +283,6 @@ class PDFGetPackageBaseClass(ABC):
 
 
 class PDFGetManPackageBaseClass(ABC):
-
     """
     The base class for PDFGetMan packages.
 
@@ -320,7 +312,6 @@ class PDFGetManPackageBaseClass(ABC):
 
 
 class PDFPrepPackageBaseClass(ABC):
-
     """
     The base class for PDFPrep packages.
 
@@ -352,7 +343,6 @@ class PDFPrepPackageBaseClass(ABC):
 
 
 class PDFPrepManPackageBaseClass(ABC):
-
     """
     The base class for PDFPrepMan packages.
 
@@ -382,7 +372,6 @@ class PDFPrepManPackageBaseClass(ABC):
 
 
 class ScreenPackageBaseClass(ABC):
-
     """
     The base class for Screen packages.
 
@@ -413,7 +402,6 @@ class ScreenPackageBaseClass(ABC):
 
 
 class DataPackageBaseClass(ABC):
-
     """
     The base class for Data packages.
 

@@ -12,7 +12,6 @@ from colrev.constants import Fields
 
 
 class SemanticScholarUI:
-
     """Implements the User Interface for the SemanticScholar API Search within colrev."""
 
     search_params: dict

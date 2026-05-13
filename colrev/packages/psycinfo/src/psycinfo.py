@@ -23,7 +23,6 @@ from colrev.ops.search_db import run_db_search
 
 
 class PsycINFOSearchSource(base_classes.SearchSourcePackageBaseClass):
-
     """PsycINFO."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

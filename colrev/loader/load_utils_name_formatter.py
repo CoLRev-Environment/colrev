@@ -44,7 +44,6 @@ def split_tex_string(
 
 
 class NameParser:
-
     """Parse a name string."""
 
     def __init__(self, name: str) -> None:

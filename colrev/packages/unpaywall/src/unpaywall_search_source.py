@@ -25,7 +25,6 @@ from colrev.packages.unpaywall.src.api import UnpaywallAPI
 
 
 class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
-
     """Unpaywall Search Source."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

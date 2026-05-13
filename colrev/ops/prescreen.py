@@ -23,7 +23,6 @@ ConditionalPrescreen = (
 
 
 class Prescreen(colrev.process.operation.Operation):
-
     """Prescreen records (based on metadata)."""
 
     type = OperationsType.prescreen

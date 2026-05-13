@@ -11,7 +11,6 @@ from colrev.constants import Fields
 
 
 class ThesisWithMultipleAuthorsChecker:
-
     """The ThesisWithMultipleAuthorsChecker."""
 
     msg = DefectCodes.THESIS_WITH_MULTIPLE_AUTHORS

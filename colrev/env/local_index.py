@@ -23,7 +23,6 @@ from colrev.env.local_index_prep import prepare_record_for_return
 
 
 class LocalIndex:
-
     """The LocalIndex implements indexing and retrieval of records across projects."""
 
     def __init__(

@@ -37,7 +37,6 @@ from colrev.paths import PathManager
 
 
 class ReviewManager:
-
     """Class for managing individual CoLRev review project (repositories)."""
 
     # pylint: disable=import-outside-toplevel

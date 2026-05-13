@@ -27,7 +27,6 @@ INTERNAL_PACKAGES = (
 
 # pylint: disable=too-many-instance-attributes
 class PackageDoc:
-
     """PackageDoc."""
 
     package_id: str
@@ -346,7 +345,6 @@ class PackageDoc:
 
 # pylint: disable=too-few-public-methods
 class DocRegistryManager:
-
     """DocRegistryManager."""
 
     # Overview page of packages: rst

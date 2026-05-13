@@ -126,7 +126,6 @@ def _pair_sort_key(vol: str, iss: str) -> Tuple[Tuple[int, str], Tuple[int, str]
 
 @dataclass
 class TocConfig:
-
     """TocConfig."""
 
     issns: List[str]

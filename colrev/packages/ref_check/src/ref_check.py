@@ -12,7 +12,6 @@ from colrev.package_manager.package_base_classes import DataPackageBaseClass
 
 
 class RefCheck(DataPackageBaseClass):
-
     """RefCheck Class."""
 
     def __init__(

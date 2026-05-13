@@ -35,7 +35,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class TEIParser:
-
     """Environment service for TEI parsing."""
 
     ns = {

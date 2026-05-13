@@ -25,7 +25,6 @@ from colrev.ops.search_db import run_db_search
 
 
 class EbscoHostSearchSource(base_classes.SearchSourcePackageBaseClass):
-
     """EBSCOHost."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

@@ -25,7 +25,6 @@ from colrev.writer.write_utils import write_file
 class GHPagesSettings(
     colrev.package_manager.package_settings.DefaultSettings, BaseModel
 ):
-
     """Settings for GithubPages."""
 
     endpoint: str
@@ -41,7 +40,6 @@ class GHPagesSettings(
 
 
 class GithubPages(base_classes.DataPackageBaseClass):
-
     """Export the literature review into a Github Page."""
 
     settings: GHPagesSettings

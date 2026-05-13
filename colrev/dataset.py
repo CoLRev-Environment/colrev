@@ -25,7 +25,6 @@ from colrev.writer.write_utils import to_string
 
 
 class Dataset:
-
     """The CoLRev dataset (records and their history in git)."""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:

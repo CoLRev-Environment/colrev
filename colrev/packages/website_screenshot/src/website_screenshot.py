@@ -27,7 +27,6 @@ from colrev.constants import RecordState
 
 
 class WebsiteScreenshot(base_classes.PDFGetPackageBaseClass):
-
     """Get PDFs from website screenshot (for "online" ENTRYTYPES)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

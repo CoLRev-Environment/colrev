@@ -17,7 +17,6 @@ from colrev.constants import PDFDefectCodes
 
 
 class AuthorNotInPDFChecker:
-
     """The AuthorNotInPDFChecker."""
 
     msg = PDFDefectCodes.AUTHOR_NOT_IN_PDF

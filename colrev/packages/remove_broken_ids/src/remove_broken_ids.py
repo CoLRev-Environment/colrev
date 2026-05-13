@@ -19,7 +19,6 @@ from colrev.constants import Fields
 
 
 class RemoveBrokenIDPrep(base_classes.PrepPackageBaseClass):
-
     """Prepares records by removing invalid IDs DOIs/ISBNs."""
 
     ci_supported: bool = Field(default=True)

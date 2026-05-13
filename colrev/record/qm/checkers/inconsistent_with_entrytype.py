@@ -11,7 +11,6 @@ from colrev.constants import Fields
 
 
 class InconsistentWithEntrytypeChecker:
-
     """The InconsistentWithEntrytypeChecker."""
 
     record_field_inconsistencies: dict[str, list[str]] = {

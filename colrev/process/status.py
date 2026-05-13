@@ -18,7 +18,6 @@ if typing.TYPE_CHECKING:
 
 
 class StatusStatsCurrently(BaseModel):
-
     """The current status statistics."""
 
     # pylint: disable=too-many-instance-attributes
@@ -43,7 +42,6 @@ class StatusStatsCurrently(BaseModel):
 
 
 class StatusStatsOverall(BaseModel):
-
     """The overall-status statistics (records currently/previously in each state)."""
 
     # pylint: disable=too-many-instance-attributes
@@ -412,7 +410,6 @@ def get_status_stats(
 
 
 class StatusStats(BaseModel):
-
     """Data class for status statistics."""
 
     # pylint: disable=too-many-instance-attributes

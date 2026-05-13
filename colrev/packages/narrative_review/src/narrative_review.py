@@ -15,7 +15,6 @@ import colrev.package_manager.package_settings
 
 
 class NarrativeReview(base_classes.ReviewTypePackageBaseClass):
-
     """Narrative review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

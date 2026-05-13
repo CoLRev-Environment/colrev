@@ -12,7 +12,6 @@ from colrev.constants import Fields
 
 
 class OSFApiQuery:
-
     """Class for querying the OSF API."""
 
     base_url = "https://api.osf.io/v2/nodes/?"

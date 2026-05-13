@@ -13,7 +13,6 @@ from colrev.constants import Fields
 
 
 class PageRangeChecker:
-
     """The PageRangeChecker."""
 
     msg = DefectCodes.PAGE_RANGE

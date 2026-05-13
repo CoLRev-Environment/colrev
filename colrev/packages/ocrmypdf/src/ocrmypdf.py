@@ -25,7 +25,6 @@ from colrev.constants import PDFDefectCodes
 
 
 class OCRMyPDF(base_classes.PDFPrepPackageBaseClass):
-
     """Prepare PDFs by applying OCR based on OCRmyPDF."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

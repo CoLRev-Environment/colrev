@@ -38,17 +38,14 @@ SESSION = requests_cache.CachedSession(
 
 
 class PlosAPIError(Exception):
-
     """Plos API Error."""
 
 
 class MaxOffsetError(PlosAPIError):
-
     """Max Offset Error."""
 
 
 class HTTPRequest:
-
     """HTTP Resquest."""
 
     def __init__(self, *, timeout: int) -> None:
@@ -107,7 +104,6 @@ class HTTPRequest:
 
 
 class Endpoint:
-
     """Endpoint."""
 
     CURSOR_AS_ITER_METHOD = False
@@ -268,7 +264,6 @@ class Endpoint:
 
 
 class PlosAPI:
-
     """PLOS Api."""
 
     ISSN_REGEX = r"^\d{4}-?\d{3}[\dxX]$"

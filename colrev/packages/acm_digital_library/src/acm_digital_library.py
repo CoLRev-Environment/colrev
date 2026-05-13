@@ -26,7 +26,6 @@ if typing.TYPE_CHECKING:
 
 
 class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
-
     """ACM digital Library."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

@@ -12,7 +12,6 @@ from colrev.writer.write_utils import write_file
 
 
 class Remove(colrev.process.operation.Operation):
-
     """Remove records, ... from CoLRev projects."""
 
     type = OperationsType.check

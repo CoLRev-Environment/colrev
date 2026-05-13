@@ -10,12 +10,10 @@ from colrev.constants import Colors
 
 
 class CoLRevException(Exception):
-
     """Base class for all exceptions raised by this package."""
 
 
 class RepoSetupError(CoLRevException):
-
     """The project files are not properly set up as a CoLRev project."""
 
     lr_docs = (
@@ -69,7 +67,6 @@ class RepoSetupError(CoLRevException):
 
 
 class CoLRevUpgradeError(CoLRevException):
-
     """
     The version of the local CoLRev package does not match with the CoLRev version
     used to create the latest commit in the project.
@@ -86,7 +83,6 @@ class CoLRevUpgradeError(CoLRevException):
 
 
 class ReviewManagerNotNotifiedError(CoLRevException):
-
     """
     The ReviewManager was not notified about the operation.
 
@@ -136,7 +132,6 @@ class ReviewManagerNotNotifiedError(CoLRevException):
 
 
 class ParameterError(CoLRevException):
-
     """An invalid parameter was passed to CoLRev."""
 
     def __init__(self, *, parameter: str, value: str, options: list) -> None:
@@ -149,7 +144,6 @@ class ParameterError(CoLRevException):
 
 
 class InvalidSettingsError(CoLRevException):
-
     """Invalid value in SETTINGS_FILE."""
 
     def __init__(self, *, msg: str, fix_per_upgrade: bool = True) -> None:
@@ -167,7 +161,6 @@ class InvalidSettingsError(CoLRevException):
 
 
 class UnstagedGitChangesError(CoLRevException):
-
     """Unstaged git changes were found although a clean repository is required."""
 
     def __init__(self, changedFiles: list) -> None:
@@ -179,7 +172,6 @@ class UnstagedGitChangesError(CoLRevException):
 
 
 class CleanRepoRequiredError(CoLRevException):
-
     """A clean git repository would be required."""
 
     def __init__(self, changedFiles: list, ignore_pattern: str) -> None:
@@ -192,7 +184,6 @@ class CleanRepoRequiredError(CoLRevException):
 
 
 class GitConflictError(CoLRevException):
-
     """There are git conflicts to be resolved before resuming operations."""
 
     def __init__(self, path: Path) -> None:
@@ -202,7 +193,6 @@ class GitConflictError(CoLRevException):
 
 
 class DirtyRepoAfterProcessingError(CoLRevException):
-
     """The git repository was not clean after completing the operation."""
 
     def __init__(self, msg: str) -> None:
@@ -212,7 +202,6 @@ class DirtyRepoAfterProcessingError(CoLRevException):
 
 
 class GitNotAvailableError(CoLRevException):
-
     """Git is currently not available."""
 
     def __init__(self) -> None:
@@ -222,7 +211,6 @@ class GitNotAvailableError(CoLRevException):
 
 
 class AppendOnlyViolation(Exception):
-
     """Invalid changes to a file in append-only mode."""
 
     def __init__(self, msg: str) -> None:
@@ -232,7 +220,6 @@ class AppendOnlyViolation(Exception):
 
 
 class ProcessOrderViolation(CoLRevException):
-
     """The process triggered dooes not have priority."""
 
     def __init__(
@@ -250,7 +237,6 @@ class ProcessOrderViolation(CoLRevException):
 
 
 class StatusTransitionError(CoLRevException):
-
     """An invalid status transition was observed."""
 
     def __init__(self, msg: str) -> None:
@@ -260,7 +246,6 @@ class StatusTransitionError(CoLRevException):
 
 
 class NoRecordsError(CoLRevException):
-
     """The operation cannot be started because no records have been imported yet."""
 
     def __init__(self) -> None:
@@ -270,7 +255,6 @@ class NoRecordsError(CoLRevException):
 
 
 class FieldValueError(CoLRevException):
-
     """An error in field values was detected (in the main records)."""
 
     def __init__(self, msg: str) -> None:
@@ -280,7 +264,6 @@ class FieldValueError(CoLRevException):
 
 
 class MissingRecordQualityRuleSpecification(CoLRevException):
-
     """A quality rule is missing."""
 
     def __init__(self, msg: str) -> None:
@@ -290,7 +273,6 @@ class MissingRecordQualityRuleSpecification(CoLRevException):
 
 
 class StatusFieldValueError(CoLRevException):
-
     """An error in the status field values was detected."""
 
     def __init__(self, record: str, status_type: str, status_value: str) -> None:
@@ -300,7 +282,6 @@ class StatusFieldValueError(CoLRevException):
 
 
 class OriginError(CoLRevException):
-
     """An error in the colrev_origin field values was detected."""
 
     def __init__(self, msg: str) -> None:
@@ -310,7 +291,6 @@ class OriginError(CoLRevException):
 
 
 class DuplicateIDsError(CoLRevException):
-
     """Duplicate IDs were detected."""
 
     def __init__(self, msg: str) -> None:
@@ -320,7 +300,6 @@ class DuplicateIDsError(CoLRevException):
 
 
 class NotEnoughDataToIdentifyException(CoLRevException):
-
     """The meta-data is not sufficiently complete to identify the record."""
 
     def __init__(
@@ -336,7 +315,6 @@ class NotEnoughDataToIdentifyException(CoLRevException):
 
 
 class NotTOCIdentifiableException(CoLRevException):
-
     """
     The record cannot be identified through table-of-contents.
     Either the table-of-contents key is not implemented or
@@ -350,7 +328,6 @@ class NotTOCIdentifiableException(CoLRevException):
 
 
 class RecordNotInTOCException(CoLRevException):
-
     """The record is not part of the table-of-contents (TOC)."""
 
     def __init__(self, *, record_id: str, toc_key: str) -> None:
@@ -362,7 +339,6 @@ class RecordNotInTOCException(CoLRevException):
 
 
 class PropagatedIDChange(CoLRevException):
-
     """Changes in propagated records ID detected."""
 
     def __init__(self, notifications: list) -> None:
@@ -375,7 +351,6 @@ class PropagatedIDChange(CoLRevException):
 
 
 class NonEmptyDirectoryError(CoLRevException):
-
     """Trying to initialize CoLRev in a non-empty directory."""
 
     def __init__(self, *, filepath: Path, content: list) -> None:
@@ -391,7 +366,6 @@ class NonEmptyDirectoryError(CoLRevException):
 
 
 class RepoInitError(CoLRevException):
-
     """Error during initialization of CoLRev project."""
 
     def __init__(self, *, msg: str) -> None:
@@ -404,7 +378,6 @@ class RepoInitError(CoLRevException):
 
 
 class SearchNotAutomated(CoLRevException):
-
     """The search cannot be completed automatically."""
 
     def __init__(self, msg: str) -> None:
@@ -414,7 +387,6 @@ class SearchNotAutomated(CoLRevException):
 
 
 class InvalidQueryException(CoLRevException):
-
     """The query format is not valid."""
 
     def __init__(self, msg: str) -> None:
@@ -424,7 +396,6 @@ class InvalidQueryException(CoLRevException):
 
 
 class RecordNotParsableException(CoLRevException):
-
     """The record could not be parsed."""
 
     def __init__(self, msg: str) -> None:
@@ -434,7 +405,6 @@ class RecordNotParsableException(CoLRevException):
 
 
 class NotFeedIdentifiableException(CoLRevException):
-
     """The record does not contain the required source_identifier (cannot be added to the feed)."""
 
     def __init__(self, msg: typing.Optional[str] = None) -> None:
@@ -444,7 +414,6 @@ class NotFeedIdentifiableException(CoLRevException):
 
 
 class SearchSourceException(CoLRevException):
-
     """Records cannot be retrieved from the SearchSource."""
 
     def __init__(self, msg: str) -> None:
@@ -454,7 +423,6 @@ class SearchSourceException(CoLRevException):
 
 
 class RecordNotFoundException(CoLRevException):
-
     """Record not found in the main records file."""
 
     def __init__(self, msg: str) -> None:
@@ -467,7 +435,6 @@ class RecordNotFoundException(CoLRevException):
 
 
 class ImportException(CoLRevException):
-
     """An error occurred in the import functions."""
 
     def __init__(
@@ -480,7 +447,6 @@ class ImportException(CoLRevException):
 
 
 class NoRecordsToImport(CoLRevException):
-
     """No records to import."""
 
     def __init__(
@@ -493,7 +459,6 @@ class NoRecordsToImport(CoLRevException):
 
 
 class UnsupportedImportFormatError(CoLRevException):
-
     """The file format is not supported."""
 
     def __init__(
@@ -512,7 +477,6 @@ class UnsupportedImportFormatError(CoLRevException):
 
 
 class RecordNotFoundInPrepSourceException(CoLRevException):
-
     """The record was not found in the prep search source."""
 
     def __init__(
@@ -529,7 +493,6 @@ class RecordNotFoundInPrepSourceException(CoLRevException):
 
 
 class DedupeError(CoLRevException):
-
     """An exception in the dedupe operation."""
 
     def __init__(self, message: str) -> None:
@@ -542,7 +505,6 @@ class DedupeError(CoLRevException):
 
 
 class DataException(CoLRevException):
-
     """Exception in the data operation."""
 
     def __init__(self, *, msg: str) -> None:
@@ -555,7 +517,6 @@ class DataException(CoLRevException):
 
 
 class RecordNotInRepoException(CoLRevException):
-
     """The record was not found in the main records."""
 
     def __init__(self, record_id: str) -> None:
@@ -568,7 +529,6 @@ class RecordNotInRepoException(CoLRevException):
 
 
 class CorrectionPreconditionException(CoLRevException):
-
     """Precondition for corrections not given (clean git repository)."""
 
     def __init__(self, message: str) -> None:
@@ -581,7 +541,6 @@ class CorrectionPreconditionException(CoLRevException):
 
 
 class InvalidPDFException(CoLRevException):
-
     """The PDF is invalid (empty, encrypted or broken)."""
 
     def __init__(self, path: Path) -> None:
@@ -591,7 +550,6 @@ class InvalidPDFException(CoLRevException):
 
 
 class PDFHashError(CoLRevException):
-
     """An error occurred during PDF hashing."""
 
     def __init__(self, path: Path) -> None:
@@ -604,7 +562,6 @@ class PDFHashError(CoLRevException):
 
 
 class MissingDependencyError(CoLRevException):
-
     """The required dependency is not available."""
 
     def __init__(self, dep: str) -> None:
@@ -614,7 +571,6 @@ class MissingDependencyError(CoLRevException):
 
 
 class PackageParameterError(CoLRevException):
-
     """The parameter for the package are not correct."""
 
     def __init__(self, dep: str) -> None:
@@ -624,7 +580,6 @@ class PackageParameterError(CoLRevException):
 
 
 class DependencyConfigurationError(CoLRevException):
-
     """The required dependency is not configured correctly."""
 
     def __init__(self, dep: str) -> None:
@@ -634,7 +589,6 @@ class DependencyConfigurationError(CoLRevException):
 
 
 class ServiceNotAvailableException(CoLRevException):
-
     """An environment service is not available."""
 
     def __init__(self, dep: str, detailed_trace: str = "") -> None:
@@ -645,7 +599,6 @@ class ServiceNotAvailableException(CoLRevException):
 
 
 class PortAlreadyRegisteredException(CoLRevException):
-
     """The port (localhost) is already registered."""
 
     def __init__(self, message: str) -> None:
@@ -655,17 +608,14 @@ class PortAlreadyRegisteredException(CoLRevException):
 
 
 class TEITimeoutException(CoLRevException):
-
     """A timeout occurred during TEI generation."""
 
 
 class TEIException(CoLRevException):
-
     """An exception related to the TEI format."""
 
 
 class RecordNotInIndexException(CoLRevException):
-
     """The requested record was not found in the LocalIndex."""
 
     def __init__(self, record_id: str) -> None:
@@ -678,7 +628,6 @@ class RecordNotInIndexException(CoLRevException):
 
 
 class RecordNotIndexableException(CoLRevException):
-
     """The requested record could not be added to the LocalIndex."""
 
     def __init__(
@@ -698,7 +647,6 @@ class RecordNotIndexableException(CoLRevException):
 
 
 class TOCNotAvailableException(CoLRevException):
-
     """Tables of contents (toc) are not available for the requested item."""
 
     def __init__(self, msg: typing.Optional[str] = None) -> None:
@@ -708,7 +656,6 @@ class TOCNotAvailableException(CoLRevException):
 
 
 class CuratedOutletNotUnique(CoLRevException):
-
     """The outlets (journals or conferences) with curated metadata are not unique."""
 
     def __init__(self, msg: typing.Optional[str] = None) -> None:
@@ -718,7 +665,6 @@ class CuratedOutletNotUnique(CoLRevException):
 
 
 class InvalidLanguageCodeException(CoLRevException):
-
     """Language code field does not comply with the required standard."""
 
     def __init__(self, invalid_language_codes: list) -> None:
@@ -729,7 +675,6 @@ class InvalidLanguageCodeException(CoLRevException):
 
 
 class PackageSettingMustStartWithPackagesException(CoLRevException):
-
     """Package settings must start with `packages` key."""
 
     def __init__(self, invalid_key: str) -> None:
@@ -741,7 +686,6 @@ class PackageSettingMustStartWithPackagesException(CoLRevException):
 
 
 class TemplateNotAvailableError(CoLRevException):
-
     """The requested template is not available."""
 
     def __init__(self, template_path: str) -> None:

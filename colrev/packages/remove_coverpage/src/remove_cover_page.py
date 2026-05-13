@@ -23,7 +23,6 @@ from colrev.constants import Filepaths
 
 
 class PDFCoverPage(base_classes.PDFPrepPackageBaseClass):
-
     """Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

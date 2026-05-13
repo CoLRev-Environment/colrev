@@ -18,7 +18,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class SearchSourceRequestsImportChecker(checkers.BaseChecker):
-
     """SearchSourceRequestsImportChecker."""
 
     name = "colrev-search-source-requests-import"

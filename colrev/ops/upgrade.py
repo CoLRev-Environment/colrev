@@ -32,7 +32,6 @@ from colrev.writer.write_utils import to_string
 
 
 class Upgrade(colrev.process.operation.Operation):
-
     """Upgrade a CoLRev project."""
 
     repo: git.Repo
@@ -946,7 +945,6 @@ class Upgrade(colrev.process.operation.Operation):
 
 
 class CoLRevVersion:
-
     """Class for handling the CoLRev version."""
 
     def __init__(self, version_string: str) -> None:

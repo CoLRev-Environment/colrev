@@ -19,7 +19,6 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class Data(colrev.process.operation.Operation):
-
     """
     Class supporting structured and unstructured
     data extraction, analysis and synthesis.

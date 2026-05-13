@@ -14,7 +14,6 @@ from colrev.constants import Fields
 
 
 class QualityModel:
-
     """The quality model for records."""
 
     checkers = []  # type: ignore

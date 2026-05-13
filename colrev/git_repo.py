@@ -23,7 +23,6 @@ if typing.TYPE_CHECKING:
 
 
 class GitRepo:
-
     """Wrapper for Git repository interactions."""
 
     def __init__(self, path: typing.Optional[Path]) -> None:

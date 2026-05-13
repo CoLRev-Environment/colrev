@@ -21,7 +21,6 @@ from colrev.env.utils import get_by_path
 
 
 class EnvironmentManager:
-
     """The EnvironmentManager manages environment resources and services."""
 
     load_yaml = False

@@ -13,7 +13,6 @@ from colrev.constants import Fields
 
 
 class HTMLTagChecker:
-
     """The HTMLTagChecker."""
 
     msg = DefectCodes.HTML_TAGS

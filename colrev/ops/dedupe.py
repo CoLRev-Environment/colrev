@@ -49,7 +49,6 @@ def same_source_merge(
 
 
 class Dedupe(colrev.process.operation.Operation):
-
     """Deduplicate records (entity resolution)."""
 
     NON_DUPLICATE_FILE_XLSX = Path("non_duplicates_to_validate.xlsx")

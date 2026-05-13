@@ -19,7 +19,6 @@ from colrev.constants import Fields
 
 
 class DBLPAPI:
-
     """Connector for the DBLP API."""
 
     # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json

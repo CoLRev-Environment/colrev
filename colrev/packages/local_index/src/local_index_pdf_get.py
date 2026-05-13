@@ -22,7 +22,6 @@ from colrev.constants import Fields
 
 
 class LocalIndexPDFGet(base_classes.PDFGetPackageBaseClass):
-
     """Get PDFs from LocalIndex."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

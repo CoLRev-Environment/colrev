@@ -20,12 +20,10 @@ from colrev.constants import Fields
 
 
 class PubmedAPIError(Exception):
-
     """Exception raised for PubMed API errors."""
 
 
 class PubmedAPI:
-
     """Connector for the Pubmed API."""
 
     # pylint: disable=too-many-arguments

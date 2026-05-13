@@ -11,12 +11,10 @@ import requests
 
 
 class OpenCitationsAPIError(Exception):
-
     """Exception raised when OpenCitations requests fail."""
 
 
 class OpenCitationsAPI:
-
     """Handle HTTP interactions with the OpenCitations service."""
 
     def __init__(

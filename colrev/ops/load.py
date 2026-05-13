@@ -25,7 +25,6 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class Load(colrev.process.operation.Operation):
-
     """Load the records."""
 
     type = OperationsType.load

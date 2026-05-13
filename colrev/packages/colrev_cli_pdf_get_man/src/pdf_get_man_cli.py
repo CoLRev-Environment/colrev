@@ -25,7 +25,6 @@ from colrev.constants import RecordState
 
 
 class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
-
     """Get PDFs manually based on a CLI."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

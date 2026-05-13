@@ -9,12 +9,10 @@ import requests
 
 
 class SpringerLinkAPIError(Exception):
-
     """Exception raised when Springer Link requests fail."""
 
 
 class SpringerLinkAPI:
-
     """Handle HTTP interactions with the Springer Link API."""
 
     def __init__(self, *, session: typing.Optional[requests.Session] = None) -> None:

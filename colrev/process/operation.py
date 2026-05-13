@@ -21,7 +21,6 @@ F = typing.TypeVar("F", bound=typing.Callable[..., typing.Any])
 
 
 class Operation:
-
     """Operations correspond to the work steps in a CoLRev project."""
 
     type: OperationsType

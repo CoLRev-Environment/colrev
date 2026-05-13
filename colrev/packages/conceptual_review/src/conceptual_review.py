@@ -15,7 +15,6 @@ import colrev.package_manager.package_settings
 
 
 class ConceptualReview(base_classes.ReviewTypePackageBaseClass):
-
     """Conceptual review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

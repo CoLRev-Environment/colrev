@@ -30,7 +30,6 @@ from colrev.packages.eric.src import eric_api
 
 
 class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
-
     """ERIC API."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

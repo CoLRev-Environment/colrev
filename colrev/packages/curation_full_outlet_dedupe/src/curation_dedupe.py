@@ -26,7 +26,6 @@ from colrev.constants import RecordState
 
 
 class CurationDedupeSettings(BaseModel):
-
     """Settings for CurationDedupe."""
 
     endpoint: str
@@ -34,7 +33,6 @@ class CurationDedupeSettings(BaseModel):
 
 
 class CurationDedupe(base_classes.DedupePackageBaseClass):
-
     """
     Deduplication endpoint for curations with full journals/proceedings
     retrieved from different sources (identifying duplicates in groups of

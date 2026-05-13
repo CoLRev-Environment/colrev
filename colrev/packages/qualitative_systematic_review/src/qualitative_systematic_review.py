@@ -21,7 +21,6 @@ from colrev.packages.pdf_backward_search.src.pdf_backward_search import (
 
 
 class QualitativeSystematicReview(base_classes.ReviewTypePackageBaseClass):
-
     """Qualitative systematic review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

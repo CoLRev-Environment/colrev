@@ -16,7 +16,6 @@ import colrev.loader.loader
 
 
 class JSONLoader(colrev.loader.loader.Loader):
-
     """Loads json files."""
 
     # pylint: disable=too-many-arguments

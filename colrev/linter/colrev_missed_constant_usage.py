@@ -23,7 +23,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class MissedConstantUsageChecker(checkers.BaseChecker):
-
     """MissedConstantUsageChecker."""
 
     name = "colrev-missed-constant-usage"

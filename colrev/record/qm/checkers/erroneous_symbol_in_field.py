@@ -11,7 +11,6 @@ from colrev.constants import Fields
 
 
 class ErroneousSymbolInFieldChecker:
-
     """The ErroneousSymbolInFieldChecker."""
 
     fields_to_check = [

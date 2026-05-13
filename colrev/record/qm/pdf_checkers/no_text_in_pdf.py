@@ -14,7 +14,6 @@ from colrev.constants import PDFDefectCodes
 
 
 class TextInPDFChecker:
-
     """The TextInPDFChecker."""
 
     msg = PDFDefectCodes.NO_TEXT_IN_PDF

@@ -11,7 +11,6 @@ from colrev.constants import Fields
 
 
 class ErroneousTitleFieldChecker:
-
     """The ErroneousTitleFieldChecker."""
 
     msg = DefectCodes.ERRONEOUS_TITLE_FIELD

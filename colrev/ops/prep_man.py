@@ -22,7 +22,6 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class PrepMan(colrev.process.operation.Operation):
-
     """Prepare records manually (metadata)."""
 
     type = OperationsType.prep_man

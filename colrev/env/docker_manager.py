@@ -14,7 +14,6 @@ from colrev.constants import Colors
 
 
 class DockerManager:
-
     """
     The DockerManager manages everything related to Docker
     (e.g. building images, running containers).

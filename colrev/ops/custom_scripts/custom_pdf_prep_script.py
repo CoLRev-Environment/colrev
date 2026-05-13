@@ -16,7 +16,6 @@ from colrev.constants import RecordState
 
 
 class CustomPDFPrep(base_classes.PDFPrepPackageBaseClass):
-
     """Class for custom pdf-prep scripts."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

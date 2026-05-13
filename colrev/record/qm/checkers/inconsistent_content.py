@@ -11,7 +11,6 @@ from colrev.constants import Fields
 
 
 class InconsistentContentChecker:
-
     """The InconsistentContentChecker."""
 
     msg = DefectCodes.INCONSISTENT_CONTENT

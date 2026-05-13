@@ -19,7 +19,6 @@ from colrev.writer.write_utils import write_file
 
 
 class Distribute(colrev.process.operation.Operation):
-
     """Distribute records to other local CoLRev projects."""
 
     type = OperationsType.check

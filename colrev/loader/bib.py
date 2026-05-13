@@ -329,7 +329,6 @@ def run_resolve_crossref(records: dict, *, logger: logging.Logger) -> None:
 
 
 class BIBLoader(colrev.loader.loader.Loader):
-
     """Loads BibTeX files."""
 
     # pylint: disable=too-many-arguments

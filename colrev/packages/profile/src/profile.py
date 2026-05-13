@@ -19,7 +19,6 @@ from colrev.constants import RecordState
 
 
 class Profile(base_classes.DataPackageBaseClass):
-
     """Create a profile."""
 
     ci_supported: bool = Field(default=False)
@@ -27,7 +26,6 @@ class Profile(base_classes.DataPackageBaseClass):
     class ProfileSettings(
         colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
-
         """Profile settings."""
 
         endpoint: str

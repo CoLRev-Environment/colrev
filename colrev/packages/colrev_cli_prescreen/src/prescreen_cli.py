@@ -53,7 +53,6 @@ def _print_prescreen_record(record_dict: dict) -> None:
 
 
 class CoLRevCLIPrescreen(base_classes.PrescreenPackageBaseClass):
-
     """CLI-based prescreen."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

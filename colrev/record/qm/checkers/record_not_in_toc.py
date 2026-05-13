@@ -14,7 +14,6 @@ from colrev.constants import Fields
 
 
 class RecordNotInTOCChecker:
-
     """The RecordNotInTOCChecker."""
 
     msg = DefectCodes.RECORD_NOT_IN_TOC

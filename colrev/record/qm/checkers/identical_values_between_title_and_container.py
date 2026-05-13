@@ -12,7 +12,6 @@ from colrev.constants import FieldValues
 
 
 class IdenticalValuesChecker:
-
     """The IdenticalValuesChecker."""
 
     msg = DefectCodes.IDENTICAL_VALUES_BETWEEN_TITLE_AND_CONTAINER

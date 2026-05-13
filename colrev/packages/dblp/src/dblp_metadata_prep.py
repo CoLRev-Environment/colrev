@@ -22,7 +22,6 @@ from colrev.constants import SearchType
 
 
 class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
-
     """Prepares records based on dblp.org metadata."""
 
     ci_supported: bool = Field(default=True)

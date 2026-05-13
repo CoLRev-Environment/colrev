@@ -15,7 +15,6 @@ import colrev.package_manager.package_settings
 
 
 class UmbrellaReview(base_classes.ReviewTypePackageBaseClass):
-
     """Umbrella review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

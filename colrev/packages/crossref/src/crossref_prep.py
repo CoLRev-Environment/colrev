@@ -22,7 +22,6 @@ from colrev.constants import SearchType
 
 
 class CrossrefMetadataPrep(base_classes.PrepPackageBaseClass):
-
     """Prepares records based on crossref.org metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

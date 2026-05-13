@@ -15,7 +15,6 @@ import colrev.package_manager.package_settings
 
 
 class ScopingReview(base_classes.ReviewTypePackageBaseClass):
-
     """Scoping review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

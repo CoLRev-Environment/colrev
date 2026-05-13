@@ -19,7 +19,6 @@ from colrev.constants import Fields
 
 
 class ExcludeCollectionsPrep(base_classes.PrepPackageBaseClass):
-
     """Prepares records by excluding collection entries (e.g., proceedings)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

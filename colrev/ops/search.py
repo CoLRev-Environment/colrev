@@ -20,7 +20,6 @@ from colrev.writer.write_utils import write_file
 
 
 class Search(colrev.process.operation.Operation):
-
     """Search for new records."""
 
     type = OperationsType.search

@@ -21,7 +21,6 @@ from colrev.constants import ScreenCriterionType
 
 
 class CoLRevCLIScreen(base_classes.ScreenPackageBaseClass):
-
     """Screen documents using a CLI."""
 
     # pylint: disable=too-many-instance-attributes

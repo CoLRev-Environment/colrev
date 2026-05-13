@@ -16,17 +16,14 @@ import colrev.loader.loader
 
 
 class NextLine(Exception):
-
     """NextLineException."""
 
 
 class ParseError(Exception):
-
     """Parsing error."""
 
 
 class RISLoader(colrev.loader.loader.Loader):
-
     """Loads ris files."""
 
     PATTERN = r"^[A-Z0-9]{2,4} "

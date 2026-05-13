@@ -35,18 +35,15 @@ SESSION = requests_cache.CachedSession(
 
 
 class CrossrefAPIError(Exception):
-
     """Crossref API Error."""
 
 
 class MaxOffsetError(CrossrefAPIError):
-
     """Max Offset Error."""
 
 
 # pylint: disable=too-few-public-methods
 class HTTPRequest:
-
     """HTTP Request."""
 
     def __init__(self, *, timeout: int, cache: bool = True) -> None:
@@ -112,7 +109,6 @@ class HTTPRequest:
 
 
 class Endpoint:
-
     """Endpoint."""
 
     cursor_as_iter_method = False
@@ -311,7 +307,6 @@ class Endpoint:
 
 
 class CrossrefAPI:
-
     """Crossref API."""
 
     ISSN_REGEX = r"^\d{4}-?\d{3}[\dxX]$"

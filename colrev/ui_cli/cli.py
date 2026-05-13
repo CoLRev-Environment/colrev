@@ -156,7 +156,6 @@ def get_search_files() -> list:
 
 
 class SpecialHelpOrder(click.Group):
-
     """Order for cli commands in help page overview."""
 
     def __init__(self, *args, **kwargs) -> None:  # type: ignore

@@ -33,7 +33,6 @@ from colrev.writer.write_utils import write_file
 
 
 class PaperMarkdownSettings(BaseModel):
-
     """Paper settings."""
 
     endpoint: str
@@ -59,7 +58,6 @@ class PaperMarkdownSettings(BaseModel):
 
 # pylint: disable=too-many-instance-attributes
 class PaperMarkdown(base_classes.DataPackageBaseClass):
-
     """
     Synthesize the literature in a markdown paper.
 
@@ -858,7 +856,6 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
 
 
 class PaperMarkdownRecordSourceTagError(Exception):
-
     """NEW_RECORD_SOURCE_TAG not found in paper.md."""
 
     def __init__(self, msg: str) -> None:

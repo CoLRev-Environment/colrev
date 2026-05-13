@@ -27,7 +27,6 @@ ROMAN_PAGE_PATTERN = re.compile(
 
 
 class PDFIncompletenessChecker:
-
     """The PDFIncompletenessChecker."""
 
     msg = PDFDefectCodes.PDF_INCOMPLETE

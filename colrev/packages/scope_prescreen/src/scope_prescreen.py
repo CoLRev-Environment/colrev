@@ -28,7 +28,6 @@ from colrev.constants import RecordState
 class ScopePrescreenSettings(
     colrev.package_manager.package_settings.DefaultSettings, BaseModel
 ):
-
     """Settings for ScopePrescreen."""
 
     # pylint: disable=invalid-name
@@ -74,7 +73,6 @@ class ScopePrescreenSettings(
 
 
 class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
-
     """Rule-based prescreen (scope)."""
 
     settings: ScopePrescreenSettings

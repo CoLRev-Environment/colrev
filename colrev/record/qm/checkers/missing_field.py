@@ -14,7 +14,6 @@ from colrev.constants import FieldValues
 
 
 class MissingFieldChecker:
-
     """The MissingFieldChecker."""
 
     # book, inbook: author <- editor

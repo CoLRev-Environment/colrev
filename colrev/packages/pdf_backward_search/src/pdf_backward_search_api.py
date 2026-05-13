@@ -11,12 +11,10 @@ import requests
 
 
 class PDFBackwardSearchAPIError(Exception):
-
     """Exception raised when OpenCitations requests fail."""
 
 
 class PDFBackwardSearchAPI:
-
     """Handle HTTP interactions required by the backward search package."""
 
     def __init__(

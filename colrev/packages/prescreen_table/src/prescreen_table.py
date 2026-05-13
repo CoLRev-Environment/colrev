@@ -23,7 +23,6 @@ from colrev.constants import RecordState
 
 
 class TablePrescreen(base_classes.PrescreenPackageBaseClass):
-
     """Table-based prescreen (exported and imported)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

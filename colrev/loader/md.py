@@ -20,7 +20,6 @@ from colrev.constants import Fields
 
 
 class MarkdownLoader(colrev.loader.loader.Loader):
-
     """Loads reference strings from text (md) files (based on GROBID)."""
 
     def __init__(

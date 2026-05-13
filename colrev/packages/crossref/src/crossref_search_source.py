@@ -36,7 +36,6 @@ from colrev.packages.crossref.src.crossref_api import query_doi
 
 
 class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
-
     """Crossref API."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

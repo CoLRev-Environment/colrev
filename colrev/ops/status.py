@@ -15,7 +15,6 @@ from colrev.constants import OperationsType
 
 
 class Status(colrev.process.operation.Operation):
-
     """Determine the status of the project."""
 
     type = OperationsType.check

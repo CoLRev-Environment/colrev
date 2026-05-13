@@ -46,7 +46,6 @@ def capitalize_entities(input_str: str) -> str:
 
 
 class PrepRecord(colrev.record.record.Record):
-
     """The PrepRecord class provides a range of Function for record preparation."""
 
     @classmethod

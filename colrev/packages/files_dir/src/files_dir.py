@@ -39,7 +39,6 @@ from colrev.writer.write_utils import write_file
 
 
 class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
-
     """Files directories (PDFs based on GROBID)."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

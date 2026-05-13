@@ -22,7 +22,6 @@ if typing.TYPE_CHECKING:
 
 
 class GROBIDTEI(base_classes.PDFPrepPackageBaseClass):
-
     """Prepare PDFs by creating an annotated TEI document."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings

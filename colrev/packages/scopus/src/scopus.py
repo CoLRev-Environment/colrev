@@ -29,7 +29,6 @@ from colrev.packages.scopus.src import scopus_api
 
 
 class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
-
     """Scopus."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"

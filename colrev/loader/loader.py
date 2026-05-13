@@ -13,7 +13,6 @@ from colrev.loader.load_utils_name_formatter import parse_names_in_records
 
 
 class Loader:
-
     """Loader class."""
 
     def __init__(

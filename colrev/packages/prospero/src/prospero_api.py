@@ -23,7 +23,6 @@ from colrev.constants import Fields
 
 
 class PROSPEROAPI:
-
     """PROSPERO API class to extract records from Prospero."""
 
     URL_PREFIX = "https://www.crd.york.ac.uk/prospero/display_record.php?RecordID="

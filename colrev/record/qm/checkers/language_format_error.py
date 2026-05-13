@@ -13,7 +13,6 @@ from colrev.constants import Fields
 
 
 class LanguageFormatChecker:
-
     """The LanguageFormatChecker."""
 
     msg = DefectCodes.LANGUAGE_FORMAT_ERROR

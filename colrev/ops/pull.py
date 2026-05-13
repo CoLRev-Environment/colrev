@@ -13,7 +13,6 @@ CHANGE_COUNTER = None
 
 
 class Pull(colrev.process.operation.Operation):
-
     """Pull the project and records."""
 
     type = OperationsType.format

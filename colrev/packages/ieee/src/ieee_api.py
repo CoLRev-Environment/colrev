@@ -15,7 +15,6 @@ from colrev.constants import Fields
 
 
 class XPLORE:
-
     """XPLORE API class."""
 
     # pylint: disable=too-many-instance-attributes

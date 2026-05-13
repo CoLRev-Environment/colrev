@@ -16,7 +16,6 @@ import colrev.package_manager.package_settings
 
 #
 class LiteratureReview(base_classes.ReviewTypePackageBaseClass):
-
     """Literature review (simple)."""
 
     ci_supported: bool = Field(default=True)

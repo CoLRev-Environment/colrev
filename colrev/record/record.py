@@ -32,7 +32,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Record:
-
     """The Record class provides a range of basic Function."""
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
