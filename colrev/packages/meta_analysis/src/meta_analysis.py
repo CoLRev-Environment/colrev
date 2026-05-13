@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Meta-analysis"""
+"""Meta-analysis."""
 
 import logging
 import typing
@@ -21,7 +21,7 @@ from colrev.packages.pdf_backward_search.src.pdf_backward_search import (
 
 
 class MetaAnalysis(base_classes.ReviewTypePackageBaseClass):
-    """Meta-analysis"""
+    """Meta-analysis."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=True)
@@ -42,8 +42,7 @@ class MetaAnalysis(base_classes.ReviewTypePackageBaseClass):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
-        """Initialize a meta-analysis"""
-
+        """Initialize a meta-analysis."""
         settings.sources.append(OpenCitationsSearchSource.get_default_source())
         settings.sources.append(BackwardSearchSource.get_default_source())
 

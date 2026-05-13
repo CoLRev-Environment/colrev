@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function to load bib files"""
+"""Function to load bib files."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from colrev.constants import RecordState
 
 
 def run_fix_bib_file(filename: Path, *, logger: logging.Logger) -> None:
-    """Fix a BibTeX file"""
+    """Fix a BibTeX file."""
     # pylint: disable=too-many-statements
 
     def fix_key(
@@ -49,8 +49,7 @@ def run_fix_bib_file(filename: Path, *, logger: logging.Logger) -> None:
         temp_id: str,
         existing_ids: list,
     ) -> str:
-        """Get the next unique ID"""
-
+        """Get the next unique ID."""
         order = 0
         letters = list(string.ascii_lowercase)
         next_unique_id = temp_id
@@ -147,7 +146,6 @@ def run_fix_bib_file(filename: Path, *, logger: logging.Logger) -> None:
 
 def check_valid_bib(filename: Path, logger: logging.Logger) -> None:
     """Check if the file is a valid bib file."""
-
     with open(filename, encoding="utf8") as file:
         contents = "".join(line for _, line in zip(range(20), file))
 
@@ -248,8 +246,8 @@ def process_lines(
 
     Returns:
         List[Dict[str, Any]]: Parsed records.
-    """
 
+    """
     records: typing.List[typing.Dict[str, typing.Any]] = []
     current_record: typing.Dict[str, typing.Any] = {}
     current_key = ""
@@ -307,7 +305,7 @@ def process_lines(
 
 
 def run_resolve_crossref(records: dict, *, logger: logging.Logger) -> None:
-    """Resolve cross-references between records"""
+    """Resolve cross-references between records."""
     # Handle cross-references between records
     crossref_ids = []
     for record_dict in records.values():
@@ -330,7 +328,7 @@ def run_resolve_crossref(records: dict, *, logger: logging.Logger) -> None:
 
 
 class BIBLoader(colrev.loader.loader.Loader):
-    """Loads BibTeX files"""
+    """Loads BibTeX files."""
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -359,7 +357,7 @@ class BIBLoader(colrev.loader.loader.Loader):
 
     @classmethod
     def get_nr_records(cls, filename: Path) -> int:
-        """Get the number of records in the file"""
+        """Get the number of records in the file."""
         count = 0
         with open(filename, encoding="utf8") as file:
             for line in file:

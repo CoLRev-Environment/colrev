@@ -11,7 +11,7 @@ from colrev.constants import Fields
 
 
 class ErroneousTermInFieldChecker:
-    """The ErroneousTermInFieldChecker"""
+    """The ErroneousTermInFieldChecker."""
 
     erroneous_terms = {
         Fields.AUTHOR: [
@@ -39,8 +39,7 @@ class ErroneousTermInFieldChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the erroneous-term-in-field checks"""
-
+        """Run the erroneous-term-in-field checks."""
         for key, erroneous_term_list in self.erroneous_terms.items():
             if key not in record.data or record.ignored_defect(
                 key=key, defect=self.msg
@@ -57,5 +56,5 @@ class ErroneousTermInFieldChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(ErroneousTermInFieldChecker(quality_model))

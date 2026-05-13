@@ -20,7 +20,7 @@ from colrev.writer.write_utils import write_file
 
 
 class Search(colrev.process.operation.Operation):
-    """Search for new records"""
+    """Search for new records."""
 
     type = OperationsType.search
 
@@ -59,8 +59,7 @@ class Search(colrev.process.operation.Operation):
     def _remove_forthcoming(
         self, source: colrev.search_file.ExtendedSearchFile
     ) -> None:
-        """Remove forthcoming papers from a SearchSource"""
-
+        """Remove forthcoming papers from a SearchSource."""
         if self.review_manager.settings.search.retrieve_forthcoming:
             return
 
@@ -88,7 +87,7 @@ class Search(colrev.process.operation.Operation):
 
     # pylint: disable=no-self-argument
     def _check_source_selection_exists(var_name: str) -> typing.Callable:  # type: ignore
-        """Check if the source selection exists"""
+        """Check if the source selection exists."""
 
         # pylint: disable=no-self-argument
         def check_accepts(func_in: typing.Callable) -> typing.Callable:
@@ -116,8 +115,7 @@ class Search(colrev.process.operation.Operation):
         return check_accepts
 
     def get_new_search_files(self) -> list[Path]:
-        """Retrieve new search files (not yet registered in settings)"""
-
+        """Retrieve new search files (not yet registered in settings)."""
         search_dir = self.review_manager.paths.search
         files = [
             f.relative_to(self.review_manager.path) for f in search_dir.glob("**/*")
@@ -202,8 +200,7 @@ class Search(colrev.process.operation.Operation):
     def _apply_source_heuristics(
         self, *, filepath: Path, search_sources: dict
     ) -> list[typing.Dict]:
-        """Apply heuristics to identify source"""
-
+        """Apply heuristics to identify source."""
         data = ""
         try:
             data = filepath.read_text()
@@ -223,12 +220,11 @@ class Search(colrev.process.operation.Operation):
         return results_list
 
     def add_most_likely_sources(self) -> None:
-        """Get the most likely SearchSources
+        """Get the most likely SearchSources.
 
         returns a dictionary:
         {"filepath": [SearchSource1,..]}
         """
-
         new_search_files = self.get_new_search_files()
         for filename in new_search_files:
             heuristic_list = self.get_new_source_heuristic(filename)
@@ -256,12 +252,11 @@ class Search(colrev.process.operation.Operation):
         self.review_manager.create_commit(msg="Add new search sources")
 
     def get_new_source_heuristic(self, filename: Path) -> list:
-        """Get the heuristic result list of SearchSources candidates
+        """Get the heuristic result list of SearchSources candidates.
 
         returns a dictionary:
         {"filepath": ({"search_source": SourceCandidate1", "confidence": 0.98},..]}
         """
-
         self.review_manager.logger.debug("Load available search_source endpoints...")
 
         search_sources = self.package_manager.discover_installed_packages(
@@ -283,8 +278,7 @@ class Search(colrev.process.operation.Operation):
     def add_source_and_search(
         self, search_file: colrev.search_file.ExtendedSearchFile
     ) -> None:
-        """Add a SearchSource and run the search"""
-
+        """Add a SearchSource and run the search."""
         search_file.save()
         self.review_manager.dataset.git_repo.add_changes(
             search_file.get_search_history_path()
@@ -311,8 +305,7 @@ class Search(colrev.process.operation.Operation):
         rerun: bool,
         skip_commit: bool = False,
     ) -> None:
-        """Search for records (main entrypoint)"""
-
+        """Search for records (main entrypoint)."""
         rerun_flag = "" if not rerun else f" ({Colors.GREEN}rerun{Colors.END})"
         self.review_manager.logger.info(f"Search{rerun_flag}")
         self.review_manager.logger.info(

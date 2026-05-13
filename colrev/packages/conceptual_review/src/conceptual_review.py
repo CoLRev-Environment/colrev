@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Conceptual review"""
+"""Conceptual review."""
 
 import logging
 import typing
@@ -15,7 +15,7 @@ import colrev.package_manager.package_settings
 
 
 class ConceptualReview(base_classes.ReviewTypePackageBaseClass):
-    """Conceptual review"""
+    """Conceptual review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -37,8 +37,7 @@ class ConceptualReview(base_classes.ReviewTypePackageBaseClass):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
-        """Initialize a conceptual review"""
-
+        """Initialize a conceptual review."""
         settings.data.data_package_endpoints = [
             {
                 "endpoint": "colrev.paper_md",

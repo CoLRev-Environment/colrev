@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Template for a custom PDFGet PackageEndpoint"""
+"""Template for a custom PDFGet PackageEndpoint."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from colrev.constants import Fields
 
 
 class CustomPDFGet(base_classes.PDFGetPackageBaseClass):
-    """Class for custom pdf-get scripts"""
+    """Class for custom pdf-get scripts."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -29,8 +29,7 @@ class CustomPDFGet(base_classes.PDFGetPackageBaseClass):
         self,
         record: colrev.record.record.Record,
     ) -> colrev.record.record.Record:
-        """Get the PDF"""
-
+        """Get the PDF."""
         record.data[Fields.FILE] = "filepath"
         self.pdf_get_operation.import_pdf(record)
 

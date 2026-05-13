@@ -16,7 +16,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class ISBNPatternChecker:
-    """The ISBNPatternChecker"""
+    """The ISBNPatternChecker."""
 
     msg = DefectCodes.ISBN_NOT_MATCHING_PATTERN
 
@@ -31,8 +31,7 @@ class ISBNPatternChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the isbn-not-matching-pattern checks"""
-
+        """Run the isbn-not-matching-pattern checks."""
         if Fields.ISBN not in record.data or record.ignored_defect(
             key=Fields.ISBN, defect=self.msg
         ):
@@ -45,5 +44,5 @@ class ISBNPatternChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(ISBNPatternChecker(quality_model))

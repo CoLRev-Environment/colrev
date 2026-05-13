@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function to write ris files"""
+"""Function to write ris files."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ RECORD_FIELD_MAP = {
 
 
 def _add_pages(record_dict: dict) -> str:
-    """Add pages to the RIS string"""
+    """Add pages to the RIS string."""
     pages_str = ""
     if Fields.PAGES in record_dict:
         pages = str(record_dict[Fields.PAGES])
@@ -66,7 +66,7 @@ def _add_pages(record_dict: dict) -> str:
 
 
 def _add_sn(record_dict: dict) -> str:
-    """Add SN (ISSN/ISBN) to the RIS string"""
+    """Add SN (ISSN/ISBN) to the RIS string."""
     sn_list = []
     if Fields.ISSN in record_dict:
         sn_list.append(str(record_dict[Fields.ISSN]))
@@ -78,7 +78,7 @@ def _add_sn(record_dict: dict) -> str:
 
 
 def to_string(*, records_dict: dict) -> str:
-    """Convert a records dict to a RIS string"""
+    """Convert a records dict to a RIS string."""
     ris_str = ""
     for record_id in sorted(records_dict.keys()):
         record_dict = records_dict[record_id]
@@ -108,7 +108,7 @@ def to_string(*, records_dict: dict) -> str:
 
 
 def write_file(*, records_dict: dict, filename: str) -> None:
-    """Write a RIS file from a records dict"""
+    """Write a RIS file from a records dict."""
     ris_str = to_string(records_dict=records_dict)
     with open(filename, "w", encoding="utf-8") as file:
         file.write(ris_str)

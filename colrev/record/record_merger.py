@@ -45,7 +45,7 @@ def _merge_origins(
     main_record: colrev.record.record.Record,
     merging_record: colrev.record.record.Record,
 ) -> None:
-    """Merge the origins with those of the merging_record"""
+    """Merge the origins with those of the merging_record."""
     if Fields.ORIGIN in merging_record.data:
         origins = main_record.data[Fields.ORIGIN] + merging_record.data[Fields.ORIGIN]
         main_record.data[Fields.ORIGIN] = sorted(list(set(origins)))
@@ -55,7 +55,7 @@ def _merge_status(
     main_record: colrev.record.record.Record,
     merging_record: colrev.record.record.Record,
 ) -> None:
-    """Merge the status with the merging_record"""
+    """Merge the status with the merging_record."""
     if Fields.STATUS in merging_record.data:
         # Set both status to the latter in the state model
         if main_record.data[Fields.STATUS] < merging_record.data[Fields.STATUS]:
@@ -187,7 +187,7 @@ def fuse_fields(
     key: str,
     default_source: str,
 ) -> None:
-    """Fuse fields based on quality heuristics"""
+    """Fuse fields based on quality heuristics."""
     # Note : the assumption is that we need masterdata_provenance notes
     # only for authors
 
@@ -327,12 +327,11 @@ def merge(
     preferred_masterdata_source_prefixes: list,
 ) -> None:
     """General-purpose record merging
-    for preparation, curated/non-curated records and records with origins
+    for preparation, curated/non-curated records and records with origins.
 
     Apply heuristics to create a fusion of the best fields based on
     quality heuristics
     """
-
     merging_record_preferred = _merging_record_preferred(
         merging_record,
         preferred_masterdata_source_prefixes=preferred_masterdata_source_prefixes,

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Retrieval of PDFs from the website (URL)"""
+"""Retrieval of PDFs from the website (URL)."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from colrev.constants import Fields
 
 
 class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
-    """Get PDFs from the website"""
+    """Get PDFs from the website."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=False)
@@ -179,8 +179,7 @@ class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
     def get_pdf(
         self, record: colrev.record.record.Record
     ) -> colrev.record.record.Record:
-        """Get PDFs from website (URL)"""
-
+        """Get PDFs from website (URL)."""
         if Fields.URL not in record.data:
             return record
 

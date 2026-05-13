@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: DBLP"""
+"""SearchSource: DBLP."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ from colrev.packages.dblp.src import dblp_api
 
 
 class DBLPSearchSourceSettings(colrev.search_file.ExtendedSearchFile, BaseModel):
-    """Settings for DBLPSearchSource"""
+    """Settings for DBLPSearchSource."""
 
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-instance-attributes
@@ -55,7 +55,7 @@ class DBLPSearchSourceSettings(colrev.search_file.ExtendedSearchFile, BaseModel)
 
 
 class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """DBLP API"""
+    """DBLP API."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -93,8 +93,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for DBLP"""
-
+        """Source heuristic for DBLP."""
         result = {"confidence": 0.0}
         # Simple heuristic:
         # pylint: disable=colrev-missed-constant-usage
@@ -115,8 +114,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
         if params:
             if params.startswith("http"):
@@ -195,7 +193,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def check_availability(self) -> None:
-        """Check status (availability) of DBLP API"""
+        """Check status (availability) of DBLP API."""
         api = dblp_api.DBLPAPI(
             params={},
             email=self.email,
@@ -309,7 +307,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         dblp_feed.save()
 
     def _validate_source(self) -> None:
-        """Validate the SearchSource (parameters etc.)"""
+        """Validate the SearchSource (parameters etc.)."""
         source = self.search_source
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
@@ -339,8 +337,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.logger.debug("SearchSource %s validated", source.search_results_path)
 
     def search(self, rerun: bool) -> None:
-        """Run a search of DBLP"""
-
+        """Run a search of DBLP."""
         self._validate_source()
 
         dblp_feed = colrev.ops.search_api_feed.SearchAPIFeed(
@@ -368,8 +365,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
 
             def field_mapper(record_dict: dict) -> None:
@@ -400,8 +396,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for DBLP"""
-
+        """Source-specific preparation for DBLP."""
         if record.data.get(Fields.AUTHOR, FieldValues.UNKNOWN) != FieldValues.UNKNOWN:
             # DBLP appends identifiers to non-unique authors
             record.update_field(
@@ -424,8 +419,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 60,
     ) -> colrev.record.record.Record:
-        """Retrieve masterdata from DBLP based on similarity with the record provided"""
-
+        """Retrieve masterdata from DBLP based on similarity with the record provided."""
         if any(self.origin_prefix in o for o in record.data[Fields.ORIGIN]):
             # Already linked to a crossref record
             return record

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Source-specific preparation as a prep operation"""
+"""Source-specific preparation as a prep operation."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records based on the prepare scripts specified by the SearchSource"""
+    """Prepares records based on the prepare scripts specified by the SearchSource."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     source_correction_hint = "check with the developer"
@@ -50,7 +50,7 @@ class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare the record by applying source-specific fixes"""
+        """Prepare the record by applying source-specific fixes."""
         # Note : we take the first origin (ie., the source-specific prep should
         # be one of the first in the prep-list)
         origin_source = record.data[Fields.ORIGIN][0].split("/")[0]

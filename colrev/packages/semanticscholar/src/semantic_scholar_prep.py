@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Consolidation of metadata based on SemanticScholar API as a prep operation"""
+"""Consolidation of metadata based on SemanticScholar API as a prep operation."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from colrev.packages.semanticscholar.src import record_transformer
 
 
 class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records based on SemanticScholar metadata"""
+    """Prepares records based on SemanticScholar metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=True)
@@ -58,8 +58,7 @@ class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
         self,
         record_in: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record_prep.PrepRecord:
-        """Prepare the record metadata based on SemanticScholar"""
-
+        """Prepare the record metadata based on SemanticScholar."""
         search_api_url = "https://api.semanticscholar.org/graph/v1/paper/search?query="
         url = search_api_url + record_in.data.get(Fields.TITLE, "").replace(" ", "+")
 
@@ -101,8 +100,7 @@ class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare a record based on metadata from SemanticScholar"""
-
+        """Prepare a record based on metadata from SemanticScholar."""
         try:
             retrieved_record = self._retrieve_record_from_semantic_scholar(record)
             if Fields.SEMANTIC_SCHOLAR_ID not in retrieved_record.data:

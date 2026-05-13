@@ -41,7 +41,7 @@ def _record_str(record: colrev.record.record.Record) -> str:
 def get_record_change_score(
     record_a: colrev.record.record.Record, record_b: colrev.record.record.Record
 ) -> float:
-    """Determine how much records changed"""
+    """Determine how much records changed."""
     # At some point, this may become more sensitive to major changes
     str_a = _record_str(record_a)
     str_b = _record_str(record_b)
@@ -49,7 +49,7 @@ def get_record_change_score(
 
 
 def container_is_abbreviated(record: colrev.record.record.Record) -> bool:
-    """Check whether the container title is abbreviated"""
+    """Check whether the container title is abbreviated."""
     if Fields.CONTAINER_TITLE in record.data:
         if record.data[Fields.CONTAINER_TITLE].count(".") > 2:
             return True
@@ -112,7 +112,7 @@ def _abbreviate_container_title(
 
 
 def _get_similarity_detailed(record_a: dict, record_b: dict) -> float:
-    """Determine the detailed similarities between records"""
+    """Determine the detailed similarities between records."""
     author_similarity = (
         fuzz.ratio(record_a.get(Fields.AUTHOR, ""), record_b.get(Fields.AUTHOR, ""))
         / 100

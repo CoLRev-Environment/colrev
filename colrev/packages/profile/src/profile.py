@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Creation of a profile of studies as part of the data operations"""
+"""Creation of a profile of studies as part of the data operations."""
 
 from __future__ import annotations
 
@@ -19,14 +19,14 @@ from colrev.constants import RecordState
 
 
 class Profile(base_classes.DataPackageBaseClass):
-    """Create a profile"""
+    """Create a profile."""
 
     ci_supported: bool = Field(default=False)
 
     class ProfileSettings(
         colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
-        """Profile settings"""
+        """Profile settings."""
 
         endpoint: str
         version: str
@@ -55,8 +55,7 @@ class Profile(base_classes.DataPackageBaseClass):
     # pylint: disable=unused-argument
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
-        """Add as an endpoint"""
-
+        """Add as an endpoint."""
         add_package = {
             "endpoint": "colrev.profile",
             "version": "0.1",
@@ -66,8 +65,7 @@ class Profile(base_classes.DataPackageBaseClass):
         )
 
     def _update_profile(self, silent_mode: bool) -> None:
-        """Create a profile of the sample"""
-
+        """Create a profile of the sample."""
         self.logger.info("Create sample profile")
 
         def prep_records(*, records: dict) -> pd.DataFrame:
@@ -185,8 +183,7 @@ class Profile(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
         silent_mode: bool,
     ) -> None:
-        """Update the data/profile"""
-
+        """Update the data/profile."""
         self._update_profile(silent_mode=silent_mode)
 
     def update_record_status_matrix(
@@ -194,8 +191,7 @@ class Profile(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
-        """Update the record_status_matrix"""
-
+        """Update the record_status_matrix."""
         # Note : automatically set all to True / synthesized
         for syn_id in list(synthesized_record_status_matrix.keys()):
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
@@ -203,8 +199,7 @@ class Profile(base_classes.DataPackageBaseClass):
     def get_advice(
         self,
     ) -> dict:
-        """Get advice on the next steps (for display in the colrev status)"""
-
+        """Get advice on the next steps (for display in the colrev status)."""
         data_endpoint = "Data operation [profile data endpoint]: "
 
         advice = {

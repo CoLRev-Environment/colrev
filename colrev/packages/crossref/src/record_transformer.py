@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Utility to transform crossref/doi.org items to records"""
+"""Utility to transform crossref/doi.org items to records."""
 
 from __future__ import annotations
 
@@ -184,8 +184,7 @@ def _remove_fields(*, record_dict: dict) -> dict:
 
 
 def json_to_record(*, item: dict) -> colrev.record.record_prep.PrepRecord:
-    """Convert a crossref item to a record dict"""
-
+    """Convert a crossref item to a record dict."""
     try:
         record_dict = _item_to_record(item=deepcopy(item))
         record_dict = _set_forthcoming(record_dict=record_dict)

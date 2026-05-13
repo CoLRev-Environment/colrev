@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Dedupe functionality dedicated to curated metadata repositories"""
+"""Dedupe functionality dedicated to curated metadata repositories."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from colrev.constants import RecordState
 
 
 class CurationDedupeSettings(BaseModel):
-    """Settings for CurationDedupe"""
+    """Settings for CurationDedupe."""
 
     endpoint: str
     selected_source: str
@@ -35,7 +35,8 @@ class CurationDedupeSettings(BaseModel):
 class CurationDedupe(base_classes.DedupePackageBaseClass):
     """Deduplication endpoint for curations with full journals/proceedings
     retrieved from different sources (identifying duplicates in groups of
-    volumes/issues or years)"""
+    volumes/issues or years).
+    """
 
     settings_class = CurationDedupeSettings
     settings: CurationDedupeSettings
@@ -60,7 +61,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         record_a: colrev.record.record.Record,
         record_b: colrev.record.record.Record,
     ) -> bool:
-        """Check if a record has an overlapping colrev_id with the other record"""
+        """Check if a record has an overlapping colrev_id with the other record."""
         try:
             own_colrev_ids = record_a.get_colrev_id()
             other_colrev_ids = record_b.get_colrev_id()
@@ -525,8 +526,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         )
 
     def run_dedupe(self) -> None:
-        """Run the curation dedupe procedure"""
-
+        """Run the curation dedupe procedure."""
         self.dedupe_operation.merge_based_on_global_ids(apply=True)
 
         records = self.review_manager.dataset.load_records_dict()

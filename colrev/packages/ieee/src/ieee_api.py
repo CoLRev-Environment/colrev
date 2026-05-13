@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""IEEE Xplore API"""
+"""IEEE Xplore API."""
 
 import json
 import math
@@ -15,7 +15,7 @@ from colrev.constants import Fields
 
 
 class XPLORE:
-    """XPLORE API class"""
+    """XPLORE API class."""
 
     # pylint: disable=too-many-instance-attributes
     # API ENDPOINT (all non-Open Access)
@@ -156,21 +156,22 @@ class XPLORE:
 
     def startingResult(self, start: int) -> None:
         """Set the start position in the results
-        string start   Start position in the returned data"""
-
+        string start   Start position in the returned data.
+        """
         self.startRecord = math.ceil(start) if (start > 0) else 1
 
     def maximumResults(self, maximum: int) -> None:
         """Set the maximum number of results
-        string maximum   Max number of results to return"""
+        string maximum   Max number of results to return.
+        """
         self.resultSetMax = math.ceil(maximum) if (maximum > 0) else 25
         self.resultSetMax = min(self.resultSetMax, self.resultSetMaxCap)
 
     def resultsFilter(self, filterParam: str, value: str) -> None:
         """Set a filter on results
         string filterParam   Field used for filtering
-        string value    Text to filter on"""
-
+        string value    Text to filter on.
+        """
         filterParam = filterParam.strip().lower()
         value = value.strip()
 
@@ -185,25 +186,26 @@ class XPLORE:
     def resultsSorting(self, field: str, order: str) -> None:
         """Setting sort order for results
         string field   Data field used for sorting
-        string order   Sort order for results (ascending or descending)"""
+        string order   Sort order for results (ascending or descending).
+        """
         field = field.strip().lower()
         order = order.strip()
         self.sortField = field
         self.sortOrder = order
 
     def queryText(self, value: str) -> None:
-        """Text to query across metadata fields, abstract and document text"""
+        """Text to query across metadata fields, abstract and document text."""
         self._add_parameter("querytext", value)
 
     def articleNumber(self, value: str) -> None:
-        """Article number to query"""
+        """Article number to query."""
         self._add_parameter("article_number", value)
 
     def _search_field(self, field: str, value: str) -> None:
         """Shortcut method for assigning search parameters and values
         string field   Field used for searching
-        string value   Text to query"""
-
+        string value   Text to query.
+        """
         field = field.strip().lower()
         if field in self.ALLOWED_SEARCH_FIELDS:
             self._add_parameter(field, value)
@@ -211,11 +213,11 @@ class XPLORE:
             print("Searches against field " + field + " are not supported")
 
     def facetText(self, value: str) -> None:
-        """Facet text to query"""
+        """Facet text to query."""
         self._add_parameter("facet", value)
 
     def _add_parameter(self, parameter: str, value: str) -> None:
-        """Add parameter"""
+        """Add parameter."""
         value = value.strip()
 
         if len(value) > 0:
@@ -235,15 +237,15 @@ class XPLORE:
                 self.usingFacet = True
 
     def openAccess(self, article: str) -> None:
-        """Open Access document"""
+        """Open Access document."""
         self.usingOpenAccess = True
         self.queryProvided = True
         self.articleNumber(article)
 
     def _build_open_access_query(self) -> str:
         """Creates the URL for the Open Access Document API call
-        return string: full URL for querying the API"""
-
+        return string: full URL for querying the API.
+        """
         url = self.OPEN_ACCESS_ENDPOINT
         url += str(self.parameters["article_number"]) + "/fulltext"
         url += "?apikey=" + str(self.apiKey)
@@ -253,8 +255,8 @@ class XPLORE:
 
     def _build_query(self) -> str:
         """Creates the URL for the non-Open Access Document API call
-        return string: full URL for querying the API"""
-
+        return string: full URL for querying the API.
+        """
         url = self.ENDPOINT
         url += "?apikey=" + str(self.apiKey)
         url += "&format=json"
@@ -294,7 +296,8 @@ class XPLORE:
     def _query_api(self, url: str) -> str:
         """Creates the URL for the API call
         string url  Full URL to pass to API
-        return string: Results from API"""
+        return string: Results from API.
+        """
         with urllib.request.urlopen(url) as con:
             content = con.read()
         return content
@@ -352,8 +355,7 @@ class XPLORE:
         return record_dict
 
     def get_records(self) -> list:
-        """Calls the API to receive the records"""
-
+        """Calls the API to receive the records."""
         if self.usingOpenAccess is True:
             url = self._build_open_access_query()
 

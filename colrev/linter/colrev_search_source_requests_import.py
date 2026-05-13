@@ -17,7 +17,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class SearchSourceRequestsImportChecker(checkers.BaseChecker):
-    """SearchSourceRequestsImportChecker"""
+    """SearchSourceRequestsImportChecker."""
 
     name = "colrev-search-source-requests-import"
 
@@ -34,7 +34,6 @@ class SearchSourceRequestsImportChecker(checkers.BaseChecker):
     @only_required_for_messages("colrev-search-source-requests-import")
     def visit_module(self, node: nodes.Module) -> None:
         """Detect requests imports in SearchSource packages."""
-
         if not any(
             self._is_search_source_class(classdef)
             for classdef in node.nodes_of_class(nodes.ClassDef)
@@ -51,7 +50,6 @@ class SearchSourceRequestsImportChecker(checkers.BaseChecker):
 
     def _is_search_source_class(self, classdef: nodes.ClassDef) -> bool:
         """Check whether class inherits from SearchSourcePackageBaseClass."""
-
         for base in classdef.bases:
             if (
                 isinstance(base, nodes.Attribute)
@@ -68,5 +66,4 @@ class SearchSourceRequestsImportChecker(checkers.BaseChecker):
 
 def register(linter: PyLinter) -> None:  # pragma: no cover
     """Required method to auto register this checker."""
-
     linter.register_checker(SearchSourceRequestsImportChecker(linter))

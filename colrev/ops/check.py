@@ -13,7 +13,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class CheckOperation(colrev.process.operation.Operation):
-    """A dummy operation that is not expected to introduce changes"""
+    """A dummy operation that is not expected to introduce changes."""
 
     # pylint: disable=too-few-public-methods
 

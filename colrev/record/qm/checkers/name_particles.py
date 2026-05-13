@@ -11,7 +11,7 @@ from colrev.constants import Fields
 
 
 class NameParticlesChecker:
-    """The NameParticlesChecker"""
+    """The NameParticlesChecker."""
 
     fields_to_check = [Fields.AUTHOR, Fields.EDITOR]
 
@@ -23,8 +23,7 @@ class NameParticlesChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the name-particles checks"""
-
+        """Run the name-particles checks."""
         for key in self.fields_to_check:
             if key not in record.data or record.ignored_defect(
                 key=key, defect=self.msg
@@ -50,5 +49,5 @@ class NameParticlesChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(NameParticlesChecker(quality_model))

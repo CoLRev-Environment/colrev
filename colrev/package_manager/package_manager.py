@@ -18,7 +18,7 @@ from colrev.constants import Filepaths
 
 
 class PackageManager:
-    """The PackageManager provides functionality for package lookup and discovery"""
+    """The PackageManager provides functionality for package lookup and discovery."""
 
     def _get_package_identifiers(self) -> list:
         group = "colrev"
@@ -46,8 +46,7 @@ class PackageManager:
         return type_identifier_endpoint_dict
 
     def discover_packages(self, *, package_type: EndpointType) -> typing.Dict:
-        """Discover packages (registered in the CoLRev environment)"""
-
+        """Discover packages (registered in the CoLRev environment)."""
         # [{'package_endpoint_identifier': 'colrev.abi_inform_proquest',
         #   'status': '|EXPERIMENTAL|',
         #   'short_description': 'ABI/INFORM (ProQuest) ...'},
@@ -57,8 +56,7 @@ class PackageManager:
             return package_endpoints[package_type.value]
 
     def discover_installed_packages(self, *, package_type: EndpointType) -> typing.Dict:
-        """Discover installed packages"""
-
+        """Discover installed packages."""
         # {EndpointType.review_type:
         #   {'colrev.blank': {'endpoint': 'colrev.packages.review_types.blank.BlankReview'},
         #     ...
@@ -70,14 +68,12 @@ class PackageManager:
     def get_package_endpoint_class(  # type: ignore
         self, *, package_type: EndpointType, package_identifier: str
     ):
-        """Load a package endpoint"""
-
+        """Load a package endpoint."""
         package = colrev.package_manager.package.Package(package_identifier)
         return package.get_endpoint_class(package_type)
 
     def is_installed(self, package_name: str, *, uv: bool = False) -> bool:
-        """Check if a package is installed"""
-
+        """Check if a package is installed."""
         fixed_package_name = package_name.replace("_", "-").replace(".", "-")
 
         if uv:
@@ -149,8 +145,7 @@ class PackageManager:
         review_manager: colrev.review_manager.ReviewManager,
         uv: bool = False,
     ) -> None:
-        """Install all packages required for the CoLRev project"""
-
+        """Install all packages required for the CoLRev project."""
         review_manager.logger.info("Install project")
         packages = self._get_packages_to_install(review_manager=review_manager, uv=uv)
         if len(packages) == 0:
@@ -167,8 +162,7 @@ class PackageManager:
         editable: bool = False,
         uv: bool = False,
     ) -> None:
-        """Install packages using uv if available, otherwise fallback to pip"""
-
+        """Install packages using uv if available, otherwise fallback to pip."""
         if uv:
             package_manager = ["uv", "pip"]
         else:

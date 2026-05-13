@@ -11,7 +11,7 @@ from colrev.constants import Fields
 
 
 class ContainerTitleAbbreviatedChecker:
-    """The ContainerTitleAbbreviatedChecker"""
+    """The ContainerTitleAbbreviatedChecker."""
 
     fields_to_check = [Fields.JOURNAL, Fields.BOOKTITLE]
     msg = DefectCodes.CONTAINER_TITLE_ABBREVIATED
@@ -22,8 +22,7 @@ class ContainerTitleAbbreviatedChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the container-title-abbreviated checks"""
-
+        """Run the container-title-abbreviated checks."""
         for key in self.fields_to_check:
             if key not in record.data or record.ignored_defect(
                 key=key, defect=self.msg
@@ -48,5 +47,5 @@ class ContainerTitleAbbreviatedChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(ContainerTitleAbbreviatedChecker(quality_model))

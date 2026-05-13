@@ -18,7 +18,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Trace(colrev.process.operation.Operation):
-    """Trace a record through history"""
+    """Trace a record through history."""
 
     type = OperationsType.check
 
@@ -75,8 +75,7 @@ class Trace(colrev.process.operation.Operation):
 
     @colrev.process.operation.Operation.decorate()
     def main(self, *, record_id: str) -> None:
-        """Trace a record (main entrypoint)"""
-
+        """Trace a record (main entrypoint)."""
         self.review_manager.logger.info(f"Trace record by ID: {record_id}")
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
 

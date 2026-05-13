@@ -19,7 +19,7 @@ from colrev.writer.write_utils import write_file
 
 
 class Distribute(colrev.process.operation.Operation):
-    """Distribute records to other local CoLRev projects"""
+    """Distribute records to other local CoLRev projects."""
 
     type = OperationsType.check
 
@@ -33,7 +33,7 @@ class Distribute(colrev.process.operation.Operation):
         self.review_manager = review_manager
 
     def get_environment_registry(self) -> list:
-        """Get the environment registry (excluding curated_metadata)"""
+        """Get the environment registry (excluding curated_metadata)."""
         environment_manager = EnvironmentManager()
         return [
             x
@@ -42,7 +42,7 @@ class Distribute(colrev.process.operation.Operation):
         ]
 
     def get_next_id(self, *, bib_file: Path) -> int:
-        """Get the next ID (incrementing counter)"""
+        """Get the next ID (incrementing counter)."""
         ids = []
         if bib_file.is_file():
             with open(bib_file, encoding="utf8") as file:
@@ -57,8 +57,7 @@ class Distribute(colrev.process.operation.Operation):
 
     @colrev.process.operation.Operation.decorate()
     def main(self, *, path: Path, target: Path) -> None:
-        """Distribute records to other CoLRev repositories (main entrypoint)"""
-
+        """Distribute records to other CoLRev repositories (main entrypoint)."""
         # if no options are given, take the current path/repo
         # optional: target-repo-path
         # path_str: could also be a url

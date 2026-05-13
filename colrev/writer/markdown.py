@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function to write Markdown (table) files"""
+"""Function to write Markdown (table) files."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def to_dataframe(
     sort_fields_first: bool = True,
     drop_empty_fields: bool = True,
 ) -> pd.DataFrame:
-    """Convert a records dict to a pandas DataFrame"""
+    """Convert a records dict to a pandas DataFrame."""
     all_keys = {k for v in records_dict.values() for k in v.keys()}
     additional_fields = sorted(all_keys - set(FIELDS))
     fields = FIELDS + additional_fields if sort_fields_first else sorted(all_keys)
@@ -56,7 +56,7 @@ def to_string(
     sort_fields_first: bool = True,
     drop_empty_fields: bool = True,
 ) -> str:
-    """Convert a records dict to a markdown string with a table"""
+    """Convert a records dict to a markdown string with a table."""
     data_frame = to_dataframe(
         records_dict=records_dict,
         sort_fields_first=sort_fields_first,
@@ -82,7 +82,7 @@ def write_file(
     sort_fields_first: bool = True,
     drop_empty_fields: bool = True,
 ) -> None:
-    """Write a markdown file with a table from a records dict"""
+    """Write a markdown file with a table from a records dict."""
     md_string = to_string(
         records_dict=records_dict,
         sort_fields_first=sort_fields_first,

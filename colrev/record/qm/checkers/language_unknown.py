@@ -12,7 +12,7 @@ from colrev.constants import FieldValues
 
 
 class LanguageChecker:
-    """The LanguageChecker"""
+    """The LanguageChecker."""
 
     msg = DefectCodes.LANGUAGE_UNKNOWN
 
@@ -22,8 +22,7 @@ class LanguageChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the language-unknown checks"""
-
+        """Run the language-unknown checks."""
         if record.data.get(
             Fields.TITLE, FieldValues.UNKNOWN
         ) == FieldValues.UNKNOWN or record.ignored_defect(
@@ -46,5 +45,5 @@ class LanguageChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(LanguageChecker(quality_model))

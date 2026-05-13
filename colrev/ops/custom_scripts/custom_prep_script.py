@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Template for a custom Prep PackageEndpoint"""
+"""Template for a custom Prep PackageEndpoint."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from colrev.constants import Fields
 
 
 class CustomPrep(base_classes.PrepPackageBaseClass):
-    """Class for custom prep scripts"""
+    """Class for custom prep scripts."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     source_correction_hint = "check with the developer"
@@ -35,8 +35,7 @@ class CustomPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Update record (metadata)"""
-
+        """Update record (metadata)."""
         if Fields.JOURNAL in record.data:
             if record.data[Fields.JOURNAL] == "MISQ":
                 record.update_field(

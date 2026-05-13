@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Colrev curated data as part of the data operations"""
+"""Colrev curated data as part of the data operations."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from colrev.constants import RecordState
 class ColrevCurationSettings(
     colrev.package_manager.package_settings.DefaultSettings, BaseModel
 ):
-    """Colrev Curation settings"""
+    """Colrev Curation settings."""
 
     endpoint: str
     version: str
@@ -35,7 +35,7 @@ class ColrevCurationSettings(
 
 
 class ColrevCuration(base_classes.DataPackageBaseClass):
-    """CoLRev Curation"""
+    """CoLRev Curation."""
 
     settings: ColrevCurationSettings
     ci_supported: bool = Field(default=True)
@@ -62,8 +62,7 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
     # pylint: disable=unused-argument
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
-        """Add as an endpoint"""
-
+        """Add as an endpoint."""
         add_source = {
             "endpoint": "colrev.colrev_curation",
             "version": "0.1",
@@ -263,7 +262,8 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
 
     def _source_comparison(self, *, silent_mode: bool) -> None:
         """Exports a table to support analyses of records that are not
-        in all sources (for curated repositories)"""
+        in all sources (for curated repositories).
+        """
         dedupe_dir = self.review_manager.paths.dedupe
         dedupe_dir.mkdir(exist_ok=True, parents=True)
         source_comparison_xlsx = dedupe_dir / Path("source_comparison.xlsx")
@@ -307,8 +307,7 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
         silent_mode: bool,
     ) -> None:
-        """Update the CoLRev curation"""
-
+        """Update the CoLRev curation."""
         if self.settings.curated_masterdata:
             self._update_stats_in_readme(
                 records=records,
@@ -321,16 +320,14 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
-        """Update the record_status_matrix"""
-
+        """Update the record_status_matrix."""
         for item in synthesized_record_status_matrix:
             synthesized_record_status_matrix[item][endpoint_identifier] = True
 
     def get_advice(
         self,
     ) -> dict:
-        """Get advice on the next steps (for display in the colrev status)"""
-
+        """Get advice on the next steps (for display in the colrev status)."""
         records = self.review_manager.dataset.load_records_dict()
         advice = {
             "msg": "TODO (add curation-specific advice...)",

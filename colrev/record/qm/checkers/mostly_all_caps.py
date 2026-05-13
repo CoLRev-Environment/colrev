@@ -13,7 +13,7 @@ from colrev.constants import FieldValues
 
 
 class MostlyAllCapsFieldChecker:
-    """The MostlyAllCapsFieldChecker"""
+    """The MostlyAllCapsFieldChecker."""
 
     msg = DefectCodes.MOSTLY_ALL_CAPS
 
@@ -23,7 +23,7 @@ class MostlyAllCapsFieldChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the mostly-all-caps checks"""
+        """Run the mostly-all-caps checks."""
         for key in [
             Fields.AUTHOR,
             Fields.TITLE,
@@ -49,8 +49,7 @@ class MostlyAllCapsFieldChecker:
     def _is_mostly_all_caps(
         self, *, record: colrev.record.record.Record, key: str
     ) -> bool:
-        """Check if the field is mostly all caps"""
-
+        """Check if the field is mostly all caps."""
         # Online sources/software can be short/have caps
         if (
             record.data.get(Fields.ENTRYTYPE, "") == "online"
@@ -76,5 +75,5 @@ class MostlyAllCapsFieldChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(MostlyAllCapsFieldChecker(quality_model))

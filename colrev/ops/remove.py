@@ -30,7 +30,6 @@ class Remove(colrev.process.operation.Operation):
     @colrev.process.operation.Operation.decorate()
     def remove_records(self, *, ids: str) -> None:
         """Remove records from CoLRev project."""
-
         records = self.review_manager.dataset.load_records_dict()
 
         for record_id in ids.split(","):

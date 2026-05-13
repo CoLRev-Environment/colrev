@@ -21,7 +21,7 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class PDFGetMan(colrev.process.operation.Operation):
-    """Get PDFs manually"""
+    """Get PDFs manually."""
 
     pdf_get_man_package_endpoints: dict[str, typing.Any]
     MISSING_PDF_FILES_RELATIVE = Path("data/pdf_get_man/missing_pdf_files.csv")
@@ -46,7 +46,7 @@ class PDFGetMan(colrev.process.operation.Operation):
         self.verbose = True
 
     def get_pdf_get_man(self, records: dict) -> list:
-        """Get the records that are missing a PDF"""
+        """Get the records that are missing a PDF."""
         missing_records = []
         for record in records.values():
             if record[Fields.STATUS] == RecordState.pdf_needs_manual_retrieval:
@@ -54,8 +54,7 @@ class PDFGetMan(colrev.process.operation.Operation):
         return missing_records
 
     def export_retrieval_table(self, records: dict) -> None:
-        """Export a table for manual PDF retrieval"""
-
+        """Export a table for manual PDF retrieval."""
         missing_records = self.get_pdf_get_man(records)
 
         if len(missing_records) > 0:
@@ -84,8 +83,7 @@ class PDFGetMan(colrev.process.operation.Operation):
             )
 
     def discard(self) -> None:
-        """Discard missing PDFs (set to pdf_not_available)"""
-
+        """Discard missing PDFs (set to pdf_not_available)."""
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
             record = colrev.record.record.Record(record_dict)
@@ -98,7 +96,7 @@ class PDFGetMan(colrev.process.operation.Operation):
         )
 
     def get_data(self) -> dict:
-        """Get the data for pdf-get-man"""
+        """Get the data for pdf-get-man."""
         # pylint: disable=duplicate-code
 
         pdf_dir = self.review_manager.paths.pdf
@@ -124,7 +122,7 @@ class PDFGetMan(colrev.process.operation.Operation):
         return pdf_get_man_data
 
     def pdfs_retrieved_manually(self) -> bool:
-        """Check whether PDFs were retrieved manually"""
+        """Check whether PDFs were retrieved manually."""
         return self.review_manager.dataset.git_repo.has_record_changes()
 
     def pdf_get_man_record(
@@ -134,7 +132,7 @@ class PDFGetMan(colrev.process.operation.Operation):
         filepath: typing.Optional[Path] = None,
         PAD: int = 40,
     ) -> None:
-        """Record pdf-get-man decision"""
+        """Record pdf-get-man decision."""
         if filepath is not None:
             record.set_status(RecordState.pdf_imported)
             record.data.update(file=str(filepath.relative_to(self.review_manager.path)))
@@ -180,8 +178,7 @@ class PDFGetMan(colrev.process.operation.Operation):
 
     @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
-        """Get PDFs manually (main entrypoint)"""
-
+        """Get PDFs manually (main entrypoint)."""
         if utils.in_ci_environment() and not self.review_manager.in_test_environment():
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev pdf-get-man",

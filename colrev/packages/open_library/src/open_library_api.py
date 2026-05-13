@@ -28,7 +28,6 @@ class OpenLibraryAPI:
 
     def get(self, url: str, *, timeout: int) -> requests.Response:
         """Perform a GET request and raise a custom error on failure."""
-
         try:
             response = self.session.request(
                 "GET", url, headers=self.headers, timeout=timeout

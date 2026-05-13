@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Consolidation of metadata based on the Pubmed API as a prep operation"""
+"""Consolidation of metadata based on the Pubmed API as a prep operation."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from colrev.constants import SearchType
 
 
 class PubmedMetadataPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records based on Pubmed metadata"""
+    """Prepares records based on Pubmed metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -73,7 +73,7 @@ class PubmedMetadataPrep(base_classes.PrepPackageBaseClass):
         ]
 
     def check_availability(self) -> None:
-        """Check status (availability) of the Pubmed API"""
+        """Check status (availability) of the Pubmed API."""
         self.pubmed_source.check_availability()
 
     # pylint: disable=unused-argument
@@ -84,8 +84,7 @@ class PubmedMetadataPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare a record based on Pubmed metadata"""
-
+        """Prepare a record based on Pubmed metadata."""
         if any(
             pubmed_prefix in o
             for pubmed_prefix in self.pubmed_prefixes

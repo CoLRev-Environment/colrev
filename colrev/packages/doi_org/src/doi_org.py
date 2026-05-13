@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Connector to doi.org (API)"""
+"""Connector to doi.org (API)."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ from colrev.packages.crossref.src import record_transformer
 
 
 class DOIConnector:
-    """Connector for the DOI.org API"""
+    """Connector for the DOI.org API."""
 
     heuristic_status = SearchSourceHeuristicStatus.oni
 
@@ -40,8 +40,7 @@ class DOIConnector:
         timeout: int = 60,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.record.record.Record:
-        """Retrieve the metadata from DOI.org based on a record (similarity)"""
-
+        """Retrieve the metadata from DOI.org based on a record (similarity)."""
         if Fields.DOI not in record.data:
             return record
 
@@ -98,8 +97,7 @@ class DOIConnector:
         record: colrev.record.record.Record,
         timeout: int = 30,
     ) -> None:
-        """Get the website link from DOI resolution API"""
-
+        """Get the website link from DOI resolution API."""
         if Fields.DOI not in record.data:
             return
 

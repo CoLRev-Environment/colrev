@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: SYNERGY-datasets"""
+"""SearchSource: SYNERGY-datasets."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ from colrev.constants import SearchType
 
 
 class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """SYNERGY-datasets
+    """SYNERGY-datasets.
 
     https://github.com/asreview/synergy-dataset
 
@@ -66,8 +66,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for SYNERGY-datasets"""
-
+        """Source heuristic for SYNERGY-datasets."""
         result = {"confidence": 0.0}
 
         if "doi,pmid,openalex_id,label_included" in data:
@@ -124,8 +123,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
         if params:
             for item in params.split(";"):
@@ -258,8 +256,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         assert source.search_type == SearchType.API
 
     def search(self, rerun: bool) -> None:
-        """Run a search of the SYNERGY datasets"""
-
+        """Run a search of the SYNERGY datasets."""
         self._validate_source()
 
         dataset_df = self._load_dataset()
@@ -345,12 +342,11 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.search_results_path,
@@ -373,8 +369,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for SYNERGY-datasets"""
-
+        """Source-specific preparation for SYNERGY-datasets."""
         record.rename_field(
             key="colrev.synergy_datasets.pubmedid", new_key=Fields.PUBMED_ID
         )

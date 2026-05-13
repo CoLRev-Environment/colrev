@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Europe PMC API"""
+"""Europe PMC API."""
 
 import typing
 from xml.etree.ElementTree import Element  # nosec
@@ -20,7 +20,7 @@ class EuropePMCAPIError(Exception):
 
 
 class EPMCAPI:
-    """Connector for the Europe PMC API"""
+    """Connector for the Europe PMC API."""
 
     def __init__(self, params: dict, email: str, session: requests.Session) -> None:
         self.params = params
@@ -34,8 +34,7 @@ class EPMCAPI:
         self.headers = {"user-agent": f"{__name__} (mailto:{email})"}
 
     def get_records(self) -> typing.Iterator[colrev.record.record_prep.PrepRecord]:
-        """Get records from the Europe PMC API"""
-
+        """Get records from the Europe PMC API."""
         try:
             ret = self.session.request(
                 "GET", self.url, headers=self.headers, timeout=60

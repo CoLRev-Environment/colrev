@@ -18,7 +18,7 @@ from colrev.constants import OperationsType
 
 
 class Merge(colrev.process.operation.Operation):
-    """Merge branches of CoLRev project"""
+    """Merge branches of CoLRev project."""
 
     type = OperationsType.check
 
@@ -86,8 +86,7 @@ class Merge(colrev.process.operation.Operation):
 
     @colrev.process.operation.Operation.decorate()
     def main(self, *, branch: str) -> None:
-        """Merge branches of a CoLRev project (main entrypoint)"""
-
+        """Merge branches of a CoLRev project (main entrypoint)."""
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-statements
 

@@ -13,7 +13,7 @@ from colrev.constants import Fields
 
 
 class PageRangeChecker:
-    """The PageRangeChecker"""
+    """The PageRangeChecker."""
 
     msg = DefectCodes.PAGE_RANGE
 
@@ -23,8 +23,7 @@ class PageRangeChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the page-range checks"""
-
+        """Run the page-range checks."""
         if (
             Fields.PAGES not in record.data
             or record.ignored_defect(key=Fields.PAGES, defect=self.msg)
@@ -48,5 +47,5 @@ class PageRangeChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(PageRangeChecker(quality_model))

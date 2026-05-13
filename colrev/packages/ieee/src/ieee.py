@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: IEEEXplore"""
+"""SearchSource: IEEEXplore."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ from colrev.ops.search_db import run_db_search
 
 
 class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """IEEEXplore"""
+    """IEEEXplore."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -78,8 +78,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for IEEEXplore"""
-
+        """Source heuristic for IEEEXplore."""
         result = {"confidence": 0.1}
 
         if "Date Added To Xplore" in data:
@@ -96,8 +95,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
         if params:
             if params.startswith("http"):
@@ -168,8 +166,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def search(self, rerun: bool) -> None:
-        """Run a search of IEEEXplore"""
-
+        """Run a search of IEEEXplore."""
         if self.search_source.search_type == SearchType.API:
             ieee_feed = colrev.ops.search_api_feed.SearchAPIFeed(
                 source_identifier=self.source_identifier,
@@ -227,7 +224,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     @classmethod
@@ -324,7 +321,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def ensure_append_only(cls, filename: Path) -> bool:
-        """Ensure that the SearchSource file is append-only"""
+        """Ensure that the SearchSource file is append-only."""
         return filename.suffix in [".ris"]
 
     @classmethod
@@ -367,8 +364,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         return records
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".ris":
             return self._load_ris(
                 filename=self.search_source.search_results_path, logger=self.logger
@@ -385,8 +381,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for IEEEXplore"""
-
+        """Source-specific preparation for IEEEXplore."""
         if Fields.AUTHOR in record.data:
             record.data[Fields.AUTHOR] = (
                 colrev.record.record_prep.PrepRecord.format_author_field(

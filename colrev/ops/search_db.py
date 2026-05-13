@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Database search operations"""
+"""Database search operations."""
 
 from __future__ import annotations
 
@@ -80,8 +80,7 @@ def get_query_filename(
     add_to_git: bool = False,
     project_root: typing.Optional[Path] = None,
 ) -> Path:
-    """Get the corresponding filename for the search query"""
-
+    """Get the corresponding filename for the search query."""
     query_filename = Path("data/search/") / Path(f"{filename.stem}_query.txt")
     root = project_root or filename.resolve().parents[2]
     review_manager = _ReviewManagerStub(root)
@@ -108,8 +107,7 @@ def create_db_source(
     add_to_git: bool = True,
     logger: typing.Optional[logging.Logger] = logging.getLogger(__name__),
 ) -> colrev.search_file.ExtendedSearchFile:
-    """Interactively add a DB SearchSource"""
-
+    """Interactively add a DB SearchSource."""
     if not all(x in ["search_file"] for x in list(params)):
         raise NotImplementedError  # or parameter error
 

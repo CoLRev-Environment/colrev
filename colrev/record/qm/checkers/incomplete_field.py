@@ -12,7 +12,7 @@ from colrev.constants import FieldValues
 
 
 class IncompleteFieldChecker:
-    """The IncompleteFieldChecker"""
+    """The IncompleteFieldChecker."""
 
     msg = DefectCodes.INCOMPLETE_FIELD
 
@@ -22,8 +22,7 @@ class IncompleteFieldChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the missing-field checks"""
-
+        """Run the missing-field checks."""
         for key in [
             Fields.TITLE,
             Fields.JOURNAL,
@@ -76,5 +75,5 @@ class IncompleteFieldChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(IncompleteFieldChecker(quality_model))

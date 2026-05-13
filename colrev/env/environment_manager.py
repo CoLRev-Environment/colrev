@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Manages environment registry, services, and stauts"""
+"""Manages environment registry, services, and stauts."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from colrev.env.utils import get_by_path
 
 
 class EnvironmentManager:
-    """The EnvironmentManager manages environment resources and services"""
+    """The EnvironmentManager manages environment resources and services."""
 
     load_yaml = False
 
@@ -30,7 +30,7 @@ class EnvironmentManager:
         self._registered_ports: typing.List[str] = []
 
     def register_ports(self, ports: typing.List[str]) -> None:
-        """Register a localhost port to avoid conflicts"""
+        """Register a localhost port to avoid conflicts."""
         for port_to_register in ports:
             if port_to_register in self._registered_ports:
                 raise colrev_exceptions.PortAlreadyRegisteredException(
@@ -84,7 +84,7 @@ class EnvironmentManager:
         path_to_register: Path,
         logger: logging.Logger = logging.getLogger(__name__),
     ) -> None:
-        """Register a repository"""
+        """Register a repository."""
         path_to_register = path_to_register.resolve().absolute()
         self.environment_registry = self.load_environment_registry()
 
@@ -121,7 +121,7 @@ class EnvironmentManager:
 
     @classmethod
     def get_name_mail_from_git(cls) -> typing.Tuple[str, str]:  # pragma: no cover
-        """Get the committer name and email from git (globals)"""
+        """Get the committer name and email from git (globals)."""
         global_conf_details = ("NA", "NA")
         try:
             username = git.config.GitConfigParser().get_value("user", "name")
@@ -134,8 +134,7 @@ class EnvironmentManager:
         return global_conf_details
 
     def check_git_installed(self) -> None:  # pragma: no cover
-        """Check whether git is installed"""
-
+        """Check whether git is installed."""
         try:
             git_instance = git.Git()
             _ = git_instance.version()
@@ -153,8 +152,7 @@ class EnvironmentManager:
         return status_dict
 
     def get_environment_details(self) -> dict:
-        """Get the environment details"""
-
+        """Get the environment details."""
         environment_details = {}
         size = 0
         last_modified = "NOT_INITIATED"
@@ -177,8 +175,7 @@ class EnvironmentManager:
         return environment_details
 
     def _get_environment_stats(self) -> dict:
-        """Get the environment stats"""
-
+        """Get the environment stats."""
         local_repos = self.local_repos()
         repos = []
         broken_links = []
@@ -212,7 +209,7 @@ class EnvironmentManager:
         return {"repos": repos, "broken_links": broken_links}
 
     def get_curated_outlets(self) -> list:
-        """Get the curated outlets"""
+        """Get the curated outlets."""
         curated_outlets: typing.List[str] = []
         for repo_source_path in [
             x["repo_source_path"]
@@ -272,9 +269,10 @@ class EnvironmentManager:
         return True
 
     def get_settings_by_key(self, key: str) -> str | None:
-        """Loads setting by the given key
+        """Loads setting by the given key.
 
-        The registry is stored in /home/username/colrev/registry.json"""
+        The registry is stored in /home/username/colrev/registry.json
+        """
         environment_registry = self.load_environment_registry()
         keys = key.split(".")
         if self._dict_keys_exists(environment_registry, *keys):
@@ -282,10 +280,10 @@ class EnvironmentManager:
         return None
 
     def update_registry(self, key: str, value: str) -> None:
-        """Updates a given key in the registry with new value
+        """Updates a given key in the registry with new value.
 
-        The registry is stored in /home/username/colrev/registry.json"""
-
+        The registry is stored in /home/username/colrev/registry.json
+        """
         keys = key.split(".")
         # We don't want to allow user to replace any core settings, so check for packages key
         if keys[0] != "packages" or len(keys) < 2:

@@ -13,7 +13,7 @@ from colrev.constants import Fields
 
 
 class LanguageFormatChecker:
-    """The LanguageFormatChecker"""
+    """The LanguageFormatChecker."""
 
     msg = DefectCodes.LANGUAGE_FORMAT_ERROR
 
@@ -24,8 +24,7 @@ class LanguageFormatChecker:
         self.language_service = colrev.env.language_service.LanguageService()
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the language-format-error checks"""
-
+        """Run the language-format-error checks."""
         if Fields.LANGUAGE not in record.data or record.ignored_defect(
             key=Fields.LANGUAGE, defect=self.msg
         ):
@@ -42,5 +41,5 @@ class LanguageFormatChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(LanguageFormatChecker(quality_model))

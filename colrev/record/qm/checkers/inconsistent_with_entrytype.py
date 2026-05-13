@@ -11,7 +11,7 @@ from colrev.constants import Fields
 
 
 class InconsistentWithEntrytypeChecker:
-    """The InconsistentWithEntrytypeChecker"""
+    """The InconsistentWithEntrytypeChecker."""
 
     record_field_inconsistencies: dict[str, list[str]] = {
         "article": [Fields.BOOKTITLE, Fields.ISBN],
@@ -64,8 +64,7 @@ class InconsistentWithEntrytypeChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the completeness checks"""
-
+        """Run the completeness checks."""
         if "ENTRYTYPE" not in record.data:
             return
 
@@ -85,5 +84,5 @@ class InconsistentWithEntrytypeChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(InconsistentWithEntrytypeChecker(quality_model))

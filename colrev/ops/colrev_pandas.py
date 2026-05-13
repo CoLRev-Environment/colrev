@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Connector for pandas"""
+"""Connector for pandas."""
 
 from __future__ import annotations
 
@@ -27,8 +27,7 @@ def load_df(
     include_provenance: bool = True,
     notify: str = "",
 ) -> pd.DataFrame:
-    """Get a pandas dataframe from a CoLRev project"""
-
+    """Get a pandas dataframe from a CoLRev project."""
     if project_path == "":
         project_path = str(Path.cwd())
 
@@ -57,7 +56,6 @@ def load_resolved_papers(other_project_path: str) -> pd.DataFrame:
     This is useful when integrating datasets and reusing screening decisions or coding.
 
     Example:
-
     Current project record(s):
 
     @Webster2002{
@@ -77,7 +75,6 @@ def load_resolved_papers(other_project_path: str) -> pd.DataFrame:
     }
 
     Returns:
-
     @Webster2002{
         title = "ANALYZING THE PAST TO PREPARE FOR THE FUTURE",
         author = "WEBSTER; WATSON",
@@ -91,7 +88,6 @@ def load_resolved_papers(other_project_path: str) -> pd.DataFrame:
     by accessing other records based on corresponding current IDs.
 
     """
-
     other_review_manager = colrev.review_manager.ReviewManager(
         path_str=other_project_path, force_mode=True
     )
@@ -157,10 +153,10 @@ def add_from_tei(
     project_path: str = "",
     fields: typing.Optional[typing.List[str]] = None,
 ) -> None:
-    """
-    This function adds data from TEI files to the given DataFrame.
+    """This function adds data from TEI files to the given DataFrame.
 
-    Parameters:
+    Parameters
+    ----------
     records_df (pd.DataFrame): The DataFrame to which the data will be added.
     project_path (str, optional): The path to the project. Defaults to the
                                   current working directory.
@@ -168,8 +164,10 @@ def add_from_tei(
                                             files. Defaults to [Fields.ABSTRACT,
                                             Fields.KEYWORDS].
 
-    Returns:
+    Returns
+    -------
     None
+
     """
     if project_path == "":
         project_path = str(Path.cwd())
@@ -206,18 +204,20 @@ def add_from_tei(
 def extract_pdfs_for_data_extraction(
     records_df: pd.DataFrame, directory: str, copy_files: bool = False
 ) -> None:
-    """
-    This function creates symlinks or copies the PDFs to the given directory
+    """This function creates symlinks or copies the PDFs to the given directory
     based on the copy_files parameter.
 
-    Parameters:
+    Parameters
+    ----------
     records_df (pd.DataFrame): The DataFrame containing the records.
     directory (str): The directory where the symlinks or copies will be created.
     copy_files (bool, optional): If True, copies the PDFs instead of creating
                                  symlinks. Defaults to False.
 
-    Returns:
+    Returns
+    -------
     None
+
     """
     project_path = str(Path.cwd())
     review_manager = colrev.review_manager.ReviewManager(
@@ -244,14 +244,16 @@ def extract_pdfs_for_data_extraction(
 
 
 def save(records_df: pd.DataFrame) -> None:
-    """
-    This function saves the records from a DataFrame to a dataset.
+    """This function saves the records from a DataFrame to a dataset.
 
-    Parameters:
+    Parameters
+    ----------
     records_df (pd.DataFrame): The DataFrame containing the records to be saved.
 
-    Returns:
+    Returns
+    -------
     None
+
     """
     project_path = str(Path.cwd())
     review_manager = colrev.review_manager.ReviewManager(

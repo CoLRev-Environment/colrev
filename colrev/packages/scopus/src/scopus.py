@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: Scopus"""
+"""SearchSource: Scopus."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ from colrev.packages.scopus.src import scopus_api
 
 
 class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """Scopus"""
+    """Scopus."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -98,8 +98,7 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         # params_dict = {params.split("=")[0]: params.split("=")[1]}
 
         # search_source = create_db_source(
@@ -226,8 +225,7 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         return records
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             return self._load_bib(
                 filename=self.search_source.search_results_path, logger=self.logger

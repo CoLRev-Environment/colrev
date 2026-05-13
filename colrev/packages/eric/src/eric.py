@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: ERIC"""
+"""SearchSource: ERIC."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ from colrev.packages.eric.src import eric_api
 
 
 class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """ERIC API"""
+    """ERIC API."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -69,8 +69,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for ERIC"""
-
+        """Source heuristic for ERIC."""
         result = {"confidence": 0.1}
 
         if "OWN - ERIC" in data:
@@ -108,8 +107,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search -a)."""
         params_dict = {}
         if params:
             if params.startswith("http"):
@@ -177,8 +175,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         eric_feed.save()
 
     def search(self, rerun: bool) -> None:
-        """Run a search of ERIC"""
-
+        """Run a search of ERIC."""
         eric_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
             search_source=self.search_source,
@@ -205,7 +202,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     @classmethod
@@ -275,8 +272,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         return records
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".nbib":
             return self._load_nbib(
                 filename=self.search_source.search_results_path, logger=self.logger
@@ -295,8 +291,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for ERIC"""
-
+        """Source-specific preparation for ERIC."""
         if Fields.ISSN in record.data:
             record.data[Fields.ISSN] = record.data[Fields.ISSN].lstrip("ISSN-")
 

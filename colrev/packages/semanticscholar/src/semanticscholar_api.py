@@ -25,7 +25,6 @@ class SemanticScholarAPI:
     @property
     def client(self) -> SemanticScholar:
         """Expose the underlying client (mainly for UI interactions)."""
-
         return self._client
 
     def get_paper(self, *, paper_id: str) -> dict:

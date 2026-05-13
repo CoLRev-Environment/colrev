@@ -16,7 +16,7 @@ from colrev.package_manager.package_manager import PackageManager
 
 
 class Push(colrev.process.operation.Operation):
-    """Push the project and record corrections"""
+    """Push the project and record corrections."""
 
     type = OperationsType.check
 
@@ -34,8 +34,7 @@ class Push(colrev.process.operation.Operation):
         project_only: bool = False,
         all_records: bool = False,
     ) -> None:
-        """Push a CoLRev project and records (main entrypoint)"""
-
+        """Push a CoLRev project and records (main entrypoint)."""
         if project_only:
             self._push_project()
 
@@ -84,8 +83,7 @@ class Push(colrev.process.operation.Operation):
         return change_sets
 
     def _push_record_corrections(self, all_records: bool) -> None:
-        """Push corrections of records"""
-
+        """Push corrections of records."""
         change_sets = self._get_change_sets()
         package_manager = PackageManager()
 

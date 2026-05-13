@@ -27,7 +27,7 @@ ROMAN_PAGE_PATTERN = re.compile(
 
 
 class PDFIncompletenessChecker:
-    """The PDFIncompletenessChecker"""
+    """The PDFIncompletenessChecker."""
 
     msg = PDFDefectCodes.PDF_INCOMPLETE
 
@@ -37,8 +37,7 @@ class PDFIncompletenessChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record_pdf.PDFRecord) -> None:
-        """Run the pdf-incomplete checks"""
-
+        """Run the pdf-incomplete checks."""
         if (
             Fields.FILE not in record.data
             or Path(record.data[Fields.FILE]).suffix != ".pdf"
@@ -150,5 +149,5 @@ class PDFIncompletenessChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(PDFIncompletenessChecker(quality_model))

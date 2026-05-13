@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: Unknown source (default for all other sources)"""
+"""SearchSource: Unknown source (default for all other sources)."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ from colrev.ops.search_db import run_db_search
 
 
 class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """Unknown SearchSource"""
+    """Unknown SearchSource."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -67,8 +67,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for unknown sources"""
-
+        """Source heuristic for unknown sources."""
         result = {"confidence": 0.1}
 
         return result
@@ -80,8 +79,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
         if params:
             for item in params.split(";"):
@@ -97,8 +95,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def search(self, rerun: bool) -> None:
-        """Run a search of Crossref"""
-
+        """Run a search of Crossref."""
         if self.search_source.search_type == SearchType.DB:
             run_db_search(
                 db_url=self.db_url,
@@ -113,7 +110,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     @classmethod
@@ -486,12 +483,11 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def ensure_append_only(cls, filename: Path) -> bool:
-        """Ensure that the SearchSource file is append-only"""
+        """Ensure that the SearchSource file is append-only."""
         return filename.suffix in [".ris", ".csv", ".xlsx", ".xls", ".md"]
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if not self.search_source.search_results_path.is_file():
             return {}
 
@@ -527,8 +523,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _heuristically_fix_entrytypes(
         self, *, record: colrev.record.record_prep.PrepRecord
     ) -> None:
-        """Prepare the record by heuristically correcting erroneous ENTRYTYPEs"""
-
+        """Prepare the record by heuristically correcting erroneous ENTRYTYPEs."""
         # Journal articles should not have booktitles/series set.
         if record.data[Fields.ENTRYTYPE] == "article":
             if Fields.BOOKTITLE in record.data and Fields.JOURNAL not in record.data:
@@ -658,8 +653,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
     def _format_fields(self, *, record: colrev.record.record_prep.PrepRecord) -> None:
-        """Format fields"""
-
+        """Format fields."""
         if record.data.get(Fields.ENTRYTYPE, "") == "inproceedings":
             self._format_inproceedings(record=record)
         elif record.data.get(Fields.ENTRYTYPE, "") == "article":
@@ -779,8 +773,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for unknown sources"""
-
+        """Source-specific preparation for unknown sources."""
         if not record.has_quality_defects() or record.masterdata_is_curated():
             return record
 

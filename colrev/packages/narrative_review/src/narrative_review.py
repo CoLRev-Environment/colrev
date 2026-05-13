@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Narrative review"""
+"""Narrative review."""
 
 import logging
 import typing
@@ -15,7 +15,7 @@ import colrev.package_manager.package_settings
 
 
 class NarrativeReview(base_classes.ReviewTypePackageBaseClass):
-    """Narrative review"""
+    """Narrative review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=True)
@@ -36,8 +36,7 @@ class NarrativeReview(base_classes.ReviewTypePackageBaseClass):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
-        """Initialize a narrative review"""
-
+        """Initialize a narrative review."""
         settings.data.data_package_endpoints = [
             {
                 "endpoint": "colrev.paper_md",

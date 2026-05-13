@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Importer"""
+"""Importer."""
 
 import shutil
 from pathlib import Path
@@ -318,7 +318,7 @@ def _import_records(
 
 
 def main() -> None:
-    """Main function for import"""
+    """Main function for import."""
     review_manager = colrev.review_manager.ReviewManager()
     import_type = _get_import_type()
     # import_path = _get_import_path()

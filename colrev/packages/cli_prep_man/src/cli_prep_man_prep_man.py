@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""CliPrepMan"""
+"""CliPrepMan."""
 
 import logging
 import typing
@@ -17,7 +17,7 @@ from colrev.packages.crossref.src import crossref_api
 
 
 class CliPrepMan(PrepManPackageBaseClass):
-    """CLI for manual preparation of records"""
+    """CLI for manual preparation of records."""
 
     def __init__(
         self,
@@ -33,7 +33,6 @@ class CliPrepMan(PrepManPackageBaseClass):
         self, similar_records: typing.List[colrev.record.record_prep.PrepRecord]
     ) -> list:
         """Generate choices for the user to select a record to merge."""
-
         choices = []
         for i, r in enumerate(similar_records):
             title = r.data.get(Fields.TITLE, "No Title")
@@ -102,7 +101,6 @@ class CliPrepMan(PrepManPackageBaseClass):
 
     def prepare_manual(self, records: dict) -> dict:
         """Run the prep-man operation."""
-
         for record in records.values():
             # if record[Fields.STATUS] != RecordState.md_needs_manual_preparation:
             #     continue
@@ -115,8 +113,7 @@ class CliPrepMan(PrepManPackageBaseClass):
 
 
 def main() -> None:
-    """Main function to run the CLI"""
-
+    """Main function to run the CLI."""
     print("CLI initialized")
 
     def _select_target_ids(records: dict[str, dict]) -> list[str]:

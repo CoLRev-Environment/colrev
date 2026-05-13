@@ -13,7 +13,7 @@ CHANGE_COUNTER = None
 
 
 class Pull(colrev.process.operation.Operation):
-    """Pull the project and records"""
+    """Pull the project and records."""
 
     type = OperationsType.format
 
@@ -25,8 +25,7 @@ class Pull(colrev.process.operation.Operation):
 
     @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
-        """Pull the CoLRev project and records (main entrypoint)"""
-
+        """Pull the CoLRev project and records (main entrypoint)."""
         self._pull_project()
 
     def _pull_project(self) -> None:

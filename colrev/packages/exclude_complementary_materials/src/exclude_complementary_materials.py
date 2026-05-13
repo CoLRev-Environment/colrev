@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Exclude complementary materials as a prep operation"""
+"""Exclude complementary materials as a prep operation."""
 
 from __future__ import annotations
 
@@ -20,7 +20,8 @@ from colrev.constants import Fields
 
 class ExcludeComplementaryMaterialsPrep(base_classes.PrepPackageBaseClass):
     """Prepares records by excluding complementary materials
-    (tables of contents, editorial boards, about our authors)"""
+    (tables of contents, editorial boards, about our authors).
+    """
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -60,8 +61,7 @@ class ExcludeComplementaryMaterialsPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare the records by excluding complementary materials"""
-
+        """Prepare the records by excluding complementary materials."""
         if (
             any(
                 complementary_materials_keyword

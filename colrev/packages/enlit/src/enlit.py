@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""ENLIT"""
+"""ENLIT."""
 
 from pathlib import Path
 
@@ -101,7 +101,6 @@ def _load_included_records(
 
 def main() -> None:
     """Main function to run the ENLIT script."""
-
     review_manager = ReviewManager()
     review_manager.logger.info("Start ENLIT")
 

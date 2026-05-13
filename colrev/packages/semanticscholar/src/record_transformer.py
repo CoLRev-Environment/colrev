@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Utility to transform items from semanticscholar into records"""
+"""Utility to transform items from semanticscholar into records."""
 
 from __future__ import annotations
 
@@ -52,8 +52,7 @@ SUPPORTED_FIELDS = [
 
 
 def _assign_entrytype(*, record_dict: dict) -> None:
-    """Method to assign the ENTRYTYPE"""
-
+    """Method to assign the ENTRYTYPE."""
     publication_types = record_dict.get("publicationTypes")
     if publication_types is not None and len(publication_types) > 0:
         entrytype = publication_types[0]
@@ -68,8 +67,7 @@ def _assign_entrytype(*, record_dict: dict) -> None:
 
 
 def _assign_authors(*, record_dict: dict) -> None:
-    """Method to assign authors from item"""
-
+    """Method to assign authors from item."""
     authors = [
         author["name"] for author in record_dict.get("authors", []) if "name" in author
     ]
@@ -79,15 +77,14 @@ def _assign_authors(*, record_dict: dict) -> None:
 
 
 def _assign_issn(*, record_dict: dict) -> None:
-    """Method to assign the issn"""
-
+    """Method to assign the issn."""
     issn = (record_dict.get("publicationVenue", {}) or {}).get("issn")
     if issn:
         record_dict[Fields.ISSN] = issn
 
 
 def _assign_ids(*, record_dict: dict) -> None:
-    """Method to assign external IDs from item"""
+    """Method to assign external IDs from item."""
     ext_ids = record_dict.get("externalIds", {})
 
     if "DOI" in ext_ids:
@@ -97,7 +94,7 @@ def _assign_ids(*, record_dict: dict) -> None:
 
 
 def _assign_abstract(*, record_dict: dict) -> None:
-    """Method to assign external IDs from item"""
+    """Method to assign external IDs from item."""
     abstract = record_dict.get("abstract", "")
     if abstract is not None:
         record_dict[Fields.ABSTRACT] = abstract.replace("\n", " ").lstrip().rstrip()
@@ -106,8 +103,7 @@ def _assign_abstract(*, record_dict: dict) -> None:
 
 
 def _assign_article_fields(*, record_dict: dict) -> None:
-    """Method to assign pages and volume from item"""
-
+    """Method to assign pages and volume from item."""
     if record_dict.get("journal") is None:
         return
 
@@ -136,7 +132,7 @@ def _assign_article_fields(*, record_dict: dict) -> None:
 
 
 def _assign_book_fields(*, record_dict: dict) -> None:
-    """Method to assign book specific details from item"""
+    """Method to assign book specific details from item."""
     book_title = record_dict.get("journal", {}).get("name")
     title = record_dict.get(Fields.TITLE, "")
 
@@ -148,8 +144,7 @@ def _assign_book_fields(*, record_dict: dict) -> None:
 
 
 def _assign_inproc_fields(*, record_dict: dict) -> None:
-    """Method to assign inproceedings specific details from item"""
-
+    """Method to assign inproceedings specific details from item."""
     if "journal" in record_dict:
         del record_dict["journal"]
 
@@ -166,8 +161,7 @@ def _assign_fulltext(*, record_dict: dict) -> None:
 
 
 def _item_to_record(item: Paper) -> dict:
-    """Method to convert the different fields and information within item to record dictionary"""
-
+    """Method to convert the different fields and information within item to record dictionary."""
     record_dict = dict(item)
 
     record_dict[Fields.SEMANTIC_SCHOLAR_ID] = record_dict["paperId"]
@@ -194,16 +188,14 @@ def _item_to_record(item: Paper) -> dict:
 
 
 def _remove_fields(*, record: dict) -> dict:
-    """Method to remove unsupported fields from semanticscholar record"""
-
+    """Method to remove unsupported fields from semanticscholar record."""
     record_dict = {k: v for k, v in record.items() if k in SUPPORTED_FIELDS and v != ""}
 
     return record_dict
 
 
 def dict_to_record(*, item: dict) -> colrev.record.record.Record:
-    """Convert a semanticscholar item to a record dict"""
-
+    """Convert a semanticscholar item to a record dict."""
     try:
         record_dict = _item_to_record(item=item)
         record_dict = _remove_fields(record=record_dict)

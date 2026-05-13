@@ -112,7 +112,7 @@ def _create_built_in_package() -> bool:
 
 # pylint: disable=unused-argument
 def validate_version(answers: list, version: str) -> bool:
-    """Validate the version"""
+    """Validate the version."""
     # return false if the version is not a valid version number
     if version == "":
         return True
@@ -124,7 +124,7 @@ def validate_version(answers: list, version: str) -> bool:
 
 # pylint: disable=unused-argument
 def validate_module_name(answers: list, name: str) -> bool:
-    """Validate the module name"""
+    """Validate the module name."""
     if name == "":  # Accept default module name
         return True
     # return false if the name is not a valid python module name
@@ -588,7 +588,6 @@ def _add_to_packages_json(package_data: dict) -> None:
 
 def main() -> None:
     """Main function to create a CoLRev package."""
-
     built_in = _create_built_in_package()
     current_dir = Path.cwd()
     if any(Path(current_dir).iterdir()):

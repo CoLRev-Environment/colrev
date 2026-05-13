@@ -30,8 +30,7 @@ from colrev.writer.write_utils import write_file
 def create_api_source(
     *, platform: str, path: Path
 ) -> colrev.search_file.ExtendedSearchFile:
-    """Interactively add an API SearchSource"""
-
+    """Interactively add an API SearchSource."""
     print(f"Add {platform} as an API SearchSource")
     print()
 
@@ -65,7 +64,7 @@ def create_api_source(
 
 # Keep in mind the need for lock-mechanisms, e.g., in concurrent prep operations
 class SearchAPIFeed:
-    """A feed managing results from API searches"""
+    """A feed managing results from API searches."""
 
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-arguments
@@ -119,7 +118,7 @@ class SearchAPIFeed:
 
     @property
     def source_identifier(self) -> str:
-        """Get the source identifier"""
+        """Get the source identifier."""
         return self._source_identifier
 
     # The setter should avoid problems caused by a packages directly setting
@@ -164,7 +163,6 @@ class SearchAPIFeed:
         """Set incremental record ID
         If self.source_identifier is in record_dict, it is updated, otherwise added as a new record.
         """
-
         if self.source_identifier not in record.data:
             raise colrev_exceptions.NotFeedIdentifiableException()
 
@@ -180,8 +178,7 @@ class SearchAPIFeed:
         record: colrev.record.record.Record,
         prev_feed_record: colrev.record.record.Record,
     ) -> bool:
-        """Add a record to the feed and set its colrev_origin"""
-
+        """Add a record to the feed and set its colrev_origin."""
         self._set_id(record)
         if Fields.ENTRYTYPE not in record.data:
             record.data[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
@@ -393,8 +390,7 @@ class SearchAPIFeed:
         retrieved_record: colrev.record.record.Record,
         prev_feed_record: colrev.record.record.Record,
     ) -> bool:
-        """Convenience function to update existing records (main data/records.bib)"""
-
+        """Convenience function to update existing records (main data/records.bib)."""
         colrev_origin = f"{self.origin_prefix}/{retrieved_record.data['ID']}"
         main_record = self._get_main_record(colrev_origin)
 
@@ -433,7 +429,7 @@ class SearchAPIFeed:
         return False
 
     def _print_post_run_search_infos(self) -> None:
-        """Print the search infos (after running the search)"""
+        """Print the search infos (after running the search)."""
         if self._nr_added > 0:
             self.logger.info(
                 f"{Colors.GREEN}Retrieved {self._nr_added} records{Colors.END}"
@@ -459,7 +455,7 @@ class SearchAPIFeed:
     def get_prev_feed_record(
         self, record: colrev.record.record.Record
     ) -> colrev.record.record.Record:
-        """Get the previous record dict version"""
+        """Get the previous record dict version."""
         record = deepcopy(record)
         self._set_id(record)
         prev_feed_record_dict = {}
@@ -470,14 +466,14 @@ class SearchAPIFeed:
     def _prep_retrieved_record(
         self, retrieved_record: colrev.record.record.Record
     ) -> None:
-        """Prepare the retrieved record for the search feed"""
+        """Prepare the retrieved record for the search feed."""
         for provenance_key in FieldSet.PROVENANCE_KEYS:
             if provenance_key in retrieved_record.data:
                 del retrieved_record.data[provenance_key]
 
     # TODO : difference to add_record_to_feed ??
     def add_update_record(self, retrieved_record: colrev.record.record.Record) -> bool:
-        """Add or update a record in the api_search_feed and records"""
+        """Add or update a record in the api_search_feed and records."""
         self._prep_retrieved_record(retrieved_record)
         prev_feed_record = self.get_prev_feed_record(retrieved_record)
 
@@ -499,15 +495,13 @@ class SearchAPIFeed:
         return added or updated
 
     def get_records(self) -> dict:
-        """Get the prepared (primary) records"""
-
+        """Get the prepared (primary) records."""
         self._retrieved_records_for_saving = True
 
         return self.records
 
     def save(self, *, skip_print: bool = False) -> None:
         """Save the feed file and records, printing post-run search infos."""
-
         if self.prep_mode:
             assert self._retrieved_records_for_saving, (
                 "You must call get_records() before calling save() "

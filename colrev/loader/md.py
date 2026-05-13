@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Load conversion of reference sections (bibliographies) in md-documents based on GROBID"""
+"""Load conversion of reference sections (bibliographies) in md-documents based on GROBID."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from colrev.constants import Fields
 
 
 class MarkdownLoader(colrev.loader.loader.Loader):
-    """Loads reference strings from text (md) files (based on GROBID)"""
+    """Loads reference strings from text (md) files (based on GROBID)."""
 
     def __init__(
         self,
@@ -46,8 +46,7 @@ class MarkdownLoader(colrev.loader.loader.Loader):
 
     @classmethod
     def get_nr_records(cls, filename: Path) -> int:
-        """Get the number of records in the file"""
-
+        """Get the number of records in the file."""
         count = 0
         with open(filename, encoding="utf8") as file:
             for line in file:
@@ -57,8 +56,7 @@ class MarkdownLoader(colrev.loader.loader.Loader):
         return count
 
     def load_records_list(self) -> list:
-        """Load records from the source"""
-
+        """Load records from the source."""
         self.logger.info("Running GROBID to parse structured reference data")
 
         grobid_service = colrev.env.grobid_service.GrobidService()

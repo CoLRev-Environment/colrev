@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function to load nbib files"""
+"""Function to load nbib files."""
 
 from __future__ import annotations
 
@@ -16,15 +16,15 @@ import colrev.loader.loader
 
 
 class NextLine(Exception):
-    """NextLineException"""
+    """NextLineException."""
 
 
 class ParseError(Exception):
-    """Parsing error"""
+    """Parsing error."""
 
 
 class NBIBLoader(colrev.loader.loader.Loader):
-    """Loads nbib files"""
+    """Loads nbib files."""
 
     PATTERN = r"^[A-Z]{2,4}( ){1,2}- "
 
@@ -56,7 +56,7 @@ class NBIBLoader(colrev.loader.loader.Loader):
 
     @classmethod
     def get_nr_records(cls, filename: Path) -> int:
-        """Get the number of records in the file"""
+        """Get the number of records in the file."""
         count = 0
         with open(filename, encoding="utf-8") as file:
             for line in file:
@@ -69,7 +69,7 @@ class NBIBLoader(colrev.loader.loader.Loader):
         return line[: line.find(" - ")].rstrip()
 
     def _get_content(self, line: str) -> str:
-        """Get the content from a line"""
+        """Get the content from a line."""
         return line[line.find(" - ") + 2 :].strip()
 
     def _add_tag(self, tag: str, line: str) -> None:

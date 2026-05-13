@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Template for a custom SearchSource PackageEndpoint"""
+"""Template for a custom SearchSource PackageEndpoint."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from colrev.constants import Fields
 
 
 class CustomSearch(base_classes.SearchSourcePackageBaseClass):
-    """Class for custom search scripts"""
+    """Class for custom search scripts."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -28,8 +28,7 @@ class CustomSearch(base_classes.SearchSourcePackageBaseClass):
         self.search_source: colrev.search_file.ExtendedSearchFile = settings
 
     def search(self, rerun: bool) -> None:
-        """Run the search"""
-
+        """Run the search."""
         feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
             search_source=self.search_source,
@@ -51,8 +50,7 @@ class CustomSearch(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def validate_search_params(cls, query: str) -> None:
-        """Validate the search parameters"""
-
+        """Validate the search parameters."""
         if " SCOPE " not in query:
             raise colrev_exceptions.InvalidQueryException(
                 "CROSSREF queries require a SCOPE section"
@@ -68,14 +66,13 @@ class CustomSearch(base_classes.SearchSourcePackageBaseClass):
     def heuristic(
         cls, filename: Path, data: str  # pylint: disable=unused-argument
     ) -> dict:
-        """Heuristic to identify the custom source"""
-
+        """Heuristic to identify the custom source."""
         result = {"confidence": 0}
 
         return result
 
     def load(self) -> dict:
-        """Load fixes for the custom source"""
+        """Load fixes for the custom source."""
         records = {"ID1": {"ID": "ID1", "title": "..."}}
 
         return records
@@ -84,6 +81,5 @@ class CustomSearch(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record.Record,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for the custom source"""
-
+        """Source-specific preparation for the custom source."""
         return record

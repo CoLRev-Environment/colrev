@@ -13,7 +13,7 @@ from colrev.constants import Fields
 
 
 class DOIPatternChecker:
-    """The DOIPatternChecker"""
+    """The DOIPatternChecker."""
 
     msg = DefectCodes.DOI_NOT_MATCHING_PATTERN
     # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
@@ -25,8 +25,7 @@ class DOIPatternChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the doi-not-matching-pattern checks"""
-
+        """Run the doi-not-matching-pattern checks."""
         if Fields.DOI not in record.data or record.ignored_defect(
             key=Fields.DOI, defect=self.msg
         ):
@@ -39,5 +38,5 @@ class DOIPatternChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(DOIPatternChecker(quality_model))

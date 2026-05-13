@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Consolidation of metadata based on GitHub REST API as a prep operation"""
+"""Consolidation of metadata based on GitHub REST API as a prep operation."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from colrev.constants import SearchType
 
 
 class GithubMetadataPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records based on GitHub metadata"""
+    """Prepares records based on GitHub metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -74,8 +74,7 @@ class GithubMetadataPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare a record based on GitHub metadata"""
-
+        """Prepare a record based on GitHub metadata."""
         self.github_search_source.prep_link_md(
             prep_operation=self.prep_operation, record=record
         )

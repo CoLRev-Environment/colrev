@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CoLRev standard paths"""
+"""CoLRev standard paths."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-instance-attributes
 class PathManager:
-    """Paths for the CoLRev review project (repository)"""
+    """Paths for the CoLRev review project (repository)."""
 
     SEARCH_DIR = Path("data/search")
     PREP_DIR = Path("data/prep")

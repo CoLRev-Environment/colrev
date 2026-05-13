@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Theoretical review"""
+"""Theoretical review."""
 
 import logging
 import typing
@@ -15,7 +15,7 @@ import colrev.package_manager.package_settings
 
 
 class TheoreticalReview(base_classes.ReviewTypePackageBaseClass):
-    """Theoretical review"""
+    """Theoretical review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -37,8 +37,7 @@ class TheoreticalReview(base_classes.ReviewTypePackageBaseClass):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
-        """Initialize a theoretical review"""
-
+        """Initialize a theoretical review."""
         settings.data.data_package_endpoints = [
             {
                 "endpoint": "colrev.obsidian",

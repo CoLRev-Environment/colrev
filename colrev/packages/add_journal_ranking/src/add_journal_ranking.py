@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Adding of journal rankings to metadata"""
+"""Adding of journal rankings to metadata."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from colrev.constants import Fields
 
 
 class AddJournalRanking(base_classes.PrepPackageBaseClass):
-    """Prepares records based on journal rankings"""
+    """Prepares records based on journal rankings."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     source_correction_hint = "check with the developer"
@@ -44,8 +44,7 @@ class AddJournalRanking(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Add Journalranking to Metadata"""
-
+        """Add Journalranking to Metadata."""
         if record.data.get(Fields.JOURNAL, "") == "":
             return record
 

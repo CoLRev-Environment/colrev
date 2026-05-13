@@ -14,7 +14,7 @@ from colrev.constants import Fields
 
 
 class QualityModel:
-    """The quality model for records"""
+    """The quality model for records."""
 
     checkers = []  # type: ignore
 
@@ -35,7 +35,6 @@ class QualityModel:
         """Register checkers from the checker directory, looking for a
         'register' function in each one.
         """
-
         self.checkers = []
         if self.pdf_mode:
             module_path = "colrev.record.qm.pdf_checkers."
@@ -64,12 +63,11 @@ class QualityModel:
                     print(f"Module {filename} does not have a register function")
 
     def register_checker(self, checker) -> None:  # type: ignore
-        """Register a checker"""
+        """Register a checker."""
         self.checkers.append(checker)
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the checkers"""
-
+        """Run the checkers."""
         if self.pdf_mode:
             if not self.path:
                 raise ValueError("Path is required for PDF mode")

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Creation of a markdown paper as part of the data operations"""
+"""Creation of a markdown paper as part of the data operations."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ from colrev.writer.write_utils import write_file
 
 
 class PaperMarkdownSettings(BaseModel):
-    """Paper settings"""
+    """Paper settings."""
 
     endpoint: str
     version: str
@@ -58,7 +58,7 @@ class PaperMarkdownSettings(BaseModel):
 
 # pylint: disable=too-many-instance-attributes
 class PaperMarkdown(base_classes.DataPackageBaseClass):
-    """Synthesize the literature in a markdown paper
+    """Synthesize the literature in a markdown paper.
 
     The paper (paper.md) is created automatically.
     Records are added for synthesis after the <!-- NEW_RECORD_SOURCE -->
@@ -140,8 +140,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
     # pylint: disable=unused-argument
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
-        """Add as an endpoint"""
-
+        """Add as an endpoint."""
         add_source = {
             "endpoint": "colrev.paper_md",
             "version": "0.1",
@@ -624,7 +623,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> typing.Dict:
-        """Update the paper (add new records after the NEW_RECORD_SOURCE_TAG)"""
+        """Update the paper (add new records after the NEW_RECORD_SOURCE_TAG)."""
         review_manager = self.review_manager
 
         if not self.settings.paper_path.is_file():
@@ -713,8 +712,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
             ) from exc
 
     def build_paper(self) -> None:
-        """Build the paper (based on pandoc)"""
-
+        """Build the paper (based on pandoc)."""
         if not self.review_manager.paths.records.is_file():
             self.review_manager.paths.records.touch()
 
@@ -767,8 +765,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> None:
-        """Update the data/paper"""
-
+        """Update the data/paper."""
         if (
             self.review_manager.dataset.git_repo.repo_initialized()
             and self.review_manager.dataset.git_repo.has_changes(
@@ -829,7 +826,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
-        """Update the record_status_matrix"""
+        """Update the record_status_matrix."""
         # Update status / synthesized_record_status_matrix
         synthesized = self._get_synthesized_papers(
             paper=self.settings.paper_path,
@@ -844,8 +841,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
     def get_advice(
         self,
     ) -> dict:
-        """Get advice on the next steps (for display in the colrev status)"""
-
+        """Get advice on the next steps (for display in the colrev status)."""
         advice = {
             "msg": "Data operation [paper_md endpoint]: "
             + "\n    1. Edit the paper (data/data/paper.md)"
@@ -858,7 +854,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
 
 
 class PaperMarkdownRecordSourceTagError(Exception):
-    """NEW_RECORD_SOURCE_TAG not found in paper.md"""
+    """NEW_RECORD_SOURCE_TAG not found in paper.md."""
 
     def __init__(self, msg: str) -> None:
         self.message = f" {msg}"

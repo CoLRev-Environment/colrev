@@ -20,7 +20,8 @@ from colrev.package_manager.package_manager import PackageManager
 
 class Data(colrev.process.operation.Operation):
     """Class supporting structured and unstructured
-    data extraction, analysis and synthesis"""
+    data extraction, analysis and synthesis.
+    """
 
     _pad = 0
     type = OperationsType.data
@@ -40,7 +41,7 @@ class Data(colrev.process.operation.Operation):
         self.package_manager = PackageManager()
 
     def get_record_ids_for_synthesis(self, records: dict) -> list:
-        """Get the IDs of records for the synthesis"""
+        """Get the IDs of records for the synthesis."""
         return [
             ID
             for ID, record in records.items()
@@ -52,8 +53,7 @@ class Data(colrev.process.operation.Operation):
         ]
 
     def reading_heuristics(self) -> list:
-        """Determine heuristics for the reading process"""
-
+        """Determine heuristics for the reading process."""
         enlit_list = []
         records = self.review_manager.dataset.load_records_dict()
         for relevant_record_id in self.get_record_ids_for_synthesis(records):
@@ -98,8 +98,7 @@ class Data(colrev.process.operation.Operation):
         return enlit_list
 
     def setup_custom_script(self) -> None:
-        """Setup a custom data script"""
-
+        """Setup a custom data script."""
         filedata = colrev.env.utils.get_package_file_content(
             module="colrev.ops", filename=Path("custom_scripts/custom_data_script.py")
         )
@@ -202,11 +201,10 @@ class Data(colrev.process.operation.Operation):
         records: typing.Optional[dict] = None,
         silent_mode: bool = False,
     ) -> dict:
-        """Data operation (main entrypoint)
+        """Data operation (main entrypoint).
 
         silent_mode: for review_manager checks
         """
-
         if not records:
             records = self.review_manager.dataset.load_records_dict()
 

@@ -158,7 +158,6 @@ def _check_project_plugins_colrev(data: dict) -> bool:
 
 def _check_project_entry_points_colrev_keys(data: dict) -> bool:
     """Check if all colrev entry-points in pyproject.toml are valid."""
-
     colrev_data = data.get("project", {}).get("entry-points", {}).get("colrev", {})
     return all(key in BASECLASS_MAP for key in colrev_data)
 
@@ -206,7 +205,6 @@ def _check_build_system(data: dict) -> bool:
 
 def _check_colrev_discovers_package(data: dict) -> bool:
     """Check whether CoLRev can discover this package as a CoLRev package."""
-
     package_name = data.get("project", {}).get("name")
     if not package_name:
         print("No project.name found – cannot check CoLRev package discovery.")
@@ -299,7 +297,6 @@ def _validate_structure(data: dict, checks_dict: dict) -> list[str]:
 
 def main() -> None:
     """Run checks of a CoLRev project."""
-
     file_path = "pyproject.toml"
 
     try:

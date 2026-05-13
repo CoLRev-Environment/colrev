@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Qualitative systematic review"""
+"""Qualitative systematic review."""
 
 import logging
 import typing
@@ -21,7 +21,7 @@ from colrev.packages.pdf_backward_search.src.pdf_backward_search import (
 
 
 class QualitativeSystematicReview(base_classes.ReviewTypePackageBaseClass):
-    """Qualitative systematic review"""
+    """Qualitative systematic review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -43,8 +43,7 @@ class QualitativeSystematicReview(base_classes.ReviewTypePackageBaseClass):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
-        """Initialize a qualitative systematic review"""
-
+        """Initialize a qualitative systematic review."""
         settings.sources.append(OpenCitationsSearchSource.get_default_source())
         settings.sources.append(BackwardSearchSource.get_default_source())
 

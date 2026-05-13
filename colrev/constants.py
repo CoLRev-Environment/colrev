@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 class Filepaths:
-    """Filepaths for CoLRev"""
+    """Filepaths for CoLRev."""
 
     # Environment-specific paths
     LOCAL_ENVIRONMENT_DIR = Path.home().joinpath(".colrev")
@@ -41,7 +41,7 @@ class Filepaths:
 
 
 class FileSets:
-    """File sets for CoLRev"""
+    """File sets for CoLRev."""
 
     DEFAULT_GIT_IGNORE_ITEMS = [
         ".history",
@@ -73,7 +73,7 @@ class FileSets:
 
 
 class ENTRYTYPES:
-    """Constants for record ENTRYTYPEs"""
+    """Constants for record ENTRYTYPEs."""
 
     ARTICLE = "article"
     INPROCEEDINGS = "inproceedings"
@@ -95,7 +95,7 @@ class ENTRYTYPES:
 
     @classmethod
     def get_all(cls) -> list:
-        """Get all ENTRYTYPES"""
+        """Get all ENTRYTYPES."""
         return [
             cls.ARTICLE,
             cls.INPROCEEDINGS,
@@ -116,7 +116,7 @@ class ENTRYTYPES:
 
 
 class Fields:
-    """Constant field names"""
+    """Constant field names."""
 
     ID = "ID"
     ENTRYTYPE = "ENTRYTYPE"
@@ -222,13 +222,13 @@ class Fields:
 
 
 class FieldsRegex:
-    """Regex patterns for specific fields"""
+    """Regex patterns for specific fields."""
 
     DOI = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
 
 
 class LocalIndexFields:
-    """Fields used in the local index"""
+    """Fields used in the local index."""
 
     ID = "id"
     CITATION_KEY = "citation_key"
@@ -239,7 +239,7 @@ class LocalIndexFields:
 
 
 class FieldValues:
-    """Constant field values"""
+    """Constant field values."""
 
     UNKNOWN = "UNKNOWN"
     FORTHCOMING = "forthcoming"
@@ -249,7 +249,7 @@ class FieldValues:
 
 
 class FieldSet:
-    """Constant field sets"""
+    """Constant field sets."""
 
     # """Keys of identifying fields considered for masterdata provenance"""
     PROVENANCE_KEYS = [
@@ -384,7 +384,8 @@ ENTRYTYPE_FIELD_REQUIREMENTS = {
 
 class RecordState(Enum):
     """The possible RecordStates stored in the colrev_status field
-    (corresponding to the ProcessModel)"""
+    (corresponding to the ProcessModel).
+    """
 
     # pylint: disable=invalid-name
 
@@ -433,7 +434,7 @@ class RecordState(Enum):
 
     @classmethod
     def get_states_requiring_file(cls) -> list:
-        """Get the states that require a file"""
+        """Get the states that require a file."""
         return [
             RecordState.pdf_imported,
             RecordState.pdf_needs_manual_preparation,
@@ -445,7 +446,7 @@ class RecordState(Enum):
 
     @classmethod
     def get_non_processed_states(cls) -> list:
-        """Get the states that correspond to not-yet-processed"""
+        """Get the states that correspond to not-yet-processed."""
         return [
             RecordState.md_retrieved,
             RecordState.md_imported,
@@ -455,7 +456,7 @@ class RecordState(Enum):
 
     @classmethod
     def get_post_x_states(cls, *, state: "RecordState") -> typing.Set["RecordState"]:
-        """Get the states after state x (passed as a parameter)"""
+        """Get the states after state x (passed as a parameter)."""
         # pylint: disable=too-many-return-statements
         if state == RecordState.md_prepared:
             return {
@@ -528,7 +529,7 @@ class RecordState(Enum):
 
 
 class DefectCodes:
-    """Constant defect codes"""
+    """Constant defect codes."""
 
     MISSING = "missing"
     RECORD_NOT_IN_TOC = "record-not-in-toc"
@@ -560,7 +561,7 @@ class DefectCodes:
 
 
 class PDFDefectCodes:
-    """Constant PDF defect codes"""
+    """Constant PDF defect codes."""
 
     NO_TEXT_IN_PDF = "no-text-in-pdf"
     PDF_INCOMPLETE = "pdf-incomplete"
@@ -571,7 +572,7 @@ class PDFDefectCodes:
 
 
 class OperationsType(Enum):
-    """Operation types correspond to the main state transitions (see ProcessModel)"""
+    """Operation types correspond to the main state transitions (see ProcessModel)."""
 
     # pylint: disable=invalid-name
 
@@ -596,7 +597,7 @@ class OperationsType(Enum):
 
     @classmethod
     def get_manual_extra_operations(cls) -> list:
-        """Get the manual operations that require extra manual steps"""
+        """Get the manual operations that require extra manual steps."""
         return [
             OperationsType.pdf_prep_man,
             OperationsType.pdf_get_man,
@@ -605,7 +606,7 @@ class OperationsType(Enum):
 
 
 class IDPattern(Enum):
-    """The pattern for generating record IDs"""
+    """The pattern for generating record IDs."""
 
     # pylint: disable=invalid-name
     first_author_year = "first_author_year"
@@ -613,13 +614,13 @@ class IDPattern(Enum):
 
     @classmethod
     def get_options(cls) -> typing.List[str]:
-        """Get the options"""
+        """Get the options."""
         # pylint: disable=no-member
         return cls._member_names_
 
 
 class SortedEnumMeta(EnumMeta):
-    """SortedEnumMeta"""
+    """SortedEnumMeta."""
 
     def __init__(
         cls, name: str, bases: typing.Tuple[type, ...], classdict: dict
@@ -633,7 +634,7 @@ class SortedEnumMeta(EnumMeta):
 
 
 class SearchType(Enum, metaclass=SortedEnumMeta):
-    """Type of search source"""
+    """Type of search source."""
 
     API = "API"  # Keyword-searches
     DB = "DB"  # search-results-file with search query
@@ -646,7 +647,7 @@ class SearchType(Enum, metaclass=SortedEnumMeta):
 
     @classmethod
     def get_options(cls) -> typing.List[str]:
-        """Get the options"""
+        """Get the options."""
         # pylint: disable=no-member
         return cls._member_names_
 
@@ -660,7 +661,7 @@ class SearchType(Enum, metaclass=SortedEnumMeta):
 
 
 class SearchSourceHeuristicStatus(Enum):
-    """Status of the SearchSource heuristic"""
+    """Status of the SearchSource heuristic."""
 
     # pylint: disable=invalid-name
     na = "not_applicable"
@@ -673,7 +674,7 @@ class SearchSourceHeuristicStatus(Enum):
 
 
 class PDFPathType(Enum):
-    """Policy for handling PDFs (create symlinks or copy files)"""
+    """Policy for handling PDFs (create symlinks or copy files)."""
 
     # pylint: disable=invalid-name
     symlink = "symlink"
@@ -681,13 +682,13 @@ class PDFPathType(Enum):
 
     @classmethod
     def get_options(cls) -> typing.List[str]:
-        """Get the options"""
+        """Get the options."""
         # pylint: disable=no-member
         return cls._member_names_
 
 
 class ScreenCriterionType(Enum):
-    """Type of screening criterion"""
+    """Type of screening criterion."""
 
     # pylint: disable=invalid-name
     inclusion_criterion = "inclusion_criterion"
@@ -695,7 +696,7 @@ class ScreenCriterionType(Enum):
 
     @classmethod
     def get_options(cls) -> typing.List[str]:
-        """Get the options"""
+        """Get the options."""
         # pylint: disable=no-member
         return cls._member_names_
 
@@ -704,7 +705,7 @@ class ScreenCriterionType(Enum):
 
 
 class ShareStatReq(Enum):
-    """Record status requirements for sharing"""
+    """Record status requirements for sharing."""
 
     # pylint: disable=invalid-name
     none = "none"
@@ -714,14 +715,14 @@ class ShareStatReq(Enum):
 
     @classmethod
     def get_options(cls) -> typing.List[str]:
-        """Get the options"""
+        """Get the options."""
         # pylint: disable=no-member
         return cls._member_names_
 
 
 # pylint: disable=colrev-missed-constant-usage
 class EndpointType(Enum):
-    """An enum for the types of PackageEndpoints"""
+    """An enum for the types of PackageEndpoints."""
 
     # pylint: disable=C0103
     review_type = "review_type"
@@ -753,14 +754,14 @@ class EndpointType(Enum):
 
 
 class ExitCodes:
-    """Exit codes"""
+    """Exit codes."""
 
     SUCCESS = 0
     FAIL = 1
 
 
 class Colors:
-    """Colors for CLI printing"""
+    """Colors for CLI printing."""
 
     RED = "\033[91m"
     GREEN = "\033[92m"

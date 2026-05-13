@@ -15,7 +15,7 @@ from colrev.constants import OperationsType
 
 
 class Status(colrev.process.operation.Operation):
-    """Determine the status of the project"""
+    """Determine the status of the project."""
 
     type = OperationsType.check
 
@@ -26,8 +26,7 @@ class Status(colrev.process.operation.Operation):
         )
 
     def get_analytics(self) -> dict:
-        """Get status analytics"""
-
+        """Get status analytics."""
         analytics_dict = {}
         git_repo = self.review_manager.dataset.git_repo.repo
 
@@ -83,8 +82,7 @@ class Status(colrev.process.operation.Operation):
     def get_review_status_report(
         self, *, records: typing.Optional[dict] = None, colors: bool = True
     ) -> str:
-        """Get the review status report"""
-
+        """Get the review status report."""
         status_stats = self.review_manager.get_status_stats(records=records)
 
         template = colrev.env.utils.get_template(template_path="ops/commit/status.txt")

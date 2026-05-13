@@ -32,7 +32,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Record:
-    """The Record class provides a range of basic Function"""
+    """The Record class provides a range of basic Function."""
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
@@ -59,7 +59,7 @@ class Record:
         return self.__dict__ == other.__dict__
 
     def get_citation_format(self) -> str:
-        """Get the record as a citation"""
+        """Get the record as a citation."""
         formatted_ref = (
             f"{self.data.get(Fields.AUTHOR, '')} ({self.data.get(Fields.YEAR, '')}) "
             f"{self.data.get(Fields.TITLE, '')}. "
@@ -69,23 +69,23 @@ class Record:
         return formatted_ref
 
     def print_citation_format(self) -> None:
-        """Print the record as a citation"""
+        """Print the record as a citation."""
         print(self.get_citation_format())
 
     def copy(self) -> Record:
-        """Copy the record object"""
+        """Copy the record object."""
         return Record(deepcopy(self.data))
 
     def copy_prep_rec(self) -> colrev.record.record_prep.PrepRecord:
-        """Copy the record object (as a PrepRecord)"""
+        """Copy the record object (as a PrepRecord)."""
         return colrev.record.record_prep.PrepRecord(deepcopy(self.data))
 
     def update_by_record(self, update_record: Record) -> None:
-        """Update all data of a record object based on another record"""
+        """Update all data of a record object based on another record."""
         self.data = update_record.copy_prep_rec().get_data()
 
     def format_bib_style(self) -> str:
-        """Simple formatter for bibliography-style output"""
+        """Simple formatter for bibliography-style output."""
         return (
             f"{self.data.get(Fields.AUTHOR, '')} "
             f"({self.data.get(Fields.YEAR, '')}) "
@@ -97,8 +97,7 @@ class Record:
         )
 
     def get_data(self) -> dict:
-        """Get the record data"""
-
+        """Get the record data."""
         if not isinstance(self.data.get(Fields.ORIGIN, []), list):
             self.data[Fields.ORIGIN] = self.data[Fields.ORIGIN].rstrip(";").split(";")
         assert isinstance(self.data.get(Fields.ORIGIN, []), list)
@@ -106,7 +105,7 @@ class Record:
         return self.data
 
     def get_value(self, key: str, *, default: typing.Optional[str] = None) -> str:
-        """Get a record value (based on the key parameter)"""
+        """Get a record value (based on the key parameter)."""
         if default is not None:
             try:
                 ret = self.data[key]
@@ -127,7 +126,7 @@ class Record:
         keep_source_if_equal: bool = True,
         append_edit: bool = True,
     ) -> None:
-        """Update a record field (including provenance information)"""
+        """Update a record field (including provenance information)."""
         if keep_source_if_equal:
             if key in self.data:
                 if self.data[key] == value:
@@ -151,7 +150,7 @@ class Record:
         self.data[key] = value
 
     def rename_field(self, *, key: str, new_key: str) -> None:
-        """Rename a field"""
+        """Rename a field."""
         if key not in self.data:
             return
         value = self.data[key]
@@ -183,8 +182,7 @@ class Record:
     def remove_field(
         self, *, key: str, not_missing_note: bool = False, source: str = ""
     ) -> None:
-        """Remove a field"""
-
+        """Remove a field."""
         if key in self.data:
             del self.data[key]
 
@@ -205,14 +203,14 @@ class Record:
                 del self.data[Fields.D_PROV][key]
 
     def require_prov(self) -> None:
-        """Ensure that provenance fields are available"""
+        """Ensure that provenance fields are available."""
         if Fields.MD_PROV not in self.data:
             self.data[Fields.MD_PROV] = {}
         if Fields.D_PROV not in self.data:
             self.data[Fields.D_PROV] = {}
 
     def align_provenance(self) -> None:
-        """Remove unnecessary provenance information and add missing provenance information"""
+        """Remove unnecessary provenance information and add missing provenance information."""
         self.require_prov()
         for key in list(self.data[Fields.MD_PROV].keys()):
             if (
@@ -245,7 +243,7 @@ class Record:
                 self.data[Fields.D_PROV][key] = {"source": "manual", "note": ""}
 
     def add_provenance_all(self, *, source: str) -> None:
-        """Add a data provenance (source) to all fields"""
+        """Add a data provenance (source) to all fields."""
         self.require_prov()
         for key in self.data.keys():
             if key in FieldSet.NO_PROVENANCE:
@@ -258,8 +256,7 @@ class Record:
                 self.data[Fields.D_PROV][key] = {"source": source, "note": ""}
 
     def add_field_provenance(self, *, key: str, source: str, note: str = "") -> None:
-        """Add a field provenance, including source and note (based on a key)"""
-
+        """Add a field provenance, including source and note (based on a key)."""
         if key in FieldSet.NO_PROVENANCE:
             return
         self.require_prov()
@@ -290,7 +287,7 @@ class Record:
             prov_dict[key]["note"] += f",{note}"
 
     def add_field_provenance_note(self, *, key: str, note: str) -> None:
-        """Add a field provenance note (based on a key)"""
+        """Add a field provenance note (based on a key)."""
         if key in FieldSet.NO_PROVENANCE:
             return
         self.require_prov()
@@ -315,7 +312,7 @@ class Record:
     def get_field_provenance(
         self, *, key: str, default_source: str = "ORIGINAL"
     ) -> dict:
-        """Get the provenance for a selected field (key)"""
+        """Get the provenance for a selected field (key)."""
         default_note = ""
         note = default_note
         source = default_source
@@ -335,7 +332,7 @@ class Record:
         return {"source": source, "note": note}
 
     def get_field_provenance_notes(self, key: str) -> list:
-        """Get field provenance notes based on a key"""
+        """Get field provenance notes based on a key."""
         if key in FieldSet.MASTERDATA:
             if Fields.MD_PROV not in self.data:
                 return []
@@ -351,11 +348,11 @@ class Record:
         return [note.strip() for note in notes if note]
 
     def get_field_provenance_source(self, key: str) -> str:
-        """Get the provenance source for a selected field (key)"""
+        """Get the provenance source for a selected field (key)."""
         return self.get_field_provenance(key=key)["source"]
 
     def remove_field_provenance_note(self, *, key: str, note: str) -> None:
-        """Remove field provenance notes based on a key (also if IGNORE:note)"""
+        """Remove field provenance notes based on a key (also if IGNORE:note)."""
         if key in FieldSet.MASTERDATA:
             if Fields.MD_PROV not in self.data:
                 return
@@ -381,8 +378,7 @@ class Record:
             )
 
     def complete_provenance(self, *, source_info: str) -> bool:
-        """Complete provenance information for indexing"""
-
+        """Complete provenance information for indexing."""
         for key in list(self.data.keys()):
             if key in FieldSet.NO_PROVENANCE:
                 continue
@@ -398,7 +394,7 @@ class Record:
     def set_masterdata_complete(
         self, *, source: str, masterdata_repository: bool, replace_source: bool = True
     ) -> None:
-        """Set the masterdata to complete"""
+        """Set the masterdata to complete."""
         # pylint: disable=too-many-branches
         if self.masterdata_is_curated() or masterdata_repository:
             return
@@ -449,7 +445,7 @@ class Record:
                     }
 
     def set_masterdata_consistent(self) -> None:
-        """Set the masterdata to consistent"""
+        """Set the masterdata to consistent."""
         self.require_prov()
         md_p_dict = self.data[Fields.MD_PROV]
 
@@ -462,7 +458,7 @@ class Record:
                     )
 
     def reset_pdf_provenance_notes(self) -> None:
-        """Reset the PDF (file) provenance notes"""
+        """Reset the PDF (file) provenance notes."""
         if Fields.D_PROV not in self.data:
             self.add_field_provenance_note(key=Fields.FILE, note="")
         else:
@@ -475,7 +471,7 @@ class Record:
                 }
 
     def defects(self, key: str) -> typing.List[str]:
-        """Get a list of defects for a field"""
+        """Get a list of defects for a field."""
         self.require_prov()
         defects = []
         if key in self.data[Fields.MD_PROV]:
@@ -485,7 +481,7 @@ class Record:
         return defects
 
     def has_quality_defects(self, *, key: str = "") -> bool:
-        """Check whether a record (or specific field/key) has quality defects"""
+        """Check whether a record (or specific field/key) has quality defects."""
         if key != "":
             if key in self.data.get(Fields.MD_PROV, {}):
                 note = self.data[Fields.MD_PROV][key]["note"]
@@ -507,8 +503,7 @@ class Record:
         return bool(defect_codes)
 
     def has_fatal_quality_defects(self) -> bool:
-        """Check whether a record has fatal quality defects"""
-
+        """Check whether a record has fatal quality defects."""
         required_fields = [Fields.TITLE, Fields.AUTHOR, Fields.YEAR]
         if not all(r in self.data for r in required_fields) or not all(
             self.data[r] != FieldValues.UNKNOWN for r in required_fields
@@ -545,8 +540,7 @@ class Record:
         return False
 
     def has_pdf_defects(self) -> bool:
-        """Check whether the PDF has quality defects"""
-
+        """Check whether the PDF has quality defects."""
         return bool(
             [
                 n
@@ -556,14 +550,13 @@ class Record:
         )
 
     def ignore_defect(self, *, key: str, defect: str) -> None:
-        """Ignore a defect for a field"""
-
+        """Ignore a defect for a field."""
         ignore_code = f"IGNORE:{defect}"
         self.remove_field_provenance_note(key=key, note=defect)
         self.add_field_provenance_note(key=key, note=ignore_code)
 
     def ignored_defect(self, *, key: str, defect: str) -> bool:
-        """Get a list of ignored defects for a record"""
+        """Get a list of ignored defects for a record."""
         ignore_code = f"IGNORE:{defect}"
         if Fields.MD_PROV in self.data and key in self.data[Fields.MD_PROV]:
             notes = self.data[Fields.MD_PROV][key]["note"].split(",")
@@ -575,8 +568,7 @@ class Record:
 
     # pylint: disable=too-many-return-statements
     def get_container_title(self, *, na_string: str = "NA") -> str:
-        """Get the record's container title (journal name, booktitle, etc.)"""
-
+        """Get the record's container title (journal name, booktitle, etc.)."""
         if Fields.ENTRYTYPE not in self.data:
             return self.data.get(
                 Fields.JOURNAL, self.data.get(Fields.BOOKTITLE, na_string)
@@ -599,13 +591,13 @@ class Record:
         return na_string
 
     def set_masterdata_curated(self, source: str) -> None:
-        """Set record masterdata to curated"""
+        """Set record masterdata to curated."""
         self.data[Fields.MD_PROV] = {
             FieldValues.CURATED: {"source": source, "note": ""}
         }
 
     def masterdata_is_curated(self) -> bool:
-        """Check whether the record masterdata is curated"""
+        """Check whether the record masterdata is curated."""
         return FieldValues.CURATED in self.data.get(Fields.MD_PROV, {})
 
     def get_colrev_id(
@@ -614,7 +606,6 @@ class Record:
         assume_complete: bool = False,
     ) -> str:
         """Returns the colrev_id of the Record."""
-
         return colrev.record.record_identifier.get_colrev_id(
             self,
             assume_complete=assume_complete,
@@ -625,16 +616,15 @@ class Record:
         cls,
         pdf_path: Path,
     ) -> str:  # pragma: no cover
-        """Generate the colrev_pdf_id"""
-
+        """Generate the colrev_pdf_id."""
         return colrev.record.record_identifier.get_colrev_pdf_id(pdf_path)
 
     def get_toc_key(self) -> str:
-        """Get the record's toc-key"""
+        """Get the record's toc-key."""
         return colrev.record.record_identifier.get_toc_key(self)
 
     def prescreen_exclude(self, *, reason: str, print_warning: bool = False) -> None:
-        """Prescreen-exclude a record"""
+        """Prescreen-exclude a record."""
         # Warn when setting rev_synthesized/rev_included to prescreen_excluded
         # Especially in cases in which the prescreen-exclusion decision
         # is revised (e.g., because a paper was retracted)
@@ -673,7 +663,7 @@ class Record:
             self.remove_field(key=key)
 
     def get_tei_filename(self) -> Path:
-        """Get the TEI filename associated with the file (PDF)"""
+        """Get the TEI filename associated with the file (PDF)."""
         tei_filename = Path(f".tei/{self.data[Fields.ID]}.tei.xml")
         if Fields.FILE in self.data:
             tei_filename = Path(
@@ -687,8 +677,7 @@ class Record:
         *,
         set_prepared: bool = False,
     ) -> None:
-        """Run the PDF quality model"""
-
+        """Run the PDF quality model."""
         pdf_qm.run(record=self)
         if self.has_pdf_defects():
             self.set_status(RecordState.pdf_needs_manual_preparation)
@@ -701,8 +690,7 @@ class Record:
         *,
         set_prepared: bool = False,
     ) -> None:
-        """Update the masterdata provenance"""
-
+        """Update the masterdata provenance."""
         self.require_prov()
         self.is_retracted()
 
@@ -727,8 +715,7 @@ class Record:
             self.set_status(RecordState.md_prepared)
 
     def is_retracted(self) -> bool:
-        """Check for potential retracts"""
-
+        """Check for potential retracts."""
         # Legacy
         if (
             self.data.get("crossmark", "") == "True"
@@ -752,7 +739,7 @@ class Record:
         self,
         new_entrytype: str,
     ) -> None:
-        """Change the ENTRYTYPE"""
+        """Change the ENTRYTYPE."""
         if new_entrytype == self.data.get(Fields.ENTRYTYPE, "NA"):
             if Fields.MD_PROV in self.data:
                 self.align_provenance()
@@ -821,8 +808,7 @@ class Record:
                     self.data[Fields.MD_PROV][req_field]["note"] = DefectCodes.MISSING
 
     def set_status(self, target_state: RecordState, *, force: bool = False) -> None:
-        """Set the record status"""
-
+        """Set the record status."""
         if RecordState.md_prepared == target_state and not force:
             if self.has_fatal_quality_defects():
                 target_state = RecordState.md_needs_manual_preparation
@@ -832,8 +818,7 @@ class Record:
     def get_diff(
         self, other_record: Record, *, identifying_fields_only: bool = True
     ) -> list:
-        """Get diff between record objects"""
-
+        """Get diff between record objects."""
         if not identifying_fields_only:
             return list(dictdiffer.diff(self.get_data(), other_record.get_data()))
 
@@ -862,21 +847,20 @@ class Record:
 
     @classmethod
     def get_record_change_score(cls, record_a: Record, record_b: Record) -> float:
-        """Determine how much records changed
+        """Determine how much records changed.
 
         This method is less sensitive than get_record_similarity, especially when
         fields are missing. For example, if the journal field is missing in both
         records, get_similarity will return a value > 1.0. The get_record_changes
-        will return 0.0 (if all other fields are equal)."""
-
+        will return 0.0 (if all other fields are equal).
+        """
         return colrev.record.record_similarity.get_record_change_score(
             record_a, record_b
         )
 
     @classmethod
     def get_record_similarity(cls, record_a: Record, record_b: Record) -> float:
-        """Determine the similarity between two records (their masterdata)"""
-
+        """Determine the similarity between two records (their masterdata)."""
         return colrev.record.record_similarity.get_record_similarity(record_a, record_b)
 
     def merge(
@@ -887,11 +871,11 @@ class Record:
         preferred_masterdata_source_prefixes: typing.Optional[list] = None,
     ) -> None:
         """General-purpose record merging
-        for preparation, curated/non-curated records and records with origins
+        for preparation, curated/non-curated records and records with origins.
 
         Apply heuristics to create a fusion of the best fields based on
-        quality heuristics"""
-
+        quality heuristics
+        """
         if preferred_masterdata_source_prefixes is None:
             preferred_masterdata_source_prefixes = []
 

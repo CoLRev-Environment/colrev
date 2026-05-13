@@ -79,7 +79,7 @@ FIELDS_TO_KEEP = FieldSet.STANDARDIZED_FIELD_KEYS + [
 
 # pylint: disable=too-many-instance-attributes
 class Prep(colrev.process.operation.Operation):
-    """Prepare records (metadata)"""
+    """Prepare records (metadata)."""
 
     timeout = 30
     max_retries_on_error = 3
@@ -315,8 +315,7 @@ class Prep(colrev.process.operation.Operation):
     def _preparation_break_condition(
         self, record: colrev.record.record_prep.PrepRecord
     ) -> bool:
-        """Check whether the break condition for the prep operation is given"""
-
+        """Check whether the break condition for the prep operation is given."""
         if DefectCodes.RECORD_NOT_IN_TOC in record.get_field_provenance_notes(
             Fields.JOURNAL
         ):
@@ -335,8 +334,7 @@ class Prep(colrev.process.operation.Operation):
     def _preparation_save_condition(
         self, record: colrev.record.record_prep.PrepRecord
     ) -> bool:
-        """Check whether the save condition for the prep operation is given"""
-
+        """Check whether the save condition for the prep operation is given."""
         if record.data[Fields.STATUS] in [
             RecordState.rev_prescreen_excluded,
             RecordState.md_prepared,
@@ -355,7 +353,7 @@ class Prep(colrev.process.operation.Operation):
         return False
 
     def _status_to_prepare(self, record: colrev.record.record_prep.PrepRecord) -> bool:
-        """Check whether the record needs to be prepared"""
+        """Check whether the record needs to be prepared."""
         return record.data.get(Fields.STATUS, "NA") in [
             RecordState.md_needs_manual_preparation,
             RecordState.md_imported,
@@ -511,8 +509,7 @@ class Prep(colrev.process.operation.Operation):
 
     # Note : no named arguments for multiprocessing
     def prepare(self, item: dict) -> dict:
-        """Prepare a record (based on package_endpoints in the settings)"""
-
+        """Prepare a record (based on package_endpoints in the settings)."""
         # https://docs.python.org/3/library/concurrent.futures.html
         # #concurrent.futures.Executor.map
         # Exceptions are raised at the end/when results are retrieved from the iterator
@@ -614,8 +611,7 @@ class Prep(colrev.process.operation.Operation):
                 self.review_manager.dataset.git_repo.add_changes(pdfs_origin_file)
 
     def set_ids(self) -> None:
-        """Set IDs (regenerate). In force-mode, all IDs are regenerated and PDFs are renamed"""
-
+        """Set IDs (regenerate). In force-mode, all IDs are regenerated and PDFs are renamed."""
         self.review_manager.logger.info("Set IDs")
         records = self.review_manager.dataset.load_records_dict()
         records = self.review_manager.dataset.set_ids()
@@ -624,8 +620,7 @@ class Prep(colrev.process.operation.Operation):
         self.review_manager.create_commit(msg="Set IDs")
 
     def setup_custom_script(self) -> None:
-        """Setup a custom prep script"""
-
+        """Setup a custom prep script."""
         filedata = colrev.env.utils.get_package_file_content(
             module="colrev.ops", filename=Path("custom_scripts/custom_prep_script.py")
         )
@@ -752,7 +747,7 @@ class Prep(colrev.process.operation.Operation):
     def _setup_prep_round(
         self, *, i: int, prep_round: colrev.settings.PrepRound
     ) -> None:
-        """Sets up the self.prep_package_endpoints"""
+        """Sets up the self.prep_package_endpoints."""
         # pylint: disable=redefined-outer-name,invalid-name,global-statement
         global PREP_COUNTER
         with PREP_COUNTER.get_lock():
@@ -982,8 +977,7 @@ class Prep(colrev.process.operation.Operation):
 
     @colrev.process.operation.Operation.decorate()
     def main(self, *, keep_ids: bool = False) -> None:
-        """Preparation of records (main entrypoint)"""
-
+        """Preparation of records (main entrypoint)."""
         self._print_startup_infos()
 
         try:

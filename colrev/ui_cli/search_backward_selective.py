@@ -18,8 +18,7 @@ if typing.TYPE_CHECKING:
 
 
 def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
-    """Run a selective backward search (interactively on the cli)"""
-
+    """Run a selective backward search (interactively on the cli)."""
     items = search_operation.review_manager.dataset.read_next_record(
         conditions=[{Fields.ID: bws}]
     )

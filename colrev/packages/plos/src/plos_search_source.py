@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: plos"""
+"""SearchSource: plos."""
 
 import datetime
 import logging
@@ -30,7 +30,7 @@ from colrev.packages.plos.src import plos_api
 
 # pylint: disable=unused-argument
 class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """PLOS API"""
+    """PLOS API."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -59,8 +59,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Heuristic to identify to which SearchSource a search file belongs (for DB searches)"""
-
+        """Heuristic to identify to which SearchSource a search file belongs (for DB searches)."""
         result = {"confidence": 0.0}
         return result
 
@@ -86,7 +85,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)
         params:
-        - search_file="..." to add a DB search
+        - search_file="..." to add a DB search.
         """
         params_dict: dict = {}
         search_type = cls._select_search_type(params_dict)
@@ -169,8 +168,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         record: colrev.record.record.Record,
         feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
-        "Restore the url from the feed if it exist"
-
+        """Restore the url from the feed if it exist."""
         prev_record = feed.get_prev_feed_record(record)
         prev_url = prev_record.data.get(Fields.URL, None)
 
@@ -264,7 +262,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.search_source
 
     def search(self, rerun: bool) -> None:
-        """Run a search of the SearchSource"""
+        """Run a search of the SearchSource."""
         self._validate_source()
         # Create the Object SearchAPIFeed which mange the search on the API
 
@@ -285,8 +283,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
             raise NotImplementedError
 
     def load(self) -> dict:
-        """Load records from the SearchSource (and convert to .bib)"""
-
+        """Load records from the SearchSource (and convert to .bib)."""
         if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.search_results_path,
@@ -301,8 +298,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Run the custom source-prep operation"""
-
+        """Run the custom source-prep operation."""
         return record
 
     def prep_link_md(
@@ -312,6 +308,5 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 30,
     ) -> colrev.record.record.Record:
-        """Retrieve masterdata from Plos based on similarity with the record provided"""
-
+        """Retrieve masterdata from Plos based on similarity with the record provided."""
         return record

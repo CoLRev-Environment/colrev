@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Settings of the project"""
+"""Settings of the project."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ if typing.TYPE_CHECKING:
 
 
 class Author(BaseModel):
-    """Author of the review"""
+    """Author of the review."""
 
     # pylint: disable=too-many-instance-attributes
 
@@ -46,13 +46,13 @@ class Author(BaseModel):
 
 
 class Protocol(BaseModel):
-    """Review protocol"""
+    """Review protocol."""
 
     url: str
 
 
 class ProjectSettings(BaseModel):
-    """Project settings"""
+    """Project settings."""
 
     # pylint: disable=too-many-instance-attributes
 
@@ -80,7 +80,7 @@ class ProjectSettings(BaseModel):
 
 
 class SearchSettings(BaseModel):
-    """Search settings"""
+    """Search settings."""
 
     retrieve_forthcoming: bool
 
@@ -92,7 +92,7 @@ class SearchSettings(BaseModel):
 
 
 class PrepRound(BaseModel):
-    """Prep round settings"""
+    """Prep round settings."""
 
     name: str
     prep_package_endpoints: list
@@ -105,7 +105,7 @@ class PrepRound(BaseModel):
 
 
 class PrepSettings(BaseModel):
-    """Prep settings"""
+    """Prep settings."""
 
     fields_to_keep: typing.List[str]
     prep_rounds: typing.List[PrepRound]
@@ -126,7 +126,7 @@ class PrepSettings(BaseModel):
 
 
 class DedupeSettings(BaseModel):
-    """Dedupe settings"""
+    """Dedupe settings."""
 
     dedupe_package_endpoints: list
 
@@ -143,7 +143,7 @@ class DedupeSettings(BaseModel):
 
 
 class PrescreenSettings(BaseModel):
-    """Prescreen settings"""
+    """Prescreen settings."""
 
     explanation: str
     prescreen_package_endpoints: list
@@ -161,7 +161,7 @@ class PrescreenSettings(BaseModel):
 
 
 class PDFGetSettings(BaseModel):
-    """PDF get settings"""
+    """PDF get settings."""
 
     pdf_path_type: PDFPathType
     pdf_required_for_screen_and_synthesis: bool
@@ -187,7 +187,7 @@ class PDFGetSettings(BaseModel):
 
 
 class PDFPrepSettings(BaseModel):
-    """PDF prep settings"""
+    """PDF prep settings."""
 
     keep_backup_of_pdfs: bool
 
@@ -208,7 +208,7 @@ class PDFPrepSettings(BaseModel):
 
 
 class ScreenCriterion(BaseModel):
-    """Screen criterion"""
+    """Screen criterion."""
 
     explanation: str
     comment: typing.Optional[str]
@@ -219,7 +219,7 @@ class ScreenCriterion(BaseModel):
 
 
 class ScreenSettings(BaseModel):
-    """Screen settings"""
+    """Screen settings."""
 
     explanation: typing.Optional[str] = None
     criteria: typing.Dict[str, ScreenCriterion]
@@ -246,7 +246,7 @@ class ScreenSettings(BaseModel):
 
 
 class DataSettings(BaseModel):
-    """Data settings"""
+    """Data settings."""
 
     data_package_endpoints: list
 
@@ -260,7 +260,7 @@ class DataSettings(BaseModel):
 
 
 class Settings(BaseModel):
-    """CoLRev project settings"""
+    """CoLRev project settings."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -282,7 +282,7 @@ class Settings(BaseModel):
     def validate_sources(
         cls, value: typing.List[colrev.search_file.ExtendedSearchFile]
     ) -> typing.List[colrev.search_file.ExtendedSearchFile]:
-        """Validate the sources"""
+        """Validate the sources."""
         return [
             colrev.search_file.ExtendedSearchFile(**v) if isinstance(v, dict) else v
             for v in value
@@ -290,15 +290,13 @@ class Settings(BaseModel):
 
     def model_dump(self, **kwargs) -> dict:  # type: ignore
         """Dump the settings model with recursive handling of SearchSource."""
-
         sources_dump = [source.model_dump(**kwargs) for source in self.sources]  # type: ignore
         data = super().model_dump(**kwargs)
         data["sources"] = sources_dump
         return data
 
     def is_curated_repo(self) -> bool:
-        """Check whether data is curated in this repository"""
-
+        """Check whether data is curated in this repository."""
         curation_endpoints = [
             x
             for x in self.data.data_package_endpoints
@@ -307,8 +305,7 @@ class Settings(BaseModel):
         return bool(curation_endpoints)
 
     def is_curated_masterdata_repo(self) -> bool:
-        """Check whether the masterdata is curated in this repository"""
-
+        """Check whether the masterdata is curated in this repository."""
         curation_endpoints = [
             x
             for x in self.data.data_package_endpoints
@@ -350,7 +347,7 @@ class Settings(BaseModel):
         )
 
     def get_packages(self) -> typing.List[str]:
-        """Get the list of all package names"""
+        """Get the list of all package names."""
 
         def extract_endpoints(package_endpoints: list) -> list:
             return [
@@ -408,8 +405,7 @@ def _load_settings_from_dict(loaded_dict: dict) -> Settings:
 
 
 def load_settings(*, settings_path: Path) -> Settings:
-    """Load the settings from file"""
-
+    """Load the settings from file."""
     if not settings_path.is_file():
         raise colrev_exceptions.RepoSetupError()
 
@@ -435,8 +431,7 @@ def load_settings(*, settings_path: Path) -> Settings:
 
 
 def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> None:
-    """Save the settings"""
-
+    """Save the settings."""
     sources = review_manager.settings.sources
     review_manager.settings.sources = []
     exported_dict = review_manager.settings.model_dump()

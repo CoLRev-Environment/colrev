@@ -30,7 +30,7 @@ PREP_COUNTER = Value("i", 0)
 
 # pylint: disable=too-many-instance-attributes
 class PrepDebug(colrev.ops.prep.Prep):
-    """Debug prepare records (metadata)"""
+    """Debug prepare records (metadata)."""
 
     debug_ids: typing.List[str]
     commit_sha: str
@@ -125,8 +125,7 @@ class PrepDebug(colrev.ops.prep.Prep):
 
     @colrev.process.operation.Operation.decorate()
     def run_debug(self, *, debug_ids: str = "NA") -> None:
-        """Preparation of records (main entrypoint)"""
-
+        """Preparation of records (main entrypoint)."""
         self.debug_ids = debug_ids.split(",")
 
         self.review_manager.logger.info("Start debug prep")

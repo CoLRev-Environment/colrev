@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function to load tabular files (csv, xlsx)"""
+"""Function to load tabular files (csv, xlsx)."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ import colrev.loader.loader
 
 
 class TableLoader(colrev.loader.loader.Loader):
-    """Loads csv and Excel files (based on pandas)"""
+    """Loads csv and Excel files (based on pandas)."""
 
     def __init__(
         self,
@@ -43,7 +43,7 @@ class TableLoader(colrev.loader.loader.Loader):
 
     @classmethod
     def get_nr_records(cls, filename: Path) -> int:
-        """Get the number of records in the file"""
+        """Get the number of records in the file."""
         if filename.name.endswith(".csv"):
             data = pd.read_csv(filename, dtype=str, keep_default_na=False)
         elif filename.name.endswith((".xls", ".xlsx")):

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Structured data extraction as part of the data operations"""
+"""Structured data extraction as part of the data operations."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from colrev.constants import RecordState
 
 # an option: https://pypi.org/project/csv-schema/
 class DataField(BaseModel):
-    """Field definition"""
+    """Field definition."""
 
     name: str
     explanation: str
@@ -34,7 +34,7 @@ class DataField(BaseModel):
 
 
 class StructuredDataSettings(BaseModel):
-    """Settings for StructuredData"""
+    """Settings for StructuredData."""
 
     endpoint: str
     version: str
@@ -47,7 +47,7 @@ class StructuredDataSettings(BaseModel):
 
 
 class StructuredData(base_classes.DataPackageBaseClass):
-    """Summarize the literature in a structured data extraction (a table)"""
+    """Summarize the literature in a structured data extraction (a table)."""
 
     settings: StructuredDataSettings
     settings_class = StructuredDataSettings
@@ -90,8 +90,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
     # pylint: disable=unused-argument
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
-        """Add as an endpoint"""
-
+        """Add as an endpoint."""
         add_source = {
             "endpoint": "colrev.structured",
             "version": "0.1",
@@ -101,8 +100,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
     def validate_structured_data(self) -> None:
-        """Validate the extracted data"""
-
+        """Validate the extracted data."""
         if not self.data_path.is_file():
             return
 
@@ -177,7 +175,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> None:
-        """Update the data/structured data extraction"""
+        """Update the data/structured data extraction."""
 
         def update_structured_data(
             *,
@@ -255,7 +253,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
-        """Update the record_status_matrix"""
+        """Update the record_status_matrix."""
 
         def get_data_extracted(
             data_path: Path, records_for_data_extraction: list
@@ -304,8 +302,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
     def get_advice(
         self,
     ) -> dict:
-        """Get advice on the next steps (for display in the colrev status)"""
-
+        """Get advice on the next steps (for display in the colrev status)."""
         data_endpoint = "Data operation [structured data endpoint]: "
 
         if self.settings.data_path_relative.is_file():

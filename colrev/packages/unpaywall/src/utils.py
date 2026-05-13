@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Utils for Unpaywall"""
+"""Utils for Unpaywall."""
 
 import os
 
@@ -9,12 +9,11 @@ UNPAYWALL_EMAIL_ENV_VAR = "UNPAYWALL_EMAIL"
 
 
 def get_email() -> str:
-    """Get user's name and email,
+    """Get user's name and email,.
 
     if user have specified an email in registry, that will be returned
     otherwise it will return the email used in git
     """
-
     env_email = os.getenv(UNPAYWALL_EMAIL_ENV_VAR)
     if env_email:
         return env_email

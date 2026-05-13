@@ -23,7 +23,7 @@ from colrev.env.local_index_prep import prepare_record_for_return
 
 
 class LocalIndex:
-    """The LocalIndex implements indexing and retrieval of records across projects"""
+    """The LocalIndex implements indexing and retrieval of records across projects."""
 
     def __init__(
         self,
@@ -37,7 +37,7 @@ class LocalIndex:
         self.thread_lock = Lock()
 
     def get_journal_rankings(self, journal: str) -> list:
-        """Get the journal rankings from the sqlite database"""
+        """Get the journal rankings from the sqlite database."""
         sqlite_index_ranking = colrev.env.local_index_sqlite.SQLiteIndexRankings()
         return sqlite_index_ranking.select(journal=journal)
 
@@ -104,8 +104,7 @@ class LocalIndex:
         return retrieved_record
 
     def search(self, query: str) -> list[colrev.record.record.Record]:
-        """Run a search for records"""
-
+        """Run a search for records."""
         try:
             self.thread_lock.acquire(timeout=60)
             sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
@@ -123,8 +122,7 @@ class LocalIndex:
         return records_to_return
 
     def get_year_from_toc(self, record_dict: dict) -> str:
-        """Determine the year of a paper based on its table-of-content (journal-volume-number)"""
-
+        """Determine the year of a paper based on its table-of-content (journal-volume-number)."""
         try:
             sqlite_index_toc = colrev.env.local_index_sqlite.SQLiteIndexTOC()
             toc_key = colrev.record.record.Record(record_dict).get_toc_key()
@@ -207,8 +205,7 @@ class LocalIndex:
         include_file: bool = False,
         search_across_tocs: bool = False,
     ) -> colrev.record.record.Record:
-        """Retrieve a record from the toc (table-of-contents)"""
-
+        """Retrieve a record from the toc (table-of-contents)."""
         # Note: in NotTOCIdentifiableException cases, we still need a toc_key.
         # to accomplish this, the get_toc_key() may acced an "accept_incomplete" flag
         try:
@@ -255,9 +252,8 @@ class LocalIndex:
     def retrieve_based_on_colrev_pdf_id(
         self, *, colrev_pdf_id: str
     ) -> colrev.record.record.Record:
-        """
-        Convenience function to retrieve the indexed record_dict metadata
-        based on a colrev_pdf_id
+        """Convenience function to retrieve the indexed record_dict metadata
+        based on a colrev_pdf_id.
         """
         try:
             sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
@@ -277,11 +273,9 @@ class LocalIndex:
         include_file: bool = False,
         include_colrev_ids: bool = False,
     ) -> colrev.record.record.Record:
+        """Convenience function to retrieve the indexed record_dict metadata
+        based on another record_dict.
         """
-        Convenience function to retrieve the indexed record_dict metadata
-        based on another record_dict
-        """
-
         # To avoid modifications to the original record
         record_dict = deepcopy(record_dict)
 
@@ -342,7 +336,8 @@ class LocalIndex:
 
     def get_fields_to_remove(self, record_dict: dict) -> list:
         """Compares the record to available toc items and
-        returns fields to remove (if any), such as the volume or number."""
+        returns fields to remove (if any), such as the volume or number.
+        """
         # pylint: disable=too-many-return-statements
 
         fields_to_remove: typing.List[str] = []
@@ -396,7 +391,7 @@ class LocalIndex:
         return fields_to_remove
 
     def get_curations(self) -> list[Path]:
-        """Get the directories of curations"""
+        """Get the directories of curations."""
         return [
             Path(x["repo_source_path"])
             for x in self.environment_manager.local_repos()

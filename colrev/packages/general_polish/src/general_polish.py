@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Genral polishing rules"""
+"""Genral polishing rules."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from colrev.constants import Fields
 
 
 class GeneralPolishPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records by applying polishing rules"""
+    """Prepares records by applying polishing rules."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -67,8 +67,7 @@ class GeneralPolishPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare the record by applying polishing rules"""
-
+        """Prepare the record by applying polishing rules."""
         if Fields.TITLE in record.data:
             acronyms = [
                 x

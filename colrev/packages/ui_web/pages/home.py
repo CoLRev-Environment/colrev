@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-"""Burn Down Chart is created here"""
+"""Burn Down Chart is created here."""
 
 from __future__ import annotations
 
@@ -23,7 +23,6 @@ dash.register_page(__name__, path="/")
 
 def analytics() -> px.line:
     """Function creating burn down chart."""
-
     # get data from get_analytics function
     review_manager = colrev.review_manager.ReviewManager()
     status_operation = review_manager.get_status_operation()

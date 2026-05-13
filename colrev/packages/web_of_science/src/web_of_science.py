@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: Web of Science"""
+"""SearchSource: Web of Science."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from colrev.ops.search_db import run_db_search
 
 
 class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """Web of Science"""
+    """Web of Science."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -52,16 +52,14 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
     def validate_source(
         cls, search_source: colrev.search_file.ExtendedSearchFile
     ) -> None:
-        """Validate the search source"""
-
+        """Validate the search source."""
         if search_source.search_type == SearchType.DB:
             print(f"Validating search string: {search_source.search_string}")
             parse(search_source.search_string, platform="wos")
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Web of Science"""
-
+        """Source heuristic for Web of Science."""
         result = {"confidence": 0.0}
 
         if data.count("UT WOS:") > 0.4 * data.count("TI "):
@@ -93,8 +91,7 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         # params_dict = {params.split("=")[0]: params.split("=")[1]}
         params_dict: dict = {}
 
@@ -108,8 +105,7 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def search(self, rerun: bool) -> None:
-        """Run a search of WebOfScience"""
-
+        """Run a search of WebOfScience."""
         if self.search_source.search_type == SearchType.DB:
             run_db_search(
                 db_url=self.db_url,
@@ -127,7 +123,7 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     @classmethod
@@ -174,8 +170,7 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
         return records
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             return self._load_bib(
                 filename=self.search_source.search_results_path, logger=self.logger
@@ -190,8 +185,7 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for Web of Science"""
-
+        """Source-specific preparation for Web of Science."""
         # pylint: disable=colrev-missed-constant-usage
         record.format_if_mostly_upper(Fields.TITLE, case="sentence")
         record.format_if_mostly_upper(Fields.JOURNAL, case="title")

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: Crossref"""
+"""SearchSource: Crossref."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ from colrev.packages.crossref.src.crossref_api import query_doi
 
 
 class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """Crossref API"""
+    """Crossref API."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -120,8 +120,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Crossref"""
-
+        """Source heuristic for Crossref."""
         result = {"confidence": 0.0}
         return result
 
@@ -204,7 +203,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint"""
+        """Add SearchSource as an endpoint."""
         params_dict = cls._parse_params(params)
         search_type = cls._select_search_type(params_dict)
 
@@ -273,7 +272,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def check_availability(self) -> None:
-        """Check status (availability) of the Crossref API"""
+        """Check status (availability) of the Crossref API."""
         self.api.check_availability()
 
     def _prep_crossref_record(
@@ -312,7 +311,8 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
         """Restore the url from the feed if it exists
-        (url-resolution is not always available)"""
+        (url-resolution is not always available).
+        """
         prev_record = feed.get_prev_feed_record(record)
         prev_url = prev_record.data.get(Fields.URL, None)
         if prev_url is None:
@@ -423,8 +423,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         crossref_feed.save()
 
     def search(self, rerun: bool) -> None:
-        """Run a search of Crossref"""
-
+        """Run a search of Crossref."""
         crossref_feed = colrev.ops.search_api_feed.SearchAPIFeed(
             source_identifier=self.source_identifier,
             search_source=self.search_source,
@@ -447,8 +446,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
             raise NotImplementedError
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.search_results_path,
@@ -463,8 +461,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for Crossref"""
-
+        """Source-specific preparation for Crossref."""
         return record
 
     def _get_masterdata_record(
@@ -585,8 +582,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 30,
     ) -> colrev.record.record.Record:
-        """Retrieve masterdata from Crossref based on similarity with the record provided"""
-
+        """Retrieve masterdata from Crossref based on similarity with the record provided."""
         # To test the metadata provided for a particular DOI use:
         # https://api.crossref.org/works/DOI
         if len(record.data.get(Fields.TITLE, "")) < 5 and Fields.DOI not in record.data:

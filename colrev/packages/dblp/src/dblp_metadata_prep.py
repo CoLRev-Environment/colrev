@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Consolidation of metadata based on DBLP API as a prep operation"""
+"""Consolidation of metadata based on DBLP API as a prep operation."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from colrev.constants import SearchType
 
 
 class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records based on dblp.org metadata"""
+    """Prepares records based on dblp.org metadata."""
 
     ci_supported: bool = Field(default=True)
     settings_class = colrev.package_manager.package_settings.DefaultSettings
@@ -72,7 +72,7 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
         ]
 
     def check_availability(self) -> None:
-        """Check status (availability) of the DBLP API"""
+        """Check status (availability) of the DBLP API."""
         self.dblp_source.check_availability()
 
     # pylint: disable=unused-argument
@@ -83,8 +83,7 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare a record by retrieving its metadata from DBLP"""
-
+        """Prepare a record by retrieving its metadata from DBLP."""
         if any(
             dblp_prefix in o
             for dblp_prefix in self.dblp_prefixes

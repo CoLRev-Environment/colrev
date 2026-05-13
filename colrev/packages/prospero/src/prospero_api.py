@@ -120,7 +120,7 @@ class PROSPEROAPI:
         return records
 
     def _format_author(self, author_string: str) -> str:
-        """Convert authors to colrev format"""
+        """Convert authors to colrev format."""
         particles = {"de", "del", "la", "van", "von", "der", "di", "da", "le"}
 
         if author_string.startswith("{{") and author_string.endswith("}}"):
@@ -224,7 +224,6 @@ class PROSPEROAPI:
 
     def get_next_record(self) -> typing.Iterator[dict]:
         """Extract record details from Prospero and yield them as dictionaries."""
-
         try:
             self._navigate_to_search_page()
 

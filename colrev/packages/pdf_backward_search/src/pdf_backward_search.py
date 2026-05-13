@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: backward search (based on PDFs and GROBID)"""
+"""SearchSource: backward search (based on PDFs and GROBID)."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ from colrev.packages.pdf_backward_search.src import pdf_backward_search_api
 
 class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
     """Backward search extracting references from PDFs using GROBID
-    Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
+    Scope: all included papers with colrev_status in (rev_included, rev_synthesized).
     """
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
@@ -81,8 +81,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def get_default_source(cls) -> colrev.search_file.ExtendedSearchFile:
-        """Get the default SearchSource settings"""
-
+        """Get the default SearchSource settings."""
         return colrev.search_file.ExtendedSearchFile(
             version=cls.CURRENT_SYNTAX_VERSION,
             platform="colrev.pdf_backward_search",
@@ -97,7 +96,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         )
 
     def _validate_source(self) -> None:
-        """Validate the SearchSource (parameters etc.)"""
+        """Validate the SearchSource (parameters etc.)."""
         source = self.search_source
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
@@ -385,8 +384,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         return colrev.record.record.Record(item)
 
     def search(self, rerun: bool) -> None:
-        """Run a search of PDFs (backward search based on GROBID)"""
-
+        """Run a search of PDFs (backward search based on GROBID)."""
         self._validate_source()
 
         # Do not run in continuous-integration environment
@@ -470,8 +468,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for PDF backward searches (GROBID)"""
-
+        """Source heuristic for PDF backward searches (GROBID)."""
         result = {"confidence": 0.0}
         if str(filename).endswith("_ref_list.pdf"):
             result["confidence"] = 1.0
@@ -568,8 +565,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
         if params:
             for item in params.split(";"):
@@ -594,8 +590,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.search_results_path,
@@ -614,15 +609,14 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for PDF backward searches (GROBID)"""
-
+        """Source-specific preparation for PDF backward searches (GROBID)."""
         record.format_if_mostly_upper(Fields.TITLE, case="sentence")
         record.format_if_mostly_upper(Fields.JOURNAL, case=Fields.TITLE)
         record.format_if_mostly_upper(Fields.BOOKTITLE, case=Fields.TITLE)

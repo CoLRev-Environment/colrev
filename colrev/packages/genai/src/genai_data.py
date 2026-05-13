@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Data based on GenAI"""
+"""Data based on GenAI."""
 
 from __future__ import annotations
 
@@ -23,14 +23,14 @@ from colrev.constants import RecordState
 
 
 class GenAIData(base_classes.DataPackageBaseClass):
-    """GenAI-based data"""
+    """GenAI-based data."""
 
     ci_supported: bool = Field(default=False)
 
     class GenAIDataSettings(
         colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
-        """GenAI data settings"""
+        """GenAI data settings."""
 
         endpoint: str
         version: str
@@ -67,8 +67,7 @@ class GenAIData(base_classes.DataPackageBaseClass):
     # pylint: disable=unused-argument
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
-        """Add as an endpoint"""
-
+        """Add as an endpoint."""
         add_package = {
             "endpoint": "colrev.prisma",
             "version": "0.1",
@@ -161,8 +160,7 @@ class GenAIData(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> None:
-        """Update the data/prisma diagram"""
-
+        """Update the data/prisma diagram."""
         self._run_prompt()
 
     def update_record_status_matrix(
@@ -170,8 +168,7 @@ class GenAIData(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
-        """Update the record_status_matrix"""
-
+        """Update the record_status_matrix."""
         # Note : automatically set all to True / synthesized
         for syn_id in list(synthesized_record_status_matrix.keys()):
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
@@ -179,8 +176,7 @@ class GenAIData(base_classes.DataPackageBaseClass):
     def get_advice(
         self,
     ) -> dict:
-        """Get advice on the next steps (for display in the colrev status)"""
-
+        """Get advice on the next steps (for display in the colrev status)."""
         # data_endpoint = "Data operation [prisma data endpoint]: "
 
         # path_str = ",".join(

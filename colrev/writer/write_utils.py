@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function to write files (BiBTeX, RIS, CSV, etc.)
+"""Function to write files (BiBTeX, RIS, CSV, etc.).
 
 Usage::
 
@@ -32,6 +32,7 @@ def write_file(records_dict: dict, *, filename: Path, **kw) -> dict:  # type: ig
         For tabular formats (csv, xlsx, md), the following options are supported:
             - sort_fields_first: list of fields to appear first in the output
             - drop_empty_fields: if True, empty fields will be omitted
+
     """
     if isinstance(filename, str):
         filename = Path(filename)

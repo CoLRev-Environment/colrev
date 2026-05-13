@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Creation of an Obsidian database as part of the data operations"""
+"""Creation of an Obsidian database as part of the data operations."""
 
 from __future__ import annotations
 
@@ -19,14 +19,14 @@ from colrev.constants import Fields
 
 
 class Obsidian(base_classes.DataPackageBaseClass):
-    """Export the sample into an Obsidian database"""
+    """Export the sample into an Obsidian database."""
 
     ci_supported: bool = Field(default=False)
 
     class ObsidianSettings(
         colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
-        """Settings for Obsidian"""
+        """Settings for Obsidian."""
 
         endpoint: str
         version: str
@@ -86,8 +86,7 @@ class Obsidian(base_classes.DataPackageBaseClass):
     # pylint: disable=unused-argument
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
-        """Add as an endpoint"""
-
+        """Add as an endpoint."""
         add_source = {
             "endpoint": "colrev.obsidian",
             "version": "0.1",
@@ -216,8 +215,7 @@ class Obsidian(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
         silent_mode: bool,
     ) -> None:
-        """Update the obsidian vault"""
-
+        """Update the obsidian vault."""
         if silent_mode:
             return
 
@@ -230,8 +228,7 @@ class Obsidian(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
-        """Update the record_status_matrix"""
-
+        """Update the record_status_matrix."""
         missing_records = self._get_obsidian_missing(
             included=list(synthesized_record_status_matrix.keys())
         )
@@ -246,8 +243,7 @@ class Obsidian(base_classes.DataPackageBaseClass):
     def get_advice(
         self,
     ) -> dict:
-        """Get advice on the next steps (for display in the colrev status)"""
-
+        """Get advice on the next steps (for display in the colrev status)."""
         data_endpoint = "Data operation [obisdian data endpoint]: "
 
         advice = {

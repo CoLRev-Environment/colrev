@@ -23,7 +23,7 @@ BASECLASS_OVERVIEW = base_classes.BASECLASS_OVERVIEW
 
 
 class Package:
-    """A Python package for CoLRev"""
+    """A Python package for CoLRev."""
 
     def __init__(self, package_identifier: str) -> None:
         try:
@@ -54,13 +54,11 @@ class Package:
         self.version = self.package.metadata["Version"]
 
     def has_endpoint(self, endpoint_type: EndpointType) -> bool:
-        """Check if the package has a specific endpoint type"""
-
+        """Check if the package has a specific endpoint type."""
         return endpoint_type.value in [e.name for e in self.package.entry_points]
 
     def get_endpoint(self, endpoint_type: EndpointType) -> str:
-        """Get the endpoint for a package type"""
-
+        """Get the endpoint for a package type."""
         if endpoint_type.value not in [e.name for e in self.package.entry_points]:
             raise colrev_exceptions.MissingDependencyError(
                 f"Package {self.name} does not have a {endpoint_type} endpoint"
@@ -88,7 +86,7 @@ class Package:
             )
 
     def get_endpoint_class(self, package_type: EndpointType) -> typing.Any:
-        """Get the endpoint class for a package type"""
+        """Get the endpoint class for a package type."""
         if not self.has_endpoint(package_type):
             raise colrev_exceptions.MissingDependencyError(
                 f"Package {self.name} does not have a {package_type} endpoint"
@@ -104,8 +102,7 @@ class Package:
     def add_to_type_identifier_endpoint_dict(
         self, type_identifier_endpoint_dict: dict
     ) -> None:
-        """Add the package to the type_identifier_endpoint_dict dict"""
-
+        """Add the package to the type_identifier_endpoint_dict dict."""
         for endpoint_type in EndpointType:
             if self.has_endpoint(endpoint_type):
                 type_identifier_endpoint_dict[endpoint_type][self.name] = (

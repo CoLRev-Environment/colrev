@@ -18,7 +18,7 @@ if typing.TYPE_CHECKING:
 
 
 class StatusStatsCurrently(BaseModel):
-    """The current status statistics"""
+    """The current status statistics."""
 
     # pylint: disable=too-many-instance-attributes
     md_retrieved: int
@@ -42,7 +42,7 @@ class StatusStatsCurrently(BaseModel):
 
 
 class StatusStatsOverall(BaseModel):
-    """The overall-status statistics (records currently/previously in each state)"""
+    """The overall-status statistics (records currently/previously in each state)."""
 
     # pylint: disable=too-many-instance-attributes
     md_retrieved: int
@@ -107,7 +107,7 @@ def _get_nr_origins(records: dict) -> int:
 
 
 def _get_nr_incomplete(origin_states_dict: dict) -> int:
-    """Get the number of incomplete records"""
+    """Get the number of incomplete records."""
     return len(
         [
             x
@@ -334,7 +334,7 @@ REQUIRED_ATOMIC_STEPS = {
 def _get_completed_atomic_steps(
     records: dict, currently: StatusStatsCurrently, md_duplicates_removed: int
 ) -> int:
-    """Get the number of completed atomic steps"""
+    """Get the number of completed atomic steps."""
     completed_steps = 0
     for record_dict in records.values():
         completed_steps += REQUIRED_ATOMIC_STEPS[record_dict[Fields.STATUS]]
@@ -366,8 +366,7 @@ def get_status_stats(
     review_manager: colrev.review_manager.ReviewManager,
     records: dict,
 ) -> StatusStats:
-    """Get the status statistics"""
-
+    """Get the status statistics."""
     origin_states_dict = _get_origin_states_dict(records)
 
     screening_statistics = _get_screening_statistics(
@@ -411,7 +410,7 @@ def get_status_stats(
 
 
 class StatusStats(BaseModel):
-    """Data class for status statistics"""
+    """Data class for status statistics."""
 
     # pylint: disable=too-many-instance-attributes
     atomic_steps: int
@@ -429,7 +428,7 @@ class StatusStats(BaseModel):
     origin_states_dict: dict
 
     def get_active_metadata_operation_info(self) -> str:
-        """Get active metadata operation info (convenience function for status printing)"""
+        """Get active metadata operation info (convenience function for status printing)."""
         infos = []
         if self.currently.md_retrieved > 0:
             infos.append(f"{self.currently.md_retrieved} to load")
@@ -444,7 +443,7 @@ class StatusStats(BaseModel):
         return ", ".join(infos)
 
     def get_active_pdf_operation_info(self) -> str:
-        """Get active PDF operation info (convenience function for status printing)"""
+        """Get active PDF operation info (convenience function for status printing)."""
         infos = []
         if self.currently.rev_prescreen_included > 0:
             infos.append(f"{self.currently.rev_prescreen_included} to retrieve")
@@ -463,8 +462,7 @@ class StatusStats(BaseModel):
     def get_transitioned_records(
         self, review_manager: colrev.review_manager.ReviewManager
     ) -> list[typing.Dict]:
-        """Get the transitioned records"""
-
+        """Get the transitioned records."""
         committed_origin_states_dict = (
             review_manager.dataset.get_committed_origin_state_dict()
         )
@@ -508,8 +506,7 @@ class StatusStats(BaseModel):
         return transitioned_records
 
     def get_priority_operations(self) -> list:
-        """Get the priority operations"""
-
+        """Get the priority operations."""
         # get "earliest" states (going backward)
         earliest_state = []
         search_states = [RecordState.rev_synthesized]
@@ -541,8 +538,7 @@ class StatusStats(BaseModel):
         return list(set(priority_transitions))
 
     def get_active_operations(self) -> list:
-        """Get the active processing functions"""
-
+        """Get the active processing functions."""
         active_operations: typing.List[str] = []
         for state in set(self.origin_states_dict.values()):
             valid_transitions = ProcessModel.get_valid_transitions(state=state)
@@ -551,6 +547,5 @@ class StatusStats(BaseModel):
         return active_operations
 
     def get_operation_in_progress(self, *, transitioned_records: list) -> set:
-        """Get the operation currently in progress"""
-
+        """Get the operation currently in progress."""
         return {str(x["type"]) for x in transitioned_records}

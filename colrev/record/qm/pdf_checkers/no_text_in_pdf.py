@@ -14,7 +14,7 @@ from colrev.constants import PDFDefectCodes
 
 
 class TextInPDFChecker:
-    """The TextInPDFChecker"""
+    """The TextInPDFChecker."""
 
     msg = PDFDefectCodes.NO_TEXT_IN_PDF
 
@@ -24,8 +24,7 @@ class TextInPDFChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the no-text-in-pdf checks"""
-
+        """Run the no-text-in-pdf checks."""
         if (
             Fields.FILE not in record.data
             or Path(record.data[Fields.FILE]).suffix != ".pdf"
@@ -50,5 +49,5 @@ class TextInPDFChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(TextInPDFChecker(quality_model))

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Default deduplication module for CoLRev"""
+"""Default deduplication module for CoLRev."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from colrev.constants import RecordState
 
 
 class Dedupe(base_classes.DedupePackageBaseClass):
-    """Default deduplication"""
+    """Default deduplication."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=True)
@@ -59,8 +59,7 @@ class Dedupe(base_classes.DedupePackageBaseClass):
         shutil.move(str(maybe_file), str(target_path))
 
     def run_dedupe(self) -> None:
-        """Run default dedupe"""
-
+        """Run default dedupe."""
         records = self.review_manager.dataset.load_records_dict()
         records_df = pd.DataFrame.from_dict(records, orient="index")
         records_df = records_df[

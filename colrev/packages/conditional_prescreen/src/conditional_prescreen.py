@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Conditional prescreen"""
+"""Conditional prescreen."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from colrev.constants import RecordState
 
 
 class ConditionalPrescreen(base_classes.PrescreenPackageBaseClass):
-    """Conditional prescreen (currently: include all)"""
+    """Conditional prescreen (currently: include all)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=True)
@@ -40,8 +40,7 @@ class ConditionalPrescreen(base_classes.PrescreenPackageBaseClass):
         records: dict,
         split: list,  # pylint: disable=unused-argument
     ) -> dict:
-        """Prescreen records based on predefined conditions (rules)"""
-
+        """Prescreen records based on predefined conditions (rules)."""
         pad = 50
         for record in records.values():
             if record[Fields.STATUS] != RecordState.md_processed:

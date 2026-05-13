@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function to load RIS files"""
+"""Function to load RIS files."""
 
 from __future__ import annotations
 
@@ -16,15 +16,15 @@ import colrev.loader.loader
 
 
 class NextLine(Exception):
-    """NextLineException"""
+    """NextLineException."""
 
 
 class ParseError(Exception):
-    """Parsing error"""
+    """Parsing error."""
 
 
 class RISLoader(colrev.loader.loader.Loader):
-    """Loads ris files"""
+    """Loads ris files."""
 
     PATTERN = r"^[A-Z0-9]{2,4} "
 
@@ -55,7 +55,7 @@ class RISLoader(colrev.loader.loader.Loader):
 
     @classmethod
     def get_nr_records(cls, filename: Path) -> int:
-        """Get the number of records in the file"""
+        """Get the number of records in the file."""
         count = 0
         with open(filename, encoding="utf-8") as file:
             for line in file:
@@ -68,7 +68,7 @@ class RISLoader(colrev.loader.loader.Loader):
         return line[0 : line.find(" ")].rstrip()
 
     def _get_content(self, line: str) -> str:
-        """Get the content from a line"""
+        """Get the content from a line."""
         return line[line.find(" - ") + 3 :].strip()
 
     def _add_tag(self, tag: str, line: str) -> None:
@@ -114,11 +114,11 @@ class RISLoader(colrev.loader.loader.Loader):
         return "\n".join(lines)
 
     def load_records_list(self, *, content: str = "") -> list:
-        """Load ris entries
+        """Load ris entries.
 
         The resulting keys should coincide with those in the KEY_MAP
-        but they can be adapted before calling the convert_to_records()"""
-
+        but they can be adapted before calling the convert_to_records()
+        """
         # Note : depending on the source, a specific ris_parser implementation may be selected.
         # its DEFAULT_LIST_TAGS can be extended with list fields that should be joined automatically
 

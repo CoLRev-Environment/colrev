@@ -32,7 +32,7 @@ from colrev.writer.write_utils import to_string
 
 
 class Upgrade(colrev.process.operation.Operation):
-    """Upgrade a CoLRev project"""
+    """Upgrade a CoLRev project."""
 
     repo: git.Repo
 
@@ -74,11 +74,11 @@ class Upgrade(colrev.process.operation.Operation):
         self.repo.index.add(["settings.json"])
 
     def load_records_dict(self) -> dict:
-        """
-        Load the records dictionary from a file and parse it using the bibtex parser.
+        """Load the records dictionary from a file and parse it using the bibtex parser.
 
         Returns:
             dict: The loaded records dictionary.
+
         """
         records = colrev.loader.load_utils.load(
             filename=Path("data/records.bib"),
@@ -88,11 +88,11 @@ class Upgrade(colrev.process.operation.Operation):
         return records
 
     def save_records_dict(self, records: dict) -> None:
-        """
-        Save the records dictionary to a file and add it to the repository index.
+        """Save the records dictionary to a file and add it to the repository index.
 
         Args:
             records (dict): The records dictionary to save.
+
         """
         bibtex_str = to_string(records_dict=records, implementation="bib")
         with open("data/records.bib", "w", encoding="utf-8") as out:
@@ -100,8 +100,7 @@ class Upgrade(colrev.process.operation.Operation):
         self.repo.index.add(["data/records.bib"])
 
     def main(self) -> None:
-        """Upgrade a CoLRev project (main entrypoint)"""
-
+        """Upgrade a CoLRev project (main entrypoint)."""
         try:
             self.repo = git.Repo(str(self.review_manager.path))
             self.repo.iter_commits()
@@ -794,7 +793,6 @@ class Upgrade(colrev.process.operation.Operation):
 
     def _migrate_0_14_0(self) -> bool:
         """Migrate GitHub Actions workflow files from Poetry to uv and update working directories."""
-
         if Path(".github/workflows").is_dir():
 
             workflow_file = Path("ops/init/colrev_update.yml")
@@ -944,7 +942,7 @@ class Upgrade(colrev.process.operation.Operation):
 
 
 class CoLRevVersion:
-    """Class for handling the CoLRev version"""
+    """Class for handling the CoLRev version."""
 
     def __init__(self, version_string: str) -> None:
         if "+" in version_string:

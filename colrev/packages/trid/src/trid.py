@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: Transport Research International Documentation"""
+"""SearchSource: Transport Research International Documentation."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from colrev.ops.search_db import run_db_search
 class TransportResearchInternationalDocumentation(
     base_classes.SearchSourcePackageBaseClass
 ):
-    """Transport Research International Documentation"""
+    """Transport Research International Documentation."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -51,8 +51,7 @@ class TransportResearchInternationalDocumentation(
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Transport Research International Documentation"""
-
+        """Source heuristic for Transport Research International Documentation."""
         result = {"confidence": 0.0}
         # Simple heuristic:
         if "UR  - https://trid.trb.org/view/" in data:
@@ -67,8 +66,7 @@ class TransportResearchInternationalDocumentation(
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {params.split("=")[0]: params.split("=")[1]}
 
         search_source = create_db_source(
@@ -81,8 +79,7 @@ class TransportResearchInternationalDocumentation(
         return search_source
 
     def search(self, rerun: bool) -> None:
-        """Run a search of TRID"""
-
+        """Run a search of TRID."""
         if self.search_source.search_type == SearchType.DB:
             run_db_search(
                 db_url=self.db_url,
@@ -100,7 +97,7 @@ class TransportResearchInternationalDocumentation(
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     @classmethod
@@ -207,8 +204,7 @@ class TransportResearchInternationalDocumentation(
         return records
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".ris":
             return self._load_ris(
                 filename=self.search_source.search_results_path, logger=self.logger
@@ -223,8 +219,7 @@ class TransportResearchInternationalDocumentation(
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for Transport Research International Documentation"""
-
+        """Source-specific preparation for Transport Research International Documentation."""
         if Fields.YEAR in record.data:
             if not re.match(r"^\d{4}$", record.data[Fields.YEAR]):
                 result = re.search(r"\d{4}", record.data[Fields.YEAR])

@@ -14,7 +14,7 @@ from colrev.constants import Fields
 
 
 class RecordNotInTOCChecker:
-    """The RecordNotInTOCChecker"""
+    """The RecordNotInTOCChecker."""
 
     msg = DefectCodes.RECORD_NOT_IN_TOC
 
@@ -25,8 +25,7 @@ class RecordNotInTOCChecker:
         self.local_index = colrev.env.local_index.LocalIndex(verbose_mode=False)
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the record-not-in-toc checks"""
-
+        """Run the record-not-in-toc checks."""
         if record.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
             if record.ignored_defect(key=Fields.JOURNAL, defect=self.msg):
                 return
@@ -66,5 +65,5 @@ class RecordNotInTOCChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(RecordNotInTOCChecker(quality_model))

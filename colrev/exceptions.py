@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Exceptions"""
+"""Exceptions."""
 
 from __future__ import annotations
 
@@ -10,15 +10,11 @@ from colrev.constants import Colors
 
 
 class CoLRevException(Exception):
-    """
-    Base class for all exceptions raised by this package
-    """
+    """Base class for all exceptions raised by this package."""
 
 
 class RepoSetupError(CoLRevException):
-    """
-    The project files are not properly set up as a CoLRev project.
-    """
+    """The project files are not properly set up as a CoLRev project."""
 
     lr_docs = (
         "https://colrev-environment.github.io/colrev/manual/problem_formulation.html"
@@ -70,8 +66,7 @@ class RepoSetupError(CoLRevException):
 
 
 class CoLRevUpgradeError(CoLRevException):
-    """
-    The version of the local CoLRev package does not match with the CoLRev version
+    """The version of the local CoLRev package does not match with the CoLRev version
     used to create the latest commit in the project.
     An explicit upgrade of the data structures is needed.
     """
@@ -85,8 +80,7 @@ class CoLRevUpgradeError(CoLRevException):
 
 
 class ReviewManagerNotNotifiedError(CoLRevException):
-    """
-    The ReviewManager was not notified about the operation.
+    """The ReviewManager was not notified about the operation.
 
     ``Dataset.load_records_dict()`` refuses to return data until the review
     manager knows which operation is about to run. It expects the
@@ -133,9 +127,7 @@ class ReviewManagerNotNotifiedError(CoLRevException):
 
 
 class ParameterError(CoLRevException):
-    """
-    An invalid parameter was passed to CoLRev.
-    """
+    """An invalid parameter was passed to CoLRev."""
 
     def __init__(self, *, parameter: str, value: str, options: list) -> None:
         options_string = "\n  - ".join(sorted(options))
@@ -146,9 +138,7 @@ class ParameterError(CoLRevException):
 
 
 class InvalidSettingsError(CoLRevException):
-    """
-    Invalid value in SETTINGS_FILE.
-    """
+    """Invalid value in SETTINGS_FILE."""
 
     def __init__(self, *, msg: str, fix_per_upgrade: bool = True) -> None:
         msg = f"Error in SETTINGS_FILE: {msg}"
@@ -164,9 +154,7 @@ class InvalidSettingsError(CoLRevException):
 
 
 class UnstagedGitChangesError(CoLRevException):
-    """
-    Unstaged git changes were found although a clean repository is required.
-    """
+    """Unstaged git changes were found although a clean repository is required."""
 
     def __init__(self, changedFiles: list) -> None:
         self.message = (
@@ -176,9 +164,7 @@ class UnstagedGitChangesError(CoLRevException):
 
 
 class CleanRepoRequiredError(CoLRevException):
-    """
-    A clean git repository would be required.
-    """
+    """A clean git repository would be required."""
 
     def __init__(self, changedFiles: list, ignore_pattern: str) -> None:
         self.message = (
@@ -189,9 +175,7 @@ class CleanRepoRequiredError(CoLRevException):
 
 
 class GitConflictError(CoLRevException):
-    """
-    There are git conflicts to be resolved before resuming operations.
-    """
+    """There are git conflicts to be resolved before resuming operations."""
 
     def __init__(self, path: Path) -> None:
         self.message = f"please resolve git conflict in {path}"
@@ -199,9 +183,7 @@ class GitConflictError(CoLRevException):
 
 
 class DirtyRepoAfterProcessingError(CoLRevException):
-    """
-    The git repository was not clean after completing the operation.
-    """
+    """The git repository was not clean after completing the operation."""
 
     def __init__(self, msg: str) -> None:
         self.message = msg
@@ -209,9 +191,7 @@ class DirtyRepoAfterProcessingError(CoLRevException):
 
 
 class GitNotAvailableError(CoLRevException):
-    """
-    Git is currently not available.
-    """
+    """Git is currently not available."""
 
     def __init__(self) -> None:
         self.message = "Git is currently not available (remove .git/index.lock exists)."
@@ -227,7 +207,7 @@ class AppendOnlyViolation(Exception):
 
 
 class ProcessOrderViolation(CoLRevException):
-    """The process triggered dooes not have priority"""
+    """The process triggered dooes not have priority."""
 
     def __init__(
         self,
@@ -243,7 +223,7 @@ class ProcessOrderViolation(CoLRevException):
 
 
 class StatusTransitionError(CoLRevException):
-    """An invalid status transition was observed"""
+    """An invalid status transition was observed."""
 
     def __init__(self, msg: str) -> None:
         self.message = f" {msg}"
@@ -315,7 +295,8 @@ class NotEnoughDataToIdentifyException(CoLRevException):
 class NotTOCIdentifiableException(CoLRevException):
     """The record cannot be identified through table-of-contents.
     Either the table-of-contents key is not implemented or
-    the ENTRYTPE is not organized in tables-of-contents (e.g., online)."""
+    the ENTRYTPE is not organized in tables-of-contents (e.g., online).
+    """
 
     def __init__(self, msg: typing.Optional[str] = None) -> None:
         self.message = msg
@@ -474,7 +455,7 @@ class RecordNotFoundInPrepSourceException(CoLRevException):
 
 
 class DedupeError(CoLRevException):
-    """An exception in the dedupe operation"""
+    """An exception in the dedupe operation."""
 
     def __init__(self, message: str) -> None:
         self.message = message
@@ -485,7 +466,7 @@ class DedupeError(CoLRevException):
 
 
 class DataException(CoLRevException):
-    """Exception in the data operation"""
+    """Exception in the data operation."""
 
     def __init__(self, *, msg: str) -> None:
         self.message = msg
@@ -578,11 +559,11 @@ class PortAlreadyRegisteredException(CoLRevException):
 
 
 class TEITimeoutException(CoLRevException):
-    """A timeout occurred during TEI generation"""
+    """A timeout occurred during TEI generation."""
 
 
 class TEIException(CoLRevException):
-    """An exception related to the TEI format"""
+    """An exception related to the TEI format."""
 
 
 class RecordNotInIndexException(CoLRevException):

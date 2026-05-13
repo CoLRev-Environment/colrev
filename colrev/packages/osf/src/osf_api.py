@@ -54,8 +54,8 @@ class OSFApiQuery:
     def _query_api(self, url: str) -> str:
         """Creates the URL for the API call
         string url  Full URL to pass to API
-        return string: Results from API"""
-
+        return string: Results from API.
+        """
         response = requests.get(url, headers=self.headers, timeout=60)
         return response.text
 
@@ -170,7 +170,6 @@ class OSFApiQuery:
 
     def retrieve_records(self) -> typing.Generator:
         """Call the API with the query parameters and return the results."""
-
         if self.next_url is None:
             url = self._build_query()
         else:
@@ -191,7 +190,6 @@ class OSFApiQuery:
 
     def overall(self) -> int:
         """Return the overall number of records."""
-
         url = self._build_query()
         data = self._query_api(url)
         response = json.loads(data)
@@ -201,7 +199,6 @@ class OSFApiQuery:
 
     def _build_query(self) -> str:
         """Creates the URL for querying the API with support for nested filter parameters."""
-
         filters = []
         # Add in filters with the correct formatting
         for key, value in self.params.items():
@@ -212,5 +209,5 @@ class OSFApiQuery:
         return url
 
     def pages_completed(self) -> bool:
-        """Check if all pages have been completed"""
+        """Check if all pages have been completed."""
         return self.next_url is None

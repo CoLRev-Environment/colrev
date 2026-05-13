@@ -12,7 +12,7 @@ from colrev.constants import Fields
 
 
 def load_dedupe_false_positives(*, dedupe_operation: colrev.ops.dedupe.Dedupe) -> list:
-    """Load the dedupe false positives marked in the Excel or txt file"""
+    """Load the dedupe false positives marked in the Excel or txt file."""
     false_positives = []
     if dedupe_operation.dupe_file.is_file():
         dupes = pd.read_excel(dedupe_operation.dupe_file)
@@ -28,8 +28,7 @@ def load_dedupe_false_positives(*, dedupe_operation: colrev.ops.dedupe.Dedupe) -
 
 
 def load_dedupe_false_negatives(*, dedupe_operation: colrev.ops.dedupe.Dedupe) -> list:
-    """Load the dedupe false negatives marked in the Excel file"""
-
+    """Load the dedupe false negatives marked in the Excel file."""
     false_negatives: typing.List[dict] = []
     if (
         dedupe_operation.non_dupe_file_xlsx.is_file()

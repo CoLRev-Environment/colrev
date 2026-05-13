@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Git repository wrapper for CoLRev"""
+"""Git repository wrapper for CoLRev."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ if typing.TYPE_CHECKING:
 
 
 class GitRepo:
-    """Wrapper for Git repository interactions"""
+    """Wrapper for Git repository interactions."""
 
     def __init__(self, path: typing.Optional[Path]) -> None:
         self.path = path if path else Path.cwd()
@@ -42,7 +42,7 @@ class GitRepo:
         )
 
     def repo_initialized(self) -> bool:
-        """Check whether the repository is initialized"""
+        """Check whether the repository is initialized."""
         try:
             self.repo.head.commit
         except ValueError:
@@ -50,13 +50,13 @@ class GitRepo:
         return True
 
     def has_record_changes(self, *, change_type: str = "all") -> bool:
-        """Check whether the records have changes"""
+        """Check whether the records have changes."""
         return self.has_changes(
             Path(self.path / "data" / "records.bib"), change_type=change_type
         )
 
     def has_changes(self, relative_path: Path, *, change_type: str = "all") -> bool:
-        """Check whether the relative path (or the git repository) has changes"""
+        """Check whether the relative path (or the git repository) has changes."""
         assert change_type in [
             "all",
             "staged",
@@ -86,7 +86,7 @@ class GitRepo:
     def update_gitignore(
         self, *, add: typing.Optional[list] = None, remove: typing.Optional[list] = None
     ) -> None:
-        """Update the gitignore file by adding or removing particular paths"""
+        """Update the gitignore file by adding or removing particular paths."""
         git_ignore_file = self.path / Path(".gitignore")
         if git_ignore_file.is_file():
             gitignore_content = git_ignore_file.read_text(encoding="utf-8")
@@ -114,7 +114,7 @@ class GitRepo:
     def add_changes(
         self, path: Path, *, remove: bool = False, ignore_missing: bool = False
     ) -> None:
-        """Add changed file to git"""
+        """Add changed file to git."""
         if path.is_absolute():
             path = path.relative_to(self.path)
         path_str = str(path).replace("\\", "/")
@@ -130,11 +130,11 @@ class GitRepo:
                 raise exc
 
     def get_untracked_files(self) -> list[Path]:
-        """Get the files that are untracked by git"""
+        """Get the files that are untracked by git."""
         return [Path(x) for x in self.repo.untracked_files]
 
     def records_changed(self) -> bool:
-        """Check whether the records were changed"""
+        """Check whether the records were changed."""
         main_recs_changed = "data/records.bib" in [
             item.a_path for item in self.repo.index.diff(None)
         ] + [x.a_path for x in self.repo.head.commit.diff()]
@@ -152,7 +152,7 @@ class GitRepo:
         skip_status_yaml: bool = False,
         skip_hooks: bool = True,
     ) -> bool:
-        """Create a commit (including a commit report)"""
+        """Create a commit (including a commit report)."""
         # pylint: disable=import-outside-toplevel
         # pylint: disable=redefined-outer-name
         import colrev.ops.commit
@@ -172,11 +172,11 @@ class GitRepo:
         return ret
 
     def file_in_history(self, filepath: Path) -> bool:
-        """Check whether a file is in the git history"""
+        """Check whether a file is in the git history."""
         return str(filepath) in [o.path for o in self.repo.head.commit.tree.traverse()]
 
     def get_commit_message(self, *, commit_nr: int) -> str:
-        """Get the commit message for commit #"""
+        """Get the commit message for commit #."""
         master = self.repo.head.reference
         assert commit_nr == 0  # extension : implement other cases
         if commit_nr == 0:
@@ -185,12 +185,12 @@ class GitRepo:
         return ""
 
     def add_setting_changes(self) -> None:
-        """Add changes in settings to git"""
+        """Add changes in settings to git."""
         self._sleep_util_git_unlocked()
         self.repo.index.add([str(self.path / "settings.json")])
 
     def has_untracked_search_records(self) -> bool:
-        """Check whether there are untracked search records"""
+        """Check whether there are untracked search records."""
         return any(
             str(Path("data/search")) in str(untracked_file)
             for untracked_file in self.get_untracked_files()
@@ -202,16 +202,16 @@ class GitRepo:
         return "No local changes to save" != ret
 
     def get_last_commit_sha(self) -> str:  # pragma: no cover
-        """Get the last commit sha"""
+        """Get the last commit sha."""
         return str(self.repo.head.commit.hexsha)
 
     def get_tree_hash(self) -> str:  # pragma: no cover
-        """Get the current tree hash"""
+        """Get the current tree hash."""
         tree_hash = self.repo.git.execute(["git", "write-tree"])
         return str(tree_hash)
 
     def get_last_updated(self, feed_file: Path) -> str:
-        """Returns the date of the last update (if available) in YYYY-MM-DD format"""
+        """Returns the date of the last update (if available) in YYYY-MM-DD format."""
         if not feed_file.is_file():
             return ""
         return self.get_last_commit_date(feed_file)
@@ -240,7 +240,7 @@ class GitRepo:
         return [nr_commits_behind, nr_commits_ahead]
 
     def behind_remote(self) -> bool:  # pragma: no cover
-        """Check whether the repository is behind the remote"""
+        """Check whether the repository is behind the remote."""
         nr_commits_behind = 0
         connected_remote = 0 != len(self.repo.remotes)
         if connected_remote:
@@ -255,7 +255,7 @@ class GitRepo:
         return False
 
     def remote_ahead(self) -> bool:  # pragma: no cover
-        """Check whether the remote is ahead"""
+        """Check whether the remote is ahead."""
         connected_remote = 0 != len(self.repo.remotes)
         if connected_remote:
             origin = self.repo.remotes.origin
@@ -269,13 +269,13 @@ class GitRepo:
         return False
 
     def pull_if_repo_clean(self) -> None:  # pragma: no cover
-        """Pull project if repository is clean"""
+        """Pull project if repository is clean."""
         if not self.repo.is_dirty():
             origin = self.repo.remotes.origin
             origin.pull()
 
     def get_remote_url(self) -> str:  # pragma: no cover
-        """Get the remote url"""
+        """Get the remote url."""
         remote_url = "NA"
         for remote in self.repo.remotes:
             if remote.name == "origin":
@@ -283,6 +283,6 @@ class GitRepo:
         return remote_url
 
     def get_last_commit_date(self, filename: Path) -> str:
-        """Get the last commit date for a file"""
+        """Get the last commit date for a file."""
         last_commit = next(self.repo.iter_commits(paths=filename))
         return last_commit.committed_datetime.isoformat()

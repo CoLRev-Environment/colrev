@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: Wiley"""
+"""SearchSource: Wiley."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from colrev.ops.search_db import run_db_search
 
 
 class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
-    """Wiley"""
+    """Wiley."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -46,8 +46,7 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Wiley"""
-
+        """Source heuristic for Wiley."""
         result = {"confidence": 0.0}
 
         # Simple heuristic:
@@ -64,8 +63,7 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {params.split("=")[0]: params.split("=")[1]}
 
         search_source = create_db_source(
@@ -78,8 +76,7 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def search(self, rerun: bool) -> None:
-        """Run a search of Wiley"""
-
+        """Run a search of Wiley."""
         if self.search_source.search_type == SearchType.DB:
             run_db_search(
                 db_url=self.db_url,
@@ -97,12 +94,11 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.search_results_path,
@@ -124,8 +120,7 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for Wiley"""
-
+        """Source-specific preparation for Wiley."""
         if record.data.get(Fields.ENTRYTYPE, "") == "inbook":
             record.rename_field(key=Fields.TITLE, new_key=Fields.CHAPTER)
             record.rename_field(key=Fields.BOOKTITLE, new_key=Fields.TITLE)

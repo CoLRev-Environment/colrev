@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Consolidation of metadata based on DOI metadata as a prep operation"""
+"""Consolidation of metadata based on DOI metadata as a prep operation."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from colrev.constants import Fields
 
 
 class DOIMetadataPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records based on doi.org metadata"""
+    """Prepares records based on doi.org metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=True)
@@ -51,8 +51,7 @@ class DOIMetadataPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare the record by retrieving its metadata from doi.org"""
-
+        """Prepare the record by retrieving its metadata from doi.org."""
         if Fields.DOI not in record.data:
             return record
         doi_connector.DOIConnector.retrieve_doi_metadata(

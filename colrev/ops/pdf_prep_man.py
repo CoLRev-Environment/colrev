@@ -23,7 +23,7 @@ from colrev.writer.write_utils import write_file
 
 
 class PDFPrepMan(colrev.process.operation.Operation):
-    """Prepare PDFs manually"""
+    """Prepare PDFs manually."""
 
     type = OperationsType.pdf_prep_man
 
@@ -42,8 +42,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
         self.verbose = True
 
     def discard(self) -> None:
-        """Discard records whose PDFs need manual preparation (set to pdf_not_available)"""
-
+        """Discard records whose PDFs need manual preparation (set to pdf_not_available)."""
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
             if record_dict[Fields.STATUS] == RecordState.pdf_needs_manual_preparation:
@@ -56,7 +55,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
         )
 
     def get_data(self) -> dict:
-        """Get the data for PDF prep man"""
+        """Get the data for PDF prep man."""
         # pylint: disable=duplicate-code
 
         records_headers = self.review_manager.dataset.load_records_dict(
@@ -82,11 +81,11 @@ class PDFPrepMan(colrev.process.operation.Operation):
         return pdf_prep_man_data
 
     def pdfs_prepared_manually(self) -> bool:
-        """Check whether PDFs were prepared manually"""
+        """Check whether PDFs were prepared manually."""
         return self.review_manager.dataset.git_repo.has_record_changes()
 
     def pdf_prep_man_stats(self) -> None:
-        """Determine PDF prep man statistics"""
+        """Determine PDF prep man statistics."""
         # pylint: disable=duplicate-code
 
         self.review_manager.logger.info(
@@ -146,8 +145,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
             tabulated.to_csv("manual_pdf_preparation_statistics.csv")
 
     def extract_needs_pdf_prep_man(self) -> None:
-        """Apply PDF prep man to csv/bib"""
-
+        """Apply PDF prep man to csv/bib."""
         prep_bib_path = self.review_manager.path / Path("data/pdf-prep-records.bib")
         prep_csv_path = self.review_manager.path / Path("data/pdf-prep-records.csv")
 
@@ -197,8 +195,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
         self.review_manager.logger.info(f"Created {prep_csv_path.name}")
 
     def apply_pdf_prep_man(self) -> None:
-        """Apply PDF prep man from csv/bib"""
-
+        """Apply PDF prep man from csv/bib."""
         if Path("data/pdf-prep-records.csv").is_file():
             self.review_manager.logger.info("Load prep-records.csv")
             bib_db_df = pd.read_csv("data/pdf-prep-records.csv")
@@ -235,8 +232,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
         self.review_manager.check_repo()
 
     def extract_coverpage(self, *, filepath: Path) -> None:
-        """Extract coverpage from PDF"""
-
+        """Extract coverpage from PDF."""
         Filepaths.COVERPAGES.mkdir(exist_ok=True)
 
         doc1 = pymupdf.Document(str(filepath))
@@ -248,8 +244,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
             )
 
     def extract_lastpage(self, *, filepath: Path) -> None:
-        """Extract last page from PDF"""
-
+        """Extract last page from PDF."""
         Filepaths.LASTPAGES.mkdir(exist_ok=True)
 
         doc1 = pymupdf.Document(str(filepath))
@@ -261,8 +256,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
             )
 
     def extract_pages(self, *, filepath: Path, pages_to_remove: list) -> None:
-        """Extract pages from PDF"""
-
+        """Extract pages from PDF."""
         doc1 = pymupdf.Document(str(filepath))
         if doc1.page_count > 0:
             colrev.record.record_pdf.PDFRecord.extract_pages_from_pdf(
@@ -271,8 +265,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
             )
 
     def set_pdf_man_prepared(self, record: colrev.record.record.Record) -> None:
-        """Set the PDF to manually prepared"""
-
+        """Set the PDF to manually prepared."""
         record.set_status(RecordState.pdf_prepared)
         record.reset_pdf_provenance_notes()
 
@@ -292,8 +285,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
 
     @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
-        """Prepare PDFs manually (main entrypoint)"""
-
+        """Prepare PDFs manually (main entrypoint)."""
         if utils.in_ci_environment() and not self.review_manager.in_test_environment():
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev pdf-prep-man",

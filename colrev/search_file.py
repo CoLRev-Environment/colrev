@@ -76,7 +76,7 @@ class ExtendedSearchFile(search_query.SearchFile):
         source_records_list: typing.List[typing.Dict],
         imported_origins: typing.List[str],
     ) -> None:
-        """Set the SearchSource up for the load process (initialize statistics)"""
+        """Set the SearchSource up for the load process (initialize statistics)."""
         # pylint: disable=attribute-defined-outside-init
         # Note : define outside init because the following
         # attributes are temporary. They should not be
@@ -88,18 +88,16 @@ class ExtendedSearchFile(search_query.SearchFile):
         self.source_records_list: typing.List[typing.Dict] = source_records_list
 
     def get_origin_prefix(self) -> str:
-        """Get the corresponding origin prefix"""
+        """Get the corresponding origin prefix."""
         assert not any(x in str(self.search_results_path.name) for x in [";", "/"])
         return str(self.search_results_path.name).lstrip("/")
 
     def is_md_source(self) -> bool:
-        """Check whether the source is a metadata source (for preparation)"""
-
+        """Check whether the source is a metadata source (for preparation)."""
         return str(self.search_results_path.name).startswith("md_")
 
     def is_curated_source(self) -> bool:
-        """Check whether the source is a curated source (for preparation)"""
-
+        """Check whether the source is a curated source (for preparation)."""
         return self.get_origin_prefix() == "md_curated.bib"
 
     # pylint: disable=unused-argument

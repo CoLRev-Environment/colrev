@@ -12,7 +12,7 @@ from colrev.constants import FieldValues
 
 
 class IdenticalValuesChecker:
-    """The IdenticalValuesChecker"""
+    """The IdenticalValuesChecker."""
 
     msg = DefectCodes.IDENTICAL_VALUES_BETWEEN_TITLE_AND_CONTAINER
 
@@ -22,8 +22,7 @@ class IdenticalValuesChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the identical-values-between-title-and-container checks"""
-
+        """Run the identical-values-between-title-and-container checks."""
         if record.ignored_defect(key=Fields.TITLE, defect=self.msg):
             return
 
@@ -55,5 +54,5 @@ class IdenticalValuesChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(IdenticalValuesChecker(quality_model))

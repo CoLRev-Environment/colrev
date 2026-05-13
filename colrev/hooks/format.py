@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""Hook to format CoLRev repositories"""
+"""Hook to format CoLRev repositories."""
 
 import colrev.review_manager
 
 
 def main() -> int:
-    """Main entrypoint for the formating"""
-
+    """Main entrypoint for the formating."""
     review_manager = colrev.review_manager.ReviewManager()
     ret = review_manager.dataset.format_records_file()
 

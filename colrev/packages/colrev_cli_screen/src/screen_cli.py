@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Screen based on CLI"""
+"""Screen based on CLI."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from colrev.constants import ScreenCriterionType
 
 
 class CoLRevCLIScreen(base_classes.ScreenPackageBaseClass):
-    """Screen documents using a CLI"""
+    """Screen documents using a CLI."""
 
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-few-public-methods
@@ -288,8 +288,7 @@ class CoLRevCLIScreen(base_classes.ScreenPackageBaseClass):
         return records
 
     def run_screen(self, records: dict, split: list) -> dict:
-        """Screen records based on a cli"""
-
+        """Screen records based on a cli."""
         records = self._screen_cli(split)
 
         return records

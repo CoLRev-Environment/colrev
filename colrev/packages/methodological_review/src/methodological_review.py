@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Methodological review"""
+"""Methodological review."""
 
 import logging
 import typing
@@ -15,7 +15,7 @@ import colrev.package_manager.package_settings
 
 
 class MethodologicalReview(base_classes.ReviewTypePackageBaseClass):
-    """Methodological review"""
+    """Methodological review."""
 
     ci_supported: bool = Field(default=True)
     settings_class: colrev.package_manager.package_settings.DefaultSettings
@@ -36,8 +36,7 @@ class MethodologicalReview(base_classes.ReviewTypePackageBaseClass):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
-        """Initialize a methodological review"""
-
+        """Initialize a methodological review."""
         settings.data.data_package_endpoints = [
             {"endpoint": "colrev.prisma", "version": "1.0"},
             {

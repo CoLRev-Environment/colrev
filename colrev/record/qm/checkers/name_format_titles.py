@@ -13,7 +13,7 @@ from colrev.constants import Fields
 
 
 class NameFormatTitleChecker:
-    """The NameFormatTitleChecker"""
+    """The NameFormatTitleChecker."""
 
     fields_to_check = [Fields.AUTHOR, Fields.EDITOR]
     titles = ["Dr", "PhD", "Prof", "Dipl Ing"]
@@ -27,8 +27,7 @@ class NameFormatTitleChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:
-        """Run the name-format-titles checks"""
-
+        """Run the name-format-titles checks."""
         for key in self.fields_to_check:
             if key not in record.data or record.ignored_defect(
                 key=key, defect=self.msg
@@ -48,5 +47,5 @@ class NameFormatTitleChecker:
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
-    """Register the checker"""
+    """Register the checker."""
     quality_model.register_checker(NameFormatTitleChecker(quality_model))

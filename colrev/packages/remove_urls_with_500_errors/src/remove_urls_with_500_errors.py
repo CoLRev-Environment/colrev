@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Removal of broken URLs (error 500) a prep operation"""
+"""Removal of broken URLs (error 500) a prep operation."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from colrev.constants import Fields
 
 
 class RemoveError500URLsPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records by removing urls that are not available"""
+    """Prepares records by removing urls that are not available."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -54,8 +54,7 @@ class RemoveError500URLsPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare the record by removing URLs with 500 errors"""
-
+        """Prepare the record by removing URLs with 500 errors."""
         session = colrev.utils.get_cached_session()
 
         try:

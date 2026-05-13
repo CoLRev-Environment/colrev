@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Template for a custom PDFPrep PackageEndpoint"""
+"""Template for a custom PDFPrep PackageEndpoint."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from colrev.constants import RecordState
 
 
 class CustomPDFPrep(base_classes.PDFPrepPackageBaseClass):
-    """Class for custom pdf-prep scripts"""
+    """Class for custom pdf-prep scripts."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -34,8 +34,7 @@ class CustomPDFPrep(base_classes.PDFPrepPackageBaseClass):
         record: colrev.record.record.Record,
         pad: int,  # pylint: disable=unused-argument
     ) -> colrev.record.record.Record:
-        """Prepare the PDF"""
-
+        """Prepare the PDF."""
         if random.random() < 0.8:  # nosec
             record.add_field_provenance_note(
                 key=Fields.FILE, note="custom_issue_detected"

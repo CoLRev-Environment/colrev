@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""OCR as a PDF preparation operation"""
+"""OCR as a PDF preparation operation."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from colrev.constants import PDFDefectCodes
 
 
 class OCRMyPDF(base_classes.PDFPrepPackageBaseClass):
-    """Prepare PDFs by applying OCR based on OCRmyPDF"""
+    """Prepare PDFs by applying OCR based on OCRmyPDF."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=False)
@@ -94,8 +94,7 @@ class OCRMyPDF(base_classes.PDFPrepPackageBaseClass):
         record: colrev.record.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
     ) -> colrev.record.record_pdf.PDFRecord:
-        """Prepare the PDF by applying OCR"""
-
+        """Prepare the PDF by applying OCR."""
         if (
             Fields.FILE not in record.data
             or not record.data[Fields.FILE].endswith(".pdf")

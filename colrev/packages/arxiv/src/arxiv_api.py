@@ -33,7 +33,6 @@ class ArxivAPI:
 
     def check_availability(self, *, timeout: int) -> None:
         """Check the health endpoint of the arXiv API."""
-
         try:
             response = self.session.get(
                 "https://export.arxiv.org/api/"

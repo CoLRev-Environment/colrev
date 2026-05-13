@@ -19,8 +19,7 @@ ALL_CAPS_DICT = {r"U\.S\.": "U.S."}
 
 
 def capitalize_entities(input_str: str) -> str:
-    """Utility function to capitalize entities"""
-
+    """Utility function to capitalize entities."""
     for all_cap in ALL_CAPS:
         input_str = re.sub(
             rf"\b{all_cap.lower()}\b", all_cap.upper(), input_str, flags=re.IGNORECASE
@@ -47,11 +46,11 @@ def capitalize_entities(input_str: str) -> str:
 
 
 class PrepRecord(colrev.record.record.Record):
-    """The PrepRecord class provides a range of Function for record preparation"""
+    """The PrepRecord class provides a range of Function for record preparation."""
 
     @classmethod
     def format_author_field(cls, input_string: str) -> str:
-        """Format the author field (recognizing first/last names based on HumanName parser)"""
+        """Format the author field (recognizing first/last names based on HumanName parser)."""
 
         def mostly_upper_case(input_string: str) -> bool:
             input_string = input_string.replace(".", "").replace(",", "")
@@ -113,8 +112,7 @@ class PrepRecord(colrev.record.record.Record):
         return author_string
 
     def format_if_mostly_upper(self, key: str, *, case: str = "sentence") -> None:
-        """Format the field if it is mostly in upper case"""
-
+        """Format the field if it is mostly in upper case."""
         if key not in self.data or self.data[key] == FieldValues.UNKNOWN:
             return
 
@@ -137,7 +135,7 @@ class PrepRecord(colrev.record.record.Record):
         self.data[key] = capitalize_entities(self.data[key])
 
     def unify_pages_field(self) -> None:
-        """Unify the format of the page field"""
+        """Unify the format of the page field."""
         if Fields.PAGES not in self.data:
             return
         if not isinstance(self.data[Fields.PAGES], str):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Linter for CoLRev – records/record naming and (light) type conventions"""
+"""Linter for CoLRev – records/record naming and (light) type conventions."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class RecordsVariableNamingConventionChecker(checkers.BaseChecker):
-    """RecordsVariableNamingConvention + simple type rules"""
+    """RecordsVariableNamingConvention + simple type rules."""
 
     name = "colrev-records-variable-naming-convention"
 
@@ -48,7 +48,6 @@ class RecordsVariableNamingConventionChecker(checkers.BaseChecker):
     )
     def visit_assign(self, node: nodes.Assign) -> None:
         """Check variable naming and simple type rules for 'record' and 'records'."""
-
         if len(node.targets) != 1:  # pragma: no cover
             return
 

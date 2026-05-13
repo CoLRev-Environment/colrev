@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Creation of a PRISMA chart as part of the data operations"""
+"""Creation of a PRISMA chart as part of the data operations."""
 
 from __future__ import annotations
 
@@ -27,14 +27,14 @@ if typing.TYPE_CHECKING:
 
 
 class PRISMA(base_classes.DataPackageBaseClass):
-    """Create a PRISMA diagram"""
+    """Create a PRISMA diagram."""
 
     ci_supported: bool = Field(default=False)
 
     class PRISMASettings(
         colrev.package_manager.package_settings.DefaultSettings, BaseModel
     ):
-        """PRISMA settings"""
+        """PRISMA settings."""
 
         endpoint: str
         version: str
@@ -83,8 +83,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
     # pylint: disable=unused-argument
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
-        """Add as an endpoint"""
-
+        """Add as an endpoint."""
         add_package = {
             "endpoint": "colrev.prisma",
             "version": "0.1",
@@ -234,8 +233,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
         silent_mode: bool,
     ) -> None:
-        """Update the data/prisma diagram"""
-
+        """Update the data/prisma diagram."""
         self._export_csv(silent_mode=silent_mode)
         self._export_diagram(silent_mode=silent_mode)
 
@@ -244,8 +242,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
-        """Update the record_status_matrix"""
-
+        """Update the record_status_matrix."""
         # Note : automatically set all to True / synthesized
         for syn_id in list(synthesized_record_status_matrix.keys()):
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
@@ -253,8 +250,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
     def get_advice(
         self,
     ) -> dict:
-        """Get advice on the next steps (for display in the colrev status)"""
-
+        """Get advice on the next steps (for display in the colrev status)."""
         data_endpoint = "Data operation [prisma data endpoint]: "
 
         path_str = ",".join(

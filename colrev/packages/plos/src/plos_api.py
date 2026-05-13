@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Plos API"""
+"""Plos API."""
 
 import contextlib
 import datetime
@@ -42,11 +42,11 @@ class PlosAPIError(Exception):
 
 
 class MaxOffsetError(PlosAPIError):
-    """Max Offset Error"""
+    """Max Offset Error."""
 
 
 class HTTPRequest:
-    """HTTP Resquest"""
+    """HTTP Resquest."""
 
     def __init__(self, *, timeout: int) -> None:
         # https://api.plos.org/solr/faq/
@@ -103,7 +103,7 @@ class HTTPRequest:
 
 
 class Endpoint:
-    """Endpoint"""
+    """Endpoint."""
 
     CURSOR_AS_ITER_METHOD = False
 
@@ -158,7 +158,7 @@ class Endpoint:
 
     @property
     def version(self) -> str:
-        """API version"""
+        """API version."""
         request_params = dict(self.request_params)
         request_url = str(self.request_url)
 
@@ -262,7 +262,7 @@ class Endpoint:
 
 
 class PlosAPI:
-    """PLOS Api"""
+    """PLOS Api."""
 
     ISSN_REGEX = r"^\d{4}-?\d{3}[\dxX]$"
     YEAR_SCOPE_REGEX = r"^\d{4}-\d{4}$"
@@ -288,7 +288,7 @@ class PlosAPI:
         self.rerun = rerun
 
     def get_url(self) -> str:
-        """Get the url from the Plos API"""
+        """Get the url from the Plos API."""
         url = self.url
         if not self.rerun and self.last_updated:
             # Changes the last updated date
@@ -306,13 +306,13 @@ class PlosAPI:
         return url
 
     def get_len_total(self) -> int:
-        """Get the total number of records from Plos based on the parameters"""
+        """Get the total number of records from Plos based on the parameters."""
         endpoint = Endpoint(self.url, email=self.email)
 
         return endpoint.get_nr()
 
     def get_len(self) -> int:
-        """Get the number of records from Crossref based on the parameters"""
+        """Get the number of records from Crossref based on the parameters."""
         endpoint = Endpoint(self.get_url(), email=self.email)
         return endpoint.get_nr()
 
@@ -338,7 +338,7 @@ class PlosAPI:
         return similarity
 
     def get_records(self) -> typing.Iterator[colrev.record.record.Record]:
-        """Get records from PLOS based on the parameters"""
+        """Get records from PLOS based on the parameters."""
         url = self.get_url()
 
         endpoint = Endpoint(url, email=self.email)
@@ -354,7 +354,7 @@ class PlosAPI:
             ) from exc
 
     def query_doi(self, *, doi: str) -> colrev.record.record_prep.PrepRecord:
-        """Get records from PLOS based on a id query"""
+        """Get records from PLOS based on a id query."""
         try:
             endpoint = Endpoint(
                 self._api_url

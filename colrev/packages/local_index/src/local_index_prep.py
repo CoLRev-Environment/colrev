@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Conslidation of metadata based on LocalIndex as a prep operation"""
+"""Conslidation of metadata based on LocalIndex as a prep operation."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from colrev.constants import SearchType
 
 
 class LocalIndexPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records based on LocalIndex metadata"""
+    """Prepares records based on LocalIndex metadata."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -78,8 +78,7 @@ class LocalIndexPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare the record metadata based on local-index"""
-
+        """Prepare the record metadata based on local-index."""
         # don't move to  jour_iss_number_year prep
         # because toc-retrieval relies on adequate toc items!
         if (

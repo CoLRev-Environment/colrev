@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Simple literature review"""
+"""Simple literature review."""
 
 import logging
 import typing
@@ -16,7 +16,7 @@ import colrev.package_manager.package_settings
 
 #
 class LiteratureReview(base_classes.ReviewTypePackageBaseClass):
-    """Literature review (simple)"""
+    """Literature review (simple)."""
 
     ci_supported: bool = Field(default=True)
     settings: colrev.package_manager.package_settings.DefaultSettings
@@ -38,8 +38,7 @@ class LiteratureReview(base_classes.ReviewTypePackageBaseClass):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
-        """Initialize a literature review"""
-
+        """Initialize a literature review."""
         settings.data.data_package_endpoints = [
             {
                 "endpoint": "colrev.paper_md",

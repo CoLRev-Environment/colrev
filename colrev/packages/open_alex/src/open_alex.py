@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: OpenAlex"""
+"""SearchSource: OpenAlex."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from colrev.packages.open_alex.src import open_alex_api
 
 
 class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """OpenAlex API"""
+    """OpenAlex API."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -53,8 +53,7 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for OpenAlex"""
-
+        """Source heuristic for OpenAlex."""
         result = {"confidence": 0.0}
 
         return result
@@ -66,15 +65,13 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         raise colrev_exceptions.PackageParameterError(
             f"Cannot add OpenAlex endpoint with query {params}"
         )
 
     def check_availability(self) -> None:
-        """Check status (availability) of the OpenAlex API"""
-
+        """Check status (availability) of the OpenAlex API."""
         try:
             _, email = (
                 colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
@@ -154,8 +151,7 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 30,
     ) -> colrev.record.record.Record:
-        """Retrieve masterdata from OpenAlex based on similarity with the record provided"""
-
+        """Retrieve masterdata from OpenAlex based on similarity with the record provided."""
         if "colrev.open_alex.id" in record.data:
             # Note: not yet implemented
             # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
@@ -169,15 +165,13 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     def search(self, rerun: bool) -> None:
-        """Run a search of OpenAlex"""
-
+        """Run a search of OpenAlex."""
         # https://docs.openalex.org/api-entities/works
 
         raise NotImplementedError
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.search_results_path,
@@ -191,6 +185,5 @@ class OpenAlexSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for OpenAlex"""
-
+        """Source-specific preparation for OpenAlex."""
         return record

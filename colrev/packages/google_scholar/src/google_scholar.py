@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: GoogleScholar"""
+"""SearchSource: GoogleScholar."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from colrev.ops.search_db import run_db_search
 
 
 class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """GoogleScholar"""
+    """GoogleScholar."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -48,8 +48,7 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for GoogleScholar"""
-
+        """Source heuristic for GoogleScholar."""
         result = {"confidence": 0.0}
         if data.count("https://scholar.google.com/scholar?q=relat") > 0.9 * data.count(
             "\n@"
@@ -78,8 +77,7 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {params.split("=")[0]: params.split("=")[1]}
 
         search_source = create_db_source(
@@ -92,8 +90,7 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     def search(self, rerun: bool) -> None:
-        """Run a search of GoogleScholar"""
-
+        """Run a search of GoogleScholar."""
         if self.search_source.search_type == SearchType.DB:
             run_db_search(
                 db_url=self.db_url,
@@ -111,12 +108,11 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 10,
     ) -> colrev.record.record.Record:
-        """Not implemented"""
+        """Not implemented."""
         return record
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
-
+        """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
 
             def bib_field_mapper(record_dict: dict) -> None:
@@ -209,7 +205,7 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         record: colrev.record.record_prep.PrepRecord,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for GoogleScholar"""
+        """Source-specific preparation for GoogleScholar."""
         if "cites: https://scholar.google.com/scholar?cites=" in record.data.get(
             "note", ""
         ):

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Retrieving DOIs from a papers website/url as a prep operation"""
+"""Retrieving DOIs from a papers website/url as a prep operation."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ from colrev.constants import Fields
 
 
 class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
-    """Prepares records by retrieving its DOI from the website (URL)"""
+    """Prepares records by retrieving its DOI from the website (URL)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -72,8 +72,7 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Prepare the record by retrieving its DOI from the website (url) if available"""
-
+        """Prepare the record by retrieving its DOI from the website (url) if available."""
         if (Fields.URL not in record.data and Fields.FULLTEXT not in record.data) or (
             Fields.DOI in record.data
         ):

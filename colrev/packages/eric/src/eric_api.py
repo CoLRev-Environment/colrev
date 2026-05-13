@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""ERIC API"""
+"""ERIC API."""
 
 import typing
 
@@ -15,7 +15,7 @@ from colrev.constants import Fields
 
 
 class ERICAPI:
-    """Connector for the ERIC API"""
+    """Connector for the ERIC API."""
 
     API_FIELDS = [
         "title",
@@ -114,7 +114,7 @@ class ERICAPI:
         return record
 
     def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
-        """Get the records from a query"""
+        """Get the records from a query."""
         full_url = self._build_search_url()
 
         response = requests.get(full_url, timeout=90)

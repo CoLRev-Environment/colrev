@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""SearchSource: Semantic Scholar"""
+"""SearchSource: Semantic Scholar."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
-    """Semantic Scholar API Search Source"""
+    """Semantic Scholar API Search Source."""
 
     CURRENT_SYNTAX_VERSION = "0.1.0"
 
@@ -93,8 +93,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         self.api = semanticscholar_api.SemanticScholarAPI()
 
     def check_availability(self) -> None:
-        """Check the availability of the Semantic Scholar API"""
-
+        """Check the availability of the Semantic Scholar API."""
         try:
             # pylint: disable=duplicate-code
             test_doi = "10.17705/1CAIS.04607"
@@ -126,7 +125,8 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         self, *, params: dict, rerun: bool
     ) -> PaginatedResults:
         """Get Semantic Scholar API depending on
-        the search subject and look for search parameters"""
+        the search subject and look for search parameters.
+        """
         subject = params.pop("search_subject")
         if subject == "keyword":
             _search_return = self.keyword_search(params=params, rerun=rerun)
@@ -141,8 +141,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         return _search_return
 
     def keyword_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
-        """Prepare search parameters and conduct full keyword search with the python client"""
-
+        """Prepare search parameters and conduct full keyword search with the python client."""
         query = None
         year = None
         venue = None
@@ -197,8 +196,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record_return
 
     def paper_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
-        """Method to conduct an API search of SemanticScholar with a List of Paper IDs"""
-
+        """Method to conduct an API search of SemanticScholar with a List of Paper IDs."""
         if "paper_ids" in params:
             try:
                 record_return = self.api.get_papers(params["paper_ids"])
@@ -227,8 +225,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record_return
 
     def author_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
-        """Method to conduct an API search of SemanticScholar with a List of Author IDs"""
-
+        """Method to conduct an API search of SemanticScholar with a List of Author IDs."""
         if "author_ids" in params:
             try:
                 record_return = self.api.get_authors(params["author_ids"])
@@ -257,7 +254,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record_return
 
     def _get_api_key(self) -> str:
-        """Method to request an API key from the settings file - or, if empty, from user input"""
+        """Method to request an API key from the settings file - or, if empty, from user input."""
         api_key = os.getenv(self._ENV_API_KEY, "")
 
         if api_key:
@@ -271,8 +268,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         return api_key
 
     def search(self, rerun: bool) -> None:
-        """Run a search of Semantic Scholar"""
-
+        """Run a search of Semantic Scholar."""
         # get the api key
         s2_api_key = self._get_api_key()
         if s2_api_key:
@@ -340,8 +336,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         path: Path,
         logger: typing.Optional[logging.Logger] = None,
     ) -> colrev.search_file.ExtendedSearchFile:
-        """Add SearchSource as an endpoint (based on query provided to colrev search --add )"""
-
+        """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         # get search parameters from the user interface
         cls._s2_UI.main_ui()
         search_subject = cls._s2_UI.search_subject
@@ -392,13 +387,13 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         save_feed: bool = True,
         timeout: int = 30,
     ) -> colrev.record.record.Record:
-        """Retrieve master data from Semantic Scholar"""
+        """Retrieve master data from Semantic Scholar."""
         # Not yet implemented
         return record
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Semantic Scholar"""
+        """Source heuristic for Semantic Scholar."""
         # Not yet implemented
 
         result = {"confidence": 0.0}
@@ -406,7 +401,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         return result
 
     def load(self) -> dict:
-        """Load the records from the SearchSource file"""
+        """Load the records from the SearchSource file."""
         # Not yet implemented
 
         if self.search_source.search_results_path.suffix == ".bib":
@@ -425,6 +420,6 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             colrev.record.qm.quality_model.QualityModel
         ] = None,
     ) -> colrev.record.record.Record:
-        """Source-specific preparation for Semantic Scholar"""
+        """Source-specific preparation for Semantic Scholar."""
         # Not yet implemented
         return record

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Checkers for CoLRev repositories"""
+"""Checkers for CoLRev repositories."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Checker:
-    """The CoLRev checker makes sure the project setup is ok"""
+    """The CoLRev checker makes sure the project setup is ok."""
 
     records: typing.Dict[str, typing.Any] = {}
 
@@ -40,7 +40,7 @@ class Checker:
         self.review_manager.notified_next_operation = OperationsType.check
 
     def get_colrev_versions(self) -> list[str]:
-        """Get the colrev version as a list: (last_version, current_version)"""
+        """Get the colrev version as a list: (last_version, current_version)."""
         current_colrev_version = version("colrev")
         last_colrev_version = current_colrev_version
         last_colrev_version = self.review_manager.settings.project.colrev_version
@@ -61,7 +61,7 @@ class Checker:
             )
 
     def check_repository_setup(self) -> None:
-        """Check the repository setup"""
+        """Check the repository setup."""
         # 1. git repository?
         if not self._is_git_repo():
             raise colrev_exceptions.RepoSetupError()
@@ -80,7 +80,7 @@ class Checker:
 
     @classmethod
     def in_virtualenv(cls) -> bool:
-        """Check whether CoLRev operates in a virtual environment"""
+        """Check whether CoLRev operates in a virtual environment."""
 
         def get_base_prefix_compat() -> str:
             return (
@@ -219,7 +219,7 @@ class Checker:
         return record_ids
 
     def _check_colrev_origins(self, *, status_data: dict) -> None:
-        """Check colrev_origins"""
+        """Check colrev_origins."""
         # Check whether each record has an origin
         if not len(status_data["entries_without_origin"]) == 0:
             raise colrev_exceptions.OriginError(
@@ -253,7 +253,7 @@ class Checker:
             )
 
     def check_fields(self, *, status_data: dict) -> None:
-        """Check field values"""
+        """Check field values."""
         # Check status fields
         status_schema = RecordState
         stat_diff = set(status_data["status_fields"]).difference(status_schema)
@@ -263,7 +263,7 @@ class Checker:
             )
 
     def check_status_transitions(self, *, status_data: dict) -> None:
-        """Check for invalid state transitions"""
+        """Check for invalid state transitions."""
         # Note : currently, we do not prevent particular transitions.
         # We may decide to provide settings parameters to apply
         # more restrictive rules related to valid transitions.
@@ -343,7 +343,7 @@ class Checker:
                 )
 
     def _check_records_screen(self, *, status_data: dict) -> None:
-        """Check consistency of screening criteria and status"""
+        """Check consistency of screening criteria and status."""
         if not status_data["screening_criteria_list"]:
             return
 
@@ -424,7 +424,7 @@ class Checker:
     def check_change_in_propagated_id(
         self, *, prior_id: str, new_id: str = "TBD", project_context: Path
     ) -> list:
-        """Check whether propagated IDs were changed
+        """Check whether propagated IDs were changed.
 
         A propagated ID is a record ID that is stored outside the records.bib.
         Propagated IDs should not be changed in the records.bib
@@ -468,7 +468,7 @@ class Checker:
     def _check_change_in_propagated_ids(
         self, *, prior: dict, status_data: dict
     ) -> None:
-        """Check for changes in propagated IDs"""
+        """Check for changes in propagated IDs."""
         if "persisted_IDs" not in prior:
             return
         for prior_origin, prior_id in prior["persisted_IDs"]:
@@ -619,7 +619,7 @@ class Checker:
         return status_data
 
     def check_repo_basics(self) -> list:
-        """Calls data.main() to update the stats"""
+        """Calls data.main() to update the stats."""
         data_operation = self.review_manager.get_data_operation(
             notify_state_transition_operation=False
         )
@@ -759,7 +759,7 @@ class Checker:
 
     def check_repo(self) -> dict:
         """Check whether the repository is in a consistent state
-        Entrypoint for pre-commit hooks
+        Entrypoint for pre-commit hooks.
         """
         failure_items = []
         failure_items.extend(self.check_repo_extended())

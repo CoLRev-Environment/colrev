@@ -22,7 +22,7 @@ from colrev.constants import Fields
 
 
 class PDFRecord(colrev.record.record.Record):
-    """The PDFRecord class provides a range of Function for PDF handling"""
+    """The PDFRecord class provides a range of Function for PDF handling."""
 
     def __init__(self, data: dict, *, path: Path) -> None:
         self.data = data
@@ -81,7 +81,7 @@ class PDFRecord(colrev.record.record.Record):
         *,
         pages: typing.Optional[list] = None,
     ) -> str:
-        """Extract the text from the PDF for a given number of pages"""
+        """Extract the text from the PDF for a given number of pages."""
         pdf_path = self._get_path()
         text_list: list = []
         with pymupdf.open(pdf_path) as doc:
@@ -94,7 +94,7 @@ class PDFRecord(colrev.record.record.Record):
         return self._fix_text_encoding_issues(text_all)
 
     def set_nr_pages_in_pdf(self) -> None:
-        """Set the pages_in_file field based on the PDF"""
+        """Set the pages_in_file field based on the PDF."""
         pdf_path = self._get_path()
 
         with pymupdf.open(pdf_path) as doc:
@@ -102,7 +102,7 @@ class PDFRecord(colrev.record.record.Record):
         self.data[Fields.NR_PAGES_IN_FILE] = pages_in_file
 
     def set_text_from_pdf(self, *, first_pages: bool = False) -> None:
-        """Set the text_from_pdf field based on the PDF"""
+        """Set the text_from_pdf field based on the PDF."""
         self.data[Fields.TEXT_FROM_PDF] = ""
         self.set_nr_pages_in_pdf()
 
@@ -123,7 +123,7 @@ class PDFRecord(colrev.record.record.Record):
         pdf_path: Path,
         save_to_path: typing.Optional[Path] = None,
     ) -> None:  # pragma: no cover
-        """Extract pages from the PDF"""
+        """Extract pages from the PDF."""
         doc = pymupdf.Document(pdf_path)
         all_pages_list = list(range(doc.page_count))
 
@@ -151,14 +151,14 @@ class PDFRecord(colrev.record.record.Record):
         pages: list,
         save_to_path: typing.Optional[Path] = None,
     ) -> None:  # pragma: no cover
-        """Extract pages from the PDF"""
+        """Extract pages from the PDF."""
         pdf_path = self._get_path()
         self.extract_pages_from_pdf(
             pages=pages, pdf_path=pdf_path, save_to_path=save_to_path
         )
 
     def get_pdf_hash(self, *, page_nr: int, hash_size: int = 32) -> str:
-        """Get the PDF image hash"""
+        """Get the PDF image hash."""
         assert page_nr > 0
         assert hash_size in [16, 32]
 
