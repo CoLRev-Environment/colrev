@@ -57,7 +57,7 @@ def write_file(
     sort_fields_first: bool = True,
     drop_empty_fields: bool = True,
 ) -> None:
-    """Write a CSV file from a records dict"""
+    """Write a CSV file from a records dict."""
     df = to_dataframe(
         records_dict=records_dict,
         sort_fields_first=sort_fields_first,

@@ -25,7 +25,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 class Advisor:
-    """The CoLRev advisor guides users through the review process"""
+    """The CoLRev advisor guides users through the review process."""
 
     _next_step_description = {
         "retrieve": "Next step: retrieve metadata",
@@ -196,7 +196,6 @@ class Advisor:
     # pylint: disable=colrev-missed-constant-usage
     def _get_collaboration_instructions(self) -> dict:
         """Get instructions related to collaboration"""
-
         collaboration_instructions: dict = {"items": []}
         git_repo = self.review_manager.dataset.git_repo.repo
 
@@ -567,7 +566,6 @@ class Advisor:
         environment_instructions: list,
     ) -> None:
         """Get instructions related to downloading outlets (resources)"""
-
         outlets, outlet_counter = self._extract_outlet_count()
 
         selected = []
@@ -604,7 +602,6 @@ class Advisor:
 
     def _get_environment_instructions(self) -> list:
         """Get instructions related to the CoLRev environment"""
-
         environment_instructions: list[dict] = []
         if self.status_stats.currently.md_imported > 10:
             self._append_download_outlets_instruction(environment_instructions)
@@ -643,7 +640,6 @@ class Advisor:
 
     def get_sharing_instructions(self) -> dict:
         """Get instructions related to sharing the project"""
-
         collaboration_instructions = self._get_collaboration_instructions()
         return {
             "msg": "\n ".join(
@@ -660,7 +656,6 @@ class Advisor:
 
     def get_instructions(self) -> dict:
         """Get all instructions on the project"""
-
         instructions = {
             "review_instructions": self.get_review_instructions(),
             "environment_instructions": self._get_environment_instructions(),

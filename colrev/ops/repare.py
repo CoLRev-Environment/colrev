@@ -47,8 +47,7 @@ class Repare(colrev.process.operation.Operation):
     def _fix_broken_symlink_based_on_local_index(
         self, *, record: colrev.record.record.Record, full_path: Path
     ) -> None:
-        """Fix broken symlinks based on local_index"""
-
+        """Fix broken symlinks based on local_index."""
         if os.path.islink(full_path) and not os.path.exists(full_path):
             self.review_manager.logger.debug(f" remove broken symlink: {full_path}")
             full_path.unlink()
@@ -445,7 +444,6 @@ class Repare(colrev.process.operation.Operation):
     @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
         """Repare a CoLRev project (main entrypoint)"""
-
         # Try: open settings, except: notify & start repare
 
         # ...

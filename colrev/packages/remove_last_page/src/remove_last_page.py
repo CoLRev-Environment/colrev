@@ -23,7 +23,7 @@ from colrev.constants import Filepaths
 
 
 class PDFLastPage(base_classes.PDFPrepPackageBaseClass):
-    """Prepare PDFs by removing unnecessary last pages (e.g. copyright notices, cited-by infos)"""
+    """Prepare PDFs by removing unnecessary last pages (e.g., copyright notices, cited-by infos)."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
 
@@ -46,7 +46,6 @@ class PDFLastPage(base_classes.PDFPrepPackageBaseClass):
         pad: int,  # pylint: disable=unused-argument
     ) -> colrev.record.record_pdf.PDFRecord:
         """Prepare the PDF by removing additional materials (if any)"""
-
         if not record.data[Fields.FILE].endswith(".pdf"):
             return record
 

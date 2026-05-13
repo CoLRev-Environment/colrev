@@ -25,8 +25,7 @@ class Clone:
         self.local_path = Path.cwd() / Path(git_repo_name)
 
     def clone_git_repo(self) -> None:
-        """Method to clone a CoLRev project from git remote repository"""
-
+        """Clone a CoLRev project from a git remote repository."""
         Repo.clone_from(self.git_url, str(self.local_path))
         os.chdir(str(self.local_path))
         try:

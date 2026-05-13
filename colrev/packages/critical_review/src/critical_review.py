@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Critical review"""
+"""Critical review."""
 
 import logging
 import typing
@@ -15,7 +15,7 @@ import colrev.package_manager.package_settings
 
 
 class CriticalReview(base_classes.ReviewTypePackageBaseClass):
-    """Critical review"""
+    """Critical review."""
 
     settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = Field(default=True)
@@ -36,8 +36,7 @@ class CriticalReview(base_classes.ReviewTypePackageBaseClass):
     def initialize(
         self, settings: colrev.settings.Settings
     ) -> colrev.settings.Settings:
-        """Initialize a critical review"""
-
+        """Initialize a critical review."""
         settings.data.data_package_endpoints = [
             {"endpoint": "colrev.prisma", "version": "1.0"},
             {

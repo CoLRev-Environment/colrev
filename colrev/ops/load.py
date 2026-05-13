@@ -80,8 +80,8 @@ class Load(colrev.process.operation.Operation):
         """Ensure that the file was only appended to.
 
         This method must be called for all packages that work
-        with an ex-post assignment of incremental IDs."""
-
+        with an ex-post assignment of incremental IDs.
+        """
         git_repo = self.review_manager.dataset.git_repo.repo
 
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
@@ -144,8 +144,7 @@ class Load(colrev.process.operation.Operation):
     def import_record(
         self, *, record_dict: dict, records: dict, set_id: bool = False
     ) -> dict:
-        """Import a record_dict to the records"""
-
+        """Import a record_dict to the records."""
         self.review_manager.logger.debug(
             f"import_record {record_dict.get(Fields.ID, '')}: "
         )
@@ -316,8 +315,7 @@ class Load(colrev.process.operation.Operation):
         *,
         select_new_records: bool = True,
     ) -> None:
-        """
-        Prepares a search source for loading records into the review manager's dataset.
+        """Prepares a search source for loading records into the review manager's dataset.
 
         This method initializes the loading process by selecting new records from the source
         based on the `select_new_records` flag. It then prepares the source records for import
@@ -327,6 +325,7 @@ class Load(colrev.process.operation.Operation):
             source: The search source package endpoint interface to prepare for loading.
             select_new_records: A boolean flag indicating whether to filter out records
                                 that have already been imported. Defaults to True.
+
         """
         if "unknown_source" in source.search_source.platform:
             self._rename_erroneous_extensions(source)
@@ -365,8 +364,7 @@ class Load(colrev.process.operation.Operation):
         *,
         keep_ids: bool,
     ) -> None:
-        """
-        Loads records from a specified source into the review manager's dataset.
+        """Loads records from a specified source into the review manager's dataset.
 
         This method prepares the source for loading by calling `setup_source_for_load`
         and then proceeds to load the records. It takes into account whether the IDs
@@ -375,6 +373,7 @@ class Load(colrev.process.operation.Operation):
         Args:
             source: The search source package endpoint interface from which records are loaded.
             keep_ids: A boolean flag indicating whether to keep the original IDs of the records.
+
         """
         self.review_manager.logger.debug(
             f"Load source records {source.search_source.get_search_history_path()}"
@@ -439,11 +438,11 @@ class Load(colrev.process.operation.Operation):
                 )
 
     def load_active_sources(self, *, include_md: bool = False) -> list:
-        """
-        Loads and returns a list of active source endpoints from the settings.
+        """Loads and returns a list of active source endpoints from the settings.
 
         Returns:
             list: A list of active source endpoint objects.
+
         """
         checker = self.review_manager.get_checker()
         checker.check_sources()
@@ -551,7 +550,6 @@ class Load(colrev.process.operation.Operation):
         keep_ids: bool = False,
     ) -> None:
         """Load records (main entrypoint)"""
-
         if not self.review_manager.high_level_operation:
             print()
 

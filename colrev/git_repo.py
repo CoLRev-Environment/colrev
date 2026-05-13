@@ -197,7 +197,7 @@ class GitRepo:
         )
 
     def stash_unstaged_changes(self) -> bool:
-        """Stash unstaged changes"""
+        """Stash unstaged changes."""
         ret = self.repo.git.stash("push", "--keep-index")
         return "No local changes to save" != ret
 

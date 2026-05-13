@@ -62,7 +62,7 @@ class Operation:
         return decorator_func
 
     def conclude(self) -> None:  # pragma: no cover
-        """Conclude the operation (stop Docker containers)"""
+        """Conclude the operation (stop Docker containers)."""
         try:
             client = docker.from_env()
             for container in client.containers.list():
@@ -116,7 +116,6 @@ class Operation:
 
     def check_precondition(self) -> None:
         """Check the operation precondition"""
-
         if self.review_manager.force_mode:
             return
 
@@ -161,7 +160,6 @@ class Operation:
 
     def notify(self, *, state_transition: bool = True) -> None:
         """Notify the review_manager about the next operation"""
-
         self.review_manager.notified_next_operation = self.type
         if state_transition:
             self.check_precondition()

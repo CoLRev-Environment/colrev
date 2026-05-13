@@ -252,7 +252,6 @@ class TEIParser:
 
     def get_abstract(self) -> str:
         """Get the abstract"""
-
         html_tag_regex = re.compile("<.*?>")
 
         def cleanhtml(raw_html: str) -> str:
@@ -273,7 +272,6 @@ class TEIParser:
 
     def get_metadata(self) -> dict:
         """Get the metadata of the PDF (title, author, ...) as a dict"""
-
         reference = self.root.find(".//" + self.ns["tei"] + "sourceDesc").find(
             ".//" + self.ns["tei"] + "biblStruct"
         )
@@ -296,7 +294,7 @@ class TEIParser:
         return record
 
     def get_paper_keywords(self) -> list:
-        """Get hte keywords"""
+        """Get the keywords."""
         keywords = []
         for keyword_list in self.root.iter(self.ns["tei"] + "keywords"):
             for keyword in keyword_list.iter(self.ns["tei"] + "term"):
@@ -599,6 +597,7 @@ class TEIParser:
 
         Yields:
             Cleaned paragraph texts in the order they appear in the body.
+
         """
         # Get <text>/<body> as the main content region
         text_node = self.root.find(f".//{self.ns['tei']}text")
@@ -693,7 +692,6 @@ class TEIParser:
 
     def mark_references(self, *, records: dict):  # type: ignore
         """Mark references with the additional record ID"""
-
         tei_records = self.get_references()
         for record_dict in tei_records:
             if Fields.TITLE not in record_dict:

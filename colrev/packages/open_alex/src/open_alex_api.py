@@ -20,7 +20,7 @@ class OpenAlexAPIError(Exception):
 
 
 class OpenAlexAPI:
-    """Connector for the Open Alex API"""
+    """Connector for the Open Alex API."""
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -124,7 +124,6 @@ class OpenAlexAPI:
 
     def get_record(self, *, open_alex_id: str) -> colrev.record.record.Record:
         """Get a record from OpenAlex"""
-
         try:
             item = Works()[open_alex_id]
         except requests.exceptions.RequestException as exc:  # pragma: no cover

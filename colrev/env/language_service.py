@@ -85,7 +85,6 @@ class LanguageService:
 
     def compute_language(self, *, text: str) -> str:
         """Compute the most likely language code"""
-
         if text.lower() in self._eng_false_negatives:
             return "eng"
 
@@ -100,8 +99,7 @@ class LanguageService:
         return self._determine_alphabet(text)
 
     def compute_language_confidence_values(self, *, text: str) -> list:
-        """Computes the most likely languages of a string and their language codes"""
-
+        """Compute the most likely languages of a string and their language codes."""
         if text.lower() in self._eng_false_negatives:
             return [("eng", 1.0)]
 
@@ -118,7 +116,6 @@ class LanguageService:
 
     def validate_iso_639_3_language_codes(self, *, lang_code_list: list) -> None:
         """Validates whether a list of language codes complies with the ISO 639-3 standard"""
-
         assert isinstance(lang_code_list, list)
 
         invalid_language_codes = [x for x in lang_code_list if 3 != len(x)]
@@ -130,8 +127,7 @@ class LanguageService:
     def unify_to_iso_639_3_language_codes(
         self, *, record: colrev.record.record.Record
     ) -> None:
-        """Unifies a language_code string to the ISO 639-3 standard"""
-
+        """Unify a language_code string to the ISO 639-3 standard."""
         if Fields.LANGUAGE not in record.data:
             return
 

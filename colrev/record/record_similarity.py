@@ -42,7 +42,6 @@ def get_record_change_score(
     record_a: colrev.record.record.Record, record_b: colrev.record.record.Record
 ) -> float:
     """Determine how much records changed"""
-
     # At some point, this may become more sensitive to major changes
     str_a = _record_str(record_a)
     str_b = _record_str(record_b)
@@ -242,8 +241,7 @@ def _ensure_mandatory_fields(
 def get_record_similarity(
     record_a: colrev.record.record.Record, record_b: colrev.record.record.Record
 ) -> float:
-    """Determine the similarity between two records (their masterdata)"""
-
+    """Determine the similarity between two records (their masterdata)."""
     record_a = record_a.copy()
     record_b = record_b.copy()
 

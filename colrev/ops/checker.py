@@ -62,7 +62,6 @@ class Checker:
 
     def check_repository_setup(self) -> None:
         """Check the repository setup"""
-
         # 1. git repository?
         if not self._is_git_repo():
             raise colrev_exceptions.RepoSetupError()
@@ -221,7 +220,6 @@ class Checker:
 
     def _check_colrev_origins(self, *, status_data: dict) -> None:
         """Check colrev_origins"""
-
         # Check whether each record has an origin
         if not len(status_data["entries_without_origin"]) == 0:
             raise colrev_exceptions.OriginError(
@@ -256,7 +254,6 @@ class Checker:
 
     def check_fields(self, *, status_data: dict) -> None:
         """Check field values"""
-
         # Check status fields
         status_schema = RecordState
         stat_diff = set(status_data["status_fields"]).difference(status_schema)
@@ -347,7 +344,6 @@ class Checker:
 
     def _check_records_screen(self, *, status_data: dict) -> None:
         """Check consistency of screening criteria and status"""
-
         if not status_data["screening_criteria_list"]:
             return
 
@@ -434,7 +430,6 @@ class Checker:
         Propagated IDs should not be changed in the records.bib
         because this would break the link between the propagated ID and its metadata.
         """
-
         ignore_patterns = [
             ".git",
             ".report.log",
@@ -474,7 +469,6 @@ class Checker:
         self, *, prior: dict, status_data: dict
     ) -> None:
         """Check for changes in propagated IDs"""
-
         if "persisted_IDs" not in prior:
             return
         for prior_origin, prior_id in prior["persisted_IDs"]:
@@ -495,7 +489,7 @@ class Checker:
                 raise colrev_exceptions.PropagatedIDChange(notifications)
 
     def check_sources(self) -> None:
-        """Check the sources"""
+        """Check the sources."""
 
     def _retrieve_prior(self) -> dict:
         prior: dict = {Fields.STATUS: [], "persisted_IDs": []}
@@ -626,7 +620,6 @@ class Checker:
 
     def check_repo_basics(self) -> list:
         """Calls data.main() to update the stats"""
-
         data_operation = self.review_manager.get_data_operation(
             notify_state_transition_operation=False
         )
@@ -673,8 +666,7 @@ class Checker:
         return failure_items
 
     def check_repo_extended(self) -> list:
-        """Calls all checks that require prior data (take longer)"""
-
+        """Call all checks that require prior data (take longer)."""
         # pylint: disable=not-a-mapping
 
         self.records: typing.Dict[str, typing.Any] = {}
@@ -769,7 +761,6 @@ class Checker:
         """Check whether the repository is in a consistent state
         Entrypoint for pre-commit hooks
         """
-
         failure_items = []
         failure_items.extend(self.check_repo_extended())
         failure_items.extend(self.check_repo_basics())

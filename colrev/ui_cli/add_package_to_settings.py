@@ -71,8 +71,7 @@ def add_package_to_settings(
     package_identifier: str,
     params: str,
 ) -> dict:
-    """Add a package_endpoint (for cli usage)"""
-
+    """Add a package_endpoint (for CLI usage)."""
     operation.review_manager.logger.info(
         f"{Colors.GREEN}Add {operation.type} "
         f"package:{Colors.END} {package_identifier}"

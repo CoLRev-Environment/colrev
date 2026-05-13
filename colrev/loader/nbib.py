@@ -100,8 +100,7 @@ class NBIBLoader(colrev.loader.loader.Loader):
                 continue
 
     def load_records_list(self) -> list:
-        """Loads nbib entries"""
-
+        """Load nbib entries."""
         # based on
         # https://github.com/MrTango/rispy/blob/main/rispy/parser.py
         # Note: skip-tags and unknown-tags can be handled

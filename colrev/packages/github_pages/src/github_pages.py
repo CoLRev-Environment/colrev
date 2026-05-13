@@ -73,7 +73,6 @@ class GithubPages(base_classes.DataPackageBaseClass):
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
         """Add as an endpoint"""
-
         add_source = {
             "endpoint": "colrev.github_pages",
             "version": "0.1",
@@ -241,7 +240,6 @@ class GithubPages(base_classes.DataPackageBaseClass):
         silent_mode: bool,
     ) -> None:
         """Update the data/github pages"""
-
         # pylint: disable=too-many-branches
 
         if utils.in_ci_environment():
@@ -337,7 +335,6 @@ class GithubPages(base_classes.DataPackageBaseClass):
         endpoint_identifier: str,
     ) -> None:
         """Update the record_status_matrix"""
-
         # Note : automatically set all to True / synthesized
         for syn_id in synthesized_record_status_matrix:
             synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
@@ -345,8 +342,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
     def get_advice(
         self,
     ) -> dict:
-        """Get advice on the next steps (for display in the colrev status)"""
-
+        """Get advice on the next steps (for display in the colrev status)."""
         data_endpoint = "Data operation [github pages data endpoint]: "
 
         advice = {"msg": f"{data_endpoint}", "detailed_msg": "TODO"}
