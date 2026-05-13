@@ -2,18 +2,23 @@
 FROM mcr.microsoft.com/vscode/devcontainers/python:3.12-bullseye
 
 # Install Docker CLI
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-transport-https \
     ca-certificates \
     curl \
     gnupg \
     lsb-release && \
-    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
-    apt-get update && apt-get install -y docker-ce-cli
+    curl -fsSL https://download.docker.com/linux/debian/gpg \
+    | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
+    | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && apt-get install -y --no-install-recommends \
+    docker-ce-cli && \
+    rm -rf /var/lib/apt/lists/*
 
 # Add and setup the vscode user, attempt to handle Docker group dynamically
-ARG DOCKER_GROUP_GID=800 # Provide a default GID to use if not passed as build arg
+# Provide a default GID to use if not passed as build arg
+ARG DOCKER_GROUP_GID=800
 RUN groupadd -g $DOCKER_GROUP_GID docker || true # Ignore if group already exists
 RUN useradd -m vscode -G docker || usermod -aG docker vscode # Add vscode user or append to docker group
 

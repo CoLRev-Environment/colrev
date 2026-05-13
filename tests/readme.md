@@ -26,7 +26,6 @@ pytest tests/0_core/record_test.py -k "test_update_metadata_status"
 
 Note: after each test, conf.run_around_tests() restores the state of the repository (even if tests fail!). For debugging, it may be helpful to deactivate the code temporarily.
 
-
 References
 
 - [Effective Python Testing With Pytest](https://realpython.com/pytest-python-testing/)

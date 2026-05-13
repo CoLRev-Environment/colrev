@@ -52,7 +52,8 @@ Format of the search-history file (API search):
 }
 ```
 
-ℹ️ Restriction: Springer Link only allows a daily quota of 500 requests. This might lead to the site being unavailable with a response code of 403.
+ℹ️ Restriction: Springer Link only allows a daily quota of 500 requests.
+This might lead to the site being unavailable with a response code of 403.
 
 #### API search: API key for Springer Link
 
@@ -72,6 +73,7 @@ The user can choose between `complete_search_string` for searching with a comple
 #### API search: complex query
 
 The user can type the individual search constraints that can also use the boolean  `AND`, `OR` , `NOT`, `NEAR` for a specified search. Following conditions have to be followed:
+
 - Search terms must be enclosed in double quotes `"`
 - The entire logical condition must be enclosed in parentheses `()`
 - Filters can be added with a `space` and then followed by the `constraint:argument`
@@ -90,8 +92,10 @@ The user can type the individual search constraints that can also use the boolea
 - `doi:` 10.1007/s11214-017-0458-1
 - `pub:` Extremes
 - `onlinedate:` 2019-03-29
+
     - also wildcard, e.g., `onlinedate:` 2019-01-*
     - `onlinedatefrom:` 2019-09-01%20 `onlinedateto:` 2019-12-31
+
 - `country:` %22New%20Zealand%22
 - `isbn:` 978-0-387-79148-7
 - `issn:` 1861-0692
@@ -101,7 +105,7 @@ The user can type the individual search constraints that can also use the boolea
 - `issn:` 1861-0692
 - `journalid:` 259
 
-For additional contraints visit the SpringerLink API Documentation (Link below).
+For additional constraints visit the SpringerLink API Documentation (Link below).
 
 #### API search: entering the search parameters
 
@@ -110,6 +114,7 @@ The user can provide values for the following parameters: keyword, subject, lang
 
 - `keyword:` e.g. onlinear.
 - `subject:`  Springer Nature supports the following subject areas:
+
     - Astronomy
     - Behavioral Sciences
     - Biomedical Sciences
@@ -137,13 +142,17 @@ The user can provide values for the following parameters: keyword, subject, lang
     - Social Sciences
     - Statistics
     - Water
+
 - `language:` please use country codes, e.g. "de" for "Germany".
 - `year:` e.g. 2024.
 - `type:` limit search to Book or Journal (case sensitive!).
 
 Each constraint that appears in your request will be automatically ANDed with all the others.
 
-ℹ️ Restriction: The format of Springer_Link's output does not produce sufficiently clear information to fill in every CoLRev field. Disparities, e.g. in the definition of content types(=="ENTRYTYPES" in CoLRev), may lead to ambigous information about a paper, its type or its venue. To prevent misinformation, papers will be marked as `miscellaneous`, if the publication type is not determinable. Furthermore, the Field regarding books, such as address are not supported by Springers Nature.
+ℹ️ Restriction: The format of Springer_Link's output does not produce sufficiently clear information to fill in every CoLRev field.
+Disparities, e.g. in the definition of content types(=="ENTRYTYPES" in CoLRev), may lead to ambiguous information about a paper, its type or its venue.
+To prevent misinformation, papers will be marked as `miscellaneous`, if the publication type is not determinable.
+Furthermore, the Field regarding books, such as address are not supported by Springers Nature.
 
 ## Links
 

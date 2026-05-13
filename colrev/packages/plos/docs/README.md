@@ -32,7 +32,6 @@ Add colrev.plos as an API SearchSource
 Enter the keywords:
 ```
 
-
 ### Load
 
 ```text

@@ -71,7 +71,6 @@ colrev search --add colrev.unpaywall -p "https://api.unpaywall.org/v2/search?que
 - `query:` (Required) Keywords to search for.
 - `email:` Your email address to access the API. If the email address is manually specified in the URL, this email will be saved and used for later requests.
 
-
 Format of the search-history file (interactive API search):
 
 ```json

@@ -14,7 +14,6 @@ When errors occur during `make html`, it can help to delete the `colrev/docs/sou
 
 Once available on Github, the documentation is automatically published at [readthedocs](https://colrev.readthedocs.io/en/latest/) (status information is available [here](https://readthedocs.org/projects/colrev/builds/)).
 
-
 ```bash
 python -m sphinx.ext.intersphinx https://colrev.readthedocs.io/en/stable/objects.inv
 ```

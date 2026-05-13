@@ -1,11 +1,8 @@
 ## Issue description
 
-
 ## Expected behavior
 
-
 ## Actual behavior
-
 
 ## Steps to reproduce the problem (copy of the commit message report)
 

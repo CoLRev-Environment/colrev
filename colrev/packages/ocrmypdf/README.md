@@ -27,7 +27,6 @@ colrev pdf-prep -a colrev.ocrmypddf
 
 ## Links
 
-
 ![ocrmypdfactivity](https://img.shields.io/github/commit-activity/y/ocrmypdf/OCRmyPDF?color=green&style=plastic)
 
 [OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF): optical-character recognition (License: [MPL-2.0](https://github.com/ocrmypdf/OCRmyPDF/blob/main/LICENSE))

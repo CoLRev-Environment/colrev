@@ -410,7 +410,7 @@ def _append_incremental(
         lines = f.readlines()
     lines = _normalize_legacy_forthcoming(lines)
 
-    present_pairs, latest_existing, _has_forthcoming = _parse_existing_headings(lines)
+    _, latest_existing, _has_forthcoming = _parse_existing_headings(lines)
 
     # ---- Build insertion block (to be placed after header)
     insertion: List[str] = []

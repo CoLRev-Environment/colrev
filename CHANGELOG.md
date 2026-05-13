@@ -452,7 +452,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Updated documentation
 - Testing and refactoring (e.g., for Windows, prefer keyword arguments in functions, python package type information)
 
-
 ### 0.4.0 - 2022-04-06
 
 ### Added

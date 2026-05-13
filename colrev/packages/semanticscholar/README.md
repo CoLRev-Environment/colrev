@@ -4,7 +4,6 @@ Semantic Scholar is a cross-disciplinary search source with a vast collection of
 
 This class supports the search function for Semantic Scholar via an unofficial python client (link below).
 
-
 ## search
 
 So far, only API search is implemented. Other search types such as MD search or TOC search might be implemented in the future. All search results are saved as a standardized dictionary in the colrev feed and a distinctive `data/search/{query_parameters}date.bib` file, the filename of which contains the query and the date of the search.
@@ -36,7 +35,6 @@ Format of the search-history file:
     "comment": ""
 }
 ```
-
 
 Upon entering the command above with no additional parameters, a console interface opens up, in which the user is asked to enter the parameters and query for their search.
 

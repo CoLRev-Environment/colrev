@@ -2,7 +2,9 @@
 
 ## Summary
 
-PLOS is a SearchSource providing open access metadata for articles published in PLOS journals. It focuses on life sciences and health but includes articles in other disciplines. Its database contains metadata for thousands of articles across multiple PLOS journals.
+PLOS is a SearchSource providing open access metadata for articles published in PLOS journals.
+It focuses on life sciences and health but includes articles in other disciplines.
+Its database contains metadata for thousands of articles across multiple PLOS journals.
 
 ## Installation
 
@@ -13,11 +15,13 @@ colrev install colrev.plos
 ## Usage
 
 ### API search
+
 To make an API search, first introduce the next command:
 
 ```bash
 colrev search -a colrev.plos
 ```
+
 On the menu displayed, select the option API:
 
 ```text
@@ -28,12 +32,12 @@ On the menu displayed, select the option API:
 ```
 
 Finally introduce a keyword to search:
+
 ```text
 Add colrev.plos as an API SearchSource
 
 Enter the keywords:
 ```
-
 
 Format of the search-history file:
 
@@ -58,7 +62,7 @@ colrev load
 
 ## Debugging
 
-In order to test the metada provided for a specific `DOI` it can be used the following link:
+In order to test the metadata provided for a specific `DOI` it can be used the following link:
 
 ```text
 https://api.plos.org/search?q=DOI:
@@ -71,4 +75,4 @@ This project is licensed under the MIT License.
 ## Links
 
 - [PLOS API](https://api.plos.org)
-- [Sorl Search Fileds and Article types](https://api.plos.org/solr/search-fields/)
+- [Sorl Search Fields and Article types](https://api.plos.org/solr/search-fields/)

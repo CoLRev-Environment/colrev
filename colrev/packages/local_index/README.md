@@ -16,7 +16,6 @@ colrev env -i
 colrev search --add colrev.local_index -p "title LIKE '%dark side%'"
 ```
 
-
 Format of the search-history file:
 
 ```json
