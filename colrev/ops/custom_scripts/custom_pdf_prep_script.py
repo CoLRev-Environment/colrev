@@ -26,6 +26,7 @@ class CustomPDFPrep(base_classes.PDFPrepPackageBaseClass):
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         settings: dict,
     ) -> None:
+        """Initialize the instance."""
         self.settings = self.settings_class(**settings)
         self.pdf_prep_operation = pdf_prep_operation
 

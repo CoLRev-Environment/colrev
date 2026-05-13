@@ -25,6 +25,7 @@ class CustomSearch(base_classes.SearchSourcePackageBaseClass):
         *,
         settings: colrev.search_file.ExtendedSearchFile,
     ) -> None:
+        """Initialize the instance."""
         self.search_source: colrev.search_file.ExtendedSearchFile = settings
 
     def search(self, rerun: bool) -> None:

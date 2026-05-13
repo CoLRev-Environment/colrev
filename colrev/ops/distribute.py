@@ -25,6 +25,7 @@ class Distribute(colrev.process.operation.Operation):
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         # pylint: disable=duplicate-code
+        """Initialize the instance."""
         super().__init__(
             review_manager=review_manager,
             operations_type=self.type,

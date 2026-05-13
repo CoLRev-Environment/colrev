@@ -28,6 +28,7 @@ class Dataset:
     """The CoLRev dataset (records and their history in git)."""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
+        """Initialize the instance."""
         self.review_manager = review_manager
 
     @cached_property

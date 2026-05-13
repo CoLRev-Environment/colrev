@@ -36,6 +36,7 @@ class Checker:
         *,
         review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
+        """Initialize the instance."""
         self.review_manager = review_manager
         self.review_manager.notified_next_operation = OperationsType.check
 

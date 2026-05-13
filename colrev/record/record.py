@@ -37,15 +37,18 @@ class Record:
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
     def __init__(self, data: dict) -> None:
+        """Initialize the instance."""
         self.data = data
         """Dictionary containing the record data"""
         # Note : avoid parsing upon Record instantiation as much as possible
         # to maintain high performance and ensure pickle-abiligy (in multiprocessing)
 
     def __repr__(self) -> str:  # pragma: no cover
+        """Return a developer representation."""
         return self.pp.pformat(self.data)
 
     def __str__(self) -> str:
+        """Return a string representation."""
         ik_order = [Fields.ID, Fields.ENTRYTYPE]
         ik_order += [k for k in FieldSet.IDENTIFYING_FIELD_KEYS if k in self.data]
         ck_order = [k for k, v in self.data.items() if k not in ik_order]
@@ -56,6 +59,7 @@ class Record:
         return ret_str
 
     def __eq__(self, other: object) -> bool:
+        """Return whether two instances are equal."""
         return self.__dict__ == other.__dict__
 
     def get_citation_format(self) -> str:

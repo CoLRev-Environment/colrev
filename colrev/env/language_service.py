@@ -24,7 +24,7 @@ class LanguageService:
         # It performs particularly well for short strings (single words/word pairs)
         # The langdetect library is non-deterministic, especially for short strings
         # https://pypi.org/project/langdetect/
-
+        """Initialize the instance."""
         self._lingua_language_detector = (
             LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
         )

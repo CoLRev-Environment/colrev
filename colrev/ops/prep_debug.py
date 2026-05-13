@@ -42,7 +42,7 @@ class PrepDebug(colrev.ops.prep.Prep):
         notify_state_transition_operation: bool,
         polish: bool,
     ) -> None:
-
+        """Initialize the instance."""
         super().__init__(
             review_manager=review_manager,
             notify_state_transition_operation=notify_state_transition_operation,

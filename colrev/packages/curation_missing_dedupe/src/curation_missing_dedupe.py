@@ -37,6 +37,7 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
         settings: dict,
         logger: typing.Optional[logging.Logger] = None,
     ):
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = dedupe_operation.review_manager

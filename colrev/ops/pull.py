@@ -18,6 +18,7 @@ class Pull(colrev.process.operation.Operation):
     type = OperationsType.format
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
+        """Initialize the instance."""
         super().__init__(
             review_manager=review_manager,
             operations_type=self.type,

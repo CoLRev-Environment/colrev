@@ -19,6 +19,7 @@ class ContainerTitleAbbreviatedChecker:
     def __init__(
         self, quality_model: colrev.record.qm.quality_model.QualityModel
     ) -> None:
+        """Initialize the instance."""
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.record.Record) -> None:

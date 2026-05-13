@@ -37,6 +37,7 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
         settings: dict,
         logger: typing.Optional[logging.Logger] = None,
     ) -> None:
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.review_manager = pdf_get_man_operation.review_manager

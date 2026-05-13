@@ -26,6 +26,7 @@ class CustomPrep(base_classes.PrepPackageBaseClass):
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
+        """Initialize the instance."""
         self.settings = self.settings_class(**settings)
 
     def prepare(

@@ -26,6 +26,7 @@ class GitRepo:
     """Wrapper for Git repository interactions."""
 
     def __init__(self, path: typing.Optional[Path]) -> None:
+        """Initialize the instance."""
         self.path = path if path else Path.cwd()
         if not self.path.is_absolute():
             self.path = self.path.resolve()

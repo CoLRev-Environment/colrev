@@ -34,7 +34,7 @@ class IDSetter:
         skip_local_index: bool = False,
         logger: logging.Logger = logging.getLogger(__name__),
     ) -> None:
-
+        """Initialize the instance."""
         self.id_pattern = id_pattern
         self.skip_local_index = skip_local_index
         if not self.skip_local_index:

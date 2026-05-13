@@ -21,6 +21,7 @@ class RepoSetupError(CoLRevException):
     )
 
     def __init__(self, msg: typing.Optional[str] = None) -> None:
+        """Initialize the instance."""
         try:
             Path(".report.log").unlink(missing_ok=True)
         except PermissionError:
@@ -72,6 +73,7 @@ class CoLRevUpgradeError(CoLRevException):
     """
 
     def __init__(self, old: str, new: str) -> None:
+        """Initialize the instance."""
         self.message = (
             f"Detected upgrade from {old} to {new}. To upgrade use\n     "
             f"{Colors.ORANGE}colrev upgrade{Colors.END}"
@@ -116,6 +118,7 @@ class ReviewManagerNotNotifiedError(CoLRevException):
     """
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.message = (
             "Instantiate the intended operation so the review manager can "
             "run its precondition checks before accessing records.\n"
@@ -130,6 +133,7 @@ class ParameterError(CoLRevException):
     """An invalid parameter was passed to CoLRev."""
 
     def __init__(self, *, parameter: str, value: str, options: list) -> None:
+        """Initialize the instance."""
         options_string = "\n  - ".join(sorted(options))
         self.message = f"Invalid parameter {parameter}: {value}."
         if options:
@@ -141,6 +145,7 @@ class InvalidSettingsError(CoLRevException):
     """Invalid value in SETTINGS_FILE."""
 
     def __init__(self, *, msg: str, fix_per_upgrade: bool = True) -> None:
+        """Initialize the instance."""
         msg = f"Error in SETTINGS_FILE: {msg}"
         if fix_per_upgrade:
             msg += (
@@ -157,6 +162,7 @@ class UnstagedGitChangesError(CoLRevException):
     """Unstaged git changes were found although a clean repository is required."""
 
     def __init__(self, changedFiles: list) -> None:
+        """Initialize the instance."""
         self.message = (
             f"changes not yet staged: {changedFiles} (use git add . or stash)"
         )
@@ -167,6 +173,7 @@ class CleanRepoRequiredError(CoLRevException):
     """A clean git repository would be required."""
 
     def __init__(self, changedFiles: list, ignore_pattern: str) -> None:
+        """Initialize the instance."""
         self.message = (
             "clean repository required (use git commit, discard or stash "
             + f"{changedFiles}; ignore_pattern={ignore_pattern})."
@@ -178,6 +185,7 @@ class GitConflictError(CoLRevException):
     """There are git conflicts to be resolved before resuming operations."""
 
     def __init__(self, path: Path) -> None:
+        """Initialize the instance."""
         self.message = f"please resolve git conflict in {path}"
         super().__init__(self.message)
 
@@ -186,6 +194,7 @@ class DirtyRepoAfterProcessingError(CoLRevException):
     """The git repository was not clean after completing the operation."""
 
     def __init__(self, msg: str) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -194,6 +203,7 @@ class GitNotAvailableError(CoLRevException):
     """Git is currently not available."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.message = "Git is currently not available (remove .git/index.lock exists)."
         super().__init__(self.message)
 
@@ -202,6 +212,7 @@ class AppendOnlyViolation(Exception):
     """Invalid changes to a file in append-only mode."""
 
     def __init__(self, msg: str) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -215,6 +226,7 @@ class ProcessOrderViolation(CoLRevException):
         required_state: str,
         violating_records: list,
     ) -> None:
+        """Initialize the instance."""
         self.message = (
             f" {operations_type}() requires all records to have at least "
             + f"'{required_state}', but there are records with {violating_records}."
@@ -226,6 +238,7 @@ class StatusTransitionError(CoLRevException):
     """An invalid status transition was observed."""
 
     def __init__(self, msg: str) -> None:
+        """Initialize the instance."""
         self.message = f" {msg}"
         super().__init__(self.message)
 
@@ -234,6 +247,7 @@ class NoRecordsError(CoLRevException):
     """The operation cannot be started because no records have been imported yet."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.message = "no records imported yet"
         super().__init__(self.message)
 
@@ -242,6 +256,7 @@ class FieldValueError(CoLRevException):
     """An error in field values was detected (in the main records)."""
 
     def __init__(self, msg: str) -> None:
+        """Initialize the instance."""
         self.message = f" {msg}"
         super().__init__(self.message)
 
@@ -250,6 +265,7 @@ class MissingRecordQualityRuleSpecification(CoLRevException):
     """A quality rule is missing."""
 
     def __init__(self, msg: str) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -258,6 +274,7 @@ class StatusFieldValueError(CoLRevException):
     """An error in the status field values was detected."""
 
     def __init__(self, record: str, status_type: str, status_value: str) -> None:
+        """Initialize the instance."""
         self.message = f"{status_type} set to '{status_value}' in {record}."
         super().__init__(self.message)
 
@@ -266,6 +283,7 @@ class OriginError(CoLRevException):
     """An error in the colrev_origin field values was detected."""
 
     def __init__(self, msg: str) -> None:
+        """Initialize the instance."""
         self.message = f" {msg}"
         super().__init__(self.message)
 
@@ -274,6 +292,7 @@ class DuplicateIDsError(CoLRevException):
     """Duplicate IDs were detected."""
 
     def __init__(self, msg: str) -> None:
+        """Initialize the instance."""
         self.message = f" {msg}"
         super().__init__(self.message)
 
@@ -287,6 +306,7 @@ class NotEnoughDataToIdentifyException(CoLRevException):
         msg: typing.Optional[str] = None,
         missing_fields: typing.Optional[list] = None,
     ) -> None:
+        """Initialize the instance."""
         self.message = msg
         self.missing_fields = missing_fields
         super().__init__(self.message)
@@ -299,6 +319,7 @@ class NotTOCIdentifiableException(CoLRevException):
     """
 
     def __init__(self, msg: typing.Optional[str] = None) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -307,6 +328,7 @@ class RecordNotInTOCException(CoLRevException):
     """The record is not part of the table-of-contents (TOC)."""
 
     def __init__(self, *, record_id: str, toc_key: str) -> None:
+        """Initialize the instance."""
         self.record_id = record_id
         self.toc_key = toc_key
         self.message = f"{record_id} not part of toc: {toc_key}"
@@ -317,6 +339,7 @@ class PropagatedIDChange(CoLRevException):
     """Changes in propagated records ID detected."""
 
     def __init__(self, notifications: list) -> None:
+        """Initialize the instance."""
         self.message = "\n    ".join(notifications)
         super().__init__("Attempt to change propagated IDs:" + self.message)
 
@@ -328,6 +351,7 @@ class NonEmptyDirectoryError(CoLRevException):
     """Trying to initialize CoLRev in a non-empty directory."""
 
     def __init__(self, *, filepath: Path, content: list) -> None:
+        """Initialize the instance."""
         if len(content) > 3:
             content = content[0:5] + ["..."]
         self.message = (
@@ -342,6 +366,7 @@ class RepoInitError(CoLRevException):
     """Error during initialization of CoLRev project."""
 
     def __init__(self, *, msg: str) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -353,6 +378,7 @@ class SearchNotAutomated(CoLRevException):
     """The search cannot be completed automatically."""
 
     def __init__(self, msg: str) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -361,6 +387,7 @@ class InvalidQueryException(CoLRevException):
     """The query format is not valid."""
 
     def __init__(self, msg: str) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -369,6 +396,7 @@ class RecordNotParsableException(CoLRevException):
     """The record could not be parsed."""
 
     def __init__(self, msg: str) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -377,6 +405,7 @@ class NotFeedIdentifiableException(CoLRevException):
     """The record does not contain the required source_identifier (cannot be added to the feed)."""
 
     def __init__(self, msg: typing.Optional[str] = None) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -385,6 +414,7 @@ class SearchSourceException(CoLRevException):
     """Records cannot be retrieved from the SearchSource."""
 
     def __init__(self, msg: str) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -393,6 +423,7 @@ class RecordNotFoundException(CoLRevException):
     """Record not found in the main records file."""
 
     def __init__(self, msg: str) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -407,6 +438,7 @@ class ImportException(CoLRevException):
         self,
         msg: str,
     ) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -418,6 +450,7 @@ class NoRecordsToImport(CoLRevException):
         self,
         msg: str,
     ) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -429,6 +462,7 @@ class UnsupportedImportFormatError(CoLRevException):
         self,
         import_path: Path,
     ) -> None:
+        """Initialize the instance."""
         self.import_path = import_path
         self.message = (
             f"Format of SearchSource file not supported ({self.import_path.name}) "
@@ -447,6 +481,7 @@ class RecordNotFoundInPrepSourceException(CoLRevException):
         *,
         msg: str,
     ) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -458,6 +493,7 @@ class DedupeError(CoLRevException):
     """An exception in the dedupe operation."""
 
     def __init__(self, message: str) -> None:
+        """Initialize the instance."""
         self.message = message
         super().__init__(self.message)
 
@@ -469,6 +505,7 @@ class DataException(CoLRevException):
     """Exception in the data operation."""
 
     def __init__(self, *, msg: str) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__("DataException: " + self.message)
 
@@ -480,6 +517,7 @@ class RecordNotInRepoException(CoLRevException):
     """The record was not found in the main records."""
 
     def __init__(self, record_id: str) -> None:
+        """Initialize the instance."""
         if id is not None:
             self.message = f"Record not in repository ({record_id})"
         else:
@@ -491,6 +529,7 @@ class CorrectionPreconditionException(CoLRevException):
     """Precondition for corrections not given (clean git repository)."""
 
     def __init__(self, message: str) -> None:
+        """Initialize the instance."""
         self.message = message
         super().__init__(self.message)
 
@@ -502,6 +541,7 @@ class InvalidPDFException(CoLRevException):
     """The PDF is invalid (empty, encrypted or broken)."""
 
     def __init__(self, path: Path) -> None:
+        """Initialize the instance."""
         self.message = f"Invalid PDF (empty/broken): {path}"
         super().__init__(self.message)
 
@@ -510,6 +550,7 @@ class PDFHashError(CoLRevException):
     """An error occurred during PDF hashing."""
 
     def __init__(self, path: Path) -> None:
+        """Initialize the instance."""
         self.message = f"Error during PDF hashing: {path}"
         super().__init__(self.message)
 
@@ -521,6 +562,7 @@ class MissingDependencyError(CoLRevException):
     """The required dependency is not available."""
 
     def __init__(self, dep: str) -> None:
+        """Initialize the instance."""
         self.message = f"{dep}"
         super().__init__(self.message)
 
@@ -529,6 +571,7 @@ class PackageParameterError(CoLRevException):
     """The parameter for the package are not correct."""
 
     def __init__(self, dep: str) -> None:
+        """Initialize the instance."""
         self.message = f"{dep}"
         super().__init__(self.message)
 
@@ -537,6 +580,7 @@ class DependencyConfigurationError(CoLRevException):
     """The required dependency is not configured correctly."""
 
     def __init__(self, dep: str) -> None:
+        """Initialize the instance."""
         self.message = f"{dep}"
         super().__init__(self.message)
 
@@ -545,6 +589,7 @@ class ServiceNotAvailableException(CoLRevException):
     """An environment service is not available."""
 
     def __init__(self, dep: str, detailed_trace: str = "") -> None:
+        """Initialize the instance."""
         self.dep = dep
         self.detailed_trace = detailed_trace
         super().__init__(f"Service not available: {self.dep}")
@@ -554,6 +599,7 @@ class PortAlreadyRegisteredException(CoLRevException):
     """The port (localhost) is already registered."""
 
     def __init__(self, message: str) -> None:
+        """Initialize the instance."""
         self.message = message
         super().__init__(self.message)
 
@@ -570,6 +616,7 @@ class RecordNotInIndexException(CoLRevException):
     """The requested record was not found in the LocalIndex."""
 
     def __init__(self, record_id: str) -> None:
+        """Initialize the instance."""
         if id is not None:
             self.message = f"Record not in index ({record_id})"
         else:
@@ -585,6 +632,7 @@ class RecordNotIndexableException(CoLRevException):
         record_id: typing.Optional[str] = None,
         missing_key: typing.Optional[str] = None,
     ) -> None:
+        """Initialize the instance."""
         self.missing_key = missing_key
         if missing_key is None:
             missing_key = "-"
@@ -599,6 +647,7 @@ class TOCNotAvailableException(CoLRevException):
     """Tables of contents (toc) are not available for the requested item."""
 
     def __init__(self, msg: typing.Optional[str] = None) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -607,6 +656,7 @@ class CuratedOutletNotUnique(CoLRevException):
     """The outlets (journals or conferences) with curated metadata are not unique."""
 
     def __init__(self, msg: typing.Optional[str] = None) -> None:
+        """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
 
@@ -615,6 +665,7 @@ class InvalidLanguageCodeException(CoLRevException):
     """Language code field does not comply with the required standard."""
 
     def __init__(self, invalid_language_codes: list) -> None:
+        """Initialize the instance."""
         self.invalid_language_codes = invalid_language_codes
 
         super().__init__(f"Invalid language codes: {', '.join(invalid_language_codes)}")
@@ -624,6 +675,7 @@ class PackageSettingMustStartWithPackagesException(CoLRevException):
     """Package settings must start with `packages` key."""
 
     def __init__(self, invalid_key: str) -> None:
+        """Initialize the instance."""
         self.invalid_key = invalid_key
         super().__init__(
             f"Package settings must start with `packages` key. {invalid_key}"
@@ -634,5 +686,6 @@ class TemplateNotAvailableError(CoLRevException):
     """The requested template is not available."""
 
     def __init__(self, template_path: str) -> None:
+        """Initialize the instance."""
         self.message = f"Template not available: {template_path}"
         super().__init__(self.message)

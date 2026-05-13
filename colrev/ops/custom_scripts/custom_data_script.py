@@ -19,6 +19,7 @@ class CustomData(base_classes.DataPackageBaseClass):
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
+        """Initialize the instance."""
         self.settings = self.settings_class(**settings)
         self.data_operation = data_operation
 

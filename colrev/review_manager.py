@@ -67,6 +67,7 @@ class ReviewManager:
         exact_call: str = "",
         skip_upgrade: bool = True,
     ) -> None:
+        """Initialize the instance."""
         self.force_mode = force_mode
         """Force mode variable (bool)"""
         self.verbose_mode = verbose_mode

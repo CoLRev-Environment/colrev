@@ -159,6 +159,7 @@ class SpecialHelpOrder(click.Group):
     """Order for cli commands in help page overview."""
 
     def __init__(self, *args, **kwargs) -> None:  # type: ignore
+        """Initialize the instance."""
         self.help_priorities: dict = {}
         super().__init__(*args, **kwargs)
 

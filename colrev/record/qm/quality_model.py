@@ -25,6 +25,7 @@ class QualityModel:
         pdf_mode: bool = False,
         path: typing.Optional[Path] = None,
     ) -> None:
+        """Initialize the instance."""
         self.pdf_mode = pdf_mode
         self.defects_to_ignore = defects_to_ignore
         self._register_checkers()

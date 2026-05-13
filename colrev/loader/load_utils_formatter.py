@@ -56,6 +56,7 @@ class LoadFormatter:
     ]
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.language_service = colrev.env.language_service.LanguageService()
 
     def _fix_author_particles(self, record: colrev.record.record.Record) -> None:

@@ -41,6 +41,7 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         search_file: colrev.search_file.ExtendedSearchFile,
         logger: typing.Optional[logging.Logger] = None,
     ) -> None:
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         self.search_source = search_file
 

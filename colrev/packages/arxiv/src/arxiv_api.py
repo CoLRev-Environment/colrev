@@ -28,6 +28,7 @@ class ArxivAPI:
         search_file: colrev.search_file.ExtendedSearchFile,
         session: typing.Optional[requests.Session] = None,
     ) -> None:
+        """Initialize the instance."""
         self.session = session or requests.Session()
         self.search_file = search_file
 

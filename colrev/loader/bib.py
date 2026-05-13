@@ -343,6 +343,7 @@ class BIBLoader(colrev.loader.loader.Loader):
         format_names: bool = False,
         resolve_crossref: bool = False,
     ):
+        """Initialize the instance."""
         self.resolve_crossref = resolve_crossref
 
         super().__init__(

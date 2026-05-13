@@ -47,6 +47,7 @@ class NameParser:
     """Parse a name string."""
 
     def __init__(self, name: str) -> None:
+        """Initialize the instance."""
         self._first: list[str] = []
         self._middle: list[str] = []
         self._prelast: list[str] = []

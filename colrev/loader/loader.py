@@ -26,6 +26,7 @@ class Loader:
         logger: logging.Logger,
         format_names: bool = False,
     ):
+        """Initialize the instance."""
         self.filename = filename
         self.unique_id_field = unique_id_field
         assert id_labeler is not None or unique_id_field != ""

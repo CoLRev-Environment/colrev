@@ -47,6 +47,7 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
         settings: dict,
         logger: typing.Optional[logging.Logger] = None,
     ) -> None:
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
         self.prep_operation = prep_operation

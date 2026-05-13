@@ -48,6 +48,7 @@ class Advisor:
         *,
         review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
+        """Initialize the instance."""
         self.review_manager = review_manager
         colrev.ops.check.CheckOperation(self.review_manager)
         self.records = self.review_manager.dataset.load_records_dict()

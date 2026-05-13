@@ -102,6 +102,7 @@ class XPLORE:
 
     def __init__(self, *, parameters: dict, api_key: str) -> None:
         # API key
+        """Initialize the instance."""
         self.apiKey = api_key
 
         # flag that some search criteria has been provided

@@ -77,6 +77,7 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
         settings: dict,
         logger: typing.Optional[logging.Logger] = None,
     ) -> None:
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         if "pdf_handling_mode" not in settings:
             settings["pdf_handling_mode"] = "symlink"

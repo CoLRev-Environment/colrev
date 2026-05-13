@@ -30,6 +30,7 @@ class Search(colrev.process.operation.Operation):
         review_manager: colrev.review_manager.ReviewManager,
         notify_state_transition_operation: bool = True,
     ) -> None:
+        """Initialize the instance."""
         super().__init__(
             review_manager=review_manager,
             operations_type=self.type,

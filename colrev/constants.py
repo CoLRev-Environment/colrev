@@ -425,9 +425,11 @@ class RecordState(Enum):
     # Note : TBD: rev_coded
 
     def __str__(self) -> str:
+        """Return a string representation."""
         return f"{self.name}"
 
     def __lt__(self, other) -> bool:  # type: ignore
+        """Return whether this instance is less than another."""
         if self.__class__ == RecordState and other.__class__ == RecordState:
             return self.value < other.value
         raise NotImplementedError
@@ -593,6 +595,7 @@ class OperationsType(Enum):
     check = "check"
 
     def __str__(self) -> str:
+        """Return a string representation."""
         return f"{self.name}"
 
     @classmethod
@@ -625,6 +628,7 @@ class SortedEnumMeta(EnumMeta):
     def __init__(
         cls, name: str, bases: typing.Tuple[type, ...], classdict: dict
     ) -> None:
+        """Initialize the instance."""
         super().__init__(name, bases, classdict)
         # Sort the members by their values
         # pylint: disable=unsubscriptable-object
@@ -652,9 +656,11 @@ class SearchType(Enum, metaclass=SortedEnumMeta):
         return cls._member_names_
 
     def __str__(self) -> str:
+        """Return a string representation."""
         return self.name
 
     def __lt__(self, other: "SearchType") -> bool:
+        """Return whether this instance is less than another."""
         if isinstance(other, SearchType):
             return self.value < other.value
         return NotImplemented
@@ -670,6 +676,7 @@ class SearchSourceHeuristicStatus(Enum):
     todo = "to_be_implemented"
 
     def __str__(self) -> str:
+        """Return a string representation."""
         return f"{self.name}"  # pragma: no cover
 
 
@@ -701,6 +708,7 @@ class ScreenCriterionType(Enum):
         return cls._member_names_
 
     def __str__(self) -> str:
+        """Return a string representation."""
         return self.name
 
 

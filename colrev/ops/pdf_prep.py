@@ -43,6 +43,7 @@ class PDFPrep(colrev.process.operation.Operation):
         reprocess: bool = False,
         notify_state_transition_operation: bool = True,
     ) -> None:
+        """Initialize the instance."""
         super().__init__(
             review_manager=review_manager,
             operations_type=self.type,

@@ -24,6 +24,7 @@ class CustomPrescreen(base_classes.PrescreenPackageBaseClass):
         prescreen_operation: colrev.ops.prescreen.Prescreen,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
+        """Initialize the instance."""
         self.settings = self.settings_class(**settings)
         self.prescreen_operation = prescreen_operation
 

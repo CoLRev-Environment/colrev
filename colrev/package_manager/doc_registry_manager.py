@@ -52,6 +52,7 @@ class PackageDoc:
     docs_rst_path: Path
 
     def __init__(self, package_id: str) -> None:
+        """Initialize the instance."""
         self.package_id = package_id
 
         methods = [
@@ -328,6 +329,7 @@ class PackageDoc:
         return item
 
     def __repr__(self) -> str:
+        """Return a developer representation."""
         package_str = f"Package name: {self.package_id}\n"
         package_str += f"Package license: {self.license}\n"
         package_str += f"Package endpoints: {self.endpoints}\n"
@@ -371,6 +373,7 @@ class DocRegistryManager:
     packages_data: typing.Dict[str, dict] = {}
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.packages: typing.List[PackageDoc] = []
 
         with open(Filepaths.PACKAGES_JSON, encoding="utf-8") as file:

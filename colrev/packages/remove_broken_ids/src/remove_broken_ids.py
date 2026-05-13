@@ -34,6 +34,7 @@ class RemoveBrokenIDPrep(base_classes.PrepPackageBaseClass):
         settings: dict,
         logger: typing.Optional[logging.Logger] = None,
     ) -> None:
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         self.settings = colrev.package_manager.package_settings.DefaultSettings(
             **settings

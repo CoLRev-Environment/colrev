@@ -33,10 +33,12 @@ class MetaAnalysis(base_classes.ReviewTypePackageBaseClass):
         settings: dict,
         logger: typing.Optional[logging.Logger] = None,
     ) -> None:
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         self.settings = self.settings_class(**settings)
 
     def __str__(self) -> str:
+        """Return a string representation."""
         return "meta-analysis"
 
     def initialize(

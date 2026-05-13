@@ -44,6 +44,7 @@ class LocalIndexBuilder:
         index_tei: bool = False,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the instance."""
         self.verbose_mode = verbose_mode
         self.environment_manager = colrev.env.environment_manager.EnvironmentManager()
         self._index_tei = index_tei

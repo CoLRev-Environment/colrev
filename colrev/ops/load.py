@@ -36,6 +36,7 @@ class Load(colrev.process.operation.Operation):
         notify_state_transition_operation: bool = True,
         hide_load_explanation: bool = False,
     ) -> None:
+        """Initialize the instance."""
         super().__init__(
             review_manager=review_manager,
             operations_type=self.type,

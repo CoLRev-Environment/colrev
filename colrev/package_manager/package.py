@@ -26,6 +26,7 @@ class Package:
     """A Python package for CoLRev."""
 
     def __init__(self, package_identifier: str) -> None:
+        """Initialize the instance."""
         try:
             self.package = distribution(package_identifier)
         except PackageNotFoundError as exc:

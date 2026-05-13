@@ -105,6 +105,7 @@ class Prep(colrev.process.operation.Operation):
         polish: bool,
         cpu: int,
     ) -> None:
+        """Initialize the instance."""
         super().__init__(
             review_manager=review_manager,
             operations_type=self.type,

@@ -44,6 +44,7 @@ class ReviewTypePackageBaseClass(abc.ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the instance."""
         pass
 
     @abstractmethod
@@ -81,6 +82,7 @@ class SearchSourcePackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the instance."""
         pass
 
     @classmethod
@@ -150,6 +152,7 @@ class PrepPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the instance."""
         pass
 
     @abstractmethod
@@ -181,6 +184,7 @@ class PrepManPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the instance."""
         pass
 
     @abstractmethod
@@ -209,6 +213,7 @@ class DedupePackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ):
+        """Initialize the instance."""
         pass
 
     @abstractmethod
@@ -238,6 +243,7 @@ class PrescreenPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the instance."""
         pass
 
     @abstractmethod
@@ -266,6 +272,7 @@ class PDFGetPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the instance."""
         pass
 
     @abstractmethod
@@ -296,6 +303,7 @@ class PDFGetManPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the instance."""
         pass
 
     @abstractmethod
@@ -324,6 +332,7 @@ class PDFPrepPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the instance."""
         pass
 
     @abstractmethod
@@ -354,6 +363,7 @@ class PDFPrepManPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the instance."""
         pass
 
     @abstractmethod
@@ -383,6 +393,7 @@ class ScreenPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the instance."""
         pass
 
     @abstractmethod
@@ -411,6 +422,7 @@ class DataPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the instance."""
         pass
 
     @abstractmethod

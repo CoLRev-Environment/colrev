@@ -58,6 +58,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
         settings: dict,
         logger: typing.Optional[logging.Logger] = None,
     ) -> None:
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         # Set default values (if necessary)
         if "version" not in settings:

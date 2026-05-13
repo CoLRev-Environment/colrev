@@ -39,6 +39,7 @@ class DBLPAPI:
         rerun: bool = False,
         timeout: int = 60,
     ):
+        """Initialize the instance."""
         self.params = params
         self.email = email
         self.session = session

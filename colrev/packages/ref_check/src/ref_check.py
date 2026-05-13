@@ -21,6 +21,7 @@ class RefCheck(DataPackageBaseClass):
         settings: dict,
         logger: typing.Optional[logging.Logger] = None,
     ) -> None:
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         self.data_operation = data_operation
         self.review_manager = data_operation.review_manager

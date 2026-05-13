@@ -22,6 +22,7 @@ class CustomPDFGet(base_classes.PDFGetPackageBaseClass):
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
+        """Initialize the instance."""
         self.settings = self.settings_class(**settings)
         self.pdf_get_operation = pdf_get_operation
 
