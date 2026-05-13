@@ -9,7 +9,7 @@ from colrev.package_manager.package_base_classes import SearchSourcePackageBaseC
 class CustomName(SearchSourcePackageBaseClass):
 
     def __init__(self, *, search_file: 'colrev.search_file.ExtendedSearchFile', logger: 'typing.Optional[logging.Logger]' = None, verbose_mode: 'bool' = False) -> 'None':
-        """Initialize self.  See help(type(self)) for accurate signature."""
+        """Initialize the instance."""
 
     def load(self) -> 'dict':
         """Load records from the SearchSource."""

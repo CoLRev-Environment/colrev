@@ -9,7 +9,7 @@ from colrev.package_manager.package_base_classes import ReviewTypePackageBaseCla
 class CustomName(ReviewTypePackageBaseClass):
 
     def __init__(self, *, operation: 'colrev.process.operation.Operation', settings: 'dict', logger: 'typing.Optional[logging.Logger]' = None, verbose_mode: 'bool' = False) -> 'None':
-        """Initialize self.  See help(type(self)) for accurate signature."""
+        """Initialize the instance."""
 
     def initialize(self, settings: 'colrev.settings.Settings') -> 'dict':
         """Initialize the review type."""
