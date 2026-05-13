@@ -16,6 +16,7 @@ class SpringerLinkAPI:
     """Handle HTTP interactions with the Springer Link API."""
 
     def __init__(self, *, session: typing.Optional[requests.Session] = None) -> None:
+        """Initialize the instance."""
         self.session = session or requests.Session()
 
     def get_json(self, url: str, *, timeout: int) -> dict:

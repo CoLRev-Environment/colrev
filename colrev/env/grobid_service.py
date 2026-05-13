@@ -21,6 +21,7 @@ class GrobidService:
     GROBID_IMAGE = "lfoppiano/grobid:0.8.2"
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         colrev.env.docker_manager.DockerManager.build_docker_image(
             imagename=self.GROBID_IMAGE
         )

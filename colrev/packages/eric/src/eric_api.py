@@ -54,6 +54,7 @@ class ERICAPI:
     FIELD_MAPPING = {"publicationdateyear": "year", "description": "abstract"}
 
     def __init__(self, params: dict) -> None:
+        """Initialize the instance."""
         self.params = params
         self.language_service = colrev.env.language_service.LanguageService()
 

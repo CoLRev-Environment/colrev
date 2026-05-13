@@ -29,6 +29,7 @@ class ScopusAPI:
     _THROTTLE_S = 0.34
 
     def __init__(self, *, logger: logging.Logger | None = None) -> None:
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
 
     @staticmethod

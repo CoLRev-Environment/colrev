@@ -18,6 +18,7 @@ class SemanticScholarAPI:
     """Light wrapper around the Semantic Scholar client."""
 
     def __init__(self, *, api_key: typing.Optional[str] = None) -> None:
+        """Initialize the instance."""
         self._client = (
             SemanticScholar(api_key=api_key) if api_key else SemanticScholar()
         )

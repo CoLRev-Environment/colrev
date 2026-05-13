@@ -25,6 +25,7 @@ class PDFRecord(colrev.record.record.Record):
     """The PDFRecord class provides a range of Function for PDF handling."""
 
     def __init__(self, data: dict, *, path: Path) -> None:
+        """Initialize the instance."""
         self.data = data
         """Dictionary containing the record data"""
 

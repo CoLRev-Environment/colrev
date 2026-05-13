@@ -47,6 +47,7 @@ class HTTPRequest:
     """HTTP Request."""
 
     def __init__(self, *, timeout: int, cache: bool = True) -> None:
+        """Initialize the instance."""
         self.rate_limits = {"x-rate-limit-limit": 50, "x-rate-limit-interval": 1}
         self.timeout = timeout
         self.cache = cache
@@ -120,7 +121,7 @@ class Endpoint:
         cache: bool = True,
         crossref_plus_token: str = "",
     ) -> None:
-
+        """Initialize the instance."""
         self.httpr = HTTPRequest(timeout=60, cache=cache)
 
         self.headers = {
@@ -229,7 +230,7 @@ class Endpoint:
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-return-statements
     def __iter__(self) -> typing.Iterator[dict]:
-
+        """Return an iterator."""
         request_url = str(self.request_url)
 
         if request_url.startswith("https://api.crossref.org/works/"):
@@ -329,6 +330,7 @@ class CrossrefAPI:
         rerun: bool = False,
         cache: typing.Optional[bool] = None,
     ):
+        """Initialize the instance."""
         assert url.startswith(self._api_url)
         self.url = url
 

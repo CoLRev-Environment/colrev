@@ -28,7 +28,7 @@ class PROSPEROAPI:
     URL_PREFIX = "https://www.crd.york.ac.uk/prospero/display_record.php?RecordID="
 
     def __init__(self, search_word: str, logger: logging.Logger) -> None:
-
+        """Initialize the instance."""
         self.search_word = search_word
 
         self.logger = logger

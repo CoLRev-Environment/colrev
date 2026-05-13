@@ -30,6 +30,7 @@ class OpenAlexAPI:
         # query: typing.Optional[str] = None,
         # timeout: int = 60,
     ):
+        """Initialize the instance."""
         pyalex.config.email = email
         self.language_service = colrev.env.language_service.LanguageService()
 

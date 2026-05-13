@@ -32,6 +32,7 @@ class PathManager:
     RECORDS_FILE_GIT = str(RECORDS_FILE).replace("\\", "/")
 
     def __init__(self, base_path: Path) -> None:
+        """Initialize the instance."""
         self.base_path = base_path
 
         self.search = base_path / self.SEARCH_DIR

@@ -23,6 +23,7 @@ class OpenCitationsAPI:
         session: typing.Optional[requests.Session] = None,
         headers: typing.Optional[typing.Dict[str, str]] = None,
     ) -> None:
+        """Initialize the instance."""
         self.session = session or requests.Session()
         # headers = {"authorization": "YOUR-OPENCITATIONS-ACCESS-TOKEN"}
         self.headers: typing.Dict[str, str] = headers or {}

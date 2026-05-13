@@ -21,6 +21,7 @@ class RecordNotInTOCChecker:
     def __init__(
         self, quality_model: colrev.record.qm.quality_model.QualityModel
     ) -> None:
+        """Initialize the instance."""
         self.quality_model = quality_model
         self.local_index = colrev.env.local_index.LocalIndex(verbose_mode=False)
 

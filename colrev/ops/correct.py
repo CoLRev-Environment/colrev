@@ -57,6 +57,7 @@ class Corrections:
         *,
         review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
+        """Initialize the instance."""
         self.review_manager = review_manager
         self.corrections_path = self.review_manager.paths.corrections
         self.corrections_path.mkdir(exist_ok=True)

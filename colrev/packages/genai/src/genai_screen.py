@@ -31,6 +31,7 @@ class GenAIScreen(base_classes.ScreenPackageBaseClass):
         settings: dict,
         logger: typing.Optional[logging.Logger] = None,
     ) -> None:
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         self.review_manager = screen_operation.review_manager
         self.screen_operation = screen_operation

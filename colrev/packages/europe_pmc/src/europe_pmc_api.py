@@ -23,6 +23,7 @@ class EPMCAPI:
     """Connector for the Europe PMC API."""
 
     def __init__(self, params: dict, email: str, session: requests.Session) -> None:
+        """Initialize the instance."""
         self.params = params
 
         self.url = (

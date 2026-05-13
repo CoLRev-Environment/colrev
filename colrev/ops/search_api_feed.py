@@ -83,6 +83,7 @@ class SearchAPIFeed:
         verbose_mode: bool = False,
         records: typing.Optional[dict] = None,
     ):
+        """Initialize the instance."""
         self.source = search_source
         self.feed_file = Path(search_source.search_results_path)
 

@@ -41,6 +41,7 @@ class Unpaywall(base_classes.PDFGetPackageBaseClass):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.settings = self.settings_class(**settings)

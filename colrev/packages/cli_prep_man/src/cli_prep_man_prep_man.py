@@ -26,6 +26,7 @@ class CliPrepMan(PrepManPackageBaseClass):
         settings: dict,
         logger: typing.Optional[logging.Logger] = None,
     ) -> "None":
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         """Initialize self.  See help(type(self)) for accurate signature."""
 

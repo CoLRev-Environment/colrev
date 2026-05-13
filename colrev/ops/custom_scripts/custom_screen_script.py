@@ -29,6 +29,7 @@ class CustomScreen(base_classes.ScreenPackageBaseClass):
         screen_operation: colrev.screen.Screen,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
+        """Initialize the instance."""
         self.settings = self.settings_class(**settings)
         self.screen_operation = screen_operation
 

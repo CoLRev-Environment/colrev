@@ -32,6 +32,7 @@ class ExtendedSearchFile(search_query.SearchFile):
     ) -> None:
 
         # Mandatory attribute
+        """Initialize the instance."""
         self.search_type = SearchType(search_type)
 
         if not str(search_results_path).replace("\\", "/").startswith("data/search"):
@@ -134,6 +135,7 @@ class ExtendedSearchFile(search_query.SearchFile):
             git_repo.add_changes(path)
 
     def __repr__(self) -> str:
+        """Return a developer representation."""
         return (
             f"{self.__class__.__name__}("
             f"platform={self.platform!r}, "
@@ -144,6 +146,7 @@ class ExtendedSearchFile(search_query.SearchFile):
 
     def __str__(self) -> str:
         # pylint: disable=broad-exception-caught
+        """Return a string representation."""
         try:
             payload = self.to_dict()
         except Exception:

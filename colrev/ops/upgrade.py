@@ -43,6 +43,7 @@ class Upgrade(colrev.process.operation.Operation):
         *,
         review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
+        """Initialize the instance."""
         prev_force_mode = review_manager.force_mode
         review_manager.force_mode = True
         super().__init__(
@@ -945,6 +946,7 @@ class CoLRevVersion:
     """Class for handling the CoLRev version."""
 
     def __init__(self, version_string: str) -> None:
+        """Initialize the instance."""
         if "+" in version_string:
             version_string = version_string[: version_string.find("+")]
         assert re.match(r"\d+\.\d+\.\d+$", version_string)
@@ -955,6 +957,7 @@ class CoLRevVersion:
         self.patch = int(version_string[version_string.rfind(".") + 1 :])
 
     def __eq__(self, other) -> bool:  # type: ignore
+        """Return whether two instances are equal."""
         return (
             self.major == other.major
             and self.minor == other.minor
@@ -962,6 +965,7 @@ class CoLRevVersion:
         )
 
     def __lt__(self, other) -> bool:  # type: ignore
+        """Return whether this instance is less than another."""
         if self.major < other.major:
             return True
         if self.major == other.major and self.minor < other.minor:
@@ -988,4 +992,5 @@ class CoLRevVersion:
         return False
 
     def __str__(self) -> str:
+        """Return a string representation."""
         return f"{self.major}.{self.minor}.{self.patch}"

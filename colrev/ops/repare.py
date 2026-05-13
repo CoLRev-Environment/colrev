@@ -32,6 +32,7 @@ class Repare(colrev.process.operation.Operation):
         *,
         review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
+        """Initialize the instance."""
         super().__init__(
             review_manager=review_manager,
             operations_type=self.type,

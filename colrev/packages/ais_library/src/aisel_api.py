@@ -28,6 +28,7 @@ class AISeLAPI:
         session: typing.Optional[requests.Session] = None,
         headers: typing.Optional[typing.Dict[str, str]] = None,
     ) -> None:
+        """Initialize the instance."""
         self.search_file = search_file
         self.session = session or requests.Session()
         self.headers = headers or {}

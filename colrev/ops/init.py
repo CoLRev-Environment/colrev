@@ -51,6 +51,7 @@ class Initializer:
         light: bool = False,
         exact_call: str = "",
     ) -> None:
+        """Initialize the instance."""
         p_man = PackageManager()
         self.review_type = self._format_review_type(review_type)
         if not p_man.is_installed(self.review_type):

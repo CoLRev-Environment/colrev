@@ -71,6 +71,7 @@ class ProjectSettings(BaseModel):
     auto_upgrade: bool
 
     def __str__(self) -> str:
+        """Return a string representation."""
         project_str = f"- review ({self.review_type}):"
         project_str += f"\n- title: {self.title}"
         return project_str
@@ -85,6 +86,7 @@ class SearchSettings(BaseModel):
     retrieve_forthcoming: bool
 
     def __str__(self) -> str:
+        """Return a string representation."""
         return f"- retrieve_forthcoming: {self.retrieve_forthcoming}"
 
 
@@ -98,6 +100,7 @@ class PrepRound(BaseModel):
     prep_package_endpoints: list
 
     def __str__(self) -> str:
+        """Return a string representation."""
         short_list = [script["endpoint"] for script in self.prep_package_endpoints][:3]
         if len(self.prep_package_endpoints) > 3:
             short_list.append("...")
@@ -115,6 +118,7 @@ class PrepSettings(BaseModel):
     defects_to_ignore: list
 
     def __str__(self) -> str:
+        """Return a string representation."""
         return (
             f"- fields_to_keep: {self.fields_to_keep}\n"
             + "- prep_rounds:\n - endpoints:\n   - "
@@ -131,6 +135,7 @@ class DedupeSettings(BaseModel):
     dedupe_package_endpoints: list
 
     def __str__(self) -> str:
+        """Return a string representation."""
         endpoints_str = "- endpoints: []\n"
         if self.dedupe_package_endpoints:
             endpoints_str = "- endpoints:\n - " + "\n - ".join(
@@ -149,6 +154,7 @@ class PrescreenSettings(BaseModel):
     prescreen_package_endpoints: list
 
     def __str__(self) -> str:
+        """Return a string representation."""
         endpoints_str = "- endpoints: []\n"
         if self.prescreen_package_endpoints:
             endpoints_str = "- endpoints:\n - " + "\n - ".join(
@@ -175,6 +181,7 @@ class PDFGetSettings(BaseModel):
     defects_to_ignore: list
 
     def __str__(self) -> str:
+        """Return a string representation."""
         endpoints_str = "- endpoints: []\n"
         if self.pdf_get_man_package_endpoints:
             endpoints_str = "- endpoints:\n - " + "\n - ".join(
@@ -196,6 +203,7 @@ class PDFPrepSettings(BaseModel):
     pdf_prep_man_package_endpoints: list
 
     def __str__(self) -> str:
+        """Return a string representation."""
         endpoints_str = "- endpoints: []\n"
         if self.pdf_prep_package_endpoints:
             endpoints_str = "- endpoints:\n - " + "\n - ".join(
@@ -215,6 +223,7 @@ class ScreenCriterion(BaseModel):
     criterion_type: ScreenCriterionType
 
     def __str__(self) -> str:
+        """Return a string representation."""
         return f"{self.explanation} ({self.criterion_type}, {self.comment})"
 
 
@@ -226,6 +235,7 @@ class ScreenSettings(BaseModel):
     screen_package_endpoints: list
 
     def __str__(self) -> str:
+        """Return a string representation."""
         endpoints_str = "- endpoints: []\n"
         if self.screen_package_endpoints:
             endpoints_str = "- endpoints:\n - " + "\n - ".join(
@@ -251,6 +261,7 @@ class DataSettings(BaseModel):
     data_package_endpoints: list
 
     def __str__(self) -> str:
+        """Return a string representation."""
         endpoints_str = "- endpoints: []\n"
         if self.data_package_endpoints:
             endpoints_str = "- endpoints:\n - " + "\n - ".join(
@@ -319,6 +330,7 @@ class Settings(BaseModel):
         return False
 
     def __str__(self) -> str:
+        """Return a string representation."""
         sources_str = "\n- " + "\n- ".join(
             [str(s) for s in self.sources if s.is_md_source()]
             + [str(s) for s in self.sources if not s.is_md_source()]

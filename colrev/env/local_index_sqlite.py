@@ -54,6 +54,7 @@ class SQLiteIndex:
     def __init__(
         self, *, index_name: str, index_keys: list, reinitialize: bool
     ) -> None:
+        """Initialize the instance."""
         self.index_name = index_name
         self.index_keys = index_keys
         self.connection = sqlite3.connect(
@@ -152,6 +153,7 @@ class SQLiteIndexRecord(SQLiteIndex):
             WHERE {LocalIndexFields.ID}=?"""
 
     def __init__(self, *, reinitialize: bool = False) -> None:
+        """Initialize the instance."""
         super().__init__(
             index_name=self.INDEX_NAME,
             index_keys=self.KEYS,
@@ -266,6 +268,7 @@ class SQLiteIndexRankings(SQLiteIndex):
     SELECT_QUERY = f"SELECT * FROM {INDEX_NAME} WHERE journal_name = ?"
 
     def __init__(self, *, reinitialize: bool = False) -> None:
+        """Initialize the instance."""
         super().__init__(
             index_name=self.INDEX_NAME,
             index_keys=self.KEYS,
@@ -306,6 +309,7 @@ class SQLiteIndexTOC(SQLiteIndex):
     INSERT_MANY_QUERY = f"INSERT INTO {INDEX_NAME} VALUES(?, ?)"
 
     def __init__(self, *, reinitialize: bool = False) -> None:
+        """Initialize the instance."""
         super().__init__(
             index_name=self.INDEX_NAME,
             index_keys=self.KEYS,

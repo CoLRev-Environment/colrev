@@ -21,11 +21,13 @@ from colrev.package_manager.package_manager import PackageManager
 
 class _Paths:
     def __init__(self, root: Path) -> None:
+        """Initialize the instance."""
         self.git_ignore = root / ".gitignore"
 
 
 class _ReviewManagerStub:
     def __init__(self, root: Path) -> None:
+        """Initialize the instance."""
         self.path = root
         self.paths = _Paths(root)
 

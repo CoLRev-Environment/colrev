@@ -23,6 +23,7 @@ class PDFBackwardSearchAPI:
         session: typing.Optional[requests.Session] = None,
         headers: typing.Optional[typing.Dict[str, str]] = None,
     ) -> None:
+        """Initialize the instance."""
         self.session = session or requests.Session()
         self.headers = headers or {}
 

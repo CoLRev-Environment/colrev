@@ -44,7 +44,7 @@ class ReviewTypePackageBaseClass(abc.ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
-        pass
+        """Initialize the instance."""
 
     @abstractmethod
     def initialize(self, settings: colrev.settings.Settings) -> dict:
@@ -81,7 +81,7 @@ class SearchSourcePackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
-        pass
+        """Initialize the instance."""
 
     @classmethod
     @abstractmethod
@@ -150,7 +150,7 @@ class PrepPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
-        pass
+        """Initialize the instance."""
 
     @abstractmethod
     def prepare(
@@ -181,7 +181,7 @@ class PrepManPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
-        pass
+        """Initialize the instance."""
 
     @abstractmethod
     def prepare_manual(self, records: dict) -> dict:
@@ -209,7 +209,7 @@ class DedupePackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ):
-        pass
+        """Initialize the instance."""
 
     @abstractmethod
     def run_dedupe(self) -> None:
@@ -238,7 +238,7 @@ class PrescreenPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
-        pass
+        """Initialize the instance."""
 
     @abstractmethod
     def run_prescreen(self, records: dict, split: list) -> dict:
@@ -266,7 +266,7 @@ class PDFGetPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
-        pass
+        """Initialize the instance."""
 
     @abstractmethod
     def get_pdf(
@@ -296,7 +296,7 @@ class PDFGetManPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
-        pass
+        """Initialize the instance."""
 
     @abstractmethod
     def pdf_get_man(self, records: dict) -> dict:
@@ -324,7 +324,7 @@ class PDFPrepPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
-        pass
+        """Initialize the instance."""
 
     @abstractmethod
     def prep_pdf(
@@ -354,7 +354,7 @@ class PDFPrepManPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
-        pass
+        """Initialize the instance."""
 
     @abstractmethod
     def pdf_prep_man(self, records: dict) -> dict:
@@ -383,7 +383,7 @@ class ScreenPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
-        pass
+        """Initialize the instance."""
 
     @abstractmethod
     def run_screen(self, records: dict, split: list) -> dict:
@@ -411,7 +411,7 @@ class DataPackageBaseClass(ABC):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
-        pass
+        """Initialize the instance."""
 
     @abstractmethod
     def update_data(

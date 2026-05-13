@@ -37,6 +37,7 @@ class PubmedAPI:
         timeout: int = 60,
         logger: typing.Optional[logging.Logger] = None,
     ):
+        """Initialize the instance."""
         self.email = email
         self.session = session
         self._timeout = timeout

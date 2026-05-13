@@ -32,6 +32,7 @@ class Operation:
         operations_type: OperationsType,
         notify_state_transition_operation: bool = True,
     ) -> None:
+        """Initialize the instance."""
         self.review_manager = review_manager
         self.type = operations_type
         self.notify_state_transition_operation = notify_state_transition_operation

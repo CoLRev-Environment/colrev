@@ -49,6 +49,7 @@ class Commit:
         saved_args: typing.Optional[dict] = None,
         skip_hooks: bool = False,
     ) -> None:
+        """Initialize the instance."""
         self.review_manager = review_manager
         self.msg = msg
         self.manual_author = manual_author

@@ -95,6 +95,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         logger: typing.Optional[logging.Logger] = None,
         verbose_mode: bool = False,
     ) -> None:
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.data_operation = data_operation
@@ -857,5 +858,6 @@ class PaperMarkdownRecordSourceTagError(Exception):
     """NEW_RECORD_SOURCE_TAG not found in paper.md."""
 
     def __init__(self, msg: str) -> None:
+        """Initialize the instance."""
         self.message = f" {msg}"
         super().__init__(self.message)

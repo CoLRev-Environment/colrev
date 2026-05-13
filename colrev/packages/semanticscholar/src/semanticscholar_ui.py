@@ -17,6 +17,7 @@ class SemanticScholarUI:
     search_params: dict
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.search_params = {}
         self.search_subject = ""
 

@@ -51,6 +51,7 @@ class HTTPRequest:
     def __init__(self, *, timeout: int) -> None:
         # https://api.plos.org/solr/faq/
         # 10 request per minute (60s)
+        """Initialize the instance."""
         self.rate_limits = {"x-rate-limit-limit": 10, "x-rate-limit-interval": 60}
         self.timeout = timeout
 
@@ -114,7 +115,7 @@ class Endpoint:
         email: str = "",
         plos_plus_token: str = "",
     ) -> None:
-
+        """Initialize the instance."""
         self.retrieve = HTTPRequest(timeout=60).retrieve
 
         # List of http headers
@@ -199,6 +200,7 @@ class Endpoint:
         return req.url
 
     def __iter__(self) -> typing.Iterator[dict]:
+        """Return an iterator."""
         request_url = str(self.request_url)
         if request_url.startswith("https://api.plos.org/search?q=doi:10"):
             result = self.retrieve(request_url, headers=self.headers)
@@ -280,6 +282,7 @@ class PlosAPI:
         url: str,
         rerun: bool = False,
     ):
+        """Initialize the instance."""
         self.url = url
 
         _, self.email = (

@@ -23,6 +23,7 @@ class OpenLibraryAPI:
         session: typing.Optional[requests.Session] = None,
         headers: typing.Optional[dict] = None,
     ) -> None:
+        """Initialize the instance."""
         self.session = session or requests.Session()
         self.headers = headers or {}
 

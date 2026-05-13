@@ -26,6 +26,7 @@ class EnvironmentManager:
     load_yaml = False
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.environment_registry = self.load_environment_registry()
         self._registered_ports: typing.List[str] = []
 

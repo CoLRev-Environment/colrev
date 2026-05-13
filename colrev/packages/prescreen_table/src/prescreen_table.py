@@ -36,6 +36,7 @@ class TablePrescreen(base_classes.PrescreenPackageBaseClass):
         settings: dict,
         logger: typing.Optional[logging.Logger] = None,
     ) -> None:
+        """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         self.review_manager = prescreen_operation.review_manager
         self.settings = self.settings_class(**settings)

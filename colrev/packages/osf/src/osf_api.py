@@ -18,6 +18,7 @@ class OSFApiQuery:
     fields = ["id", "type", "title", "year", "description", "tags", "date_created"]
 
     def __init__(self, *, parameters: dict, api_key: str) -> None:
+        """Initialize the instance."""
         self.api_key = api_key
         self.headers = {"Authorization": f"Bearer {self.api_key}"}
         self.params: typing.Dict[str, str] = {}
