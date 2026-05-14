@@ -1,6 +1,6 @@
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/CoLRev-Environment/colrev/main/docs/figures/logo_small.png" width="400">
+<img src="https://raw.githubusercontent.com/CoLRev-Environment/colrev/main/docs/figures/logo_small.png" alt="CoLRev logo" width="400">
 </p>
 
 <div align="center">

@@ -3,17 +3,17 @@ FROM mcr.microsoft.com/vscode/devcontainers/python:3.12-bullseye
 
 # Install Docker CLI
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release && \
+    apt-transport-https=2.2.* \
+    ca-certificates=20210119* \
+    curl=7.74.* \
+    gnupg=2.2.* \
+    lsb-release=11.* && \
     curl -fsSL https://download.docker.com/linux/debian/gpg \
     | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
     | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
     apt-get update && apt-get install -y --no-install-recommends \
-    docker-ce-cli && \
+    docker-ce-cli=5:* && \
     rm -rf /var/lib/apt/lists/*
 
 # Add and setup the vscode user, attempt to handle Docker group dynamically
