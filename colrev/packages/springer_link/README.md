@@ -13,7 +13,7 @@ The search for is launched with the following command in your ColRev project:
 colrev search --add colrev.springer_link
 ```
 
-Upon entering the above command the user is asked to choose between  `DB search` and `API search` (For more details on the searchtypes see manual of CoLRev).
+Upon entering the above command the user is asked to choose between `DB search` and `API search` (For more details on the searchtypes see manual of CoLRev).
 The user can select the search type by navigating through the list with `uparrow` and `downarrow` and confirm the choice with `enter`.
 
 ### DB search
@@ -72,7 +72,7 @@ The user can choose between `complete_search_string` for searching with a comple
 
 #### API search: complex query
 
-The user can type the individual search constraints that can also use the boolean  `AND`, `OR` , `NOT`, `NEAR` for a specified search. Following conditions have to be followed:
+The user can type the individual search constraints that can also use the boolean `AND`, `OR`, `NOT`, `NEAR` for a specified search. Following conditions have to be followed:
 
 - Search terms must be enclosed in double quotes `"`
 - The entire logical condition must be enclosed in parentheses `()`
@@ -91,11 +91,8 @@ The user can type the individual search constraints that can also use the boolea
 
 - `doi:` 10.1007/s11214-017-0458-1
 - `pub:` Extremes
-- `onlinedate:` 2019-03-29
-
-    - also wildcard, e.g., `onlinedate:` 2019-01-*
-    - `onlinedatefrom:` 2019-09-01%20 `onlinedateto:` 2019-12-31
-
+- `onlinedate:` 2019-03-29 (supports wildcards, e.g., `onlinedate:` 2019-01-*)
+- `onlinedatefrom:` 2019-09-01%20 `onlinedateto:` 2019-12-31
 - `country:` %22New%20Zealand%22
 - `isbn:` 978-0-387-79148-7
 - `issn:` 1861-0692
@@ -110,12 +107,14 @@ For additional constraints visit the SpringerLink API Documentation (Link below)
 #### API search: entering the search parameters
 
 In this step the user can enter the search parameters into the console.
-The user can provide values for the following parameters: keyword, subject, language, year and type. Pressing `enter` will confirm the choice. If the field is blank, this parameter will be skipped. The parameters should be entered as followed:
+The user can provide values for the following parameters: keyword, subject, language, year and type.
+Pressing `enter` will confirm the choice. If the field is blank, this parameter will be skipped.
+The parameters should be entered as followed:
 
 - `keyword:` e.g. onlinear.
-- `subject:`  Springer Nature supports the subject areas (see below)
+- `subject:` Springer Nature supports the subject areas (see below)
 
-- `language:` please use country codes, e.g. "de" for "Germany".
+- `language:` Please use country codes, e.g. "de" for "Germany".
 - `year:` e.g. 2024.
 - `type:` limit search to Book or Journal (case sensitive!).
 

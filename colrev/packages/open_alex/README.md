@@ -17,7 +17,8 @@ Links meta data from OpenAlex to existing records.
 ## Debugging
 
 To test the metadata provided for a particular `open_alex_id` use:
-```
+
+```text
 https://api.openalex.org/works/OPEN_ALEX_ID
 ```
 

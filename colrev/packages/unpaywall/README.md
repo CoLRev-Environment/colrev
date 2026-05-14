@@ -28,14 +28,14 @@ Download search results and store them in the `data/search/` directory. When sea
 
 #### Option 1: Search with keywords
 
-1. Use the following command to add the endpoint:
+Use the following command to add the endpoint:
 
 ```bash
 colrev search --add colrev.unpaywall
 ```
 
-2. Upon entering the command above with no additional parameters, a console interface opens up, in which the user is asked to enter the parameters and query for their search.
-   Enter the keywords for the search by following the [Query & Keyword format](#api-search-query--keyword-format) like described underneath.
+Upon entering the command above with no additional parameters, a console interface opens up, in which the user is asked to enter the parameters and query for their search.
+Enter the keywords for the search by following the [Query & Keyword format](#api-search-query--keyword-format) like described underneath.
 
 #### API search: Query & Keyword format
 
