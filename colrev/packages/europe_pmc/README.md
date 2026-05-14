@@ -6,9 +6,10 @@ Europe PMC is a comprehensive database that includes metadata from PubMed Centra
 
 ### API search
 
-```
+```bash
 colrev search --add colrev.europe_pmc -p "https://europepmc.org/search?query=fitbit%20AND%20gamification%20AND%20RCT%20AND%20diabetes%20mellitus"
 ```
+
 Format of the search-history file (DB search):
 
 ```json

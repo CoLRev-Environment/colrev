@@ -8,7 +8,7 @@ Running GROBID requires Docker.
 
 This package can be added to a project using the following command:
 
-```
+```bash
 colrev pdf-prep -a colrev.grobid_tei
 ```
 

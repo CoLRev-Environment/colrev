@@ -8,7 +8,7 @@ This package provides functionality aimed at
 - fixing the errors manually (with the relevant error codes and explanations)
 - importing the prepared records
 
-1. Export the md_needs_manual_preparation cases
+### 1. Export the md_needs_manual_preparation cases
 
 ```bash
 colrev prep-man
@@ -16,12 +16,12 @@ colrev prep-man
 
 Exports the `records_prep_man.bib` (containing the records) and the `records_prep_man_info.csv` (containing the error codes).
 
-2. Manually fix the errors
+### 2. Manually fix the errors
 
 Manually change the bib file (based on error codes in csv file)
 Error code descriptions are available [here](https://colrev-environment.github.io/colrev/manual/appendix/quality_model.html).
 
-3. (Re) import the records
+### 3. (Re) import the records
 
 ```bash
 colrev prep-man

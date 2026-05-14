@@ -12,4 +12,4 @@ currently being supported with security updates.
 
 ## Reporting a Vulnerability
 
-Please report vulnerabilities to gerit.wagner@uni-bamberg.de.
+Please report vulnerabilities to <gerit.wagner@uni-bamberg.de>.

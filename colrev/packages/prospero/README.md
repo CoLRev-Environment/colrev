@@ -1,6 +1,6 @@
 ## Summary
 
-- [PROSPERO](https://www.crd.york.ac.uk/prospero/) is an international database of prospectively registered systematic reviews in health and social care, welfare, public health, education, crime, justice, and international development, where there is a health related outcome.
+[PROSPERO](https://www.crd.york.ac.uk/prospero/) is an international database of prospectively registered systematic reviews in health and social care, welfare, public health, education, crime, justice, and international development, where there is a health related outcome.
 
 ### Installation
 
@@ -10,10 +10,12 @@ colrev install colrev.prospero
 
 ### search
 
-Download the search results and store them in the data/search/ directory.
+Download the search results and store them in the `data/search/` directory.
+
 ```bash
 colrev search --add colrev.prospero
 ```
+
 The search is done using keywords that can be entered into the console.
 
 Format of the search-history file:
@@ -32,11 +34,15 @@ Format of the search-history file:
 ```
 
 ### load
-It is possible to save the records after search. All records that were found during the search will be saved to a data/records.bib file. Load function will add the records to the file or update existing one.
+
+It is possible to save the records after search.
+All records that were found during the search will be saved to a `data/records.bib` file.
+Load function will add the records to the file or update existing one.
 
 ```bash
 colrev load
 ```
+
 ## Links
 
 - [PROSPERO](https://www.crd.york.ac.uk/prospero/)

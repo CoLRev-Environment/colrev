@@ -1,6 +1,8 @@
 ## Summary
 
-PLOS is a SearchSource providing open access metadata for articles published in PLOS journals. It focuses on life sciences and health but includes articles in other disciplines. Its database contains metadata for thousands of articles across multiple PLOS journals.
+PLOS is a SearchSource providing open access metadata for articles published in PLOS journals.
+It focuses on life sciences and health but includes articles in other disciplines.
+Its database contains metadata for thousands of articles across multiple PLOS journals.
 
 ## Installation
 
@@ -11,11 +13,13 @@ colrev install colrev.plos
 ## Usage
 
 ### API search
+
 To make an API search, first introduce the next command:
 
 ```text
 colrev search -a colrev.plos
 ```
+
 On the menu displayed, select the option API:
 
 ```text
@@ -26,6 +30,7 @@ On the menu displayed, select the option API:
 ```
 
 Finally introduce a keyword to search:
+
 ```text
 Add colrev.plos as an API SearchSource
 

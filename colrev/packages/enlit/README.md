@@ -24,7 +24,7 @@ colrev_enlit
 
 ## Cite
 
-Wagner, G., Empl, P., & Schryen, G. (2020, May). Designing a novel strategy for exploring literature corpora. In *Proceedings of the European Conference on Information Systems*. https://aisel.aisnet.org/ecis2020_rp/44/
+Wagner, G., Empl, P., & Schryen, G. (2020, May). Designing a novel strategy for exploring literature corpora. In *Proceedings of the European Conference on Information Systems*. <https://aisel.aisnet.org/ecis2020_rp/44/>
 
 Original repository: [link](https://github.com/digital-work-lab/enlit)
 

@@ -8,19 +8,24 @@
 
 Download search results and store in `data/search/` directory.
 
-Data from the OSF open platform can be retrieved with the URL from the [https://www.osf.io/](https://api.osf.io/v2/nodes/?filter). Add the URL as follows:
+Data from the OSF open platform can be retrieved with the URL from the [https://www.osf.io/](https://api.osf.io/v2/nodes/?filter).
+Add the URL as follows:
 
-```
+```bash
 colrev search --add colrev.osf -p "https://api.osf.io/v2/nodes/?filter[title]=reproducibility"
 ```
 
 The retrieved data, including detailed project metadata and resources, is processed and made available for further actions within CoLRev, such as analysis or reporting.
 
-It is not necessary to pass an API key as a parameter here. In order to keep the key secret, set it in the `OSF_API_KEY` environment variable (for example with `export OSF_API_KEY="<your-api-key>"`). The api key can be requested via the [OSF settings page](https://accounts.osf.io/login?service=https://osf.io/settings/tokens/). If the variable is not defined, colrev will prompt for the key and store it for the current session.
+It is not necessary to pass an API key as a parameter here.
+In order to keep the key secret, set it in the `OSF_API_KEY` environment variable (for example with `export OSF_API_KEY="<your-api-key>"`).
+The API key can be requested via the [OSF settings page](https://accounts.osf.io/login?service=https://osf.io/settings/tokens/).
+If the variable is not defined, colrev will prompt for the key and store it for the current session.
 
-The search can be filtered by changing the filter parameter to one of the following parameters: title, id, type, category, year, description, tags, data_created. For each of these, change "filter[parameter]=value" in the URL.
+The search can be filtered by changing the filter parameter to one of the following parameters: `title`, `id`, `type`, `category`, `year`, `description`, `tags`, `data_created`.
+For each of these, change "filter[parameter]=value" in the URL.
 
-```
+```bash
 colrev search --add colrev.osf -p "https://api.osf.io/v2/nodes/?filter[description]=machine%20learning"
 ```
 

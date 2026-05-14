@@ -1,6 +1,7 @@
 ## Summary
 
-[Crossref](https://www.crossref.org/) is a SearchSource that contains metadata deposited by publishers. It is cross-disciplinary and has a size of over 125,000,000 records.
+[Crossref](https://www.crossref.org/) is a SearchSource that contains metadata deposited by publishers.
+It is cross-disciplinary and has a size of over 125,000,000 records.
 
 ## search
 
@@ -8,9 +9,9 @@
 
 ℹ️ Restriction: API searches do not support complex queries (yet)
 
-It is possible to copy the url from the [search.crossref.org](https://search.crossref.org/?q=microsourcing&from_ui=yes) UI and add it as follows:
+It is possible to copy the URL from the [search.crossref.org](https://search.crossref.org/?q=microsourcing&from_ui=yes) UI and add it as follows:
 
-```
+```bash
 colrev search --add colrev.crossref -p "query=microsourcing"
 colrev search --add colrev.crossref -p "https://search.crossref.org/?q=+microsourcing&from_ui=yes"
 ```
@@ -37,8 +38,9 @@ Format of the search-history file:
 
 ### TOC search
 
-Whole journals can be added based on their issn:
-```
+Whole journals can be added based on their ISSN:
+
+```bash
 colrev search --add colrev.crossref -p "issn=2162-9730"
 ```
 
@@ -64,7 +66,8 @@ Crossref generally offers high-quality meta data, making it an effective source 
 ## Debugging
 
 To test the metadata provided for a particular `DOI` use:
-```
+
+```bash
 https://api.crossref.org/works/DOI
 ```
 
