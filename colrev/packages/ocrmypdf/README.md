@@ -21,7 +21,7 @@ Running OCRmyPDF requires Docker.
 
 OCRmyPDF is contained in the default setup. To add it, run
 
-```
+```bash
 colrev pdf-prep -a colrev.ocrmypddf
 ```
 

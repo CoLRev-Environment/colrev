@@ -44,7 +44,8 @@ class ExcludeNonLatinAlphabetsPrep(base_classes.PrepPackageBaseClass):
         self.prep_operation = prep_operation
 
     def _mostly_latin_alphabet(self, str_to_check: str) -> bool:
-        assert len(str_to_check) != 0
+        if len(str_to_check) == 0:
+            raise AssertionError("String to check must not be empty")
         nr_latin = 0
         for character in str_to_check:
             if self.alphabet_detector.only_alphabet_chars(character, "LATIN"):

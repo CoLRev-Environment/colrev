@@ -104,7 +104,8 @@ class Record:
         """Get the record data."""
         if not isinstance(self.data.get(Fields.ORIGIN, []), list):
             self.data[Fields.ORIGIN] = self.data[Fields.ORIGIN].rstrip(";").split(";")
-        assert isinstance(self.data.get(Fields.ORIGIN, []), list)
+        if not isinstance(self.data.get(Fields.ORIGIN, []), list):
+            raise AssertionError("Expected ORIGIN field to be a list")
 
         return self.data
 

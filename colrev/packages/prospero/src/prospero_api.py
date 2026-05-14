@@ -53,7 +53,8 @@ class PROSPEROAPI:
     def _navigate_to_search_page(self) -> None:
         self.driver.get("https://www.crd.york.ac.uk/prospero/")
         self.driver.implicitly_wait(5)
-        assert "PROSPERO" in self.driver.title
+        if "PROSPERO" not in self.driver.title:
+            raise AssertionError(f"Unexpected page title: {self.driver.title}")
 
         search_bar = self.driver.find_element(By.ID, "txtSearch")
         search_bar.clear()
@@ -216,7 +217,8 @@ class PROSPEROAPI:
 
         finally:
             # Close the detail tab and switch back to the original search page
-            assert len(self.driver.window_handles) > 1
+            if len(self.driver.window_handles) <= 1:
+                raise AssertionError("Expected more than one browser window")
             self.driver.close()
             self.driver.switch_to.window(self.original_search_window)
 

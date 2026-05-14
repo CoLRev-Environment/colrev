@@ -19,7 +19,7 @@ The citation style can be change in the `data/data/paper.md` header. The templat
 
 Upon running the paper-md (as part of `colrev data`), new records are added after the following marker (as a to-do list):
 
-```
+```bash
 # Coding and synthesis
 
 _Records to synthesize_:<!-- NEW_RECORD_SOURCE -->

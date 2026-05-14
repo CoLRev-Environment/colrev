@@ -21,7 +21,7 @@ It is activated by default and is responsible for removing duplicate entries in 
 
 ## Cite
 
-```
+```tex
 @article{Wagner_BibDedupe_An_Open-Source_2024,
         author  = {Wagner, Gerit},
         doi     = {10.21105/joss.06318},

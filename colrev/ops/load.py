@@ -449,7 +449,8 @@ class Load(colrev.process.operation.Operation):
         checker.check_sources()
         sources_settings = []
         for source in self.review_manager.settings.sources:
-            assert isinstance(source, colrev.search_file.ExtendedSearchFile)
+            if not isinstance(source, colrev.search_file.ExtendedSearchFile):
+                raise AssertionError("Expected source to be ExtendedSearchFile")
             source.search_type = SearchType(source.search_type)
             source.search_results_path = Path(source.search_results_path)
             sources_settings.append(source)

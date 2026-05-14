@@ -136,7 +136,8 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def _save_field_dict(self, *, input_dict: dict, input_key: str) -> list:
         list_to_return = []
-        assert input_key in [Fields.MD_PROV, Fields.D_PROV]
+        if input_key not in [Fields.MD_PROV, Fields.D_PROV]:
+            raise AssertionError(f"Unexpected input key: {input_key}")
         if input_key == Fields.MD_PROV:
             for key, value in input_dict.items():
                 if isinstance(value, dict):

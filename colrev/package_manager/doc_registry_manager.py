@@ -103,9 +103,10 @@ class PackageDoc:
             ) as file:
                 self.package_metadata = toml.load(file)
 
-            assert str(self.package_dir).endswith(
-                package_id.replace("colrev.", "")
-            ), package_id
+            if not str(self.package_dir).endswith(package_id.replace("colrev.", "")):
+                raise AssertionError(
+                    f"Unexpected package directory for {package_id}: {self.package_dir}"
+                )
 
             return True
         return False

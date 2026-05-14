@@ -4,7 +4,7 @@
 
 ### FILES  search
 
-```
+```bash
 colrev search --add colrev.files_dir
 ```
 

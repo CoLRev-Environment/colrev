@@ -182,7 +182,10 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
                     continue
                 screening_criteria_field = ""
                 for screening_criterion in screening_criteria.keys():
-                    assert screened_record[screening_criterion] in ["in", "out"]
+                    if screened_record[screening_criterion] not in ["in", "out"]:
+                        raise AssertionError(
+                            "Screening criterion value must be 'in' or 'out'"
+                        )
                     screening_criteria_field += (
                         screening_criterion
                         + "="

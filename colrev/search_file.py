@@ -90,7 +90,8 @@ class ExtendedSearchFile(search_query.SearchFile):
 
     def get_origin_prefix(self) -> str:
         """Get the corresponding origin prefix."""
-        assert not any(x in str(self.search_results_path.name) for x in [";", "/"])
+        if any(x in str(self.search_results_path.name) for x in [";", "/"]):
+            raise AssertionError("Search results filename contains invalid characters")
         return str(self.search_results_path.name).lstrip("/")
 
     def is_md_source(self) -> bool:
@@ -106,7 +107,8 @@ class ExtendedSearchFile(search_query.SearchFile):
         self, search_history_path: typing.Optional[str | Path] = None
     ) -> Path:
         """Get the search history path."""
-        assert search_history_path is None
+        if search_history_path is not None:
+            raise AssertionError("Search history path must be None")
 
         return Path("data/search") / Path(
             Path(self.search_results_path).stem + "_search_history.json"

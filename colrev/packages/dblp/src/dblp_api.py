@@ -78,8 +78,10 @@ class DBLPAPI:
             dblp_record = retrieved_records[0]
 
             if 0 != len(dblp_record.data):
-                assert dblp_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
-                assert dblp_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
+                if dblp_record.data[Fields.TITLE] != test_rec[Fields.TITLE]:
+                    raise AssertionError("Returned title does not match test record")
+                if dblp_record.data[Fields.AUTHOR] != test_rec[Fields.AUTHOR]:
+                    raise AssertionError("Returned author does not match test record")
             else:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message

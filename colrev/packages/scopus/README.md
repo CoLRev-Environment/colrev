@@ -10,7 +10,7 @@ Download search results and store in `data/search/` directory. API-access not ye
 
 Get an API key and set it using
 
-```
+```bash
 export SCOPUS_API_KEY="your-api-key"
 ```
 

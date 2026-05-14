@@ -10,7 +10,7 @@ PubMed is a free search engine that provides access to a vast collection of biom
 
 To add a pubmed API search, enter the query in the [Pubmed web interface](https://pubmed.ncbi.nlm.nih.gov/), run the search, copy the url and run:
 
-```
+```bash
 colrev search --add colrev.pubmed -p "https://pubmed.ncbi.nlm.nih.gov/?term=fitbit"
 ```
 

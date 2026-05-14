@@ -4,7 +4,7 @@ This package creates an sqlite database based on local CoLRev packages, providin
 
 To create or update the index, run
 
-```
+```bash
 colrev env -i
 ```
 
@@ -12,7 +12,7 @@ colrev env -i
 
 ### API search
 
-```
+```bash
 colrev search --add colrev.local_index -p "title LIKE '%dark side%'"
 ```
 

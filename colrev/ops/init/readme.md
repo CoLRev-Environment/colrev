@@ -2,7 +2,7 @@
 
 This repository is based on the [ColRev](https://github.com/CoLRev-Environment/colrev) standard.
 
-```
+```bash
 # To work on this project, run
 colrev clone URL
 

@@ -86,7 +86,8 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         source = self.search_source
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
-        assert source.search_type in self.search_types
+        if source.search_type not in self.search_types:
+            raise AssertionError(f"Unexpected search type: {source.search_type}")
 
         # if "query" not in source.search_string:
         # Note :  for md-sources, there is no query parameter.
@@ -483,7 +484,8 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                 item["original_record"]
             ).get_field_provenance_source(FieldValues.CURATED)
             if repo_path != "":
-                assert "#" not in repo_path
+                if "#" in repo_path:
+                    raise AssertionError(f"Unexpected repository path: {repo_path}")
                 # otherwise: strip the ID at the end if we add an ID...
                 base_repos.append(repo_path)
 
@@ -517,7 +519,8 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             repo_path = colrev.record.record.Record(
                 item["original_record"]
             ).get_field_provenance_source(FieldValues.CURATED)
-            assert "#" not in repo_path
+            if "#" in repo_path:
+                raise AssertionError(f"Unexpected repository path: {repo_path}")
 
             if repo_path != local_base_repo:
                 continue

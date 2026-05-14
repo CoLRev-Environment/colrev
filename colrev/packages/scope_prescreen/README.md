@@ -9,7 +9,7 @@ This package uses a predefined scope to apply prescreening decisions automatical
 
 The Scope Prescreen can be added as follows:
 
-```
+```bash
 colrev prescreen -a colrev.scope_prescreen -p "TimeScopeFrom=2010"
 colrev prescreen -a colrev.scope_prescreen -p "TimeScopeTo=2020"
 colrev prescreen -a colrev.scope_prescreen -p "LanguageScope=eng,deu"
@@ -18,7 +18,6 @@ colrev prescreen -a colrev.scope_prescreen -p "ENTRYTYPEScope=article,inproceedi
 colrev prescreen -a colrev.scope_prescreen -p "RequireRankedJournals=True"
 
 # TODO : OutletInclusionScope,OutletExclusionScope
-
 ```
 
 For **RequireRankedJournals**:

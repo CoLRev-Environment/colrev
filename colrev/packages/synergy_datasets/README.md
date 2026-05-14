@@ -9,7 +9,7 @@
 Navigate to the [SYNERGY Datasets](https://github.com/asreview/synergy-dataset) and copy the name of the directory and csv file (in the datasets directory).
 For example, the dataset under `Howard_2016/Wassenaar_2017_ids.csv` can be added as follows:
 
-```
+```bash
 colrev search --add colrev.synergy_datasets -p dataset=Howard_2016/Wassenaar_2017_ids.csv
 ```
 

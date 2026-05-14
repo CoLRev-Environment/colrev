@@ -91,12 +91,16 @@ class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
         self.logger = logger or logging.getLogger(__name__)
         if "TimeScopeFrom" in settings:
             settings["TimeScopeFrom"] = int(settings["TimeScopeFrom"])
-            assert settings["TimeScopeFrom"] > 1900
-            assert settings["TimeScopeFrom"] < 2100
+            if settings["TimeScopeFrom"] <= 1900:
+                raise AssertionError("TimeScopeFrom must be greater than 1900")
+            if settings["TimeScopeFrom"] >= 2100:
+                raise AssertionError("TimeScopeFrom must be less than 2100")
         if "TimeScopeTo" in settings:
             settings["TimeScopeTo"] = int(settings["TimeScopeTo"])
-            assert settings["TimeScopeTo"] > 1900
-            assert settings["TimeScopeTo"] < 2100
+            if settings["TimeScopeTo"] <= 1900:
+                raise AssertionError("TimeScopeTo must be greater than 1900")
+            if settings["TimeScopeTo"] >= 2100:
+                raise AssertionError("TimeScopeTo must be less than 2100")
         if "LanguageScope" in settings:
             self.language_service = colrev.env.language_service.LanguageService()
             try:

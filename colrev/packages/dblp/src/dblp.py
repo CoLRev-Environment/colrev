@@ -171,7 +171,8 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         elif search_type == SearchType.TOC:
             url = input("Paste the URL of the DBLP venue (e.g. conference):")
-            assert url.startswith("https://dblp.org/db/journals/")
+            if not url.startswith("https://dblp.org/db/journals/"):
+                raise AssertionError(f"Unexpected URL: {url}")
             venue_key = url.split("/")[-2].replace(".html", "")
             search_source = colrev.search_file.ExtendedSearchFile(
                 platform=cls.endpoint,
@@ -312,11 +313,13 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         source = self.search_source
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
-        assert source.search_type in self.search_types
+        if source.search_type not in self.search_types:
+            raise AssertionError(f"Unexpected search type: {source.search_type}")
 
         # maybe : validate/assert that the venue_key is available
         if source.search_type == SearchType.TOC:
-            assert "scope" in source.search_parameters
+            if "scope" not in source.search_parameters:
+                raise AssertionError("Missing required search parameter: scope")
             if "venue_key" not in source.search_parameters["scope"]:
                 raise colrev_exceptions.InvalidQueryException(
                     "venue_key required in search_parameters/scope"
@@ -326,7 +329,8 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                     "journal_abbreviated required in search_parameters/scope"
                 )
         elif source.search_type == SearchType.API:
-            assert "query" in source.search_parameters
+            if "query" not in source.search_parameters:
+                raise AssertionError("Missing required search parameter: query")
 
         elif source.search_type == SearchType.MD:
             pass  # No parameters required

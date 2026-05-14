@@ -97,7 +97,8 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         else:
             host = urlparse(params_dict["url"]).hostname
 
-            assert host and host.endswith("arxiv.org")
+            if not (host and host.endswith("arxiv.org")):
+                raise AssertionError(f"Unexpected URL host: {host}")
 
             query = params_dict["url"].replace("https://arxiv.org/search/?query=", "")
             query = query[: query.find("&searchtype")]

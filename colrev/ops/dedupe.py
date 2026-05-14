@@ -381,7 +381,8 @@ class Dedupe(colrev.process.operation.Operation):
         if non_existing_ids:
             print(f"Non-existing IDs: {non_existing_ids}")
             print(f"Records IDs: {records.keys()}")
-        assert not non_existing_ids, "Not all IDs from id_sets are present in records"
+        if non_existing_ids:
+            raise AssertionError("Not all IDs from id_sets are present in records")
 
         # Notify users about items with only one unique ID
         for id_set in id_sets:
@@ -531,7 +532,10 @@ class Dedupe(colrev.process.operation.Operation):
                     if origins == hist_recs[rid].get(Fields.ORIGIN, []):
                         continue
                     if any(orig in origins for orig in hist_rec.get(Fields.ORIGIN, [])):
-                        assert hist_rec[Fields.ID] not in unmerged_records
+                        if hist_rec[Fields.ID] in unmerged_records:
+                            raise AssertionError(
+                                "Historical record ID unexpectedly present in unmerged records"
+                            )
                         hist_rec.update({Fields.STATUS: RecordState.md_processed})
                         self.review_manager.logger.info(
                             f"add historical record: {hist_rec[Fields.ID]}"

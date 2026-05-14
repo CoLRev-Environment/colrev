@@ -10,7 +10,7 @@ The add_journal_ranking package allows the user to add a ranking to the records 
 
 Example:
 
-```
+```text
 journal_ranking = {Senior Scholars' List of Premier Journals}, or
 journal_ranking = {not included in a ranking},
 ```
@@ -19,7 +19,7 @@ Should the journal be in the Beall's Predatory Journal list, then the record wil
 
 Example:
 
-```
+```text
 journal_ranking = {Predatory Journal: Do not include!},
 ```
 

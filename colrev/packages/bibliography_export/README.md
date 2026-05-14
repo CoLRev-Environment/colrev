@@ -6,7 +6,7 @@ This endpoint exports the records in different bibliographical formats, which ca
 
 To add an endpoint, run any of the following:
 
-```
+```bash
 colrev data -a colrev.bibliography_export -p zotero
 colrev data -a colrev.bibliography_export -p jabref
 colrev data -a colrev.bibliography_export -p citavi

@@ -227,7 +227,8 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
-        assert source.search_type in self.search_types
+        if source.search_type not in self.search_types:
+            raise AssertionError(f"Unexpected search type: {source.search_type}")
 
         if source.search_type != SearchType.MD:
             if "query" not in source.search_parameters:

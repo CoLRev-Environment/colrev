@@ -108,14 +108,17 @@ def _remove_fields(*, record_dict: dict) -> dict:
 
 def _item_to_record(*, item: dict) -> dict:
 
-    assert isinstance(item, dict), "The received objet is not a dictionary"
+    if not isinstance(item, dict):
+        raise TypeError("Expected item to be a dictionary")
 
     if isinstance(item["title_display"], str):
         item[Fields.TITLE] = str(item["title_display"])
-    assert isinstance(item.get("title_display"), str)
+    if not isinstance(item.get("title_display"), str):
+        raise TypeError("Expected title_display to be a string")
 
     item[Fields.JOURNAL] = item.get("journal", "")
-    assert isinstance(item["journal"], str)
+    if not isinstance(item["journal"], str):
+        raise TypeError("Expected journal to be a string")
 
     item[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
     item[Fields.AUTHOR] = _get_authors(item=item)

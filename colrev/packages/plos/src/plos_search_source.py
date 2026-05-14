@@ -161,7 +161,8 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
             record.prescreen_exclude(reason=FieldValues.RETRACTED)
             record.remove_field(key="warning")
         else:
-            assert "" != plos_source
+            if "" == plos_source:
+                raise AssertionError("PLOS source must not be empty")
             record.set_status(RecordState.md_prepared)
 
     def _restore_url(

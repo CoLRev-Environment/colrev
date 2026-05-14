@@ -197,7 +197,8 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         elif search_type == SearchType.API:
             if "url" in params_dict:
                 host = urlparse(params_dict["url"]).hostname
-                assert host and host.endswith("aisel.aisnet.org")
+                if not (host and host.endswith("aisel.aisnet.org")):
+                    raise AssertionError(f"Unexpected URL host: {host}")
                 q_params = cls._parse_query(query=params_dict["url"])
                 filename = colrev.utils.get_unique_filename(
                     base_path=path,

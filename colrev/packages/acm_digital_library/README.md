@@ -4,7 +4,7 @@
 
 ### DB search
 
-```
+```bash
 colrev search --add colrev.acm_digital_library
 ```
 

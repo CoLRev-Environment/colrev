@@ -70,9 +70,12 @@ class Unpaywall(base_classes.PDFGetPackageBaseClass):
             best_loc = None
             best_loc = ret.json()["best_oa_location"]
 
-            assert ret.json()["is_oa"]
-            assert best_loc is not None
-            assert not (pdfonly and best_loc["url_for_pdf"] is None)
+            if not ret.json()["is_oa"]:
+                raise AssertionError("Record is not open access")
+            if best_loc is None:
+                raise AssertionError("Missing best open-access location")
+            if pdfonly and best_loc["url_for_pdf"] is None:
+                raise AssertionError("Missing PDF URL for pdfonly request")
 
         except (
             json.decoder.JSONDecodeError,

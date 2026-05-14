@@ -131,7 +131,8 @@ class Endpoint:
         self.crossref_plus_token = crossref_plus_token
         if crossref_plus_token:
             self.headers["Crossref-Plus-API-Token"] = self.crossref_plus_token
-        assert request_url.startswith(CrossrefAPI._api_url)
+        if not request_url.startswith(CrossrefAPI._api_url):
+            raise AssertionError(f"Unexpected URL: {request_url}")
         self.request_url = request_url
         self.request_params: typing.Dict[str, str] = {}
         self.timeout = 60
@@ -331,7 +332,8 @@ class CrossrefAPI:
         cache: typing.Optional[bool] = None,
     ):
         """Initialize the instance."""
-        assert url.startswith(self._api_url)
+        if not url.startswith(self._api_url):
+            raise AssertionError(f"Unexpected URL: {url}")
         self.url = url
 
         self.email = email
@@ -370,8 +372,10 @@ class CrossrefAPI:
             )[0]
 
             if 0 != len(returned_record.data):
-                assert returned_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
-                assert returned_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
+                if returned_record.data[Fields.TITLE] != test_rec[Fields.TITLE]:
+                    raise AssertionError("Returned title does not match test record")
+                if returned_record.data[Fields.AUTHOR] != test_rec[Fields.AUTHOR]:
+                    raise AssertionError("Returned author does not match test record")
             else:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message

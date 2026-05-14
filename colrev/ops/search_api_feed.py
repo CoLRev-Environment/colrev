@@ -111,7 +111,8 @@ class SearchAPIFeed:
         self._load_feed()
 
         if prep_mode:
-            assert records is not None
+            if records is None:
+                raise AssertionError("Retrieved records must not be None")
         self.verbose_mode = verbose_mode
         self.prep_mode = prep_mode
         self._retrieved_records_for_saving = False
@@ -504,10 +505,11 @@ class SearchAPIFeed:
     def save(self, *, skip_print: bool = False) -> None:
         """Save the feed file and records, printing post-run search infos."""
         if self.prep_mode:
-            assert self._retrieved_records_for_saving, (
-                "You must call get_records() before calling save() "
-                "to ensure that the prepared (primary) records are saved."
-            )
+            if not self._retrieved_records_for_saving:
+                raise AssertionError(
+                    "You must call get_records() before calling save() "
+                    "to ensure that the prepared (primary) records are saved."
+                )
 
         if not skip_print and not self.prep_mode:
             self._print_post_run_search_infos()

@@ -233,8 +233,10 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             returned_record = api.query_id(pubmed_id=test_rec["pubmedid"])
 
             if returned_record:
-                assert returned_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
-                assert returned_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
+                if returned_record.data[Fields.TITLE] != test_rec[Fields.TITLE]:
+                    raise AssertionError("Returned title does not match test record")
+                if returned_record.data[Fields.AUTHOR] != test_rec[Fields.AUTHOR]:
+                    raise AssertionError("Returned author does not match test record")
             else:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message

@@ -108,8 +108,10 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
             returned_record = self.api.get_paper(paper_id=test_doi)
 
             if 0 != len(returned_record):
-                assert returned_record[Fields.TITLE] == test_record[Fields.TITLE]
-                assert returned_record[Fields.URL] == test_record[Fields.URL]
+                if returned_record[Fields.TITLE] != test_record[Fields.TITLE]:
+                    raise AssertionError("Returned title does not match test record")
+                if returned_record[Fields.URL] != test_record[Fields.URL]:
+                    raise AssertionError("Returned URL does not match test record")
             else:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message

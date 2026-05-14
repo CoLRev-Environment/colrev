@@ -949,7 +949,8 @@ class CoLRevVersion:
         """Initialize the instance."""
         if "+" in version_string:
             version_string = version_string[: version_string.find("+")]
-        assert re.match(r"\d+\.\d+\.\d+$", version_string)
+        if not re.match(r"\d+\.\d+\.\d+$", version_string):
+            raise AssertionError(f"Invalid version string: {version_string}")
         self.major = int(version_string[: version_string.find(".")])
         self.minor = int(
             version_string[version_string.find(".") + 1 : version_string.rfind(".")]

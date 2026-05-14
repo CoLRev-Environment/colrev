@@ -71,14 +71,16 @@ def _item_to_record(*, item: dict) -> dict:
 
     if isinstance(item["title"], list):
         item[Fields.TITLE] = str(item["title"][0])
-    assert isinstance(item[Fields.TITLE], str)
+    if not isinstance(item[Fields.TITLE], str):
+        raise TypeError("Expected title to be a string")
 
     if isinstance(item.get("container-title", ""), list):
         if len(item["container-title"]) > 0:
             item["container-title"] = item["container-title"][0]
         else:
             item["container-title"] = ""
-    assert isinstance(item.get("container-title", ""), str)
+    if not isinstance(item.get("container-title", ""), str):
+        raise TypeError("Expected container-title to be a string")
 
     item[Fields.ENTRYTYPE] = "misc"
     if item.get("type", "NA") == "journal-article":

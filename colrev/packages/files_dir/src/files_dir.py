@@ -353,7 +353,8 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self.logger.debug(f"Validate SearchSource {source.search_results_path}")
 
-        assert source.search_type == SearchType.FILES
+        if source.search_type != SearchType.FILES:
+            raise AssertionError(f"Unexpected search type: {source.search_type}")
 
         if "subdir_pattern" in source.search_parameters:
             if source.search_parameters["subdir_pattern"] != [

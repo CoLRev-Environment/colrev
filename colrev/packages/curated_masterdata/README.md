@@ -13,12 +13,11 @@ Note: This document is currently under development. It will contain the followin
 
 To create a new masterdata curation, run
 
-```
+```bash
 colrev init --type colrev.curated_masterdata
 # add crossref
 colrev search --add "crossref:jissn=123456"
 # add further sources (like DBLP)
-
 ```
 
 <!--

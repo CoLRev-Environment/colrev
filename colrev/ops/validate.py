@@ -578,7 +578,8 @@ class Validate(colrev.process.operation.Operation):
         if scope in ["HEAD", "."]:
             scope = "HEAD~0"
         if scope.startswith("HEAD~"):
-            assert scope.replace("HEAD~", "").isdigit()
+            if not scope.replace("HEAD~", "").isdigit():
+                raise AssertionError(f"Invalid scope value: {scope}")
             back_count = int(scope.replace("HEAD~", ""))
             for commit_item in git_repo.iter_commits():
                 if back_count == 0:

@@ -113,39 +113,41 @@ In this step the user can enter the search parameters into the console.
 The user can provide values for the following parameters: keyword, subject, language, year and type. Pressing `enter` will confirm the choice. If the field is blank, this parameter will be skipped. The parameters should be entered as followed:
 
 - `keyword:` e.g. onlinear.
-- `subject:`  Springer Nature supports the following subject areas:
-
-    - Astronomy
-    - Behavioral Sciences
-    - Biomedical Sciences
-    - Business and Management
-    - Chemistry
-    - Climate
-    - Computer Science
-    - Earth Sciences
-    - Economics
-    - Education and Language
-    - Energy
-    - Engineering
-    - Environmental Sciences
-    - Food Science and Nutrition
-    - General Interest
-    - Geography
-    - Law
-    - Life Sciences
-    - Materials
-    - Mathematics
-    - Medicine
-    - Philosophy
-    - Physics
-    - Public Health
-    - Social Sciences
-    - Statistics
-    - Water
+- `subject:`  Springer Nature supports the subject areas (see below)
 
 - `language:` please use country codes, e.g. "de" for "Germany".
 - `year:` e.g. 2024.
 - `type:` limit search to Book or Journal (case sensitive!).
+
+Subject areas:
+
+- Astronomy
+- Behavioral Sciences
+- Biomedical Sciences
+- Business and Management
+- Chemistry
+- Climate
+- Computer Science
+- Earth Sciences
+- Economics
+- Education and Language
+- Energy
+- Engineering
+- Environmental Sciences
+- Food Science and Nutrition
+- General Interest
+- Geography
+- Law
+- Life Sciences
+- Materials
+- Mathematics
+- Medicine
+- Philosophy
+- Physics
+- Public Health
+- Social Sciences
+- Statistics
+- Water
 
 Each constraint that appears in your request will be automatically ANDed with all the others.
 

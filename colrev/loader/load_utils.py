@@ -264,9 +264,8 @@ def load_df(
     filename: Path,
 ) -> pd.DataFrame:
     """Load a file and return records as a DataFrame."""
-    assert isinstance(
-        filename, Path
-    ), f"filename must be a Path object, not {type(filename)}"
+    if not isinstance(filename, Path):
+        raise TypeError(f"filename must be a Path object, not {type(filename)}")
     record_dict = load(filename)
     return pd.DataFrame.from_dict(record_dict, orient="index")
 

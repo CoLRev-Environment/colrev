@@ -208,7 +208,8 @@ class Checker:
                 )
 
     def _retrieve_ids_from_bib(self, *, file_path: Path) -> list:
-        assert file_path.suffix == ".bib"
+        if file_path.suffix != ".bib":
+            raise AssertionError(f"Unexpected file suffix: {file_path.suffix}")
         record_ids = []
         with open(file_path, encoding="utf8") as file:
             line = file.readline()

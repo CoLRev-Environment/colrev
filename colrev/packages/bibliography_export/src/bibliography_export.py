@@ -123,7 +123,8 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
         }
 
         if params:
-            assert params in [b.value for b in BibFormats]
+            if params not in [b.value for b in BibFormats]:
+                raise AssertionError(f"Unexpected bibliography format: {params}")
             add_package["bib_format"] = params
         else:
             questions = [

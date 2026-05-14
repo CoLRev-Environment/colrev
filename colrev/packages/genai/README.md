@@ -4,13 +4,13 @@
 
 To install the dependencies of ``colrev.genai``, run
 
-```
+```bash
 pip install colrev[colrev.genai]
 ```
 
 To set the open-AI key, run
 
-```
+```bash
 export OPENAI_API_KEY="your_api_key_here"
 ```
 
@@ -22,10 +22,10 @@ to your shell profile (for example ``~/.bashrc``) and reload it with
 
 Note: This document is currently under development. It will contain the following elements.
 
-* description
-* example
+- description
+- example
 
-```
+```bash
 colrev prescreen --add colrev.genai
 ```
 
@@ -33,10 +33,10 @@ colrev prescreen --add colrev.genai
 
 Note: This document is currently under development. It will contain the following elements.
 
-* description
-* example
+- description
+- example
 
-```
+```bash
 colrev screen --add colrev.genai
 ```
 
