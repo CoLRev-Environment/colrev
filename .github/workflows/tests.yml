@@ -145,7 +145,7 @@ jobs:
 
       - name: Install via pip
         run: |
-          pip install -e .[dev]
+          pip install --default-timeout=1000 --retries 5 -e .[dev]
           colrev install ${{ env.COLREV_PACKAGES }}
 
       - name: Setup git
