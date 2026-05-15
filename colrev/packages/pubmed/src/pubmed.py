@@ -7,6 +7,7 @@ import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
+from urllib.parse import parse_qs
 from urllib.parse import urlparse
 
 import pandas as pd
@@ -175,33 +176,42 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             # pylint: disable=colrev-missed-constant-usage
             elif "url" in params_dict:
-                host = urlparse(params_dict["url"]).hostname
-
-                if host and host.endswith("pubmed.ncbi.nlm.nih.gov"):
-
-                    filename = colrev.utils.get_unique_filename(
-                        base_path=path,
-                        file_path_string="pubmed",
+                parsed_url = urlparse(params_dict["url"])
+                if parsed_url.scheme != "https":
+                    raise AssertionError(
+                        f"Unexpected PubMed URL scheme: {parsed_url.scheme}"
                     )
-                    # params = (
-                    # "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
-                    #     + params
-                    # )
-                    search_source = colrev.search_file.ExtendedSearchFile(
-                        platform=cls.endpoint,
-                        search_results_path=filename,
-                        search_type=SearchType.API,
-                        search_string=params_dict["url"],
-                        comment="",
-                        version=cls.CURRENT_SYNTAX_VERSION,
+                if parsed_url.hostname != "pubmed.ncbi.nlm.nih.gov":
+                    raise AssertionError(
+                        f"Unexpected PubMed URL host: {parsed_url.hostname}"
+                    )
+                query_params = parse_qs(parsed_url.query)
+                if "term" not in query_params or not query_params["term"]:
+                    raise AssertionError(
+                        "Unexpected PubMed URL query: missing non-empty term parameter"
                     )
 
-                    search_source.search_parameters = {
-                        "url": params_dict["url"],
-                    }
-                    search_source.version = cls.CURRENT_SYNTAX_VERSION
-                else:
-                    raise NotImplementedError
+                filename = colrev.utils.get_unique_filename(
+                    base_path=path,
+                    file_path_string="pubmed",
+                )
+                # params = (
+                # "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
+                #     + params
+                # )
+                search_source = colrev.search_file.ExtendedSearchFile(
+                    platform=cls.endpoint,
+                    search_results_path=filename,
+                    search_type=SearchType.API,
+                    search_string=params_dict["url"],
+                    comment="",
+                    version=cls.CURRENT_SYNTAX_VERSION,
+                )
+
+                search_source.search_parameters = {
+                    "url": params_dict["url"],
+                }
+                search_source.version = cls.CURRENT_SYNTAX_VERSION
             else:
                 raise NotImplementedError
 

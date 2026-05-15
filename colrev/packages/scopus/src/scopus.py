@@ -6,6 +6,7 @@ from __future__ import annotations
 import logging
 import typing
 from pathlib import Path
+from urllib.parse import urlparse
 
 from pydantic import Field
 
@@ -87,9 +88,30 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         result = {"confidence": 0.0}
         if "source={Scopus}," in data:
             result["confidence"] = 1.0
-        elif "www.scopus.com" in data:
-            if data.count("www.scopus.com") >= data.count("\n@"):
-                result["confidence"] = 1.0
+            return result
+
+        candidate_urls = []
+        for line in data.splitlines():
+            stripped = line.strip()
+            if stripped.lower().startswith("url") and "=" in stripped:
+                candidate_urls.append(
+                    stripped.split("=", maxsplit=1)[1].strip().strip("{}\",")
+                )
+            elif stripped.startswith("%U "):
+                candidate_urls.append(stripped[3:].strip())
+
+        nr_items = data.count("\n@")
+        nr_valid_scopus_urls = 0
+        for candidate_url in candidate_urls:
+            parsed_url = urlparse(candidate_url)
+            if (
+                parsed_url.scheme == "https"
+                and parsed_url.hostname == "www.scopus.com"
+            ):
+                nr_valid_scopus_urls += 1
+
+        if nr_valid_scopus_urls > 0 and nr_valid_scopus_urls >= nr_items:
+            result["confidence"] = 1.0
         return result
 
     @classmethod

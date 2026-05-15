@@ -196,9 +196,19 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         # pylint: disable=colrev-missed-constant-usage
         elif search_type == SearchType.API:
             if "url" in params_dict:
-                host = urlparse(params_dict["url"]).hostname
-                if not (host and host.endswith("aisel.aisnet.org")):
-                    raise AssertionError(f"Unexpected URL host: {host}")
+                parsed_url = urlparse(params_dict["url"])
+                if parsed_url.scheme != "https":
+                    raise AssertionError(
+                        f"Unexpected AISeL URL scheme: {parsed_url.scheme}"
+                    )
+                if parsed_url.hostname != "aisel.aisnet.org":
+                    raise AssertionError(
+                        f"Unexpected AISeL URL host: {parsed_url.hostname}"
+                    )
+                if not parsed_url.path.startswith("/do/search/"):
+                    raise AssertionError(
+                        f"Unexpected AISeL URL path: {parsed_url.path}"
+                    )
                 q_params = cls._parse_query(query=params_dict["url"])
                 filename = colrev.utils.get_unique_filename(
                     base_path=path,
