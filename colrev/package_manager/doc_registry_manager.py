@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 import typing
 from pathlib import Path
@@ -13,7 +14,6 @@ import inquirer
 import requests
 import toml
 from bs4 import BeautifulSoup
-from m2r import parse_from_file  # pylint: disable=import-error
 
 import colrev.package_manager.colrev_internal_packages
 from colrev.constants import EndpointType
@@ -271,18 +271,83 @@ class PackageDoc:
 
     def import_package_docs(self) -> None:
         """Import the package documentation."""
-        with open(
-            Filepaths.COLREV_PATH
-            / Path(f"docs/source/manual/packages/{self.docs_rst_path}"),
-            "w",
-            encoding="utf-8",
-        ) as file:
+        docs_package_path = Filepaths.COLREV_PATH / Path(
+            f"docs/source/manual/packages/{self.docs_rst_path}"
+        )
+
+        readme_path = self._copy_readme_for_myst_include()
+        readme_content = readme_path.read_text(encoding="utf-8")
+        rst_readme_content = self._convert_markdown_to_rst(readme_content)
+
+        with open(docs_package_path, "w", encoding="utf-8") as file:
             file.write(self._get_header_info())
-            output = parse_from_file(self.docs_package_readme_path)
-            output = output.replace(
-                ".. list-table::", ".. list-table::\n   :align: left"
-            )
-            file.write(output)
+            file.write("\n")
+            file.write(rst_readme_content)
+
+    def _convert_markdown_to_rst(self, markdown_content: str) -> str:
+        """Convert Markdown content to reStructuredText for generated docs pages."""
+        heading_chars = {1: "=", 2: "-", 3: "^", 4: '"'}
+        converted_lines = []
+        in_fenced_code_block = False
+        fenced_code_language = ""
+
+        for line in markdown_content.splitlines():
+            fence_match = re.match(r"^```(\w+)?\s*$", line)
+            if fence_match:
+                if not in_fenced_code_block:
+                    in_fenced_code_block = True
+                    fenced_code_language = fence_match.group(1) or ""
+                    if fenced_code_language:
+                        converted_lines.append(
+                            f".. code-block:: {fenced_code_language}"
+                        )
+                    else:
+                        converted_lines.append(".. code-block::")
+                    converted_lines.append("")
+                else:
+                    in_fenced_code_block = False
+                    fenced_code_language = ""
+                    converted_lines.append("")
+                continue
+
+            if in_fenced_code_block:
+                if line.strip() == "":
+                    converted_lines.append("")
+                else:
+                    converted_lines.append(f"   {line}")
+                continue
+
+            heading_match = re.match(r"^(#{1,6})\s+(.+?)\s*$", line)
+            if heading_match:
+                level = len(heading_match.group(1))
+                title = heading_match.group(2)
+                underline_char = heading_chars.get(level, '"')
+                converted_lines.append(title)
+                converted_lines.append(underline_char * len(title))
+                converted_lines.append("")
+                continue
+
+            line = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"`\1 <\2>`_", line)
+            line = re.sub(r"^\s*-\s+`([^`]+)\s+<([^>]+)>`_\s*$", r"* `\1 <\2>`_", line)
+            line = re.sub(r"``([^`]+)```\1`", r"``\1``", line)
+            converted_lines.append(line)
+
+        return "\n".join(converted_lines).rstrip() + "\n"
+
+    def _copy_readme_for_myst_include(self) -> Path:
+        """Copy the package README to a generated docs folder for MyST inclusion."""
+        readme_dir = Filepaths.COLREV_PATH / Path(
+            "docs/source/manual/packages/_package_readmes"
+        )
+        readme_dir.mkdir(parents=True, exist_ok=True)
+
+        readme_path = readme_dir / f"{self.package_id}.md"
+        readme_path.write_text(
+            self.docs_package_readme_path.read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+
+        return readme_path
 
     def get_endpoint_item(self, endpoint_type: EndpointType) -> dict:
         """Get the endpoint item for the package.

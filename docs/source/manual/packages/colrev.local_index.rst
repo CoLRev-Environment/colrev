@@ -65,23 +65,28 @@ colrev.local_index
 Summary
 -------
 
+
 This package creates an sqlite database based on local CoLRev packages, providing meta-data and PDFs to other local packages.
 
 To create or update the index, run
 
-.. code-block::
+.. code-block:: bash
 
    colrev env -i
+
 
 search
 ------
 
+
 API search
 ^^^^^^^^^^
 
-.. code-block::
+
+.. code-block:: bash
 
    colrev search --add colrev.local_index -p "title LIKE '%dark side%'"
+
 
 Format of the search-history file:
 
@@ -98,12 +103,11 @@ Format of the search-history file:
        "version": "0.1.0"
    }
 
+
 pdf-get
 -------
 
+
 Retrieves PDF documents from other local CoLRev repositories, given that they are registered, and that the index is updated.
 
-
-.. raw:: html
-
-   <!-- ## Links -->
+<!-- ## Links -->

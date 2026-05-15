@@ -51,14 +51,15 @@ colrev.prep_man_curation_jupyter
 Summary
 -------
 
+
 prep-man
 --------
 
+
 Note: This document is currently under development. It will contain the following elements.
 
-
-* description
-* example
+- description
+- example
 
 Links
 -----

@@ -51,8 +51,10 @@ colrev.add_journal_ranking
 Summary
 -------
 
+
 prep
 ----
+
 
 **Prerequisite** Initial ranking data is extracted from ranking.csv into SQLite Database sqlite_index.db with 'colrev env -i'.
 
@@ -62,18 +64,20 @@ The add_journal_ranking package allows the user to add a ranking to the records 
 
 Example:
 
-.. code-block::
+.. code-block:: text
 
    journal_ranking = {Senior Scholars' List of Premier Journals}, or
    journal_ranking = {not included in a ranking},
+
 
 Should the journal be in the Beall's Predatory Journal list, then the record will be marked as "Predatory Journal: Do not include!" and be predestined to be excluded in the scope_prescreen process.
 
 Example:
 
-.. code-block::
+.. code-block:: text
 
    journal_ranking = {Predatory Journal: Do not include!},
+
 
 The journal ranking will also be used in the colrev prescreen method and allows the user to decide if the record should be marked as 'rev_prescreen_excluded' or 'rev_prescreen_included'.
 

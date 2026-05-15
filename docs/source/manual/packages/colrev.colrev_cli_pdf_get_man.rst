@@ -51,16 +51,14 @@ colrev.colrev_cli_pdf_get_man
 Summary
 -------
 
+
 pdf-get-man
 -----------
 
+
 Note: This document is currently under development. It will contain the following elements.
 
+- description
+- example
 
-* description
-* example
-
-
-.. raw:: html
-
-   <!-- ## Links -->
+<!-- ## Links -->

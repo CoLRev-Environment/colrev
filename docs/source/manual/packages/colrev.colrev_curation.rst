@@ -59,24 +59,21 @@ Summary
 -------
 
 
-.. raw:: html
+<!-- Note: This document is currently under development. It will contain the following elements.
 
-   <!-- Note: This document is currently under development. It will contain the following elements.
-
-   - description
-   - example -->
-
-
+- description
+- example -->
 
 prep
 ----
 
+
 Curation prep: enforces masterdata restrictions.
 
-Masterdata restrictions are useful to specify field requirements related to the ENTRYTYPE, the journal name, and the required fields (volume/number).
+Masterdata restrictions are useful to specify field requirements related to the ENTRYTYPE, the journal name, and the required fields (volume, number).
 They can be set as follows:
 
-.. code-block::
+.. code-block:: json
 
    "data_package_endpoints": [
        {

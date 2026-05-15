@@ -46,6 +46,7 @@ colrev-sync
 Summary
 -------
 
+
 The colrev-sync package imports references from CoLRev projects (through local_index) into non-CoLRev paper projects that use Markdown and BibTeX.
 If BibTeX citations keys are used in the paper project, the following command retrieves the corresponding bibliographical details and adds them to the BibTeX file:
 
@@ -53,7 +54,8 @@ If BibTeX citations keys are used in the paper project, the following command re
 
    colrev-sync
 
-CoLRev sync can also be used through pre-commit hooks, when the following is included in the ``.pre-commit-config.yaml``\ :
+
+CoLRev sync can also be used through pre-commit hooks, when the following is included in the `.pre-commit-config.yaml`:
 
 .. code-block::
 

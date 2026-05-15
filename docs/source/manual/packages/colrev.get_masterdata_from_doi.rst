@@ -51,14 +51,15 @@ colrev.get_masterdata_from_doi
 Summary
 -------
 
+
 prep
 ----
 
+
 This package retrieves meta data from doi.org.
 
+<!--
+Links
+-----
 
-.. raw:: html
-
-   <!--
-   ## Links
-   -->
+-->

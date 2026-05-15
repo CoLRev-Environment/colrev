@@ -58,32 +58,32 @@ colrev.crossref
 Summary
 -------
 
-`Crossref <https://www.crossref.org/>`_ is a SearchSource that contains metadata deposited by publishers. It is cross-disciplinary and has a size of over 125,000,000 records.
+
+`Crossref <https://www.crossref.org/>`_ is a SearchSource that contains metadata deposited by publishers.
+It is cross-disciplinary and has a size of over 125,000,000 records.
 
 search
 ------
 
+
 API search
 ^^^^^^^^^^
 
+
 ℹ️ Restriction: API searches do not support complex queries (yet)
 
-It is possible to copy the url from the `search.crossref.org <https://search.crossref.org/?q=microsourcing&from_ui=yes>`_ UI and add it as follows:
+It is possible to copy the URL from the `search.crossref.org <https://search.crossref.org/?q=microsourcing&from_ui=yes>`_ UI and add it as follows:
 
-.. code-block::
+.. code-block:: bash
 
    colrev search --add colrev.crossref -p "query=microsourcing"
    colrev search --add colrev.crossref -p "https://search.crossref.org/?q=+microsourcing&from_ui=yes"
 
 
-.. raw:: html
-
-   <!--
-   TODO:
-   colrev search --add colrev.crossref -p "query=microsourcing;years=2000-2010"
-   -->
-
-
+<!--
+TODO:
+colrev search --add colrev.crossref -p "query=microsourcing;years=2000-2010"
+-->
 
 Format of the search-history file:
 
@@ -100,14 +100,17 @@ Format of the search-history file:
        "version": "0.1.0"
    }
 
+
 TOC search
 ^^^^^^^^^^
 
-Whole journals can be added based on their issn:
 
-.. code-block::
+Whole journals can be added based on their ISSN:
+
+.. code-block:: bash
 
    colrev search --add colrev.crossref -p "issn=2162-9730"
+
 
 Format of the search-history file:
 
@@ -124,19 +127,23 @@ Format of the search-history file:
        "version": "0.1.0"
    }
 
+
 prep
 ----
+
 
 Crossref generally offers high-quality meta data, making it an effective source to link and update existing records.
 
 Debugging
 ---------
 
-To test the metadata provided for a particular ``DOI`` use:
 
-.. code-block::
+To test the metadata provided for a particular `DOI` use:
+
+.. code-block:: bash
 
    https://api.crossref.org/works/DOI
+
 
 Links
 -----

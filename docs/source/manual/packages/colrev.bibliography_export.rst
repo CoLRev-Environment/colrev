@@ -51,14 +51,16 @@ colrev.bibliography_export
 Summary
 -------
 
+
 data
 ----
+
 
 This endpoint exports the records in different bibliographical formats, which can be useful when the team works with a particular reference manager.
 
 To add an endpoint, run any of the following:
 
-.. code-block::
+.. code-block:: bash
 
    colrev data -a colrev.bibliography_export -p zotero
    colrev data -a colrev.bibliography_export -p jabref
@@ -69,6 +71,4 @@ To add an endpoint, run any of the following:
    colrev data -a colrev.bibliography_export -p EXCEL
 
 
-.. raw:: html
-
-   <!-- ## Links -->
+<!-- ## Links -->

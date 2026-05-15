@@ -51,36 +51,43 @@ colrev.ais_library
 Summary
 -------
 
+
 search
 ------
 
-**Limitation**\ : The AIS eLibrary currently limits search results an 3.000 records (for DB and API searches).
+
+**Limitation**: The AIS eLibrary currently limits search results an 3.000 records (for DB and API searches).
 
 DB search
 ^^^^^^^^^
 
+
 Run a search on `aisel.aisnet.org <https://aisel.aisnet.org/>`_.
 
-Download the search results (advanced search, format:Bibliography Export, click Search) and store them in the ``data/search/`` directory.
+Download the search results (advanced search, format:Bibliography Export, click Search) and store them in the `data/search/` directory.
 
-.. code-block::
+.. code-block:: bash
 
    colrev search --add colrev.ais_library
+
 
 API search
 ^^^^^^^^^^
 
+
 Copy the search link and add an API search (replacing the link):
 
-.. code-block::
+.. code-block:: bash
 
    colrev search --add colrev.ais_library -p "https://aisel.aisnet.org/do/search/?q=microsourcing&start=0&context=509156&facet="
 
+
 Note: Complex queries can be entered in the basic search field. Example:
 
-.. code-block::
+.. code-block:: text
 
    title:microsourcing AND ( digital OR online)
+
 
 Format of the search-history file (DB search):
 
@@ -93,6 +100,7 @@ Format of the search-history file (DB search):
        "search_type": "DB",
        "version": "0.1.0"
    }
+
 
 Format of the search-history file (API search):
 
@@ -109,7 +117,9 @@ Format of the search-history file (API search):
        "version": "0.1.0"
    }
 
+
 Links
 -----
+
 
 `AIS eLibrary <https://aisel.aisnet.org/>`_

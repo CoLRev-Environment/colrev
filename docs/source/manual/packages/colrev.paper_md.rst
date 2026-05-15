@@ -51,32 +51,29 @@ colrev.paper_md
 Summary
 -------
 
+
 data
 ----
 
 
-.. raw:: html
+<!--
+Note: This document is currently under development. It will contain the following elements.
 
-   <!--
-   Note: This document is currently under development. It will contain the following elements.
-
-   - description
-   - example
-   -->
-
-
+- description
+- example
+-->
 
 The paper-md endpoint can be used to create a review protocol or a manuscript based on `pandoc <https://pandoc.org/>`_ and `csl citation styles <https://citationstyles.org/>`_.
 
 Pandoc can use different template files to generate word, pdf, or latex outputs (among others).
 
-The ``data/data/paper.md`` file may serve as a review protocol at the beginning and evolve into the final manuscript.
+The `data/data/paper.md` file may serve as a review protocol at the beginning and evolve into the final manuscript.
 
-The citation style can be change in the ``data/data/paper.md`` header. The template can be changed in the ``settings.json`` (\ ``data/data_package_endpoints/colrev.paper_md/word_template``\ ).
+The citation style can be change in the `data/data/paper.md` header. The template can be changed in the `settings.json` (`data/data_package_endpoints/colrev.paper_md/word_template`).
 
-Upon running the paper-md (as part of ``colrev data``\ ), new records are added after the following marker (as a to-do list):
+Upon running the paper-md (as part of `colrev data`), new records are added after the following marker (as a to-do list):
 
-.. code-block::
+.. code-block:: bash
 
    # Coding and synthesis
 
@@ -85,21 +82,15 @@ Upon running the paper-md (as part of ``colrev data``\ ), new records are added 
    - @Smith2010
    - @Webster2020
 
-Once record citations are moved from the to-do list to other parts of the manuscript, they are considered synthesized and are set to ``rev_synthesized`` upon running ``colrev data``.
+
+Once record citations are moved from the to-do list to other parts of the manuscript, they are considered synthesized and are set to `rev_synthesized` upon running `colrev data`.
 
 Links
 -----
 
 
-.. image:: https://img.shields.io/github/commit-activity/y/jgm/pandoc?color=green&style=plastic
-   :target: https://img.shields.io/github/commit-activity/y/jgm/pandoc?color=green&style=plastic
-   :alt: pandocactivity
+!`pandocactivity <https://img.shields.io/github/commit-activity/y/jgm/pandoc?color=green&style=plastic>`_
+`pandoc <https://github.com/jgm/pandoc>`_ to convert Markdown to PDF or Word (License: `GPL 2 <https://github.com/jgm/pandoc/blob/main/COPYRIGHT>`_)
 
-`pandoc <https://github.com/jgm/pandoc>`_ to convert Markdown to PDF or Word (License: `GPL 2 <https://github.com/jgm/pandoc/blob/main/COPYRIGHT>`_\ )
-
-
-.. image:: https://img.shields.io/github/commit-activity/y/citation-style-language/styles?color=green&style=plastic
-   :target: https://img.shields.io/github/commit-activity/y/citation-style-language/styles?color=green&style=plastic
-   :alt: cslactivity
-
-`CSL <https://github.com/citation-style-language/styles>`_ to format citations (License: `CC BY-SA 3.0 <https://github.com/citation-style-language/styles>`_\ )
+!`cslactivity <https://img.shields.io/github/commit-activity/y/citation-style-language/styles?color=green&style=plastic>`_
+`CSL <https://github.com/citation-style-language/styles>`_ to format citations (License: `CC BY-SA 3.0 <https://github.com/citation-style-language/styles>`_)

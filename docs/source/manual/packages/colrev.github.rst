@@ -58,23 +58,31 @@ colrev.github
 Summary
 -------
 
+
 `GitHub <https://github.com/>`_ hosts repositories for code, datasets, and documentation.
 
 search
 ------
 
+
 API search
 ^^^^^^^^^^
 
-ℹ️ Restriction: API searches require an GitHub access token to retrieve all the relevant meta data. Store the token in the ``GITHUB_API_TOKEN`` environment variable (for example with ``export GITHUB_API_TOKEN="<your-token>"``\ ). If it is not set you will be prompted to enter the token and it will be stored for the current session.
 
-In your GitHub account, a classic `personal access tokens <https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens>`_ can be created. It is not necessary to select any scopes.
+ℹ️ Restriction: API searches require an GitHub access token to retrieve all the relevant meta data.
+Store the token in the `GITHUB_API_TOKEN` environment variable (for example with `export GITHUB_API_TOKEN="<your-token>"`).
+If it is not set you will be prompted to enter the token and it will be stored for the current session.
 
-Keywords are entered after the search command is executed. The user can chose to search repositories by title, readme files, or both.
+In your GitHub account, a classic `personal access tokens <https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens>`_ can be created.
+It is not necessary to select any scopes.
 
-.. code-block::
+Keywords are entered after the search command is executed.
+The user can chose to search repositories by title, readme files, or both.
+
+.. code-block:: bash
 
    colrev search --add colrev.github
+
 
 Format of the search-history file (API search):
 
@@ -92,11 +100,13 @@ Format of the search-history file (API search):
        "version": "0.1.0"
    }
 
+
 prep
 ----
 
+
 GitHub can be used to provide meta data for linking and updating existing records.
 
-.. code-block::
+.. code-block:: bash
 
    colrev prep --add colrev.github

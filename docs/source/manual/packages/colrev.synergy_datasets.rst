@@ -51,29 +51,28 @@ colrev.synergy_datasets
 Summary
 -------
 
+
 search
 ------
+
 
 API search
 ^^^^^^^^^^
 
 
-.. raw:: html
-
-   <!-- Download search results and store in `data/search/` directory. API-access not yet available. -->
-
-
+<!-- Download search results and store in `data/search/` directory. API-access not yet available. -->
 
 Navigate to the `SYNERGY Datasets <https://github.com/asreview/synergy-dataset>`_ and copy the name of the directory and csv file (in the datasets directory).
-For example, the dataset under ``Howard_2016/Wassenaar_2017_ids.csv`` can be added as follows:
+For example, the dataset under `Howard_2016/Wassenaar_2017_ids.csv` can be added as follows:
 
-.. code-block::
+.. code-block:: bash
 
    colrev search --add colrev.synergy_datasets -p dataset=Howard_2016/Wassenaar_2017_ids.csv
 
+
 Note: some datasets are "broken". For example, the `Nagtegaal_2019 <https://github.com/asreview/synergy-dataset/blob/master/datasets/Nagtegaal_2019/Nagtegaal_2019_ids.csv>`_ dataset is a broken csv file and does not have any ids (doi/pubmedid/openalex_id).
 
-The percentage of records with missing meatadata (no ids) is shown upon ``colrev search``.
+The percentage of records with missing meatadata (no ids) is shown upon `colrev search`.
 
 Format of the search-history file:
 
@@ -90,6 +89,7 @@ Format of the search-history file:
            "dataset": "Bos_2018/Bos_2018_ids.csv"
        },
    }
+
 
 Links
 -----

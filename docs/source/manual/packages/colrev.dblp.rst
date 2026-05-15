@@ -58,21 +58,27 @@ colrev.dblp
 Summary
 -------
 
-The table shows the search sources available in the dblp package. The main source is dblp.org, which provides curated metadata for computer science and information technology. The size of the database is over 5,750,000 entries.
+
+The table shows the search sources available in the DBLP package.
+The main source is dblp.org, which provides curated metadata for computer science and information technology.
+The size of the database is over 5,750,000 entries.
 
 search
 ------
 
+
 API search
 ^^^^^^^^^^
 
+
 ℹ️ Restriction: API searches do not support complex queries (yet)
 
-Run a search on dblp.org and paste the url in the following command:
+Run a search on dblp.org and paste the URL in the following command:
 
-.. code-block::
+.. code-block:: bash
 
    colrev search --add colrev.dblp -p "https://dblp.org/search?q=microsourcing"
+
 
 Format of the search-history file:
 
@@ -89,10 +95,10 @@ Format of the search-history file:
        "version": "0.1.0"
    }
 
+
 TOC search
 ^^^^^^^^^^
 
-TODO
 
 Format of the search-history file:
 
@@ -112,8 +118,10 @@ Format of the search-history file:
        "version": "0.1.0"
    }
 
+
 prep
 ----
+
 
 linking metadata
 
@@ -121,5 +129,5 @@ Links
 -----
 
 
-* License: `Open Data Commons ODC-BY 1.0 license <https://dblp.org/db/about/copyright.html>`_
+- License: `Open Data Commons ODC-BY 1.0 license <https://dblp.org/db/about/copyright.html>`_
 * `DBLP <https://dblp.org/>`_

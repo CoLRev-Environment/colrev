@@ -51,7 +51,9 @@ colrev.curation_full_outlet_dedupe
 Summary
 -------
 
+
 dedupe
 ------
+
 
 Deduplication aimed at curated repositories of a selected journal or conference.

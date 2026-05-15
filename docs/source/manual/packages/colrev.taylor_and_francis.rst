@@ -51,13 +51,16 @@ colrev.taylor_and_francis
 Summary
 -------
 
+
 search
 ------
+
 
 DB search
 ^^^^^^^^^
 
-Download search results and store in ``data/search/`` directory. NO API-access available.
+
+Download search results and store in `data/search/` directory. NO API-access available.
 
 Links
 -----

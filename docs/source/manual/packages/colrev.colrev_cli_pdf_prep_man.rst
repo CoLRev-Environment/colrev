@@ -51,14 +51,15 @@ colrev.colrev_cli_pdf_prep_man
 Summary
 -------
 
+
 pdf-prep-man
 ------------
 
+
 Note: This document is currently under development. It will contain the following elements.
 
-
-* description
-* example
+- description
+- example
 
 Links
 -----

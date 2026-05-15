@@ -51,41 +51,57 @@ colrev.scientometric
 Summary
 -------
 
+
 Note: This document is currently under development. It will contain the following elements.
 
 Short summary
 -------------
 
 
-* explanation
-* goals
-* dimensions
-* differences between disciplines
+- explanation
+- goals
+- dimensions
+- differences between disciplines
 
 For the analysis of citation data, established software packages like `VosViewer <https://www.vosviewer.com/>`_ are recommended.
 
+<!--
 
-.. raw:: html
+Steps and operations
+--------------------
 
-   <!--
 
-   ## Steps and operations
+Problem formulation
+^^^^^^^^^^^^^^^^^^^
 
-   ### Problem formulation
 
-   ### Metadata retrieval
+Metadata retrieval
+^^^^^^^^^^^^^^^^^^
 
-   ### Metadata prescreen
 
-   ### PDF retrieval
+Metadata prescreen
+^^^^^^^^^^^^^^^^^^
 
-   ### PDF screen
 
-   ### Data extraction and synthesis
+PDF retrieval
+^^^^^^^^^^^^^
 
-   - For manuscript development see separate page for Word/Tex/Md, Reference Managers
 
-   ## Software recommendations
+PDF screen
+^^^^^^^^^^
 
-   ## References
-   -->
+
+Data extraction and synthesis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+- For manuscript development see separate page for Word/Tex/Md, Reference Managers
+
+Software recommendations
+------------------------
+
+
+References
+----------
+
+-->

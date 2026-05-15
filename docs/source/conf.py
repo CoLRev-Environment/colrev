@@ -50,6 +50,7 @@ extensions = [
     "sphinx_collapse",
     "sphinx_design",
     "sphinx_copybutton",
+    "myst_parser",
 ]
 
 
@@ -64,6 +65,7 @@ add_module_names = True  # Ensure fully qualified names in signatures
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
+exclude_patterns = ["manual/packages/_package_readmes/**"]
 
 # -- Options for HTML output -------------------------------------------------
 

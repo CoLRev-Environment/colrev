@@ -51,39 +51,55 @@ colrev.qualitative_systematic_review
 Summary
 -------
 
+
 Note: This document is currently under development. It will contain the following elements.
 
 Short summary
 -------------
 
 
-* explanation
-* goals
-* dimensions
-* differences between disciplines
+- explanation
+- goals
+- dimensions
+- differences between disciplines
+
+<!--
+
+Steps and operations
+--------------------
 
 
-.. raw:: html
+Problem formulation
+^^^^^^^^^^^^^^^^^^^
 
-   <!--
 
-   ## Steps and operations
+Metadata retrieval
+^^^^^^^^^^^^^^^^^^
 
-   ### Problem formulation
 
-   ### Metadata retrieval
+Metadata prescreen
+^^^^^^^^^^^^^^^^^^
 
-   ### Metadata prescreen
 
-   ### PDF retrieval
+PDF retrieval
+^^^^^^^^^^^^^
 
-   ### PDF screen
 
-   ### Data extraction and synthesis
+PDF screen
+^^^^^^^^^^
 
-   - For manuscript development see separate page for Word/Tex/Md, Reference Managers
 
-   ## Software recommendations
+Data extraction and synthesis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   ## References
-   -->
+
+- For manuscript development see separate page for Word/Tex/Md, Reference Managers
+
+Software recommendations
+------------------------
+
+
+References
+----------
+
+-->

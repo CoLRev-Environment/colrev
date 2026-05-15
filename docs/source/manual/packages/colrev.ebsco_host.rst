@@ -51,14 +51,17 @@ colrev.ebsco_host
 Summary
 -------
 
+
 search
 ------
+
 
 DB search
 ^^^^^^^^^
 
-Export is available after adding citations to a folder (\ `1 <https://connect.ebsco.com/s/article/How-to-Use-the-Export-Manager?language=en_US>`_\ ).
-Download search results and store in ``data/search/`` directory. API-access not yet available.
+
+Export is available after adding citations to a folder (`1 <https://connect.ebsco.com/s/article/How-to-Use-the-Export-Manager?language=en_US>`_).
+Download search results and store in `data/search/` directory. API-access not yet available.
 
 Links
 -----

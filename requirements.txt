@@ -8,7 +8,7 @@ attrs==25.3.0
     #   glom
     #   number-parser
     #   requests-cache
-bib-dedupe==0.10.0
+bib-dedupe==0.11.0
     # via colrev (pyproject.toml)
 blessed==1.20.0
     # via inquirer
@@ -84,7 +84,9 @@ numpy==2.2.4
 openpyxl==3.1.5
     # via colrev (pyproject.toml)
 pandas==2.2.3
-    # via colrev (pyproject.toml)
+    # via
+    #   colrev (pyproject.toml)
+    #   bib-dedupe
 pillow==12.2.0
     # via imagehash
 platformdirs==4.3.7
@@ -131,6 +133,8 @@ runs==1.2.2
     # via editor
 scipy==1.15.2
     # via imagehash
+search-query==0.15.0
+    # via colrev (pyproject.toml)
 six==1.17.0
     # via
     #   blessed

@@ -51,7 +51,9 @@ colrev.general_polish
 Summary
 -------
 
+
 prep
 ----
+
 
 This package implements basic polishing functionality.

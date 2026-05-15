@@ -51,8 +51,10 @@ colrev.prisma
 Summary
 -------
 
+
 data
 ----
+
 
 This package automatically generates a PRISMA flow chart based on the current state of the review.
 

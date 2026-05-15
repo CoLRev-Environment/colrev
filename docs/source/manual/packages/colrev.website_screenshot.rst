@@ -51,7 +51,9 @@ colrev.website_screenshot
 Summary
 -------
 
+
 pdf-get
 -------
 
-This package takes a PDF screenshot of websites (for ``ONLINE`` ENTRYTYPES).
+
+This package takes a PDF screenshot of websites (for `ONLINE` ENTRYTYPES).

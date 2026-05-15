@@ -51,13 +51,16 @@ colrev.psycinfo
 Summary
 -------
 
+
 search
 ------
+
 
 DB search
 ^^^^^^^^^
 
-Download search results and store in ``data/search/`` directory. No API-access available.
+
+Download search results and store in `data/search/` directory. No API-access available.
 
 Links
 -----

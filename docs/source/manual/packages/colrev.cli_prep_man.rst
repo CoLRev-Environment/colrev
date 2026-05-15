@@ -51,8 +51,9 @@ colrev.cli_prep_man
 Summary
 -------
 
+
 Standalone call:
 
-.. code-block::
+.. code-block:: bash
 
    colrev_cli_prep_man

@@ -58,17 +58,21 @@ colrev.europe_pmc
 Summary
 -------
 
+
 Europe PMC is a comprehensive database that includes metadata from PubMed Central (PMC) and provides access to over 40 million records.
 
 search
 ------
 
+
 API search
 ^^^^^^^^^^
 
-.. code-block::
+
+.. code-block:: bash
 
    colrev search --add colrev.europe_pmc -p "https://europepmc.org/search?query=fitbit%20AND%20gamification%20AND%20RCT%20AND%20diabetes%20mellitus"
+
 
 Format of the search-history file (DB search):
 
@@ -81,6 +85,7 @@ Format of the search-history file (DB search):
        "search_type": "DB",
        "version": "0.1.0"
    }
+
 
 Format of the search-history file (API search):
 
@@ -97,8 +102,10 @@ Format of the search-history file (API search):
        "version": "0.1.0"
    }
 
+
 prep
 ----
+
 
 EuropePMC linking
 
@@ -107,5 +114,5 @@ Links
 
 
 * `Europe PMC <https://europepmc.org/>`_
-* License: `may contain copyrighted material, unless stated otherwise <https://europepmc.org/Copyright>`_
+- License: `may contain copyrighted material, unless stated otherwise <https://europepmc.org/Copyright>`_
 * `Field definitions <https://europepmc.org/docs/EBI_Europe_PMC_Web_Service_Reference.pdf>`_

@@ -51,12 +51,11 @@ colrev.get_year_from_vol_iss_jour
 Summary
 -------
 
+
 prep
 ----
 
-This package adds missing ``year`` fields if the ``journal``\ , ``volume``\ , and ``number`` fields are set. Based on crossref.
 
+This package adds missing ``year`` fields if the ``journal``, ``volume``, and ``number`` fields are set. Based on crossref.
 
-.. raw:: html
-
-   <!-- ## Links -->
+<!-- ## Links -->

@@ -51,17 +51,21 @@ colrev.colrev_project
 Summary
 -------
 
+
 search
 ------
+
 
 API search
 ^^^^^^^^^^
 
+
 ℹ️ Restriction: API searches do not support complex queries (yet)
 
-.. code-block::
+.. code-block:: bash
 
    colrev search --add colrev.colrev_project -p "https://github.com/CoLRev-Environment/example"
+
 
 Format of the search-history file:
 
@@ -79,6 +83,7 @@ Format of the search-history file:
        },
        "version": "0.1.0"
    }
+
 
 Links
 -----

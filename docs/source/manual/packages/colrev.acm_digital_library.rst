@@ -51,15 +51,19 @@ colrev.acm_digital_library
 Summary
 -------
 
+
 search
 ------
+
 
 DB search
 ^^^^^^^^^
 
-.. code-block::
+
+.. code-block:: bash
 
    colrev search --add colrev.acm_digital_library
+
 
 Links
 -----
