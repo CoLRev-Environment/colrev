@@ -248,7 +248,7 @@ class SemanticScholarUI:
                     return ""
 
             else:
-                print("\n" + "API key: " + api_key + "\n")
+                print("\nAPI key configured.\n")
                 fwd = self.choose_single_option(
                     msg="Start search with this API key?", options=["YES", "NO"]
                 )
