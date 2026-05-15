@@ -7,7 +7,7 @@ import logging
 import typing
 from multiprocessing import Lock
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 from pydantic import Field
 
@@ -95,13 +95,20 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
 
         # pylint: disable=colrev-missed-constant-usage
         else:
-            host = urlparse(params_dict["url"]).hostname
+            parsed_url = urlparse(params_dict["url"])
 
-            if not (host and host.endswith("arxiv.org")):
-                raise AssertionError(f"Unexpected URL host: {host}")
+            if (
+                parsed_url.scheme != "https"
+                or parsed_url.hostname != "arxiv.org"
+                or parsed_url.path != "/search/"
+            ):
+                raise AssertionError(f"Unexpected arXiv URL: {params_dict['url']}")
 
-            query = params_dict["url"].replace("https://arxiv.org/search/?query=", "")
-            query = query[: query.find("&searchtype")]
+            query_values = parse_qs(parsed_url.query).get("query")
+            if not query_values:
+                raise AssertionError("Missing arXiv search query")
+
+            query = query_values[0]
 
             filename = colrev.utils.get_unique_filename(
                 base_path=path,
