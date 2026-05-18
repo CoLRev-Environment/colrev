@@ -134,20 +134,23 @@ class SQLiteIndexRecord(SQLiteIndex):
         f"CREATE TABLE {INDEX_NAME} (id TEXT PRIMARY KEY," + ",".join(KEYS[1:]) + ")"
     )
 
-    SELECT_ALL_QUERY = f"SELECT * FROM {INDEX_NAME} WHERE"
+    # nosec B608: INDEX_NAME/field names are internal constants; values use sqlite placeholders.
+    SELECT_ALL_QUERY = f"SELECT * FROM {INDEX_NAME} WHERE"  # nosec B608
 
     SELECT_KEY_QUERIES = {
-        LocalIndexFields.ID: f"SELECT * FROM {INDEX_NAME} WHERE {LocalIndexFields.ID}=?",
-        Fields.COLREV_ID: f"SELECT * FROM {INDEX_NAME} WHERE {Fields.COLREV_ID}=?",
-        Fields.DOI: f"SELECT * FROM {INDEX_NAME} where {Fields.DOI}=?",
-        Fields.DBLP_KEY: f"SELECT * FROM {INDEX_NAME} WHERE {Fields.DBLP_KEY}=?",
-        Fields.PDF_ID: f"SELECT * FROM {INDEX_NAME} WHERE {Fields.PDF_ID}=?",
-        Fields.URL: f"SELECT * FROM {INDEX_NAME} WHERE {Fields.URL}=?",
+        # nosec B608: INDEX_NAME/field names are internal constants; values use sqlite placeholders.
+        LocalIndexFields.ID: f"SELECT * FROM {INDEX_NAME} WHERE {LocalIndexFields.ID}=?",  # nosec B608
+        Fields.COLREV_ID: f"SELECT * FROM {INDEX_NAME} WHERE {Fields.COLREV_ID}=?",  # nosec B608
+        Fields.DOI: f"SELECT * FROM {INDEX_NAME} where {Fields.DOI}=?",  # nosec B608
+        Fields.DBLP_KEY: f"SELECT * FROM {INDEX_NAME} WHERE {Fields.DBLP_KEY}=?",  # nosec B608
+        Fields.PDF_ID: f"SELECT * FROM {INDEX_NAME} WHERE {Fields.PDF_ID}=?",  # nosec B608
+        Fields.URL: f"SELECT * FROM {INDEX_NAME} WHERE {Fields.URL}=?",  # nosec B608
     }
 
     INSERT_QUERY = f"INSERT INTO {INDEX_NAME} VALUES(:{', :'.join(KEYS)})"
 
-    UPDATE_RECORD_QUERY = f"""
+    # nosec B608: INDEX_NAME/field names are internal constants; values use sqlite placeholders.
+    UPDATE_RECORD_QUERY = f"""  # nosec B608
             UPDATE {INDEX_NAME} SET
             {LocalIndexFields.BIBTEX}=?
             WHERE {LocalIndexFields.ID}=?"""
@@ -265,7 +268,8 @@ class SQLiteIndexRankings(SQLiteIndex):
     KEYS: typing.List[str] = []
 
     CREATE_TABLE_QUERY = f"CREATE TABLE {INDEX_NAME} (id TEXT PRIMARY KEY)"
-    SELECT_QUERY = f"SELECT * FROM {INDEX_NAME} WHERE journal_name = ?"
+    # nosec B608: INDEX_NAME is an internal constant; journal value is bound via placeholder.
+    SELECT_QUERY = f"SELECT * FROM {INDEX_NAME} WHERE journal_name = ?"  # nosec B608
 
     def __init__(self, *, reinitialize: bool = False) -> None:
         """Initialize the instance."""
@@ -300,10 +304,12 @@ class SQLiteIndexTOC(SQLiteIndex):
         f"CREATE TABLE {INDEX_NAME} (toc_key TEXT PRIMARY KEY, colrev_ids)"
     )
 
-    SELECT_ALL_QUERY = f"SELECT * FROM {INDEX_NAME} WHERE "
+    # nosec B608: INDEX_NAME/field names are internal constants; values use sqlite placeholders.
+    SELECT_ALL_QUERY = f"SELECT * FROM {INDEX_NAME} WHERE "  # nosec B608
 
     SELECT_KEY_QUERY = {
-        LocalIndexFields.TOC_KEY: f"SELECT * FROM {INDEX_NAME} WHERE {LocalIndexFields.TOC_KEY}=?",
+        # nosec B608: INDEX_NAME/field names are internal constants; values use sqlite placeholders.
+        LocalIndexFields.TOC_KEY: f"SELECT * FROM {INDEX_NAME} WHERE {LocalIndexFields.TOC_KEY}=?",  # nosec B608
     }
 
     INSERT_MANY_QUERY = f"INSERT INTO {INDEX_NAME} VALUES(?, ?)"
@@ -334,9 +340,8 @@ class SQLiteIndexTOC(SQLiteIndex):
             query = f"{self.SELECT_ALL_QUERY} {LocalIndexFields.TOC_KEY} LIKE ?"
             argument = partial_toc_key + "%"
         elif toc_key != "":
-            query = (
-                f"SELECT * FROM {self.INDEX_NAME} WHERE {LocalIndexFields.TOC_KEY}=?"
-            )
+            # nosec B608: INDEX_NAME/field names are internal constants; toc_key is bound via placeholder.
+            query = f"SELECT * FROM {self.INDEX_NAME} WHERE {LocalIndexFields.TOC_KEY}=?"  # nosec B608
             argument = toc_key
         else:
             raise NotImplementedError
