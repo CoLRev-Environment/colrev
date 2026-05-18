@@ -26,14 +26,17 @@
 
 </div>
 
-CoLRev is an open-source environment for collaborative literature reviews. It integrates with differerent synthesis tools, takes care of the data, and facilitates Git-based collaboration.
+CoLRev is an open-source environment for collaborative literature reviews. It integrates with different synthesis tools, takes care of the data, and facilitates Git-based collaboration.
 
 To accomplish these goals, CoLRev advances the design of review technology at the intersection of methods, design, cognition, and community building.
 The following features stand out:
 
-- Supports all literature review steps: problem formulation, search, dedupe, (pre)screen, pdf retrieval and preparation, and synthesis
+- Supports all literature review steps: problem formulation, search, dedupe, (pre)screen, PDF retrieval and preparation, and synthesis
 - An open and extensible environment based on shared data and process standards
 - Builds on git and its transparent collaboration model for the entire literature review process
+- Builds on peer-reviewed libraries developed for CoLRev:
+  [search-query](https://github.com/CoLRev-Environment/search-query) for loading, linting, translating, saving, improving, and automating academic search queries, and
+  [BibDedupe](https://github.com/CoLRev-Environment/bib-dedupe) for bibliographic record deduplication
 - Offers a self-explanatory, fault-tolerant, and configurable user workflow
 - Operates a model for data quality, content curation, and reuse
 - Enables typological and methodological pluralism throughout the process
@@ -44,7 +47,7 @@ For details, consult the [documentation](https://colrev-environment.github.io/co
 
 ## Demo
 
-You can try a live demonstration of CoLRev via GitHub codespaces: [start demo](https://github.com//codespaces/new?hide_repo_select=true&ref=main&repo=767717822).
+You can try a live demonstration of CoLRev via GitHub Codespaces: [start demo](https://github.com//codespaces/new?hide_repo_select=true&ref=main&repo=767717822).
 
 ## Related work (preview)
 
@@ -93,7 +96,7 @@ present short version, long version in the docs
 | Publication of review                         | ✅                                 | ✅                               | ❌                               | ❌                               |
 | **Platform**                                  |                                   |                                  |                                 |                                 |
 | OSI-approved license                          | ✅                                 | ✅                               | ✅                               | ❌                               |
-| Peer-reviewed                                 | ❌                                 | ✅                               | ✅                               | ❌                               |
+| Peer-reviewed                                 | ⚠️ Core libraries peer-reviewed   | ✅                               | ✅                               | ❌                               |
 | Technology                                    | Python                            | Python                           | Ruby                            | Proprietary                     |
 | Setup                                         | Local or cloud                    | Local or cloud                   | Server                          | Server                          |
 | Interface                                     | CLI, Programmatic (GUI planned)   | Jupyter Notebook                 | Web-UI                          | Web-UI                          |
@@ -109,7 +112,7 @@ present short version, long version in the docs
 
 Contributions, code and features are always welcome
 
-- See [contributing guidelines](CONTRIBUTING.md), [help page](https://colrev-environment.github.io/colrev/manual/help.html), and [github repository](https://github.com/CoLRev-Environment/colrev).
+- See [contributing guidelines](CONTRIBUTING.md), [help page](https://colrev-environment.github.io/colrev/manual/help.html), and [GitHub repository](https://github.com/CoLRev-Environment/colrev).
 - Bug reports or feedback? Please use the [issue tracker](https://github.com/CoLRev-Environment/colrev/issues) and let us know.
 - To get your work included, fork the repository, implement your changes, and create a [pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
