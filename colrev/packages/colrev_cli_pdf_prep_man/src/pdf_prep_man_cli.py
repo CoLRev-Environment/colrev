@@ -27,6 +27,11 @@ from colrev.constants import RecordState
 # pylint: disable=too-few-public-methods
 
 
+def clear_screen() -> None:
+    """Clear the terminal without spawning a subprocess."""
+    print("\033[2J\033[H", end="")
+
+
 class CoLRevCLIPDFManPrep(base_classes.PDFPrepManPackageBaseClass):
     """Manually prepare PDFs based on a CLI (not yet implemented)."""
 
@@ -297,11 +302,7 @@ class CoLRevCLIPDFManPrep(base_classes.PDFPrepManPackageBaseClass):
         item: dict,
         stat: str,
     ) -> dict:
-        current_platform = platform.system()
-        if current_platform in ["Linux", "Darwin"]:
-            os.system("clear")
-        else:
-            os.system("cls")
+        clear_screen()
 
         # to do : if authors mismatch: color those that do/do not match
         print(stat)
