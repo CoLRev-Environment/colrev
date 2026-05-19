@@ -6,13 +6,13 @@ from __future__ import annotations
 import re
 import typing
 from pathlib import Path
-from xml.etree.ElementTree import ElementTree as StdElementTree
-from xml.etree.ElementTree import ParseError
-from xml.etree.ElementTree import register_namespace
-from xml.etree.ElementTree import tostring
+from xml.etree.ElementTree import (
+    register_namespace,
+)  # nosec B405 - namespace registration only
 
 import requests
 from defusedxml import ElementTree as DefusedET
+from defusedxml.common import DefusedXmlException
 
 import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
@@ -147,8 +147,8 @@ class TEIParser:
                     xml_fstring = file.read()
                 self.root = DefusedET.fromstring(xml_fstring)
 
-                tree = StdElementTree(self.root)
-                tree.write(str(self.tei_path), encoding="utf-8")
+                with open(self.tei_path, "wb") as file:
+                    file.write(DefusedET.tostring(self.root, encoding="utf-8"))
         except requests.exceptions.ConnectionError as exc:  # pragma: no cover
             print(exc)
             print(str(self.pdf_path))
@@ -158,8 +158,8 @@ class TEIParser:
         """Get the TEI string."""
         try:
             register_namespace("tei", "http://www.tei-c.org/ns/1.0")
-            return tostring(self.root, encoding="unicode")
-        except ParseError as exc:  # pragma: no cover
+            return DefusedET.tostring(self.root, encoding="unicode")
+        except (DefusedET.ParseError, DefusedXmlException) as exc:  # pragma: no cover
             raise colrev_exceptions.TEIException from exc
 
     def get_grobid_version(self) -> str:
@@ -731,8 +731,8 @@ class TEIParser:
             # if settings file available: dedupe_io match agains records
 
         if self.tei_path:
-            tree = StdElementTree(self.root)
-            tree.write(str(self.tei_path))
+            with open(self.tei_path, "wb") as file:
+                file.write(DefusedET.tostring(self.root, encoding="utf-8"))
 
         return self.root
 

@@ -7,10 +7,10 @@ import time
 import typing
 from sqlite3 import OperationalError
 from xml.etree.ElementTree import Element  # nosec
-from xml.etree.ElementTree import ParseError
 
 import requests
 from defusedxml import ElementTree as DefusedET
+from defusedxml.common import DefusedXmlException
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
@@ -199,7 +199,7 @@ class PubmedAPI:
                 return retrieved_record
         except requests.exceptions.RequestException as exc:
             raise PubmedAPIError from exc
-        except ParseError as exc:
+        except (DefusedET.ParseError, DefusedXmlException) as exc:
             raise colrev_exceptions.RecordNotParsableException(
                 "Error parsing xml"
             ) from exc
