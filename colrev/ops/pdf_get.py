@@ -33,18 +33,6 @@ def relink_pdfs_in_source(
     logger: logging.Logger,
 ) -> None:
     """Relink PDFs in the given source based on CPIDs."""
-    # pylint: disable=too-many-locals
-
-    def get_pdf_candidates() -> dict:
-        logger.info("Calculate CPIDs to link PDF file(s)")
-        candidates: dict[str, Path] = {}
-        for pdf_candidate in pdf_dir.glob("**/*.pdf"):
-            colrev_pdf_id = colrev.record.record_pdf.PDFRecord.get_colrev_pdf_id(
-                pdf_candidate
-            )
-            relative_path = pdf_candidate.relative_to(home_path)
-            candidates[colrev_pdf_id] = relative_path
-        return candidates
 
     logger.info(
         "Checking PDFs in same directory to reassign when "
@@ -68,104 +56,133 @@ def relink_pdfs_in_source(
 
     corresponding_origin = str(source.get_origin_prefix())
     for record in records.values():
-
-        if Fields.FILE not in record:
-            continue
-
-        # Note: we check the source_records based on the cpids
-        # in the record because cpids are not stored in the source_record
-        # (pdf hashes may change after import/preparation)
-        source_rec = {}
-        if corresponding_origin != "":
-            source_origin_l = [
-                o for o in record[Fields.ORIGIN] if corresponding_origin in o
-            ]
-            if len(source_origin_l) == 1:
-                source_origin = source_origin_l[0]
-                source_origin = source_origin.replace(f"{corresponding_origin}/", "")
-                source_rec_l = [
-                    s for s in source_records if s[Fields.ID] == source_origin
-                ]
-                if len(source_rec_l) == 1:
-                    source_rec = source_rec_l[0]
-
-        if not source_rec and (home_path / Path(record[Fields.FILE])).is_file():
-            continue
-
-        if not (home_path / Path(record[Fields.FILE])).is_file():
-            logger.info(
-                f"Primary record ({record[Fields.ID]}): "
-                f"Broken file path {Colors.RED}{record[Fields.FILE]}{Colors.END}"
-            )
-        if Fields.FILE not in source_rec:
-            logger.warning(f"Missing file in {source_rec}")
-            continue
-        if not (home_path / Path(source_rec[Fields.FILE])).is_file():
-            logger.info(
-                f"Source record ({source.search_results_path}{source_rec[Fields.ID]}) "
-                f"of {record[Fields.ID]}: Broken file path {Colors.RED}{source_rec[Fields.FILE]}{Colors.END}"
-            )
-
-        if (home_path / Path(record[Fields.FILE])).is_file() and (
-            home_path / Path(source_rec[Fields.FILE])
-        ).is_file():
-            if record[Fields.FILE] != source_rec[Fields.FILE]:
-                logger.warning(
-                    f"{Colors.ORANGE}Source record has {source_rec[Fields.FILE]} "
-                    f"but primary record has {record[Fields.FILE]} (both exist) "
-                    f"- Resolve manually.{Colors.END}"
-                )
-            continue
-
-        if not source_rec and not (home_path / Path(record[Fields.FILE])).is_file():
-            if not pdf_candidates:
-                pdf_candidates = get_pdf_candidates()
-
-            record_cpid = record.get("colrev_pdf_id")
-            if record_cpid and record_cpid in pdf_candidates:
-                pdf_candidate = pdf_candidates[record_cpid]
-                logger.info(
-                    "- Primary record: Updated path to file with matching CPID: "
-                    f"{Colors.GREEN}{pdf_candidate}{Colors.END}"
-                )
-                record[Fields.FILE] = str(pdf_candidate)
-            else:
-                logger.warning(
-                    f"{Colors.RED}- Primary record: Did not find the PDF file based on CPID.{Colors.END}"
-                )
-            continue
-
-        id_named_pdf = "data/pdfs/" + record[Fields.ID] + ".pdf"
-        if (
-            not (home_path / Path(record[Fields.FILE])).is_file()
-            and (home_path / Path(id_named_pdf)).is_file()
-        ):
-
-            logger.info(
-                "- Primary record: Updated path to match existing file: "
-                f"{Colors.GREEN}{record[Fields.ID]}.pdf{Colors.END}"
-            )
-            record[Fields.FILE] = Path(id_named_pdf)
-            if source_rec and str(source_rec[Fields.FILE]) != id_named_pdf:
-                logger.info(
-                    "- Source record: Updated path to match existing file: "
-                    f"{Colors.GREEN}{record[Fields.ID]}.pdf{Colors.END}"
-                )
-                source_rec[Fields.FILE] = Path(id_named_pdf)
-
-        if (home_path / Path(record[Fields.FILE])).is_file() and not (
-            home_path / Path(source_rec[Fields.FILE])
-        ).is_file():
-            logger.info(
-                "- Source record: Updated to path from primary record: "
-                f"{Colors.GREEN}{record[Fields.FILE]}{Colors.END}"
-            )
-            source_rec[Fields.FILE] = record[Fields.FILE]
-            continue
+        pdf_candidates = _relink_pdf_record(
+            source=source,
+            record=record,
+            source_records=source_records,
+            corresponding_origin=corresponding_origin,
+            home_path=home_path,
+            logger=logger,
+            pdf_dir=pdf_dir,
+            pdf_candidates=pdf_candidates,
+        )
 
     logger.info("Relinking completed. Save results.")
     source_records_dict = {r[Fields.ID]: r for r in source_records}
     write_file(records_dict=source_records_dict, filename=source.search_results_path)
+
+
+def _get_source_record(
+    *, record: dict, source_records: list[dict], corresponding_origin: str
+) -> dict:
+    source_rec: dict = {}
+    if corresponding_origin == "":
+        return source_rec
+    source_origin_l = [o for o in record[Fields.ORIGIN] if corresponding_origin in o]
+    if len(source_origin_l) != 1:
+        return source_rec
+    source_origin = source_origin_l[0].replace(f"{corresponding_origin}/", "")
+    source_rec_l = [s for s in source_records if s[Fields.ID] == source_origin]
+    if len(source_rec_l) == 1:
+        source_rec = source_rec_l[0]
+    return source_rec
+
+
+def _get_pdf_candidates(
+    *, pdf_dir: Path, home_path: Path, logger: logging.Logger
+) -> dict:
+    logger.info("Calculate CPIDs to link PDF file(s)")
+    candidates: dict[str, Path] = {}
+    for pdf_candidate in pdf_dir.glob("**/*.pdf"):
+        colrev_pdf_id = colrev.record.record_pdf.PDFRecord.get_colrev_pdf_id(
+            pdf_candidate
+        )
+        relative_path = pdf_candidate.relative_to(home_path)
+        candidates[colrev_pdf_id] = relative_path
+    return candidates
+
+
+def _relink_pdf_record(
+    *,
+    source: colrev.search_file.ExtendedSearchFile,
+    record: dict,
+    source_records: list[dict],
+    corresponding_origin: str,
+    home_path: Path,
+    logger: logging.Logger,
+    pdf_dir: Path,
+    pdf_candidates: typing.Dict[str, Path],
+) -> typing.Dict[str, Path]:
+    if Fields.FILE not in record:
+        return pdf_candidates
+    source_rec = _get_source_record(
+        record=record,
+        source_records=source_records,
+        corresponding_origin=corresponding_origin,
+    )
+    primary_file_exists = (home_path / Path(record[Fields.FILE])).is_file()
+    if not source_rec and primary_file_exists:
+        return pdf_candidates
+    if not primary_file_exists:
+        logger.info(
+            f"Primary record ({record[Fields.ID]}): "
+            f"Broken file path {Colors.RED}{record[Fields.FILE]}{Colors.END}"
+        )
+    if Fields.FILE not in source_rec:
+        logger.warning(f"Missing file in {source_rec}")
+        return pdf_candidates
+    source_file_exists = (home_path / Path(source_rec[Fields.FILE])).is_file()
+    if not source_file_exists:
+        logger.info(
+            f"Source record ({source.search_results_path}{source_rec[Fields.ID]}) "
+            f"of {record[Fields.ID]}: Broken file path {Colors.RED}{source_rec[Fields.FILE]}{Colors.END}"
+        )
+    if primary_file_exists and source_file_exists:
+        if record[Fields.FILE] != source_rec[Fields.FILE]:
+            logger.warning(
+                f"{Colors.ORANGE}Source record has {source_rec[Fields.FILE]} "
+                f"but primary record has {record[Fields.FILE]} (both exist) "
+                f"- Resolve manually.{Colors.END}"
+            )
+        return pdf_candidates
+    if not source_rec and not primary_file_exists:
+        if not pdf_candidates:
+            pdf_candidates = _get_pdf_candidates(
+                pdf_dir=pdf_dir, home_path=home_path, logger=logger
+            )
+        record_cpid = record.get("colrev_pdf_id")
+        if record_cpid and record_cpid in pdf_candidates:
+            pdf_candidate = pdf_candidates[record_cpid]
+            logger.info(
+                "- Primary record: Updated path to file with matching CPID: "
+                f"{Colors.GREEN}{pdf_candidate}{Colors.END}"
+            )
+            record[Fields.FILE] = str(pdf_candidate)
+        else:
+            logger.warning(
+                f"{Colors.RED}- Primary record: Did not find the PDF file based on CPID.{Colors.END}"
+            )
+        return pdf_candidates
+    id_named_pdf = "data/pdfs/" + record[Fields.ID] + ".pdf"
+    if not primary_file_exists and (home_path / Path(id_named_pdf)).is_file():
+        logger.info(
+            "- Primary record: Updated path to match existing file: "
+            f"{Colors.GREEN}{record[Fields.ID]}.pdf{Colors.END}"
+        )
+        record[Fields.FILE] = Path(id_named_pdf)
+        if source_rec and str(source_rec[Fields.FILE]) != id_named_pdf:
+            logger.info(
+                "- Source record: Updated path to match existing file: "
+                f"{Colors.GREEN}{record[Fields.ID]}.pdf{Colors.END}"
+            )
+            source_rec[Fields.FILE] = Path(id_named_pdf)
+    if (home_path / Path(record[Fields.FILE])).is_file() and not source_file_exists:
+        logger.info(
+            "- Source record: Updated to path from primary record: "
+            f"{Colors.GREEN}{record[Fields.FILE]}{Colors.END}"
+        )
+        source_rec[Fields.FILE] = record[Fields.FILE]
+    return pdf_candidates
 
 
 class PDFGet(colrev.process.operation.Operation):
