@@ -6,7 +6,10 @@ from __future__ import annotations
 import os
 import pprint
 import re
+import shutil
+import subprocess
 import typing
+import sys
 import unicodedata
 from datetime import timedelta
 from pathlib import Path
@@ -206,3 +209,31 @@ def remove_stopwords(
         kept.append(tok)
 
     return " ".join(kept)
+
+
+def resolved_command(command: str) -> str:
+    """Resolve a command on PATH and raise a clear error if it is unavailable."""
+    command_path = shutil.which(command)
+    if command_path is None:
+        raise RuntimeError(f"Required opener command not found: {command}")
+    return command_path
+
+
+def open_file(filepath: str, *, prefer_vscode: bool = False) -> None:
+    """Open a file with the platform default opener or VS Code."""
+    if prefer_vscode:
+        subprocess.run([resolved_command("code"), filepath], check=True)
+        return
+
+    if sys.platform.startswith("win"):
+        os.startfile(filepath)  # type: ignore[attr-defined]
+        return
+
+    if sys.platform == "darwin":
+        mac_open = "/usr/bin/open"
+        if not Path(mac_open).is_file():
+            mac_open = resolved_command("open")
+        subprocess.run([mac_open, filepath], check=True)
+        return
+
+    subprocess.run([resolved_command("xdg-open"), filepath], check=True)

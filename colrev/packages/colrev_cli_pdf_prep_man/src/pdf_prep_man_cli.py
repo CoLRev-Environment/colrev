@@ -7,7 +7,6 @@ import logging
 import os
 import platform
 import re
-import subprocess
 import textwrap
 import typing
 from pathlib import Path
@@ -23,6 +22,7 @@ from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
+from colrev.utils import open_file
 
 # pylint: disable=too-few-public-methods
 
@@ -120,21 +120,7 @@ class CoLRevCLIPDFManPrep(base_classes.PDFPrepManPackageBaseClass):
         return record
 
     def _open_pdf(self, *, filepath: Path) -> None:
-        try:
-            system_platform = platform.system().lower()
-
-            if os.getenv("CODESPACES") is not None:
-                subprocess.run(["code", filepath], check=True)
-            elif system_platform == "darwin":  # macOS
-                subprocess.run(["open", filepath], check=True)
-            elif system_platform == "windows":
-                subprocess.run(["start", "", filepath], check=True, shell=True)
-            elif system_platform == "linux":
-                subprocess.run(["xdg-open", filepath], check=True)
-            else:
-                print("Unsupported operating system.")
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            print(f"Error: {exc}")
+        open_file(str(filepath), prefer_vscode=os.getenv("CODESPACES") is not None)
 
     def _remove_page(
         self,
