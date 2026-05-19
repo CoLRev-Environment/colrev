@@ -71,63 +71,66 @@ def _parse_authors(entry: typing.Dict[str, typing.Any]) -> str:
       - author (list[dict] or dict)
       - authors.author (list[dict]).
     """
-    # pylint: disable=too-many-branches
+    authors = _get_raw_authors(entry=entry)
+    if not authors:
+        return _get_dc_creator(entry=entry)
 
-    authors: typing.List[typing.Any] = []
+    return "; ".join(n for n in (_normalize_author(author=a) for a in authors) if n)
 
-    # Preferred structured variants
+
+def _get_raw_authors(entry: typing.Dict[str, typing.Any]) -> typing.List[typing.Any]:
     if isinstance(entry.get("author"), list):
-        authors = entry["author"]
-    elif isinstance(entry.get("author"), dict):
+        return entry["author"]
+    if isinstance(entry.get("author"), dict):
         maybe = entry["author"]
         if isinstance(maybe.get("author"), list):
-            authors = maybe["author"]
-        else:
-            authors = [maybe]
-    elif isinstance(entry.get("authors"), dict) and isinstance(
+            return maybe["author"]
+        return [maybe]
+    if isinstance(entry.get("authors"), dict) and isinstance(
         entry["authors"].get("author"), list
     ):
-        authors = entry["authors"]["author"]
+        return entry["authors"]["author"]
+    return []
 
-    if not authors:
-        dc_creator = entry.get("dc:creator")
-        if isinstance(dc_creator, str) and dc_creator.strip():
-            return dc_creator.strip()
 
-    norm: typing.List[str] = []
-    for a in authors:
-        if isinstance(a, str):
-            s = a.strip()
-            if s:
-                norm.append(s)
-            continue
-        if not isinstance(a, dict):
-            continue
+def _get_dc_creator(entry: typing.Dict[str, typing.Any]) -> str:
+    dc_creator = entry.get("dc:creator")
+    if isinstance(dc_creator, str) and dc_creator.strip():
+        return dc_creator.strip()
+    return ""
 
-        # Prefer Scopus' indexed name if present
-        indexed = a.get("ce:indexed-name") or a.get("indexed-name")
-        if isinstance(indexed, str) and indexed.strip():
-            norm.append(indexed.strip())
-            continue
 
-        surname = (a.get("surname") or a.get("ce:surname") or "").strip()
-        given = (a.get("given-name") or a.get("ce:given-name") or "").strip()
-        initials = (a.get("initials") or a.get("ce:initials") or "").strip()
+def _normalize_author(author: typing.Any) -> str:
+    if isinstance(author, str):
+        return author.strip()
+    if not isinstance(author, dict):
+        return ""
 
-        if surname and (given or initials):
-            given_part = initials if initials else given
-            norm.append(f"{surname}, {given_part}")
-        elif surname:
-            norm.append(surname)
-        else:
-            # last resort: any plausible name field
-            for k in ("preferred-name", "authname"):
-                v = a.get(k)
-                if isinstance(v, str) and v.strip():
-                    norm.append(v.strip())
-                    break
+    indexed = author.get("ce:indexed-name") or author.get("indexed-name")
+    if isinstance(indexed, str) and indexed.strip():
+        return indexed.strip()
+    return _format_author_from_parts(author=author)
 
-    return "; ".join(n for n in norm if n)
+
+def _format_author_from_parts(author: typing.Dict[str, typing.Any]) -> str:
+    surname = (author.get("surname") or author.get("ce:surname") or "").strip()
+    given = (author.get("given-name") or author.get("ce:given-name") or "").strip()
+    initials = (author.get("initials") or author.get("ce:initials") or "").strip()
+
+    if surname and (given or initials):
+        given_part = initials if initials else given
+        return f"{surname}, {given_part}"
+    if surname:
+        return surname
+    return _fallback_author_name(author=author)
+
+
+def _fallback_author_name(author: typing.Dict[str, typing.Any]) -> str:
+    for key in ("preferred-name", "authname"):
+        value = author.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
 
 
 _SUBTYPE_MAP: typing.Dict[str, typing.Dict[str, str]] = {

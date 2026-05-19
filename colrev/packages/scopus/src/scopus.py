@@ -186,63 +186,64 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        def entrytype_setter(record_dict: dict) -> None:
-            if "document_type" in record_dict:
-                if record_dict["document_type"] == "Conference Paper":
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
-                elif record_dict["document_type"] == "Conference Review":
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.PROCEEDINGS
-                elif record_dict["document_type"] == "Article":
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-
-        def field_mapper(record_dict: dict) -> None:
-            if record_dict[Fields.ENTRYTYPE] in [
-                ENTRYTYPES.INPROCEEDINGS,
-                ENTRYTYPES.PROCEEDINGS,
-            ]:
-                record_dict[Fields.BOOKTITLE] = record_dict.pop(Fields.JOURNAL, None)
-
-            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK:
-                if (
-                    Fields.JOURNAL in record_dict
-                    and Fields.BOOKTITLE not in record_dict
-                ):
-                    record_dict[Fields.BOOKTITLE] = record_dict.pop(Fields.TITLE, None)
-                    record_dict[Fields.TITLE] = record_dict.pop(Fields.JOURNAL, None)
-
-            if "art_number" in record_dict:
-                record_dict[f"{cls.endpoint}.art_number"] = record_dict.pop(
-                    "art_number"
-                )
-            if "note" in record_dict:
-                record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
-            if "document_type" in record_dict:
-                record_dict[f"{cls.endpoint}.document_type"] = record_dict.pop(
-                    "document_type"
-                )
-            if "source" in record_dict:
-                record_dict[f"{cls.endpoint}.source"] = record_dict.pop("source")
-
-            if "Start_Page" in record_dict and "End_Page" in record_dict:
-                if (
-                    record_dict["Start_Page"] != "nan"
-                    and record_dict["End_Page"] != "nan"
-                ):
-                    record_dict[Fields.PAGES] = (
-                        record_dict["Start_Page"] + "--" + record_dict["End_Page"]
-                    ).replace(".0", "")
-                    del record_dict["Start_Page"]
-                    del record_dict["End_Page"]
-
         colrev.loader.bib.run_fix_bib_file(filename, logger=logger)
         records = colrev.loader.load_utils.load(
             filename=filename,
             unique_id_field="ID",
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
+            entrytype_setter=cls._set_entrytype_from_document_type,
+            field_mapper=cls._map_scopus_fields,
             logger=logger,
         )
         return records
+
+    @staticmethod
+    def _set_entrytype_from_document_type(record_dict: dict) -> None:
+        if "document_type" not in record_dict:
+            return
+        if record_dict["document_type"] == "Conference Paper":
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+        elif record_dict["document_type"] == "Conference Review":
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.PROCEEDINGS
+        elif record_dict["document_type"] == "Article":
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+
+    @classmethod
+    def _map_scopus_fields(cls, record_dict: dict) -> None:
+        cls._map_scopus_entrytype_fields(record_dict=record_dict)
+        cls._map_scopus_prefixed_fields(record_dict=record_dict)
+        cls._map_scopus_pages(record_dict=record_dict)
+
+    @staticmethod
+    def _map_scopus_entrytype_fields(*, record_dict: dict) -> None:
+        if record_dict[Fields.ENTRYTYPE] in [
+            ENTRYTYPES.INPROCEEDINGS,
+            ENTRYTYPES.PROCEEDINGS,
+        ]:
+            record_dict[Fields.BOOKTITLE] = record_dict.pop(Fields.JOURNAL, None)
+
+        if (
+            record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK
+            and Fields.JOURNAL in record_dict
+            and Fields.BOOKTITLE not in record_dict
+        ):
+            record_dict[Fields.BOOKTITLE] = record_dict.pop(Fields.TITLE, None)
+            record_dict[Fields.TITLE] = record_dict.pop(Fields.JOURNAL, None)
+
+    @classmethod
+    def _map_scopus_prefixed_fields(cls, *, record_dict: dict) -> None:
+        for field in ["art_number", "note", "document_type", "source"]:
+            if field in record_dict:
+                record_dict[f"{cls.endpoint}.{field}"] = record_dict.pop(field)
+
+    @staticmethod
+    def _map_scopus_pages(*, record_dict: dict) -> None:
+        if "Start_Page" in record_dict and "End_Page" in record_dict:
+            if record_dict["Start_Page"] != "nan" and record_dict["End_Page"] != "nan":
+                record_dict[Fields.PAGES] = (
+                    record_dict["Start_Page"] + "--" + record_dict["End_Page"]
+                ).replace(".0", "")
+                del record_dict["Start_Page"]
+                del record_dict["End_Page"]
 
     def load(self) -> dict:
         """Load the records from the SearchSource file."""
