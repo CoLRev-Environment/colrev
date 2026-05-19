@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import logging
 import typing
+from collections.abc import Callable
 from pathlib import Path
 
 from pydantic import Field
@@ -112,93 +113,98 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented."""
         return record
 
+    def _map_prefixed_fields(self, *, record_dict: dict, fields: list[str]) -> None:
+        for field in fields:
+            if field in record_dict:
+                record_dict[f"{self.endpoint}.{field}"] = record_dict.pop(field)
+
+    def _map_bib_fields(self, record_dict: dict) -> None:
+        self._map_prefixed_fields(
+            record_dict=record_dict, fields=["related", "note", "type"]
+        )
+
+    def _normalize_authors(self, record_dict: dict) -> None:
+        if "authors" not in record_dict:
+            return
+
+        authors = record_dict.pop("authors")
+        for i, author in enumerate(authors):
+            names = author.split(" ")
+            if len(names) > 1:
+                first_name, last_name = names[0], " ".join(names[1:])
+                authors[i] = f"{last_name}, {first_name}"
+            else:
+                authors[i] = names[0]
+
+        record_dict[Fields.AUTHOR] = " and ".join(authors)
+
+    def _map_json_fields(self, record_dict: dict) -> None:
+        self._map_prefixed_fields(
+            record_dict=record_dict,
+            fields=[
+                "related",
+                "note",
+                "type",
+                "article_url",
+                "cites_url",
+                "related_url",
+                "fulltext_url",
+                "uid",
+                "cites",
+            ],
+        )
+        if "source" in record_dict:
+            record_dict[Fields.JOURNAL] = record_dict.pop("source")
+
+        record_dict.pop("volume", None)
+        record_dict.pop("issue", None)
+        record_dict.pop("startpage", None)
+        record_dict.pop("endpage", None)
+        record_dict.pop("ecc", None)
+        record_dict.pop("use", None)
+        record_dict.pop("rank", None)
+
+        self._normalize_authors(record_dict)
+
+        for key, value in record_dict.items():
+            record_dict[key] = str(value)
+
+    @staticmethod
+    def _set_json_entrytype(record_dict: dict) -> None:
+        record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+    def _load_records(
+        self,
+        *,
+        field_mapper: Callable[[dict], None],
+        entrytype_setter: typing.Optional[Callable[[dict], None]] = None,
+        unique_id_field: typing.Optional[str] = None,
+    ) -> dict:
+        load_kwargs: dict[str, typing.Any] = {}
+        if entrytype_setter is not None:
+            load_kwargs["entrytype_setter"] = entrytype_setter
+        if unique_id_field is not None:
+            load_kwargs["unique_id_field"] = unique_id_field
+
+        return colrev.loader.load_utils.load(
+            filename=self.search_source.search_results_path,
+            field_mapper=field_mapper,
+            logger=self.logger,
+            **load_kwargs,
+        )
+
     def load(self) -> dict:
         """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
-
-            def bib_field_mapper(record_dict: dict) -> None:
-                if "related" in record_dict:
-                    record_dict[f"{self.endpoint}.related"] = record_dict.pop("related")
-                if "note" in record_dict:
-                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
-                if "type" in record_dict:
-                    record_dict[f"{self.endpoint}.type"] = record_dict.pop("type")
-
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                field_mapper=bib_field_mapper,
-                logger=self.logger,
-            )
-            return records
+            return self._load_records(field_mapper=self._map_bib_fields)
 
         if self.search_source.search_results_path.suffix == ".json":
-            # pylint: disable=too-many-branches
-            def json_field_mapper(record_dict: dict) -> None:
-                if "related" in record_dict:
-                    record_dict[f"{self.endpoint}.related"] = record_dict.pop("related")
-                if "note" in record_dict:
-                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
-                if "type" in record_dict:
-                    record_dict[f"{self.endpoint}.type"] = record_dict.pop("type")
-                if "article_url" in record_dict:
-                    record_dict[f"{self.endpoint}.article_url"] = record_dict.pop(
-                        "article_url"
-                    )
-                if "cites_url" in record_dict:
-                    record_dict[f"{self.endpoint}.cites_url"] = record_dict.pop(
-                        "cites_url"
-                    )
-                if "related_url" in record_dict:
-                    record_dict[f"{self.endpoint}.related_url"] = record_dict.pop(
-                        "related_url"
-                    )
-                if "fulltext_url" in record_dict:
-                    record_dict[f"{self.endpoint}.fulltext_url"] = record_dict.pop(
-                        "fulltext_url"
-                    )
-
-                if "uid" in record_dict:
-                    record_dict[f"{self.endpoint}.uid"] = record_dict.pop("uid")
-                if "source" in record_dict:
-                    record_dict[Fields.JOURNAL] = record_dict.pop("source")
-                if "cites" in record_dict:
-                    record_dict[f"{self.endpoint}.cites"] = record_dict.pop("cites")
-
-                record_dict.pop("volume", None)
-                record_dict.pop("issue", None)
-                record_dict.pop("startpage", None)
-                record_dict.pop("endpage", None)
-                record_dict.pop("ecc", None)
-                record_dict.pop("use", None)
-                record_dict.pop("rank", None)
-                if "authors" in record_dict:
-                    authors = record_dict.pop("authors")
-                    for i, author in enumerate(authors):
-                        names = author.split(" ")
-                        if len(names) > 1:
-                            first_name, last_name = names[0], " ".join(names[1:])
-                            authors[i] = f"{last_name}, {first_name}"
-                        else:
-                            authors[i] = names[0]
-
-                    record_dict[Fields.AUTHOR] = " and ".join(authors)
-
-                for key, value in record_dict.items():
-                    record_dict[key] = str(value)
-
-            def json_entrytype_setter(record_dict: dict) -> None:
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
-
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                entrytype_setter=json_entrytype_setter,
-                field_mapper=json_field_mapper,
+            return self._load_records(
+                field_mapper=self._map_json_fields,
+                entrytype_setter=self._set_json_entrytype,
                 # Note: uid not always available.
                 unique_id_field="INCREMENTAL",
-                logger=self.logger,
             )
-
-            return records
 
         raise NotImplementedError
 
