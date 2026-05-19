@@ -151,10 +151,10 @@ class SQLiteIndexRecord(SQLiteIndex):
 
     # nosec B608: INDEX_NAME/field names are internal constants; values use sqlite placeholders.
     UPDATE_RECORD_QUERY = (
-        f"UPDATE {INDEX_NAME} SET "
+        f"UPDATE {INDEX_NAME} SET "  # nosec B608
         f"{LocalIndexFields.BIBTEX}=? "
         f"WHERE {LocalIndexFields.ID}=?"
-    )  # nosec B608
+    )
 
     def __init__(self, *, reinitialize: bool = False) -> None:
         """Initialize the instance."""
