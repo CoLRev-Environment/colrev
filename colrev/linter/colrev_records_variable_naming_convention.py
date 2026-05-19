@@ -14,6 +14,10 @@ from pylint.checkers.utils import only_required_for_messages
 if typing.TYPE_CHECKING:  # pragma: no cover
     from pylint.lint import PyLinter
 
+
+import logging
+
+LOGGER = logging.getLogger(__name__)
 # pylint: disable=broad-exception-caught
 
 
@@ -88,33 +92,46 @@ class RecordsVariableNamingConventionChecker(checkers.BaseChecker):
         if not inferred:
             return
 
+        def _safe_pytype(n: nodes.NodeNG) -> str | None:
+            pytype = getattr(n, "pytype", None)
+            if not callable(pytype):
+                return None
+
+            try:
+                return pytype()
+            except (AttributeError, InferenceError, TypeError):
+                LOGGER.debug(
+                    "Could not infer pytype for astroid node %s",
+                    n.__class__.__name__,
+                    exc_info=True,
+                )
+                return None
+
+        def _safe_qname(n: nodes.NodeNG) -> str | None:
+            qname = getattr(n, "qname", None)
+            if not callable(qname):
+                return None
+
+            try:
+                return qname()
+            except (AttributeError, InferenceError, TypeError):
+                LOGGER.debug(
+                    "Could not infer qname for astroid node %s",
+                    n.__class__.__name__,
+                    exc_info=True,
+                )
+                return None
+
         def _is_dict(n: nodes.NodeNG) -> bool:
             if isinstance(n, nodes.Dict):
                 return True
-            try:
-                if getattr(n, "pytype", None) and n.pytype() == "builtins.dict":
-                    return True
-            except Exception:  # pragma: no cover
-                pass
-            try:
-                if getattr(n, "qname", None) and n.qname() == "builtins.dict":
-                    return True
-            except Exception:  # pragma: no cover
-                pass
-            return False
+
+            return (
+                _safe_pytype(n) == "builtins.dict" or _safe_qname(n) == "builtins.dict"
+            )
 
         def _type_str(n: nodes.NodeNG) -> str:
-            try:
-                if getattr(n, "pytype", None):
-                    return n.pytype()
-            except Exception:  # pragma: no cover
-                pass
-            try:
-                if getattr(n, "qname", None):
-                    return n.qname()
-            except Exception:  # pragma: no cover
-                pass
-            return n.__class__.__name__
+            return _safe_pytype(n) or _safe_qname(n) or n.__class__.__name__
 
         any_dict = any(_is_dict(n) for n in inferred)
 
