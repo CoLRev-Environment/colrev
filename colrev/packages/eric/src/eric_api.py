@@ -66,34 +66,42 @@ class ERICAPI:
         rows_param = self.params.get("rows", "2000")
         return f"{url}?search={query}&format={format_param}&start={start_param}&rows={rows_param}"
 
-    def _create_record(self, doc: dict) -> colrev.record.record.Record:
-        # pylint: disable=too-many-branches
-        record_dict = {Fields.ID: doc["id"]}
-        record_dict[Fields.ENTRYTYPE] = "other"
-        if "Journal Articles" in doc["publicationtype"]:
+    def _build_base_record_dict(self, doc: dict) -> dict:
+        record_dict = {Fields.ID: doc["id"], Fields.ENTRYTYPE: "other"}
+        publicationtype = doc.get("publicationtype", [])
+        if "Journal Articles" in publicationtype:
             record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-        elif "Books" in doc["publicationtype"]:
+        elif "Books" in publicationtype:
             record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.BOOK
+        return record_dict
 
+    def _add_api_fields(self, *, record_dict: dict, doc: dict) -> None:
         for field in self.API_FIELDS:
             field_value = doc.get(field)
             if field_value is not None:
                 record_dict[field] = field_value
 
+    def _map_api_fields(self, *, record_dict: dict) -> None:
         for api_field, rec_field in self.FIELD_MAPPING.items():
             if api_field not in record_dict:
                 continue
             record_dict[rec_field] = record_dict.pop(api_field)
 
+    def _add_source_fields(self, *, record_dict: dict, doc: dict) -> None:
         if "source" in doc:
             record_dict[Fields.JOURNAL] = doc.pop("source")
 
+    def _normalize_core_fields(self, *, record_dict: dict) -> None:
         if "subject" in record_dict:
             record_dict["subject"] = ", ".join(record_dict["subject"])
-
         if Fields.AUTHOR in record_dict:
             # pylint: disable=colrev-missed-constant-usage
             record_dict[Fields.AUTHOR] = " and ".join(record_dict["author"])
+        if Fields.YEAR in record_dict:
+            # pylint: disable=colrev-missed-constant-usage
+            record_dict[Fields.YEAR] = str(record_dict["year"])
+
+    def _normalize_identifier_fields(self, *, record_dict: dict) -> None:
         if Fields.ISSN in record_dict:
             # pylint: disable=colrev-missed-constant-usage
             record_dict[Fields.ISSN] = record_dict["issn"][0].lstrip("EISSN-")
@@ -101,17 +109,23 @@ class ERICAPI:
             # pylint: disable=colrev-missed-constant-usage
             record_dict[Fields.ISBN] = record_dict["isbn"][0].lstrip("ISBN-")
 
-        if Fields.YEAR in record_dict:
-            # pylint: disable=colrev-missed-constant-usage
-            record_dict[Fields.YEAR] = str(record_dict["year"])
-
-        record = colrev.record.record.Record(record_dict)
+    def _normalize_language(self, *, record: colrev.record.record.Record) -> None:
         if Fields.LANGUAGE in record.data:
             try:
                 record.data[Fields.LANGUAGE] = record.data[Fields.LANGUAGE][0]
                 self.language_service.unify_to_iso_639_3_language_codes(record=record)
             except colrev_exceptions.InvalidLanguageCodeException:
                 del record.data[Fields.LANGUAGE]
+
+    def _create_record(self, doc: dict) -> colrev.record.record.Record:
+        record_dict = self._build_base_record_dict(doc=doc)
+        self._add_api_fields(record_dict=record_dict, doc=doc)
+        self._map_api_fields(record_dict=record_dict)
+        self._add_source_fields(record_dict=record_dict, doc=doc)
+        self._normalize_core_fields(record_dict=record_dict)
+        self._normalize_identifier_fields(record_dict=record_dict)
+        record = colrev.record.record.Record(record_dict)
+        self._normalize_language(record=record)
         return record
 
     def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
