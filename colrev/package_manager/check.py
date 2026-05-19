@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
-import subprocess
+# subprocess is required for checking package installation status via pip.
+# Calls in this module must use shell=False and validated/static arguments.
+import subprocess  # nosec B404
 import sys
 import typing
 from importlib import import_module

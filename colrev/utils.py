@@ -7,7 +7,10 @@ import os
 import pprint
 import re
 import shutil
-import subprocess
+
+# subprocess is required for opening local files with platform opener commands.
+# Calls in this module must resolve the executable and pass filepath as one arg.
+import subprocess  # nosec B404
 import typing
 import sys
 import unicodedata

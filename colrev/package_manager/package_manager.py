@@ -6,7 +6,10 @@ from __future__ import annotations
 import importlib.metadata
 import json
 import shutil
-import subprocess
+
+# subprocess is required for package installation via pip/uv.
+# Package specs/paths must be validated before being passed to subprocess.
+import subprocess  # nosec B404
 import sys
 import typing
 from pathlib import Path
