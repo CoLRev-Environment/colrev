@@ -8,10 +8,17 @@ import urllib.request
 
 import colrev.record.record
 from colrev.constants import Fields
+from urllib.parse import urlsplit
 
 # pylint: disable=invalid-name
 # pylint: disable=too-many-public-methods
 # pylint: disable=colrev-missed-constant-usage
+
+_ALLOWED_IEEE_HOST = "ieeexploreapi.ieee.org"
+_ALLOWED_IEEE_PATH_PREFIXES = (
+    "/api/v1/search/articles",
+    "/api/v1/search/document/",
+)
 
 
 class XPLORE:
@@ -294,12 +301,32 @@ class XPLORE:
 
         return url
 
+    def _validate_ieee_api_url(self, url: str) -> None:
+        """Validate that the URL targets the expected IEEE API endpoint."""
+        parsed_url = urlsplit(url)
+
+        if parsed_url.scheme != "https":
+            raise ValueError("IEEE API requests must use HTTPS.")
+
+        if parsed_url.hostname != _ALLOWED_IEEE_HOST:
+            raise ValueError(f"Unexpected IEEE API host: {parsed_url.hostname!r}")
+
+        if not any(
+            parsed_url.path.startswith(path_prefix)
+            for path_prefix in _ALLOWED_IEEE_PATH_PREFIXES
+        ):
+            raise ValueError(f"Unexpected IEEE API path: {parsed_url.path!r}")
+
+        if parsed_url.username is not None or parsed_url.password is not None:
+            raise ValueError("IEEE API URLs must not include credentials.")
+
     def _query_api(self, url: str) -> str:
         """Creates the URL for the API call
         string url  Full URL to pass to API
         return string: Results from API.
         """
-        with urllib.request.urlopen(url) as con:
+        self._validate_ieee_api_url(url)
+        with urllib.request.urlopen(url) as con:  # nosec B310
             content = con.read()
         return content
 
