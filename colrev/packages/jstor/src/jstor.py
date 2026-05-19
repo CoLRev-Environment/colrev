@@ -103,101 +103,123 @@ class JSTORSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def _load_ris(cls, *, filename: Path, logger: logging.Logger) -> dict:
-
-        def id_labeler(records: list) -> None:
-            for record_dict in records:
-                record_dict[Fields.ID] = record_dict["UR"].split("/")[-1]
-
-        def entrytype_setter(record_dict: dict) -> None:
-            if record_dict["TY"] == "JOUR":
-                record_dict[Fields.ENTRYTYPE] = "article"
-            elif record_dict["TY"] == "RPRT":
-                record_dict[Fields.ENTRYTYPE] = "techreport"
-            elif record_dict["TY"] == "CHAP":
-                record_dict[Fields.ENTRYTYPE] = "inbook"
-            else:
-                record_dict[Fields.ENTRYTYPE] = "misc"
-
-        def field_mapper(record_dict: dict) -> None:
-
-            key_maps = {
-                ENTRYTYPES.ARTICLE: {
-                    "PY": Fields.YEAR,
-                    "AU": Fields.AUTHOR,
-                    "TI": Fields.TITLE,
-                    "T2": Fields.JOURNAL,
-                    "AB": Fields.ABSTRACT,
-                    "VL": Fields.VOLUME,
-                    "IS": Fields.NUMBER,
-                    "DO": Fields.DOI,
-                    "PB": Fields.PUBLISHER,
-                    "UR": Fields.URL,
-                    "SN": Fields.ISSN,
-                },
-                ENTRYTYPES.INBOOK: {
-                    "PY": Fields.YEAR,
-                    "AU": Fields.AUTHOR,
-                    "TI": Fields.CHAPTER,
-                    "T2": Fields.TITLE,
-                    "DO": Fields.DOI,
-                    "PB": Fields.PUBLISHER,
-                    "UR": Fields.URL,
-                    "AB": Fields.ABSTRACT,
-                    "SN": Fields.ISBN,
-                    "A2": Fields.EDITOR,
-                },
-                ENTRYTYPES.TECHREPORT: {
-                    "PY": Fields.YEAR,
-                    "AU": Fields.AUTHOR,
-                    "TI": Fields.TITLE,
-                    "UR": Fields.URL,
-                    "PB": Fields.PUBLISHER,
-                },
-            }
-
-            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-                if "T1" in record_dict and "TI" not in record_dict:
-                    record_dict["TI"] = record_dict.pop("T1")
-
-            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
-            for ris_key in list(record_dict.keys()):
-                if ris_key in key_map:
-                    standard_key = key_map[ris_key]
-                    record_dict[standard_key] = record_dict.pop(ris_key)
-
-            if "SP" in record_dict and "EP" in record_dict:
-                record_dict[Fields.PAGES] = (
-                    f"{record_dict.pop('SP')}--{record_dict.pop('EP')}"
-                )
-
-            if Fields.AUTHOR in record_dict and isinstance(
-                record_dict[Fields.AUTHOR], list
-            ):
-                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
-            if Fields.EDITOR in record_dict and isinstance(
-                record_dict[Fields.EDITOR], list
-            ):
-                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
-
-            record_dict.pop("TY", None)
-            record_dict.pop("Y2", None)
-            record_dict.pop("DB", None)
-            record_dict.pop("C1", None)
-            record_dict.pop("T3", None)
-            record_dict.pop("ER", None)
-
-            for key, value in record_dict.items():
-                record_dict[key] = str(value)
-
         records = colrev.loader.load_utils.load(
             filename=filename,
-            id_labeler=id_labeler,
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
+            id_labeler=cls.__id_labeler,
+            entrytype_setter=cls.__entrytype_setter,
+            field_mapper=cls.__field_mapper,
             logger=logger,
         )
 
         return records
+
+    @staticmethod
+    def __id_labeler(records: list) -> None:
+        for record_dict in records:
+            record_dict[Fields.ID] = record_dict["UR"].split("/")[-1]
+
+    @staticmethod
+    def __entrytype_setter(record_dict: dict) -> None:
+        if record_dict["TY"] == "JOUR":
+            record_dict[Fields.ENTRYTYPE] = "article"
+        elif record_dict["TY"] == "RPRT":
+            record_dict[Fields.ENTRYTYPE] = "techreport"
+        elif record_dict["TY"] == "CHAP":
+            record_dict[Fields.ENTRYTYPE] = "inbook"
+        else:
+            record_dict[Fields.ENTRYTYPE] = "misc"
+
+    @classmethod
+    def __field_mapper(cls, record_dict: dict) -> None:
+        cls.__normalize_article_title_field(record_dict=record_dict)
+        cls.__map_standard_fields(record_dict=record_dict)
+        cls.__set_pages(record_dict=record_dict)
+        cls.__join_person_lists(record_dict=record_dict)
+        cls.__drop_unneeded_ris_fields(record_dict=record_dict)
+        cls.__cast_values_to_string(record_dict=record_dict)
+
+    @staticmethod
+    def __normalize_article_title_field(*, record_dict: dict) -> None:
+        if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+            if "T1" in record_dict and "TI" not in record_dict:
+                record_dict["TI"] = record_dict.pop("T1")
+
+    @classmethod
+    def __map_standard_fields(cls, *, record_dict: dict) -> None:
+        key_map = cls.__get_key_maps()[record_dict[Fields.ENTRYTYPE]]
+        for ris_key in list(record_dict.keys()):
+            if ris_key in key_map:
+                standard_key = key_map[ris_key]
+                record_dict[standard_key] = record_dict.pop(ris_key)
+
+    @staticmethod
+    def __set_pages(*, record_dict: dict) -> None:
+        if "SP" in record_dict and "EP" in record_dict:
+            record_dict[Fields.PAGES] = (
+                f"{record_dict.pop('SP')}--{record_dict.pop('EP')}"
+            )
+
+    @staticmethod
+    def __join_person_lists(*, record_dict: dict) -> None:
+        if Fields.AUTHOR in record_dict and isinstance(
+            record_dict[Fields.AUTHOR], list
+        ):
+            record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
+        if Fields.EDITOR in record_dict and isinstance(
+            record_dict[Fields.EDITOR], list
+        ):
+            record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
+
+    @staticmethod
+    def __drop_unneeded_ris_fields(*, record_dict: dict) -> None:
+        record_dict.pop("TY", None)
+        record_dict.pop("Y2", None)
+        record_dict.pop("DB", None)
+        record_dict.pop("C1", None)
+        record_dict.pop("T3", None)
+        record_dict.pop("ER", None)
+
+    @staticmethod
+    def __cast_values_to_string(*, record_dict: dict) -> None:
+        for key, value in record_dict.items():
+            record_dict[key] = str(value)
+
+    @staticmethod
+    def __get_key_maps() -> dict:
+        return {
+            ENTRYTYPES.ARTICLE: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                "TI": Fields.TITLE,
+                "T2": Fields.JOURNAL,
+                "AB": Fields.ABSTRACT,
+                "VL": Fields.VOLUME,
+                "IS": Fields.NUMBER,
+                "DO": Fields.DOI,
+                "PB": Fields.PUBLISHER,
+                "UR": Fields.URL,
+                "SN": Fields.ISSN,
+            },
+            ENTRYTYPES.INBOOK: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                "TI": Fields.CHAPTER,
+                "T2": Fields.TITLE,
+                "DO": Fields.DOI,
+                "PB": Fields.PUBLISHER,
+                "UR": Fields.URL,
+                "AB": Fields.ABSTRACT,
+                "SN": Fields.ISBN,
+                "A2": Fields.EDITOR,
+            },
+            ENTRYTYPES.TECHREPORT: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                "TI": Fields.TITLE,
+                "UR": Fields.URL,
+                "PB": Fields.PUBLISHER,
+            },
+        }
 
     def load(self) -> dict:
         """Load the records from the SearchSource file."""
