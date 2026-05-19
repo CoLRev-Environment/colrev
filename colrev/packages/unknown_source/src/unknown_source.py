@@ -304,88 +304,86 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             del record_dict["citation_key"]
 
     @classmethod
+    def _table_entrytype_setter(cls, record_dict: dict) -> None:
+        if "type" in record_dict:
+            record_dict[Fields.ENTRYTYPE] = record_dict.pop("type")
+
+        if Fields.ENTRYTYPE not in record_dict:
+            if record_dict.get(Fields.JOURNAL, "") != "":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            elif record_dict.get(Fields.BOOKTITLE, "") != "":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+            else:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+        if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
+            if Fields.JOURNAL in record_dict and Fields.BOOKTITLE not in record_dict:
+                record_dict[Fields.BOOKTITLE] = record_dict.pop(Fields.JOURNAL)
+        elif record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+            if Fields.BOOKTITLE in record_dict and Fields.JOURNAL not in record_dict:
+                record_dict[Fields.JOURNAL] = record_dict.pop(Fields.BOOKTITLE)
+
+    @classmethod
+    def _table_field_mapper(cls, record_dict: dict) -> None:
+        # replace all keys with lower case
+        record_dict = {k.lower(): v for k, v in record_dict.items()}
+
+        if "id" in record_dict:
+            record_dict[Fields.ID] = record_dict.pop("id")
+        if "entrytype" in record_dict:
+            record_dict[Fields.ENTRYTYPE] = record_dict.pop("entrytype")
+        if "type" in record_dict:
+            record_dict[Fields.ENTRYTYPE] = record_dict.pop("type")
+        if "authors" in record_dict:
+            record_dict[Fields.AUTHOR] = record_dict.pop("authors", "")
+        if "publication" in record_dict:
+            record_dict[Fields.JOURNAL] = record_dict.pop("publication", "")
+
+        record_dict.pop("Category", None)
+        record_dict.pop("Affiliations", None)
+
+        if "issue" in record_dict and Fields.NUMBER not in record_dict:
+            record_dict[Fields.NUMBER] = record_dict.pop("issue")
+            if record_dict[Fields.NUMBER] == "no issue":
+                del record_dict[Fields.NUMBER]
+
+        if "publication_year" in record_dict and Fields.YEAR not in record_dict:
+            record_dict[Fields.YEAR] = record_dict.pop("publication_year")
+
+        # Note: this is a simple heuristic:
+        if (
+            "journal/book" in record_dict
+            and Fields.JOURNAL not in record_dict
+            and Fields.DOI in record_dict
+        ):
+            record_dict[Fields.JOURNAL] = record_dict.pop("journal/book")
+
+        if "author" in record_dict and ";" in record_dict["author"]:
+            record_dict["author"] = record_dict["author"].replace("; ", " and ")
+
+        cls._table_drop_fields(record_dict=record_dict)
+
+        for key in list(record_dict.keys()):
+            value = record_dict[key]
+            record_dict[key] = str(value)
+            if value == "" or pd.isna(value):
+                del record_dict[key]
+
+    @classmethod
+    def _table_id_labeler(cls, records: list[dict]) -> None:
+        """Labeler for IDs."""
+        for counter, record_dict in enumerate(records):
+            if Fields.ID not in record_dict:
+                record_dict[Fields.ID] = str(counter + 1).zfill(6)
+
+    @classmethod
     def _load_table(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        def entrytype_setter(record_dict: dict) -> None:
-            if "type" in record_dict:
-                record_dict[Fields.ENTRYTYPE] = record_dict.pop("type")
-
-            if Fields.ENTRYTYPE not in record_dict:
-                if record_dict.get(Fields.JOURNAL, "") != "":
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-                elif record_dict.get(Fields.BOOKTITLE, "") != "":
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
-                else:
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
-
-            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
-                if (
-                    Fields.JOURNAL in record_dict
-                    and Fields.BOOKTITLE not in record_dict
-                ):
-                    record_dict[Fields.BOOKTITLE] = record_dict.pop(Fields.JOURNAL)
-            elif record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-                if (
-                    Fields.BOOKTITLE in record_dict
-                    and Fields.JOURNAL not in record_dict
-                ):
-                    record_dict[Fields.JOURNAL] = record_dict.pop(Fields.BOOKTITLE)
-
-        def field_mapper(record_dict: dict) -> None:
-            # replace all keys with lower case
-            record_dict = {k.lower(): v for k, v in record_dict.items()}
-
-            if "id" in record_dict:
-                record_dict[Fields.ID] = record_dict.pop("id")
-            if "entrytype" in record_dict:
-                record_dict[Fields.ENTRYTYPE] = record_dict.pop("entrytype")
-            if "type" in record_dict:
-                record_dict[Fields.ENTRYTYPE] = record_dict.pop("type")
-            if "authors" in record_dict:
-                record_dict[Fields.AUTHOR] = record_dict.pop("authors", "")
-            if "publication" in record_dict:
-                record_dict[Fields.JOURNAL] = record_dict.pop("publication", "")
-
-            record_dict.pop("Category", None)
-            record_dict.pop("Affiliations", None)
-
-            if "issue" in record_dict and Fields.NUMBER not in record_dict:
-                record_dict[Fields.NUMBER] = record_dict.pop("issue")
-                if record_dict[Fields.NUMBER] == "no issue":
-                    del record_dict[Fields.NUMBER]
-
-            if "publication_year" in record_dict and Fields.YEAR not in record_dict:
-                record_dict[Fields.YEAR] = record_dict.pop("publication_year")
-
-            # Note: this is a simple heuristic:
-            if (
-                "journal/book" in record_dict
-                and Fields.JOURNAL not in record_dict
-                and Fields.DOI in record_dict
-            ):
-                record_dict[Fields.JOURNAL] = record_dict.pop("journal/book")
-
-            if "author" in record_dict and ";" in record_dict["author"]:
-                record_dict["author"] = record_dict["author"].replace("; ", " and ")
-
-            cls._table_drop_fields(record_dict=record_dict)
-
-            for key in list(record_dict.keys()):
-                value = record_dict[key]
-                record_dict[key] = str(value)
-                if value == "" or pd.isna(value):
-                    del record_dict[key]
-
-        def id_labeler(records: list) -> None:
-            """Labeler for IDs."""
-            for counter, record_dict in enumerate(records):
-                if Fields.ID not in record_dict:
-                    record_dict[Fields.ID] = str(counter + 1).zfill(6)
 
         records = colrev.loader.load_utils.load(
             filename=filename,
-            id_labeler=id_labeler,
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
+            id_labeler=cls._table_id_labeler,
+            entrytype_setter=cls._table_entrytype_setter,
+            field_mapper=cls._table_field_mapper,
             logger=logger,
         )
 
