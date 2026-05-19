@@ -57,56 +57,53 @@ class OpenAlexAPI:
 
         record_dict[Fields.AUTHOR] = " and ".join(author_list)
 
-    def _parse_item_to_record(self, *, item: dict) -> colrev.record.record.Record:
-        def set_entrytype(*, record_dict: dict, item: dict) -> None:
-            # pylint: disable=colrev-missed-constant-usage
-            if "title" in record_dict and record_dict["title"] is None:
-                del record_dict["title"]
-            if item.get("type_crossref", "") == "proceedings-article":
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
-                if (
-                    item.get("primary_location", None) is not None
-                    and item["primary_location"].get("source", None) is not None
-                ):
-                    display_name = item["primary_location"]["source"]["display_name"]
-                    if display_name != "Proceedings":
-                        record_dict[Fields.BOOKTITLE] = display_name
-            elif item["type"] in ["journal-article", "article"]:
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-                if (
-                    item.get("primary_location", None) is not None
-                    and item["primary_location"].get("source", None) is not None
-                ):
-                    record_dict[Fields.JOURNAL] = item["primary_location"]["source"][
-                        "display_name"
-                    ]
-            else:
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+    def _get_record_id(self, *, item: dict) -> str:
+        return item["id"].replace("https://openalex.org/", "")
 
-        record_dict = {}
-        record_dict["id"] = item["id"].replace("https://openalex.org/", "")
+    def _set_title_field(self, *, record_dict: dict, item: dict) -> None:
         # pylint: disable=colrev-missed-constant-usage
         if "title" in item and item["title"] is not None:
             record_dict[Fields.TITLE] = item["title"].lstrip("[").rstrip("].")
-        set_entrytype(record_dict=record_dict, item=item)
+        if "title" in record_dict and record_dict["title"] is None:
+            del record_dict["title"]
 
+    def _set_entrytype(self, *, record_dict: dict, item: dict) -> None:
+        if item.get("type_crossref", "") == "proceedings-article":
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+            if (
+                item.get("primary_location", None) is not None
+                and item["primary_location"].get("source", None) is not None
+            ):
+                display_name = item["primary_location"]["source"]["display_name"]
+                if display_name != "Proceedings":
+                    record_dict[Fields.BOOKTITLE] = display_name
+        elif item["type"] in ["journal-article", "article"]:
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            if (
+                item.get("primary_location", None) is not None
+                and item["primary_location"].get("source", None) is not None
+            ):
+                record_dict[Fields.JOURNAL] = item["primary_location"]["source"][
+                    "display_name"
+                ]
+        else:
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+    def _set_basic_fields(self, *, record_dict: dict, item: dict) -> None:
         if "publication_year" in item and item["publication_year"] is not None:
             record_dict[Fields.YEAR] = str(item["publication_year"])
         # pylint: disable=colrev-missed-constant-usage
         if "language" in item and item["language"] is not None:
             record_dict[Fields.LANGUAGE] = item["language"]
-
         if "is_retracted" in item and item["is_retracted"]:
             record_dict[FieldValues.RETRACTED] = item["is_retracted"]
-
-        # pylint: disable=colrev-missed-constant-usage
         if "doi" in item and item["doi"] is not None:
             record_dict[Fields.DOI] = (
                 item["doi"].upper().replace("HTTPS://DOI.ORG/", "")
             )
-
         record_dict[Fields.CITED_BY] = item["cited_by_count"]
 
+    def _set_biblio_fields(self, *, record_dict: dict, item: dict) -> None:
         # pylint: disable=colrev-missed-constant-usage
         if "volume" in item["biblio"] and item["biblio"]["volume"] is not None:
             record_dict[Fields.VOLUME] = item["biblio"]["volume"]
@@ -116,6 +113,13 @@ class OpenAlexAPI:
             record_dict[Fields.PAGES] = item["biblio"]["first_page"]
         if "last_page" in item["biblio"] and item["biblio"]["last_page"] is not None:
             record_dict[Fields.PAGES] += "--" + item["biblio"]["last_page"]
+
+    def _parse_item_to_record(self, *, item: dict) -> colrev.record.record.Record:
+        record_dict = {"id": self._get_record_id(item=item)}
+        self._set_title_field(record_dict=record_dict, item=item)
+        self._set_entrytype(record_dict=record_dict, item=item)
+        self._set_basic_fields(record_dict=record_dict, item=item)
+        self._set_biblio_fields(record_dict=record_dict, item=item)
 
         self._set_author_from_item(record_dict=record_dict, item=item)
         record = colrev.record.record.Record(record_dict)
