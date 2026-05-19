@@ -13,9 +13,19 @@ import typing
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.colrev_internal_packages
 import colrev.package_manager.package
+from colrev.package_manager.colrev_internal_packages import get_internal_packages_dict
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Filepaths
+
+
+def _validate_internal_package_selection(
+    *, selected_package: str, internal_packages_dict: dict[str, str]
+) -> None:
+    if selected_package not in internal_packages_dict:
+        raise ValueError(
+            f"Installation rejected: unknown internal package '{selected_package}'."
+        )
 
 
 def _run_uv_pip_list() -> subprocess.CompletedProcess[str]:
@@ -190,9 +200,7 @@ class PackageManager:
 
         # print(package_manager)
 
-        internal_packages_dict = (
-            colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
-        )
+        internal_packages_dict = get_internal_packages_dict()
 
         if len(packages) == 1 and packages[0] == "all_internal_packages":
             packages = list(internal_packages_dict.keys())
@@ -200,6 +208,11 @@ class PackageManager:
         # Install internal colrev packages first
         colrev_packages = []
         for package in packages:
+            if package.startswith("colrev."):
+                _validate_internal_package_selection(
+                    selected_package=package,
+                    internal_packages_dict=internal_packages_dict,
+                )
             if package in internal_packages_dict:
                 colrev_packages.append(package)
         packages = [p for p in packages if p not in colrev_packages]

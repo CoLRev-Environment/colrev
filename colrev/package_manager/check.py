@@ -9,6 +9,7 @@ import typing
 from importlib import import_module
 from importlib import util
 from pathlib import Path
+import re
 
 import toml
 
@@ -104,10 +105,25 @@ HELP_MESSAGES: dict[str, str] = {
 }
 
 
+def _validate_package_name(package_name: str) -> str:
+    if not package_name:
+        raise ValueError("Invalid package name: package name must not be empty.")
+    if package_name.startswith("-"):
+        raise ValueError("Invalid package name: package name must not start with '-'.")
+    if not re.match(r"^[A-Za-z0-9][A-Za-z0-9._-]*$", package_name):
+        raise ValueError(
+            "Invalid package name: only letters, digits, dots, underscores, and hyphens are allowed."
+        )
+    return package_name
+
+
 def _check_package_installed(data: dict) -> bool:
-    package_name = data["project"]["name"]
+    package_name = _validate_package_name(data["project"]["name"])
     try:
-        subprocess.check_output([sys.executable, "-m", "pip", "show", package_name])
+        # package_name is validated above and shell=True is not used.
+        subprocess.check_output(  # nosec B603
+            [sys.executable, "-m", "pip", "show", package_name]
+        )
     except subprocess.CalledProcessError:
         print(
             f"Navigate to {Path.cwd()} and run: "
