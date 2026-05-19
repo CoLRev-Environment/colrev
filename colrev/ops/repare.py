@@ -80,58 +80,12 @@ class Repare(colrev.process.operation.Operation):
             )
 
     def _fix_files(self, records: dict) -> None:
-        # pylint: disable=too-many-branches
-        for record_dict in records.values():
-            if Fields.FILE not in record_dict:
-                continue
-
-            if not record_dict[Fields.FILE].startswith("data/pdfs/"):
-                record_dict[Fields.FILE] = f"data/pdfs/{record_dict['ID']}.pdf"
-
-            full_path = self.review_manager.path / Path(record_dict[Fields.FILE])
-
-            if full_path.is_file():
-                continue
-
-            # Add .pdf extension if missing
-            if Path(str(full_path) + ".pdf").is_file():
-                shutil.move(str(full_path) + ".pdf", str(full_path))
-
-            # Check / replace multiple blanks in file and filename
-            try:
-                parent_dir = full_path.parent
-                same_dir_pdfs = [
-                    x.relative_to(self.review_manager.path)
-                    for x in parent_dir.glob("*.pdf")
-                ]
-                for same_dir_pdf in same_dir_pdfs:
-                    if record_dict[Fields.FILE].replace("  ", " ") == str(
-                        same_dir_pdf
-                    ).replace("  ", " "):
-                        shutil.move(
-                            str(same_dir_pdf), str(same_dir_pdf).replace("  ", " ")
-                        )
-                        record_dict[Fields.FILE] = record_dict[Fields.FILE].replace(
-                            "  ", " "
-                        )
-            except ValueError:
-                pass
-
-            full_path = self.review_manager.path / Path(record_dict[Fields.FILE])
-
-            if not full_path.is_file():
-                record = colrev.record.record.Record(record_dict)
-                self._fix_broken_symlink_based_on_local_index(
-                    record=record, full_path=full_path
-                )
-
-            if full_path.is_file():
-                continue
-
-            record_dict["colrev_status_backup"] = record_dict[Fields.STATUS]
-            del record_dict[Fields.FILE]
-            record = colrev.record.record.Record(record_dict)
-            record.set_status(RecordState.rev_prescreen_included)
+        for record_id, record_dict in self._records_with_file_references(
+            records=records
+        ):
+            self._fix_record_file_reference(
+                record_id=record_id, record_dict=record_dict
+            )
 
         file_search_sources = [
             x
@@ -162,6 +116,76 @@ class Repare(colrev.process.operation.Operation):
                             files_dir_feed.feed_records[feed_id] = feed_record
 
             files_dir_feed.save()
+
+    def _records_with_file_references(self, *, records: dict) -> list[tuple[str, dict]]:
+        return [
+            (record_id, record_dict)
+            for record_id, record_dict in records.items()
+            if Fields.FILE in record_dict
+        ]
+
+    def _fix_record_file_reference(self, *, record_id: str, record_dict: dict) -> None:
+        self._normalize_expected_pdf_path(record_dict=record_dict, record_id=record_id)
+        full_path = self._full_file_path(record_dict=record_dict)
+
+        if full_path.is_file():
+            return
+
+        self._move_missing_pdf_extension_variant_if_exists(full_path=full_path)
+        self._normalize_double_blanks_in_file_path(
+            record_dict=record_dict, full_path=full_path
+        )
+        full_path = self._full_file_path(record_dict=record_dict)
+
+        if not full_path.is_file():
+            record = colrev.record.record.Record(record_dict)
+            self._fix_broken_symlink_based_on_local_index(
+                record=record, full_path=full_path
+            )
+
+        if full_path.is_file():
+            return
+
+        self._handle_missing_file_reference(record_dict=record_dict)
+
+    def _normalize_expected_pdf_path(
+        self, *, record_dict: dict, record_id: str
+    ) -> None:
+        if not record_dict[Fields.FILE].startswith("data/pdfs/"):
+            record_dict[Fields.FILE] = f"data/pdfs/{record_id}.pdf"
+
+    def _full_file_path(self, *, record_dict: dict) -> Path:
+        return self.review_manager.path / Path(record_dict[Fields.FILE])
+
+    def _move_missing_pdf_extension_variant_if_exists(self, *, full_path: Path) -> None:
+        if Path(str(full_path) + ".pdf").is_file():
+            shutil.move(str(full_path) + ".pdf", str(full_path))
+
+    def _normalize_double_blanks_in_file_path(
+        self, *, record_dict: dict, full_path: Path
+    ) -> None:
+        try:
+            parent_dir = full_path.parent
+            same_dir_pdfs = [
+                x.relative_to(self.review_manager.path)
+                for x in parent_dir.glob("*.pdf")
+            ]
+            for same_dir_pdf in same_dir_pdfs:
+                if record_dict[Fields.FILE].replace("  ", " ") == str(
+                    same_dir_pdf
+                ).replace("  ", " "):
+                    shutil.move(str(same_dir_pdf), str(same_dir_pdf).replace("  ", " "))
+                    record_dict[Fields.FILE] = record_dict[Fields.FILE].replace(
+                        "  ", " "
+                    )
+        except ValueError:
+            pass
+
+    def _handle_missing_file_reference(self, *, record_dict: dict) -> None:
+        record_dict["colrev_status_backup"] = record_dict[Fields.STATUS]
+        del record_dict[Fields.FILE]
+        record = colrev.record.record.Record(record_dict)
+        record.set_status(RecordState.rev_prescreen_included)
 
     def _get_source_feeds(self) -> dict:
         source_feeds = {}
