@@ -525,78 +525,130 @@ class CrossrefAPI:
     ) -> list:
         """Retrieve records from Crossref based on a query."""
         record = record_input.copy_prep_rec()
-        record_list: list[colrev.record.record.Record] = []
-        candidates: list[colrev.record.record.Record] = []
+        endpoint = self._get_crossref_endpoint(
+            record=record, jour_vol_iss_list=jour_vol_iss_list
+        )
+        retrieved_records = self._retrieve_crossref_records(
+            endpoint=endpoint,
+            record=record,
+            jour_vol_iss_list=jour_vol_iss_list,
+            top_n=top_n,
+        )
 
-        url = self._create_query_url(record=record, jour_vol_iss_list=jour_vol_iss_list)
-
-        endpoint = Endpoint(url, email=self.email, cache=self.cache)
         if jour_vol_iss_list:
-            endpoint.request_params["rows"] = "50"
-        else:
-            endpoint.request_params["rows"] = "15"
+            self._drop_similarity_scores(records=retrieved_records)
+            return retrieved_records
+
+        return self._prepare_top_n_results(candidates=retrieved_records, top_n=top_n)
+
+    def _get_crossref_endpoint(
+        self, *, record: colrev.record.record.Record, jour_vol_iss_list: bool
+    ) -> Endpoint:
+        url = self._create_query_url(record=record, jour_vol_iss_list=jour_vol_iss_list)
+        endpoint = Endpoint(url, email=self.email, cache=self.cache)
+        endpoint.request_params["rows"] = "50" if jour_vol_iss_list else "15"
+        return endpoint
+
+    def _retrieve_crossref_records(
+        self,
+        *,
+        endpoint: Endpoint,
+        record: colrev.record.record.Record,
+        jour_vol_iss_list: bool,
+        top_n: int,
+    ) -> list[colrev.record.record.Record]:
+        records: list[colrev.record.record.Record] = []
 
         counter = 0
         while True:
-            try:
-                item = next(iter(endpoint), None)
-            except requests.exceptions.RequestException as exc:
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
-                ) from exc
+            item = self._get_next_endpoint_item(endpoint=endpoint)
             if item is None:
                 break
-            try:
-                retrieved_record = record_transformer.json_to_record(item=item)
-                similarity = self._get_similarity(
-                    record=record, retrieved_record_dict=retrieved_record.data
+            retrieved_record = self._parse_record(item=item)
+            if retrieved_record is not None:
+                self._append_with_similarity(
+                    records=records,
+                    record=record,
+                    retrieved_record=retrieved_record,
                 )
-                retrieved_record.data["_similarity_score"] = similarity
-                if jour_vol_iss_list:
-                    record_list.append(retrieved_record)
-                else:
-                    candidates.append(retrieved_record)
 
-            except colrev_exceptions.RecordNotParsableException:
-                pass
             counter += 1
-            if jour_vol_iss_list and counter > 200:
+            if self._should_stop_iteration(
+                jour_vol_iss_list=jour_vol_iss_list, counter=counter, top_n=top_n
+            ):
                 break
-            if not jour_vol_iss_list and counter > top_n + 10:
-                break
 
-        def _norm_doi(doi: str) -> str:
-            doi = doi.strip().lower()
-            for p in ("https://doi.org/", "http://doi.org/", "doi:", "doi.org/"):
-                if doi.startswith(p):
-                    return doi[len(p) :]
-            return doi
+        return records
 
-        if not jour_vol_iss_list:
-            # keep only the best (highest similarity) per DOI
-            best_by_doi: typing.Dict[str, colrev.record.record.Record] = {}
-            for rec in candidates:
-                key = _norm_doi(rec.data["doi"])
-                if key not in best_by_doi or rec.data.get(
-                    "_similarity_score", 0.0
-                ) > best_by_doi[key].data.get("_similarity_score", 0.0):
-                    best_by_doi[key] = rec
+    def _get_next_endpoint_item(self, *, endpoint: Endpoint) -> typing.Optional[dict]:
+        try:
+            return next(iter(endpoint), None)
+        except requests.exceptions.RequestException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
+            ) from exc
 
-            deduped = list(best_by_doi.values())
-            deduped.sort(
-                key=lambda r: r.data.get("_similarity_score", 0.0), reverse=True
-            )
+    def _parse_record(
+        self, *, item: dict
+    ) -> typing.Optional[colrev.record.record.Record]:
+        try:
+            return record_transformer.json_to_record(item=item)
+        except colrev_exceptions.RecordNotParsableException:
+            return None
 
-            result = []
-            for rec in deduped[: max(1, top_n)]:
-                rec.data.pop("_similarity_score", None)
-                result.append(colrev.record.record_prep.PrepRecord(rec.get_data()))
-            return result
+    def _append_with_similarity(
+        self,
+        *,
+        records: list[colrev.record.record.Record],
+        record: colrev.record.record.Record,
+        retrieved_record: colrev.record.record.Record,
+    ) -> None:
+        similarity = self._get_similarity(
+            record=record, retrieved_record_dict=retrieved_record.data
+        )
+        retrieved_record.data["_similarity_score"] = similarity
+        records.append(retrieved_record)
 
-        # For jour_vol_iss_list=True, optionally strip similarity before returning
-        for rec in record_list:
+    def _should_stop_iteration(
+        self, *, jour_vol_iss_list: bool, counter: int, top_n: int
+    ) -> bool:
+        if jour_vol_iss_list:
+            return counter > 200
+        return counter > top_n + 10
+
+    def _prepare_top_n_results(
+        self, *, candidates: list[colrev.record.record.Record], top_n: int
+    ) -> list[colrev.record.record_prep.PrepRecord]:
+        best_by_doi: typing.Dict[str, colrev.record.record.Record] = {}
+        for rec in candidates:
+            key = self._norm_doi(doi=rec.data["doi"])
+            if key not in best_by_doi or rec.data.get(
+                "_similarity_score", 0.0
+            ) > best_by_doi[key].data.get("_similarity_score", 0.0):
+                best_by_doi[key] = rec
+
+        deduped = list(best_by_doi.values())
+        deduped.sort(key=lambda r: r.data.get("_similarity_score", 0.0), reverse=True)
+
+        result = []
+        for rec in deduped[: max(1, top_n)]:
             rec.data.pop("_similarity_score", None)
-        return record_list
+            result.append(colrev.record.record_prep.PrepRecord(rec.get_data()))
+        return result
+
+    def _drop_similarity_scores(
+        self, *, records: list[colrev.record.record.Record]
+    ) -> None:
+        for rec in records:
+            rec.data.pop("_similarity_score", None)
+
+    @staticmethod
+    def _norm_doi(*, doi: str) -> str:
+        doi = doi.strip().lower()
+        for prefix in ("https://doi.org/", "http://doi.org/", "doi:", "doi.org/"):
+            if doi.startswith(prefix):
+                return doi[len(prefix) :]
+        return doi
 
 
 def query_doi(
