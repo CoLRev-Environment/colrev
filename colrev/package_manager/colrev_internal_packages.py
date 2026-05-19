@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
 import tempfile
 from importlib.metadata import distribution
 from importlib.metadata import PackageNotFoundError
@@ -14,6 +13,7 @@ from urllib.parse import unquote
 from urllib.parse import urlparse
 
 import toml
+import git
 
 
 # pylint: disable=too-many-return-statements
@@ -52,16 +52,10 @@ def _get_local_editable_colrev_path() -> str:
 
 def _clone_colrev_repository() -> Path:
     temp_dir = tempfile.mkdtemp()
-    subprocess.run(
-        [
-            "git",
-            "clone",
-            "--depth",
-            "1",
-            "https://github.com/CoLRev-Environment/colrev",
-            temp_dir,
-        ],
-        check=True,
+    git.Repo.clone_from(
+        "https://github.com/CoLRev-Environment/colrev",
+        temp_dir,
+        depth=1,
     )
     return Path(temp_dir)
 

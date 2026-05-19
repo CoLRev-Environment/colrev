@@ -7,7 +7,6 @@ import inspect
 import json
 import os
 import re
-import subprocess
 from abc import ABC
 from datetime import datetime
 from importlib import import_module
@@ -23,19 +22,27 @@ from colrev.package_manager.package_base_classes import BASECLASS_MAP
 
 def _get_default_author() -> dict:
     try:
-        name = (
-            subprocess.check_output(["git", "config", "--get", "user.name"])
-            .decode()
-            .strip()
-        )
-        email = (
-            subprocess.check_output(["git", "config", "--get", "user.email"])
-            .decode()
-            .strip()
-        )
-        return {"name": name, "email": email}
-    except subprocess.CalledProcessError as exc:
-        print(exc)
+        config_reader = git.Repo(
+            Path.cwd(), search_parent_directories=True
+        ).config_reader()
+    except git.exc.InvalidGitRepositoryError:
+        try:
+            config_reader = git.GitConfigParser(read_only=True)
+        except (OSError, ValueError):
+            return {}
+    except (git.exc.GitError, OSError, ValueError):
+        return {}
+
+    try:
+        if not (config_reader.has_option("user", "name")) or not (
+            config_reader.has_option("user", "email")
+        ):
+            return {}
+        return {
+            "name": config_reader.get_value("user", "name"),
+            "email": config_reader.get_value("user", "email"),
+        }
+    except (git.exc.GitError, OSError, ValueError):
         return {}
 
 

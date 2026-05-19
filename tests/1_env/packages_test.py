@@ -2,9 +2,11 @@
 """Tests for the colrev package manager"""
 
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
+import colrev.package_manager.colrev_internal_packages
 import colrev.package_manager.init
 from colrev.constants import EndpointType
 
@@ -26,6 +28,88 @@ def test_generate_method_signatures(endpoint_type: str, helpers) -> None:  # typ
     assert (
         module_content.rstrip() == expected_content.rstrip()
     ), "Generated module content does not match expected version!"
+
+
+def test_get_default_author_from_repo_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    mock_reader = MagicMock()
+    mock_reader.has_option.side_effect = [True, True]
+    mock_reader.get_value.side_effect = ["Test User", "test.user@example.org"]
+
+    mock_repo = MagicMock()
+    mock_repo.config_reader.return_value = mock_reader
+    monkeypatch.setattr(
+        colrev.package_manager.init.git, "Repo", MagicMock(return_value=mock_repo)
+    )
+
+    author = colrev.package_manager.init._get_default_author()
+
+    assert author == {"name": "Test User", "email": "test.user@example.org"}
+
+
+def test_get_default_author_falls_back_to_global_config(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        colrev.package_manager.init.git,
+        "Repo",
+        MagicMock(
+            side_effect=colrev.package_manager.init.git.exc.InvalidGitRepositoryError()
+        ),
+    )
+    mock_global_reader = MagicMock()
+    mock_global_reader.has_option.side_effect = [True, True]
+    mock_global_reader.get_value.side_effect = ["Global User", "global@example.org"]
+    monkeypatch.setattr(
+        colrev.package_manager.init.git,
+        "GitConfigParser",
+        MagicMock(return_value=mock_global_reader),
+    )
+
+    author = colrev.package_manager.init._get_default_author()
+
+    assert author == {"name": "Global User", "email": "global@example.org"}
+
+
+def test_get_default_author_returns_empty_dict_without_complete_author(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    mock_reader = MagicMock()
+    mock_reader.has_option.side_effect = [True, False]
+    mock_repo = MagicMock()
+    mock_repo.config_reader.return_value = mock_reader
+    monkeypatch.setattr(
+        colrev.package_manager.init.git, "Repo", MagicMock(return_value=mock_repo)
+    )
+
+    author = colrev.package_manager.init._get_default_author()
+
+    assert author == {}
+
+
+def test_clone_colrev_repository_uses_gitpython(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    temp_dir = "/tmp/test-colrev-clone"
+    clone_from_mock = MagicMock()
+    monkeypatch.setattr(
+        colrev.package_manager.colrev_internal_packages.tempfile,
+        "mkdtemp",
+        MagicMock(return_value=temp_dir),
+    )
+    monkeypatch.setattr(
+        colrev.package_manager.colrev_internal_packages.git.Repo,
+        "clone_from",
+        clone_from_mock,
+    )
+
+    result = colrev.package_manager.colrev_internal_packages._clone_colrev_repository()
+
+    clone_from_mock.assert_called_once_with(
+        "https://github.com/CoLRev-Environment/colrev",
+        temp_dir,
+        depth=1,
+    )
+    assert result == Path(temp_dir)
 
 
 # @pytest.fixture
