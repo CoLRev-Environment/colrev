@@ -3,6 +3,7 @@
 
 import shutil
 from pathlib import Path
+from typing import Any
 
 import inquirer
 import pandas as pd
@@ -145,6 +146,111 @@ def _import_prescreening_decisions(
     )
 
 
+def _prepare_records_for_matching(
+    *, other_records: dict, records: dict
+) -> pd.DataFrame:
+    other_records_df = pd.DataFrame(other_records.values())
+    other_records_df[Fields.ID] = "other_" + other_records_df[Fields.ID].astype(str)
+    records_df = pd.DataFrame(records.values())
+    records_df["search_set"] = "old_set"
+    combined_records_df = pd.concat([records_df, other_records_df], ignore_index=True)
+    combined_records_df["prev_ID"] = combined_records_df[Fields.ID]
+    prepped_records_df = prep(combined_records_df, verbosity_level=0)
+    return block(prepped_records_df, verbosity_level=0)
+
+
+def _get_files_search_source(
+    *, review_manager: colrev.review_manager.ReviewManager
+) -> Any | None:
+    files_search_source = None
+    for search_source in review_manager.settings.sources:
+        if search_source.search_type == SearchType.FILES:
+            files_search_source = search_source
+    return files_search_source
+
+
+def _get_or_create_target_files_feed(
+    *, review_manager: colrev.review_manager.ReviewManager
+) -> colrev.ops.search_api_feed.SearchAPIFeed:
+    target_files_search_source = _get_files_search_source(review_manager=review_manager)
+    if not target_files_search_source:
+        print("No Files source found -- creating one")
+        target_files_search_source = colrev.search_file.ExtendedSearchFile(
+            search_string="",
+            platform="colrev.files_dir",
+            search_type=SearchType.FILES,
+            search_results_path=Path("data/search/files.bib"),
+            version="1.0.0",
+        )
+        review_manager.settings.sources.append(target_files_search_source)
+        review_manager.settings.save_settings_file()
+    return colrev.ops.search_api_feed.SearchAPIFeed(
+        source_identifier=Fields.FILE,
+        search_source=target_files_search_source,
+        update_only=False,
+        logger=review_manager.logger,
+        verbose_mode=False,
+    )
+
+
+def _get_origin_files_feed(
+    *, other_review_manager: colrev.review_manager.ReviewManager
+) -> colrev.ops.search_api_feed.SearchAPIFeed | None:
+    origin_files_search_source = _get_files_search_source(
+        review_manager=other_review_manager
+    )
+    if not origin_files_search_source:
+        print("No Files source found in origin repository -- cannot proceed")
+        return None
+    origin_files_search_source.search_results_path = (
+        other_review_manager.path / origin_files_search_source.search_results_path
+    )
+    return colrev.ops.search_api_feed.SearchAPIFeed(
+        source_identifier=Fields.FILE,
+        search_source=origin_files_search_source,
+        update_only=False,
+        logger=other_review_manager.logger,
+        verbose_mode=False,
+    )
+
+
+def _merge_duplicate_record(
+    *,
+    original_id: str,
+    other_id: str,
+    other_records: dict,
+    records: dict,
+    other_review_manager: colrev.review_manager.ReviewManager,
+    review_manager: colrev.review_manager.ReviewManager,
+    origin_files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
+    target_files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
+) -> None:
+    other_record = other_records[other_id.replace("other_", "")]
+    if Fields.FILE in other_record and Fields.FILE not in records[original_id]:
+        print(f" - Copying file {other_record[Fields.FILE]}")
+        records[original_id][Fields.FILE] = other_record[Fields.FILE]
+        original_path = other_review_manager.path / Path(other_record[Fields.FILE])
+        if original_path.is_file():
+            target_path = review_manager.path / Path(other_record[Fields.FILE])
+            if not target_path.parent.is_dir():
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+            if not target_path.is_file():
+                shutil.copyfile(original_path, target_path)
+            else:
+                print(f" - PDF {target_path} already exists -- not copying")
+
+        other_origins = other_record.get(Fields.ORIGIN, [])
+        file_origin = [
+            o for o in other_origins if o.startswith("file") or o.startswith("pdf")
+        ].pop()
+        origin_record = origin_files_dir_feed.feed_records[file_origin.split("/")[1]]
+        origin_record[Fields.FILE] = other_record[Fields.FILE]
+        target_files_dir_feed.add_update_record(
+            colrev.record.record.Record(origin_record)
+        )
+    other_records.pop(other_id.replace("other_", ""))
+
+
 def _import_records(
     review_manager: colrev.review_manager.ReviewManager,
     *,
@@ -171,62 +277,17 @@ def _import_records(
     other_records = other_review_manager.dataset.load_records_dict()
     records = review_manager.dataset.load_records_dict()
 
-    other_records_df = pd.DataFrame(other_records.values())
-    # prefix IDs with "other_" to avoid collisions
-    other_records_df[Fields.ID] = "other_" + other_records_df[Fields.ID].astype(str)
-    records_df = pd.DataFrame(records.values())
-    records_df["search_set"] = "old_set"
-
-    combined_records_df = pd.concat([records_df, other_records_df], ignore_index=True)
-    combined_records_df["prev_ID"] = combined_records_df[Fields.ID]
-
-    records_df = prep(combined_records_df, verbosity_level=0)
-
-    # Block records
-    blocked_df = block(records_df, verbosity_level=0)
-
-    target_files_search_source = None
-    for search_source in review_manager.settings.sources:
-        if search_source.search_type == SearchType.FILES:
-            target_files_search_source = search_source
-    if not target_files_search_source:
-        print("No Files source found -- creating one")
-        target_files_search_source = colrev.search_file.ExtendedSearchFile(
-            search_string="",
-            platform="colrev.files_dir",
-            search_type=SearchType.FILES,
-            search_results_path=Path("data/search/files.bib"),
-            version="1.0.0",
-        )
-        review_manager.settings.sources.append(target_files_search_source)
-        review_manager.settings.save_settings_file()
-
-    target_files_dir_feed = colrev.ops.search_api_feed.SearchAPIFeed(
-        source_identifier=Fields.FILE,
-        search_source=target_files_search_source,
-        update_only=False,
-        logger=review_manager.logger,
-        verbose_mode=False,
+    blocked_df = _prepare_records_for_matching(
+        other_records=other_records, records=records
     )
-
-    origin_files_search_source = None
-    for search_source in other_review_manager.settings.sources:
-        if search_source.search_type == SearchType.FILES:
-            origin_files_search_source = search_source
-    if not origin_files_search_source:
-        print("No Files source found in origin repository -- cannot proceed")
+    target_files_dir_feed = _get_or_create_target_files_feed(
+        review_manager=review_manager
+    )
+    origin_files_dir_feed = _get_origin_files_feed(
+        other_review_manager=other_review_manager
+    )
+    if not origin_files_dir_feed:
         return
-
-    origin_files_search_source.search_results_path = (
-        other_review_manager.path / origin_files_search_source.search_results_path
-    )
-    origin_files_dir_feed = colrev.ops.search_api_feed.SearchAPIFeed(
-        source_identifier=Fields.FILE,
-        search_source=origin_files_search_source,
-        update_only=False,
-        logger=other_review_manager.logger,
-        verbose_mode=False,
-    )
 
     print()
 
@@ -245,39 +306,16 @@ def _import_records(
             )
         print(f"{original_id} <-- {other_id}")
 
-        # merge
-        other_record = other_records[other_id.replace("other_", "")]
-        if Fields.FILE in other_record and Fields.FILE not in records[original_id]:
-            print(f" - Copying file {other_record[Fields.FILE]}")
-            records[original_id][Fields.FILE] = other_record[Fields.FILE]
-            # TODO : copy PDF file
-            original_path = other_review_manager.path / Path(other_record[Fields.FILE])
-            if original_path.is_file():
-                target_path = review_manager.path / Path(other_record[Fields.FILE])
-                if not target_path.parent.is_dir():
-                    target_path.parent.mkdir(parents=True, exist_ok=True)
-                if not target_path.is_file():
-
-                    shutil.copyfile(original_path, target_path)
-                else:
-                    print(f" - PDF {target_path} already exists -- not copying")
-
-            other_origins = other_record.get(Fields.ORIGIN, [])
-            file_origin = [
-                o for o in other_origins if o.startswith("file") or o.startswith("pdf")
-            ].pop()
-            origin_record = origin_files_dir_feed.feed_records[
-                file_origin.split("/")[1]
-            ]
-
-            # Fix filename
-            origin_record[Fields.FILE] = other_record[Fields.FILE]
-            target_files_dir_feed.add_update_record(
-                colrev.record.record.Record(origin_record)
-            )
-
-        # TODO : other fields?
-        other_records.pop(other_id.replace("other_", ""))
+        _merge_duplicate_record(
+            original_id=original_id,
+            other_id=other_id,
+            other_records=other_records,
+            records=records,
+            other_review_manager=other_review_manager,
+            review_manager=review_manager,
+            origin_files_dir_feed=origin_files_dir_feed,
+            target_files_dir_feed=target_files_dir_feed,
+        )
 
     if "y" != input("Proceed with merge? [yN] ").lower():
         print("Aborting")  # discarding in-mem changes
