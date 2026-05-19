@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib.metadata
 import json
+import shutil
 import subprocess
 import sys
 import typing
@@ -15,6 +16,26 @@ import colrev.package_manager.package
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Filepaths
+
+
+def _run_uv_pip_list() -> subprocess.CompletedProcess[str]:
+    """Return package information reported by ``uv pip list``.
+
+    Security note:
+    The subprocess executable and arguments are fully static and do not include
+    user-controlled input.
+    """
+    uv_executable = shutil.which("uv")
+    if uv_executable is None:
+        raise FileNotFoundError("uv executable not found")
+
+    return subprocess.run(  # nosec B603 - static command; no user-controlled input is passed.
+        [uv_executable, "pip", "list"],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=30,
+    )
 
 
 class PackageManager:
@@ -78,12 +99,7 @@ class PackageManager:
 
         if uv:
             try:
-                result = subprocess.run(
-                    ["uv", "pip", "list"],
-                    capture_output=True,
-                    text=True,
-                    check=True,
-                )
+                result = _run_uv_pip_list()
                 installed_packages_uv = {
                     line.split()[0].replace(".", "-")
                     for line in result.stdout.splitlines()[2:]
@@ -92,7 +108,11 @@ class PackageManager:
                 if fixed_package_name in installed_packages_uv:
                     return True
 
-            except (subprocess.CalledProcessError, FileNotFoundError):
+            except (
+                subprocess.CalledProcessError,
+                subprocess.TimeoutExpired,
+                FileNotFoundError,
+            ):
                 pass
         else:
             try:
