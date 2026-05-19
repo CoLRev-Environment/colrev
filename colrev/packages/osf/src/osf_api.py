@@ -60,114 +60,108 @@ class OSFApiQuery:
         response = requests.get(url, headers=self.headers, timeout=60)
         return response.text
 
-    # pylint: disable=broad-exception-caught
     def _resolve_authors(self, record: dict) -> None:
-        """Resolve OSF authors for a single record (in place).
-
-        Replaces record[Fields.AUTHOR] (contributors URL) with a BibTeX-style string
-        'Family, Given and Family, Given'. Guarantees the URL is not kept:
-        - prefer unregistered_contributor
-        - otherwise fetch user by id (relationships.users.data.id)
-        - fallback: user id string
-        - if nothing at all is found, drop the AUTHOR field
-        """
+        """Resolve OSF authors for a single record (in place)."""
         href = record.get(Fields.AUTHOR)
         if not href or not isinstance(href, str):
             return
 
-        def _name_from_attrs(uattr: dict) -> str:
-            given = (uattr.get("given_name") or "").strip()
-            family = (uattr.get("family_name") or "").strip()
-            full = (uattr.get("full_name") or "").strip()
-            if family and given:
-                return f"{family}, {given}"
-            return full or (given or family) or ""
+        names, id_fallbacks = self._resolve_contributor_authors(href)
+        if names:
+            record[Fields.AUTHOR] = " and ".join(names)
+            return
+        if id_fallbacks:
+            record[Fields.AUTHOR] = " and ".join(id_fallbacks)
+            return
 
-        def _fetch_user_attrs(uid: str) -> dict:
-            if not uid:
-                return {}
-            if uid in self._user_cache:
-                return self._user_cache[uid]
-            url = f"https://api.osf.io/v2/users/{uid}/"
-            try:
-                # keep it simple; no fields filter to avoid oddities
-                js = json.loads(self._query_api(url))
-                data = js.get("data", {})
-                if isinstance(data, list):
-                    data = data[0] if data else {}
-                attrs = (data.get("attributes") or {}) if isinstance(data, dict) else {}
-                if attrs:
-                    self._user_cache[uid] = attrs
-                return attrs
-            except Exception:
-                return {}
+        record.pop(Fields.AUTHOR, None)
+
+    def _resolve_contributor_authors(self, href: str) -> tuple[list[str], list[str]]:
+        sep = "&" if "?" in href else "?"
+        url = f"{href}{sep}filter[bibliographic]=true"
+        names: list[str] = []
+        id_fallbacks: list[str] = []
 
         try:
-            # Pull only bibliographic contributors
-            sep = "&" if "?" in href else "?"
-            url = f"{href}{sep}filter[bibliographic]=true"
-
-            names: list[str] = []
-            id_fallbacks: list[str] = []
-
             while url:
                 js = json.loads(self._query_api(url))
-                for item in js.get("data", []):
-                    attr = item.get("attributes") or {}
-                    if attr.get("bibliographic") is False:
-                        continue
-
-                    # 1) unregistered contributor name (verbatim)
-                    name = (attr.get("unregistered_contributor") or "").strip()
-
-                    # 2) registered user via id
-                    if not name:
-                        rel = (item.get("relationships") or {}).get("users") or {}
-                        rel_data = rel.get("data") or {}
-                        uid = rel_data.get("id") if isinstance(rel_data, dict) else None
-                        if uid:
-                            uattrs = _fetch_user_attrs(uid)
-                            name = _name_from_attrs(uattrs)
-                            if not name:
-                                # keep uid as a safe fallback
-                                id_fallbacks.append(uid)
-
-                    if name:
-                        names.append(name)
-
-                # paginate
+                page_names, page_ids = self._extract_page_author_data(js)
+                names.extend(page_names)
+                id_fallbacks.extend(page_ids)
                 links = js.get("links") or {}
                 url = links.get("next", "")
-
-            # Always overwrite AUTHOR (never keep the URL):
-            if names:
-                record[Fields.AUTHOR] = " and ".join(names)
-            elif id_fallbacks:
-                record[Fields.AUTHOR] = " and ".join(id_fallbacks)
-            else:
-                # nothing found—drop the field to avoid leaving a URL around
-                record.pop(Fields.AUTHOR, None)
-
         except Exception:
-            # On hard failures, fall back to user ids if we can extract them without extra calls
-            try:
-                # last-chance: fetch once without filters and try to read ids
-                js = json.loads(self._query_api(href))
-                ids = []
-                for item in js.get("data", []):
-                    if (item.get("attributes") or {}).get("bibliographic") is False:
-                        continue
-                    rel = (item.get("relationships") or {}).get("users") or {}
-                    rel_data = rel.get("data") or {}
-                    uid = rel_data.get("id") if isinstance(rel_data, dict) else None
-                    if uid:
-                        ids.append(uid)
-                if ids:
-                    record[Fields.AUTHOR] = " and ".join(ids)
-                else:
-                    record.pop(Fields.AUTHOR, None)
-            except Exception:
-                record.pop(Fields.AUTHOR, None)
+            return [], self._resolve_fallback_ids(href)
+
+        return names, id_fallbacks
+
+    def _extract_page_author_data(self, js: dict) -> tuple[list[str], list[str]]:
+        names: list[str] = []
+        id_fallbacks: list[str] = []
+        for item in js.get("data", []):
+            attr = item.get("attributes") or {}
+            if attr.get("bibliographic") is False:
+                continue
+
+            name = (attr.get("unregistered_contributor") or "").strip()
+            if not name:
+                uid = self._get_contributor_user_id(item)
+                if uid:
+                    name = self._name_from_attrs(self._fetch_user_attrs(uid))
+                    if not name:
+                        id_fallbacks.append(uid)
+
+            if name:
+                names.append(name)
+
+        return names, id_fallbacks
+
+    def _get_contributor_user_id(self, item: dict) -> typing.Optional[str]:
+        rel = (item.get("relationships") or {}).get("users") or {}
+        rel_data = rel.get("data") or {}
+        return rel_data.get("id") if isinstance(rel_data, dict) else None
+
+    def _name_from_attrs(self, uattr: dict) -> str:
+        given = (uattr.get("given_name") or "").strip()
+        family = (uattr.get("family_name") or "").strip()
+        full = (uattr.get("full_name") or "").strip()
+        if family and given:
+            return f"{family}, {given}"
+        return full or (given or family) or ""
+
+    # pylint: disable=broad-exception-caught
+    def _fetch_user_attrs(self, uid: str) -> dict:
+        if not uid:
+            return {}
+        if uid in self._user_cache:
+            return self._user_cache[uid]
+        url = f"https://api.osf.io/v2/users/{uid}/"
+        try:
+            js = json.loads(self._query_api(url))
+            data = js.get("data", {})
+            if isinstance(data, list):
+                data = data[0] if data else {}
+            attrs = (data.get("attributes") or {}) if isinstance(data, dict) else {}
+            if attrs:
+                self._user_cache[uid] = attrs
+            return attrs
+        except Exception:
+            return {}
+
+    # pylint: disable=broad-exception-caught
+    def _resolve_fallback_ids(self, href: str) -> list[str]:
+        try:
+            js = json.loads(self._query_api(href))
+            ids = []
+            for item in js.get("data", []):
+                if (item.get("attributes") or {}).get("bibliographic") is False:
+                    continue
+                uid = self._get_contributor_user_id(item)
+                if uid:
+                    ids.append(uid)
+            return ids
+        except Exception:
+            return []
 
     def retrieve_records(self) -> typing.Generator:
         """Call the API with the query parameters and return the results."""
