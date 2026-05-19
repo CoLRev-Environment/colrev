@@ -9,6 +9,10 @@ import shutil
 import subprocess
 import sys
 import typing
+from pathlib import Path
+
+from packaging.requirements import InvalidRequirement
+from packaging.requirements import Requirement
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.colrev_internal_packages
@@ -21,11 +25,41 @@ from colrev.constants import Filepaths
 
 def _validate_internal_package_selection(
     *, selected_package: str, internal_packages_dict: dict[str, str]
-) -> None:
+) -> str:
     if selected_package not in internal_packages_dict:
         raise ValueError(
             f"Installation rejected: unknown internal package '{selected_package}'."
         )
+    selected_path = (
+        Path(internal_packages_dict[selected_package]).expanduser().resolve()
+    )
+    if not selected_path.exists():
+        raise ValueError(
+            f"Installation rejected: internal package path does not exist: {selected_path}"
+        )
+    if not selected_path.is_dir():
+        raise ValueError(
+            f"Installation rejected: internal package path is not a directory: {selected_path}"
+        )
+    if not (selected_path / "pyproject.toml").is_file():
+        raise ValueError(
+            f"Installation rejected: internal package path misses pyproject.toml: {selected_path}"
+        )
+    return str(selected_path)
+
+
+def _validate_external_package_selection(*, selected_package: str) -> str:
+    if not selected_package:
+        raise ValueError("Installation rejected: empty package spec")
+    if selected_package.startswith("-"):
+        raise ValueError(
+            "Installation rejected: package specs must not start with '-' "
+            "(option injection risk)"
+        )
+
+    # Accept only normal Python requirement specifications.
+    Requirement(selected_package)
+    return selected_package
 
 
 def _run_uv_pip_list() -> subprocess.CompletedProcess[str]:
@@ -194,9 +228,12 @@ class PackageManager:
     ) -> None:
         """Install packages using uv if available, otherwise fallback to pip."""
         if uv:
-            package_manager = ["uv", "pip"]
+            uv_executable = shutil.which("uv")
+            if uv_executable is None:
+                raise FileNotFoundError("uv executable not found")
+            package_manager = [uv_executable, "pip"]
         else:
-            package_manager = ["pip"]
+            package_manager = [sys.executable, "-m", "pip"]
 
         # print(package_manager)
 
@@ -227,16 +264,27 @@ class PackageManager:
         if editable:
             install_args.append("--editable")
 
-        # Install both internal and external packages in a single command
-        all_packages = [
-            internal_packages_dict[p] if p in internal_packages_dict else p
+        safe_internal_packages = [
+            _validate_internal_package_selection(
+                selected_package=p, internal_packages_dict=internal_packages_dict
+            )
             for p in colrev_packages
-        ] + packages
+        ]
+        safe_external_packages = [
+            _validate_external_package_selection(selected_package=p) for p in packages
+        ]
 
-        for selected_package in all_packages:
+        for safe_selected_package in safe_internal_packages + safe_external_packages:
             try:
-                # install_args += all_packages
-                subprocess.run(install_args + [selected_package], check=True)
-            except Exception as e:
-                print(f"Installation failed: {selected_package}")
-                print(e)
+                subprocess.run(  # nosec B603 - package spec/path is validated above; shell=False.
+                    install_args + [safe_selected_package],
+                    check=True,
+                )
+            except (
+                subprocess.CalledProcessError,
+                FileNotFoundError,
+                ValueError,
+                InvalidRequirement,
+            ) as exc:
+                print(f"Installation failed: {safe_selected_package}")
+                print(exc)
