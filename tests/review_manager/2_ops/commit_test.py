@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """Tests of the CoLRev commit operation"""
 
+import git
 import pytest
+from docker import errors as docker_errors
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
@@ -61,3 +63,40 @@ def test_create(commit_fixture, mocker):  # type: ignore
     commit_fixture.review_manager.force_mode = False
     commit_fixture.review_manager.force_mode = True
     commit_fixture.create()
+
+
+def test_get_git_version_success(commit_fixture, mocker):  # type: ignore
+    mocker.patch("colrev.ops.commit.shutil.which", return_value="/usr/bin/git")
+    mocker.patch("colrev.ops.commit.git.refresh")
+    mocker.patch(
+        "colrev.ops.commit.git.cmd.Git.version_info",
+        new_callable=mocker.PropertyMock,
+        return_value=(2, 44, 0),
+    )
+
+    assert commit_fixture._get_git_version() == "version 2.44.0"
+
+
+def test_get_git_version_failure(commit_fixture, mocker):  # type: ignore
+    mocker.patch("colrev.ops.commit.shutil.which", return_value="/usr/bin/git")
+    mocker.patch("colrev.ops.commit.git.refresh", side_effect=git.exc.GitError("err"))
+
+    assert commit_fixture._get_git_version() == "Not installed"
+
+
+def test_get_docker_version_success(commit_fixture, mocker):  # type: ignore
+    docker_client = mocker.MagicMock()
+    docker_client.version.return_value = {"Version": "27.1.0"}
+    mocker.patch("colrev.ops.commit.docker_from_env", return_value=docker_client)
+
+    assert commit_fixture._get_docker_version() == "version 27.1.0"
+    docker_client.close.assert_called_once()
+
+
+def test_get_docker_version_failure(commit_fixture, mocker):  # type: ignore
+    mocker.patch(
+        "colrev.ops.commit.docker_from_env",
+        side_effect=docker_errors.DockerException("unavailable"),
+    )
+
+    assert commit_fixture._get_docker_version() == "Not installed"

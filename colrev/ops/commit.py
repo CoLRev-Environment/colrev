@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import importlib
-import os
+import shutil
 import sys
 import typing
 from importlib.metadata import version
@@ -12,6 +12,8 @@ from pathlib import Path
 
 import git
 import gitdb.exc
+from docker import errors as docker_errors
+from docker import from_env as docker_from_env
 
 import colrev.env.environment_manager
 import colrev.env.utils
@@ -86,12 +88,37 @@ class Commit:
         self.colrev_version = f'version {version("colrev")}'
         sys_v = sys.version
         self.python_version = f'version {sys_v[: sys_v.find(" ")]}'
-        stream = os.popen("git --version")
-        self.git_version = stream.read().replace("git ", "").replace("\n", "")
-        stream = os.popen("docker --version")
-        self.docker_version = stream.read().replace("Docker ", "").replace("\n", "")
-        if self.docker_version == "":  # pragma: no cover
-            self.docker_version = "Not installed"
+        self.git_version = self._get_git_version()
+        self.docker_version = self._get_docker_version()
+
+    def _get_git_version(self) -> str:
+        git_executable = shutil.which("git")
+        if git_executable is None:
+            return "Not installed"
+
+        try:
+            # Use the resolved absolute executable path to avoid partial-path execution.
+            git.refresh(path=git_executable)
+            version_info = git.cmd.Git().version_info
+            return "version " + ".".join(map(str, version_info))
+        except (git.exc.GitError, TypeError, ValueError):
+            return "Not installed"
+
+    def _get_docker_version(self) -> str:
+        # This validates Docker daemon availability/version through the Docker SDK,
+        # not just whether the docker CLI binary exists on PATH.
+        client = None
+        try:
+            client = docker_from_env()
+            docker_version = client.version().get("Version", "")
+            if docker_version == "":  # pragma: no cover
+                return "Not installed"
+            return f"version {docker_version}"
+        except docker_errors.DockerException:
+            return "Not installed"
+        finally:
+            if client is not None:
+                client.close()
 
     def _set_script_information(self, script_name: str) -> None:
         self.ext_script_name = ""
