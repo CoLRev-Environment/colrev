@@ -30,6 +30,9 @@ from colrev.writer.write_utils import to_string
 # pylint: disable=line-too-long
 # pylint: disable=too-many-locals
 
+if typing.TYPE_CHECKING:  # pragma: no cover
+    import colrev.record.qm.quality_model
+
 
 class Upgrade(colrev.process.operation.Operation):
     """Upgrade a CoLRev project."""
@@ -405,8 +408,17 @@ class Upgrade(colrev.process.operation.Operation):
         return self.repo.is_dirty()
 
     def _migrate_0_8_3(self) -> bool:
-        # pylint: disable=too-many-branches
         settings = self._load_settings_dict()
+        self._migrate_0_8_3_settings(settings=settings)
+        self._save_settings(settings)
+        self._reload_review_manager_for_0_8_3()
+        records = self.review_manager.dataset.load_records_dict()
+        quality_model = self.review_manager.get_qm()
+        self._migrate_0_8_3_records(records=records, quality_model=quality_model)
+        self.review_manager.dataset.save_records_dict(records)
+        return self.repo.is_dirty()
+
+    def _migrate_0_8_3_settings(self, *, settings: dict) -> None:
         settings["prep"]["defects_to_ignore"] = []
         if "curated_metadata" in str(self.review_manager.path):
             settings["prep"]["defects_to_ignore"] = [
@@ -422,41 +434,24 @@ class Upgrade(colrev.process.operation.Operation):
                 for x in p_round["prep_package_endpoints"]
                 if x["endpoint"] != "colrev.global_ids_consistency_check"
             ]
-        self._save_settings(settings)
+
+    def _reload_review_manager_for_0_8_3(self) -> None:
         self.review_manager = colrev.review_manager.ReviewManager(
             path_str=str(self.review_manager.path), force_mode=True
         )
         self.review_manager.load_settings()
         self.review_manager.get_load_operation()
-        records = self.review_manager.dataset.load_records_dict()
-        quality_model = self.review_manager.get_qm()
 
+    def _migrate_0_8_3_records(
+        self,
+        *,
+        records: dict,
+        quality_model: colrev.record.qm.quality_model.QualityModel,
+    ) -> None:
         # delete the masterdata provenance notes and apply the new quality model
         # replace not_missing > not-missing
         for record_dict in tqdm(records.values()):
-            if Fields.MD_PROV not in record_dict:
-                continue
-            not_missing_fields = []
-            for key, prov in record_dict[Fields.MD_PROV].items():
-                if "not-missing" in prov["note"]:
-                    not_missing_fields.append(key)
-                prov["note"] = ""
-            for key in not_missing_fields:
-                record_dict[Fields.MD_PROV][key]["note"] = "not-missing"
-            if "cited_by_file" in record_dict:
-                del record_dict["cited_by_file"]
-            if "cited_by_id" in record_dict:
-                del record_dict["cited_by_id"]
-            if "tei_id" in record_dict:
-                del record_dict["tei_id"]
-            if Fields.D_PROV in record_dict:
-                if "cited_by_file" in record_dict[Fields.D_PROV]:
-                    del record_dict[Fields.D_PROV]["cited_by_file"]
-                if "cited_by_id" in record_dict[Fields.D_PROV]:
-                    del record_dict[Fields.D_PROV]["cited_by_id"]
-                if "tei_id" in record_dict[Fields.D_PROV]:
-                    del record_dict[Fields.D_PROV]["tei_id"]
-
+            self._migrate_0_8_3_record_metadata(record_dict=record_dict)
             record = colrev.record.record.Record(record_dict)
             prior_state = record.data[Fields.STATUS]
             record.run_quality_model(quality_model)
@@ -464,8 +459,33 @@ class Upgrade(colrev.process.operation.Operation):
                 record.data[  # pylint: disable=colrev-direct-status-assign
                     Fields.STATUS
                 ] = RecordState.rev_prescreen_excluded
-        self.review_manager.dataset.save_records_dict(records)
-        return self.repo.is_dirty()
+
+    def _migrate_0_8_3_record_metadata(self, *, record_dict: dict) -> None:
+        if Fields.MD_PROV not in record_dict:
+            return
+
+        not_missing_fields = []
+        for key, prov in record_dict[Fields.MD_PROV].items():
+            if "not-missing" in prov["note"]:
+                not_missing_fields.append(key)
+            prov["note"] = ""
+        for key in not_missing_fields:
+            record_dict[Fields.MD_PROV][key]["note"] = "not-missing"
+
+        self._delete_top_level_fields_for_0_8_3(record_dict=record_dict)
+        self._delete_dprov_fields_for_0_8_3(record_dict=record_dict)
+
+    def _delete_top_level_fields_for_0_8_3(self, *, record_dict: dict) -> None:
+        for field in ("cited_by_file", "cited_by_id", "tei_id"):
+            if field in record_dict:
+                del record_dict[field]
+
+    def _delete_dprov_fields_for_0_8_3(self, *, record_dict: dict) -> None:
+        if Fields.D_PROV not in record_dict:
+            return
+        for field in ("cited_by_file", "cited_by_id", "tei_id"):
+            if field in record_dict[Fields.D_PROV]:
+                del record_dict[Fields.D_PROV][field]
 
     def _migrate_0_8_4(self) -> bool:
         records = self.review_manager.dataset.load_records_dict()
