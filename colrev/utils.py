@@ -222,7 +222,10 @@ def resolved_command(command: str) -> str:
 def open_file(filepath: str, *, prefer_vscode: bool = False) -> None:
     """Open a file with the platform default opener or VS Code."""
     if prefer_vscode:
-        subprocess.run([resolved_command("code"), filepath], check=True)
+
+        # Reviewed: command is resolved from PATH and shell=False is used.
+        # The filepath is passed as a single argument to the editor.
+        subprocess.run([resolved_command("code"), filepath], check=True)  # nosec B603
         return
 
     if sys.platform.startswith("win"):
@@ -233,7 +236,12 @@ def open_file(filepath: str, *, prefer_vscode: bool = False) -> None:
         mac_open = "/usr/bin/open"
         if not Path(mac_open).is_file():
             mac_open = resolved_command("open")
-        subprocess.run([mac_open, filepath], check=True)
+
+        # Reviewed: macOS opener is fixed/resolved and shell=False is used.
+        # The filepath is passed as a single argument.
+        subprocess.run([mac_open, filepath], check=True)  # nosec B603
         return
 
-    subprocess.run([resolved_command("xdg-open"), filepath], check=True)
+    # Reviewed: opener command is resolved from PATH and shell=False is used.
+    # The filepath is passed as a single argument.
+    subprocess.run([resolved_command("xdg-open"), filepath], check=True)  # nosec B603
