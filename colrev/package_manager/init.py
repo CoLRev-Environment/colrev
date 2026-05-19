@@ -145,16 +145,96 @@ def validate_module_name(answers: list, name: str) -> bool:
 
 # pylint: disable=unused-argument
 # pylint: disable=too-many-locals
-# pylint: disable=too-many-return-statements
-# pylint: disable=too-many-branches
-# pylint: disable=too-many-statements
+def _get_default_package_name_string(default_package_name: str) -> str:
+    if not default_package_name:
+        return ""
+    return f" [{Colors.GREEN}{default_package_name}{Colors.END}]"
+
+
+def _parse_author_input(author_input: str) -> dict:
+    if not author_input:
+        return DEFAULT_AUTHOR
+    match = re.match(AUTHOR_PATTERN, author_input)
+    if not match or len(match.groups()) != 2:
+        raise ValueError("Author name and e-mail must be in the format 'Name <email>'")
+    return {"name": match.group(1).strip(), "email": match.group(2)}
+
+
+def _to_camel_case(snake_str: str) -> str:
+    components = snake_str.split("_")
+    return "".join(x.capitalize() for x in components)
+
+
+def _set_package_defaults(package_data: dict, default_package_name: str) -> None:
+    if not package_data["name"]:
+        package_data["name"] = default_package_name
+    if not package_data["version"]:
+        package_data["version"] = "0.1.0"
+    if not package_data["license"]:
+        package_data["license"] = "MIT"
+    # pylint: disable=colrev-missed-constant-usage
+    package_data["author"] = _parse_author_input(package_data.get("author", ""))
+    if not package_data["repository"]:
+        package_data["repository"] = "TODO"
+    package_data["doc_description"] = "TODO"
+
+
+def _get_repository_default(package_name: str, built_in: bool) -> str | None:
+    if not built_in:
+        return None
+    return (
+        "https://github.com/CoLRev-Environment/colrev/tree/"
+        f"main/colrev/packages/{package_name.replace('colrev.', '')}"
+    )
+
+
+def _build_plugin_data(*, package_name: str, selected_plugins: list) -> dict:
+    def validate_class_name(answers: list, name: str) -> bool:
+        if name == "":  # Accept default class name
+            return True
+        # return false if the name is not a valid python class name
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
+            print(
+                f"  {Colors.RED}The class name is not a valid python class name.{Colors.END}"
+            )
+            return False
+        return True
+
+    plugin_data: dict = {}
+    for plugin in selected_plugins:
+        p_name = package_name.replace("colrev.", "")
+        default_module_name = f"{p_name}_{plugin}"
+        default_class_name = _to_camel_case(
+            f"{p_name.capitalize()}_{plugin.capitalize()}"
+        )
+        plugin_questions = [
+            inquirer.Text(
+                "module",
+                message=f"Enter the module name for {plugin} "
+                + f"[{Colors.GREEN}{default_module_name}{Colors.END}]",
+                validate=validate_module_name,
+            ),
+            inquirer.Text(
+                "class",
+                message=f"Enter the class name for {plugin} "
+                + f"[{Colors.GREEN}{default_class_name}{Colors.END}]",
+                validate=validate_class_name,
+            ),
+        ]
+
+        data = inquirer.prompt(plugin_questions)
+
+        if data["module"] == "":
+            data["module"] = default_module_name
+        if data["class"] == "":
+            data["class"] = default_class_name
+        plugin_data[plugin] = data
+    return plugin_data
+
+
 def _get_package_data(default_package_name: str, built_in: bool) -> dict:
 
-    default_package_name_str = ""
-    if default_package_name:
-        default_package_name_str = (
-            f" [{Colors.GREEN}{default_package_name}{Colors.END}]"
-        )
+    default_package_name_str = _get_default_package_name_string(default_package_name)
 
     default_author_str = (
         f"[{Colors.GREEN}{DEFAULT_AUTHOR['name']} "
@@ -248,81 +328,17 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
 
     package_data = inquirer.prompt(questions)
 
-    def validate_class_name(answers: list, name: str) -> bool:
-        if name == "":  # Accept default class name
-            return True
-        # return false if the name is not a valid python class name
-        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
-            print(
-                f"  {Colors.RED}The class name is not a valid python class name.{Colors.END}"
-            )
-            return False
-        return True
+    repository_default = _get_repository_default(
+        package_name=package_data["name"], built_in=built_in
+    )
+    if repository_default is not None:
+        package_data["repository"] = repository_default
 
-    def to_camel_case(snake_str: str) -> str:
-        components = snake_str.split("_")
-        # Capitalize the first letter of each component and join them together
-        return "".join(x.capitalize() for x in components)
+    _set_package_defaults(package_data, default_package_name)
 
-    if built_in:
-        package_data["repository"] = (
-            f"https://github.com/CoLRev-Environment/colrev/tree/"
-            f"main/colrev/packages/{package_data['name'].replace('colrev.', '')}"
-        )
-
-    if not package_data["name"]:
-        package_data["name"] = default_package_name
-    if not package_data["version"]:
-        package_data["version"] = "0.1.0"
-    if not package_data["license"]:
-        package_data["license"] = "MIT"
-    # pylint: disable=colrev-missed-constant-usage
-    if not package_data["author"]:
-        package_data["author"] = DEFAULT_AUTHOR
-    else:
-        match = re.match(AUTHOR_PATTERN, package_data.pop("author"))
-        if not match or len(match.groups()) != 2:
-            raise ValueError(
-                "Author name and e-mail must be in the format 'Name <email>'"
-            )
-        package_data["author"] = {}
-        package_data["author"]["name"] = match.group(1).strip()
-        package_data["author"]["email"] = match.group(2)
-    if not package_data["repository"]:
-        package_data["repository"] = "TODO"
-
-    package_data["doc_description"] = "TODO"
-
-    # Example: package_data["plugins"] = ["data", "screen"]
-    plugin_data = {}
-    for plugin in package_data["plugins"]:
-        p_name = package_data["name"].replace("colrev.", "")
-        default_module_name = f"{p_name}_{plugin}"
-        default_class_name = to_camel_case(
-            f"{p_name.capitalize()}_{plugin.capitalize()}"
-        )
-        plugin_questions = [
-            inquirer.Text(
-                "module",
-                message=f"Enter the module name for {plugin} "
-                + f"[{Colors.GREEN}{default_module_name}{Colors.END}]",
-                validate=validate_module_name,
-            ),
-            inquirer.Text(
-                "class",
-                message=f"Enter the class name for {plugin} "
-                + f"[{Colors.GREEN}{default_class_name}{Colors.END}]",
-                validate=validate_class_name,
-            ),
-        ]
-
-        data = inquirer.prompt(plugin_questions)
-
-        if data["module"] == "":
-            data["module"] = default_module_name
-        if data["class"] == "":
-            data["class"] = default_class_name
-        plugin_data[plugin] = data
+    plugin_data = _build_plugin_data(
+        package_name=package_data["name"], selected_plugins=package_data["plugins"]
+    )
 
     package_data["plugins"] = plugin_data
     package_data["built_in"] = built_in
