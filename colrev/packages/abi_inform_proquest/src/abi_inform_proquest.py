@@ -133,124 +133,145 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     @classmethod
+    def _ris_id_labeler(cls, records: list) -> None:
+        for record_dict in records:
+            record_dict[Fields.ID] = record_dict["AN"]
+
+    @classmethod
+    def _ris_entrytype_setter(cls, record_dict: dict) -> None:
+        if record_dict["TY"] == "JOUR":
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+        elif record_dict["TY"] == "BOOK":
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.BOOK
+        elif record_dict["TY"] == "THES":
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.PHDTHESIS
+        else:
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+    @classmethod
+    def _get_ris_key_maps(cls) -> dict:
+        return {
+            ENTRYTYPES.ARTICLE: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                "TI": Fields.TITLE,
+                "JF": Fields.JOURNAL,
+                "AB": Fields.ABSTRACT,
+                "VL": Fields.VOLUME,
+                "IS": Fields.NUMBER,
+                "KW": Fields.KEYWORDS,
+                "DO": Fields.DOI,
+                "PB": Fields.PUBLISHER,
+                "SP": Fields.PAGES,
+                "PMID": Fields.PUBMED_ID,
+                "SN": Fields.ISSN,
+                "AN": f"{cls.endpoint}.accession_number",
+                "LA": Fields.LANGUAGE,
+                "L2": Fields.FULLTEXT,
+                "UR": Fields.URL,
+            },
+            ENTRYTYPES.PHDTHESIS: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                "T1": Fields.TITLE,
+                "UR": Fields.URL,
+                "PB": Fields.SCHOOL,
+                "KW": Fields.KEYWORDS,
+                "AN": f"{cls.endpoint}.accession_number",
+                "AB": Fields.ABSTRACT,
+                "LA": Fields.LANGUAGE,
+                "CY": Fields.ADDRESS,
+                "L2": Fields.FULLTEXT,
+                "A3": f"{cls.endpoint}.supervisor",
+            },
+        }
+
+    @classmethod
+    def _map_ris_fields(cls, record_dict: dict) -> None:
+        if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+            if "T1" in record_dict and "TI" not in record_dict:
+                record_dict["TI"] = record_dict.pop("T1")
+
+        key_maps = cls._get_ris_key_maps()
+        key_map = key_maps.get(record_dict[Fields.ENTRYTYPE], {})
+
+        for ris_key in list(record_dict.keys()):
+            if ris_key in key_map:
+                standard_key = key_map[ris_key]
+                record_dict[standard_key] = record_dict.pop(ris_key)
+
+    @classmethod
+    def _merge_ris_pages(cls, record_dict: dict) -> None:
+        if "SP" in record_dict and "EP" in record_dict:
+            record_dict[Fields.PAGES] = (
+                f"{record_dict.pop('SP')}--{record_dict.pop('EP')}"
+            )
+
+    @classmethod
+    def _stringify_ris_list_fields(cls, record_dict: dict) -> None:
+        if Fields.AUTHOR in record_dict and isinstance(
+            record_dict[Fields.AUTHOR], list
+        ):
+            record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
+
+        if Fields.EDITOR in record_dict and isinstance(
+            record_dict[Fields.EDITOR], list
+        ):
+            record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
+
+        if Fields.KEYWORDS in record_dict and isinstance(
+            record_dict[Fields.KEYWORDS], list
+        ):
+            record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
+
+    @classmethod
+    def _remove_unmapped_ris_keys(cls, record_dict: dict) -> None:
+        keys_to_remove = [
+            "TY",
+            "Y2",
+            "DB",
+            "C1",
+            "T3",
+            "DA",
+            "JF",
+            "L1",
+            "SP",
+            "Y1",
+            "M1",
+            "M3",
+            "N1",
+            "PP",
+            "CY",
+            "SN",
+            "ER",
+            "AN",
+        ]
+
+        for key in keys_to_remove:
+            record_dict.pop(key, None)
+
+    @classmethod
+    def _stringify_ris_values(cls, record_dict: dict) -> None:
+        for key, value in record_dict.items():
+            record_dict[key] = str(value)
+
+    @classmethod
+    def _ris_field_mapper(cls, record_dict: dict) -> None:
+        cls._map_ris_fields(record_dict)
+        cls._merge_ris_pages(record_dict)
+        cls._stringify_ris_list_fields(record_dict)
+        cls._remove_unmapped_ris_keys(record_dict)
+        cls._stringify_ris_values(record_dict)
+
+    @classmethod
     def _load_ris(cls, filename: Path, logger: logging.Logger) -> dict:
-
-        def id_labeler(records: list) -> None:
-            for record_dict in records:
-                record_dict[Fields.ID] = record_dict["AN"]
-
-        def entrytype_setter(record_dict: dict) -> None:
-            if record_dict["TY"] == "JOUR":
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-            elif record_dict["TY"] == "BOOK":
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.BOOK
-            elif record_dict["TY"] == "THES":
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.PHDTHESIS
-            else:
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
-
-        def field_mapper(record_dict: dict) -> None:
-
-            key_maps = {
-                ENTRYTYPES.ARTICLE: {
-                    "PY": Fields.YEAR,
-                    "AU": Fields.AUTHOR,
-                    "TI": Fields.TITLE,
-                    "JF": Fields.JOURNAL,
-                    "AB": Fields.ABSTRACT,
-                    "VL": Fields.VOLUME,
-                    "IS": Fields.NUMBER,
-                    "KW": Fields.KEYWORDS,
-                    "DO": Fields.DOI,
-                    "PB": Fields.PUBLISHER,
-                    "SP": Fields.PAGES,
-                    "PMID": Fields.PUBMED_ID,
-                    "SN": Fields.ISSN,
-                    "AN": f"{cls.endpoint}.accession_number",
-                    "LA": Fields.LANGUAGE,
-                    "L2": Fields.FULLTEXT,
-                    "UR": Fields.URL,
-                },
-                ENTRYTYPES.PHDTHESIS: {
-                    "PY": Fields.YEAR,
-                    "AU": Fields.AUTHOR,
-                    "T1": Fields.TITLE,
-                    "UR": Fields.URL,
-                    "PB": Fields.SCHOOL,
-                    "KW": Fields.KEYWORDS,
-                    "AN": f"{cls.endpoint}.accession_number",
-                    "AB": Fields.ABSTRACT,
-                    "LA": Fields.LANGUAGE,
-                    "CY": Fields.ADDRESS,
-                    "L2": Fields.FULLTEXT,
-                    "A3": f"{cls.endpoint}.supervisor",
-                },
-            }
-
-            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-                if "T1" in record_dict and "TI" not in record_dict:
-                    record_dict["TI"] = record_dict.pop("T1")
-
-            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
-            for ris_key in list(record_dict.keys()):
-                if ris_key in key_map:
-                    standard_key = key_map[ris_key]
-                    record_dict[standard_key] = record_dict.pop(ris_key)
-
-            if "SP" in record_dict and "EP" in record_dict:
-                record_dict[Fields.PAGES] = (
-                    f"{record_dict.pop('SP')}--{record_dict.pop('EP')}"
-                )
-
-            if Fields.AUTHOR in record_dict and isinstance(
-                record_dict[Fields.AUTHOR], list
-            ):
-                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
-            if Fields.EDITOR in record_dict and isinstance(
-                record_dict[Fields.EDITOR], list
-            ):
-                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
-            if Fields.KEYWORDS in record_dict and isinstance(
-                record_dict[Fields.KEYWORDS], list
-            ):
-                record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
-
-            keys_to_remove = [
-                "TY",
-                "Y2",
-                "DB",
-                "C1",
-                "T3",
-                "DA",
-                "JF",
-                "L1",
-                "SP",
-                "Y1",
-                "M1",
-                "M3",
-                "N1",
-                "PP",
-                "CY",
-                "SN",
-                "ER",
-                "AN",
-            ]
-
-            for key in keys_to_remove:
-                record_dict.pop(key, None)
-
-            for key, value in record_dict.items():
-                record_dict[key] = str(value)
-
-        records = colrev.loader.load_utils.load(
+        return colrev.loader.load_utils.load(
             filename=filename,
-            id_labeler=id_labeler,
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
+            id_labeler=cls._ris_id_labeler,
+            entrytype_setter=cls._ris_entrytype_setter,
+            field_mapper=cls._ris_field_mapper,
             logger=logger,
         )
-
-        return records
 
     def load(self) -> dict:
         """Load the records from the SearchSource file."""
