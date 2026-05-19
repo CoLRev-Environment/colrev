@@ -107,7 +107,7 @@ HELP_MESSAGES: dict[str, str] = {
 def _check_package_installed(data: dict) -> bool:
     package_name = data["project"]["name"]
     try:
-        subprocess.check_output(["pip", "show", package_name])
+        subprocess.check_output([sys.executable, "-m", "pip", "show", package_name])
     except subprocess.CalledProcessError:
         print(
             f"Navigate to {Path.cwd()} and run: "
