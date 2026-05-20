@@ -9,7 +9,6 @@ import typing
 from multiprocessing import Lock
 from pathlib import Path
 
-import requests  # pylint: disable=colrev-search-source-requests-import
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -22,7 +21,6 @@ import colrev.record.record_prep
 import colrev.record.record_similarity
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
@@ -364,9 +362,9 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             else:
                 raise NotImplementedError
-        except (requests.exceptions.ConnectTimeout, requests.exceptions.HTTPError):
+        except colrev_exceptions.ServiceNotAvailableException:
             self.logger.warning(
-                f"{Colors.RED}Skipping DBLP search (API currently not available){Colors.END}"
+                "Skipping DBLP search: DBLP API is currently not available or returned an invalid response"
             )
 
     def load(self) -> dict:

@@ -5,6 +5,7 @@ import html
 import json
 import re
 import time
+from typing import Any
 from datetime import datetime
 
 import requests
@@ -288,24 +289,44 @@ class DBLPAPI:
 
     def retrieve_records(self) -> list:
         """Retrieve records from DBLP."""
-        # try:
+        ret: Any
         while True:
-            # print(self.url)
-            ret = self.session.request(
-                "GET", self.url, headers=self.headers, timeout=self._timeout  # type: ignore
-            )
+            try:
+                ret = self.session.request(
+                    "GET", self.url, headers=self.headers, timeout=self._timeout  # type: ignore
+                )
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+                requests.exceptions.HTTPError,
+                requests.exceptions.RequestException,
+            ) as exc:
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    "DBLP API is currently not available or returned an invalid response"
+                ) from exc
 
             if ret.status_code == 429:
                 time.sleep(60)
                 print("Waiting for 60 seconds (request limit reached)")
                 continue
-            ret.raise_for_status()
-            # 429 - too many requests
-            if ret.status_code == 500:
-                return []
+            if ret.status_code >= 500:
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    "DBLP API is currently not available or returned an invalid response"
+                )
+            try:
+                ret.raise_for_status()
+            except requests.exceptions.HTTPError as exc:
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    "DBLP API is currently not available or returned an invalid response"
+                ) from exc
             break
 
-        data = json.loads(ret.text)
+        try:
+            data = json.loads(ret.text)
+        except (TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "DBLP API is currently not available or returned an invalid response"
+            ) from exc
         response_ms = float(data["result"]["time"]["text"])
         time.sleep(response_ms / 10)
 
