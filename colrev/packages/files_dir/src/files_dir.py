@@ -659,7 +659,9 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         # Do not run in continuous-integration environment
         if utils.in_ci_environment():
-            raise colrev_exceptions.SearchNotAutomated("PDFs Dir Search not automated.")
+            raise colrev_exceptions.SearchNotAutomated(
+                "PDF directory search is not available in CI environments."
+            )
 
         if self.review_manager.force_mode:  # i.e., reindex all
             self.logger.info("Reindex all")
