@@ -83,6 +83,8 @@ numpy==2.2.4
     #   scipy
 openpyxl==3.1.5
     # via colrev (pyproject.toml)
+packaging==26.2
+    # via colrev (pyproject.toml)
 pandas==2.2.3
     # via
     #   colrev (pyproject.toml)
