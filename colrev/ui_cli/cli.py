@@ -344,6 +344,12 @@ def exit_command(
     default=False,
     help="Add search results example",
 )
+@click.option(
+    "--reset-existing",
+    is_flag=True,
+    default=False,
+    help="Reset existing single-commit repository (destructive)",
+)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def init(
@@ -352,6 +358,7 @@ def init(
     example: bool,
     force: bool,
     light: bool,
+    reset_existing: bool,
 ) -> None:
     """Initialize (define review objectives and type).
 
@@ -367,6 +374,7 @@ def init(
         force_mode=force,
         light=light,
         exact_call=EXACT_CALL,
+        reset_existing=reset_existing,
     )
 
 

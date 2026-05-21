@@ -50,6 +50,7 @@ class Initializer:
         force_mode: bool = False,
         light: bool = False,
         exact_call: str = "",
+        reset_existing: bool = False,
     ) -> None:
         """Initialize the instance."""
         p_man = PackageManager()
@@ -61,6 +62,7 @@ class Initializer:
             )
             raise colrev.exceptions.MissingDependencyError(self.review_type)
         self.force_mode = force_mode
+        self.reset_existing = reset_existing
         self.target_path = target_path
         os.chdir(target_path)
         self.review_manager = colrev.review_manager.ReviewManager(
@@ -167,8 +169,10 @@ class Initializer:
                 if is_empty_colrev_template():
                     return
                 print("Detected existing repository")
-                if "y" != input("Reset existing repository? (y/n) "):
-                    raise colrev_exceptions.CoLRevException("Operation aborted.")
+                if not self.reset_existing:
+                    raise colrev_exceptions.CoLRevException(
+                        "Detected existing repository. Pass reset_existing=True to reset it."
+                    )
                 for root, dirs, files in os.walk(self.target_path):
                     for file in files:
                         os.remove(os.path.join(root, file))

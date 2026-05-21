@@ -4,6 +4,7 @@
 import os
 from pathlib import Path
 
+import git
 import pytest
 
 import colrev.exceptions as colrev_exceptions
@@ -72,3 +73,48 @@ def local_pdf_collection(helpers, tmp_path_factory):  # type: ignore
         local_pdf_collection=True,
         light=True,
     )
+
+
+def test_existing_single_commit_repo_aborts_without_reset_flag(tmp_path, monkeypatch) -> None:  # type: ignore
+    """Existing single-commit repositories require explicit reset flag."""
+
+    os.chdir(tmp_path)
+    repo = git.Repo.init(tmp_path)
+    (tmp_path / Path("existing.txt")).write_text("existing", encoding="utf-8")
+    repo.index.add(["existing.txt"])
+    repo.index.commit("initial commit")
+
+    monkeypatch.setattr(
+        "builtins.input",
+        lambda *_args, **_kwargs: pytest.fail("input() should not be called"),
+    )
+
+    initializer = colrev.ops.init.Initializer.__new__(colrev.ops.init.Initializer)
+    initializer.target_path = tmp_path
+    initializer.reset_existing = False
+
+    with pytest.raises(colrev_exceptions.CoLRevException):
+        initializer._reset_if_existing_repo_with_single_commit()
+
+
+def test_existing_single_commit_repo_resets_with_reset_flag(tmp_path, monkeypatch) -> None:  # type: ignore
+    """Existing single-commit repositories are reset when explicitly requested."""
+
+    os.chdir(tmp_path)
+    repo = git.Repo.init(tmp_path)
+    (tmp_path / Path("existing.txt")).write_text("existing", encoding="utf-8")
+    repo.index.add(["existing.txt"])
+    repo.index.commit("initial commit")
+
+    monkeypatch.setattr(
+        "builtins.input",
+        lambda *_args, **_kwargs: pytest.fail("input() should not be called"),
+    )
+
+    initializer = colrev.ops.init.Initializer.__new__(colrev.ops.init.Initializer)
+    initializer.target_path = tmp_path
+    initializer.reset_existing = True
+
+    initializer._reset_if_existing_repo_with_single_commit()
+
+    assert not (tmp_path / Path("existing.txt")).exists()
