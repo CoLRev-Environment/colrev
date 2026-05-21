@@ -79,7 +79,6 @@ class Distribute(colrev.process.operation.Operation):
                 shutil.move(
                     str(path), str(target / Path("data/search/local_import.bib"))
                 )
-                input(path)
 
             if path.suffix == ".pdf":
 
