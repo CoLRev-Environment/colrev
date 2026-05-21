@@ -124,20 +124,16 @@ class PrepDebug(colrev.ops.prep.Prep):
         return prep_data
 
     @colrev.process.operation.Operation.decorate()
-    def run_debug(self, *, debug_ids: str = "NA") -> None:
+    def run_debug(self, *, debug_ids: str = "NA", commit_sha: str = "") -> None:
         """Preparation of records (main entrypoint)."""
         self.debug_ids = debug_ids.split(",")
+        self.commit_sha = commit_sha
 
         self.review_manager.logger.info("Start debug prep")
         self.review_manager.logger.info(
             "The debugger will replay the preparation procedures"
             " step-by-step, allow you to identify potential errors, trace them to "
             "their colrev_origin and correct them."
-        )
-
-        self.polish = input("Polish mode (y/n)?") == "y"
-        self.commit_sha = input(
-            "Commit in which the error occurred (press Enter to select the most recent commit):"
         )
 
         try:

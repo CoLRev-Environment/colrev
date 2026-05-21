@@ -727,6 +727,13 @@ def load(
     help="Debug the preparation step for a selected record (can be 'all').",
 )
 @click.option(
+    "--commit-sha",
+    type=str,
+    default="",
+    show_default=True,
+    help="Commit SHA where the error occurred (empty defaults to HEAD).",
+)
+@click.option(
     "--cpu",
     type=int,
     help="Number of cpus (parallel processes)",
@@ -761,6 +768,7 @@ def prep(
     keep_ids: bool,
     polish: bool,
     debug: str,
+    commit_sha: str,
     cpu: int,
     setup_custom_script: bool,
     verbose: bool,
@@ -776,6 +784,11 @@ def prep(
             {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL},
         )
 
+        if commit_sha and not debug:
+            raise click.UsageError(
+                "--commit-sha can only be used together with --debug"
+            )
+
         if debug:
             review_manager.force_mode = True
             debug_prep_operation = review_manager.get_prep_operation(
@@ -783,7 +796,11 @@ def prep(
                 cpu=cpu,
                 debug=True,
             )
-            debug_prep_operation.run_debug(debug_ids=debug)  # type: ignore
+            if not hasattr(debug_prep_operation, "run_debug"):
+                raise colrev_exceptions.CoLRevException(
+                    "Debug prep operation unavailable."
+                )
+            debug_prep_operation.run_debug(debug_ids=debug, commit_sha=commit_sha)
             return
 
         prep_operation = review_manager.get_prep_operation(polish=polish, cpu=cpu)
