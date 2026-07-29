@@ -9,6 +9,8 @@ import typing
 from pathlib import Path
 
 import colrev.loader.loader
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-arguments
@@ -23,6 +25,99 @@ class ParseError(Exception):
     """Parsing error."""
 
 
+RIS_ENTRYTYPES = {
+    "JOUR": ENTRYTYPES.ARTICLE,
+    "JFULL": ENTRYTYPES.ARTICLE,
+    "ABST": ENTRYTYPES.ARTICLE,
+    "INPR": ENTRYTYPES.ARTICLE,
+    "CONF": ENTRYTYPES.INPROCEEDINGS,
+    "CPAPER": ENTRYTYPES.INPROCEEDINGS,
+    "CHAP": ENTRYTYPES.INBOOK,
+    "BOOK": ENTRYTYPES.BOOK,
+    "THES": ENTRYTYPES.PHDTHESIS,
+    "REPT": ENTRYTYPES.TECHREPORT,
+    "RPRT": ENTRYTYPES.TECHREPORT,
+    "NEWS": ENTRYTYPES.MISC,
+    "BLOG": ENTRYTYPES.MISC,
+}
+
+
+def set_entrytype(record_dict: dict) -> None:
+    """Apply CoLRev's generic interpretation of the RIS reference type."""
+    raw_type = record_dict.pop("TY", "")
+    ris_type = str(raw_type).strip().upper()
+    record_dict[Fields.ENTRYTYPE] = RIS_ENTRYTYPES.get(ris_type, ENTRYTYPES.MISC)
+
+
+def _first_non_empty(record_dict: dict, tags: tuple[str, ...]) -> object | None:
+    """Return the first populated value in *tags*."""
+    for tag in tags:
+        value = record_dict.get(tag)
+        if isinstance(value, list):
+            if any(str(item).strip() for item in value):
+                return value
+        elif value is not None and str(value).strip():
+            return value
+    return None
+
+
+def _map_first(record_dict: dict, target: str, tags: tuple[str, ...]) -> None:
+    """Map the first populated RIS tag without replacing existing metadata."""
+    value = _first_non_empty(record_dict, tags)
+    if target not in record_dict and value is not None:
+        record_dict[target] = value
+    if target in record_dict and str(record_dict[target]).strip():
+        for tag in tags:
+            record_dict.pop(tag, None)
+
+
+def map_fields(record_dict: dict) -> None:
+    """Map common RIS tags to conservative, format-independent CoLRev fields."""
+    _map_first(record_dict, Fields.TITLE, ("TI", "T1"))
+    _map_first(record_dict, Fields.YEAR, ("PY", "Y1", "DA"))
+    _map_first(record_dict, Fields.AUTHOR, ("AU", "A1"))
+
+    if record_dict.get(Fields.ENTRYTYPE) == ENTRYTYPES.ARTICLE:
+        _map_first(record_dict, Fields.JOURNAL, ("JO", "JF", "JA", "T2"))
+    elif record_dict.get(Fields.ENTRYTYPE) == ENTRYTYPES.INPROCEEDINGS:
+        _map_first(record_dict, Fields.BOOKTITLE, ("T2",))
+
+    for tag, target in (
+        ("DO", Fields.DOI),
+        ("VL", Fields.VOLUME),
+        ("IS", Fields.NUMBER),
+        ("UR", Fields.URL),
+        ("SN", Fields.ISSN),
+        ("AB", Fields.ABSTRACT),
+        ("KW", Fields.KEYWORDS),
+        ("PB", Fields.PUBLISHER),
+    ):
+        _map_first(record_dict, target, (tag,))
+
+    if Fields.PAGES not in record_dict:
+        start_page = _first_non_empty(record_dict, ("SP",))
+        end_page = _first_non_empty(record_dict, ("EP",))
+        if start_page is not None:
+            record_dict[Fields.PAGES] = str(start_page)
+            if end_page is not None:
+                record_dict[Fields.PAGES] += f"--{end_page}"
+    if Fields.PAGES in record_dict and str(record_dict[Fields.PAGES]).strip():
+        record_dict.pop("SP", None)
+        record_dict.pop("EP", None)
+
+    if Fields.YEAR in record_dict:
+        year_match = re.search(r"(?<!\d)(\d{4})(?!\d)", str(record_dict[Fields.YEAR]))
+        if year_match:
+            record_dict[Fields.YEAR] = year_match.group(1)
+    if isinstance(record_dict.get(Fields.AUTHOR), list):
+        record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
+    if isinstance(record_dict.get(Fields.KEYWORDS), list):
+        record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
+
+    for control_field in ("ER", "Y2", "DB"):
+        record_dict.pop(control_field, None)
+
+
 class RISLoader(colrev.loader.loader.Loader):
     """Loads ris files."""
 
@@ -34,8 +129,8 @@ class RISLoader(colrev.loader.loader.Loader):
         self,
         *,
         filename: Path,
-        entrytype_setter: typing.Callable = lambda x: x,
-        field_mapper: typing.Callable = lambda x: x,
+        entrytype_setter: typing.Callable = set_entrytype,
+        field_mapper: typing.Callable = map_fields,
         id_labeler: typing.Callable = lambda x: x,
         unique_id_field: str = "",
         logger: logging.Logger = logging.getLogger(__name__),

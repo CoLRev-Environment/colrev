@@ -2,12 +2,15 @@
 """Tests of the load utils for ris files"""
 
 import os
+import logging
 from pathlib import Path
 
 import pytest
 
 import colrev.loader.load_utils
 import colrev.loader.ris
+from colrev.packages.unknown_source.src.unknown_source import UnknownSearchSource
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
 NESTED_KNOWLEDGE_TITLES = [
@@ -18,6 +21,119 @@ NESTED_KNOWLEDGE_TITLES = [
     "USA. June 2-6 2002",
     "Ischemic preconditioning reduces caspase-related intestinal apoptosis",
 ]
+
+
+def _load_ris_string(ris: str) -> dict:
+    """Load a single realistic RIS record with the public string API."""
+    return next(
+        iter(
+            colrev.loader.load_utils.loads(
+                ris, implementation="ris", unique_id_field="ID"
+            ).values()
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    ("ris_type", "expected"),
+    [
+        (" JOUR ", ENTRYTYPES.ARTICLE),
+        ("CONF", ENTRYTYPES.INPROCEEDINGS),
+        ("UNLISTED", ENTRYTYPES.MISC),
+        (None, ENTRYTYPES.MISC),
+    ],
+)
+def test_default_ris_entrytypes(ris_type: str | None, expected: str) -> None:
+    """Map known, unknown, and missing RIS types using core defaults."""
+    type_line = f"TY  - {ris_type}\n" if ris_type is not None else ""
+    record = _load_ris_string(f"{type_line}ID  - test\nTI  - A title\nER  -\n")
+
+    assert record[Fields.ENTRYTYPE] == expected
+    assert "TY" not in record
+
+
+@pytest.mark.parametrize(
+    ("date_tag", "date_value"),
+    [("PY", "2011"), ("PY", "2011-01-01"), ("Y1", "2011/01/01"), ("DA", "2011/02/03")],
+)
+def test_default_ris_common_fields(date_tag: str, date_value: str) -> None:
+    """Map common fields, repeated values, dates, and page ranges."""
+    record = _load_ris_string(
+        "TY  - JOUR\nID  - test\nTI  - Main title\nT1  - Other title\n"
+        f"{date_tag}  - {date_value}\nAU  - Doe, Jane\nAU  - Roe, John\n"
+        "JO  - Main Journal\nJF  - Other Journal\nDO  - 10.1000/test\n"
+        "SP  - 10\nEP  - 20\nER  -\n"
+    )
+
+    assert record[Fields.TITLE] == "Main title"
+    assert record[Fields.YEAR] == "2011"
+    assert record[Fields.AUTHOR] == "Doe, Jane and Roe, John"
+    assert record[Fields.JOURNAL] == "Main Journal"
+    assert record[Fields.DOI] == "10.1000/test"
+    assert record[Fields.PAGES] == "10--20"
+
+
+def test_default_ris_fallbacks_and_start_page() -> None:
+    """Use title/date/author/journal fallbacks and retain a lone start page."""
+    record = _load_ris_string(
+        "TY  - JOUR\nID  - test\nT1  - Fallback title\nDA  - 2020-05-04\n"
+        "A1  - Doe, Jane\nT2  - Fallback Journal\nSP  - 7\nER  -\n"
+    )
+
+    assert record[Fields.TITLE] == "Fallback title"
+    assert record[Fields.YEAR] == "2020"
+    assert record[Fields.AUTHOR] == "Doe, Jane"
+    assert record[Fields.JOURNAL] == "Fallback Journal"
+    assert record[Fields.PAGES] == "7"
+
+
+@pytest.mark.parametrize("journal_tag", ["JO", "JF", "JA", "T2"])
+def test_default_ris_journal_fallbacks(journal_tag: str) -> None:
+    """Accept each documented article journal tag."""
+    record = _load_ris_string(
+        f"TY  - JOUR\nID  - test\nTI  - Title\n{journal_tag}  - Journal\nER  -\n"
+    )
+    assert record[Fields.JOURNAL] == "Journal"
+
+
+def test_ris_custom_callbacks_override_defaults() -> None:
+    """Keep caller-provided RIS interpretation authoritative."""
+    record = next(
+        iter(
+            colrev.loader.load_utils.loads(
+                "TY  - JOUR\nID  - test\nTI  - Raw title\nER  -\n",
+                implementation="ris",
+                unique_id_field="ID",
+                entrytype_setter=lambda item: item.update({Fields.ENTRYTYPE: "book"}),
+                field_mapper=lambda item: item.update({Fields.TITLE: "Custom title"}),
+            ).values()
+        )
+    )
+
+    assert record[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK
+    assert record[Fields.TITLE] == "Custom title"
+
+
+def test_unknown_source_reuses_default_ris_mapping(tmp_path: Path) -> None:
+    """Keep unknown-source RIS loading compatible with the shared defaults."""
+    ris_file = tmp_path / "unknown.ris"
+    ris_file.write_text(
+        "TY  - JOUR\nTI  - Shared mapping\nPY  - 2022/01/01\n" "PMID  - 12345\nER  -\n",
+        encoding="utf-8",
+    )
+
+    record = next(
+        iter(
+            UnknownSearchSource._load_ris(  # pylint: disable=protected-access
+                filename=ris_file, logger=logging.getLogger(__name__)
+            ).values()
+        )
+    )
+
+    assert record[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE
+    assert record[Fields.TITLE] == "Shared mapping"
+    assert record[Fields.YEAR] == "2022"
+    assert record[Fields.PUBMED_ID] == "12345"
 
 
 def test_clean_ris_numbered_record_prefixes(tmp_path: Path) -> None:

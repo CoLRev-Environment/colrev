@@ -15,6 +15,7 @@ from rapidfuzz import fuzz
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
+import colrev.loader.ris
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.record.record_prep
@@ -116,156 +117,24 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def _load_ris(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        def entrytype_setter(record_dict: dict) -> None:
-            # Based on https://github.com/aurimasv/translators/wiki/RIS-Tag-Map
-            reference_types = {
-                "JOUR": ENTRYTYPES.ARTICLE,
-                "JFULL": ENTRYTYPES.ARTICLE,
-                "ABST": ENTRYTYPES.ARTICLE,
-                "INPR": ENTRYTYPES.ARTICLE,  # inpress
-                "CONF": ENTRYTYPES.INPROCEEDINGS,
-                "CPAPER": ENTRYTYPES.INPROCEEDINGS,
-                "THES": ENTRYTYPES.PHDTHESIS,
-                "REPT": ENTRYTYPES.TECHREPORT,
-                "RPRT": ENTRYTYPES.TECHREPORT,
-                "CHAP": ENTRYTYPES.INBOOK,
-                "BOOK": ENTRYTYPES.BOOK,
-                "NEWS": ENTRYTYPES.MISC,
-                "BLOG": ENTRYTYPES.MISC,
-            }
-            if record_dict["TY"] in reference_types:
-                record_dict[Fields.ENTRYTYPE] = reference_types[record_dict["TY"]]
-            else:
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
-
-        def field_mapper(record_dict: dict) -> None:
-            # Based on https://github.com/aurimasv/translators/wiki/RIS-Tag-Map
-            key_maps = {
-                ENTRYTYPES.ARTICLE: {
-                    "PY": Fields.YEAR,
-                    "AU": Fields.AUTHOR,
-                    "TI": Fields.TITLE,
-                    "T2": Fields.JOURNAL,
-                    "AB": Fields.ABSTRACT,
-                    "VL": Fields.VOLUME,
-                    "IS": Fields.NUMBER,
-                    "DO": Fields.DOI,
-                    "PB": Fields.PUBLISHER,
-                    "UR": Fields.URL,
-                    "fulltext": Fields.FULLTEXT,
-                    "PMID": Fields.PUBMED_ID,
-                    "KW": Fields.KEYWORDS,
-                    "SP": Fields.PAGES,
-                },
-                ENTRYTYPES.INPROCEEDINGS: {
-                    "PY": Fields.YEAR,
-                    "AU": Fields.AUTHOR,
-                    "TI": Fields.TITLE,
-                    # "secondary_title": Fields.BOOKTITLE,
-                    "DO": Fields.DOI,
-                    "UR": Fields.URL,
-                    # "fulltext": Fields.FULLTEXT,
-                    "PMID": Fields.PUBMED_ID,
-                    "KW": Fields.KEYWORDS,
-                    "SP": Fields.PAGES,
-                },
-                ENTRYTYPES.INBOOK: {
-                    "PY": Fields.YEAR,
-                    "AU": Fields.AUTHOR,
-                    # "primary_title": Fields.CHAPTER,
-                    # "secondary_title": Fields.TITLE,
-                    "DO": Fields.DOI,
-                    "PB": Fields.PUBLISHER,
-                    # "edition": Fields.EDITION,
-                    "UR": Fields.URL,
-                    # "fulltext": Fields.FULLTEXT,
-                    "KW": Fields.KEYWORDS,
-                    "SP": Fields.PAGES,
-                },
-                ENTRYTYPES.BOOK: {
-                    "PY": Fields.YEAR,
-                    "AU": Fields.AUTHOR,
-                    # "primary_title": Fields.CHAPTER,
-                    # "secondary_title": Fields.TITLE,
-                    "DO": Fields.DOI,
-                    "PB": Fields.PUBLISHER,
-                    # "edition": Fields.EDITION,
-                    "UR": Fields.URL,
-                    # "fulltext": Fields.FULLTEXT,
-                    "KW": Fields.KEYWORDS,
-                    "SP": Fields.PAGES,
-                },
-                ENTRYTYPES.PHDTHESIS: {
-                    "PY": Fields.YEAR,
-                    "AU": Fields.AUTHOR,
-                    "TI": Fields.TITLE,
-                    "UR": Fields.URL,
-                },
-                ENTRYTYPES.TECHREPORT: {
-                    "PY": Fields.YEAR,
-                    "AU": Fields.AUTHOR,
-                    "TI": Fields.TITLE,
-                    "UR": Fields.URL,
-                    # "fulltext": Fields.FULLTEXT,
-                    "KW": Fields.KEYWORDS,
-                    "PB": Fields.PUBLISHER,
-                    "SP": Fields.PAGES,
-                },
-                ENTRYTYPES.MISC: {
-                    "PY": Fields.YEAR,
-                    "AU": Fields.AUTHOR,
-                    "TI": Fields.TITLE,
-                    "UR": Fields.URL,
-                    # "fulltext": Fields.FULLTEXT,
-                    "KW": Fields.KEYWORDS,
-                    "PB": Fields.PUBLISHER,
-                    "SP": Fields.PAGES,
-                },
-            }
-
-            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
-            for ris_key in list(record_dict.keys()):
-                if ris_key in key_map:
-                    standard_key = key_map[ris_key]
+        def map_source_specific_fields(record_dict: dict) -> None:
+            """Apply core RIS defaults and legacy unknown-source extensions."""
+            colrev.loader.ris.map_fields(record_dict)
+            for ris_key, standard_key in (
+                ("fulltext", Fields.FULLTEXT),
+                ("PMID", Fields.PUBMED_ID),
+            ):
+                if ris_key in record_dict and standard_key not in record_dict:
                     record_dict[standard_key] = record_dict.pop(ris_key)
-
-            if "SP" in record_dict and "EP" in record_dict:
-                record_dict[Fields.PAGES] = (
-                    f"{record_dict.pop('SP')}--{record_dict.pop('EP')}"
-                )
-
-            if Fields.AUTHOR in record_dict and isinstance(
-                record_dict[Fields.AUTHOR], list
-            ):
-                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
-            if Fields.EDITOR in record_dict and isinstance(
-                record_dict[Fields.EDITOR], list
-            ):
+            if isinstance(record_dict.get(Fields.EDITOR), list):
                 record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
-            if Fields.KEYWORDS in record_dict and isinstance(
-                record_dict[Fields.KEYWORDS], list
-            ):
-                record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
-
-            record_dict.pop("TY", None)
-            record_dict.pop("Y2", None)
-            record_dict.pop("DB", None)
-            record_dict.pop("C1", None)
-            record_dict.pop("T3", None)
-            record_dict.pop("AD", None)
-            record_dict.pop("CY", None)
-            record_dict.pop("M3", None)
-            record_dict.pop("EP", None)
-            record_dict.pop("ER", None)
-
-            for key, value in record_dict.items():
-                record_dict[key] = str(value)
+            for source_control_field in ("C1", "T3", "AD", "CY", "M3"):
+                record_dict.pop(source_control_field, None)
 
         records = colrev.loader.load_utils.load(
             filename=filename,
             unique_id_field="INCREMENTAL",
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
+            field_mapper=map_source_specific_fields,
             logger=logger,
         )
         return records

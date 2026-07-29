@@ -166,11 +166,16 @@ def _noop_entrytype_setter(entrytype: dict) -> None:
     return
 
 
+def _noop_field_mapper(record_dict: dict) -> None:
+    """Default field mapper for formats without generic mappings."""
+    return
+
+
 def load(  # type: ignore
     filename: Path,
     *,
     entrytype_setter: typing.Callable[[dict], None] | None = None,
-    field_mapper: typing.Callable = lambda x: x,
+    field_mapper: typing.Callable[[dict], None] | None = None,
     id_labeler: typing.Callable = lambda x: x,
     unique_id_field: str = "",
     logger: logging.Logger = logging.getLogger(__name__),
@@ -194,6 +199,10 @@ def load(  # type: ignore
         parser = colrev.loader.table.TableLoader  # type: ignore
     elif filename.suffix == ".ris":
         parser = colrev.loader.ris.RISLoader  # type: ignore
+        if entrytype_setter is None:
+            entrytype_setter = colrev.loader.ris.set_entrytype
+        if field_mapper is None:
+            field_mapper = colrev.loader.ris.map_fields
     elif filename.suffix in [".enl", ".txt"]:
         parser = colrev.loader.enl.ENLLoader  # type: ignore
     elif filename.suffix == ".md":
@@ -208,6 +217,8 @@ def load(  # type: ignore
     # For non-bib files, if still None, use a no-op setter
     if entrytype_setter is None:
         entrytype_setter = _noop_entrytype_setter
+    if field_mapper is None:
+        field_mapper = _noop_field_mapper
 
     return parser(
         filename=filename,
@@ -224,8 +235,8 @@ def loads(  # type: ignore
     load_string: str,
     *,
     implementation: str,
-    entrytype_setter: typing.Callable = lambda x: x,
-    field_mapper: typing.Callable = lambda x: x,
+    entrytype_setter: typing.Callable[[dict], None] | None = None,
+    field_mapper: typing.Callable[[dict], None] | None = None,
     id_labeler: typing.Callable = lambda x: x,
     unique_id_field: str = "",
     logger: logging.Logger = logging.getLogger(__name__),
