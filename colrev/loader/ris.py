@@ -27,6 +27,7 @@ class RISLoader(colrev.loader.loader.Loader):
     """Loads ris files."""
 
     PATTERN = r"^[A-Z0-9]{2,4} "
+    NUMBERED_RECORD_PATTERN = re.compile(r"^\s*\d+\.\s*$")
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -107,6 +108,8 @@ class RISLoader(colrev.loader.loader.Loader):
 
         lines = []
         for line in text.split("\n"):
+            if self.NUMBERED_RECORD_PATTERN.fullmatch(line):
+                continue
             if re.match(self.pattern, line):
                 lines.append(line)
             if line.strip() in ["", "\n"]:

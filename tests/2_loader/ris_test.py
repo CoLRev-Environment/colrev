@@ -7,7 +7,93 @@ from pathlib import Path
 import pytest
 
 import colrev.loader.load_utils
+import colrev.loader.ris
 from colrev.constants import Fields
+
+NESTED_KNOWLEDGE_TITLES = [
+    "Activation of peroxisome-proliferator-receptor alpha and gamma mediates "
+    "remote ischemic preconditioning against myocardial infarction",
+    "Myocardial Protection from Surgical Ischemic-Reperfusion Injury. Proceedings "
+    "and abstracts of the 3rd International Symposium. Asheville North Carolina "
+    "USA. June 2-6 2002",
+    "Ischemic preconditioning reduces caspase-related intestinal apoptosis",
+]
+
+
+def test_clean_ris_numbered_record_prefixes(tmp_path: Path) -> None:
+    """Remove only standalone numbered-record markers while cleaning RIS text."""
+    loader = colrev.loader.ris.RISLoader(
+        filename=tmp_path / "records.ris",
+        unique_id_field="ID",
+    )
+
+    cleaned = loader._clean_text(  # pylint: disable=protected-access
+        "  12.  \nTY  - JOUR\nTI  - Chapter 12. Introduction\nER  -\n"
+    )
+
+    assert "12." not in cleaned.splitlines()
+    assert "TI  - Chapter 12. Introduction" in cleaned.splitlines()
+
+
+def test_load_nested_knowledge_numbered_records() -> None:
+    """Load numbered Nested Knowledge RIS records through the public loader."""
+
+    def entrytype_setter(record_dict: dict) -> None:
+        record_dict[Fields.ENTRYTYPE] = {"JOUR": "article"}.get(
+            record_dict.pop("TY"), "misc"
+        )
+
+    def field_mapper(record_dict: dict) -> None:
+        key_map = {
+            "AB": Fields.ABSTRACT,
+            "AU": Fields.AUTHOR,
+            "DO": Fields.DOI,
+            "JO": Fields.JOURNAL,
+            "PY": Fields.YEAR,
+            "TI": Fields.TITLE,
+        }
+        for ris_key, colrev_key in key_map.items():
+            if ris_key in record_dict:
+                record_dict[colrev_key] = record_dict.pop(ris_key)
+
+    fixture = (
+        Path(__file__).parents[1] / "data/ris/nestedknowledge_numbered_records.ris"
+    )
+    records = colrev.loader.load_utils.load(
+        filename=fixture,
+        unique_id_field="ID",
+        entrytype_setter=entrytype_setter,
+        field_mapper=field_mapper,
+    )
+
+    assert len(records) == 3
+    assert list(records) == ["1", "2", "3"]
+    assert [record[Fields.ENTRYTYPE] for record in records.values()] == [
+        "article",
+        "article",
+        "article",
+    ]
+    assert [record[Fields.TITLE] for record in records.values()] == (
+        NESTED_KNOWLEDGE_TITLES
+    )
+    assert [record[Fields.YEAR] for record in records.values()] == [
+        "2011",
+        "2003",
+        "2005",
+    ]
+    assert records["1"][Fields.DOI] == "10.1258/ebm.2010.011f01"
+    assert Fields.DOI not in records["2"]
+    assert records["3"][Fields.DOI] == "10.1007/s00595-004-2918-y"
+    assert records["3"][Fields.ABSTRACT].startswith("PURPOSE: To investigate")
+    assert records["3"][Fields.AUTHOR] == "M., Aban N.Cinel L.Tamer L.Aktas A.Aban"
+
+    parsed_values = {
+        value
+        for record in records.values()
+        for value in record.values()
+        if isinstance(value, str)
+    }
+    assert not {"1.", "2.", "3."} & parsed_values
 
 
 def test_load_ris_entries(tmp_path, helpers):  # type: ignore
