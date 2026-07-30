@@ -93,11 +93,11 @@ def to_string(*, records_dict: dict) -> str:
                 ris_str += f"{field}  - {record_dict[RECORD_FIELD_MAP[field]]}\n"
 
             elif field == "AU":
-                if record_dict[Fields.AUTHOR] and str(
-                    record_dict[Fields.AUTHOR]
-                ) not in ["None", "UNKNOWN", "nan"]:
-                    for author in record_dict[Fields.AUTHOR].split(" and "):
-                        ris_str += f"AU  - {author}\n"
+                authors = str(record_dict.get(Fields.AUTHOR, "")).strip()
+
+                if authors not in {"", "None", "UNKNOWN", "nan"}:
+                    for author in authors.split(" and "):
+                        ris_str += f"AU  - {author.strip()}\n"
 
         ris_str += _add_pages(record_dict)
         ris_str += _add_sn(record_dict)
