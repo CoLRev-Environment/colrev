@@ -8,6 +8,29 @@ from pathlib import Path
 import pytest
 
 import colrev.loader.load_utils
+from colrev.constants import Colors
+from colrev.loader.loader import Loader
+
+
+def test_missing_ids_error_explains_incremental_ids(tmp_path) -> None:
+    """Test that the missing-ID error explains how to generate IDs."""
+    loader = Loader(
+        filename=tmp_path / "records.test",
+        entrytype_setter=lambda record: None,
+        field_mapper=lambda record: None,
+        id_labeler=lambda records: None,
+        unique_id_field="",
+        logger=logging.getLogger(__name__),
+    )
+
+    with pytest.raises(ValueError) as exc_info:
+        loader._set_ids([{"title": "Record without an ID"}])
+
+    assert str(exc_info.value) == (
+        f'{Colors.ORANGE}ID not set in all records. Pass unique_id_field="INCREMENTAL" '
+        "to colrev.loader.load_utils.load() to generate sequential IDs."
+        f"{Colors.END}"
+    )
 
 
 def test_load(tmp_path, helpers) -> None:  # type: ignore
