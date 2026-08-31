@@ -11,9 +11,7 @@ import colrev.env.tei_parser
 import colrev.process.operation
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import SearchType
+from colrev.constants import Fields, OperationsType, SearchType
 from colrev.env.environment_manager import EnvironmentManager
 from colrev.writer.write_utils import write_file
 

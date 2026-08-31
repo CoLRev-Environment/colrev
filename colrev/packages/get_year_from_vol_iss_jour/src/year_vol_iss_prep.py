@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 import pprint
-import typing
 
 import requests
 from pydantic import Field
@@ -68,7 +67,7 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -223,9 +222,7 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Prepare a record based on year-volume-issue dependency."""
         if record.data.get(Fields.YEAR, "NA").isdigit():

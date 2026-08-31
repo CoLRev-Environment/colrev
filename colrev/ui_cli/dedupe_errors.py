@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-import typing
-
 import pandas as pd
 
 import colrev.ops.dedupe
@@ -29,7 +27,7 @@ def load_dedupe_false_positives(*, dedupe_operation: colrev.ops.dedupe.Dedupe) -
 
 def load_dedupe_false_negatives(*, dedupe_operation: colrev.ops.dedupe.Dedupe) -> list:
     """Load the dedupe false negatives marked in the Excel file."""
-    false_negatives: typing.List[dict] = []
+    false_negatives: list[dict] = []
     if (
         dedupe_operation.non_dupe_file_xlsx.is_file()
         or dedupe_operation.non_dupe_file_txt.is_file()

@@ -7,9 +7,7 @@ import time
 import typing
 
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import TimeoutException
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -107,7 +105,7 @@ class PROSPEROAPI:
             self.logger.debug("Finished retrieving data from current result page.")
         self.current_page_index += 1
 
-    def _get_records_from_page(self) -> typing.List[WebElement]:
+    def _get_records_from_page(self) -> list[WebElement]:
 
         table_of_matches = self.driver.find_element(
             By.XPATH, "//table[@id='myDataTable']"

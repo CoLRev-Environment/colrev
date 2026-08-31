@@ -5,15 +5,14 @@ import html
 import json
 import re
 import time
-from typing import Any
 from datetime import datetime
+from typing import Any
 
 import requests
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record_prep
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
+from colrev.constants import ENTRYTYPES, Fields
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-instance-attributes

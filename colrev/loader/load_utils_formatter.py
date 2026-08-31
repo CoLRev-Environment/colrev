@@ -8,9 +8,7 @@ import re
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
+from colrev.constants import Fields, FieldValues, RecordState
 
 # pylint: disable=too-few-public-methods
 

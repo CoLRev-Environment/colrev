@@ -4,10 +4,8 @@
 from __future__ import annotations
 
 import logging
-import typing
 
-from inquirer import Checkbox
-from inquirer import prompt
+from inquirer import Checkbox, prompt
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
@@ -15,9 +13,7 @@ import colrev.package_manager.package_settings
 import colrev.packages.screen_utils as util_cli_screen
 import colrev.record.record
 import colrev.settings
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import ScreenCriterionType
+from colrev.constants import Colors, Fields, ScreenCriterionType
 
 
 class CoLRevCLIScreen(base_classes.ScreenPackageBaseClass):
@@ -35,7 +31,7 @@ class CoLRevCLIScreen(base_classes.ScreenPackageBaseClass):
         *,
         screen_operation: colrev.ops.screen.Screen,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)

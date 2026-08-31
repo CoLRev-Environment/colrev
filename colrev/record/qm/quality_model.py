@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import importlib
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 
@@ -23,7 +22,7 @@ class QualityModel:
         *,
         defects_to_ignore: list[str],
         pdf_mode: bool = False,
-        path: typing.Optional[Path] = None,
+        path: Path | None = None,
     ) -> None:
         """Initialize the instance."""
         self.pdf_mode = pdf_mode

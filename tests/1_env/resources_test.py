@@ -1,7 +1,6 @@
 import shutil
 from pathlib import Path
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from colrev.constants import Filepaths
 from colrev.env import resources

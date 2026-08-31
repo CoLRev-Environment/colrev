@@ -3,8 +3,7 @@
 
 from __future__ import annotations
 
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
+from colrev.constants import ENTRYTYPES, Fields
 
 RECORDS_FIELD_ORDER = [
     "TY",  # Must be the first field

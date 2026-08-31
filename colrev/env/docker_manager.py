@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import typing
 from pathlib import Path
 
 import docker
@@ -20,7 +19,7 @@ class DockerManager:
 
     @classmethod
     def build_docker_image(
-        cls, *, imagename: str, dockerfile: typing.Optional[Path] = None
+        cls, *, imagename: str, dockerfile: Path | None = None
     ) -> None:
         """Build a docker image."""
         try:

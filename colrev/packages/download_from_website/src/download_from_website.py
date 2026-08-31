@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import logging
-import typing
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -42,7 +41,7 @@ class WebsiteDownload(base_classes.PDFGetPackageBaseClass):
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)

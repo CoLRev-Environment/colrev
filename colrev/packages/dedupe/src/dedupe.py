@@ -5,23 +5,18 @@ from __future__ import annotations
 
 import logging
 import shutil
-import typing
 from pathlib import Path
 
 import bib_dedupe.cluster
 import bib_dedupe.maybe_cases
 import pandas as pd
-from bib_dedupe.bib_dedupe import block
-from bib_dedupe.bib_dedupe import export_maybe
-from bib_dedupe.bib_dedupe import import_maybe
-from bib_dedupe.bib_dedupe import match
+from bib_dedupe.bib_dedupe import block, export_maybe, import_maybe, match
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Fields, RecordState
 
 # pylint: disable=too-few-public-methods
 
@@ -37,7 +32,7 @@ class Dedupe(base_classes.DedupePackageBaseClass):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ):
         """Initialize the instance."""

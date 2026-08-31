@@ -6,7 +6,6 @@ from __future__ import annotations
 import datetime
 import logging
 import tempfile
-import typing
 from pathlib import Path
 
 import inquirer
@@ -20,10 +19,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import Colors, Fields, SearchSourceHeuristicStatus, SearchType
 
 # pylint: disable=unused-argument
 
@@ -57,7 +53,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -122,7 +118,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
@@ -237,16 +233,16 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         for k in list(record.keys()):
             if str(record[k]) == "nan":
                 del record[k]
-        if Fields.DOI in record.keys():
+        if Fields.DOI in record:
             # pylint: disable=colrev-missed-constant-usage
             record[Fields.DOI] = (
                 str(record["doi"]).replace("https://doi.org/", "").upper()
             )
-        if "pmid" in record.keys():
+        if "pmid" in record:
             record["pmid"] = str(record["pmid"]).replace(
                 "https://pubmed.ncbi.nlm.nih.gov/", ""
             )
-        if "openalex_id" in record.keys():
+        if "openalex_id" in record:
             record["openalex_id"] = str(record["openalex_id"]).replace(
                 "https://openalex.org/", ""
             )
@@ -288,7 +284,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
             ],
         }
 
-        decisions: typing.Dict[str, typing.Dict[str, list]] = {
+        decisions: dict[str, dict[str, list]] = {
             Fields.DOI: {},
             "pmid": {},
             "openalex_id": {},
@@ -369,9 +365,7 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for SYNERGY-datasets."""
         record.rename_field(

@@ -17,11 +17,7 @@ import colrev.packages.grobid_tei.src.grobid_tei
 import colrev.process.operation
 import colrev.record.record_pdf
 from colrev import utils
-from colrev.constants import Colors
-from colrev.constants import EndpointType
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
+from colrev.constants import Colors, EndpointType, Fields, OperationsType, RecordState
 from colrev.package_manager.package_manager import PackageManager
 
 

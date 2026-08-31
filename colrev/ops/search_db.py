@@ -10,9 +10,7 @@ from pathlib import Path
 import colrev.exceptions as colrev_exceptions
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Colors
-from colrev.constants import EndpointType
-from colrev.constants import SearchType
+from colrev.constants import Colors, EndpointType, SearchType
 from colrev.git_repo import GitRepo
 from colrev.package_manager.package_manager import PackageManager
 
@@ -38,7 +36,7 @@ def run_db_search(
     db_url: str,
     source: colrev.search_file.ExtendedSearchFile,
     add_to_git: bool = False,
-    project_root: typing.Optional[Path] = None,
+    project_root: Path | None = None,
     **kwargs: typing.Any,
 ) -> None:
     """Run the database search.
@@ -80,7 +78,7 @@ def get_query_filename(
     instantiate: bool = False,
     interactive: bool = False,
     add_to_git: bool = False,
-    project_root: typing.Optional[Path] = None,
+    project_root: Path | None = None,
 ) -> Path:
     """Get the corresponding filename for the search query."""
     query_filename = Path("data/search/") / Path(f"{filename.stem}_query.txt")
@@ -107,7 +105,7 @@ def create_db_source(
     path: Path,
     params: dict,
     add_to_git: bool = True,
-    logger: typing.Optional[logging.Logger] = logging.getLogger(__name__),
+    logger: logging.Logger | None = logging.getLogger(__name__),
 ) -> colrev.search_file.ExtendedSearchFile:
     """Interactively add a DB SearchSource."""
     if not all(x in ["search_file"] for x in list(params)):

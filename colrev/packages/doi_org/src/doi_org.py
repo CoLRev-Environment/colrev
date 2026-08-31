@@ -6,7 +6,6 @@ from __future__ import annotations
 import json
 import logging
 import re
-import typing
 from sqlite3 import OperationalError
 from urllib.parse import unquote
 
@@ -15,10 +14,7 @@ import requests
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 import colrev.utils
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
-from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import Fields, FieldValues, RecordState, SearchSourceHeuristicStatus
 from colrev.packages.crossref.src import record_transformer
 
 # Note: not (yet) implemented as a full search_source
@@ -38,7 +34,7 @@ class DOIConnector:
         *,
         record: colrev.record.record_prep.PrepRecord,
         timeout: int = 60,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.record.record.Record:
         """Retrieve the metadata from DOI.org based on a record (similarity)."""
         if Fields.DOI not in record.data:
@@ -85,7 +81,7 @@ class DOIConnector:
             if Fields.TITLE in record.data:
                 record.format_if_mostly_upper(Fields.TITLE, case="sentence")
 
-        except (requests.exceptions.RequestException,) as exc:
+        except requests.exceptions.RequestException as exc:
             print(exc)
 
         return record

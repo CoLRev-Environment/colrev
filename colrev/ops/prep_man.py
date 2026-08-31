@@ -14,10 +14,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record_prep
 from colrev import utils
-from colrev.constants import EndpointType
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
+from colrev.constants import EndpointType, Fields, OperationsType, RecordState
 from colrev.package_manager.package_manager import PackageManager
 
 

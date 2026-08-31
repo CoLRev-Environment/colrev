@@ -8,11 +8,9 @@ import typing
 import unicodedata
 from enum import Enum
 from functools import reduce
-from pathlib import Path
-from pathlib import PosixPath
+from pathlib import Path, PosixPath
 
-from jinja2 import Environment
-from jinja2 import FunctionLoader
+from jinja2 import Environment, FunctionLoader
 from jinja2.environment import Template
 
 import colrev.exceptions as colrev_exceptions
@@ -34,7 +32,7 @@ def retrieve_package_file(*, template_file: Path, target: Path) -> None:
 
 def get_package_file_content(
     *, module: str, filename: Path
-) -> typing.Union[bytes, None]:
+) -> bytes | None:
     """Get the content of a file in the CoLRev package."""
     return pkgutil.get_data(module, str(filename))
 
@@ -146,12 +144,12 @@ def load_complementary_material_prefixes() -> list:
     return complementary_material_keywords
 
 
-def get_by_path(root: dict, items: typing.List[str]) -> typing.Any:
+def get_by_path(root: dict, items: list[str]) -> typing.Any:
     """Access a nested object in root by item sequence."""
     return reduce(operator.getitem, items, root)
 
 
-def dict_set_nested(root: dict, keys: typing.List[str], value: typing.Any) -> None:
+def dict_set_nested(root: dict, keys: list[str], value: typing.Any) -> None:
     """Set dict value by nested key, this works on empty dict."""
     for key in keys[:-1]:
         root = root.setdefault(key, {})
