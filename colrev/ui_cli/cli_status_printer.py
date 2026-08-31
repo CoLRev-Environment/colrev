@@ -10,8 +10,7 @@ from time import sleep
 from tqdm import tqdm
 
 import colrev.exceptions as colrev_exceptions
-from colrev.constants import Colors
-from colrev.constants import ExitCodes
+from colrev.constants import Colors, ExitCodes
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.ops.status
@@ -173,7 +172,7 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
     print("Load records...", end="\r")
     sys.stdout.write("\033[K")
 
-    ret_check: typing.Dict[str, typing.Any] = {"status": ExitCodes.SUCCESS}
+    ret_check: dict[str, typing.Any] = {"status": ExitCodes.SUCCESS}
     failure_items = []
     try:
         checker = status_operation.review_manager.get_checker()
@@ -198,7 +197,7 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
                 total_atomic_steps=status_stats.atomic_steps,
                 completed_steps=status_stats.completed_atomic_steps,
             )
-        print("")
+        print()
 
         instructions = advisor.get_instructions()
         print_review_instructions(instructions["review_instructions"])

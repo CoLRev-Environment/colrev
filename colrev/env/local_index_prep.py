@@ -8,11 +8,7 @@ from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
-from colrev.constants import Fields
-from colrev.constants import FieldSet
-from colrev.constants import FieldValues
-from colrev.constants import LocalIndexFields
-from colrev.constants import RecordState
+from colrev.constants import Fields, FieldSet, FieldValues, LocalIndexFields, RecordState
 
 KEYS_TO_REMOVE = (
     Fields.ORIGIN,
@@ -87,18 +83,13 @@ def _adjust_provenance_for_indexing(record_dict: dict) -> None:
     # Make sure that we don't add provenance information without corresponding fields
     record.align_provenance()
     for key in list(record.data.keys()):
-        if not record.masterdata_is_curated():
-            record.add_field_provenance(
-                key=key, source=record_dict[Fields.METADATA_SOURCE_REPOSITORY_PATHS]
-            )
-        elif key not in FieldSet.IDENTIFYING_FIELD_KEYS + FieldSet.PROVENANCE_KEYS + [
+        if not record.masterdata_is_curated() or key not in FieldSet.IDENTIFYING_FIELD_KEYS + FieldSet.PROVENANCE_KEYS + [
             Fields.ID,
             Fields.ENTRYTYPE,
             Fields.METADATA_SOURCE_REPOSITORY_PATHS,
         ]:
             record.add_field_provenance(
-                key=key,
-                source=record_dict[Fields.METADATA_SOURCE_REPOSITORY_PATHS],
+                key=key, source=record_dict[Fields.METADATA_SOURCE_REPOSITORY_PATHS]
             )
 
     record.remove_field(key=Fields.METADATA_SOURCE_REPOSITORY_PATHS)

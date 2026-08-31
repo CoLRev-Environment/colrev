@@ -7,9 +7,7 @@ import logging
 import typing
 
 import colrev.exceptions as colrev_exceptions
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
+from colrev.constants import Fields, OperationsType, RecordState
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.process.operation

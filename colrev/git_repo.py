@@ -9,8 +9,7 @@ from pathlib import Path
 from random import randint
 
 import git
-from git import GitCommandError
-from git import InvalidGitRepositoryError
+from git import GitCommandError, InvalidGitRepositoryError
 
 import colrev.exceptions as colrev_exceptions
 import colrev.utils
@@ -25,7 +24,7 @@ if typing.TYPE_CHECKING:
 class GitRepo:
     """Wrapper for Git repository interactions."""
 
-    def __init__(self, path: typing.Optional[Path]) -> None:
+    def __init__(self, path: Path | None) -> None:
         """Initialize the instance."""
         self.path = path if path else Path.cwd()
         if not self.path.is_absolute():
@@ -82,7 +81,7 @@ class GitRepo:
         return path_changed
 
     def update_gitignore(
-        self, *, add: typing.Optional[list] = None, remove: typing.Optional[list] = None
+        self, *, add: list | None = None, remove: list | None = None
     ) -> None:
         """Update the gitignore file by adding or removing particular paths."""
         git_ignore_file = self.path / Path(".gitignore")
@@ -146,7 +145,7 @@ class GitRepo:
         review_manager: colrev.review_manager.ReviewManager,
         manual_author: bool = False,
         script_call: str = "",
-        saved_args: typing.Optional[dict] = None,
+        saved_args: dict | None = None,
         skip_status_yaml: bool = False,
         skip_hooks: bool = True,
     ) -> bool:

@@ -7,17 +7,18 @@ import dash  # pylint: disable=import-error
 import pandas as pd
 import plotly.express as px  # pylint: disable=import-error
 import plotly.graph_objects as go  # pylint: disable=import-error
-from dash import callback  # pylint: disable=import-error
-from dash import dash_table  # pylint: disable=import-error
-from dash import dcc  # pylint: disable=import-error
-from dash import html  # pylint: disable=import-error
-from dash import Input  # pylint: disable=import-error
-from dash import Output  # pylint: disable=import-error
+from dash import (
+    Input,  # pylint: disable=import-error
+    Output,  # pylint: disable=import-error
+    callback,  # pylint: disable=import-error
+    dash_table,  # pylint: disable=import-error
+    dcc,  # pylint: disable=import-error
+    html,  # pylint: disable=import-error
+)
 
 import colrev.record.record
 import colrev.review_manager
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Fields, RecordState
 
 # dash dependencies optional
 # install with pip install colrev[ui_web]

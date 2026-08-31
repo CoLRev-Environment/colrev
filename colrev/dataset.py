@@ -15,9 +15,7 @@ import colrev.loader.load_utils
 import colrev.ops.check
 import colrev.record.record_id_setter
 import colrev.record.record_prep
-from colrev.constants import ExitCodes
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import ExitCodes, Fields, RecordState
 from colrev.git_repo import GitRepo
 from colrev.writer.write_utils import to_string
 
@@ -234,8 +232,7 @@ class Dataset:
             with open(
                 self.review_manager.paths.records, "a", encoding="utf8"
             ) as m_refs:
-                for item in record_list:
-                    m_refs.write(item["record"])
+                m_refs.writelines(item["record"] for item in record_list)
 
         self.git_repo.add_changes(self.review_manager.paths.RECORDS_FILE)
 
@@ -319,7 +316,7 @@ class Dataset:
 
         return False
 
-    def set_ids(self, selected_ids: typing.Optional[list] = None) -> dict:
+    def set_ids(self, selected_ids: list | None = None) -> dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex.
         """

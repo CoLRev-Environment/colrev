@@ -5,12 +5,10 @@ from __future__ import annotations
 
 import logging
 import re
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
@@ -21,11 +19,7 @@ import colrev.record.record_prep
 import colrev.record.record_similarity
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import Fields, FieldValues, RecordState, SearchSourceHeuristicStatus, SearchType
 from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.dblp.src import dblp_api
 
@@ -42,7 +36,7 @@ class DBLPSearchSourceSettings(colrev.search_file.ExtendedSearchFile, BaseModel)
     filepath: Path
     search_type: SearchType
     search_parameters: dict
-    comment: typing.Optional[str]
+    comment: str | None
 
     _details = {
         "search_parameters": {
@@ -76,7 +70,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -111,7 +105,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
@@ -492,7 +486,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 dblp_feed.save()
                 self.dblp_lock.release()
 
-            except (colrev_exceptions.NotFeedIdentifiableException,):
+            except colrev_exceptions.NotFeedIdentifiableException:
                 self.dblp_lock.release()
 
         except colrev_exceptions.ServiceNotAvailableException:

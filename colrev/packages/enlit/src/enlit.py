@@ -4,18 +4,13 @@
 from pathlib import Path
 
 import pandas as pd
-from bib_dedupe.bib_dedupe import block
-from bib_dedupe.bib_dedupe import cluster
-from bib_dedupe.bib_dedupe import match
-from bib_dedupe.bib_dedupe import prep
+from bib_dedupe.bib_dedupe import block, cluster, match, prep
 from bib_dedupe.merge import merge
 
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Colors, Fields, RecordState
 from colrev.review_manager import ReviewManager
 
 
