@@ -6,7 +6,6 @@ from __future__ import annotations
 import logging
 import os
 import shutil
-import typing
 from pathlib import Path
 
 import docker
@@ -17,8 +16,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev import utils
-from colrev.constants import Fields
-from colrev.constants import PDFDefectCodes
+from colrev.constants import Fields, PDFDefectCodes
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -36,7 +34,7 @@ class OCRMyPDF(base_classes.PDFPrepPackageBaseClass):
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)

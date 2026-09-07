@@ -11,8 +11,8 @@ import shutil
 # subprocess is required for opening local files with platform opener commands.
 # Calls in this module must resolve the executable and pass filepath as one arg.
 import subprocess  # nosec B404
-import typing
 import sys
+import typing
 import unicodedata
 from datetime import timedelta
 from pathlib import Path
@@ -20,9 +20,7 @@ from pathlib import Path
 import requests_cache
 
 import colrev.exceptions as colrev_exceptions
-from colrev.constants import Fields
-from colrev.constants import Filepaths
-from colrev.constants import SearchType
+from colrev.constants import Fields, Filepaths, SearchType
 from colrev.search_file import load_search_file
 
 _p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
@@ -113,7 +111,7 @@ def select_search_type(*, search_types: list, params: dict) -> SearchType:
     return SearchType[answers["search_type"]]
 
 
-def get_project_home_dir(*, path_str: typing.Optional[str] = None) -> Path:
+def get_project_home_dir(*, path_str: str | None = None) -> Path:
     """Get the root directory of the CoLRev project
     (i.e., the directory containing the .git directory).
     """
@@ -195,7 +193,7 @@ def _strip_diacritics(text: str) -> str:
 
 
 def remove_stopwords(
-    input_str: str, stopwords: typing.Optional[typing.Set[str]] = None
+    input_str: str, stopwords: set[str] | None = None
 ) -> str:
     """Remove stopwords from a string."""
     if stopwords is None:

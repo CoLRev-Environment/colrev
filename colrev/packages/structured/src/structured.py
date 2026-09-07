@@ -5,21 +5,17 @@ from __future__ import annotations
 
 import csv
 import logging
-import typing
 from dataclasses import asdict
 from pathlib import Path
 
 import pandas as pd
 from git.exc import GitCommandError
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Colors, Fields, RecordState
 
 # pylint: disable=too-few-public-methods
 
@@ -38,7 +34,7 @@ class StructuredDataSettings(BaseModel):
 
     endpoint: str
     version: str
-    fields: typing.List[DataField]
+    fields: list[DataField]
     data_path_relative: Path = Path("data.csv")
 
     _details = {
@@ -70,7 +66,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -148,11 +144,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
 
             self.settings.fields.append(
                 Field(
-                    **{
-                        "name": short_name,
-                        "explanation": explanation,
-                        "data_type": data_type,
-                    }
+                    name=short_name, explanation=explanation, data_type=data_type
                 )
             )
 
@@ -182,7 +174,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
             *,
             review_manager: colrev.review_manager.ReviewManager,
             synthesized_record_status_matrix: dict,
-        ) -> typing.Dict:
+        ) -> dict:
             if silent_mode:
                 return synthesized_record_status_matrix
             if not self.data_path.is_file():
@@ -274,7 +266,7 @@ class StructuredData(base_classes.DataPackageBaseClass):
             return data_extracted
 
         def get_structured_data_extracted(
-            *, synthesized_record_status_matrix: typing.Dict, data_path: Path
+            *, synthesized_record_status_matrix: dict, data_path: Path
         ) -> list:
             if not data_path.is_file():
                 return []

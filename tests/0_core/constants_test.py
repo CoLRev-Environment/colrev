@@ -2,11 +2,7 @@
 """Test the colrev project settings"""
 
 import colrev.settings
-from colrev.constants import IDPattern
-from colrev.constants import OperationsType
-from colrev.constants import PDFPathType
-from colrev.constants import ScreenCriterionType
-from colrev.constants import SearchType
+from colrev.constants import IDPattern, OperationsType, PDFPathType, ScreenCriterionType, SearchType
 
 
 def test_search_type() -> None:

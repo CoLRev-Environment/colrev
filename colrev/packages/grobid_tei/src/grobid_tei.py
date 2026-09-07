@@ -34,7 +34,7 @@ class GROBIDTEI(base_classes.PDFPrepPackageBaseClass):
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -71,8 +71,8 @@ def convert(pdf_dir: Path, tei_dir: Path) -> None:
     print(f"Converting PDFs in {pdf_dir} to TEI in {tei_dir}...")
 
     # pylint: disable=import-outside-toplevel
-    import colrev.env.grobid_service
     import colrev.env.environment_manager
+    import colrev.env.grobid_service
 
     colrev.env.environment_manager.EnvironmentManager()
 

@@ -14,16 +14,13 @@ import sys
 import typing
 from pathlib import Path
 
-from packaging.requirements import InvalidRequirement
-from packaging.requirements import Requirement
+from packaging.requirements import InvalidRequirement, Requirement
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.colrev_internal_packages
 import colrev.package_manager.package
+from colrev.constants import Colors, EndpointType, Filepaths
 from colrev.package_manager.colrev_internal_packages import get_internal_packages_dict
-from colrev.constants import Colors
-from colrev.constants import EndpointType
-from colrev.constants import Filepaths
 
 
 def _validate_internal_package_selection(
@@ -98,8 +95,8 @@ class PackageManager:
         ]
 
     def _load_type_identifier_endpoint_dict(self) -> dict:
-        type_identifier_endpoint_dict: typing.Dict[
-            EndpointType, typing.Dict[str, typing.Any]
+        type_identifier_endpoint_dict: dict[
+            EndpointType, dict[str, typing.Any]
         ] = {endpoint_type: {} for endpoint_type in EndpointType}
 
         for package_identifier in self._get_package_identifiers():
@@ -113,7 +110,7 @@ class PackageManager:
 
         return type_identifier_endpoint_dict
 
-    def discover_packages(self, *, package_type: EndpointType) -> typing.Dict:
+    def discover_packages(self, *, package_type: EndpointType) -> dict:
         """Discover packages (registered in the CoLRev environment)."""
         # [{'package_endpoint_identifier': 'colrev.abi_inform_proquest',
         #   'status': '|EXPERIMENTAL|',
@@ -123,7 +120,7 @@ class PackageManager:
             package_endpoints = json.load(file)
             return package_endpoints[package_type.value]
 
-    def discover_installed_packages(self, *, package_type: EndpointType) -> typing.Dict:
+    def discover_installed_packages(self, *, package_type: EndpointType) -> dict:
         """Discover installed packages."""
         # {EndpointType.review_type:
         #   {'colrev.blank': {'endpoint': 'colrev.packages.review_types.blank.BlankReview'},
@@ -187,7 +184,7 @@ class PackageManager:
         *,
         review_manager: colrev.review_manager.ReviewManager,
         uv: bool = False,
-    ) -> typing.List[str]:
+    ) -> list[str]:
 
         review_manager.logger.info("Packages:")
         packages = review_manager.settings.get_packages()
@@ -224,7 +221,7 @@ class PackageManager:
     def install(
         self,
         *,
-        packages: typing.List[str],
+        packages: list[str],
         upgrade: bool = True,
         editable: bool = False,
         uv: bool = False,

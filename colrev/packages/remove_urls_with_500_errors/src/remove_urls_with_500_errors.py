@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import logging
-import typing
 
 import requests
 from pydantic import Field
@@ -39,7 +38,7 @@ class RemoveError500URLsPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -51,9 +50,7 @@ class RemoveError500URLsPrep(base_classes.PrepPackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Prepare the record by removing URLs with 500 errors."""
         session = colrev.utils.get_cached_session()

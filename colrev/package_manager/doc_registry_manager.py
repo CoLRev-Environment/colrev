@@ -7,7 +7,6 @@ import json
 import os
 import re
 import tempfile
-import typing
 from pathlib import Path
 
 import inquirer
@@ -16,9 +15,7 @@ import toml
 from bs4 import BeautifulSoup
 
 import colrev.package_manager.colrev_internal_packages
-from colrev.constants import EndpointType
-from colrev.constants import Filepaths
-from colrev.constants import SearchType
+from colrev.constants import EndpointType, Filepaths, SearchType
 
 INTERNAL_PACKAGES = (
     colrev.package_manager.colrev_internal_packages.get_internal_packages_dict()
@@ -168,7 +165,6 @@ class PackageDoc:
     # pylint: disable=line-too-long
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-statements
-    # flake8: noqa: E501
     def _get_header_info(self) -> str:
 
         # To format the table (adjust row height), the following is suggested:
@@ -434,13 +430,13 @@ class DocRegistryManager:
         "docs/source/manual/pypi_ignored_packages.json"
     )
 
-    package_endpoints_json: typing.Dict[str, list] = {x.value: [] for x in EndpointType}
-    docs_for_index: typing.Dict[str, list] = {x.value: [] for x in EndpointType}
-    packages_data: typing.Dict[str, dict] = {}
+    package_endpoints_json: dict[str, list] = {x.value: [] for x in EndpointType}
+    docs_for_index: dict[str, list] = {x.value: [] for x in EndpointType}
+    packages_data: dict[str, dict] = {}
 
     def __init__(self) -> None:
         """Initialize the instance."""
-        self.packages: typing.List[PackageDoc] = []
+        self.packages: list[PackageDoc] = []
 
         with open(Filepaths.PACKAGES_JSON, encoding="utf-8") as file:
             self.packages_data = json.load(file)
@@ -478,7 +474,7 @@ class DocRegistryManager:
                 self.docs_for_index[endpoint_type.value].append(package.get_docs_item())
 
     def _extract_search_source_types(self) -> None:
-        search_source_types: typing.Dict[str, list] = {}
+        search_source_types: dict[str, list] = {}
         for search_source_type in SearchType:
             if search_source_type.value not in search_source_types:
                 search_source_types[search_source_type.value] = []

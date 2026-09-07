@@ -2,7 +2,6 @@
 """Qualitative systematic review."""
 
 import logging
-import typing
 
 from pydantic import Field
 
@@ -32,7 +31,7 @@ class QualitativeSystematicReview(base_classes.ReviewTypePackageBaseClass):
         *,
         operation: colrev.process.operation.Operation,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)

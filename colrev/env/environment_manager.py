@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import json
 import logging
-import typing
 from pathlib import Path
 
 import git
@@ -13,11 +12,8 @@ import yaml
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import Filepaths
-from colrev.env.utils import dict_set_nested
-from colrev.env.utils import get_by_path
+from colrev.constants import Fields, FieldValues, Filepaths
+from colrev.env.utils import dict_set_nested, get_by_path
 
 
 class EnvironmentManager:
@@ -28,9 +24,9 @@ class EnvironmentManager:
     def __init__(self) -> None:
         """Initialize the instance."""
         self.environment_registry = self.load_environment_registry()
-        self._registered_ports: typing.List[str] = []
+        self._registered_ports: list[str] = []
 
-    def register_ports(self, ports: typing.List[str]) -> None:
+    def register_ports(self, ports: list[str]) -> None:
         """Register a localhost port to avoid conflicts."""
         for port_to_register in ports:
             if port_to_register in self._registered_ports:
@@ -121,7 +117,7 @@ class EnvironmentManager:
         logger.info("Registered path (%s)", path_to_register)
 
     @classmethod
-    def get_name_mail_from_git(cls) -> typing.Tuple[str, str]:  # pragma: no cover
+    def get_name_mail_from_git(cls) -> tuple[str, str]:  # pragma: no cover
         """Get the committer name and email from git (globals)."""
         global_conf_details = ("NA", "NA")
         try:
@@ -211,7 +207,7 @@ class EnvironmentManager:
 
     def get_curated_outlets(self) -> list:
         """Get the curated outlets."""
-        curated_outlets: typing.List[str] = []
+        curated_outlets: list[str] = []
         for repo_source_path in [
             x["repo_source_path"]
             for x in self.local_repos()
@@ -226,7 +222,7 @@ class EnvironmentManager:
                     f"{repo_source_path}/data/records.bib", encoding="utf-8"
                 ) as file:
                     outlets = []
-                    for line in file.readlines():
+                    for line in file:
                         # Note : the second part ("journal:"/"booktitle:")
                         # ensures that data provenance fields are skipped
                         if (

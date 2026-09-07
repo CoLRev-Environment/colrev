@@ -10,8 +10,7 @@ import dictdiffer
 
 import colrev.process.operation
 import colrev.utils
-from colrev.constants import Colors
-from colrev.constants import OperationsType
+from colrev.constants import Colors, OperationsType
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import git.objects.commit

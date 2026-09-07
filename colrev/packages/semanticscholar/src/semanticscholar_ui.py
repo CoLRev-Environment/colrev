@@ -3,7 +3,6 @@
 
 import datetime
 import re
-import typing
 
 import inquirer
 
@@ -204,7 +203,7 @@ class SemanticScholarUI:
         else:
             self.search_params["open_access_pdf"] = False
 
-    def get_api_key(self, existing_key: typing.Optional[str] = "") -> str:
+    def get_api_key(self, existing_key: str | None = "") -> str:
         """Method to get API key from user input."""
         ask_again = True
 

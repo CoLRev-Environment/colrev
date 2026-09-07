@@ -3,7 +3,6 @@
 
 import json as stdjson
 import platform
-import typing
 
 import colrev.review_manager
 
@@ -22,7 +21,7 @@ def test_checks(  # type: ignore
 
     actual = checker.check_repo_extended()
     current_platform = platform.system()
-    expected: typing.List[str] = []
+    expected: list[str] = []
     assert expected == actual
 
     actual = checker.check_repo()  # type: ignore

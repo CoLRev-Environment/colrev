@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 import shutil
-import typing
 from pathlib import Path
 
 from pydantic import Field
@@ -32,7 +31,7 @@ class LocalIndexPDFGet(base_classes.PDFGetPackageBaseClass):
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,  # pylint: disable=unused-argument
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""

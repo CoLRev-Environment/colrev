@@ -5,10 +5,10 @@ import json
 import math
 import urllib.parse
 import urllib.request
+from urllib.parse import urlsplit
 
 import colrev.record.record
 from colrev.constants import Fields
-from urllib.parse import urlsplit
 
 # pylint: disable=invalid-name
 # pylint: disable=too-many-public-methods

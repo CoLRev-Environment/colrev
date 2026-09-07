@@ -4,11 +4,7 @@
 import pytest
 
 import colrev.review_manager
-from colrev.constants import Fields
-from colrev.constants import IDPattern
-from colrev.constants import RecordState
-
-# flake8: noqa: E501
+from colrev.constants import Fields, IDPattern, RecordState
 
 
 def test_load_records_dict_not_notified_exception(

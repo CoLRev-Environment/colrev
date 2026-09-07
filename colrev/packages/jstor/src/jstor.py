@@ -4,19 +4,14 @@
 from __future__ import annotations
 
 import logging
-import typing
 from pathlib import Path
 
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
-from colrev.ops.search_db import create_db_source
-from colrev.ops.search_db import run_db_search
+from colrev.constants import ENTRYTYPES, Fields, SearchSourceHeuristicStatus, SearchType
+from colrev.ops.search_db import create_db_source, run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -41,7 +36,7 @@ class JSTORSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -65,7 +60,7 @@ class JSTORSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {params.split("=")[0]: params.split("=")[1]}

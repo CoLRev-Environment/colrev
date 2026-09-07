@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import difflib
 import logging
-import typing
 import webbrowser
 from multiprocessing import Lock
 from pathlib import Path
@@ -22,13 +21,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import FieldSet
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import Colors, Fields, FieldSet, FieldValues, RecordState, SearchSourceHeuristicStatus, SearchType
 from colrev.ops.search_api_feed import create_api_source
 
 # pylint: disable=unused-argument
@@ -67,7 +60,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -115,7 +108,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self.logger.debug("SearchSource %s validated", source.search_results_path)
 
-    def _retrieve_from_index(self) -> typing.List[dict]:
+    def _retrieve_from_index(self) -> list[dict]:
         params = self.search_source.search_parameters
         query = params["query"]
 
@@ -230,7 +223,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         # always API search
@@ -767,7 +760,7 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
         for key, value in rec_for_reset.items():
             record_dict[key] = value
         keys_added = [
-            key for key in record_dict.keys() if key not in rec_for_reset.keys()
+            key for key in record_dict if key not in rec_for_reset
         ]
         for key in keys_added:
             del record_dict[key]

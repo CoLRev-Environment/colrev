@@ -5,9 +5,7 @@ import logging
 import typing
 from pathlib import Path
 
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Colors
-from colrev.constants import Fields
+from colrev.constants import ENTRYTYPES, Colors, Fields
 from colrev.loader.load_utils_name_formatter import parse_names_in_records
 
 # pylint: disable=too-many-arguments
@@ -54,7 +52,7 @@ class Loader:
 
         if not all(Fields.ID in record_dict for record_dict in records_list):
             raise ValueError(
-                f'{Colors.ORANGE}ID not set in all records. Pass unique_id_field='
+                f"{Colors.ORANGE}ID not set in all records. Pass unique_id_field="
                 '"INCREMENTAL" to colrev.loader.load_utils.load() to generate '
                 f"sequential IDs.{Colors.END}"
             )

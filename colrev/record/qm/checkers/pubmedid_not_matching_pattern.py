@@ -6,8 +6,7 @@ from __future__ import annotations
 import re
 
 import colrev.record.qm.quality_model
-from colrev.constants import DefectCodes
-from colrev.constants import Fields
+from colrev.constants import DefectCodes, Fields
 
 # pylint: disable=too-few-public-methods
 

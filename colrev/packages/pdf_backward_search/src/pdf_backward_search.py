@@ -5,15 +5,11 @@ from __future__ import annotations
 
 import json
 import logging
-import typing
 from pathlib import Path
 
 import inquirer
 import pandas as pd
-from bib_dedupe.bib_dedupe import block
-from bib_dedupe.bib_dedupe import cluster
-from bib_dedupe.bib_dedupe import match
-from bib_dedupe.bib_dedupe import prep
+from bib_dedupe.bib_dedupe import block, cluster, match, prep
 from bib_dedupe.merge import merge
 from pydantic import Field
 from rapidfuzz import fuzz
@@ -27,11 +23,7 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
 from colrev import utils
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import RecordState
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import ENTRYTYPES, Fields, RecordState, SearchSourceHeuristicStatus, SearchType
 from colrev.packages.crossref.src.crossref_api import query_doi
 from colrev.packages.pdf_backward_search.src import pdf_backward_search_api
 
@@ -59,7 +51,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -153,8 +145,8 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def _get_reference_records_from_open_citations(
         self, *, record_dict: dict
-    ) -> typing.List[dict]:
-        references: typing.List[dict] = []
+    ) -> list[dict]:
+        references: list[dict] = []
         if "doi" not in record_dict:
             return references
 
@@ -256,7 +248,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def _export_crosstab_thresholds(cls, df_all_references: pd.DataFrame) -> None:
-        cross_tabulated_data: typing.Dict[int, dict] = {}
+        cross_tabulated_data: dict[int, dict] = {}
 
         for in_text_citation_threshold in range(1, 20):
             for ref_freq_threshold in range(1, 20):
@@ -380,8 +372,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
             "bwsearch_ref",
         ]
         for field in fields_to_drop:
-            if field in item:
-                del item[field]
+            item.pop(field, None)
         item = {
             k: v for k, v in item.items() if not pd.isna(v)
         }  # Drop fields where value is NaN
@@ -567,7 +558,7 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
