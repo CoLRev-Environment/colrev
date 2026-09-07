@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 import re
-import typing
 
 from pydantic import Field
 
@@ -55,7 +54,7 @@ class GeneralPolishPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -64,9 +63,7 @@ class GeneralPolishPrep(base_classes.PrepPackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Prepare the record by applying polishing rules."""
         if Fields.TITLE in record.data:
@@ -77,7 +74,7 @@ class GeneralPolishPrep(base_classes.PrepPackageBaseClass):
             ]
             for acronym in acronyms:
                 record.data[Fields.TITLE] = re.sub(
-                    acronym, acronym, record.data[Fields.TITLE], flags=re.I
+                    acronym, acronym, record.data[Fields.TITLE], flags=re.IGNORECASE
                 )
 
         return record

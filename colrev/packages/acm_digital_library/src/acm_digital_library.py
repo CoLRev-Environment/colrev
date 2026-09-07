@@ -12,11 +12,8 @@ from pydantic import Field
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.utils
-from colrev.constants import Fields
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
-from colrev.ops.search_db import create_db_source
-from colrev.ops.search_db import run_db_search
+from colrev.constants import Fields, SearchSourceHeuristicStatus, SearchType
+from colrev.ops.search_db import create_db_source, run_db_search
 
 if typing.TYPE_CHECKING:
     import colrev.search_file
@@ -44,7 +41,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -63,7 +60,7 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def add_endpoint(
-        cls, params: str, path: Path, logger: typing.Optional[logging.Logger] = None
+        cls, params: str, path: Path, logger: logging.Logger | None = None
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}

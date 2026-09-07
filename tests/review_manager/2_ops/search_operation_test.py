@@ -9,8 +9,7 @@ import pytest
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.utils
-from colrev.constants import EndpointType
-from colrev.constants import SearchType
+from colrev.constants import EndpointType, SearchType
 from colrev.package_manager.package_manager import PackageManager
 
 

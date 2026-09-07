@@ -5,8 +5,6 @@ import colrev.hooks.check
 import colrev.hooks.share
 import colrev.review_manager
 
-# flake8: noqa: E501
-
 
 def test_check_repo(
     base_repo_review_manager: colrev.review_manager.ReviewManager,

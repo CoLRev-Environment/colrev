@@ -4,12 +4,7 @@
 import pytest
 
 import colrev.record.record_merger
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
-
-# flake8: noqa: E501
+from colrev.constants import ENTRYTYPES, Fields, FieldValues, RecordState
 
 
 @pytest.mark.parametrize(

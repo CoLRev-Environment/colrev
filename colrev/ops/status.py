@@ -4,14 +4,12 @@
 from __future__ import annotations
 
 import io
-import typing
 
 import yaml
 
 import colrev.env.utils
 import colrev.process.operation
-from colrev.constants import Colors
-from colrev.constants import OperationsType
+from colrev.constants import Colors, OperationsType
 
 
 class Status(colrev.process.operation.Operation):
@@ -81,7 +79,7 @@ class Status(colrev.process.operation.Operation):
         return analytics_dict
 
     def get_review_status_report(
-        self, *, records: typing.Optional[dict] = None, colors: bool = True
+        self, *, records: dict | None = None, colors: bool = True
     ) -> str:
         """Get the review status report."""
         status_stats = self.review_manager.get_status_stats(records=records)

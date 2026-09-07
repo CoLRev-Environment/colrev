@@ -4,16 +4,13 @@
 from __future__ import annotations
 
 import sqlite3
-import typing
 
 import pandas as pd
 
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.record.record
-from colrev.constants import Fields
-from colrev.constants import Filepaths
-from colrev.constants import LocalIndexFields
+from colrev.constants import Fields, Filepaths, LocalIndexFields
 
 # Note : records are indexed by id = hash(colrev_id)
 # to ensure that the indexing-ids do not exceed limits
@@ -266,7 +263,7 @@ class SQLiteIndexRankings(SQLiteIndex):
     """
 
     INDEX_NAME = "rankings"
-    KEYS: typing.List[str] = []
+    KEYS: list[str] = []
 
     CREATE_TABLE_QUERY = f"CREATE TABLE {INDEX_NAME} (id TEXT PRIMARY KEY)"
     # nosec B608: INDEX_NAME is an internal constant; journal value is bound via placeholder.
@@ -299,7 +296,7 @@ class SQLiteIndexTOC(SQLiteIndex):
     """The SQLiteIndexTOC class implements indexing and retrieval of TOC items locally."""
 
     INDEX_NAME = "toc_index"
-    KEYS: typing.List[str] = []
+    KEYS: list[str] = []
 
     CREATE_TABLE_QUERY = (
         f"CREATE TABLE {INDEX_NAME} (toc_key TEXT PRIMARY KEY, colrev_ids)"

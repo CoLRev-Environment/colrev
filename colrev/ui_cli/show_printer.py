@@ -6,9 +6,7 @@ from pathlib import Path
 
 import colrev.ops.check
 import colrev.record.record
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Colors, Fields, RecordState
 
 
 def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:

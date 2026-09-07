@@ -19,12 +19,8 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
-from colrev.packages.semanticscholar.src import record_transformer
-from colrev.packages.semanticscholar.src import semanticscholar_api
+from colrev.constants import Colors, Fields, SearchSourceHeuristicStatus, SearchType
+from colrev.packages.semanticscholar.src import record_transformer, semanticscholar_api
 from colrev.packages.semanticscholar.src.semanticscholar_ui import SemanticScholarUI
 
 if typing.TYPE_CHECKING:  # pragma: no cover
@@ -70,8 +66,8 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     def __init__(
         self,
         *,
-        search_file: typing.Optional[colrev.search_file.ExtendedSearchFile] = None,
-        logger: typing.Optional[logging.Logger] = None,
+        search_file: colrev.search_file.ExtendedSearchFile | None = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -337,7 +333,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         # get search parameters from the user interface
@@ -419,9 +415,7 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Semantic Scholar."""
         # Not yet implemented

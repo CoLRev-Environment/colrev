@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 import typing
 from pathlib import Path
-from typing import Optional
 
 import pytest
 from pytest_mock import MockerFixture
@@ -11,14 +10,13 @@ import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.search_file
-from colrev.constants import Fields
-from colrev.constants import SearchType
+from colrev.constants import Fields, SearchType
 from colrev.packages.pubmed.src.pubmed import PubMedSearchSource
 
 
 class BuildFactory(Protocol):
     def __call__(
-        self, version_marker: Optional[str], include_version_param: bool = ...
+        self, version_marker: str | None, include_version_param: bool = ...
     ) -> colrev.search_file.ExtendedSearchFile: ...
 
 
@@ -27,7 +25,7 @@ def pubmed_search_file_factory() -> BuildFactory:
     """Return a factory to build PubMed search files for validation tests."""
 
     def _build(
-        version_marker: Optional[str], include_version_param: bool = True
+        version_marker: str | None, include_version_param: bool = True
     ) -> colrev.search_file.ExtendedSearchFile:
         search_file = colrev.search_file.ExtendedSearchFile(
             platform="colrev.pubmed",
@@ -173,7 +171,7 @@ def test_pubmed_search_persists_api_results(
             self,
             *,
             status_code: int,
-            json_data: Optional[dict[str, typing.Any]] = None,
+            json_data: dict[str, typing.Any] | None = None,
             text: str = "",
         ) -> None:
             self.status_code = status_code
@@ -195,9 +193,9 @@ def test_pubmed_search_persists_api_results(
         self: typing.Any,
         method: str,
         url: str,
-        params: Optional[dict[str, typing.Any]] = None,
-        headers: Optional[dict[str, str]] = None,
-        timeout: Optional[float] = None,
+        params: dict[str, typing.Any] | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
     ) -> "FakeResponse":
         del self  # unused
         if url == esearch_url:

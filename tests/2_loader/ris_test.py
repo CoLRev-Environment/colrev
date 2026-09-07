@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 """Tests of the load utils for ris files"""
 
-import os
 import logging
+import os
 from pathlib import Path
 
 import pytest
 
 import colrev.loader.load_utils
 import colrev.loader.ris
+from colrev.constants import ENTRYTYPES, Fields
 from colrev.packages.unknown_source.src.unknown_source import UnknownSearchSource
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
 
 NESTED_KNOWLEDGE_TITLES = [
     "Activation of peroxisome-proliferator-receptor alpha and gamma mediates "

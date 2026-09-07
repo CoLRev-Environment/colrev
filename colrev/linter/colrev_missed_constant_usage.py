@@ -5,16 +5,11 @@ from __future__ import annotations
 
 import typing
 
-from astroid import Const
-from astroid import nodes
+from astroid import Const, nodes
 from pylint import checkers
 from pylint.checkers.utils import only_required_for_messages
 
-from colrev.constants import DefectCodes
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import OperationsType
+from colrev.constants import ENTRYTYPES, DefectCodes, Fields, FieldValues, OperationsType
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     from pylint.lint import PyLinter

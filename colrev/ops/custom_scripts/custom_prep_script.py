@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-import typing
-
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 from colrev.constants import Fields
@@ -32,9 +30,7 @@ class CustomPrep(base_classes.PrepPackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record.Record,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Update record (metadata)."""
         if Fields.JOURNAL in record.data:

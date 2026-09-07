@@ -8,8 +8,7 @@ import subprocess  # nosec
 import sys
 import time
 import typing
-from functools import partial
-from functools import wraps
+from functools import partial, wraps
 from pathlib import Path
 
 import click
@@ -29,13 +28,7 @@ import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
 from colrev import utils
-from colrev.constants import Colors
-from colrev.constants import EndpointType
-from colrev.constants import Fields
-from colrev.constants import Filepaths
-from colrev.constants import IDPattern
-from colrev.constants import RecordState
-from colrev.constants import ScreenCriterionType
+from colrev.constants import Colors, EndpointType, Fields, Filepaths, IDPattern, RecordState, ScreenCriterionType
 from colrev.env.environment_manager import EnvironmentManager
 from colrev.env.resources import Resources
 
@@ -167,7 +160,7 @@ class SpecialHelpOrder(click.Group):
         super().__init__(*args, **kwargs)
 
     def get_help(self, ctx: click.core.Context):  # type: ignore
-        self.list_commands = self.list_commands_for_help  # type: ignore  # noqa
+        self.list_commands = self.list_commands_for_help  # type: ignore
         return super().get_help(ctx)
 
     def list_commands_for_help(self, ctx: click.core.Context) -> typing.Generator:
@@ -1736,8 +1729,9 @@ def pdf_get_man(
 
 def _print_pdf_hashes(*, pdf_path: Path) -> None:
 
-    import colrev.record.record_pdf
     import pymupdf
+
+    import colrev.record.record_pdf
 
     doc = pymupdf.Document(pdf_path)
     last_page_nr = doc.page_count
@@ -2251,7 +2245,7 @@ def _select_target_repository(environment_registry: list) -> Path:
             )
         sel_str = input("Select target repository: ")
         sel = int(sel_str) - 1
-        if sel in range(0, len(environment_registry)):
+        if sel in range(len(environment_registry)):
             target = Path(environment_registry[sel]["repo_source_path"])
             return target
 
@@ -2619,11 +2613,14 @@ def settings(
         click.echo(ctx.get_help())
         ctx.exit(1)
 
-    from subprocess import check_call  # nosec
-    from subprocess import DEVNULL  # nosec
-    from subprocess import STDOUT  # nosec
-    import json
     import ast
+    import json
+    from subprocess import (
+        DEVNULL,  # nosec
+        STDOUT,  # nosec
+        check_call,  # nosec
+    )
+
     import glom
 
     review_manager = get_review_manager(
@@ -3216,7 +3213,7 @@ def version(
     default=False,
 )
 def install(
-    packages: typing.List[str], upgrade: bool, editable: bool, uv: bool
+    packages: list[str], upgrade: bool, editable: bool, uv: bool
 ) -> None:
     r"""Install packages.
 

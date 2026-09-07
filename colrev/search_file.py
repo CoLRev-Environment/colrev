@@ -74,8 +74,8 @@ class ExtendedSearchFile(search_query.SearchFile):
     def setup_for_load(
         self,
         *,
-        source_records_list: typing.List[typing.Dict],
-        imported_origins: typing.List[str],
+        source_records_list: list[dict],
+        imported_origins: list[str],
     ) -> None:
         """Set the SearchSource up for the load process (initialize statistics)."""
         # pylint: disable=attribute-defined-outside-init
@@ -84,9 +84,9 @@ class ExtendedSearchFile(search_query.SearchFile):
         # saved to SETTINGS_FILE.
 
         self.to_import = len(source_records_list)
-        self.imported_origins: typing.List[str] = imported_origins
+        self.imported_origins: list[str] = imported_origins
         self.len_before = len(imported_origins)
-        self.source_records_list: typing.List[typing.Dict] = source_records_list
+        self.source_records_list: list[dict] = source_records_list
 
     def get_origin_prefix(self) -> str:
         """Get the corresponding origin prefix."""
@@ -104,7 +104,7 @@ class ExtendedSearchFile(search_query.SearchFile):
 
     # pylint: disable=unused-argument
     def get_search_history_path(
-        self, search_history_path: typing.Optional[str | Path] = None
+        self, search_history_path: str | Path | None = None
     ) -> Path:
         """Get the search history path."""
         if search_history_path is not None:
@@ -116,8 +116,8 @@ class ExtendedSearchFile(search_query.SearchFile):
 
     def save(
         self,
-        search_history_path: typing.Optional[str | Path] = None,
-        git_repo: typing.Optional[colrev.git_repo.GitRepo] = None,
+        search_history_path: str | Path | None = None,
+        git_repo: colrev.git_repo.GitRepo | None = None,
     ) -> None:
         """Save the search file to a JSON file."""
         path = (

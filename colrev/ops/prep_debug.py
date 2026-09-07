@@ -15,8 +15,7 @@ import colrev.ops.prep
 import colrev.process.operation
 import colrev.record.record_prep
 import colrev.utils
-from colrev.constants import Colors
-from colrev.constants import Fields
+from colrev.constants import Colors, Fields
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.package_manager.package_base_classes as base_classes
@@ -32,7 +31,7 @@ PREP_COUNTER = Value("i", 0)
 class PrepDebug(colrev.ops.prep.Prep):
     """Debug prepare records (metadata)."""
 
-    debug_ids: typing.List[str]
+    debug_ids: list[str]
     commit_sha: str
 
     def __init__(

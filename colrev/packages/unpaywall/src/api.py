@@ -11,8 +11,7 @@ import requests
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
+from colrev.constants import ENTRYTYPES, Fields
 from colrev.packages.unpaywall.src import utils
 
 ENTRYTYPE_MAPPING = {
@@ -57,7 +56,7 @@ class UnpaywallAPI:
         """Initialize the instance."""
         self.search_parameters = search_parameters
 
-    def _get_authors(self, article: dict) -> typing.List[str]:
+    def _get_authors(self, article: dict) -> list[str]:
         authors = []
         z_authors = article.get("z_authors", [])
         if z_authors:
@@ -68,7 +67,7 @@ class UnpaywallAPI:
                     authors.append(f"{family_name}, {given_name}")
         return authors
 
-    def _get_affiliation(self, article: dict) -> typing.List[str]:
+    def _get_affiliation(self, article: dict) -> list[str]:
         affiliations = set()
         z_authors = article.get("z_authors", "")
         if z_authors:
