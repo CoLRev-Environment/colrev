@@ -1,0 +1,162 @@
+## Summary
+
+Springer Nature is a leading global scientific, technical, and medical publisher, with metadata for over 16 million online documents, encompassing journal articles, book chapters, and protocols published by Springer.
+
+This package supports DB searches and API searches using the SpringerLink API.
+By configuring and using this package, you can retrieve and manage metadata from Springer Nature's vast database of scholarly articles and books.
+
+## search
+
+The search for is launched with the following command in your ColRev project:
+
+```bash
+colrev search --add colrev.springer_link
+```
+
+Upon entering the above command the user is asked to choose between `DB search` and `API search` (For more details on the searchtypes see manual of CoLRev).
+The user can select the search type by navigating through the list with `uparrow` and `downarrow` and confirm the choice with `enter`.
+
+### DB search
+
+Format of the search-history file (DB search):
+
+```json
+{
+    "search_string": "keyword:\"microsourcing\"",
+    "platform": "colrev.springer_link",
+    "search_results_path": "data/search/springer_link.bib",
+    "search_type": "DB",
+    "version": "0.1.0"
+}
+```
+
+### API search
+
+Format of the search-history file (API search):
+
+```json
+{
+    "search_string": "",
+    "platform": "colrev.springer_link",
+    "search_results_path": "data/search/springer_link.bib",
+    "search_type": "API",
+    "field": "",
+    "version": "0.1.0",
+    "search_parameters": {
+        "subject": "",
+        "search_string": "microsourcing",
+        "language": "",
+        "year": "",
+        "type": ""
+    }
+}
+```
+
+ℹ️ Restriction: Springer Link only allows a daily quota of 500 requests.
+This might lead to the site being unavailable with a response code of 403.
+
+#### API search: API key for Springer Link
+
+After selecting API search the user is asked to enter an API key for Springer Link (available upon [registration](https://dev.springernature.com/)).
+Set the API-KEY using
+
+```bash
+export SPRINGER_API_KEY="your-api-key"
+```
+
+> **Tip:** Add the export line to your shell profile (for example ``~/.bashrc``)
+> and reload it with ``source ~/.bashrc`` to keep the key available in future
+> sessions.
+
+The user can choose between `complete_search_string` for searching with a complex query or `interactively` to enter search parameters interactively.
+
+#### API search: complex query
+
+The user can type the individual search constraints that can also use the boolean `AND`, `OR`, `NOT`, `NEAR` for a specified search. Following conditions have to be followed:
+
+- Search terms must be enclosed in double quotes `"`
+- The entire logical condition must be enclosed in parentheses `()`
+- Filters can be added with a `space` and then followed by the `constraint:argument`
+- A word or phrase that appears among the constraints but is not preceded by a constraint value will be treated as the argument of the "empty constraint"
+
+##### Examples
+
+- A single search term: `("saturn") type:Book`
+- Two terms with AND: `("saturn" AND "jupiter") type:Book`
+- Two terms with OR: `("saturn" OR "jupiter") type:Book`
+- Negation of a term: `("saturn" NOT "jupiter") type:Book`
+- After NEAR, a slash `/{number}` should be used, for example: `("saturn" NEAR/10 "jupiter") type:Book`
+
+##### Other Constraints supported by the Springers Nature API
+
+- `doi:` 10.1007/s11214-017-0458-1
+- `pub:` Extremes
+- `onlinedate:` 2019-03-29 (supports wildcards, e.g., `onlinedate:` 2019-01-*)
+- `onlinedatefrom:` 2019-09-01%20 `onlinedateto:` 2019-12-31
+- `country:` %22New%20Zealand%22
+- `isbn:` 978-0-387-79148-7
+- `issn:` 1861-0692
+- `journalid:` 392
+- `date:` 2010-03-01
+- `issuetype:` Supplement
+- `issn:` 1861-0692
+- `journalid:` 259
+
+For additional constraints visit the SpringerLink API Documentation (Link below).
+
+#### API search: entering the search parameters
+
+In this step the user can enter the search parameters into the console.
+The user can provide values for the following parameters: keyword, subject, language, year and type.
+Pressing `enter` will confirm the choice. If the field is blank, this parameter will be skipped.
+The parameters should be entered as followed:
+
+- `keyword:` e.g. onlinear.
+- `subject:` Springer Nature supports the subject areas (see below)
+
+- `language:` Please use country codes, e.g. "de" for "Germany".
+- `year:` e.g. 2024.
+- `type:` limit search to Book or Journal (case sensitive!).
+
+Subject areas:
+
+- Astronomy
+- Behavioral Sciences
+- Biomedical Sciences
+- Business and Management
+- Chemistry
+- Climate
+- Computer Science
+- Earth Sciences
+- Economics
+- Education and Language
+- Energy
+- Engineering
+- Environmental Sciences
+- Food Science and Nutrition
+- General Interest
+- Geography
+- Law
+- Life Sciences
+- Materials
+- Mathematics
+- Medicine
+- Philosophy
+- Physics
+- Public Health
+- Social Sciences
+- Statistics
+- Water
+
+Each constraint that appears in your request will be automatically ANDed with all the others.
+
+ℹ️ Restriction: The format of Springer_Link's output does not produce sufficiently clear information to fill in every CoLRev field.
+Disparities, e.g. in the definition of content types(=="ENTRYTYPES" in CoLRev), may lead to ambiguous information about a paper, its type or its venue.
+To prevent misinformation, papers will be marked as `miscellaneous`, if the publication type is not determinable.
+Furthermore, the Field regarding books, such as address are not supported by Springers Nature.
+
+## Links
+
+- [SpringerLink](https://link.springer.com/)
+- [SpringerLink API](https://dev.springernature.com/)
+- [SpringerLink API Documentation](https://docs-dev.springernature.com/docs/)
