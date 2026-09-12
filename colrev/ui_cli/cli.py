@@ -3138,7 +3138,13 @@ def select_format() -> str:
 @main.command(help_priority=33)
 @click.argument(
     "input_file",
-    type=click.Path(exists=True, readable=True),
+    type=click.Path(exists=True, readable=True, path_type=Path),
+)
+@click.option(
+    "-r",
+    "--recursive",
+    is_flag=True,
+    help="Recursively convert supported files in a directory.",
 )
 @click.option(
     "-o",
@@ -3152,22 +3158,54 @@ def select_format() -> str:
 @click.pass_context
 def convert(
     ctx: click.core.Context,
-    input_file: str,
+    input_file: Path,
+    recursive: bool,
     output_format: str,
 ) -> None:
-    """Convert a file to the specified format."""
-    # Example placeholder logic
-    click.echo(f"Converting file: {input_file}")
-    if output_format:
-        click.echo(f"Output format: {output_format}")
-    else:
+    """Convert a file, or recursively convert files in a directory."""
+    if input_file.is_dir() and not recursive:
+        raise click.UsageError(
+            f"'{input_file}' is a directory. "
+            "Use -r/--recursive to convert files recursively."
+        )
+
+    if not output_format:
         output_format = select_format()
+
+    supported_suffixes = {
+        ".bib",
+        ".csv",
+        ".enl",
+        ".json",
+        ".md",
+        ".nbib",
+        ".ris",
+        ".txt",
+        ".xls",
+        ".xlsx",
+    }
+    input_files = [input_file]
+    if input_file.is_dir():
+        input_files = [
+            path
+            for path in input_file.rglob("*")
+            if path.is_file() and path.suffix in supported_suffixes
+        ]
+
+    for file_to_convert in input_files:
+        _convert_file(input_file=file_to_convert, output_format=output_format)
+
+
+def _convert_file(*, input_file: Path, output_format: str) -> None:
+    """Convert a single file to the specified format."""
+    click.echo(f"Converting file: {input_file}")
+    click.echo(f"Output format: {output_format}")
 
     import colrev.loader.load_utils
     from colrev.writer.write_utils import write_file
 
-    records = colrev.loader.load_utils.load(Path(input_file))
-    if Path(input_file).suffix == ".md":  # or generate_ids flag
+    records = colrev.loader.load_utils.load(input_file)
+    if input_file.suffix == ".md":  # or generate_ids flag
         print("Generating IDs")
         id_setter = colrev.record.record_id_setter.IDSetter(
             id_pattern=IDPattern.three_authors_year,
@@ -3182,7 +3220,7 @@ def convert(
             record_dict.pop(Fields.D_PROV, None)
 
     write_file(
-        records_dict=records, filename=Path(input_file).with_suffix(f".{output_format}")
+        records_dict=records, filename=input_file.with_suffix(f".{output_format}")
     )
 
 
