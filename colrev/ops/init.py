@@ -164,8 +164,9 @@ class Initializer:
             return not files
 
         try:
-            git_repo = git.Repo.init()
-            if len(list(git_repo.iter_commits())) == 1:
+            with git.Repo(self.target_path) as git_repo:
+                if len(list(git_repo.iter_commits())) != 1:
+                    return
                 if is_empty_colrev_template():
                     return
                 print("Detected existing repository")
@@ -173,13 +174,14 @@ class Initializer:
                     raise colrev_exceptions.CoLRevException(
                         "Detected existing repository. Pass reset_existing=True to reset it."
                     )
-                for root, dirs, files in os.walk(self.target_path):
-                    for file in files:
-                        os.remove(os.path.join(root, file))
-                    for directory in dirs:
-                        shutil.rmtree(os.path.join(root, directory))
         except (InvalidGitRepositoryError, ValueError):
-            pass
+            return
+
+        for child in self.target_path.iterdir():
+            if child.is_dir():
+                shutil.rmtree(child)
+            else:
+                child.unlink()
 
     def _check_init_precondition(self) -> None:
         if self.force_mode:

@@ -79,10 +79,10 @@ def test_existing_single_commit_repo_aborts_without_reset_flag(tmp_path, monkeyp
     """Existing single-commit repositories require explicit reset flag."""
 
     os.chdir(tmp_path)
-    repo = git.Repo.init(tmp_path)
-    (tmp_path / Path("existing.txt")).write_text("existing", encoding="utf-8")
-    repo.index.add(["existing.txt"])
-    repo.index.commit("initial commit")
+    with git.Repo.init(tmp_path) as repo:
+        (tmp_path / Path("existing.txt")).write_text("existing", encoding="utf-8")
+        repo.index.add(["existing.txt"])
+        repo.index.commit("initial commit")
 
     monkeypatch.setattr(
         "builtins.input",
@@ -101,10 +101,10 @@ def test_existing_single_commit_repo_resets_with_reset_flag(tmp_path, monkeypatc
     """Existing single-commit repositories are reset when explicitly requested."""
 
     os.chdir(tmp_path)
-    repo = git.Repo.init(tmp_path)
-    (tmp_path / Path("existing.txt")).write_text("existing", encoding="utf-8")
-    repo.index.add(["existing.txt"])
-    repo.index.commit("initial commit")
+    with git.Repo.init(tmp_path) as repo:
+        (tmp_path / Path("existing.txt")).write_text("existing", encoding="utf-8")
+        repo.index.add(["existing.txt"])
+        repo.index.commit("initial commit")
 
     monkeypatch.setattr(
         "builtins.input",
@@ -118,3 +118,19 @@ def test_existing_single_commit_repo_resets_with_reset_flag(tmp_path, monkeypatc
     initializer._reset_if_existing_repo_with_single_commit()
 
     assert not (tmp_path / Path("existing.txt")).exists()
+
+
+def test_existing_non_git_directory_is_not_initialized(tmp_path) -> None:  # type: ignore
+    """Checking an existing non-Git directory does not initialize it."""
+
+    existing_file = tmp_path / Path("existing.txt")
+    existing_file.write_text("existing", encoding="utf-8")
+
+    initializer = colrev.ops.init.Initializer.__new__(colrev.ops.init.Initializer)
+    initializer.target_path = tmp_path
+    initializer.reset_existing = True
+
+    initializer._reset_if_existing_repo_with_single_commit()
+
+    assert existing_file.is_file()
+    assert not (tmp_path / Path(".git")).exists()
