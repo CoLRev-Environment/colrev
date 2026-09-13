@@ -7,9 +7,12 @@ from click.testing import CliRunner
 import colrev.loader.load_utils
 import colrev.ui_cli.cli
 import colrev.writer.write_utils
+import pytest
 
 
-def _patch_conversion(monkeypatch, converted_files: list[Path]) -> None:
+def _patch_conversion(
+    monkeypatch: pytest.MonkeyPatch, converted_files: list[Path]
+) -> None:
     monkeypatch.setattr(
         colrev.loader.load_utils,
         "load",
@@ -22,7 +25,7 @@ def _patch_conversion(monkeypatch, converted_files: list[Path]) -> None:
     )
 
 
-def test_convert_accepts_file(tmp_path: Path, monkeypatch) -> None:
+def test_convert_accepts_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """A regular file does not require recursive mode."""
     input_file = tmp_path / "references.ris"
     input_file.touch()
@@ -49,7 +52,7 @@ def test_convert_rejects_directory_without_recursive(tmp_path: Path) -> None:
 
 
 def test_convert_recursively_processes_supported_files(
-    tmp_path: Path, monkeypatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Short recursive mode discovers eligible files below the directory."""
     nested_directory = tmp_path / "nested"
@@ -73,7 +76,9 @@ def test_convert_recursively_processes_supported_files(
     }
 
 
-def test_convert_long_recursive_option(tmp_path: Path, monkeypatch) -> None:
+def test_convert_long_recursive_option(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """The long recursive option is equivalent to its short form."""
     input_file = tmp_path / "references.ris"
     input_file.touch()

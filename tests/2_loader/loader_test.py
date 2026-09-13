@@ -12,7 +12,7 @@ from colrev.constants import Colors
 from colrev.loader.loader import Loader
 
 
-def test_missing_ids_error_explains_incremental_ids(tmp_path) -> None:
+def test_missing_ids_error_explains_incremental_ids(tmp_path: Path) -> None:
     """Test that the missing-ID error explains how to generate IDs."""
     loader = Loader(
         filename=tmp_path / "records.test",
