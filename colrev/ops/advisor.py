@@ -9,14 +9,10 @@ from multiprocessing.dummy import Pool as ThreadPool
 from pathlib import Path
 
 import git
-from git.exc import InvalidGitRepositoryError
-from git.exc import NoSuchPathError
+from git.exc import InvalidGitRepositoryError, NoSuchPathError
 
 import colrev.ops.check
-from colrev.constants import EndpointType
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
+from colrev.constants import EndpointType, Fields, FieldValues, RecordState
 from colrev.env.environment_manager import EnvironmentManager
 from colrev.package_manager.package_manager import PackageManager
 
@@ -545,10 +541,10 @@ class Advisor:
             pass
         return instruction
 
-    def _extract_outlet_count(self) -> typing.Tuple[list, list]:
+    def _extract_outlet_count(self) -> tuple[list, list]:
         with open(self.review_manager.paths.records, encoding="utf8") as file:
             outlets = []
-            for line in file.readlines():
+            for line in file:
                 if line.lstrip()[:8] == "journal ":
                     journal = line[line.find("{") + 1 : line.rfind("}")]
                     outlets.append(journal)
@@ -556,7 +552,7 @@ class Advisor:
                     booktitle = line[line.find("{") + 1 : line.rfind("}")]
                     outlets.append(booktitle)
 
-        outlet_counter: typing.List[typing.Tuple[str, int]] = [
+        outlet_counter: list[tuple[str, int]] = [
             (j, x) for j, x in Counter(outlets).most_common(10) if x > 5
         ]
 
@@ -631,7 +627,7 @@ class Advisor:
 
     def get_review_instructions(self) -> list:
         """Get instructions related to the review (operations)."""
-        review_instructions: typing.List[typing.Dict] = []
+        review_instructions: list[dict] = []
         self._append_initial_load_instruction(review_instructions)
         self._append_operation_in_progress_instructions(review_instructions)
         self._append_next_operation_instructions(review_instructions)

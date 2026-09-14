@@ -4,12 +4,9 @@
 import pytest
 
 import colrev.record.record
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import ENTRYTYPES, Fields, RecordState
 
 # pylint: disable=line-too-long
-# flake8: noqa: E501
 
 
 def test_get_fields_to_remove(local_index) -> None:  # type: ignore

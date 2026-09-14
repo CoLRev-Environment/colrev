@@ -8,8 +8,7 @@ import requests
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record_prep
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
+from colrev.constants import ENTRYTYPES, Fields
 
 # pylint: disable=too-few-public-methods
 

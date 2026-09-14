@@ -11,10 +11,7 @@ import inquirer
 from rapidfuzz import fuzz
 
 import colrev.record.record
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
+from colrev.constants import Colors, Fields, FieldValues, RecordState
 
 if typing.TYPE_CHECKING:
     import colrev.ops.validate
@@ -209,7 +206,7 @@ def _validate_prep(
 ) -> None:
 
     # Part 1 : origin validation
-    origins_to_remove: typing.Dict[str, list] = {}
+    origins_to_remove: dict[str, list] = {}
     displayed = False
     for validation_element in validation_details:
         if validation_element["change_score_max"] < threshold:

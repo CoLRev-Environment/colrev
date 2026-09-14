@@ -7,10 +7,7 @@ import re
 import typing
 
 import colrev.env.utils
-from colrev.constants import DefectCodes
-from colrev.constants import Fields
-from colrev.constants import FieldSet
-from colrev.constants import FieldValues
+from colrev.constants import DefectCodes, Fields, FieldSet, FieldValues
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.record.record
@@ -18,7 +15,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 def _get_merging_triple(
     merging_record: colrev.record.record.Record, *, key: str, default_source: str
-) -> typing.Tuple[str, str, str]:
+) -> tuple[str, str, str]:
     val = merging_record.data.get(key, "")
 
     # do not override provenance, ID, ... fields

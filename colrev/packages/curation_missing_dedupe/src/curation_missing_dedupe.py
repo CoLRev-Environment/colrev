@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import logging
-import typing
 from pathlib import Path
 
 import pandas as pd
@@ -15,9 +14,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Colors, Fields, RecordState
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods
@@ -35,7 +32,7 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -218,7 +215,7 @@ class CurationMissingDedupe(base_classes.DedupePackageBaseClass):
         nr_recs_to_merge = self._get_nr_recs_to_merge(records=records)
 
         nr_recs_checked = 0
-        results: typing.Dict[str, list] = {
+        results: dict[str, list] = {
             "decision_list": [],
             "add_records_to_md_processed_list": [],
             "records_to_prepare": [],

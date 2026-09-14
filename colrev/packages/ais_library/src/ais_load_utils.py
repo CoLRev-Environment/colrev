@@ -3,8 +3,7 @@
 
 from __future__ import annotations
 
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
+from colrev.constants import ENTRYTYPES, Fields
 
 
 def enl_id_labeler(records: list) -> None:
