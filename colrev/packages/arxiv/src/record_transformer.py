@@ -57,8 +57,7 @@ def parse_record(entry: dict) -> dict:
         )
 
     for field_to_remove in FIELDS_TO_REMOVE:
-        if field_to_remove in entry:
-            del entry[field_to_remove]
+        entry.pop(field_to_remove, None)
 
     if "keywords" in entry and "pages" in entry["keywords"]:
         del entry["keywords"]

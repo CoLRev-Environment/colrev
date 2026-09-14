@@ -8,8 +8,10 @@ from datetime import datetime
 import dash  # pylint: disable=import-error
 import pandas as pd
 import plotly.express as px  # pylint: disable=import-error
-from dash import dcc  # pylint: disable=import-error
-from dash import html  # pylint: disable=import-error
+from dash import (
+    dcc,  # pylint: disable=import-error
+    html,  # pylint: disable=import-error
+)
 
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager

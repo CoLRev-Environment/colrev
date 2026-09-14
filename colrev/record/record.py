@@ -14,14 +14,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record.record_identifier
 import colrev.record.record_merger
 import colrev.record.record_similarity
-from colrev.constants import Colors
-from colrev.constants import DefectCodes
-from colrev.constants import ENTRYTYPE_FIELD_REQUIREMENTS
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import FieldSet
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
+from colrev.constants import ENTRYTYPE_FIELD_REQUIREMENTS, ENTRYTYPES, Colors, DefectCodes, Fields, FieldSet, FieldValues, RecordState
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.record.qm.quality_model
@@ -109,7 +102,7 @@ class Record:
 
         return self.data
 
-    def get_value(self, key: str, *, default: typing.Optional[str] = None) -> str:
+    def get_value(self, key: str, *, default: str | None = None) -> str:
         """Get a record value (based on the key parameter)."""
         if default is not None:
             try:
@@ -475,7 +468,7 @@ class Record:
                     "note": "",
                 }
 
-    def defects(self, key: str) -> typing.List[str]:
+    def defects(self, key: str) -> list[str]:
         """Get a list of defects for a field."""
         self.require_prov()
         defects = []
@@ -835,14 +828,14 @@ class Record:
                 if selected_tuple[1] in FieldSet.IDENTIFYING_FIELD_KEYS:
                     diff.append(selected_tuple)
             if selected_tuple[0] == "add":
-                addition_list: typing.Tuple = ("add", "", [])
+                addition_list: tuple = ("add", "", [])
                 for addition_item in selected_tuple[2]:
                     if addition_item[0] in FieldSet.IDENTIFYING_FIELD_KEYS:
                         addition_list[2].append(addition_item)
                 if addition_list[2]:
                     diff.append(addition_list)
             if selected_tuple[0] == "remove":
-                removal_list: typing.Tuple = ("remove", "", [])
+                removal_list: tuple = ("remove", "", [])
                 for removal_item in selected_tuple[2]:
                     if removal_item[0] in FieldSet.IDENTIFYING_FIELD_KEYS:
                         removal_list[2].append(removal_item)
@@ -873,7 +866,7 @@ class Record:
         merging_record: Record,
         *,
         default_source: str,
-        preferred_masterdata_source_prefixes: typing.Optional[list] = None,
+        preferred_masterdata_source_prefixes: list | None = None,
     ) -> None:
         """General-purpose record merging
         for preparation, curated/non-curated records and records with origins.

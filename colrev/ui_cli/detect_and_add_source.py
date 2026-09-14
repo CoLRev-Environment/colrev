@@ -8,8 +8,7 @@ from pathlib import Path
 
 import inquirer
 
-from colrev.constants import Colors
-from colrev.constants import EndpointType
+from colrev.constants import Colors, EndpointType
 from colrev.package_manager.package_manager import PackageManager
 
 if typing.TYPE_CHECKING:
@@ -88,7 +87,7 @@ class CLISourceAdder:
         )
         return source
 
-    def add_new_sources(self) -> typing.List[colrev.search_file.ExtendedSearchFile]:
+    def add_new_sources(self) -> list[colrev.search_file.ExtendedSearchFile]:
         """Select the new source from the heuristic_result_list."""
         new_search_files = self.search_operation.get_new_search_files()
         sources_added = []

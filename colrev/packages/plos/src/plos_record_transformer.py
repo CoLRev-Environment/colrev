@@ -10,9 +10,7 @@ from datetime import datetime
 
 import colrev.record.record
 import colrev.record.record_prep
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import FieldValues
+from colrev.constants import ENTRYTYPES, Fields, FieldValues
 
 TAG_RE = re.compile(r"<[a-z/][^<>]{0,12}>")
 

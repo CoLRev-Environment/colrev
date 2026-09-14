@@ -10,8 +10,7 @@ import colrev.env.tei_parser
 import colrev.ops.search_api_feed
 import colrev.record.record
 import colrev.search_file
-from colrev.constants import Fields
-from colrev.constants import SearchType
+from colrev.constants import Fields, SearchType
 
 if typing.TYPE_CHECKING:
     import colrev.ops.search

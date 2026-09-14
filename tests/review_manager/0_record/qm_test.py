@@ -8,13 +8,7 @@ import pytest
 import colrev.exceptions as colrev_exceptions
 import colrev.record.qm.quality_model
 import colrev.record.record
-from colrev.constants import DefectCodes
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
-
-# flake8: noqa: E501
+from colrev.constants import ENTRYTYPES, DefectCodes, Fields, FieldValues, RecordState
 
 
 def test_container_title_abbreviated(
@@ -1056,11 +1050,10 @@ def test_inconsistent_with_doi_metadata(
     quality_model: colrev.record.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the DOIConsistencyChecker directly
+    from colrev.packages.crossref.src import crossref_api
     from colrev.record.qm.checkers.inconsistent_with_doi_metadata import (
         InconsistentWithDOIMetadataChecker,
     )
-
-    import colrev.packages.crossref.src.crossref_api as crossref_api
 
     @classmethod  # type: ignore
     def patched_query_doi(cls, *, doi):  # type: ignore
