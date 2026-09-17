@@ -89,7 +89,7 @@ pandas==2.2.3
     # via
     #   colrev (pyproject.toml)
     #   bib-dedupe
-pillow==12.2.0
+pillow==12.3.0
     # via imagehash
 platformdirs==4.3.7
     # via
