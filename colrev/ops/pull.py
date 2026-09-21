@@ -4,8 +4,7 @@
 from __future__ import annotations
 
 import colrev.process.operation
-from colrev.constants import Colors
-from colrev.constants import OperationsType
+from colrev.constants import Colors, OperationsType
 
 # pylint: disable=too-few-public-methods
 

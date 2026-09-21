@@ -7,18 +7,12 @@ import json
 import typing
 from pathlib import Path
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
-from pydantic import Field
-from pydantic import field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.search_file
-from colrev.constants import IDPattern
-from colrev.constants import PDFPathType
-from colrev.constants import ScreenCriterionType
-from colrev.constants import ShareStatReq
+from colrev.constants import IDPattern, PDFPathType, ScreenCriterionType, ShareStatReq
 
 if typing.TYPE_CHECKING:
     import colrev.review_manager
@@ -38,11 +32,11 @@ class Author(BaseModel):
     name: str
     initials: str
     email: str
-    orcid: typing.Optional[str] = None
-    contributions: typing.List[str] = Field(default_factory=list)
-    affiliations: typing.Optional[str] = None
-    funding: typing.List[str] = Field(default_factory=list)
-    identifiers: typing.List[str] = Field(default_factory=list)
+    orcid: str | None = None
+    contributions: list[str] = Field(default_factory=list)
+    affiliations: str | None = None
+    funding: list[str] = Field(default_factory=list)
+    identifiers: list[str] = Field(default_factory=list)
 
 
 class Protocol(BaseModel):
@@ -58,10 +52,10 @@ class ProjectSettings(BaseModel):
 
     title: str
     __doc_title__ = "The title of the review"
-    authors: typing.List[Author]
-    keywords: typing.List[str]
+    authors: list[Author]
+    keywords: list[str]
     # status ? (development/published?)
-    protocol: typing.Optional[Protocol]
+    protocol: Protocol | None
     # publication: ... (reference, link, ....)
     review_type: str
     id_pattern: IDPattern
@@ -110,8 +104,8 @@ class PrepRound(BaseModel):
 class PrepSettings(BaseModel):
     """Prep settings."""
 
-    fields_to_keep: typing.List[str]
-    prep_rounds: typing.List[PrepRound]
+    fields_to_keep: list[str]
+    prep_rounds: list[PrepRound]
 
     prep_man_package_endpoints: list
 
@@ -219,7 +213,7 @@ class ScreenCriterion(BaseModel):
     """Screen criterion."""
 
     explanation: str
-    comment: typing.Optional[str]
+    comment: str | None
     criterion_type: ScreenCriterionType
 
     def __str__(self) -> str:
@@ -230,8 +224,8 @@ class ScreenCriterion(BaseModel):
 class ScreenSettings(BaseModel):
     """Screen settings."""
 
-    explanation: typing.Optional[str] = None
-    criteria: typing.Dict[str, ScreenCriterion]
+    explanation: str | None = None
+    criteria: dict[str, ScreenCriterion]
     screen_package_endpoints: list
 
     def __str__(self) -> str:
@@ -278,7 +272,7 @@ class Settings(BaseModel):
     # pylint: disable=too-many-instance-attributes
 
     project: ProjectSettings
-    sources: typing.List[colrev.search_file.ExtendedSearchFile]
+    sources: list[colrev.search_file.ExtendedSearchFile]
     search: SearchSettings
     prep: PrepSettings
     dedupe: DedupeSettings
@@ -291,8 +285,8 @@ class Settings(BaseModel):
     @field_validator("sources", mode="before")
     @classmethod
     def validate_sources(
-        cls, value: typing.List[colrev.search_file.ExtendedSearchFile]
-    ) -> typing.List[colrev.search_file.ExtendedSearchFile]:
+        cls, value: list[colrev.search_file.ExtendedSearchFile]
+    ) -> list[colrev.search_file.ExtendedSearchFile]:
         """Validate the sources."""
         return [
             colrev.search_file.ExtendedSearchFile(**v) if isinstance(v, dict) else v
@@ -358,7 +352,7 @@ class Settings(BaseModel):
             + str(self.data)
         )
 
-    def get_packages(self) -> typing.List[str]:
+    def get_packages(self) -> list[str]:
         """Get the list of all package names."""
 
         def extract_endpoints(package_endpoints: list) -> list:

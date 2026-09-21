@@ -10,10 +10,12 @@ import platform
 import shutil
 from importlib.metadata import version
 from pathlib import Path
-from subprocess import CalledProcessError  # nosec
-from subprocess import check_call  # nosec
-from subprocess import DEVNULL  # nosec
-from subprocess import STDOUT  # nosec
+from subprocess import (
+    DEVNULL,  # nosec
+    STDOUT,  # nosec
+    CalledProcessError,  # nosec
+    check_call,  # nosec
+)
 
 import git
 from git.exc import InvalidGitRepositoryError
@@ -26,9 +28,7 @@ import colrev.ops.check
 import colrev.review_manager
 import colrev.search_file
 import colrev.settings
-from colrev.constants import Colors
-from colrev.constants import EndpointType
-from colrev.constants import SearchType
+from colrev.constants import Colors, EndpointType, SearchType
 from colrev.env.environment_manager import EnvironmentManager
 from colrev.package_manager.package_manager import PackageManager
 
