@@ -5,15 +5,13 @@ from __future__ import annotations
 
 import os
 import shutil
-import typing
 from pathlib import Path
 
 import pytest
 
 import colrev.env.local_index
 import colrev.env.local_index_builder
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
+from colrev.constants import ENTRYTYPES, Fields
 
 # Note : the following produces different relative paths locally/on github.
 # Path(colrev.__file__).parents[1]
@@ -67,7 +65,7 @@ def get_local_index_test_records_dict(  # type: ignore
     test_local_index_dir,
 ) -> dict:
     """Test records dict for local_index"""
-    local_index_test_records_dict: typing.Dict[Path, dict] = {}
+    local_index_test_records_dict: dict[Path, dict] = {}
     bib_files_to_index = helpers.test_data_path / Path("data/local_index")
     for file_path in bib_files_to_index.glob("**/*"):
         local_index_test_records_dict[Path(file_path.name)] = {}

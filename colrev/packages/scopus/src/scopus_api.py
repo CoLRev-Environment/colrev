@@ -54,7 +54,7 @@ class ScopusAPI:
 
     def _scopus_abstract_authors_by_eid(
         self, *, eid: str
-    ) -> list[dict[str, typing.Optional[str]]]:
+    ) -> list[dict[str, str | None]]:
         """Retrieve authors (names + ids) from the Scopus abstract endpoint."""
         url = self._SCOPUS_ABSTRACT_BY_EID_URL + urllib.parse.quote(eid)
         response = requests.get(
@@ -72,7 +72,7 @@ class ScopusAPI:
         )
         if not isinstance(arr, list):
             arr = [arr] if arr else []
-        out: list[dict[str, typing.Optional[str]]] = []
+        out: list[dict[str, str | None]] = []
         for author in arr:
             if not isinstance(author, dict):
                 continue
@@ -88,14 +88,14 @@ class ScopusAPI:
 
     def _crossref_authors_by_doi(
         self, *, doi: str
-    ) -> list[dict[str, typing.Optional[str]]]:
+    ) -> list[dict[str, str | None]]:
         """Retrieve authors (names only) from Crossref as a fallback."""
         url = self._CROSSREF_WORKS_URL + urllib.parse.quote(doi)
         response = requests.get(url, headers=self._crossref_headers(), timeout=30)
         response.raise_for_status()
         message = response.json().get("message", {})
         authors = message.get("author", []) or []
-        out: list[dict[str, typing.Optional[str]]] = []
+        out: list[dict[str, str | None]] = []
         for author in authors:
             if not isinstance(author, dict):
                 continue
@@ -106,8 +106,8 @@ class ScopusAPI:
         return out
 
     def resolve_authors(
-        self, *, eid: typing.Optional[str], doi: typing.Optional[str]
-    ) -> tuple[str, list[dict[str, typing.Optional[str]]]]:
+        self, *, eid: str | None, doi: str | None
+    ) -> tuple[str, list[dict[str, str | None]]]:
         """Resolve authors using Scopus Abstract Retrieval first, then Crossref."""
         if eid:
             try:

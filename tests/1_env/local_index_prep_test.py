@@ -3,15 +3,10 @@
 
 import pytest
 
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import LocalIndexFields
-from colrev.constants import RecordState
-from colrev.env.local_index_prep import prepare_record_for_indexing
-from colrev.env.local_index_prep import prepare_record_for_return
+from colrev.constants import ENTRYTYPES, Fields, LocalIndexFields, RecordState
+from colrev.env.local_index_prep import prepare_record_for_indexing, prepare_record_for_return
 
 # pylint: disable=line-too-long
-# flake8: noqa: E501
 
 
 @pytest.mark.parametrize(

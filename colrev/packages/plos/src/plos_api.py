@@ -17,9 +17,7 @@ import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 import colrev.record.record_prep
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import Filepaths
+from colrev.constants import Colors, Fields, Filepaths
 from colrev.packages.plos.src import plos_record_transformer
 
 # pylint: disable=too-many-arguments
@@ -86,7 +84,7 @@ class HTTPRequest:
         self,
         endpoint: str,
         headers: dict,
-        data: typing.Optional[dict] = None,
+        data: dict | None = None,
         only_headers: bool = False,
         skip_throttle: bool = False,
     ) -> requests.Response:
@@ -128,7 +126,7 @@ class Endpoint:
         if plos_plus_token:
             self.headers["Plos-Plus-API-Token"] = self.plos_plus_token
         self.request_url = request_url
-        self.request_params: typing.Dict[str, str] = {}
+        self.request_params: dict[str, str] = {}
         self.timeout = 60
 
     @property

@@ -12,13 +12,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils_formatter
 import colrev.ops.search_api_feed
 import colrev.process.operation
-from colrev.constants import DefectCodes
-from colrev.constants import Fields
-from colrev.constants import FieldSet
-from colrev.constants import FieldValues
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
-from colrev.constants import SearchType
+from colrev.constants import DefectCodes, Fields, FieldSet, FieldValues, OperationsType, RecordState, SearchType
 from colrev.writer.write_utils import write_file
 
 

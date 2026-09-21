@@ -8,8 +8,7 @@ from pathlib import Path
 
 import colrev.env.utils
 import colrev.record.qm.quality_model
-from colrev.constants import Fields
-from colrev.constants import PDFDefectCodes
+from colrev.constants import Fields, PDFDefectCodes
 
 # pylint: disable=too-few-public-methods
 
