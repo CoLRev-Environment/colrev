@@ -21,9 +21,7 @@ import colrev.packages.prospero.src.prospero_api
 import colrev.process
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Fields
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import Fields, SearchSourceHeuristicStatus, SearchType
 from colrev.ops.search_api_feed import create_api_source
 
 
@@ -44,21 +42,21 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the ProsperoSearchSource plugin."""
         self.logger = logger or logging.getLogger(__name__)
         self.verbose_mode = verbose_mode
         self.search_source = search_file
-        self.search_word: typing.Optional[str] = None
+        self.search_word: str | None = None
 
     @classmethod
     def add_endpoint(
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Adds Prospero as a search source endpoint based on user-provided parameters."""
         if len(params) == 0:
@@ -204,9 +202,7 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Map fields to standardized fields for CoLRev (matching interface signature)."""
         return record

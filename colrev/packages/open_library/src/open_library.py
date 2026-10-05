@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import json
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 
@@ -18,9 +17,7 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Fields
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import Fields, SearchSourceHeuristicStatus, SearchType
 from colrev.packages.open_library.src import open_library_api
 
 # Note: not (yet) implemented as a full search_source
@@ -54,7 +51,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -210,7 +207,7 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         raise NotImplementedError
@@ -264,9 +261,9 @@ class OpenLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
             open_library_feed.save()
             self.open_library_lock.release()
 
-        except (colrev_exceptions.RecordNotFoundInPrepSourceException,):
+        except colrev_exceptions.RecordNotFoundInPrepSourceException:
             pass
-        except (colrev_exceptions.NotFeedIdentifiableException,):
+        except colrev_exceptions.NotFeedIdentifiableException:
             self.open_library_lock.release()
 
         return record

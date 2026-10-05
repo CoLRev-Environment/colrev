@@ -35,7 +35,7 @@ class PubmedAPI:
         email: str,
         session: requests.Session,
         timeout: int = 60,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """Initialize the instance."""
         self.email = email

@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import typing
 import urllib.parse
 
 import requests
@@ -25,8 +24,8 @@ class AISeLAPI:
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        session: typing.Optional[requests.Session] = None,
-        headers: typing.Optional[typing.Dict[str, str]] = None,
+        session: requests.Session | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         """Initialize the instance."""
         self.search_file = search_file

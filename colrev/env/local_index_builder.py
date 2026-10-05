@@ -6,7 +6,6 @@ from __future__ import annotations
 import collections
 import io
 import os
-import typing
 from copy import deepcopy
 from datetime import timedelta
 from multiprocessing import Lock
@@ -27,10 +26,7 @@ import colrev.loader.load_utils
 import colrev.ops.check
 import colrev.record.record
 import colrev.review_manager
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import Filepaths
-from colrev.constants import LocalIndexFields
+from colrev.constants import Colors, Fields, Filepaths, LocalIndexFields
 from colrev.env.local_index_prep import prepare_record_for_indexing
 from colrev.writer.write_utils import to_string
 
@@ -177,7 +173,7 @@ class LocalIndexBuilder:
     ) -> None:
         """Index a CoLRev project."""
         recs_to_index = []
-        toc_to_index: typing.Dict[str, str] = {}
+        toc_to_index: dict[str, str] = {}
         for record_dict in tqdm(records.values()):
             copy_for_toc_index = deepcopy(record_dict)
             toc_item = colrev.record.record.Record(copy_for_toc_index).get_toc_key()

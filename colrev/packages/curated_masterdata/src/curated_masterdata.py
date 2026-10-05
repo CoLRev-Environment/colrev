@@ -2,7 +2,6 @@
 """Curated metadata project."""
 
 import logging
-import typing
 from pathlib import Path
 
 from pydantic import Field
@@ -10,8 +9,7 @@ from pydantic import Field
 import colrev.env.utils
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
-from colrev.constants import Fields
-from colrev.constants import SearchType
+from colrev.constants import Fields, SearchType
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -28,7 +26,7 @@ class CuratedMasterdata(base_classes.ReviewTypePackageBaseClass):
         *,
         operation: colrev.process.operation.Operation,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)

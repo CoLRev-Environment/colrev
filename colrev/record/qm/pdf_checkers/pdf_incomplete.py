@@ -5,12 +5,10 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Optional
 
 import colrev.env.utils
 import colrev.record.qm.quality_model
-from colrev.constants import Fields
-from colrev.constants import PDFDefectCodes
+from colrev.constants import Fields, PDFDefectCodes
 
 # pylint: disable=too-few-public-methods
 
@@ -76,7 +74,7 @@ class PDFIncompletenessChecker:
 
     def _get_pdf_page_count(
         self, *, record: colrev.record.record_pdf.PDFRecord
-    ) -> Optional[int]:
+    ) -> int | None:
         if Fields.NR_PAGES_IN_FILE not in record.data:
             return None
         return record.data[Fields.NR_PAGES_IN_FILE]
@@ -152,7 +150,7 @@ class PDFIncompletenessChecker:
 
     def _get_expected_page_count(
         self, *, record: colrev.record.record_pdf.PDFRecord
-    ) -> Optional[int]:
+    ) -> int | None:
         try:
             pages_str = self._normalize_pages_str(pages=record.data[Fields.PAGES])
             if "--" in pages_str:

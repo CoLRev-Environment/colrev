@@ -5,9 +5,7 @@ from __future__ import annotations
 
 import importlib.util
 import typing
-from importlib.metadata import distribution
-from importlib.metadata import distributions
-from importlib.metadata import PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, distribution, distributions
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
@@ -78,7 +76,7 @@ class Package:
         # baseclass_definition = BASECLASS_OVERVIEW[endpoint_type]["import_name"]
 
         baseclass_definition = typing.cast(
-            typing.Type, BASECLASS_OVERVIEW[endpoint_type]["import_name"]
+            type, BASECLASS_OVERVIEW[endpoint_type]["import_name"]
         )
         if not issubclass(endpoint_class, baseclass_definition):
             raise TypeError(

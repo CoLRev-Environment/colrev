@@ -9,9 +9,7 @@ import pytest
 
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import ENTRYTYPES, Fields, RecordState
 
 # pylint: disable=line-too-long
 # pylint: disable=too-many-lines

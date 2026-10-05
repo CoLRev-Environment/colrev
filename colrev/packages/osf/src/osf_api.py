@@ -21,7 +21,7 @@ class OSFApiQuery:
         """Initialize the instance."""
         self.api_key = api_key
         self.headers = {"Authorization": f"Bearer {self.api_key}"}
-        self.params: typing.Dict[str, str] = {}
+        self.params: dict[str, str] = {}
         self.next_url = None
         self.params = {
             key: value for key, value in parameters.items() if key in self.fields
@@ -116,7 +116,7 @@ class OSFApiQuery:
 
         return names, id_fallbacks
 
-    def _get_contributor_user_id(self, item: dict) -> typing.Optional[str]:
+    def _get_contributor_user_id(self, item: dict) -> str | None:
         rel = (item.get("relationships") or {}).get("users") or {}
         rel_data = rel.get("data") or {}
         return rel_data.get("id") if isinstance(rel_data, dict) else None

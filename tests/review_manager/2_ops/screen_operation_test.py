@@ -4,9 +4,7 @@
 import pytest
 
 import colrev.review_manager
-from colrev.constants import Fields
-from colrev.constants import RecordState
-from colrev.constants import ScreenCriterionType
+from colrev.constants import Fields, RecordState, ScreenCriterionType
 
 
 @pytest.fixture(scope="package", name="criterion")

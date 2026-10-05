@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 import shutil
-import typing
 import urllib.parse
 from pathlib import Path
 
@@ -16,9 +15,7 @@ import colrev.env.utils
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Colors, Fields, RecordState
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=unused-argument
@@ -35,7 +32,7 @@ class CoLRevCLIPDFGetMan(base_classes.PDFGetManPackageBaseClass):
         *,
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)

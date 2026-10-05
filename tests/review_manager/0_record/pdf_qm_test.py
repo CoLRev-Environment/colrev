@@ -7,9 +7,7 @@ from pathlib import Path
 
 import colrev.record.qm.quality_model
 import colrev.record.record_pdf
-from colrev.constants import Fields
-from colrev.constants import PDFDefectCodes
-from colrev.constants import RecordState
+from colrev.constants import Fields, PDFDefectCodes, RecordState
 
 
 def test_pdf_qm(  # type: ignore

@@ -20,8 +20,8 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 
 if typing.TYPE_CHECKING:  # pragma: no cover
-    import colrev.review_manager
     import colrev.ops.status
+    import colrev.review_manager
 
 
 class Commit:
@@ -48,7 +48,7 @@ class Commit:
         msg: str,
         manual_author: bool,
         script_name: str,
-        saved_args: typing.Optional[dict] = None,
+        saved_args: dict | None = None,
         skip_hooks: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -71,7 +71,7 @@ class Commit:
             )
         return script_name
 
-    def _parse_saved_args(self, saved_args: typing.Optional[dict] = None) -> str:
+    def _parse_saved_args(self, saved_args: dict | None = None) -> str:
         saved_args_str = ""
         if saved_args is not None:
             for key, value in saved_args.items():

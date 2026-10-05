@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import sqlite3
-import typing
 from copy import deepcopy
 from multiprocessing import Lock
 from pathlib import Path
@@ -17,8 +16,7 @@ import colrev.env.local_index_sqlite
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.record.record
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
+from colrev.constants import ENTRYTYPES, Fields
 from colrev.env.local_index_prep import prepare_record_for_return
 
 
@@ -341,7 +339,7 @@ class LocalIndex:
         """
         # pylint: disable=too-many-return-statements
 
-        fields_to_remove: typing.List[str] = []
+        fields_to_remove: list[str] = []
         if (
             Fields.JOURNAL not in record_dict
             and record_dict[Fields.ENTRYTYPE] != ENTRYTYPES.ARTICLE

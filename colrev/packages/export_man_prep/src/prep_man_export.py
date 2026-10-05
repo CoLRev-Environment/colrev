@@ -5,22 +5,16 @@ from __future__ import annotations
 
 import logging
 import platform
-import typing
 from pathlib import Path
 
 import pandas as pd
 import pymupdf
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
-from colrev.constants import Colors
-from colrev.constants import DefectCodes
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
+from colrev.constants import Colors, DefectCodes, Fields, FieldValues, RecordState
 from colrev.writer.write_utils import write_file
 
 # pylint: disable=duplicate-code
@@ -75,7 +69,7 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
         *,
         prep_man_operation: colrev.ops.prep_man.PrepMan,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -123,7 +117,7 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
     def _export_prep_man(
         self,
         *,
-        records: typing.Dict[str, typing.Dict],
+        records: dict[str, dict],
     ) -> None:
         man_prep_recs = {
             k: v
@@ -147,7 +141,7 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
     def _create_info_dataframe(
         self,
         *,
-        records: typing.Dict[str, typing.Dict],
+        records: dict[str, dict],
     ) -> None:
         man_prep_recs = [
             v
@@ -312,7 +306,7 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
             logger=self.logger,
         )
 
-        imported_records: typing.List[dict] = []
+        imported_records: list[dict] = []
         records = self.review_manager.dataset.load_records_dict()
         for record_id, record_dict in records.items():
             if (

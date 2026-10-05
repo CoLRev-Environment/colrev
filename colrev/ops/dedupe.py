@@ -15,12 +15,7 @@ from bib_dedupe.bib_dedupe import prep
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
-from colrev.constants import Colors
-from colrev.constants import EndpointType
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
+from colrev.constants import ENTRYTYPES, Colors, EndpointType, Fields, OperationsType, RecordState
 from colrev.package_manager.package_manager import PackageManager
 
 
@@ -115,7 +110,7 @@ class Dedupe(colrev.process.operation.Operation):
 
         for node in graph:
             if not visited[node]:
-                component: typing.List[str] = []
+                component: list[str] = []
                 cls._dfs(node, graph, visited, component)
                 components.append(sorted(component))
 
@@ -172,14 +167,7 @@ class Dedupe(colrev.process.operation.Operation):
         elif rec_1[Fields.STATUS] == RecordState.md_prepared:
             main_record = rec_2
             dupe_record = rec_1
-        elif rec_2[Fields.STATUS] == RecordState.md_prepared:
-            main_record = rec_1
-            dupe_record = rec_2
-
-        # 3. If a record is md_processed, use the other record as the dupe record
-        # -> during the fix_errors procedure, records are in md_processed
-        # and beyond.
-        elif rec_1[Fields.STATUS] == RecordState.md_processed:
+        elif rec_2[Fields.STATUS] == RecordState.md_prepared or rec_1[Fields.STATUS] == RecordState.md_processed:
             main_record = rec_1
             dupe_record = rec_2
         elif rec_2[Fields.STATUS] == RecordState.md_processed:
@@ -293,8 +281,7 @@ class Dedupe(colrev.process.operation.Operation):
         self, *, records: dict, removed_duplicates: list, complete_dedupe: bool
     ) -> list:
         for removed_duplicate in removed_duplicates:
-            if removed_duplicate in records:
-                del records[removed_duplicate]
+            records.pop(removed_duplicate, None)
 
         set_to_md_processed = []
         if complete_dedupe:
@@ -357,7 +344,7 @@ class Dedupe(colrev.process.operation.Operation):
         *,
         id_sets: list,
         complete_dedupe: bool = False,
-        preferred_masterdata_sources: typing.Optional[list] = None,
+        preferred_masterdata_sources: list | None = None,
     ) -> None:
         """Apply deduplication decisions.
 
@@ -394,7 +381,7 @@ class Dedupe(colrev.process.operation.Operation):
         id_sets = [id_set for id_set in id_sets if len(set(id_set)) != 1]
 
         removed_duplicates = []
-        duplicate_id_mappings: typing.Dict[str, list] = {}
+        duplicate_id_mappings: dict[str, list] = {}
         for main_record, dupe_record in self._get_records_to_merge(
             records=records, id_sets=id_sets
         ):
@@ -486,7 +473,7 @@ class Dedupe(colrev.process.operation.Operation):
 
     def _get_origins_for_current_ids(self, current_record_ids: list) -> dict:
         """For each record ID, get the origins from the most recent history entry."""
-        ids_origins: typing.Dict[str, typing.List[str]] = {
+        ids_origins: dict[str, list[str]] = {
             rid: [] for rid in current_record_ids
         }
         # history = next(self.review_manager.dataset.load_records_from_history(), None)
@@ -634,7 +621,7 @@ class Dedupe(colrev.process.operation.Operation):
 
         id_sets = []
         for global_key in global_keys:
-            global_key_dict: typing.Dict[str, list] = {}
+            global_key_dict: dict[str, list] = {}
             for record in records.values():
                 if global_key not in record:
                     continue
