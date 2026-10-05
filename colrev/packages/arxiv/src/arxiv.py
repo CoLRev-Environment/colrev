@@ -4,10 +4,9 @@
 from __future__ import annotations
 
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 from pydantic import Field
 
@@ -19,9 +18,7 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Fields
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import Fields, SearchSourceHeuristicStatus, SearchType
 from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.arxiv.src import arxiv_api
 
@@ -48,7 +45,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -75,7 +72,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
@@ -279,7 +276,7 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
         self,
         load_operation: colrev.ops.load.Load,
         source: colrev.search_file.ExtendedSearchFile,
-        records: typing.Dict,
+        records: dict,
     ) -> dict:
         """Load fixes for ArXiv."""
         return records

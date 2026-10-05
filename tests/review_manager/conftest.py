@@ -7,6 +7,7 @@ import os
 import typing
 import warnings
 from pathlib import Path
+from unittest import mock
 
 import git
 import pytest
@@ -18,12 +19,8 @@ import colrev.ops.init
 import colrev.record.record_pdf
 import colrev.review_manager
 from colrev import utils
-from colrev.constants import Colors
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import SearchType
+from colrev.constants import ENTRYTYPES, Colors, Fields, SearchType
 from colrev.process.model import ProcessModel
-from unittest import mock
 
 # Note : the following produces different relative paths locally/on github.
 # Path(colrev.__file__).parents[1]
@@ -131,7 +128,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         git_repo.config_writer().set_value("user", "email", "tester@mail.com").release()
 
     def load_test_records(test_data_path) -> dict:  # type: ignore
-        test_records_dict: typing.Dict[Path, dict] = {}
+        test_records_dict: dict[Path, dict] = {}
         bib_files_to_index = test_data_path / Path("data/local_index")
         for file_path in bib_files_to_index.glob("**/*"):
             test_records_dict[Path(file_path.name)] = {}
@@ -350,7 +347,7 @@ def get_local_index_test_records_dict(  # type: ignore
     test_local_index_dir,
 ) -> dict:
     """Test records dict for local_index"""
-    local_index_test_records_dict: typing.Dict[Path, dict] = {}
+    local_index_test_records_dict: dict[Path, dict] = {}
     bib_files_to_index = helpers.test_data_path / Path("data/local_index")
     for file_path in bib_files_to_index.glob("**/*"):
         local_index_test_records_dict[Path(file_path.name)] = {}

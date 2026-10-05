@@ -38,7 +38,7 @@ class Operation:
         self.notify_state_transition_operation = notify_state_transition_operation
         self.notify(state_transition=notify_state_transition_operation)
         self.cpus = 4
-        self.docker_images_to_stop: typing.List[str] = []
+        self.docker_images_to_stop: list[str] = []
 
         # Note: the following call seems to block the flow (if debug is enabled)
         # self.review_manager.logger.debug(f"Created {self.type} operation")
@@ -78,7 +78,7 @@ class Operation:
     def _require_clean_repo_general(
         self,
         *,
-        ignored_files: typing.Optional[list] = None,
+        ignored_files: list | None = None,
     ) -> bool:
 
         # Note : not considering untracked files.

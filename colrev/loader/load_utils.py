@@ -144,11 +144,9 @@ import colrev.loader.md
 import colrev.loader.nbib
 import colrev.loader.ris
 import colrev.loader.table
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
+from colrev.constants import ENTRYTYPES, Fields
 
 # pylint: disable=too-many-arguments
-# flake8: noqa: E501
 
 
 def bib_entrytype_setter(entrytype: dict) -> None:

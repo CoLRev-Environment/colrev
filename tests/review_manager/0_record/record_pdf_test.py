@@ -14,7 +14,6 @@ from colrev.constants import Fields
 
 # pylint: disable=line-too-long
 
-# flake8: noqa: E501
 
 
 def test_set_text_from_pdf(helpers, record_with_pdf: colrev.record.record_pdf.PDFRecord) -> None:  # type: ignore

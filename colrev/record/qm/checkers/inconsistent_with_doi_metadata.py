@@ -7,9 +7,7 @@ from rapidfuzz import fuzz
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record.qm.quality_model
-from colrev.constants import DefectCodes
-from colrev.constants import Fields
-from colrev.constants import FieldValues
+from colrev.constants import DefectCodes, Fields, FieldValues
 from colrev.packages.crossref.src.crossref_api import query_doi
 
 # pylint: disable=too-few-public-methods

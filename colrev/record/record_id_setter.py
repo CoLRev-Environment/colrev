@@ -7,7 +7,6 @@ import itertools
 import logging
 import re
 import string
-import typing
 
 from tqdm import tqdm
 
@@ -15,11 +14,8 @@ import colrev.env.local_index
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import IDPattern
-from colrev.constants import RecordState
 import colrev.record.record_prep
+from colrev.constants import Fields, FieldValues, IDPattern, RecordState
 
 # pylint: disable=too-few-public-methods
 
@@ -65,13 +61,13 @@ class IDSetter:
         authors = self._get_author_last_names(record_dict)
 
         if IDPattern.first_author_year == self.id_pattern:
-            temp_id = f'{authors[0]}{str(record_dict.get(Fields.YEAR, "NoYear"))}'
+            temp_id = f'{authors[0]}{record_dict.get(Fields.YEAR, "NoYear")!s}'
         elif IDPattern.three_authors_year == self.id_pattern:
             temp_id = ""
             indices = len(authors)
             if len(authors) > 3:
                 indices = 3
-            for ind in range(0, indices):
+            for ind in range(indices):
                 temp_id = temp_id + f"{authors[ind]}"
             if len(authors) > 3:
                 temp_id = temp_id + "EtAl"
@@ -110,7 +106,7 @@ class IDSetter:
         self,
         record_dict: dict,
         *,
-        existing_ids: typing.Optional[list] = None,
+        existing_ids: list | None = None,
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs."""
         if self.skip_local_index:
@@ -134,7 +130,7 @@ class IDSetter:
         return temp_id
 
     def set_ids(
-        self, records: dict, *, selected_ids: typing.Optional[list] = None
+        self, records: dict, *, selected_ids: list | None = None
     ) -> dict:
         """Set the IDs for the records in the dataset."""
         id_list = list(records.keys())
@@ -157,13 +153,7 @@ class IDSetter:
                 record.set_status(RecordState.md_prepared)
 
             new_id = old_id
-            if Fields.STATUS not in record_dict:
-                new_id = self._generate_id(
-                    record_dict,
-                    existing_ids=[x for x in id_list if x != record_id],
-                )
-            # Only change IDs that are before md_processed
-            elif record_dict[Fields.STATUS] not in RecordState.get_post_x_states(
+            if Fields.STATUS not in record_dict or record_dict[Fields.STATUS] not in RecordState.get_post_x_states(
                 state=RecordState.md_processed
             ):
                 new_id = self._generate_id(

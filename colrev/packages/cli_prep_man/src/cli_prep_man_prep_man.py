@@ -2,14 +2,12 @@
 """CliPrepMan."""
 
 import logging
-import typing
 
 import questionary
 
 import colrev.ops.prep_man
 import colrev.review_manager
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Fields, RecordState
 from colrev.package_manager.package_base_classes import PrepManPackageBaseClass
 from colrev.packages.crossref.src import crossref_api
 
@@ -24,14 +22,14 @@ class CliPrepMan(PrepManPackageBaseClass):
         *,
         prep_man_operation: colrev.ops.prep_man.PrepMan,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> "None":
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
         """Initialize self.  See help(type(self)) for accurate signature."""
 
     def _get_choices(
-        self, similar_records: typing.List[colrev.record.record_prep.PrepRecord]
+        self, similar_records: list[colrev.record.record_prep.PrepRecord]
     ) -> list:
         """Generate choices for the user to select a record to merge."""
         choices = []
@@ -55,8 +53,8 @@ class CliPrepMan(PrepManPackageBaseClass):
 
     def _get_selected_record(
         self,
-        similar_records: typing.List[colrev.record.record_prep.PrepRecord],
-    ) -> typing.Optional[colrev.record.record_prep.PrepRecord]:
+        similar_records: list[colrev.record.record_prep.PrepRecord],
+    ) -> colrev.record.record_prep.PrepRecord | None:
 
         choices = self._get_choices(similar_records)
         answer = questionary.select(

@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 import textwrap
-import typing
 from pathlib import Path
 
 from pydantic import Field
@@ -13,10 +12,7 @@ from pydantic import Field
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
-from colrev.constants import Colors
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import ENTRYTYPES, Colors, Fields, RecordState
 
 # pylint: disable=too-few-public-methods
 
@@ -64,7 +60,7 @@ class CoLRevCLIPrescreen(base_classes.PrescreenPackageBaseClass):
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)

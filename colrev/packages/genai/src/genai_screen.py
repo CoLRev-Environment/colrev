@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import logging
-import typing
 
 from pydantic import Field
 
@@ -29,7 +28,7 @@ class GenAIScreen(base_classes.ScreenPackageBaseClass):
         *,
         screen_operation: colrev.ops.screen.Screen,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)

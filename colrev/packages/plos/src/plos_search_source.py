@@ -3,7 +3,6 @@
 
 import datetime
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 
@@ -19,11 +18,7 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import Fields, FieldValues, RecordState, SearchSourceHeuristicStatus, SearchType
 from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.plos.src import plos_api
 
@@ -45,7 +40,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the PLOS search source."""
@@ -66,9 +61,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def _select_search_type(cls, params_dict: dict) -> SearchType:
-        if "query" in params_dict:
-            search_type = SearchType.API
-        elif Fields.URL in params_dict:
+        if "query" in params_dict or Fields.URL in params_dict:
             search_type = SearchType.API
         else:
             search_type = colrev.utils.select_search_type(
@@ -82,7 +75,7 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add the SearchSource as an endpoint based on a query.
 

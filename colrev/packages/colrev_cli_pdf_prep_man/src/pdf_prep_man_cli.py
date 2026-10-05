@@ -8,7 +8,6 @@ import os
 import platform
 import re
 import textwrap
-import typing
 from pathlib import Path
 
 import inquirer
@@ -18,10 +17,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
-from colrev.constants import Colors
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import ENTRYTYPES, Colors, Fields, RecordState
 from colrev.utils import open_file
 
 # pylint: disable=too-few-public-methods
@@ -45,7 +41,7 @@ class CoLRevCLIPDFManPrep(base_classes.PDFPrepManPackageBaseClass):
         *,
         pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)

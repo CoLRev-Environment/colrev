@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 import os
-import typing
 from pathlib import Path
 
 from pydantic import Field
@@ -20,9 +19,7 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Fields
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import Fields, SearchSourceHeuristicStatus, SearchType
 from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.osf.src.osf_api import OSFApiQuery
 
@@ -50,8 +47,8 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     def __init__(
         self,
         *,
-        search_file: typing.Optional[colrev.search_file.ExtendedSearchFile] = None,
-        logger: typing.Optional[logging.Logger] = None,
+        search_file: colrev.search_file.ExtendedSearchFile | None = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -82,10 +79,10 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a)."""
-        params_dict: typing.Dict[str, str] = {}
+        params_dict: dict[str, str] = {}
         if params and isinstance(params, str) and params.startswith("http"):
             params_dict = {Fields.URL: params}
 

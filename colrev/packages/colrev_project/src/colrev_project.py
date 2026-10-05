@@ -6,7 +6,6 @@ from __future__ import annotations
 import logging
 import shutil
 import tempfile
-import typing
 from copy import deepcopy
 from pathlib import Path
 
@@ -23,10 +22,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Fields
-from colrev.constants import FieldSet
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import Fields, FieldSet, SearchSourceHeuristicStatus, SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -48,7 +44,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -80,7 +76,7 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         # Always API search

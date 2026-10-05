@@ -8,13 +8,12 @@ import typing
 from pydantic import BaseModel
 
 import colrev.loader.load_utils
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Fields, RecordState
 from colrev.process.model import ProcessModel
 
 if typing.TYPE_CHECKING:
-    import colrev.review_manager
     import colrev.record.record
+    import colrev.review_manager
 
 
 class StatusStatsCurrently(BaseModel):
@@ -461,7 +460,7 @@ class StatusStats(BaseModel):
 
     def get_transitioned_records(
         self, review_manager: colrev.review_manager.ReviewManager
-    ) -> list[typing.Dict]:
+    ) -> list[dict]:
         """Get the transitioned records."""
         committed_origin_states_dict = (
             review_manager.dataset.get_committed_origin_state_dict()
@@ -539,7 +538,7 @@ class StatusStats(BaseModel):
 
     def get_active_operations(self) -> list:
         """Get the active processing functions."""
-        active_operations: typing.List[str] = []
+        active_operations: list[str] = []
         for state in set(self.origin_states_dict.values()):
             valid_transitions = ProcessModel.get_valid_transitions(state=state)
             active_operations.extend(valid_transitions)

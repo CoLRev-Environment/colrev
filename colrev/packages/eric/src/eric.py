@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import logging
-import typing
 import urllib.parse
 from pathlib import Path
 
@@ -16,13 +15,9 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
 import colrev.utils
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import ENTRYTYPES, Fields, SearchSourceHeuristicStatus, SearchType
 from colrev.ops.search_api_feed import create_api_source
-from colrev.ops.search_db import create_db_source
-from colrev.ops.search_db import run_db_search
+from colrev.ops.search_db import create_db_source, run_db_search
 from colrev.packages.eric.src import eric_api
 
 # pylint: disable=unused-argument
@@ -47,8 +42,8 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
     def __init__(
         self,
         *,
-        search_file: typing.Optional[colrev.search_file.ExtendedSearchFile] = None,
-        logger: typing.Optional[logging.Logger] = None,
+        search_file: colrev.search_file.ExtendedSearchFile | None = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -106,7 +101,7 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a)."""
         params_dict = {}

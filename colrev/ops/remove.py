@@ -6,8 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import colrev.process.operation
-from colrev.constants import Fields
-from colrev.constants import OperationsType
+from colrev.constants import Fields, OperationsType
 from colrev.writer.write_utils import write_file
 
 

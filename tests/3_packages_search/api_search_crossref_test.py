@@ -78,7 +78,7 @@ from colrev.packages.crossref.src.crossref_api import query_doi
                 "doi": "10.17705/1CAIS.04607",
                 "ENTRYTYPE": "article",
                 "author": "Schryen, Guido and Wagner, Gerit and Benlian, Alexander and Paré, Guy",
-                "title": "A Knowledge Development Perspective on Literature Reviews: Validation of a new Typology in the IS Field",  # noqa: E501
+                "title": "A Knowledge Development Perspective on Literature Reviews: Validation of a new Typology in the IS Field",
                 "journal": "Communications of the Association for Information Systems",
                 "volume": "49",
                 "year": "2021",

@@ -13,9 +13,7 @@ from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.loader
-from colrev.constants import Fields
-from colrev.constants import FieldSet
-from colrev.constants import RecordState
+from colrev.constants import Fields, FieldSet, RecordState
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-arguments
@@ -72,7 +70,7 @@ def run_fix_bib_file(filename: Path, *, logger: logging.Logger) -> None:
         # Errors to fix before pybtex loading:
         # - set_incremental_ids (otherwise, not all records will be loaded)
         # - fix_keys (keys containing white spaces)
-        record_ids: typing.List[str] = []
+        record_ids: list[str] = []
         with open(filename, "r+b") as file:
             seekpos = file.tell()
             line = file.readline()
@@ -149,7 +147,7 @@ def check_valid_bib(filename: Path, logger: logging.Logger) -> None:
     with open(filename, encoding="utf8") as file:
         contents = "".join(line for _, line in zip(range(20), file))
 
-        bib_r = re.compile(r"@.*{.*,", re.M)
+        bib_r = re.compile(r"@.*{.*,", re.MULTILINE)
         if len(contents.strip()) > 0:
             if len(re.findall(bib_r, contents)) == 0:
                 logger.error(f"Not a bib file? {filename.name}")
@@ -178,10 +176,10 @@ def extract_content(text: str) -> str:
 
 
 def handle_new_entry(
-    records: typing.List[typing.Dict[str, typing.Any]],
-    current_record: typing.Dict[str, typing.Any],
+    records: list[dict[str, typing.Any]],
+    current_record: dict[str, typing.Any],
     line: str,
-) -> typing.Dict[str, typing.Any]:
+) -> dict[str, typing.Any]:
     """Handles a new record entry."""
     if current_record:
         records.append(current_record)
@@ -198,7 +196,7 @@ def handle_new_entry(
 
 
 def process_key_value(
-    current_record: typing.Dict[str, typing.Any],
+    current_record: dict[str, typing.Any],
     current_key: str,
     current_value: str,
     line: str,
@@ -213,7 +211,7 @@ def process_key_value(
 
 
 def store_current_key_value(
-    current_record: typing.Dict[str, typing.Any], current_key: str, current_value: str
+    current_record: dict[str, typing.Any], current_key: str, current_value: str
 ) -> None:
     """Stores the processed key-value pair into the current entry."""
     if not current_key or not current_record:
@@ -237,7 +235,7 @@ def store_current_key_value(
 
 def process_lines(
     file: typing.TextIO, header_only: bool = False
-) -> typing.List[typing.Dict[str, typing.Any]]:
+) -> list[dict[str, typing.Any]]:
     """Processes each line of the file and constructs records.
 
     Args:
@@ -248,8 +246,8 @@ def process_lines(
         List[Dict[str, Any]]: Parsed records.
 
     """
-    records: typing.List[typing.Dict[str, typing.Any]] = []
-    current_record: typing.Dict[str, typing.Any] = {}
+    records: list[dict[str, typing.Any]] = []
+    current_record: dict[str, typing.Any] = {}
     current_key = ""
     current_value = ""
     inside_record = False
@@ -373,7 +371,7 @@ class BIBLoader(colrev.loader.loader.Loader):
 
     def load_records_list(
         self, header_only: bool = False
-    ) -> typing.List[typing.Dict[str, typing.Any]]:
+    ) -> list[dict[str, typing.Any]]:
         """Parses the file and returns either full records or just header fields."""
         records_list = []
         check_valid_bib(self.filename, self.logger)
