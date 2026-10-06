@@ -2138,7 +2138,9 @@ def data(
 @click.option(
     "--filter",
     "filter_settings",
-    type=click.Choice(["prepare", "dedupe", "merge", "all"], case_sensitive=False),
+    type=click.Choice(
+        ["prepare", "dedupe", "dedupe-audit", "merge", "all"], case_sensitive=False
+    ),
     default="all",
     help="prepare, merge, or all.",
 )
