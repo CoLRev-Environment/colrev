@@ -19,6 +19,80 @@ from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
 
+def _apa_like(rec_dict: dict) -> str:
+    """Best-effort APA-like reference line from a CoLRev record_dict (no exceptions)."""
+
+    def g(*keys: str) -> str:
+        for k in keys:
+            v = rec_dict.get(k, "")
+            if v is None:
+                continue
+            s = str(v).strip()
+            if s:
+                return s
+        return ""
+
+    author = g(Fields.AUTHOR, "author")
+    year = g(Fields.YEAR, "year")
+    title = g(Fields.TITLE, "title")
+
+    container = g(
+        Fields.CONTAINER_TITLE,
+        "container_title",
+        "journal",
+        "journaltitle",
+        "booktitle",  # important for inproceedings
+    )
+
+    volume = g(Fields.VOLUME, "volume")
+    number = g(Fields.NUMBER, "number")
+    pages = g(Fields.PAGES, "pages")
+
+    parts = []
+    if author:
+        parts.append(author)
+    if year:
+        parts.append(f"({year}).")
+    if title:
+        parts.append(f"{title}.")
+    if container:
+        parts.append(container)
+
+    # light venue details
+    volno = ""
+    if volume and number:
+        volno = f"{volume}({number})"
+    elif volume:
+        volno = volume
+    elif number:
+        volno = f"({number})"
+
+    tail = []
+    if volno:
+        tail.append(volno)
+    if pages:
+        tail.append(pages)
+
+    if tail:
+        parts.append(", ".join(tail))
+
+    return " ".join(parts).replace("  ", " ").strip()
+
+
+def _format_record_apa(rec_dict: dict) -> str:
+    """Prefer CoLRev's APA formatting if available; otherwise use _apa_like()."""
+    try:
+        rec = colrev.record.record.Record(rec_dict)
+        fmt = getattr(rec, "format_apa_style", None)
+        if callable(fmt):
+            out = fmt()
+            if isinstance(out, str) and out.strip():
+                return out.strip()
+    except Exception:
+        pass
+    return _apa_like(rec_dict)
+
+
 class Validate(colrev.process.operation.Operation):
     """Validate changes."""
 
@@ -708,6 +782,248 @@ class Validate(colrev.process.operation.Operation):
 
             self.review_manager.dataset.git_repo.add_changes(filename)
 
+    def _validate_dedupe_audit(self) -> dict:
+        """Dataset-wide audit to identify likely erroneous merges.
+
+        Focus: records that contain multiple origins from the same source (e.g., wos/.. twice).
+
+        Returns:
+            {"dedupe_audit": suspects}
+
+        where suspects is a list (sorted by severity) of dicts shaped like:
+            {
+            "severity": "high"|"medium"|"low",
+            "same_source": "<source_prefix>",
+            "merged": {"origins": [...], "record_dict": <merged_record_dict>},
+            "candidates": [
+                {"origin": "<origin_str>", "record_dict": <origin_record_dict>},
+                ...
+            ],
+            "pairs": [
+                {
+                    "severity": "...",
+                    "similarity": float,
+                    "a": {"origin": "...", "record_dict": ...},
+                    "b": {"origin": "...", "record_dict": ...},
+                },
+                ...
+            ],
+            }
+        """
+
+        def _source_prefix(origin: str) -> str:
+            return origin.split("/", 1)[0] if "/" in origin else origin
+
+        def _group_origins_by_source(origins: list[str]) -> dict[str, list[str]]:
+            grouped: dict[str, list[str]] = {}
+            for o in origins:
+                grouped.setdefault(_source_prefix(o), []).append(o)
+            return grouped
+
+        def _norm_lower(v: object) -> str:
+            return str(v).replace("\\", "").strip().lower()
+
+        def _norm_str(v: object) -> str:
+            return str(v).replace("\\", "").strip()
+
+        def _severity_from(
+            similarity: float, doi_mismatch: bool, year_mismatch: bool
+        ) -> str:
+            # Simple, conservative heuristic
+            if doi_mismatch:
+                return "high"
+            if similarity < 0.70:
+                return "high"
+            if year_mismatch and similarity < 0.85:
+                return "medium"
+            if similarity < 0.85:
+                return "medium"
+            return "low"
+
+        self.review_manager.logger.info("Audit dedupe merges (dataset-wide)...")
+
+        # 1) Load origin-records from active sources
+        load_operation = self.review_manager.get_load_operation(
+            hide_load_explanation=True
+        )
+        origin_records: dict[str, dict] = {}
+        for source in load_operation.load_active_sources(include_md=True):
+            if not source.search_source.search_results_path.is_file():
+                continue
+            load_operation.setup_source_for_load(source, select_new_records=False)
+            for origin_record in source.search_source.source_records_list:
+                if Fields.ORIGIN in origin_record and origin_record[Fields.ORIGIN]:
+                    origin_records[origin_record[Fields.ORIGIN][0]] = origin_record
+
+        # 2) Load current dataset records
+        records = self.review_manager.dataset.load_records_dict()
+
+        suspects: list[dict] = []
+
+        # 3) Find records with multiple origins from the same source, then analyze them
+        for _, merged_record in records.items():
+            merged_origins = merged_record.get(Fields.ORIGIN, [])
+            if not isinstance(merged_origins, list) or len(merged_origins) < 2:
+                continue
+
+            grouped = _group_origins_by_source(merged_origins)
+            same_source_groups = {src: os for src, os in grouped.items() if len(os) > 1}
+            if not same_source_groups:
+                continue
+
+            for src, src_origins in same_source_groups.items():
+                available = [o for o in src_origins if o in origin_records]
+
+                candidates = [
+                    {"origin": o, "record_dict": origin_records[o]} for o in available
+                ]
+
+                # If we cannot resolve >=2 origin records, still add a medium-severity suspect
+                if len(available) < 2:
+                    suspects.append(
+                        {
+                            "severity": "medium",
+                            "same_source": src,
+                            "merged": {
+                                "origins": merged_origins,
+                                "record_dict": merged_record,
+                            },
+                            "candidates": candidates,
+                            "pairs": [],
+                            "note": "Origin records not fully available from active sources.",
+                        }
+                    )
+                    continue
+
+                pairs: list[dict] = []
+                max_sev = "low"
+
+                for i in range(len(available)):
+                    for j in range(i + 1, len(available)):
+                        o_a, o_b = available[i], available[j]
+                        a = origin_records[o_a]
+                        b = origin_records[o_b]
+
+                        sim = colrev.record.record.Record.get_record_similarity(
+                            colrev.record.record.Record(a),
+                            colrev.record.record.Record(b),
+                        )
+
+                        doi_a = _norm_lower(a.get(Fields.DOI, ""))
+                        doi_b = _norm_lower(b.get(Fields.DOI, ""))
+                        doi_mismatch = bool(doi_a and doi_b and doi_a != doi_b)
+
+                        year_a = _norm_str(a.get(Fields.YEAR, ""))
+                        year_b = _norm_str(b.get(Fields.YEAR, ""))
+                        year_mismatch = bool(
+                            year_a.isdigit() and year_b.isdigit() and year_a != year_b
+                        )
+
+                        sev = _severity_from(
+                            similarity=sim,
+                            doi_mismatch=doi_mismatch,
+                            year_mismatch=year_mismatch,
+                        )
+
+                        if sev == "high":
+                            max_sev = "high"
+                        elif sev == "medium" and max_sev != "high":
+                            max_sev = "medium"
+
+                        pairs.append(
+                            {
+                                "severity": sev,
+                                "similarity": sim,
+                                "a": {"origin": o_a, "record_dict": a},
+                                "b": {"origin": o_b, "record_dict": b},
+                            }
+                        )
+
+                # Sort pairs for convenience (worst first)
+                sev_rank = {"high": 0, "medium": 1, "low": 2}
+                pairs.sort(key=lambda x: (sev_rank[x["severity"]], x["similarity"]))
+
+                suspects.append(
+                    {
+                        "severity": max_sev,
+                        "same_source": src,
+                        "merged": {
+                            "origins": merged_origins,
+                            "record_dict": merged_record,
+                        },
+                        "candidates": candidates,
+                        "pairs": pairs,
+                    }
+                )
+
+        # 4) Sort suspects: severity first, then worst similarity among their pairs (if any)
+        def _sev_rank(sev: str) -> int:
+            return 0 if sev == "high" else 1 if sev == "medium" else 2
+
+        def _worst_sim(s: dict) -> float:
+            if s.get("pairs"):
+                return min(p["similarity"] for p in s["pairs"])
+            return 1.0
+
+        suspects.sort(
+            key=lambda s: (_sev_rank(s.get("severity", "low")), _worst_sim(s))
+        )
+
+        for i, suspect in enumerate(suspects, start=1):
+            print("\n" + "=" * 110)
+            print(
+                f"[{i}/{len(suspects)}] severity={suspect.get('severity')}  "
+                + f"same_source={suspect.get('same_source')}"
+            )
+            print("-" * 110)
+
+            # merged record
+            # merged = suspect.get("merged", {})
+            # merged_rec_dict = merged.get("record_dict", {})
+            # try:
+            #     merged_rec = colrev.record.record.Record(merged_rec_dict)
+            #     print("MERGED:")
+            #     print(merged_rec.format_apa_style())
+            # except Exception:  # pragma: no cover
+            #     print("MERGED (raw dict fallback):")
+            #     print(merged_rec_dict)
+
+            # candidate origin records
+            print("\nCANDIDATES:")
+            for cand in suspect.get("candidates", []):
+                origin = cand.get("origin", "")
+                rec_dict = cand.get("record_dict", {})
+                try:
+                    colrev.record.record.Record(rec_dict)
+                    print(f"- {origin}")
+                    print(f"  {_format_record_apa(rec_dict)}")
+                except Exception:  # pragma: no cover
+                    print(f"- {origin} (raw dict fallback)")
+                    print(rec_dict)
+
+            # optional: show the most suspicious pair summary (keeps output manageable)
+            pairs = suspect.get("pairs", [])
+            if pairs:
+                worst = pairs[0]  # pairs are already sorted worst-first
+                print("\nMOST SUSPICIOUS PAIR:")
+                print(
+                    f"  pair_severity={worst.get('severity')}  similarity={worst.get('similarity'):.3f}"
+                )
+                try:
+                    a = colrev.record.record.Record(worst["a"]["record_dict"])
+                    b = colrev.record.record.Record(worst["b"]["record_dict"])
+                    print(
+                        f"  A ({worst['a'].get('origin', '')}): {a.format_apa_style()}"
+                    )
+                    print(
+                        f"  B ({worst['b'].get('origin', '')}): {b.format_apa_style()}"
+                    )
+                except Exception:  # pragma: no cover
+                    pass
+
+            input("Press Enter for next…")
+        return {"dedupe_audit": suspects}
+
     @colrev.process.operation.Operation.decorate()
     def main(
         self,
@@ -717,6 +1033,11 @@ class Validate(colrev.process.operation.Operation):
         properties: bool = False,
     ) -> dict:
         """Validate a commit (main entrypoint)."""
+
+        # colrev validate . --filter dedupe-audit
+        if filter_setting == "dedupe-audit":
+            return self._validate_dedupe_audit()
+
         target_commit = self._get_target_commit(
             scope=scope, filter_setting=filter_setting
         )
@@ -745,4 +1066,5 @@ class Validate(colrev.process.operation.Operation):
             self._validate_prep_changes(report=report)
         if filter_setting in ["dedupe", "all"]:
             self._validate_dedupe_changes(report=report, commit_sha=target_commit)
+
         return report
