@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import stat
 import logging
 import os
 import platform
@@ -31,8 +32,23 @@ from colrev.constants import EndpointType
 from colrev.constants import SearchType
 from colrev.env.environment_manager import EnvironmentManager
 from colrev.package_manager.package_manager import PackageManager
+from types import TracebackType
+from typing import Callable
 
 # pylint: disable=too-few-public-methods
+
+
+def _remove_readonly(
+    func: Callable[..., object],
+    path: str,
+    exc_info: tuple[type[BaseException], BaseException, TracebackType | None],
+) -> None:
+    """Remove a read-only file on Windows during directory cleanup."""
+    if not isinstance(exc_info[1], PermissionError):
+        raise exc_info[1]
+
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
 
 
 class Initializer:
@@ -179,7 +195,7 @@ class Initializer:
 
         for child in self.target_path.iterdir():
             if child.is_dir():
-                shutil.rmtree(child)
+                shutil.rmtree(child, onerror=_remove_readonly)
             else:
                 child.unlink()
 
