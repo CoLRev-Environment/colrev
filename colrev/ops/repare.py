@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 from pathlib import Path
 
@@ -12,6 +13,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils_formatter
 import colrev.ops.search_api_feed
 import colrev.process.operation
+import colrev.record.record_similarity
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldSet
@@ -56,23 +58,25 @@ class Repare(colrev.process.operation.Operation):
         try:
             retrieved_record = self.local_index.retrieve(record.data, include_file=True)
 
-            if Fields.FILE in retrieved_record.data:
-                record.update_field(
-                    key=Fields.FILE,
-                    value=str(retrieved_record.data[Fields.FILE]),
-                    source="local_index",
-                    append_edit=False,
-                )
-                self.pdf_get_operation.import_pdf(record)
-                if Fields.FULLTEXT in retrieved_record.data:
-                    del retrieved_record.data[Fields.FULLTEXT]
-                self.review_manager.logger.info(
-                    f" fix broken symlink: {record.data['ID']}"
-                )
-            else:
+            if Fields.FILE not in retrieved_record.data:
                 self.review_manager.logger.debug(
                     f" file not linked in retrieved record: {record.data['ID']}"
                 )
+                return
+
+            if not colrev.record.record_similarity.matches(record, retrieved_record):
+                return
+
+            record.update_field(
+                key=Fields.FILE,
+                value=str(retrieved_record.data[Fields.FILE]),
+                source="local_index",
+                append_edit=False,
+            )
+            self.pdf_get_operation.import_pdf(record)
+            if Fields.FULLTEXT in retrieved_record.data:
+                del retrieved_record.data[Fields.FULLTEXT]
+            self.review_manager.logger.info(f" fix broken symlink: {record.data['ID']}")
 
         except colrev_exceptions.RecordNotInIndexException:
             self.review_manager.logger.debug(
@@ -466,6 +470,220 @@ class Repare(colrev.process.operation.Operation):
             record = colrev.record.record.Record(record_dict)
             self.load_formatter.run(record)
 
+    def _remove_records_not_in_search_results(self, records: dict) -> None:
+        """Remove origins (or whole records) if their origin IDs are no longer present
+        in the corresponding original search results (data/search/...).
+
+        Logic:
+        - Build a lookup: origin_prefix -> {feed_id set} by loading each source's
+          search_results_path once.
+        - For each record, check every origin like "crossref.bib/1234":
+            - if 1234 not in data/search/crossref.bib -> drop that origin
+            - if that was the last origin -> drop the whole record
+        - If an origin prefix cannot be mapped to a configured search source,
+          we keep it and warn (because we cannot verify it safely).
+        """
+        # 1) Load all configured search result files once (data/search/...)
+        origin_prefix_to_ids: dict[str, set[str]] = {}
+
+        for source in self.review_manager.settings.sources:
+            try:
+                prefix = source.get_origin_prefix()  # e.g., "crossref.bib"
+                search_path = (
+                    source.search_results_path
+                )  # e.g., data/search/crossref.bib
+            except Exception as exc:  # very defensive
+                self.review_manager.logger.warning("Could not inspect source (%s)", exc)
+                continue
+
+            try:
+                feed_records = colrev.loader.load_utils.load(
+                    filename=search_path,
+                    logger=self.review_manager.logger,
+                )
+                origin_prefix_to_ids[prefix] = set(feed_records.keys())
+            except FileNotFoundError:
+                # If the search results file doesn't exist, we cannot validate origins safely.
+                self.review_manager.logger.warning(
+                    "Search results file missing (%s). Keeping origins for prefix '%s' unchanged.",
+                    search_path,
+                    prefix,
+                )
+            except Exception as exc:
+                self.review_manager.logger.warning(
+                    "Could not load search results (%s): %s. "
+                    "Keeping origins for prefix '%s' unchanged.",
+                    search_path,
+                    exc,
+                    prefix,
+                )
+
+        # 2) Iterate through records and prune invalid origins
+        for rec_id in list(records.keys()):
+            record_dict = records[rec_id]
+            origins = record_dict.get(Fields.ORIGIN, [])
+
+            if isinstance(origins, str):
+                origins = [origins]
+            if not isinstance(origins, list):
+                self.review_manager.logger.warning(
+                    "Unexpected ORIGIN format for %s -> %r (keeping record unchanged)",
+                    record_dict.get(Fields.ID, rec_id),
+                    origins,
+                )
+                continue
+
+            kept_origins: list[str] = []
+            removed_origins: list[str] = []
+
+            for origin in origins:
+                if not isinstance(origin, str) or "/" not in origin:
+                    # Not in "<prefix>/<id>" format -> cannot validate
+                    kept_origins.append(origin)
+                    self.review_manager.logger.warning(
+                        "Unverifiable origin format for %s -> %r (kept)",
+                        record_dict.get(Fields.ID, rec_id),
+                        origin,
+                    )
+                    continue
+
+                origin_prefix, origin_item_id = origin.split("/", 1)
+
+                if origin_prefix not in origin_prefix_to_ids:
+                    # We cannot validate because we don't have the corresponding feed ids set
+                    kept_origins.append(origin)
+                    self.review_manager.logger.warning(
+                        "Unknown/unloaded origin prefix '%s' for %s (origin=%r). Kept.",
+                        origin_prefix,
+                        record_dict.get(Fields.ID, rec_id),
+                        origin,
+                    )
+                    continue
+
+                if origin_item_id in origin_prefix_to_ids[origin_prefix]:
+                    kept_origins.append(origin)
+                else:
+                    removed_origins.append(origin)
+
+            if removed_origins:
+                self.review_manager.logger.info(
+                    "Pruning missing origin(s) for %s: %s",
+                    record_dict.get(Fields.ID, rec_id),
+                    ", ".join(removed_origins),
+                )
+
+            if not kept_origins:
+                self.review_manager.logger.warning(
+                    "Removing record %s because all origins are "
+                    "missing in their search results (%s)",
+                    record_dict.get(Fields.ID, rec_id),
+                    ", ".join(removed_origins) if removed_origins else "no origins",
+                )
+                del records[rec_id]
+                continue
+
+            record_dict[Fields.ORIGIN] = kept_origins
+
+    def _fix_misassigned_curated_pdfs(self, records: dict) -> None:
+        """Remove misassigned PDFs in curated repositories.
+
+        Heuristics:
+        - If file path matches data/pdfs/<YEAR>/..., remove if YEAR != record[year]
+        - If file path matches data/pdfs/<VOLUME>_<ISSUE>/..., remove if mismatch with volume/number
+        (where issue is typically Fields.NUMBER in CoLRev records)
+
+        Side effect:
+        - If we remove Fields.FILE, also remove ORIGIN entries starting with "pdfs.bib/".
+        """
+
+        # Only apply in curated masterdata repositories
+        if not self.review_manager.settings.is_curated_masterdata_repo():
+            return
+
+        year_dir_re = re.compile(r"^data/pdfs/(?P<year>\d{4})/")
+        vol_issue_dir_re = re.compile(r"^data/pdfs/(?P<vol>\d+)_(?P<iss>\d+)/")
+
+        def _drop_pdf_origin(record_dict: dict) -> None:
+            """Remove any origin entries starting with 'pdfs.bib/'."""
+            if Fields.ORIGIN not in record_dict:
+                return
+            origins = record_dict.get(Fields.ORIGIN) or []
+
+            new_origins = [
+                origin for origin in origins if not str(origin).startswith("pdfs.bib/")
+            ]
+            record_dict[Fields.ORIGIN] = new_origins
+
+        def _remove_file_and_pdf_origin(record_dict: dict) -> None:
+            if Fields.FILE in record_dict:
+                del record_dict[Fields.FILE]
+            _drop_pdf_origin(record_dict)
+
+        for record_dict in records.values():
+            file_path = record_dict.get(Fields.FILE)
+            if not file_path:
+                continue
+
+            # Only validate "structured" paths; leave other schemes alone
+            if not isinstance(file_path, str) or not file_path.startswith("data/pdfs/"):
+                continue
+
+            rec_year_raw = record_dict.get(Fields.YEAR, "")
+            rec_year = None
+            try:
+                rec_year = (
+                    int(str(rec_year_raw).strip())
+                    if str(rec_year_raw).strip()
+                    else None
+                )
+            except ValueError:
+                rec_year = None
+
+            # --- Case 1: data/pdfs/<YEAR>/...
+            m_year = year_dir_re.match(file_path)
+            if m_year:
+                dir_year = int(m_year.group("year"))
+                if rec_year is not None and dir_year != rec_year:
+                    _remove_file_and_pdf_origin(record_dict)
+                continue
+
+            # --- Case 2: data/pdfs/<VOLUME>_<ISSUE>/...
+            m_vi = vol_issue_dir_re.match(file_path)
+            if m_vi:
+                dir_vol = m_vi.group("vol")
+                dir_iss = m_vi.group("iss")
+
+                rec_vol = str(record_dict.get(Fields.VOLUME, "")).strip()
+                rec_iss = str(record_dict.get(Fields.NUMBER, "")).strip()
+
+                comparable = False
+                mismatch = False
+
+                if rec_vol:
+                    comparable = True
+                    mismatch = mismatch or (rec_vol != dir_vol)
+
+                if rec_iss:
+                    comparable = True
+                    mismatch = mismatch or (rec_iss != dir_iss)
+
+                if comparable and mismatch:
+                    _remove_file_and_pdf_origin(record_dict)
+
+                continue
+
+            # Other folder conventions: do nothing (avoid false positives)
+            continue
+
+        # Drop all records with empty ORIGIN
+        for rid in list(records.keys()):
+            origins = records[rid].get(Fields.ORIGIN, [])
+
+            if len(origins) == 0:
+                del records[rid]
+
+        write_file(records_dict=records, filename=Path("data/records.bib"))
+
     @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
         """Repare a CoLRev project (main entrypoint)."""
@@ -506,6 +724,10 @@ class Repare(colrev.process.operation.Operation):
                 records = self.review_manager.dataset.load_records_dict()
             except AttributeError:
                 return
+
+        self._remove_records_not_in_search_results(records)
+
+        self._fix_misassigned_curated_pdfs(records)
 
         self._fix_curated_sources(records)
 
