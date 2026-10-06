@@ -97,9 +97,14 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
             _index_record(record, vol_nr_dict)
 
         for source in self.review_manager.settings.sources:
-            records = colrev.loader.load_utils.load(source.search_results_path)
-            for record in records.values():
-                _index_record(record, vol_nr_dict)
+            try:
+                records = colrev.loader.load_utils.load(source.search_results_path)
+                for record in records.values():
+                    _index_record(record, vol_nr_dict)
+            # TODO: AssertionError should be temporary
+            # (until meaningful exceptions are raised)
+            except AssertionError:
+                pass
 
         for _, mapping_yvn in vol_nr_dict.items():
             mapping_yvn.pop("UNKNOWN", None)
