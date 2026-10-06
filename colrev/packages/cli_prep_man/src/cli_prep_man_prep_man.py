@@ -121,35 +121,45 @@ def main() -> None:
         """Ask user which records to process and return the selected record_ids.
 
         Options:
-        - All records where Fields.STATUS == RecordState.md_needs_man_prep
+        - All records where Fields.STATUS == RecordState.md_needs_manual_preparation
+        - All records where ENTRYTYPE == misc
         - Manually entered, comma-separated record_ids
         """
         mode = questionary.select(
             "Which records do you want to prepare manually?",
             choices=[
                 "All records with status: md_needs_man_prep",
+                "All records with ENTRYTYPE: misc",
                 "Selected records by ID (comma-separated)",
             ],
         ).ask()
 
         if mode is None:
-            # user cancelled
             return []
 
-        if mode.startswith("All"):
+        if mode.startswith("All records with status"):
             target_ids = [
                 rec_id
                 for rec_id, rec in records.items()
                 if rec.get(Fields.STATUS, None)
                 == RecordState.md_needs_manual_preparation
             ]
+
+        elif mode.startswith("All records with ENTRYTYPE"):
+            target_ids = []
+            for rec_id, rec in records.items():
+                entrytype = rec.get(
+                    getattr(Fields, "ENTRYTYPE", "ENTRYTYPE"), rec.get("ENTRYTYPE", "")
+                )
+                if str(entrytype).lower() == "misc":
+                    target_ids.append(rec_id)
+
         else:
             raw_ids = (
                 questionary.text("Enter record IDs (comma-separated):").ask() or ""
             )
             target_ids = [rid.strip() for rid in raw_ids.split(",") if rid.strip()]
 
-            # sanity-check: warn about unknown IDs
             unknown = [rid for rid in target_ids if rid not in records]
             if unknown:
                 questionary.print(
