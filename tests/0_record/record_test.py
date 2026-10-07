@@ -1012,7 +1012,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
 
     mocker.patch(
         "colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git",
-        return_value=("Gerit Wagner", "gerit.wagner@uni-bamberg.de"),
+        return_value=("Gerit Wagner", "g.wagner@fs.de"),
     )
 
     r1_mod = colrev.record.record.Record(

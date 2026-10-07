@@ -9,7 +9,7 @@ authors = [
     { name = "Frederic Fischer" },
     { name = "Janus Fiegen" },
     { name = "Albert Borchardt" },
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
+    { name = "Gerit Wagner", email = "g.wagner@fs.de" },
 ]
 requires-python = ">=3.8, <4"
 

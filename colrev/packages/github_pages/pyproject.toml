@@ -5,7 +5,7 @@ version = "0.1.0"
 license = {text = "MIT"}
 authors = [
     { name = "Julian Prester", email = "julian.prester@sydney.edu.au" },
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
+    { name = "Gerit Wagner", email = "g.wagner@fs.de" },
 ]
 requires-python = ">=3.8, <4"
 

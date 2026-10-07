@@ -8,7 +8,7 @@ authors = [
     { name = "Robert Ahr" },
     { name = "Thomas Fleischmann" },
     { name = "Anton Liam Frisch" },
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
+    { name = "Gerit Wagner", email = "g.wagner@fs.de" },
 ]
 requires-python = ">=3.8, <4"
 

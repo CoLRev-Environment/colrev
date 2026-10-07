@@ -154,7 +154,7 @@ The package metadata is stored in the ``pyproject.toml`` file. The metadata is u
     description = "CoLRev package for abi_inform_proquest"
     version = "0.1.0"
     authors = [
-      { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
+      { name = "Gerit Wagner", email = "g.wagner@fs.de" },
     ]
     license = "MIT"
     requires-python = ">=3.8, <4"

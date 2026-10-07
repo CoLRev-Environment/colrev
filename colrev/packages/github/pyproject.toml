@@ -8,7 +8,7 @@ authors = [
     { name = "Philipp Kasimir", email = "philipp-william.kasimir@stud.uni-bamberg.de" },
     { name = "Chris Vierath", email = "chris-norman.vierath@stud.uni-bamberg.de" },
     { name = "Karl Schnickmann", email = "karl.schnickmann@stud.uni-bamberg.de" },
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
+    { name = "Gerit Wagner", email = "g.wagner@fs.de" },
 ]
 requires-python = ">=3.8, <4"
 dependencies = [

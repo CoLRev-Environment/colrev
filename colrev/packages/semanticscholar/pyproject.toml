@@ -8,7 +8,7 @@ authors = [
     { name = "Peter Eckhardt" },
     { name = "Amadou-Choumoussidine Kouotou-Ngapout" },
     { name = "Robert Theis" },
-    { name = "Gerit Wagner", email = "gerit.wagner@uni-bamberg.de" },
+    { name = "Gerit Wagner", email = "g.wagner@fs.de" },
 ]
 requires-python = ">=3.8, <4"
 dependencies = [
