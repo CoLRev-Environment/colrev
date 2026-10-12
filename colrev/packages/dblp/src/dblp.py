@@ -271,6 +271,7 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
 
             self.logger.info("Estimated runtime [hh:mm:ss]: %s", formatted_time)
 
+        retrieved_dblp_keys: typing.Set[str] = set()
         while True:
             api.set_next_url()
 
@@ -295,6 +296,12 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                         )
                         continue
 
+                    dblp_key = retrieved_record.data.get(
+                        "dblp_key"
+                    ) or retrieved_record.data.get(Fields.DBLP_KEY)
+                    if dblp_key:
+                        retrieved_dblp_keys.add(dblp_key)
+
                     dblp_feed.add_update_record(retrieved_record)
 
                 except colrev_exceptions.NotFeedIdentifiableException as exc:
@@ -304,7 +311,73 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
             if api.processed_all_urls():
                 break
 
-        dblp_feed.save()
+        # TODO: carefully test removal with curations before committing
+        print(retrieved_dblp_keys)
+        input("start removal")
+        if rerun:
+            removed_feed_ids: typing.List[str] = []
+            for feed_id, feed_record_dict in list(dblp_feed.feed_records.items()):
+                feed_dblp_key = feed_record_dict.get(
+                    "dblp_key"
+                ) or feed_record_dict.get(Fields.DBLP_KEY)
+                if feed_dblp_key and feed_dblp_key not in retrieved_dblp_keys:
+                    removed_feed_ids.append(feed_id)
+                    print(feed_dblp_key)
+                    input("not found/remove")
+
+            for feed_id in removed_feed_ids:
+                del dblp_feed.feed_records[feed_id]
+
+            if removed_feed_ids:
+                self.logger.info(
+                    "DBLP: removed %s missing records from feed (not retrieved in rerun)",
+                    f"{len(removed_feed_ids):,}",
+                )
+            input(removed_feed_ids)
+            # Best-effort cleanup of main records (if available on feed object)
+            try:
+                main_records = getattr(dblp_feed, "records")
+                if isinstance(main_records, dict):
+                    removed_main = 0
+                    for rec_id, rec_dict in list(main_records.items()):
+                        rec_dblp_key = rec_dict.get("dblp_key") or rec_dict.get(
+                            Fields.DBLP_KEY
+                        )
+                        if rec_dblp_key and rec_dblp_key not in retrieved_dblp_keys:
+                            origins = rec_dict.get(Fields.ORIGIN, [])
+                            if isinstance(origins, str):
+                                origins_list = [origins]
+                            else:
+                                origins_list = list(origins)
+
+                            dblp_origins = [
+                                o for o in origins_list if self.origin_prefix in o
+                            ]
+                            if not dblp_origins:
+                                continue
+
+                            other_origins = [
+                                o for o in origins_list if self.origin_prefix not in o
+                            ]
+                            if len(other_origins) == 0:
+                                del main_records[rec_id]
+                                removed_main += 1
+                            else:
+                                rec_dict[Fields.ORIGIN] = other_origins
+                                if "dblp_key" in rec_dict:
+                                    del rec_dict["dblp_key"]
+                                if Fields.DBLP_KEY in rec_dict:
+                                    del rec_dict[Fields.DBLP_KEY]
+
+                    if removed_main:
+                        self.logger.info(
+                            "DBLP: removed %s records from main records (only DBLP origin)",
+                            f"{removed_main:,}",
+                        )
+            except Exception as exc:  # pragma: no cover
+                self.logger.debug("DBLP: cleanup skipped (%s)", exc)
+
+            dblp_feed.save()
 
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)."""
