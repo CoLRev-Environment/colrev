@@ -5,9 +5,7 @@ import pytest
 
 import colrev.ops.prep
 import colrev.packages.get_year_from_vol_iss_jour.src.year_vol_iss_prep
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import OperationsType
+from colrev.constants import ENTRYTYPES, Fields, OperationsType
 
 
 @pytest.fixture(name="yvip")

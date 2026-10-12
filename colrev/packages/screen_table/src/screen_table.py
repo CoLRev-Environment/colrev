@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import csv
 import logging
-import typing
 from pathlib import Path
 
 import pandas as pd
@@ -16,8 +15,7 @@ import colrev.package_manager.package_settings
 import colrev.packages.screen_utils as util_cli_screen
 import colrev.record.record
 import colrev.settings
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Fields, RecordState
 
 
 class TableScreen(base_classes.ScreenPackageBaseClass):
@@ -34,7 +32,7 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
         *,
         screen_operation: colrev.ops.screen.Screen,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -148,7 +146,7 @@ class TableScreen(base_classes.ScreenPackageBaseClass):
     def import_table(
         self,
         records: dict,
-        import_table_path: typing.Optional[Path] = None,
+        import_table_path: Path | None = None,
     ) -> None:
         """Import a screening table."""
         # pylint: disable=duplicate-code

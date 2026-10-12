@@ -6,19 +6,16 @@ from __future__ import annotations
 import abc
 import logging
 import typing
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from pathlib import Path
 
 import colrev.package_manager.package_settings
-from colrev.constants import EndpointType
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import EndpointType, SearchSourceHeuristicStatus, SearchType
 
 if typing.TYPE_CHECKING:  # pragma: no cover
+    import colrev.ops
     import colrev.record.record
     import colrev.settings
-    import colrev.ops
 
 
 # pylint: disable=too-few-public-methods
@@ -41,7 +38,7 @@ class ReviewTypePackageBaseClass(abc.ABC):
         *,
         operation: colrev.process.operation.Operation,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -78,7 +75,7 @@ class SearchSourcePackageBaseClass(ABC):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -91,7 +88,7 @@ class SearchSourcePackageBaseClass(ABC):
     @classmethod
     @abstractmethod
     def add_endpoint(
-        cls, params: str, path: Path, logger: typing.Optional[logging.Logger] = None
+        cls, params: str, path: Path, logger: logging.Logger | None = None
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add the SearchSource as an endpoint."""
 
@@ -137,7 +134,7 @@ class PrepPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: type[colrev.package_manager.package_settings.DefaultSettings]
     source_correction_hint: str
     always_apply_changes: bool
 
@@ -147,7 +144,7 @@ class PrepPackageBaseClass(ABC):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -170,7 +167,7 @@ class PrepManPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -178,7 +175,7 @@ class PrepManPackageBaseClass(ABC):
         *,
         prep_man_operation: colrev.ops.prep_man.PrepMan,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -198,7 +195,7 @@ class DedupePackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -206,7 +203,7 @@ class DedupePackageBaseClass(ABC):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ):
         """Initialize the instance."""
@@ -226,7 +223,7 @@ class PrescreenPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: type[colrev.package_manager.package_settings.DefaultSettings]
     settings: colrev.package_manager.package_settings.DefaultSettings
 
     @abstractmethod
@@ -235,7 +232,7 @@ class PrescreenPackageBaseClass(ABC):
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -255,7 +252,7 @@ class PDFGetPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -263,7 +260,7 @@ class PDFGetPackageBaseClass(ABC):
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -285,7 +282,7 @@ class PDFGetManPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -293,7 +290,7 @@ class PDFGetManPackageBaseClass(ABC):
         *,
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -313,7 +310,7 @@ class PDFPrepPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -321,7 +318,7 @@ class PDFPrepPackageBaseClass(ABC):
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -343,7 +340,7 @@ class PDFPrepManPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -351,7 +348,7 @@ class PDFPrepManPackageBaseClass(ABC):
         *,
         pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -372,7 +369,7 @@ class ScreenPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -380,7 +377,7 @@ class ScreenPackageBaseClass(ABC):
         *,
         screen_operation: colrev.ops.screen.Screen,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -400,7 +397,7 @@ class DataPackageBaseClass(ABC):
 
     ci_supported: bool
 
-    settings_class: typing.Type[colrev.package_manager.package_settings.DefaultSettings]
+    settings_class: type[colrev.package_manager.package_settings.DefaultSettings]
 
     @abstractmethod
     def __init__(
@@ -408,7 +405,7 @@ class DataPackageBaseClass(ABC):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""

@@ -3,17 +3,15 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import sys
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 from packaging.requirements import InvalidRequirement
 
 from colrev.package_manager import check
-from colrev.package_manager.package_manager import PackageManager
-from colrev.package_manager.package_manager import _validate_external_package_selection
-from colrev.package_manager.package_manager import _validate_internal_package_selection
+from colrev.package_manager.package_manager import PackageManager, _validate_external_package_selection, _validate_internal_package_selection
 
 
 @pytest.mark.parametrize(

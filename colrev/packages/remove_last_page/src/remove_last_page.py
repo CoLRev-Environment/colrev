@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 import shutil
-import typing
 from pathlib import Path
 
 import pymupdf
@@ -13,8 +12,7 @@ from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
-from colrev.constants import Fields
-from colrev.constants import Filepaths
+from colrev.constants import Fields, Filepaths
 
 # pylint: disable=duplicate-code
 
@@ -34,7 +32,7 @@ class PDFLastPage(base_classes.PDFPrepPackageBaseClass):
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -52,8 +50,8 @@ class PDFLastPage(base_classes.PDFPrepPackageBaseClass):
 
         Filepaths.LASTPAGES.mkdir(exist_ok=True)
 
-        def _get_last_pages(*, pdf: str) -> typing.List[int]:
-            last_pages: typing.List[int] = []
+        def _get_last_pages(*, pdf: str) -> list[int]:
+            last_pages: list[int] = []
 
             doc = pymupdf.Document(pdf)
 

@@ -6,19 +6,16 @@ from __future__ import annotations
 import collections
 import logging
 import os
-import typing
 from pathlib import Path
 
 import pandas as pd
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Fields, RecordState
 
 
 class ColrevCurationSettings(
@@ -47,7 +44,7 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -345,7 +342,7 @@ class ColrevCuration(base_classes.DataPackageBaseClass):
                 + f"({','.join(records_missing_languages)})",
             }
 
-        identical_colrev_ids: typing.Dict[str, list] = {}
+        identical_colrev_ids: dict[str, list] = {}
         non_identifiable_records = []
         for record_dict in records.values():
             try:
