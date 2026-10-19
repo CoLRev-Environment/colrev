@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import logging
-import typing
 from pathlib import Path
 
 from pydantic import Field
@@ -12,11 +11,8 @@ from search_query.parser import parse
 
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
-from colrev.constants import Fields
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
-from colrev.ops.search_db import create_db_source
-from colrev.ops.search_db import run_db_search
+from colrev.constants import Fields, SearchSourceHeuristicStatus, SearchType
+from colrev.ops.search_db import create_db_source, run_db_search
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -42,7 +38,7 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -74,9 +70,7 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
             result["confidence"] = 0.7
             return result
         if "@article{ WOS:" in data or "@article{WOS:" in data:
-            if data.count("{WOS:") > data.count("\n@"):
-                result["confidence"] = 1.0
-            elif data.count("{ WOS:") > data.count("\n@"):
+            if data.count("{WOS:") > data.count("\n@") or data.count("{ WOS:") > data.count("\n@"):
                 result["confidence"] = 1.0
             else:
                 result["confidence"] = 0.7
@@ -90,7 +84,7 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         # params_dict = {params.split("=")[0]: params.split("=")[1]}
@@ -182,9 +176,7 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Web of Science."""
         # pylint: disable=colrev-missed-constant-usage

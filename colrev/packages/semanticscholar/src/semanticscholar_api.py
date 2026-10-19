@@ -17,7 +17,7 @@ class SemanticScholarAPIError(Exception):
 class SemanticScholarAPI:
     """Light wrapper around the Semantic Scholar client."""
 
-    def __init__(self, *, api_key: typing.Optional[str] = None) -> None:
+    def __init__(self, *, api_key: str | None = None) -> None:
         """Initialize the instance."""
         self._client = (
             SemanticScholar(api_key=api_key) if api_key else SemanticScholar()
@@ -39,12 +39,12 @@ class SemanticScholarAPI:
     def search_paper(
         self,
         *,
-        query: typing.Optional[str] = None,
-        year: typing.Optional[str] = None,
-        publication_types: typing.Optional[typing.Iterable[str]] = None,
-        venue: typing.Optional[str] = None,
-        fields_of_study: typing.Optional[typing.Iterable[str]] = None,
-        open_access_pdf: typing.Optional[bool] = None,
+        query: str | None = None,
+        year: str | None = None,
+        publication_types: typing.Iterable[str] | None = None,
+        venue: str | None = None,
+        fields_of_study: typing.Iterable[str] | None = None,
+        open_access_pdf: bool | None = None,
     ) -> PaginatedResults:
         """Search for papers matching the given criteria."""
         try:

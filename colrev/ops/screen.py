@@ -10,11 +10,7 @@ import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
-from colrev.constants import Colors
-from colrev.constants import EndpointType
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
+from colrev.constants import Colors, EndpointType, Fields, OperationsType, RecordState
 from colrev.package_manager.package_manager import PackageManager
 
 
@@ -256,7 +252,7 @@ class Screen(colrev.process.operation.Operation):
         )
 
         screen_splits = []
-        for _ in range(0, create_split):
+        for _ in range(create_split):
             added: list[str] = []
             while len(added) < nrecs:
                 added.append(next(data["items"])[Fields.ID])

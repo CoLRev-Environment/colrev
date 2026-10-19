@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import typing
 from pathlib import Path
 
 from colrev.constants import Colors
@@ -20,7 +19,7 @@ class RepoSetupError(CoLRevException):
         "https://colrev-environment.github.io/colrev/manual/problem_formulation.html"
     )
 
-    def __init__(self, msg: typing.Optional[str] = None) -> None:
+    def __init__(self, msg: str | None = None) -> None:
         """Initialize the instance."""
         try:
             Path(".report.log").unlink(missing_ok=True)
@@ -303,8 +302,8 @@ class NotEnoughDataToIdentifyException(CoLRevException):
     def __init__(
         self,
         *,
-        msg: typing.Optional[str] = None,
-        missing_fields: typing.Optional[list] = None,
+        msg: str | None = None,
+        missing_fields: list | None = None,
     ) -> None:
         """Initialize the instance."""
         self.message = msg
@@ -318,7 +317,7 @@ class NotTOCIdentifiableException(CoLRevException):
     the ENTRYTPE is not organized in tables-of-contents (e.g., online).
     """
 
-    def __init__(self, msg: typing.Optional[str] = None) -> None:
+    def __init__(self, msg: str | None = None) -> None:
         """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
@@ -404,7 +403,7 @@ class RecordNotParsableException(CoLRevException):
 class NotFeedIdentifiableException(CoLRevException):
     """The record does not contain the required source_identifier (cannot be added to the feed)."""
 
-    def __init__(self, msg: typing.Optional[str] = None) -> None:
+    def __init__(self, msg: str | None = None) -> None:
         """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
@@ -629,8 +628,8 @@ class RecordNotIndexableException(CoLRevException):
 
     def __init__(
         self,
-        record_id: typing.Optional[str] = None,
-        missing_key: typing.Optional[str] = None,
+        record_id: str | None = None,
+        missing_key: str | None = None,
     ) -> None:
         """Initialize the instance."""
         self.missing_key = missing_key
@@ -646,7 +645,7 @@ class RecordNotIndexableException(CoLRevException):
 class TOCNotAvailableException(CoLRevException):
     """Tables of contents (toc) are not available for the requested item."""
 
-    def __init__(self, msg: typing.Optional[str] = None) -> None:
+    def __init__(self, msg: str | None = None) -> None:
         """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)
@@ -655,7 +654,7 @@ class TOCNotAvailableException(CoLRevException):
 class CuratedOutletNotUnique(CoLRevException):
     """The outlets (journals or conferences) with curated metadata are not unique."""
 
-    def __init__(self, msg: typing.Optional[str] = None) -> None:
+    def __init__(self, msg: str | None = None) -> None:
         """Initialize the instance."""
         self.message = msg
         super().__init__(self.message)

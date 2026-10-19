@@ -4,21 +4,17 @@
 from __future__ import annotations
 
 import logging
-import typing
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 from rapidfuzz import fuzz
 from tqdm import tqdm
 
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Colors, Fields, RecordState
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods
@@ -47,7 +43,7 @@ class CurationDedupe(base_classes.DedupePackageBaseClass):
         *,
         dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)

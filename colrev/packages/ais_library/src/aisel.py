@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 import re
-import typing
 import urllib.parse
 from pathlib import Path
 from urllib.parse import urlparse
@@ -20,15 +19,10 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import Fields, FieldValues, SearchSourceHeuristicStatus, SearchType
 from colrev.ops.search_api_feed import create_api_source
-from colrev.ops.search_db import create_db_source
-from colrev.ops.search_db import run_db_search
-from colrev.packages.ais_library.src import ais_load_utils
-from colrev.packages.ais_library.src import aisel_api
+from colrev.ops.search_db import create_db_source, run_db_search
+from colrev.packages.ais_library.src import ais_load_utils, aisel_api
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -77,7 +71,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -168,7 +162,7 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}

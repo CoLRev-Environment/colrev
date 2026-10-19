@@ -6,7 +6,6 @@ from __future__ import annotations
 import collections
 import logging
 import re
-import typing
 from sqlite3 import OperationalError
 
 import requests
@@ -45,7 +44,7 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -69,9 +68,7 @@ class DOIFromURLsPrep(base_classes.PrepPackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Prepare the record by retrieving its DOI from the website (url) if available."""
         if (Fields.URL not in record.data and Fields.FULLTEXT not in record.data) or (
