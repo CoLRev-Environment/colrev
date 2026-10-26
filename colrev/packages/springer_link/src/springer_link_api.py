@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-import typing
-
 import requests
 
 
@@ -15,7 +13,7 @@ class SpringerLinkAPIError(Exception):
 class SpringerLinkAPI:
     """Handle HTTP interactions with the Springer Link API."""
 
-    def __init__(self, *, session: typing.Optional[requests.Session] = None) -> None:
+    def __init__(self, *, session: requests.Session | None = None) -> None:
         """Initialize the instance."""
         self.session = session or requests.Session()
 

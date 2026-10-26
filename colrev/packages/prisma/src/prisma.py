@@ -11,8 +11,7 @@ from pathlib import Path
 import docker
 import pandas as pd
 from docker.errors import DockerException
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 import colrev.env.docker_manager
 import colrev.env.utils
@@ -38,7 +37,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
 
         endpoint: str
         version: str
-        diagram_path: typing.List[Path] = Field(
+        diagram_path: list[Path] = Field(
             default_factory=lambda: [Path("PRISMA.png")]
         )
 
@@ -50,7 +49,7 @@ class PRISMA(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)

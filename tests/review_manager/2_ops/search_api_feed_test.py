@@ -13,12 +13,7 @@ import pytest
 import colrev.ops.search_api_feed
 import colrev.record.record
 import colrev.review_manager
-from colrev.constants import DefectCodes
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import SearchType
-
-# flake8: noqa: E501
+from colrev.constants import DefectCodes, Fields, FieldValues, SearchType
 
 
 @pytest.fixture(name="search_feed")

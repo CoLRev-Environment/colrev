@@ -7,8 +7,7 @@ import logging
 import typing
 from sqlite3 import OperationalError
 
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 import colrev.env.language_service
 import colrev.env.local_index
@@ -16,8 +15,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Fields, RecordState
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -34,15 +32,15 @@ class ScopePrescreenSettings(
     # pylint: disable=too-many-instance-attributes
 
     endpoint: str
-    ExcludePredatoryJournals: typing.Optional[bool] = True
-    TimeScopeFrom: typing.Optional[int] = None
-    TimeScopeTo: typing.Optional[int] = None
-    LanguageScope: typing.Optional[list] = None
-    ExcludeComplementaryMaterials: typing.Optional[bool] = None
-    OutletInclusionScope: typing.Optional[dict] = None
-    OutletExclusionScope: typing.Optional[dict] = None
-    ENTRYTYPEScope: typing.Optional[list] = None
-    RequireRankedJournals: typing.Optional[list] = None
+    ExcludePredatoryJournals: bool | None = True
+    TimeScopeFrom: int | None = None
+    TimeScopeTo: int | None = None
+    LanguageScope: list | None = None
+    ExcludeComplementaryMaterials: bool | None = None
+    OutletInclusionScope: dict | None = None
+    OutletExclusionScope: dict | None = None
+    ENTRYTYPEScope: list | None = None
+    RequireRankedJournals: list | None = None
 
     _details = {
         "TimeScopeFrom": {
@@ -85,7 +83,7 @@ class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -281,7 +279,7 @@ class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
 
         def parse_value(
             key: str, value: str
-        ) -> typing.Union[str, int, bool, list, dict]:
+        ) -> str | int | bool | list | dict:
             if key == "ExcludePredatoryJournals":
                 return_value = value == "True"
             elif key in ["TimeScopeTo", "TimeScopeFrom"]:
@@ -294,9 +292,7 @@ class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
                 return_value = {  # type: ignore
                     x.split(":")[0]: x.split(":")[1] for x in value.split(",")
                 }
-            elif key == "ENTRYTYPEScope":
-                return_value = value.split(",")  # type: ignore
-            elif key == "RequireRankedJournals":
+            elif key == "ENTRYTYPEScope" or key == "RequireRankedJournals":
                 return_value = value.split(",")  # type: ignore
             else:
                 return_value = value  # type: ignore
@@ -327,7 +323,7 @@ class ScopePrescreen(base_classes.PrescreenPackageBaseClass):
 
         # Insert (if not added before)
         operation.review_manager.settings.prescreen.prescreen_package_endpoints.insert(
-            0, {**{"endpoint": "colrev.scope_prescreen"}, **params_dict}
+            0, {"endpoint": "colrev.scope_prescreen", **params_dict}
         )
 
     def run_prescreen(

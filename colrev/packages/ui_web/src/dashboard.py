@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import dash  # pylint: disable=import-error
-from dash import Dash  # pylint: disable=import-error
-from dash import html  # pylint: disable=import-error
+from dash import (
+    Dash,  # pylint: disable=import-error
+    html,  # pylint: disable=import-error
+)
 
 import colrev.exceptions as colrev_exceptions
 
