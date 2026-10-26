@@ -2,10 +2,7 @@
 """Tests of the CoLRev validate operation"""
 
 import colrev.review_manager
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
-
-# flake8: noqa: E501
+from colrev.constants import OperationsType, RecordState
 
 
 def test_prep_validation(

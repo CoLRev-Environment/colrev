@@ -10,9 +10,7 @@ from git.exc import GitCommandError
 
 import colrev.process.operation
 import colrev.utils
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import OperationsType
+from colrev.constants import Colors, Fields, OperationsType
 
 # pylint: disable=too-few-public-methods
 

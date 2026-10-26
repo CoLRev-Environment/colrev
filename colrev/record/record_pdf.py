@@ -7,7 +7,6 @@ import logging
 import os
 import re
 import tempfile
-import typing
 import unicodedata
 from pathlib import Path
 
@@ -17,8 +16,7 @@ from PIL import Image
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
-from colrev.constants import Colors
-from colrev.constants import Fields
+from colrev.constants import Colors, Fields
 
 
 class PDFRecord(colrev.record.record.Record):
@@ -80,7 +78,7 @@ class PDFRecord(colrev.record.record.Record):
     def extract_text_by_page(
         self,
         *,
-        pages: typing.Optional[list] = None,
+        pages: list | None = None,
     ) -> str:
         """Extract the text from the PDF for a given number of pages."""
         pdf_path = self._get_path()
@@ -122,7 +120,7 @@ class PDFRecord(colrev.record.record.Record):
         *,
         pages: list,
         pdf_path: Path,
-        save_to_path: typing.Optional[Path] = None,
+        save_to_path: Path | None = None,
     ) -> None:  # pragma: no cover
         """Extract pages from the PDF."""
         doc = pymupdf.Document(pdf_path)
@@ -150,7 +148,7 @@ class PDFRecord(colrev.record.record.Record):
         self,
         *,
         pages: list,
-        save_to_path: typing.Optional[Path] = None,
+        save_to_path: Path | None = None,
     ) -> None:  # pragma: no cover
         """Extract pages from the PDF."""
         pdf_path = self._get_path()

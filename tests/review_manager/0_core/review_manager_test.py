@@ -7,8 +7,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 from colrev.constants import Colors
 
-# flake8: noqa: E501
-
 
 def test_invalid_git_repository_error(
     tmp_path: pytest.TempPathFactory,

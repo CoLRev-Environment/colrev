@@ -15,10 +15,7 @@ from git.exc import InvalidGitRepositoryError
 
 import colrev.exceptions as colrev_exceptions
 from colrev import utils
-from colrev.constants import ExitCodes
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
+from colrev.constants import ExitCodes, Fields, OperationsType, RecordState
 from colrev.env.environment_manager import EnvironmentManager
 from colrev.process.model import ProcessModel
 
@@ -29,7 +26,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 class Checker:
     """The CoLRev checker makes sure the project setup is ok."""
 
-    records: typing.Dict[str, typing.Any] = {}
+    records: dict[str, typing.Any] = {}
 
     def __init__(
         self,
@@ -292,10 +289,10 @@ class Checker:
         record_id: str,
         status: RecordState,
         screen_crit: str,
-        field_errors: typing.List[str],
+        field_errors: list[str],
         pattern: str,
         pattern_inclusion: str,
-        criteria: typing.List[str],
+        criteria: list[str],
     ) -> None:
         # No screening criteria allowed before screen
         if (
@@ -349,7 +346,7 @@ class Checker:
         if not status_data["screening_criteria_list"]:
             return
 
-        field_errors: typing.List[str] = []
+        field_errors: list[str] = []
 
         screening_criteria = self.review_manager.settings.screen.criteria
         if not screening_criteria:
@@ -441,7 +438,7 @@ class Checker:
         ]
 
         text_formats = [".txt", ".csv", ".md", ".bib", ".yaml"]
-        notifications: typing.List[str] = []
+        notifications: list[str] = []
         for root, dirs, files in os.walk(project_context, topdown=False):
             for filename in files:
                 if any(
@@ -671,7 +668,7 @@ class Checker:
         """Call all checks that require prior data (take longer)."""
         # pylint: disable=not-a-mapping
 
-        self.records: typing.Dict[str, typing.Any] = {}
+        self.records: dict[str, typing.Any] = {}
         if self.review_manager.paths.records.is_file():
             self.records = self.review_manager.dataset.load_records_dict()
 

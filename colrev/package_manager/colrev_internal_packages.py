@@ -6,14 +6,12 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from importlib.metadata import distribution
-from importlib.metadata import PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, distribution
 from pathlib import Path
-from urllib.parse import unquote
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
-import toml
 import git
+import toml
 
 
 # pylint: disable=too-many-return-statements

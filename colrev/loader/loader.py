@@ -5,9 +5,7 @@ import logging
 import typing
 from pathlib import Path
 
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Colors
-from colrev.constants import Fields
+from colrev.constants import ENTRYTYPES, Colors, Fields
 from colrev.loader.load_utils_name_formatter import parse_names_in_records
 
 # pylint: disable=too-many-arguments
