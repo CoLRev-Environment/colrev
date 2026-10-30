@@ -3,15 +3,17 @@
 
 from __future__ import annotations
 
-import os
-import tempfile
 import typing
 from functools import cached_property
 from pathlib import Path
 
+from bibliography_io import update
+from bibliography_io import load_primary
+from bibliography_io import loads_primary
+from bibliography_io import to_string
+from bibliography_io.exceptions import ParseError as BibliographyParseError
+
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.bib
-import colrev.loader.load_utils
 import colrev.ops.check
 import colrev.record.record_id_setter
 import colrev.record.record_prep
@@ -19,9 +21,35 @@ from colrev.constants import ExitCodes
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.git_repo import GitRepo
-from colrev.writer.write_utils import to_string
+from colrev.record.bibliography import adapt_bibliography_records
 
 # pylint: disable=too-many-public-methods
+
+
+def _load_primary_bibliography(
+    *, path: Path | None = None, text: str | None = None
+) -> dict[str, dict[str, typing.Any]]:
+    """Load CoLRev BibTeX, decoding structured values and accepting legacy data."""
+    options = {
+        "mapping_fields": {Fields.MD_PROV, Fields.D_PROV},
+        "list_fields": {Fields.ORIGIN},
+    }
+    try:
+        if path is not None:
+            records = load_primary(path, **options)
+        elif text is not None:
+            records = loads_primary(text, format="bib", **options)
+        else:
+            raise ValueError("Specify either path or text")
+    except BibliographyParseError:
+        # Older CoLRev files store provenance and origins as legacy strings.
+        if path is not None:
+            records = load_primary(path)
+        elif text is not None:
+            records = loads_primary(text, format="bib")
+        else:  # pragma: no cover - validated above
+            raise
+    return adapt_bibliography_records(records)
 
 
 class Dataset:
@@ -43,25 +71,12 @@ class Dataset:
         """
         current_origin_states_dict = {}
         if records_string != "":
-            with tempfile.NamedTemporaryFile(
-                mode="wb", delete=False, suffix=".bib"
-            ) as temp_file:
-                temp_file.write(records_string.encode("utf-8"))
-                temp_file_path = Path(temp_file.name)
-            bib_loader = colrev.loader.bib.BIBLoader(
-                filename=temp_file_path,
-                logger=self.review_manager.logger,
-                unique_id_field="ID",
-            )
+            records = _load_primary_bibliography(text=records_string)
         else:
-            bib_loader = colrev.loader.bib.BIBLoader(
-                filename=self.review_manager.paths.records,
-                logger=self.review_manager.logger,
-                unique_id_field="ID",
-            )
-        for record_header_item in bib_loader.get_record_header_items().values():
-            for origin in record_header_item[Fields.ORIGIN]:
-                current_origin_states_dict[origin] = record_header_item[Fields.STATUS]
+            records = _load_primary_bibliography(path=self.review_manager.paths.records)
+        for record_dict in records.values():
+            for origin in record_dict.get(Fields.ORIGIN, []):
+                current_origin_states_dict[origin] = record_dict[Fields.STATUS]
         return current_origin_states_dict
 
     def get_committed_origin_state_dict(self) -> dict:
@@ -118,10 +133,8 @@ class Dataset:
                 current_commit.tree / self.review_manager.paths.RECORDS_FILE_GIT
             ).data_stream.read()
 
-            records_dict = colrev.loader.load_utils.loads(
-                load_string=filecontents.decode("utf-8", "replace"),
-                implementation="bib",
-                logger=self.review_manager.logger,
+            records_dict = _load_primary_bibliography(
+                text=filecontents.decode("utf-8", "replace")
             )
             if records_dict:
                 yield records_dict
@@ -148,20 +161,19 @@ class Dataset:
 
         if header_only:
             # Note : currently not parsing screening_criteria to settings.ScreeningCriterion
-            # to optimize performance
-            bib_loader = colrev.loader.bib.BIBLoader(
-                filename=self.review_manager.paths.records,
-                logger=self.review_manager.logger,
-                unique_id_field="ID",
+            # TODO: should the parsing of status also occur in bibliography-io???
+            records = load_primary(
+                self.review_manager.paths.records,
+                header_only=True,
+                list_fields=[Fields.ORIGIN],
+                mapping_fields=[Fields.MD_PROV, Fields.D_PROV],
             )
-            return bib_loader.get_record_header_items()
+            return adapt_bibliography_records(records)
 
         if self.review_manager.paths.records.is_file():
 
-            records_dict = colrev.loader.load_utils.load(
-                filename=self.review_manager.paths.records,
-                logger=self.review_manager.logger,
-                unique_id_field="ID",
+            records_dict = _load_primary_bibliography(
+                path=self.review_manager.paths.records
             )
 
         else:
@@ -174,7 +186,12 @@ class Dataset:
         # Note : this classmethod function can be called by CoLRev scripts
         # operating outside a CoLRev repo (e.g., sync)
 
-        bibtex_str = to_string(records_dict=records, implementation="bib")
+        bibtex_str = to_string(
+            records,
+            format="bib",
+            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+            list_fields={Fields.ORIGIN},
+        )
 
         with open(self.review_manager.paths.records, "w", encoding="utf-8") as out:
             out.write(bibtex_str + "\n")
@@ -183,59 +200,12 @@ class Dataset:
 
     def _save_record_list_by_id(self, records: dict) -> None:
 
-        parsed = to_string(records_dict=records, implementation="bib")
-        record_list = [
-            {
-                Fields.ID: item[item.find("{") + 1 : item.find(",")],
-                "record": "@" + item + "\n",
-            }
-            for item in parsed.split("\n@")
-        ]
-        # Correct the first item
-        record_list[0]["record"] = "@" + record_list[0]["record"][2:]
-
-        current_id_str = "NOTSET"
-        if self.review_manager.paths.records.is_file():
-            with open(self.review_manager.paths.records, "r+b") as file:
-                seekpos = file.tell()
-                line = file.readline()
-                while line:
-                    if b"@" in line[:3]:
-                        current_id = line[line.find(b"{") + 1 : line.rfind(b",")]
-                        current_id_str = current_id.decode("utf-8")
-                    if current_id_str in [x[Fields.ID] for x in record_list]:
-                        replacement = [
-                            x["record"]
-                            for x in record_list
-                            if x[Fields.ID] == current_id_str
-                        ][0]
-                        record_list = [
-                            x for x in record_list if x[Fields.ID] != current_id_str
-                        ]
-                        line = file.readline()
-                        while (
-                            b"@" not in line[:3] and line
-                        ):  # replace: drop the current record
-                            line = file.readline()
-                        remaining = line + file.read()
-                        file.seek(seekpos)
-                        file.write(replacement.encode("utf-8"))
-                        seekpos = file.tell()
-                        file.flush()
-                        os.fsync(file)
-                        file.write(remaining)
-                        file.truncate()  # if the replacement is shorter...
-                        file.seek(seekpos)
-
-                    seekpos = file.tell()
-                    line = file.readline()
-
-        if len(record_list) > 0:
-            with open(
-                self.review_manager.paths.records, "a", encoding="utf8"
-            ) as m_refs:
-                for item in record_list:
-                    m_refs.write(item["record"])
+        update(
+            self.review_manager.paths.records,
+            records,
+            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+            list_fields={Fields.ORIGIN},
+        )
 
         self.git_repo.add_changes(self.review_manager.paths.RECORDS_FILE)
 

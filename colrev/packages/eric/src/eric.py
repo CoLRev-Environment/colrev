@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
 import urllib.parse
@@ -262,15 +264,14 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
             for key, value in record_dict.items():
                 record_dict[key] = str(value)
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            unique_id_field="OID",
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
-            logger=logger,
-        )
-
-        return records
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(filename, normalize=False)
+        for index, record_dict in enumerate(records, start=1):
+            entrytype_setter(record_dict)
+            if not record_dict.get(Fields.ID):
+                record_dict[Fields.ID] = str(record_dict.get("OID", index))
+            field_mapper(record_dict)
+        return index_records_by_id(records)
 
     def load(self) -> dict:
         """Load the records from the SearchSource file."""
@@ -280,11 +281,8 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
         if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-            )
-            return records
+            # TODO: source-package load() may need CoLRev pre/post-processing.
+            return index_records_by_id(load_raw(self.search_source.search_results_path))
 
         raise NotImplementedError
 

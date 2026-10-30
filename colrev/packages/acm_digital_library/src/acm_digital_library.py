@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
 from pathlib import Path
@@ -136,14 +138,11 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
                         "articleno"
                     )
 
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                unique_id_field="ID",
-                field_mapper=field_mapper,
-                logger=self.logger,
-            )
-
-            return records
+            # TODO: source-package load() may need CoLRev pre/post-processing.
+            records = load_raw(self.search_source.search_results_path)
+            for record_dict in records:
+                field_mapper(record_dict)
+            return index_records_by_id(records)
 
         raise NotImplementedError
 

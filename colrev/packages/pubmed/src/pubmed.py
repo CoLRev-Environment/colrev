@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
 from multiprocessing import Lock
@@ -523,14 +525,13 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if value == "" or pd.isna(value):
                     del record_dict[key]
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            unique_id_field="PMID",
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
-            logger=logger,
-        )
-        return records
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(filename, normalize=False)
+        for record_dict in records:
+            entrytype_setter(record_dict)
+            record_dict[Fields.ID] = str(record_dict.get("PMID", ""))
+            field_mapper(record_dict)
+        return index_records_by_id(records)
 
     def load(self) -> dict:
         """Load the records from the SearchSource file."""
@@ -540,11 +541,8 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
 
         if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-            )
-            return records
+            # TODO: source-package load() may need CoLRev pre/post-processing.
+            return index_records_by_id(load_raw(self.search_source.search_results_path))
 
         raise NotImplementedError
 

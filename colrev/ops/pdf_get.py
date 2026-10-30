@@ -14,6 +14,7 @@ import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record_pdf
+from bibliography_io import load_raw
 from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
@@ -22,7 +23,7 @@ from colrev.constants import OperationsType
 from colrev.constants import PDFPathType
 from colrev.constants import RecordState
 from colrev.package_manager.package_manager import PackageManager
-from colrev.writer.write_utils import write_file
+from bibliography_io import write
 
 
 def relink_pdfs_in_source(
@@ -43,11 +44,7 @@ def relink_pdfs_in_source(
 
     pdf_candidates: typing.Dict[str, Path] = {}
 
-    source_records_dict = colrev.loader.load_utils.load(
-        filename=source.search_results_path,
-        logger=logger,
-    )
-    source_records = list(source_records_dict.values())
+    source_records = load_raw(source.search_results_path)
     if len(source_records) == 0:
         logger.info("No records to relink")
         return
@@ -68,8 +65,7 @@ def relink_pdfs_in_source(
         )
 
     logger.info("Relinking completed. Save results.")
-    source_records_dict = {r[Fields.ID]: r for r in source_records}
-    write_file(records_dict=source_records_dict, filename=source.search_results_path)
+    write(source_records, path=source.search_results_path)
 
 
 def _get_source_record(

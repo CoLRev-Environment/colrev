@@ -225,10 +225,7 @@ class RISLoader(colrev.loader.loader.Loader):
             content = self.filename.read_text(encoding="utf-8")
             content = self._clean_text(content)
 
-        lines = content.split("\n")
-        records_list = list(r for r in self._parse_lines(lines) if r)
-
-        return records_list
+        return list(r for r in self._parse_lines(content.split("\n")) if r)
 
     # def apply_ris_fixes(self) -> None:
     #     """Fix common defects in RIS files"""

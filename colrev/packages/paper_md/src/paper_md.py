@@ -15,6 +15,9 @@ from threading import Timer
 
 import docker
 import requests
+from bibliography_io import load_raw
+from bibliography_io import loads_raw
+from bibliography_io import write
 from docker.errors import DockerException
 from pydantic import BaseModel
 from pydantic import Field
@@ -29,7 +32,7 @@ from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
-from colrev.writer.write_utils import write_file
+from colrev.record.record_utils import index_records_by_id
 
 
 class PaperMarkdownSettings(BaseModel):
@@ -530,29 +533,34 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         )
 
         if filedata:
-
-            non_sample_records = colrev.loader.load_utils.load(
-                filename=self.non_sample_references,
-                logger=self.logger,
+            fields_to_remove = {Fields.MD_PROV, Fields.D_PROV, Fields.ORIGIN}
+            non_sample_references = (
+                index_records_by_id(load_raw(self.non_sample_references))
+                if self.non_sample_references.is_file()
+                else {}
             )
 
-            records_to_add = colrev.loader.load_utils.loads(
-                load_string=filedata.decode("utf-8"),
-                implementation="bib",
-                logger=self.logger,
+            records_to_add = index_records_by_id(
+                loads_raw(filedata.decode("utf-8"), format="bib")
             )
+            for record_dict in (
+                *non_sample_references.values(),
+                *records_to_add.values(),
+            ):
+                for field in fields_to_remove:
+                    record_dict.pop(field, None)
 
             # maybe prefix "non_sample_NameYear"? (also avoid conflicts with records.bib)
-            duplicated_keys = [
-                k for k in records_to_add.keys() if k in non_sample_records.keys()
-            ]
+            duplicated_keys = [k for k in records_to_add if k in non_sample_references]
             duplicated_records = [
                 item
                 for item in records_to_add.values()
-                if item[Fields.ID] in non_sample_records.keys()
+                if item[Fields.ID] in non_sample_references
             ]
             records_to_add = {
-                k: v for k, v in records_to_add.items() if k not in non_sample_records
+                k: v
+                for k, v in records_to_add.items()
+                if k not in non_sample_references
             }
             if duplicated_keys:
                 self.logger.error(
@@ -563,10 +571,11 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 for duplicated_record in duplicated_records:
                     print(colrev.record.record.Record(duplicated_record))
 
-            non_sample_records = {**non_sample_records, **records_to_add}
+            non_sample_references = {**non_sample_references, **records_to_add}
 
-            write_file(
-                records_dict=non_sample_records, filename=self.non_sample_references
+            write(
+                non_sample_references,
+                path=self.non_sample_references,
             )
 
             self.review_manager.dataset.git_repo.add_changes(
@@ -665,11 +674,16 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
 
     def _copy_references_bib(self) -> None:
         records = self.review_manager.dataset.load_records_dict()
+        fields_to_remove = {Fields.MD_PROV, Fields.D_PROV, Fields.ORIGIN}
         for record_id, record_dict in records.items():
-            record_dict = {k.replace(".", "_"): v for k, v in record_dict.items()}
+            record_dict = {
+                key.replace(".", "_"): value
+                for key, value in record_dict.items()
+                if key not in fields_to_remove
+            }
             records[record_id] = record_dict
 
-        write_file(records_dict=records, filename=self.sample_references)
+        write(records, path=self.sample_references)
         self.review_manager.dataset.git_repo.add_changes(self.sample_references)
 
     def _call_docker_build_process(self, *, script: str) -> None:

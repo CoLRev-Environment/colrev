@@ -3,6 +3,9 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
+
 import logging
 import re
 import typing
@@ -18,7 +21,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
-from colrev.writer.write_utils import write_file
+from bibliography_io import write
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -120,7 +123,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
                 logger.info(f" remove duplicate {rid}")
                 del records[rid]
 
-            write_file(records_dict=records, filename=filename)
+            write(records, path=filename)
 
     def prep_link_md(
         self,
@@ -265,21 +268,20 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def _load_ris(cls, filename: Path, logger: logging.Logger) -> dict:
-        return colrev.loader.load_utils.load(
-            filename=filename,
-            id_labeler=cls._ris_id_labeler,
-            entrytype_setter=cls._ris_entrytype_setter,
-            field_mapper=cls._ris_field_mapper,
-            logger=logger,
-        )
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(filename, normalize=False)
+        cls._ris_id_labeler(records)
+        for record_dict in records:
+            cls._ris_entrytype_setter(record_dict)
+            cls._ris_field_mapper(record_dict)
+        return index_records_by_id(records)
 
     def load(self) -> dict:
         """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-                unique_id_field="ID",
+            # TODO: source-package load() may need CoLRev pre/post-processing.
+            records = index_records_by_id(
+                load_raw(self.search_source.search_results_path)
             )
             self._remove_duplicates(
                 records=records,

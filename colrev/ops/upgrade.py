@@ -18,13 +18,14 @@ from yaml import safe_load
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
+from bibliography_io import load_primary
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
-from colrev.writer.write_utils import to_string
+from bibliography_io import to_string
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=line-too-long
@@ -84,9 +85,10 @@ class Upgrade(colrev.process.operation.Operation):
             dict: The loaded records dictionary.
 
         """
-        records = colrev.loader.load_utils.load(
-            filename=Path("data/records.bib"),
-            logger=self.review_manager.logger,
+        records = load_primary(
+            Path("data/records.bib"),
+            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+            list_fields={Fields.ORIGIN},
         )
 
         return records
@@ -98,7 +100,12 @@ class Upgrade(colrev.process.operation.Operation):
             records (dict): The records dictionary to save.
 
         """
-        bibtex_str = to_string(records_dict=records, implementation="bib")
+        bibtex_str = to_string(
+            records,
+            format="bib",
+            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+            list_fields={Fields.ORIGIN},
+        )
         with open("data/records.bib", "w", encoding="utf-8") as out:
             out.write(bibtex_str + "\n")
         self.repo.index.add(["data/records.bib"])
@@ -746,16 +753,22 @@ class Upgrade(colrev.process.operation.Operation):
         settings = self._load_settings_dict()
         for source in settings["sources"]:
             if source["endpoint"] == "colrev.dblp":
-                records = colrev.loader.load_utils.load(
-                    filename=Path(source["filename"]),
-                    logger=self.review_manager.logger,
+                records = load_primary(
+                    Path(source["filename"]),
+                    mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                    list_fields={Fields.ORIGIN},
                 )
                 for record_dict in records.values():
                     if "warning" in record_dict:
                         record_dict["colrev.dblp.warning"] = record_dict.pop("warning")
                     record_dict.pop("metadata_source", None)
 
-                bibtex_str = to_string(records_dict=records, implementation="bib")
+                bibtex_str = to_string(
+                    records,
+                    format="bib",
+                    mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                    list_fields={Fields.ORIGIN},
+                )
                 with open(source["filename"], "w", encoding="utf-8") as out:
                     out.write(bibtex_str + "\n")
                 self.repo.index.add([source["filename"]])

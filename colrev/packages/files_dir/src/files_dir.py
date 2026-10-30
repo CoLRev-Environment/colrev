@@ -17,6 +17,8 @@ import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.packages.pdf_backward_search.src.pdf_backward_search as bws
 import colrev.record.record
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import colrev.record.record_pdf
 import colrev.record.record_prep
 import colrev.record.record_similarity
@@ -31,7 +33,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.pdf_get import relink_pdfs_in_source
 from colrev.packages.crossref.src.crossref_api import query_doi
-from colrev.writer.write_utils import write_file
+from bibliography_io import write
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -137,10 +139,8 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         if not self.search_source.search_results_path.is_file():
             return
 
-        search_rd = colrev.loader.load_utils.load(
-            filename=self.search_source.search_results_path,
-            logger=self.logger,
-            unique_id_field="ID",
+        search_rd = index_records_by_id(
+            load_raw(self.search_source.search_results_path)
         )
 
         records = self.review_manager.dataset.load_records_dict()
@@ -171,9 +171,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if len(search_rd.values()) != 0:
 
-            write_file(
-                records_dict=search_rd, filename=self.search_source.search_results_path
-            )
+            write(search_rd, path=self.search_source.search_results_path)
 
         if records:
             for record_dict in records.values():
@@ -773,12 +771,11 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if "note" in record_dict:
                     record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
 
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                unique_id_field="ID",
-                field_mapper=field_mapper,
-                logger=self.logger,
-            )
+            # TODO: source-package load() may need CoLRev pre/post-processing.
+            raw_records = load_raw(self.search_source.search_results_path)
+            for record_dict in raw_records:
+                field_mapper(record_dict)
+            records = index_records_by_id(raw_records)
 
             for record_dict in records.values():
                 if Fields.GROBID_VERSION in record_dict:

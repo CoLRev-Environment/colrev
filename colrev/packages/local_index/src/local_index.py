@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import difflib
 import logging
 import typing
@@ -274,11 +276,12 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
                         self.logger.debug(f"Field {key} not in standard field set")
                         del record_dict[key]
 
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                field_mapper=field_mapper,
-                logger=self.logger,
+            # TODO: source-package load() may need CoLRev pre/post-processing.
+            records = index_records_by_id(
+                load_raw(self.search_source.search_results_path)
             )
+            for record_dict in records.values():
+                field_mapper(record_dict)
             for record_id in records:
                 record_dict = {
                     k: v

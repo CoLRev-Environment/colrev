@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import logging
 import os
 import typing
@@ -309,16 +311,13 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
             for key, value in record_dict.items():
                 record_dict[key] = str(value)
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            unique_id_field="INCREMENTAL",
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
-            logger=logger,
-            format_names=True,
-        )
-
-        return records
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(filename, normalize=False)
+        for index, record_dict in enumerate(records, start=1):
+            entrytype_setter(record_dict)
+            record_dict.setdefault(Fields.ID, f"{index:06d}")
+            field_mapper(record_dict)
+        return index_records_by_id(records)
 
     @classmethod
     def ensure_append_only(cls, filename: Path) -> bool:
@@ -355,14 +354,14 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if value == "" or pd.isna(value):
                     del record_dict[key]
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            unique_id_field="DOI",
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
-            logger=logger,
-        )
-        return records
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(filename, normalize=False)
+        for record_dict in records:
+            entrytype_setter(record_dict)
+            if not record_dict.get(Fields.ID):
+                record_dict[Fields.ID] = str(record_dict.get("DOI", ""))
+            field_mapper(record_dict)
+        return index_records_by_id(records)
 
     def load(self) -> dict:
         """Load the records from the SearchSource file."""

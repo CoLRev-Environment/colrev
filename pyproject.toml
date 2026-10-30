@@ -51,6 +51,7 @@ dependencies = [
     "defusedxml>=0.7.1",               # required for XML parsing
     "pandas>=2.2,<3",
     "openpyxl>=3.1.2",                 # required by pandas for Excel
+    "bibliography-io>=0.1.0",
     "PyYAML>=6.0.0",
     "requests>=2.32.0",
     "requests-cache>=1.2.0",
@@ -111,6 +112,9 @@ colrev-hooks-update = "colrev.hooks.update:main"
 python_version = "3.12"
 warn_unused_configs = true
 ignore_missing_imports = true
+
+[tool.uv.sources]
+bibliography-io = { path = "../bibliography-io", editable = true }
 
 [[tool.mypy.overrides]]
 module = ["requests.*", "yaml.*", "pkg_resources.*"]

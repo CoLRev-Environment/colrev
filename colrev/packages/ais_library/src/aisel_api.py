@@ -8,7 +8,7 @@ import urllib.parse
 
 import requests
 
-import colrev.loader.load_utils
+from bibliography_io import loads_raw
 import colrev.search_file
 from colrev.packages.ais_library.src import ais_load_utils
 
@@ -79,13 +79,10 @@ class AISeLAPI:
         # Note: the following writes the enl to the feed file (bib).
         # This file is replaced by ais_feed.save()
 
-        records = colrev.loader.load_utils.loads(
-            response.text,
-            implementation="enl",
-            id_labeler=ais_load_utils.enl_id_labeler,
-            entrytype_setter=ais_load_utils.enl_entrytype_setter,
-            field_mapper=ais_load_utils.enl_field_mapper,
-            # logger=self.logger,
-        )
-
-        return list(records.values())
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = loads_raw(response.text, format="enl", normalize=False)
+        ais_load_utils.enl_id_labeler(records)
+        for record_dict in records:
+            ais_load_utils.enl_entrytype_setter(record_dict)
+            ais_load_utils.enl_field_mapper(record_dict)
+        return records

@@ -8,13 +8,14 @@ import re
 import typing
 from pathlib import Path
 
+from bibliography_io import load_raw
 import pandas as pd
 from pydantic import Field
 from rapidfuzz import fuzz
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.load_utils
+from colrev.record.record_utils import index_records_by_id
 import colrev.loader.ris
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
@@ -131,22 +132,23 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             for source_control_field in ("C1", "T3", "AD", "CY", "M3"):
                 record_dict.pop(source_control_field, None)
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            unique_id_field="INCREMENTAL",
-            field_mapper=map_source_specific_fields,
-            logger=logger,
-        )
-        return records
+        records = load_raw(filename, normalize=False)
+        for index, record_dict in enumerate(records, start=1):
+            if Fields.ENTRYTYPE not in record_dict:
+                colrev.loader.ris.set_entrytype(record_dict)
+            map_source_specific_fields(record_dict)
+            record_dict[Fields.ID] = str(index).zfill(6)
+        return index_records_by_id(records)
 
     @classmethod
     def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            logger=logger,
-            unique_id_field="ID",
-        )
-        return records
+        records = load_raw(filename, normalize=False)
+        for record_dict in records:
+            record_dict.setdefault(Fields.ENTRYTYPE, ENTRYTYPES.MISC)
+            record_dict[Fields.ENTRYTYPE] = record_dict[Fields.ENTRYTYPE].lower()
+            if record_dict[Fields.ENTRYTYPE] in ["www", "electronic"]:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+        return index_records_by_id(records)
 
     # pylint: disable=colrev-missed-constant-usage
     @classmethod
@@ -248,24 +250,19 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def _load_table(cls, *, filename: Path, logger: logging.Logger) -> dict:
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            id_labeler=cls._table_id_labeler,
-            entrytype_setter=cls._table_entrytype_setter,
-            field_mapper=cls._table_field_mapper,
-            logger=logger,
-        )
-
-        return records
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(filename, normalize=False)
+        cls._table_id_labeler(records)
+        for record_dict in records:
+            cls._table_entrytype_setter(record_dict)
+            cls._table_field_mapper(record_dict)
+        return index_records_by_id(records)
 
     @classmethod
     def _load_md(cls, *, filename: Path, logger: logging.Logger) -> dict:
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            logger=logger,
-        )
-        return records
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        return index_records_by_id(load_raw(filename, format="md"))
 
     @classmethod
     def _load_enl(cls, *, filename: Path, logger: logging.Logger) -> dict:
@@ -339,15 +336,13 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
             for key, value in record_dict.items():
                 record_dict[key] = str(value)
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            unique_id_field="INCREMENTAL",
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
-            logger=logger,
-        )
-
-        return records
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(filename, normalize=False)
+        for index, record_dict in enumerate(records, start=1):
+            entrytype_setter(record_dict)
+            record_dict.setdefault(Fields.ID, str(index))
+            field_mapper(record_dict)
+        return index_records_by_id(records)
 
     @classmethod
     def ensure_append_only(cls, filename: Path) -> bool:

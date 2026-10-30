@@ -20,7 +20,7 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import RecordState
-from colrev.writer.write_utils import write_file
+from bibliography_io import write
 
 
 class BibFormats(Enum):
@@ -106,7 +106,16 @@ class BibliographyExport(base_classes.DataPackageBaseClass):
         else:
             raise NotImplementedError
 
-        write_file(records_dict=selected_records, filename=export_filepath)
+        write(
+            selected_records,
+            path=export_filepath,
+            mapping_fields=(
+                {Fields.MD_PROV, Fields.D_PROV}
+                if export_filepath.suffix == ".bib"
+                else ()
+            ),
+            list_fields=({Fields.ORIGIN} if export_filepath.suffix == ".bib" else ()),
+        )
 
         self.review_manager.dataset.git_repo.add_changes(export_filepath)
         self.review_manager.create_commit(

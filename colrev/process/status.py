@@ -5,16 +5,15 @@ from __future__ import annotations
 
 import typing
 
+from bibliography_io import get_nr_records
 from pydantic import BaseModel
 
-import colrev.loader.load_utils
-from colrev.constants import Fields
-from colrev.constants import RecordState
+import colrev.record.record
+from colrev.constants import Fields, RecordState
 from colrev.process.model import ProcessModel
 
 if typing.TYPE_CHECKING:
     import colrev.review_manager
-    import colrev.record.record
 
 
 class StatusStatsCurrently(BaseModel):
@@ -212,10 +211,11 @@ def _get_md_retrieved(sources: list) -> int:
     md_retrieved = 0
     for source in sources:
         if not source.is_md_source():
-            nr_in_file = colrev.loader.load_utils.get_nr_records(
-                source.search_results_path
-            )
-            md_retrieved += nr_in_file
+            try:
+                md_retrieved += get_nr_records(source.search_results_path)
+            except FileNotFoundError:
+                # A configured source may not have a results file yet.
+                continue
     return md_retrieved
 
 

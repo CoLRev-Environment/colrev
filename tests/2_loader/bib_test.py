@@ -6,42 +6,36 @@ import os
 from pathlib import Path
 
 import pytest
+from bibliography_io import get_nr_records
+from bibliography_io import load_raw
+from bibliography_io.exceptions import ParseError
+from bibliography_io.exceptions import UnsupportedFormatError
 
-import colrev.exceptions as colrev_exceptions
 import colrev.loader.bib
-import colrev.loader.load_utils
 
 # flake8: noqa
 
 
 def test_load(tmp_path, helpers) -> None:  # type: ignore
-    """Test the load utils for bib files"""
+    """Test direct bibliography-io BibTeX loading and CoLRev fix helpers."""
     os.chdir(tmp_path)
 
     Path("non-bib-file.bib").write_text("This is not a bib file.")
-    with pytest.raises(colrev_exceptions.UnsupportedImportFormatError):
-        colrev.loader.load_utils.load(
-            filename=Path("non-bib-file.bib"),
-        )
+    with pytest.raises(ParseError):
+        load_raw(Path("non-bib-file.bib"))
 
     # only supports bib
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(UnsupportedFormatError):
         os.makedirs("data/search", exist_ok=True)
         Path("data/search/bib_tests.xy").touch()
         try:
-            colrev.loader.load_utils.load(
-                filename=Path("data/search/bib_tests.xy"),
-                logger=logging.getLogger(__name__),
-            )
+            load_raw(Path("data/search/bib_tests.xy"))
         finally:
             Path("data/search/bib_tests.xy").unlink()
 
     # file must exist
     with pytest.raises(FileNotFoundError):
-        colrev.loader.load_utils.load(
-            filename=Path("non-existent.bib"),
-            empty_if_file_not_exists=False,
-        )
+        load_raw(Path("non-existent.bib"))
 
     helpers.retrieve_test_file(
         source=Path("2_loader/data/bib_data.bib"),
@@ -52,9 +46,8 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         Path("data/search/bib_data.bib"), logger=logging.getLogger(__name__)
     )
 
-    records = colrev.loader.load_utils.load(
-        filename=Path("data/search/bib_data.bib"),
-    )
+    records_list = load_raw(Path("data/search/bib_data.bib"), normalize=False)
+    records = {record["ID"]: record for record in records_list}
     colrev.loader.bib.run_resolve_crossref(records, logger=logging.getLogger(__name__))
 
     print(records)
@@ -120,17 +113,13 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         },
     }
 
-    nr_records = colrev.loader.load_utils.get_nr_records(
-        Path("data/search/bib_data.bib")
-    )
+    nr_records = get_nr_records(Path("data/search/bib_data.bib"))
     assert 6 == nr_records
 
-    # if the file does not (yet) exist
-    nr_records = colrev.loader.load_utils.get_nr_records(
-        Path("data/search/bib_data2.bib")
-    )
+    # A missing file has no records.
+    nr_records = get_nr_records(Path("data/search/bib_data2.bib"))
     assert 0 == nr_records
 
     Path("data/search/bib_data2.unkonwn").write_text("This is not a bib file.")
-    with pytest.raises(NotImplementedError):
-        colrev.loader.load_utils.get_nr_records(Path("data/search/bib_data2.unkonwn"))
+    with pytest.raises(UnsupportedFormatError):
+        get_nr_records(Path("data/search/bib_data2.unkonwn"))

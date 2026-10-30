@@ -6,9 +6,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import colrev.process.operation
+from bibliography_io import load_primary
 from colrev.constants import Fields
 from colrev.constants import OperationsType
-from colrev.writer.write_utils import write_file
+from bibliography_io import write
 
 
 class Remove(colrev.process.operation.Operation):
@@ -46,15 +47,16 @@ class Remove(colrev.process.operation.Operation):
                     search_dir = self.review_manager.paths.search
                     filepath = search_dir / Path(file)
 
-                    origin_records = colrev.loader.load_utils.load(
-                        filename=filepath,
-                        logger=self.review_manager.logger,
+                    origin_records = load_primary(
+                        filepath,
+                        mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                        list_fields={Fields.ORIGIN},
                     )
 
                     if origin_id in origin_records:
                         del origin_records[origin_id]
 
-                    write_file(records_dict=origin_records, filename=filepath)
+                    write(origin_records, path=filepath)
 
                     self.review_manager.dataset.git_repo.add_changes(filepath)
 

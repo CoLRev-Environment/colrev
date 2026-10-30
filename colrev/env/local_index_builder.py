@@ -15,6 +15,8 @@ from threading import Timer
 
 import pandas as pd
 import requests_cache
+from bibliography_io import loads_raw
+from bibliography_io import to_string
 from tqdm import tqdm
 
 import colrev.env.environment_manager
@@ -23,7 +25,6 @@ import colrev.env.resources
 import colrev.env.tei_parser
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.load_utils
 import colrev.ops.check
 import colrev.record.record
 import colrev.review_manager
@@ -32,7 +33,8 @@ from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import LocalIndexFields
 from colrev.env.local_index_prep import prepare_record_for_indexing
-from colrev.writer.write_utils import to_string
+from colrev.record.bibliography import adapt_bibliography_records
+from colrev.record.record_utils import index_records_by_id
 
 
 class LocalIndexBuilder:
@@ -135,11 +137,16 @@ class LocalIndexBuilder:
         curated_fields: list,
     ) -> None:
         """Adds layered fields to amend existing records."""
-        item_record_dict = colrev.loader.load_utils.loads(
-            load_string=item_to_add[LocalIndexFields.BIBTEX],
-            implementation="bib",
-            unique_id_field="ID",
+        item_record_dict = index_records_by_id(
+            loads_raw(
+                item_to_add[LocalIndexFields.BIBTEX],
+                format="bib",
+                normalize=False,
+                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                list_fields={Fields.ORIGIN},
+            )
         )
+        item_record_dict = adapt_bibliography_records(item_record_dict)
         item_record = colrev.record.record.Record(list(item_record_dict.values())[0])
         stored_record = colrev.record.record.Record(stored_record_dict)
 
@@ -157,8 +164,18 @@ class LocalIndexBuilder:
             )
 
         bibtex = to_string(
-            records_dict={stored_record.data[Fields.ID]: stored_record.data},
-            implementation="bib",
+            {stored_record.data[Fields.ID]: stored_record.data},
+            format="bib",
+            mapping_fields={
+                field
+                for field in (Fields.MD_PROV, Fields.D_PROV)
+                if isinstance(stored_record.data.get(field), dict)
+            },
+            list_fields=(
+                {Fields.ORIGIN}
+                if isinstance(stored_record.data.get(Fields.ORIGIN), list)
+                else set()
+            ),
         )
 
         sqlite_index_record.update(
@@ -201,8 +218,18 @@ class LocalIndexBuilder:
                         file=repo_source_path / Path(record_dict[Fields.FILE])
                     )
                 record_dict[LocalIndexFields.BIBTEX] = to_string(
-                    records_dict={record_dict[Fields.ID]: record_dict},
-                    implementation="bib",
+                    {record_dict[Fields.ID]: record_dict},
+                    format="bib",
+                    mapping_fields={
+                        field
+                        for field in (Fields.MD_PROV, Fields.D_PROV)
+                        if isinstance(record_dict.get(field), dict)
+                    },
+                    list_fields=(
+                        {Fields.ORIGIN}
+                        if isinstance(record_dict.get(Fields.ORIGIN), list)
+                        else set()
+                    ),
                 )
                 record_dict = prepare_record_for_indexing(record_dict)
                 recs_to_index.append(record_dict)

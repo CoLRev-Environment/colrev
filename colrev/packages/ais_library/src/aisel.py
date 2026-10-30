@@ -13,7 +13,8 @@ from urllib.parse import urlparse
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.load_utils
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
@@ -322,25 +323,22 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def _load_enl(cls, *, filename: Path, logger: logging.Logger) -> dict:
 
-        return colrev.loader.load_utils.load(
-            filename=filename,
-            id_labeler=ais_load_utils.enl_id_labeler,
-            entrytype_setter=ais_load_utils.enl_entrytype_setter,
-            field_mapper=ais_load_utils.enl_field_mapper,
-            logger=logger,
-        )
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(filename, normalize=False)
+        ais_load_utils.enl_id_labeler(records)
+        for record_dict in records:
+            ais_load_utils.enl_entrytype_setter(record_dict)
+            ais_load_utils.enl_field_mapper(record_dict)
+        return index_records_by_id(records)
 
     @classmethod
     def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            logger=logger,
-            field_mapper=ais_load_utils.bib_field_mapper,
-            unique_id_field="ID",
-        )
-
-        return records
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(filename)
+        for record_dict in records:
+            ais_load_utils.bib_field_mapper(record_dict)
+        return index_records_by_id(records)
 
     def load(self) -> dict:
         """Load the records from the SearchSource file."""

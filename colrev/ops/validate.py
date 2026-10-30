@@ -8,6 +8,9 @@ import re
 import typing
 from pathlib import Path
 
+from bibliography_io import load_primary
+from bibliography_io import loads_primary
+from bibliography_io import write
 from tqdm import tqdm
 
 import colrev.exceptions as colrev_exceptions
@@ -16,7 +19,7 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
-from colrev.writer.write_utils import write_file
+from colrev.record.bibliography import adapt_bibliography_records
 
 
 class Validate(colrev.process.operation.Operation):
@@ -60,10 +63,11 @@ class Validate(colrev.process.operation.Operation):
                 # To skip the same commit
                 found_target_commit = True
                 continue
-            prior_records_dict = colrev.loader.load_utils.loads(
-                load_string=filecontents.decode("utf-8"),
-                implementation="bib",
-                logger=self.review_manager.logger,
+            prior_records_dict = adapt_bibliography_records(
+                loads_primary(
+                    filecontents.decode("utf-8"),
+                    format="bib",
+                )
             )
 
             return prior_records_dict
@@ -296,17 +300,19 @@ class Validate(colrev.process.operation.Operation):
         prior_records = {}
         for commit, filecontents in list(revlist):
             if found:  # load the records_file_relative in the following commit
-                prior_records = colrev.loader.load_utils.loads(
-                    load_string=filecontents.decode("utf-8"),
-                    implementation="bib",
-                    logger=self.review_manager.logger,
+                prior_records = adapt_bibliography_records(
+                    loads_primary(
+                        filecontents.decode("utf-8"),
+                        format="bib",
+                    )
                 )
                 break
             if commit == target_commit:
-                records = colrev.loader.load_utils.loads(
-                    load_string=filecontents.decode("utf-8"),
-                    implementation="bib",
-                    logger=self.review_manager.logger,
+                records = adapt_bibliography_records(
+                    loads_primary(
+                        filecontents.decode("utf-8"),
+                        format="bib",
+                    )
                 )
                 found = True
 
@@ -529,10 +535,11 @@ class Validate(colrev.process.operation.Operation):
                 .data_stream.read()
                 .decode("utf-8")
             )
-            records_branch_1 = colrev.loader.load_utils.loads(
-                load_string=load_str,
-                implementation="bib",
-                logger=self.review_manager.logger,
+            records_branch_1 = adapt_bibliography_records(
+                loads_primary(
+                    load_str,
+                    format="bib",
+                )
             )
 
             load_str = (
@@ -540,10 +547,11 @@ class Validate(colrev.process.operation.Operation):
                 .data_stream.read()
                 .decode("utf-8")
             )
-            records_branch_2 = colrev.loader.load_utils.loads(
-                load_string=load_str,
-                implementation="bib",
-                logger=self.review_manager.logger,
+            records_branch_2 = adapt_bibliography_records(
+                loads_primary(
+                    load_str,
+                    format="bib",
+                )
             )
 
             load_str = (
@@ -551,10 +559,11 @@ class Validate(colrev.process.operation.Operation):
                 .data_stream.read()
                 .decode("utf-8")
             )
-            records_reconciled = colrev.loader.load_utils.loads(
-                load_string=load_str,
-                implementation="bib",
-                logger=self.review_manager.logger,
+            records_reconciled = adapt_bibliography_records(
+                loads_primary(
+                    load_str,
+                    format="bib",
+                )
             )
 
             if "screen" in commit.message or "prescreen" in commit.message:
@@ -695,16 +704,18 @@ class Validate(colrev.process.operation.Operation):
         for file, identifiers in origins_to_remove.items():
             if file.startswith("md_"):
                 filename = self.review_manager.paths.SEARCH_DIR / Path(file)
-                origin_records = colrev.loader.load_utils.load(
-                    filename=filename,
-                    logger=self.review_manager.logger,
+                origin_records = load_primary(
+                    filename,
+                    mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                    list_fields={Fields.ORIGIN},
                 )
+                origin_records = adapt_bibliography_records(origin_records)
                 for identifier in identifiers:
                     if f"{file}/{identifier}" in origins_in_use:
                         continue
                     if identifier in origin_records:
                         origin_records.pop(identifier)
-                write_file(records_dict=origin_records, filename=filename)
+                write(origin_records, path=filename)
 
             self.review_manager.dataset.git_repo.add_changes(filename)
 

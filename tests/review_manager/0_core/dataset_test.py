@@ -92,6 +92,25 @@ def test_get_origin_state_dict(
     ), "The origin state dictionary does not match the expected output."
 
 
+def test_header_only_records_adapt_status_to_record_state(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Header-only reads should expose CoLRev's enum status values."""
+    base_repo_review_manager.get_pdf_get_operation()
+    header_records = base_repo_review_manager.dataset.load_records_dict(
+        header_only=True
+    )
+    full_records = base_repo_review_manager.dataset.load_records_dict()
+
+    assert isinstance(
+        header_records["SrivastavaShainesh2015"][Fields.STATUS], RecordState
+    )
+    assert (
+        header_records["SrivastavaShainesh2015"][Fields.STATUS]
+        == full_records["SrivastavaShainesh2015"][Fields.STATUS]
+    )
+
+
 def test_get_committed_origin_state_dict(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:

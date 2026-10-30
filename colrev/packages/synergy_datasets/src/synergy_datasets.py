@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import datetime
 import logging
 import tempfile
@@ -352,17 +354,15 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
     def load(self) -> dict:
         """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-            )
-            for record in records.values():
+            # TODO: source-package load() may need CoLRev pre/post-processing.
+            records = load_raw(self.search_source.search_results_path)
+            for record in records:
                 if "pmid" in record:
                     record["pubmedid"] = record["pmid"].replace(
                         "https://pubmed.ncbi.nlm.nih.gov/", ""
                     )
                     del record["pmid"]
-            return records
+            return index_records_by_id(records)
 
         raise NotImplementedError
 

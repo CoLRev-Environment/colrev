@@ -3,6 +3,7 @@
 
 import platform
 import re
+from difflib import unified_diff
 from pathlib import Path
 
 import pytest
@@ -37,7 +38,7 @@ def tei_doc(script_loc) -> colrev.env.tei_parser.TEIParser:  # type: ignore
     return tei_doc
 
 
-def test_tei_creation(script_loc) -> None:  # type: ignore
+def test_tei_creation(script_loc, tmp_path) -> None:  # type: ignore
     """Test the tei"""
 
     if platform.system() != "Linux":
@@ -45,29 +46,55 @@ def test_tei_creation(script_loc) -> None:  # type: ignore
 
     tei_file = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.tei.xml")
     pdf_path = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.pdf")
+    baseline = tei_file.read_text()
 
-    tmp_tei_file = tei_file.with_name(tei_file.stem + "_tmp.tei.xml")
-    if tmp_tei_file.exists():
-        tmp_tei_file.unlink(missing_ok=True)
-    tei_file.rename(tmp_tei_file)
+    generated_tei_file = tmp_path / tei_file.name
+    colrev.env.tei_parser.TEIParser(
+        pdf_path=pdf_path,
+        tei_path=generated_tei_file,
+    )
 
-    try:
-
-        colrev.env.tei_parser.TEIParser(pdf_path=pdf_path, tei_path=tei_file)
-
-        with open(tei_file) as file:
-            tei_content = file.read()
-
-        tei_content = re.sub(
-            r'(ident="GROBID" when=")[^"]+(">)', r"\g<1>NA\g<2>", tei_content
+    def normalize_tei_xml(tei_content: str) -> str:
+        """Normalize volatile data and TEI namespace prefixes for comparison."""
+        tei_namespace = "http://www.tei-c.org/ns/1.0"
+        tei_prefixes = re.findall(
+            rf'xmlns:([^=\s]+)="{re.escape(tei_namespace)}"', tei_content
+        )
+        for prefix in tei_prefixes:
+            tei_content = re.sub(rf"(<[/]?){re.escape(prefix)}:", r"\1", tei_content)
+            namespace_declaration = f'xmlns:{prefix}="{tei_namespace}"'
+            if f'xmlns="{tei_namespace}"' in tei_content:
+                tei_content = tei_content.replace(namespace_declaration, "", 1)
+            else:
+                tei_content = tei_content.replace(
+                    namespace_declaration, f'xmlns="{tei_namespace}"', 1
+                )
+        return re.sub(
+            r'(ident="GROBID" when=")[^"]+(">)',
+            r"\g<1>NA\g<2>",
+            tei_content,
         )
 
-        with open(tei_file, "w") as file:
-            file.write(tei_content)
-    except Exception as exc:
-        print("Restoring original TEI file")
-        tmp_tei_file.rename(tei_file)
-        raise exc
+    baseline = normalize_tei_xml(baseline)
+    generated = normalize_tei_xml(generated_tei_file.read_text())
+    if generated != baseline:
+        # Write the candidate so GROBID changes are reviewable in git diff, but
+        # fail this run to make the change explicit and require review.
+        tei_file.write_text(generated)
+        diff = unified_diff(
+            baseline.splitlines(keepends=True),
+            generated.splitlines(keepends=True),
+            fromfile=str(tei_file),
+            tofile="generated TEI",
+        )
+        pytest.fail(
+            "Generated TEI differs from the tracked fixture. Review the fixture "
+            "diff and rerun the test after accepting the change.\n" + "".join(diff)
+        )
+    elif tei_file.read_text() != generated:
+        # Keep the fixture's representation canonical even when only normalized
+        # details (for example, a namespace prefix) differ.
+        tei_file.write_text(generated)
 
 
 def test_tei_version(tei_doc) -> None:  # type: ignore

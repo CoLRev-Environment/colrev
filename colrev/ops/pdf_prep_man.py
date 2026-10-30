@@ -12,6 +12,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
 import colrev.record.record_pdf
+from bibliography_io import load_raw
 from colrev import utils
 from colrev.constants import EndpointType
 from colrev.constants import Fields
@@ -19,7 +20,7 @@ from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.package_manager.package_manager import PackageManager
-from colrev.writer.write_utils import write_file
+from bibliography_io import write
 
 
 class PDFPrepMan(colrev.process.operation.Operation):
@@ -169,7 +170,12 @@ class PDFPrepMan(colrev.process.operation.Operation):
             if RecordState.pdf_needs_manual_preparation == record[Fields.STATUS]
         }
 
-        write_file(records_dict=records, filename=prep_bib_path)
+        write(
+            records,
+            path=prep_bib_path,
+            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+            list_fields={Fields.ORIGIN},
+        )
 
         bib_db_df = pd.DataFrame.from_records(list(records.values()))
 
@@ -205,9 +211,10 @@ class PDFPrepMan(colrev.process.operation.Operation):
         if Path("data/pdf-prep-records.bib").is_file():
             self.review_manager.logger.info("Load prep-records.bib")
 
-            records_changed = colrev.loader.load_utils.load(
-                filename=Path("data/pdf-prep-records.bib"),
-                logger=self.review_manager.logger,
+            records_changed = load_raw(
+                Path("data/pdf-prep-records.bib"),
+                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                list_fields={Fields.ORIGIN},
             )
 
         records = self.review_manager.dataset.load_records_dict()

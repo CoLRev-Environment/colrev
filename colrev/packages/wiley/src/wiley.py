@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
 from pathlib import Path
@@ -101,10 +103,9 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
     def load(self) -> dict:
         """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-                unique_id_field="ID",
+            # TODO: source-package load() may need CoLRev pre/post-processing.
+            records = index_records_by_id(
+                load_raw(self.search_source.search_results_path)
             )
             for record_dict in records.values():
                 if "eprint" not in record_dict:

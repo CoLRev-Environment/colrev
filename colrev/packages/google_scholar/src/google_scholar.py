@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
 from collections.abc import Callable
@@ -180,18 +182,18 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
         entrytype_setter: typing.Optional[Callable[[dict], None]] = None,
         unique_id_field: typing.Optional[str] = None,
     ) -> dict:
-        load_kwargs: dict[str, typing.Any] = {}
-        if entrytype_setter is not None:
-            load_kwargs["entrytype_setter"] = entrytype_setter
-        if unique_id_field is not None:
-            load_kwargs["unique_id_field"] = unique_id_field
-
-        return colrev.loader.load_utils.load(
-            filename=self.search_source.search_results_path,
-            field_mapper=field_mapper,
-            logger=self.logger,
-            **load_kwargs,
-        )
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(self.search_source.search_results_path, normalize=False)
+        for index, record_dict in enumerate(records, start=1):
+            field_mapper(record_dict)
+            if entrytype_setter is not None:
+                entrytype_setter(record_dict)
+            if unique_id_field == "INCREMENTAL":
+                record_dict[Fields.ID] = str(index).zfill(6)
+            elif not record_dict.get(Fields.ID):
+                if unique_id_field and unique_id_field in record_dict:
+                    record_dict[Fields.ID] = str(record_dict[unique_id_field])
+        return index_records_by_id(records)
 
     def load(self) -> dict:
         """Load the records from the SearchSource file."""

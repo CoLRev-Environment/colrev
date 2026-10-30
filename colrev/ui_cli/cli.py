@@ -3201,10 +3201,15 @@ def _convert_file(*, input_file: Path, output_format: str) -> None:
     click.echo(f"Converting file: {input_file}")
     click.echo(f"Output format: {output_format}")
 
-    import colrev.loader.load_utils
-    from colrev.writer.write_utils import write_file
+    from bibliography_io import load_primary
 
-    records = colrev.loader.load_utils.load(input_file)
+    load_options = {}
+    if input_file.suffix.lower() in {".bib", ".bibtex"}:
+        load_options = {
+            "mapping_fields": {Fields.MD_PROV, Fields.D_PROV},
+            "list_fields": {Fields.ORIGIN},
+        }
+    records = load_primary(input_file, **load_options)
     if input_file.suffix == ".md":  # or generate_ids flag
         print("Generating IDs")
         id_setter = colrev.record.record_id_setter.IDSetter(
@@ -3219,9 +3224,16 @@ def _convert_file(*, input_file: Path, output_format: str) -> None:
             record_dict.pop(Fields.MD_PROV, None)
             record_dict.pop(Fields.D_PROV, None)
 
-    write_file(
-        records_dict=records, filename=input_file.with_suffix(f".{output_format}")
-    )
+    output_file = input_file.with_suffix(f".{output_format}")
+    from bibliography_io import write
+
+    write_options = {}
+    if output_format.lower() in {"bib", "bibtex"}:
+        write_options = {
+            "mapping_fields": {Fields.MD_PROV, Fields.D_PROV},
+            "list_fields": {Fields.ORIGIN},
+        }
+    write(records, path=output_file, **write_options)
 
 
 @main.command(help_priority=34)

@@ -5,8 +5,9 @@ import os
 from pathlib import Path
 
 import pytest
+from bibliography_io import load_raw
+from bibliography_io.exceptions import UnsupportedFormatError
 
-import colrev.loader.load_utils
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
@@ -69,37 +70,29 @@ def test_load_nbib_entries(tmp_path, helpers):  # type: ignore
             record_dict[key] = str(value)
 
     # only supports nbib
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(UnsupportedFormatError):
         os.makedirs("data/search", exist_ok=True)
         Path("data/search/table.ptvc").touch()
         try:
-            colrev.loader.load_utils.load(
-                filename=Path("data/search/table.ptvc"),
-            )
+            load_raw(Path("data/search/table.ptvc"))
         finally:
             Path("data/search/table.ptvc").unlink()
 
     # file must exist
     with pytest.raises(FileNotFoundError):
-        colrev.loader.load_utils.load(
-            filename=Path("non-existent.nbib"),
-            unique_id_field="doi",
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
-            empty_if_file_not_exists=False,
-        )
+        load_raw(Path("non-existent.nbib"))
 
     helpers.retrieve_test_file(
         source=Path("2_loader/data/nbib_data.nbib"),
         target=Path("bib_data.nbib"),
     )
 
-    entries = colrev.loader.load_utils.load(
-        filename=Path("bib_data.nbib"),
-        unique_id_field="INCREMENTAL",
-        entrytype_setter=entrytype_setter,
-        field_mapper=field_mapper,
-    )
+    records = load_raw(Path("bib_data.nbib"), normalize=False)
+    for next_id, record in enumerate(records, 1):
+        entrytype_setter(record)
+        field_mapper(record)
+        record[Fields.ID] = str(next_id).zfill(6)
+    entries = {record[Fields.ID]: record for record in records}
 
     assert len(entries) == 1
 

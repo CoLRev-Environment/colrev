@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_primary
+
 import logging
 import platform
 import typing
@@ -21,7 +23,7 @@ from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
-from colrev.writer.write_utils import write_file
+from bibliography_io import write
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
@@ -139,7 +141,7 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
                     del fields[key]
             filtered_man_prep_recs.update({citation: fields})
 
-        write_file(records_dict=filtered_man_prep_recs, filename=self.prep_man_bib_path)
+        write(filtered_man_prep_recs, path=self.prep_man_bib_path)
 
         if any(Fields.FILE in r for r in man_prep_recs.values()):
             self._copy_files_for_man_prep(records=man_prep_recs)
@@ -307,9 +309,10 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
             f"{self.prep_man_bib_path.relative_to(self.review_manager.path)}"
         )
 
-        man_prep_recs = colrev.loader.load_utils.load(
-            filename=self.prep_man_bib_path,
-            logger=self.logger,
+        man_prep_recs = load_primary(
+            self.prep_man_bib_path,
+            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+            list_fields={Fields.ORIGIN},
         )
 
         imported_records: typing.List[dict] = []

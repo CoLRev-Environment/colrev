@@ -79,8 +79,10 @@ def test_dedupe_utilities(  # type: ignore
 
     expected_file = Path("data/dedupe/records_expected.bib")
     actual = Path("data/records.bib").read_text(encoding="utf-8")
-    if (helpers.test_data_path / expected_file).is_file():
-        expected = (helpers.test_data_path / expected_file).read_text(encoding="utf-8")
+    expected_path = helpers.test_data_path / expected_file
+    expected_exists = expected_path.is_file()
+    if expected_exists:
+        expected = expected_path.read_text(encoding="utf-8")
     else:
         expected = ""
 
@@ -90,11 +92,8 @@ def test_dedupe_utilities(  # type: ignore
         print("\n".join(diff))
 
         print(Path.cwd())
-        shutil.copy(
-            Path("data/records.bib"),
-            helpers.test_data_path / Path("dedupe/records_expected.bib"),
-        )
-        if not (helpers.test_data_path / expected_file).is_file():
+        shutil.copy(Path("data/records.bib"), expected_path)
+        if not expected_exists:
             raise Exception(
                 f"The expected_file ({expected_file.name}) was not (yet) available. "
                 f"An initial version was created in {expected_file}. "

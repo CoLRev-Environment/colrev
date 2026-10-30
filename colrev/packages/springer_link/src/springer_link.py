@@ -3,6 +3,9 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
+from colrev.loader.load_utils_name_formatter import parse_names_in_records
 import logging
 import os
 import re
@@ -485,15 +488,16 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if value == "" or pd.isna(value):
                     del record_dict[key]
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            unique_id_field="Item DOI",
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
-            logger=logger,
-            format_names=True,
-        )
-        return records
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        # TODO: e.g., format-names
+        records = load_raw(filename, normalize=False)
+        for record_dict in records:
+            entrytype_setter(record_dict)
+            record_dict[Fields.ID] = str(record_dict.get("Item DOI", ""))
+            field_mapper(record_dict)
+        indexed_records = index_records_by_id(records)
+        parse_names_in_records(indexed_records)
+        return indexed_records
 
     def api_ui(self) -> None:
         """User API key insertion."""
@@ -571,12 +575,9 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
         """Load bib file."""
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            logger=logger,
-            unique_id_field="ID",
-            format_names=True,
-        )
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = index_records_by_id(load_raw(filename))
+        parse_names_in_records(records)
         return records
 
     def load(self) -> dict:

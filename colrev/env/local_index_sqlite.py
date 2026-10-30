@@ -7,13 +7,15 @@ import sqlite3
 import typing
 
 import pandas as pd
+from bibliography_io import loads_raw
 
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.load_utils
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import LocalIndexFields
+from colrev.record.bibliography import adapt_bibliography_records
+from colrev.record.record_utils import index_records_by_id
 
 # Note : records are indexed by id = hash(colrev_id)
 # to ensure that the indexing-ids do not exceed limits
@@ -44,7 +46,6 @@ from colrev.constants import LocalIndexFields
 #     return new_hex.decode("utf-8")
 
 
-# pylint: disable=too-few-public-methods
 class SQLiteIndex:
     """The SQLiteIndex class implements indexing and retrieval of records locally."""
 
@@ -88,13 +89,20 @@ class SQLiteIndex:
 
     def _get_record_from_row(self, row: dict) -> dict:
 
-        records_dict = colrev.loader.load_utils.loads(
-            load_string=row[LocalIndexFields.BIBTEX],
-            implementation="bib",
-            unique_id_field="ID",
+        records_dict = index_records_by_id(
+            loads_raw(
+                row[LocalIndexFields.BIBTEX],
+                format="bib",
+                normalize=False,
+                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                list_fields={Fields.ORIGIN},
+            )
         )
+        records_dict = adapt_bibliography_records(records_dict)
 
         retrieved_record = list(records_dict.values())[0]
+        if "dblp_key" in retrieved_record and Fields.DBLP_KEY not in retrieved_record:
+            retrieved_record[Fields.DBLP_KEY] = retrieved_record.pop("dblp_key")
         if LocalIndexFields.TEI in row:
             retrieved_record[LocalIndexFields.TEI] = row[LocalIndexFields.TEI]
         if Fields.FULLTEXT in row:

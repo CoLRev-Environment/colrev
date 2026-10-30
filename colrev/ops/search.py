@@ -9,6 +9,7 @@ from pathlib import Path
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.search_file
+from bibliography_io import load_primary
 from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
@@ -16,7 +17,7 @@ from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import SearchType
 from colrev.package_manager.package_manager import PackageManager
-from colrev.writer.write_utils import write_file
+from bibliography_io import write
 
 
 class Search(colrev.process.operation.Operation):
@@ -73,9 +74,10 @@ class Search(colrev.process.operation.Operation):
             print(f"{source.search_results_path.suffix} not yet supported")
             return
 
-        records = colrev.loader.load_utils.load(
-            filename=source.search_results_path,
-            logger=self.review_manager.logger,
+        records = load_primary(
+            path=source.search_results_path,
+            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+            list_fields={Fields.ORIGIN},
         )
 
         record_list = list(records.values())
@@ -89,7 +91,7 @@ class Search(colrev.process.operation.Operation):
         )
         records = {r[Fields.ID]: r for r in record_list}
 
-        write_file(records_dict=records, filename=source.search_results_path)
+        write(records, path=source.search_results_path)
 
     # pylint: disable=no-self-argument
     def _check_source_selection_exists(var_name: str) -> typing.Callable:  # type: ignore

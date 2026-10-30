@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_primary
 import logging
 import pprint
 import typing
@@ -97,8 +98,16 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
             _index_record(record, vol_nr_dict)
 
         for source in self.review_manager.settings.sources:
+            if not source.search_results_path.is_file():
+                continue
             try:
-                records = colrev.loader.load_utils.load(source.search_results_path)
+                load_options = {}
+                if source.search_results_path.suffix.lower() in {".bib", ".bibtex"}:
+                    load_options = {
+                        "mapping_fields": {Fields.MD_PROV, Fields.D_PROV},
+                        "list_fields": {Fields.ORIGIN},
+                    }
+                records = load_primary(source.search_results_path, **load_options)
                 for record in records.values():
                     _index_record(record, vol_nr_dict)
             # TODO: AssertionError should be temporary

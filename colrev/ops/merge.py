@@ -10,9 +10,11 @@ from git.exc import GitCommandError
 
 import colrev.process.operation
 import colrev.utils
+from bibliography_io import loads_primary
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import OperationsType
+from colrev.record.bibliography import adapt_bibliography_records
 
 # pylint: disable=too-few-public-methods
 
@@ -132,17 +134,19 @@ class Merge(colrev.process.operation.Operation):
                 # stage == 3: other branch
                 if 2 == stage:
 
-                    current_branch_records = colrev.loader.load_utils.loads(
-                        load_string=blob.data_stream.read().decode("utf-8"),
-                        implementation="bib",
-                        logger=self.review_manager.logger,
+                    current_branch_records = adapt_bibliography_records(
+                        loads_primary(
+                            blob.data_stream.read().decode("utf-8"),
+                            format="bib",
+                        )
                     )
 
                 elif 3 == stage:
-                    other_branch_records = colrev.loader.load_utils.loads(
-                        load_string=blob.data_stream.read().decode("utf-8"),
-                        implementation="bib",
-                        logger=self.review_manager.logger,
+                    other_branch_records = adapt_bibliography_records(
+                        loads_primary(
+                            blob.data_stream.read().decode("utf-8"),
+                            format="bib",
+                        )
                     )
 
         else:

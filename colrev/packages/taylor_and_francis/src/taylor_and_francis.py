@@ -3,6 +3,9 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
+from colrev.loader.load_utils_name_formatter import parse_names_in_records
 import logging
 import re
 import typing
@@ -108,14 +111,13 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if key not in ["ID", "ENTRYTYPE"]:
                     record_dict[key.lower()] = record_dict.pop(key)
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            logger=logger,
-            unique_id_field="ID",
-            field_mapper=field_mapper,
-            format_names=True,
-        )
-        return records
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(filename)
+        for record_dict in records:
+            field_mapper(record_dict)
+        indexed_records = index_records_by_id(records)
+        parse_names_in_records(indexed_records)
+        return indexed_records
 
     def load(self) -> dict:
         """Load the records from the SearchSource file."""

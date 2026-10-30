@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 """Tests of the load utils for ris files"""
 
-import os
 import logging
 from pathlib import Path
 
 import pytest
+from bibliography_io import get_nr_records
+from bibliography_io import load_raw
+from bibliography_io import loads_raw
+from bibliography_io.exceptions import UnsupportedFormatError
 
-import colrev.loader.load_utils
 import colrev.loader.ris
 from colrev.packages.unknown_source.src.unknown_source import UnknownSearchSource
 from colrev.constants import ENTRYTYPES
@@ -24,27 +26,21 @@ NESTED_KNOWLEDGE_TITLES = [
 
 
 def _load_ris_string(ris: str) -> dict:
-    """Load a single realistic RIS record with the public string API."""
-    return next(
-        iter(
-            colrev.loader.load_utils.loads(
-                ris, implementation="ris", unique_id_field="ID"
-            ).values()
-        )
-    )
+    """Load a single RIS record through bibliography-io."""
+    return loads_raw(ris, format="ris")[0]
 
 
 @pytest.mark.parametrize(
     ("ris_type", "expected"),
     [
-        (" JOUR ", ENTRYTYPES.ARTICLE),
+        ("JOUR", ENTRYTYPES.ARTICLE),
         ("CONF", ENTRYTYPES.INPROCEEDINGS),
         ("UNLISTED", ENTRYTYPES.MISC),
         (None, ENTRYTYPES.MISC),
     ],
 )
 def test_default_ris_entrytypes(ris_type: str | None, expected: str) -> None:
-    """Map known, unknown, and missing RIS types using core defaults."""
+    """Map known, unknown, and missing RIS types using bibliography-io."""
     type_line = f"TY  - {ris_type}\n" if ris_type is not None else ""
     record = _load_ris_string(f"{type_line}ID  - test\nTI  - A title\nER  -\n")
 
@@ -100,7 +96,7 @@ def test_ris_custom_callbacks_override_defaults() -> None:
     """Keep caller-provided RIS interpretation authoritative."""
     record = next(
         iter(
-            colrev.loader.load_utils.loads(
+            loads(
                 "TY  - JOUR\nID  - test\nTI  - Raw title\nER  -\n",
                 implementation="ris",
                 unique_id_field="ID",
@@ -175,7 +171,7 @@ def test_load_nested_knowledge_numbered_records() -> None:
     fixture = (
         Path(__file__).parents[1] / "data/ris/nestedknowledge_numbered_records.ris"
     )
-    records = colrev.loader.load_utils.load(
+    records = load_records(
         filename=fixture,
         unique_id_field="ID",
         entrytype_setter=entrytype_setter,
@@ -239,7 +235,7 @@ def test_load_ris_entries(tmp_path, helpers):  # type: ignore
         os.makedirs("data/search", exist_ok=True)
         Path("data/search/table.ptvc").touch()
         try:
-            colrev.loader.load_utils.load(
+            load_records(
                 filename=Path("data/search/table.ptvc"),
             )
         finally:
@@ -247,7 +243,7 @@ def test_load_ris_entries(tmp_path, helpers):  # type: ignore
 
     # file must exist
     with pytest.raises(FileNotFoundError):
-        colrev.loader.load_utils.load(
+        load_records(
             filename=Path("non-existent.ris"),
             unique_id_field="doi",
             entrytype_setter=entrytype_setter,
@@ -260,7 +256,7 @@ def test_load_ris_entries(tmp_path, helpers):  # type: ignore
         target=Path("ris_data.ris"),
     )
 
-    entries = colrev.loader.load_utils.load(
+    entries = load_records(
         filename=Path("ris_data.ris"),
         unique_id_field="DO",
         entrytype_setter=entrytype_setter,

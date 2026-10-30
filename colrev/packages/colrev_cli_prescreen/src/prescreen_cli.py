@@ -164,12 +164,16 @@ class CoLRevCLIPrescreen(base_classes.PrescreenPackageBaseClass):
 
 
 def cli() -> None:
-    import colrev.loader.load_utils
-    import colrev.writer.write_utils
+    from bibliography_io import load_primary
+    from bibliography_io import write
 
     # TODO: allow custom file selection
     filename = Path("records.bib")
-    records_dict = colrev.loader.load_utils.load(filename=filename)
+    records_dict = load_primary(
+        filename,
+        mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+        list_fields={Fields.ORIGIN},
+    )
     for record_dict in records_dict.values():
         if record_dict["colrev_status"] != RecordState.md_processed:
             continue
@@ -205,4 +209,9 @@ def cli() -> None:
         else:
             record_dict["colrev_status"] = RecordState.rev_excluded
 
-    colrev.writer.write_utils.write_file(records_dict, filename=filename)
+    write(
+        records_dict,
+        path=filename,
+        mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+        list_fields={Fields.ORIGIN},
+    )

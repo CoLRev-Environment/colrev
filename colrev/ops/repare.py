@@ -11,6 +11,8 @@ from pathlib import Path
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils_formatter
+from bibliography_io import loads_primary
+from bibliography_io import load_primary
 import colrev.ops.search_api_feed
 import colrev.process.operation
 import colrev.record.record_similarity
@@ -21,7 +23,7 @@ from colrev.constants import FieldValues
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.constants import SearchType
-from colrev.writer.write_utils import write_file
+from bibliography_io import write
 
 
 class Repare(colrev.process.operation.Operation):
@@ -403,9 +405,10 @@ class Repare(colrev.process.operation.Operation):
             if search_source.platform != "colrev.local_index":
                 continue
 
-            curation_recs = colrev.loader.load_utils.load(
-                filename=search_source.search_results_path,
-                logger=self.review_manager.logger,
+            curation_recs = load_primary(
+                search_source.search_results_path,
+                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                list_fields={Fields.ORIGIN},
             )
 
             for record_id in list(curation_recs.keys()):
@@ -436,8 +439,11 @@ class Repare(colrev.process.operation.Operation):
                             )
                         del curation_recs[record_id]
 
-            write_file(
-                records_dict=curation_recs, filename=search_source.search_results_path
+            write(
+                curation_recs,
+                path=search_source.search_results_path,
+                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                list_fields={Fields.ORIGIN},
             )
             self.review_manager.dataset.git_repo.add_changes(
                 search_source.search_results_path
@@ -497,9 +503,10 @@ class Repare(colrev.process.operation.Operation):
                 continue
 
             try:
-                feed_records = colrev.loader.load_utils.load(
-                    filename=search_path,
-                    logger=self.review_manager.logger,
+                feed_records = load_primary(
+                    search_path,
+                    mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                    list_fields={Fields.ORIGIN},
                 )
                 origin_prefix_to_ids[prefix] = set(feed_records.keys())
             except FileNotFoundError:
@@ -682,7 +689,7 @@ class Repare(colrev.process.operation.Operation):
             if len(origins) == 0:
                 del records[rid]
 
-        write_file(records_dict=records, filename=Path("data/records.bib"))
+            write(records, path=Path("data/records.bib"))
 
     @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
@@ -704,10 +711,11 @@ class Repare(colrev.process.operation.Operation):
 
                 while line:
                     if line == "\n":
-                        records = colrev.loader.load_utils.loads(
-                            load_string=record_str,
-                            implementation="bib",
-                            logger=self.review_manager.logger,
+                        records = loads_primary(
+                            record_str,
+                            format="bib",
+                            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                            list_fields={Fields.ORIGIN},
                         )
 
                         if len(records) != 1:
@@ -718,7 +726,12 @@ class Repare(colrev.process.operation.Operation):
                     record_str += line
                     line = file.readline()
 
-            write_file(records_dict=separated_records, filename=Path("extracted.bib"))
+            write(
+                separated_records,
+                path=Path("extracted.bib"),
+                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                list_fields={Fields.ORIGIN},
+            )
 
             try:
                 records = self.review_manager.dataset.load_records_dict()

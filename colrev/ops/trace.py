@@ -10,8 +10,10 @@ import dictdiffer
 
 import colrev.process.operation
 import colrev.utils
+from bibliography_io import loads_primary
 from colrev.constants import Colors
 from colrev.constants import OperationsType
+from colrev.record.bibliography import adapt_bibliography_records
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import git.objects.commit
@@ -102,10 +104,11 @@ class Trace(colrev.process.operation.Operation):
                     + f" {commit_message_first_line} (by {commit.author.name})"
                 )
 
-            records_dict = colrev.loader.load_utils.loads(
-                load_string=filecontents.decode("utf-8"),
-                implementation="bib",
-                logger=self.review_manager.logger,
+            records_dict = adapt_bibliography_records(
+                loads_primary(
+                    filecontents.decode("utf-8"),
+                    format="bib",
+                )
             )
 
             if record_id not in records_dict:

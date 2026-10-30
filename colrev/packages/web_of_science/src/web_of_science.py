@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
 from pathlib import Path
@@ -133,9 +135,9 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
             for key in list(record_dict.keys()):
                 if key not in ["ID", "ENTRYTYPE"]:
                     record_dict[key.lower()] = record_dict.pop(key)
-            record_dict.pop("book-group-author", None)
+            record_dict.pop("book_group_author", None)
             record_dict.pop("organization", None)
-            record_dict.pop("researcherid-numbers", None)
+            record_dict.pop("researcherid_numbers", None)
             if "eissn" in record_dict:
                 if Fields.ISSN not in record_dict:
                     record_dict[Fields.ISSN] = record_dict.pop("eissn", "")
@@ -147,28 +149,27 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
                 record_dict[f"{cls.endpoint}.earlyaccessdate"] = record_dict.pop(
                     "earlyaccessdate"
                 )
-            if "article-number" in record_dict:
+            if "article_number" in record_dict:
                 record_dict[f"{cls.endpoint}.article-number"] = record_dict.pop(
-                    "article-number"
+                    "article_number"
                 )
-            if "orcid-numbers" in record_dict:
-                record_dict[f"{cls.endpoint}.orcid-numbers"] = record_dict.pop(
-                    "orcid-numbers"
-                )
-            if "unique-id" in record_dict:
-                record_dict[f"{cls.endpoint}.unique-id"] = record_dict.pop("unique-id")
-            if "book-author" in record_dict:
+            if "orcid_numbers" in record_dict:
+                orcid_numbers = record_dict.pop("orcid_numbers")
+                if isinstance(orcid_numbers, str):
+                    orcid_numbers = " ".join(orcid_numbers.split())
+                record_dict[f"{cls.endpoint}.orcid-numbers"] = orcid_numbers
+            if "unique_id" in record_dict:
+                record_dict[f"{cls.endpoint}.unique-id"] = record_dict.pop("unique_id")
+            if "book_author" in record_dict:
                 record_dict[f"{cls.endpoint}.book-author"] = record_dict.pop(
-                    "book-author"
+                    "book_author"
                 )
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            logger=logger,
-            unique_id_field="ID",
-            field_mapper=field_mapper,
-        )
-        return records
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(filename)
+        for record_dict in records:
+            field_mapper(record_dict)
+        return index_records_by_id(records)
 
     def load(self) -> dict:
         """Load the records from the SearchSource file."""

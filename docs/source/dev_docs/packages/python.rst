@@ -22,16 +22,16 @@ Programmatic use of CoLRev in other Python applications is supported. The follow
     review_manager.dataset.save_records_dict(records)
     review_manager.dataset.create_commit(msg="Pre-screening (package/script X")
 
-It is also possible to use CoLRev utility methods to load and save different bibliography formats:
+Use :mod:`bibliography_io` to load and save bibliography files directly:
 
 .. code-block:: python
 
     from pathlib import Path
-    from colrev.writer.write_utils import write_file
-    from colrev.loader.load_utils import load
+    from bibliography_io import load_raw
+    from bibliography_io import write
 
-    records_dict = load(filename=Path("filename.bib"))
+    records = load_raw(Path("filename.bib"))
 
-    # modify records_dict
+    # modify records
 
-    write_file(records_dict=records_dict, filename=Path("filename.bib"))
+    write(records, path=Path("filename.bib"))

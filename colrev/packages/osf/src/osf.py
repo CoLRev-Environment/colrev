@@ -10,7 +10,8 @@ from pathlib import Path
 
 from pydantic import Field
 
-import colrev.loader.load_utils
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import colrev.ops.prep
 import colrev.ops.search
 import colrev.ops.search_api_feed
@@ -198,11 +199,7 @@ class OSFSearchSource(base_classes.SearchSourcePackageBaseClass):
     def load(self) -> dict:
         """Load the records."""
         if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-                unique_id_field="ID",
-            )
-            return records
+            # TODO: source-package load() may need CoLRev pre/post-processing.
+            return index_records_by_id(load_raw(self.search_source.search_results_path))
 
         raise NotImplementedError

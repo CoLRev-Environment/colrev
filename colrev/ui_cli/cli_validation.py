@@ -189,18 +189,6 @@ def _validate_prep_prescreen_exclusions(
             )
 
 
-# def _remove_from_feed(*, review_manager, origin) -> None:
-#     feed_name, feed_id = origin.split("/")
-#     feed_file = review_manager.paths.search / Path(feed_name)
-#     records = colrev.loader.load_utils.load(
-#         filename=feed_file,
-#         logger=review_manager.logger,
-#         unique_id_field="ID",
-#     )
-#     records = {k: v for k, v in records.items() if k != feed_id}
-#     write_file(records_dict=records, filename=feed_file)
-
-
 def _validate_prep(
     *,
     validate_operation: colrev.ops.validate.Validate,

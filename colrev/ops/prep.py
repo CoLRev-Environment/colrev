@@ -23,7 +23,7 @@ from requests.exceptions import ReadTimeout
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.load_utils
+from bibliography_io import load_primary
 import colrev.process.operation
 import colrev.record.record_prep
 from colrev import utils
@@ -35,8 +35,8 @@ from colrev.constants import FieldSet
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.package_manager.package_manager import PackageManager
-from colrev.writer.write_utils import to_string
-from colrev.writer.write_utils import write_file
+from bibliography_io import to_string
+from bibliography_io import write
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.package_manager.package_base_classes as base_classes
@@ -443,8 +443,10 @@ class Prep(colrev.process.operation.Operation):
 
     def _save_to_temp(self, record: colrev.record.record_prep.PrepRecord) -> None:
         rec_str = to_string(
-            records_dict={record.data[Fields.ID]: record.get_data()},
-            implementation="bib",
+            {record.data[Fields.ID]: record.get_data()},
+            format="bib",
+            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+            list_fields={Fields.ORIGIN},
         )
         self.temp_prep_lock.acquire(timeout=120)
         self.current_temp_records.parent.mkdir(exist_ok=True)
@@ -457,9 +459,10 @@ class Prep(colrev.process.operation.Operation):
 
     def _complete_resumed_operation(self, prepared_records: list) -> None:
         if self.temp_records.is_file():
-            temp_recs = colrev.loader.load_utils.load(
-                filename=self.temp_records,
-                logger=self.review_manager.logger,
+            temp_recs = load_primary(
+                self.temp_records,
+                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                list_fields={Fields.ORIGIN},
             )
             prepared_records_ids = [x[Fields.ID] for x in prepared_records]
             for record in temp_recs.values():
@@ -674,30 +677,38 @@ class Prep(colrev.process.operation.Operation):
         if self.current_temp_records.is_file():
             # combine and remove redundant records
 
-            cur_temp_recs = colrev.loader.load_utils.load(
-                filename=self.current_temp_records,
-                logger=self.review_manager.logger,
+            cur_temp_recs = load_primary(
+                self.current_temp_records,
+                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                list_fields={Fields.ORIGIN},
             )
 
             temp_recs = {}
             if self.temp_records.is_file():
-                temp_recs = colrev.loader.load_utils.load(
-                    filename=self.temp_records,
-                    logger=self.review_manager.logger,
+                temp_recs = load_primary(
+                    self.temp_records,
+                    mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                    list_fields={Fields.ORIGIN},
                 )
 
             combined_recs = {**temp_recs, **cur_temp_recs}
             self.temp_records.parent.mkdir(exist_ok=True)
 
-            write_file(records_dict=combined_recs, filename=self.temp_records)
+            write(
+                combined_recs,
+                path=self.temp_records,
+                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                list_fields={Fields.ORIGIN},
+            )
 
             self.current_temp_records.unlink()
 
         if self.temp_records.is_file():
 
-            temp_recs = colrev.loader.load_utils.load(
-                filename=self.temp_records,
-                logger=self.review_manager.logger,
+            temp_recs = load_primary(
+                self.temp_records,
+                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                list_fields={Fields.ORIGIN},
             )
 
             self.review_manager.logger.info("Continue with existing records")

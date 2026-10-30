@@ -8,9 +8,9 @@ import typing
 from pathlib import Path
 
 import requests
+from bibliography_io import loads_raw
 
 import colrev.env.grobid_service
-import colrev.loader.load_utils
 import colrev.loader.loader
 from colrev.constants import Fields
 
@@ -80,14 +80,10 @@ class MarkdownLoader(colrev.loader.loader.Loader):
             ind += 1
             data = data + "\n" + ret.text.replace("{-1,", "{" + str(ind) + ",")
 
-        records_dict = colrev.loader.load_utils.loads(
-            load_string=data,
-            implementation="bib",
-            logger=self.logger,
-        )
+        records = loads_raw(data, format="bib")
 
-        for record in records_dict.values():
+        for record in records:
             if record.get(Fields.YEAR, "a") == record.get("date", "b"):
                 del record["date"]
 
-        return list(records_dict.values())
+        return records

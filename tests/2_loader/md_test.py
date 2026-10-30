@@ -1,10 +1,12 @@
-import logging
 import os
 from pathlib import Path
 
 import pytest
+from bibliography_io import get_nr_records
+from bibliography_io import load_raw
+from bibliography_io.exceptions import UnsupportedFormatError
 
-import colrev.loader.load_utils
+import colrev.search_file
 from colrev import utils
 from colrev.constants import SearchType
 
@@ -13,23 +15,17 @@ def test_load_md(helpers) -> None:  # type: ignore
     """Test the load utils for md files"""
 
     # only supports md
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(UnsupportedFormatError):
         os.makedirs("data/search", exist_ok=True)
         Path("data/search/table.ptvc").touch()
         try:
-            colrev.loader.load_utils.load(
-                filename=Path("data/search/table.ptvc"),
-            )
+            load_raw(Path("data/search/table.ptvc"))
         finally:
             Path("data/search/table.ptvc").unlink()
 
     # file must exist
     with pytest.raises(FileNotFoundError):
-        colrev.loader.load_utils.load(
-            filename=Path("non-existent.md"),
-            logger=logging.getLogger(__name__),
-            empty_if_file_not_exists=False,
-        )
+        load_raw(Path("non-existent.md"))
 
     if utils.in_ci_environment():
         return
@@ -48,10 +44,9 @@ def test_load_md(helpers) -> None:  # type: ignore
         target=Path("data/search/md_data.md"),
     )
 
-    records = colrev.loader.load_utils.load(
-        filename=search_source.search_results_path,
-        logger=logging.getLogger(__name__),
-    )
+    records = {
+        record["ID"]: record for record in load_raw(search_source.search_results_path)
+    }
 
     assert records["1"]["ID"] == "1"
     assert records["1"]["ENTRYTYPE"] == "article"
@@ -131,5 +126,5 @@ def test_load_md(helpers) -> None:  # type: ignore
     assert records["6"]["number"] == "1"
     assert records["6"]["author"] == "Antons, D and Breidbach, C"
 
-    nr_records = colrev.loader.load_utils.get_nr_records(Path("data/search/md_data.md"))
+    nr_records = get_nr_records(Path("data/search/md_data.md"))
     assert 6 == nr_records

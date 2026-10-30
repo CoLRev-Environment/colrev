@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
 from pathlib import Path
@@ -103,15 +105,13 @@ class JSTORSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def _load_ris(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            id_labeler=cls.__id_labeler,
-            entrytype_setter=cls.__entrytype_setter,
-            field_mapper=cls.__field_mapper,
-            logger=logger,
-        )
-
-        return records
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(filename, normalize=False)
+        cls.__id_labeler(records)
+        for record_dict in records:
+            cls.__entrytype_setter(record_dict)
+            cls.__field_mapper(record_dict)
+        return index_records_by_id(records)
 
     @staticmethod
     def __id_labeler(records: list) -> None:

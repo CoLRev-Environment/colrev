@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import json
 import logging
 import typing
@@ -379,13 +381,11 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if key not in ["ID", "ENTRYTYPE"]:
                     record_dict[key.lower()] = record_dict.pop(key)
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            logger=logger,
-            unique_id_field="ID",
-            field_mapper=field_mapper,
-        )
-        return records
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(filename)
+        for record_dict in records:
+            field_mapper(record_dict)
+        return index_records_by_id(records)
 
     def load(self) -> dict:
         """Load the records from the SearchSource file."""

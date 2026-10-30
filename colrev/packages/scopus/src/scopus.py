@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
 from pathlib import Path
@@ -187,14 +189,12 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
     @classmethod
     def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
         colrev.loader.bib.run_fix_bib_file(filename, logger=logger)
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            unique_id_field="ID",
-            entrytype_setter=cls._set_entrytype_from_document_type,
-            field_mapper=cls._map_scopus_fields,
-            logger=logger,
-        )
-        return records
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        records = load_raw(filename)
+        for record_dict in records:
+            cls._set_entrytype_from_document_type(record_dict)
+            cls._map_scopus_fields(record_dict)
+        return index_records_by_id(records)
 
     @staticmethod
     def _set_entrytype_from_document_type(record_dict: dict) -> None:

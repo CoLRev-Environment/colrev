@@ -26,6 +26,9 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
+from bibliography_io import load_primary
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 from colrev import utils
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -399,7 +402,11 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self.logger.info("Scope: %s", self.search_source.search_parameters["scope"])
 
-        records = colrev.loader.load_utils.load(filename=Path("data/records.bib"))
+        records = load_primary(
+            Path("data/records.bib"),
+            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+            list_fields={Fields.ORIGIN},
+        )
 
         if not records:
             self.logger.info("No records imported. Cannot run backward search yet.")
@@ -526,7 +533,11 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         # Assuming there's a function to create an overview, it would be called here.
         # For example: cls.create_min_intext_citations_overview(params)
 
-        records = colrev.loader.load_utils.load(filename=Path("data/records.bib"))
+        records = load_primary(
+            Path("data/records.bib"),
+            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+            list_fields={Fields.ORIGIN},
+        )
         selected_records = {
             record_id: record
             for record_id, record in records.items()
@@ -602,9 +613,9 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
     def load(self) -> dict:
         """Load the records from the SearchSource file."""
         if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
+            # TODO: source-package load() may need CoLRev pre/post-processing.
+            records = index_records_by_id(
+                load_raw(self.search_source.search_results_path)
             )
             for record_dict in records.values():
                 record_dict.pop("bw_search_origins")

@@ -5,8 +5,10 @@ import os
 from pathlib import Path
 
 import pytest
+from bibliography_io import get_nr_records
+from bibliography_io import load_raw
+from bibliography_io.exceptions import UnsupportedFormatError
 
-import colrev.loader.load_utils
 from colrev.constants import Fields
 
 
@@ -36,24 +38,12 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
             record_dict[key] = str(value)
 
     # only supports csv/xlsx
-    with pytest.raises(FileNotFoundError):
-        colrev.loader.load_utils.load(
-            filename=Path("table.ptvc"),
-            unique_id_field="pmid",
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
-            empty_if_file_not_exists=False,
-        )
+    with pytest.raises(UnsupportedFormatError):
+        load_raw(Path("table.ptvc"))
 
     # file must exist
     with pytest.raises(FileNotFoundError):
-        colrev.loader.load_utils.load(
-            filename=Path("non-existent.xlsx"),
-            unique_id_field="INCREMENTAL",
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
-            empty_if_file_not_exists=False,
-        )
+        load_raw(Path("non-existent.xlsx"))
 
     # Test csv
     helpers.retrieve_test_file(
@@ -61,12 +51,12 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("csv_data.csv"),
     )
 
-    entries = colrev.loader.load_utils.load(
-        filename=Path("csv_data.csv"),
-        unique_id_field="PMID",
-        entrytype_setter=entrytype_setter,
-        field_mapper=field_mapper,
-    )
+    records = load_raw(Path("csv_data.csv"), normalize=False)
+    for record in records:
+        record["ID"] = record["PMID"]
+        entrytype_setter(record)
+        field_mapper(record)
+    entries = {record["ID"]: record for record in records}
 
     assert len(entries) == 2
 
@@ -83,7 +73,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         == "Nature. 2021 Dec 21;1(2):10-11. doi: 10.1111/nature1111."
     )
 
-    nr_records = colrev.loader.load_utils.get_nr_records(Path("csv_data.csv"))
+    nr_records = get_nr_records(Path("csv_data.csv"))
     assert 2 == nr_records
 
     # Test xlsx
@@ -91,12 +81,8 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         source=Path("2_loader/data/xlsx_data.xlsx"),
         target=Path("xlsx_data.xlsx"),
     )
-    colrev.loader.load_utils.load(
-        filename=Path("xlsx_data.xlsx"),
-        unique_id_field="INCREMENTAL",
-        entrytype_setter=entrytype_setter,
-        field_mapper=field_mapper,
-    )
+    xlsx_records = load_raw(Path("xlsx_data.xlsx"), normalize=False)
+    assert len(xlsx_records) == 3
 
-    nr_records = colrev.loader.load_utils.get_nr_records(Path("xlsx_data.xlsx"))
+    nr_records = get_nr_records(Path("xlsx_data.xlsx"))
     assert 3 == nr_records

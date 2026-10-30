@@ -14,7 +14,8 @@ from pathlib import Path
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.load_utils
+from bibliography_io import load_raw
+from colrev.record.record_utils import index_records_by_id
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.packages.prospero.src.prospero_api
@@ -179,12 +180,9 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        """Helper to load from .bib file using CoLRev's load_utils."""
-        return colrev.loader.load_utils.load(
-            filename=filename,
-            logger=logger,
-            unique_id_field="ID",
-        )
+        """Helper to load from .bib file using bibliography-io."""
+        # TODO: source-package load() may need CoLRev pre/post-processing.
+        return index_records_by_id(load_raw(filename))
 
     # pylint: disable=unused-argument
     def load(self) -> dict:
