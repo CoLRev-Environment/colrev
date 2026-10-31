@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function for name formatting."""
+"""Parse personal names in bibliographic records."""
 
 from __future__ import annotations
 

@@ -1,17 +1,17 @@
 #!/usr/bin/env python
-"""Tests of load formatters"""
+"""Tests for record formatting and standardization."""
 
 import unittest
 
-from colrev.loader.load_utils_formatter import LoadFormatter
 from colrev.record.record import Fields
 from colrev.record.record import Record
 from colrev.record.record import RecordState
+from colrev.record.record_formatter import RecordFormatter
 
 
-class LoadFormatterTests(unittest.TestCase):
+class RecordFormatterTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.load_formatter = LoadFormatter()
+        self.record_formatter = RecordFormatter()
 
     def test_pre_md_retrieved(self) -> None:
         record = Record(
@@ -28,7 +28,7 @@ class LoadFormatterTests(unittest.TestCase):
             }
         )
 
-        self.load_formatter.run(record=record)
+        self.record_formatter.run(record=record)
 
         self.assertEqual(
             record.data["author"],
@@ -54,7 +54,7 @@ class LoadFormatterTests(unittest.TestCase):
             }
         )
 
-        self.load_formatter.run(record=record)
+        self.record_formatter.run(record=record)
 
         self.assertEqual(record.data[Fields.DOI], "10.1234")
         self.assertEqual(record.data[Fields.LANGUAGE], "eng")

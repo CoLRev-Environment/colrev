@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Function for load formatting."""
+"""Formatting and standardization for CoLRev records."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ from colrev.constants import RecordState
 # pylint: disable=too-few-public-methods
 
 
-class LoadFormatter:
-    """Load formatter class."""
+class RecordFormatter:
+    """Format and standardize record metadata."""
 
     # Based on
     # https://en.wikibooks.org/wiki/LaTeX/Special_Characters

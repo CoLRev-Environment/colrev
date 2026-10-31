@@ -10,10 +10,10 @@ import string
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.load_utils_formatter
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.process.operation
 import colrev.record.record
+import colrev.record.record_formatter
 from colrev.constants import Colors
 from colrev.constants import EndpointType
 from colrev.constants import Fields
@@ -46,7 +46,7 @@ class Load(colrev.process.operation.Operation):
         self.quality_model = review_manager.get_qm()
         self.package_manager = PackageManager()
 
-        self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
+        self.record_formatter = colrev.record.record_formatter.RecordFormatter()
 
         self.id_setter = colrev.record.record_id_setter.IDSetter(
             id_pattern=self.review_manager.settings.project.id_pattern,
@@ -153,7 +153,7 @@ class Load(colrev.process.operation.Operation):
         record = colrev.record.record.Record(record_dict)
 
         # For better readability of the git diff:
-        self.load_formatter.run(record)
+        self.record_formatter.run(record)
 
         if Fields.ORIGIN not in record_dict:
             print(f"Error: {record_dict.get(Fields.ID, '')} has no origin")

@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from colrev.loader.load_utils_name_formatter import parse_names_in_records
 import logging
 import os
 import re
@@ -32,6 +31,7 @@ from colrev.ops.search_api_feed import create_api_source
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
 from colrev.packages.springer_link.src import springer_link_api
+from colrev.record.name_parser import parse_names_in_records
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code

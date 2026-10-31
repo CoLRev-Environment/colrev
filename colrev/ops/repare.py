@@ -8,13 +8,15 @@ import re
 import shutil
 from pathlib import Path
 
+from bibliography_io import load_primary
+from bibliography_io import loads_primary
+from bibliography_io import write
+
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.load_utils_formatter
-from bibliography_io import loads_primary
-from bibliography_io import load_primary
 import colrev.ops.search_api_feed
 import colrev.process.operation
+import colrev.record.record_formatter
 import colrev.record.record_similarity
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
@@ -23,7 +25,6 @@ from colrev.constants import FieldValues
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.constants import SearchType
-from bibliography_io import write
 
 
 class Repare(colrev.process.operation.Operation):
@@ -47,7 +48,7 @@ class Repare(colrev.process.operation.Operation):
         self.pdf_get_operation = self.review_manager.get_pdf_get_operation(
             notify_state_transition_operation=False
         )
-        self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
+        self.record_formatter = colrev.record.record_formatter.RecordFormatter()
 
     def _fix_broken_symlink_based_on_local_index(
         self, *, record: colrev.record.record.Record, full_path: Path
@@ -474,7 +475,7 @@ class Repare(colrev.process.operation.Operation):
     def _fix_field_values(self, records: dict) -> None:
         for record_dict in records.values():
             record = colrev.record.record.Record(record_dict)
-            self.load_formatter.run(record)
+            self.record_formatter.run(record)
 
     def _remove_records_not_in_search_results(self, records: dict) -> None:
         """Remove origins (or whole records) if their origin IDs are no longer present

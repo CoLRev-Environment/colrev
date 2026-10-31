@@ -8,23 +8,24 @@ import typing
 from copy import deepcopy
 from pathlib import Path
 
+from bibliography_io import loads_primary
+from bibliography_io import to_string
+from bibliography_io import write
+
 import colrev.exceptions as colrev_exceptions
 import colrev.git_repo
-from bibliography_io import loads_primary
-import colrev.loader.load_utils_formatter
+import colrev.record.record_formatter
 import colrev.record.record_merger
 import colrev.utils
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import EndpointType
-from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import SearchType
 from colrev.package_manager.package_manager import PackageManager
-from bibliography_io import to_string
-from bibliography_io import write
 
 
 def create_api_source(
@@ -104,7 +105,7 @@ class SearchAPIFeed:
         # (otherwise, fields in recent records would be more up-to-date)
 
         self.logger = logger
-        self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
+        self.record_formatter = colrev.record.record_formatter.RecordFormatter()
 
         self.origin_prefix = self.source.get_origin_prefix()
 
@@ -402,7 +403,7 @@ class SearchAPIFeed:
         main_record = self._get_main_record(colrev_origin)
 
         # For consistency (with ops/load):
-        self.load_formatter.run(retrieved_record)
+        self.record_formatter.run(retrieved_record)
 
         self._update_record_fields(
             record=retrieved_record,

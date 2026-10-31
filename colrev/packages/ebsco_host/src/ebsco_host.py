@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from colrev.loader.load_utils_name_formatter import parse_names_in_records
 import logging
 import re
 import typing
@@ -20,6 +19,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
+from colrev.record.name_parser import parse_names_in_records
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code

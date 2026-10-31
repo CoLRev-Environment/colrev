@@ -8,8 +8,8 @@ import tempfile
 import typing
 from pathlib import Path
 from urllib.parse import urlparse
-import bibliography_io.loaders.bibtex
 
+import bibliography_io.loaders.bibtex
 from pydantic import Field
 
 import colrev.ops.search_api_feed
@@ -25,7 +25,6 @@ from colrev.ops.search_api_feed import create_api_source
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
 from colrev.packages.scopus.src import scopus_api
-import colrev.loader.load_utils_formatter
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
