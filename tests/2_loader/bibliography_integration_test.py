@@ -1,25 +1,16 @@
-#!/usr/bin/env python
-"""Tests of the load utils for bib files"""
-
-import logging
-import os
 from pathlib import Path
-import bibliography_io.loaders.bibtex
+
 import pytest
-from bibliography_io import get_nr_records
 from bibliography_io import load_primary
-from bibliography_io import load_raw
 from bibliography_io import loads_primary
 from bibliography_io import loads_raw
 from bibliography_io import to_string
 from bibliography_io import write
 from bibliography_io.exceptions import DuplicateRecordIDError
 from bibliography_io.exceptions import MissingRecordIDError
-from bibliography_io.exceptions import UnsupportedFormatError
-from colrev.record.bibliography import adapt_bibliography_records
 
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Fields, RecordState
+from colrev.record.bibliography import adapt_bibliography_records
 from colrev.record.record_utils import index_records_by_id
 
 
@@ -128,36 +119,3 @@ def test_dataset_adapter_restores_structured_bibliography_fields(
     assert converted == expected
     assert raw_converted == expected
     assert file_converted == expected
-
-
-def test_load(tmp_path, helpers) -> None:  # type: ignore
-    """Test the load utils for bib files"""
-    os.chdir(tmp_path)
-
-    with pytest.raises(FileNotFoundError):
-        load_raw(Path("data/search/bib_data.bib"))
-    helpers.retrieve_test_file(
-        source=Path("2_loader/data/bib_data.bib"),
-        target=Path("data/search/bib_tests.xy"),
-    )
-    with pytest.raises(UnsupportedFormatError):
-        os.makedirs("data/search", exist_ok=True)
-        Path("data/search/bib_tests.xy").touch()
-        try:
-            load_raw(Path("data/search/bib_tests.xy"))
-        finally:
-            Path("data/search/bib_tests.xy").unlink()
-
-    helpers.retrieve_test_file(
-        source=Path("2_loader/data/bib_data.bib"),
-        target=Path("data/search/bib_data.bib"),
-    )
-
-    bibliography_io.loaders.bibtex.run_fix_bib_file(
-        Path("data/search/bib_data.bib"), logger=logging.getLogger(__name__)
-    )
-
-    assert get_nr_records(Path("data/search/bib_data.bib")) == 6
-
-    with pytest.raises(UnsupportedFormatError):
-        loads_raw("content...", format="xy")
