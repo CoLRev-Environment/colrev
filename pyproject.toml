@@ -113,9 +113,6 @@ python_version = "3.12"
 warn_unused_configs = true
 ignore_missing_imports = true
 
-[tool.uv.sources]
-bibliography-io = { path = "../bibliography-io", editable = true }
-
 [[tool.mypy.overrides]]
 module = ["requests.*", "yaml.*", "pkg_resources.*"]
 ignore_missing_imports = true
