@@ -7,7 +7,7 @@ import sqlite3
 import typing
 
 import pandas as pd
-from bibliography_io import loads_raw
+from bibliography_io import loads
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
@@ -90,12 +90,9 @@ class SQLiteIndex:
     def _get_record_from_row(self, row: dict) -> dict:
 
         records_dict = index_records_by_id(
-            loads_raw(
+            loads(
                 row[LocalIndexFields.BIBTEX],
                 format="bib",
-                normalize=False,
-                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
-                list_fields={Fields.ORIGIN},
             )
         )
         records_dict = adapt_bibliography_records(records_dict)

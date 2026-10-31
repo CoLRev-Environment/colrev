@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import json
 import logging
 import typing
@@ -375,26 +373,15 @@ class EuropePMCSearchSource(base_classes.SearchSourcePackageBaseClass):
         return search_source
 
     @classmethod
-    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        def field_mapper(record_dict: dict) -> None:
-            for key in list(record_dict.keys()):
-                if key not in ["ID", "ENTRYTYPE"]:
-                    record_dict[key.lower()] = record_dict.pop(key)
-
-        # TODO: source-package load() may need CoLRev pre/post-processing.
-        records = load_raw(filename)
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Lowercase fields in Europe PMC exports."""
         for record_dict in records:
-            field_mapper(record_dict)
-        return index_records_by_id(records)
-
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            return self._load_bib(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        raise NotImplementedError
+            for key in list(record_dict):
+                if key not in [Fields.ID, Fields.ENTRYTYPE]:
+                    record_dict[key.lower()] = record_dict.pop(key)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
 from pathlib import Path
@@ -160,14 +158,6 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
             self._run_api_search(unpaywall_feed=unpaywall_feed, rerun=rerun)
         else:
             raise NotImplementedError
-
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            # TODO: source-package load() may need CoLRev pre/post-processing.
-            return index_records_by_id(load_raw(self.search_source.search_results_path))
-
-        raise NotImplementedError
 
     def prep_link_md(
         self,

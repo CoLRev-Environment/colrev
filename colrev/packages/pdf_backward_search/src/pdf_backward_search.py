@@ -27,8 +27,6 @@ import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
 from bibliography_io import load_primary
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 from colrev import utils
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -610,18 +608,14 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
         return search_source
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            # TODO: source-package load() may need CoLRev pre/post-processing.
-            records = index_records_by_id(
-                load_raw(self.search_source.search_results_path)
-            )
-            for record_dict in records.values():
-                record_dict.pop("bw_search_origins")
-            return records
-
-        raise NotImplementedError
+    @classmethod
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Drop internal backward-search origin data."""
+        for record_dict in records:
+            record_dict.pop("bw_search_origins", None)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prep_link_md(
         self,

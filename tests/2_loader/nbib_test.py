@@ -87,7 +87,7 @@ def test_load_nbib_entries(tmp_path, helpers):  # type: ignore
         target=Path("bib_data.nbib"),
     )
 
-    records = load_raw(Path("bib_data.nbib"), normalize=False)
+    records = load_raw(Path("bib_data.nbib"))
     for next_id, record in enumerate(records, 1):
         entrytype_setter(record)
         field_mapper(record)

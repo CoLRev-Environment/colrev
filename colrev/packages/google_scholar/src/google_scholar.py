@@ -3,11 +3,8 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
-from collections.abc import Callable
 from pathlib import Path
 
 from pydantic import Field
@@ -175,40 +172,55 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _set_json_entrytype(record_dict: dict) -> None:
         record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
-    def _load_records(
-        self,
-        *,
-        field_mapper: Callable[[dict], None],
-        entrytype_setter: typing.Optional[Callable[[dict], None]] = None,
-        unique_id_field: typing.Optional[str] = None,
-    ) -> dict:
-        # TODO: source-package load() may need CoLRev pre/post-processing.
-        records = load_raw(self.search_source.search_results_path, normalize=False)
+    @classmethod
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Normalize BibTeX and JSON exports from Google Scholar."""
         for index, record_dict in enumerate(records, start=1):
-            field_mapper(record_dict)
-            if entrytype_setter is not None:
-                entrytype_setter(record_dict)
-            if unique_id_field == "INCREMENTAL":
+            fields = ["related", "note", "type"]
+            if format == "json":
+                fields.extend(
+                    [
+                        "article_url",
+                        "cites_url",
+                        "related_url",
+                        "fulltext_url",
+                        "uid",
+                        "cites",
+                    ]
+                )
+                if "source" in record_dict:
+                    record_dict[Fields.JOURNAL] = record_dict.pop("source")
+                for key in [
+                    "volume",
+                    "issue",
+                    "startpage",
+                    "endpage",
+                    "ecc",
+                    "use",
+                    "rank",
+                ]:
+                    record_dict.pop(key, None)
+                authors = record_dict.pop("authors", None)
+                if authors:
+                    record_dict[Fields.AUTHOR] = " and ".join(
+                        (
+                            ", ".join(author.split(" ")[1:] + author.split(" ")[:1])
+                            if " " in author
+                            else author
+                        )
+                        for author in authors
+                    )
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
                 record_dict[Fields.ID] = str(index).zfill(6)
-            elif not record_dict.get(Fields.ID):
-                if unique_id_field and unique_id_field in record_dict:
-                    record_dict[Fields.ID] = str(record_dict[unique_id_field])
-        return index_records_by_id(records)
-
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            return self._load_records(field_mapper=self._map_bib_fields)
-
-        if self.search_source.search_results_path.suffix == ".json":
-            return self._load_records(
-                field_mapper=self._map_json_fields,
-                entrytype_setter=self._set_json_entrytype,
-                # Note: uid not always available.
-                unique_id_field="INCREMENTAL",
-            )
-
-        raise NotImplementedError
+            for field in fields:
+                if field in record_dict:
+                    record_dict[f"{cls.endpoint}.{field}"] = record_dict.pop(field)
+            for key, value in record_dict.items():
+                if isinstance(value, (str, int, float)):
+                    record_dict[key] = str(value)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

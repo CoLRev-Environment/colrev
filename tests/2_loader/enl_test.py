@@ -106,7 +106,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("enl_data.enl"),
     )
 
-    records_list = load_raw(Path("enl_data.enl"), normalize=False)
+    records_list = load_raw(Path("enl_data.enl"))
     for next_id, record in enumerate(records_list, 1):
         entrytype_setter(record)
         field_mapper(record)

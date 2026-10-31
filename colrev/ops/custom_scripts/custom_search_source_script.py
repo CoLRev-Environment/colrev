@@ -72,11 +72,12 @@ class CustomSearch(base_classes.SearchSourcePackageBaseClass):
 
         return result
 
-    def load(self) -> dict:
-        """Load fixes for the custom source."""
-        records = {"ID1": {"ID": "ID1", "title": "..."}}
-
-        return records
+    @classmethod
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Normalize records from the custom source."""
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

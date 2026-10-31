@@ -10,15 +10,18 @@ from abc import ABC
 from abc import abstractmethod
 from pathlib import Path
 
+from bibliography_io import load as bibliography_io_load
+
 import colrev.package_manager.package_settings
 from colrev.constants import EndpointType
+from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 if typing.TYPE_CHECKING:  # pragma: no cover
+    import colrev.ops
     import colrev.record.record
     import colrev.settings
-    import colrev.ops
 
 
 # pylint: disable=too-few-public-methods
@@ -68,6 +71,7 @@ class SearchSourcePackageBaseClass(ABC):
 
     CURRENT_SYNTAX_VERSION: str
     ci_supported: bool
+    endpoint: typing.ClassVar[str]
     source_identifier: str
     search_types: list[SearchType]
     heuristic_status: SearchSourceHeuristicStatus
@@ -115,9 +119,82 @@ class SearchSourcePackageBaseClass(ABC):
         """Ensure that the SearchSource is append-only (override this method if needed)."""
         return False
 
-    @abstractmethod
     def load(self) -> dict:
-        """Load records from the SearchSource."""
+        """Load normalized SearchSource records through bibliography-io."""
+        source_path = self.search_source.search_results_path
+        if not source_path.is_file():
+            return {}
+
+        records = bibliography_io_load(
+            source_path,
+            source=self.endpoint,
+            source_version=self.search_source.version,
+        )
+        return {str(record[Fields.ID]): record for record in records}
+
+    @classmethod
+    # pylint: disable=unused-argument
+    def preprocess(
+        cls, text: str, *, format: str, source_version: typing.Optional[str]
+    ) -> str:
+        """Preprocess source text before parsing it.
+
+        Search sources can override this hook to handle source-specific exports.
+        The default keeps the source text unchanged.
+        """
+        del format, source_version
+        return text
+
+    @classmethod
+    # pylint: disable=unused-argument
+    def preprocess_file(
+        cls,
+        path: Path,
+        *,
+        format: str,
+        source_version: typing.Optional[str],
+        output_dir: Path,
+    ) -> Path:
+        """Preprocess a source file before parsing it.
+
+        Search sources can override this hook for file-based transformations.
+        Implementations must leave the original file unchanged and write any
+        transformed files under ``output_dir``. The default returns ``path``
+        unchanged.
+        """
+        del format, source_version, output_dir
+        return path
+
+    @classmethod
+    # pylint: disable=unused-argument
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: typing.Optional[str]
+    ) -> dict[str, dict]:
+        """Normalize parsed records and return them indexed by unique ID.
+
+        Existing unique IDs are preserved. Missing or repeated IDs receive the
+        next available zero-padded numeric ID.
+        """
+        del format, source_version
+        reserved_ids = {
+            str(record[Fields.ID])
+            for record in records
+            if record.get(Fields.ID) not in (None, "")
+        }
+        seen_ids: set[str] = set()
+        next_id = 1
+        normalized: dict[str, dict] = {}
+        for record in records:
+            record_id = str(record.get(Fields.ID, ""))
+            if not record_id or record_id in seen_ids:
+                while f"{next_id:06d}" in reserved_ids or f"{next_id:06d}" in seen_ids:
+                    next_id += 1
+                record_id = f"{next_id:06d}"
+                next_id += 1
+            record[Fields.ID] = record_id
+            seen_ids.add(record_id)
+            normalized[record_id] = record
+        return normalized
 
     @abstractmethod
     def prepare(

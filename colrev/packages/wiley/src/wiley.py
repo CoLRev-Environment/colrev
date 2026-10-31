@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
 from pathlib import Path
@@ -100,20 +98,15 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented."""
         return record
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            # TODO: source-package load() may need CoLRev pre/post-processing.
-            records = index_records_by_id(
-                load_raw(self.search_source.search_results_path)
-            )
-            for record_dict in records.values():
-                if "eprint" not in record_dict:
-                    continue
+    @classmethod
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Map Wiley-specific full-text links and index records."""
+        for record_dict in records:
+            if "eprint" in record_dict:
                 record_dict[Fields.FULLTEXT] = record_dict.pop("eprint")
-            return records
-
-        raise NotImplementedError
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

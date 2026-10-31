@@ -763,29 +763,17 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         except (colrev_exceptions.RecordNotFoundInPrepSourceException,):
             pass
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-
-            def field_mapper(record_dict: dict) -> None:
-                if "note" in record_dict:
-                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
-
-            # TODO: source-package load() may need CoLRev pre/post-processing.
-            raw_records = load_raw(self.search_source.search_results_path)
-            for record_dict in raw_records:
-                field_mapper(record_dict)
-            records = index_records_by_id(raw_records)
-
-            for record_dict in records.values():
-                if Fields.GROBID_VERSION in record_dict:
-                    del record_dict[Fields.GROBID_VERSION]
-
-                self._update_based_on_doi(record_dict=record_dict)
-
-            return records
-
-        raise NotImplementedError
+    @classmethod
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Normalize metadata extracted from files in the source directory."""
+        for record_dict in records:
+            if "note" in record_dict:
+                record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
+            record_dict.pop(Fields.GROBID_VERSION, None)
+            cls._update_based_on_doi(record_dict=record_dict)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def _fix_special_chars(self, *, record: colrev.record.record.Record) -> None:
         # We may also apply the following upon loading tei content

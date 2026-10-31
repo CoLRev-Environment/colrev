@@ -51,7 +51,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("csv_data.csv"),
     )
 
-    records = load_raw(Path("csv_data.csv"), normalize=False)
+    records = load_raw(Path("csv_data.csv"))
     for record in records:
         record["ID"] = record["PMID"]
         entrytype_setter(record)
@@ -81,7 +81,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         source=Path("2_loader/data/xlsx_data.xlsx"),
         target=Path("xlsx_data.xlsx"),
     )
-    xlsx_records = load_raw(Path("xlsx_data.xlsx"), normalize=False)
+    xlsx_records = load_raw(Path("xlsx_data.xlsx"))
     assert len(xlsx_records) == 3
 
     nr_records = get_nr_records(Path("xlsx_data.xlsx"))

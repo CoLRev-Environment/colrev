@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import logging
 import re
 import typing
@@ -369,31 +367,21 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "Skipping DBLP search: DBLP API is currently not available or returned an invalid response"
             )
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-
-            def field_mapper(record_dict: dict) -> None:
-                if "timestamp" in record_dict:
-                    record_dict[f"{self.endpoint}.timestamp"] = record_dict.pop(
-                        "timestamp"
-                    )
-                if "biburl" in record_dict:
-                    record_dict[f"{self.endpoint}.biburl"] = record_dict.pop("biburl")
-                if "bibsource" in record_dict:
-                    record_dict[f"{self.endpoint}.bibsource"] = record_dict.pop(
-                        "bibsource"
-                    )
-                if "dblp_key" in record_dict:
-                    record_dict[Fields.DBLP_KEY] = record_dict.pop("dblp_key")
-
-            # TODO: source-package load() may need CoLRev pre/post-processing.
-            records = load_raw(self.search_source.search_results_path)
-            for record_dict in records:
-                field_mapper(record_dict)
-            return index_records_by_id(records)
-
-        raise NotImplementedError
+    @classmethod
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Map DBLP export fields to namespaced metadata."""
+        for record_dict in records:
+            for source_field, target_field in {
+                "timestamp": f"{cls.endpoint}.timestamp",
+                "biburl": f"{cls.endpoint}.biburl",
+                "bibsource": f"{cls.endpoint}.bibsource",
+                "dblp_key": Fields.DBLP_KEY,
+            }.items():
+                if source_field in record_dict:
+                    record_dict[target_field] = record_dict.pop(source_field)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

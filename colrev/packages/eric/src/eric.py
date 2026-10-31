@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
 import urllib.parse
@@ -209,82 +207,53 @@ class ERICSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     @classmethod
-    def _load_nbib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        def entrytype_setter(record_dict: dict) -> None:
-            if "Journal Articles" in record_dict["PT"]:
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-            else:
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
-
-        def field_mapper(record_dict: dict) -> None:
-
-            key_maps = {
-                ENTRYTYPES.ARTICLE: {
-                    "TI": Fields.TITLE,
-                    "AU": Fields.AUTHOR,
-                    "DP": Fields.YEAR,
-                    "JT": Fields.JOURNAL,
-                    "VI": Fields.VOLUME,
-                    "IP": Fields.NUMBER,
-                    "PG": Fields.PAGES,
-                    "AB": Fields.ABSTRACT,
-                    "AID": Fields.DOI,
-                    "ISSN": Fields.ISSN,
-                    "OID": f"{cls.endpoint}.eric_id",
-                    "OT": Fields.KEYWORDS,
-                    "LA": Fields.LANGUAGE,
-                    "PT": "type",
-                    "LID": f"{cls.endpoint}.eric_url",
-                }
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Map ERIC NBIB exports; BibTeX records use the default mapping."""
+        if format == "nbib":
+            field_map = {
+                "TI": Fields.TITLE,
+                "AU": Fields.AUTHOR,
+                "DP": Fields.YEAR,
+                "JT": Fields.JOURNAL,
+                "VI": Fields.VOLUME,
+                "IP": Fields.NUMBER,
+                "PG": Fields.PAGES,
+                "AB": Fields.ABSTRACT,
+                "AID": Fields.DOI,
+                "ISSN": Fields.ISSN,
+                "OID": f"{cls.endpoint}.eric_id",
+                "OT": Fields.KEYWORDS,
+                "LA": Fields.LANGUAGE,
+                "LID": f"{cls.endpoint}.eric_url",
             }
-
-            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
-            for ris_key in list(record_dict.keys()):
-                if ris_key in key_map:
-                    standard_key = key_map[ris_key]
-                    record_dict[standard_key] = record_dict.pop(ris_key)
-
-            if Fields.AUTHOR in record_dict and isinstance(
-                record_dict[Fields.AUTHOR], list
-            ):
-                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
-            if Fields.EDITOR in record_dict and isinstance(
-                record_dict[Fields.EDITOR], list
-            ):
-                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
-            if Fields.KEYWORDS in record_dict and isinstance(
-                record_dict[Fields.KEYWORDS], list
-            ):
-                record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
-
-            record_dict.pop("type", None)
-            record_dict.pop("OWN", None)
-            record_dict.pop("SO", None)
-
-            for key, value in record_dict.items():
-                record_dict[key] = str(value)
-
-        # TODO: source-package load() may need CoLRev pre/post-processing.
-        records = load_raw(filename, normalize=False)
-        for index, record_dict in enumerate(records, start=1):
-            entrytype_setter(record_dict)
-            if not record_dict.get(Fields.ID):
-                record_dict[Fields.ID] = str(record_dict.get("OID", index))
-            field_mapper(record_dict)
-        return index_records_by_id(records)
-
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".nbib":
-            return self._load_nbib(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        if self.search_source.search_results_path.suffix == ".bib":
-            # TODO: source-package load() may need CoLRev pre/post-processing.
-            return index_records_by_id(load_raw(self.search_source.search_results_path))
-
-        raise NotImplementedError
+            for index, record_dict in enumerate(records, start=1):
+                pt = record_dict.get("PT", "")
+                if isinstance(pt, list):
+                    pt = " ".join(pt)
+                record_dict[Fields.ENTRYTYPE] = (
+                    ENTRYTYPES.ARTICLE
+                    if "Journal Articles" in str(pt)
+                    else ENTRYTYPES.MISC
+                )
+                record_dict.pop("PT", None)
+                record_dict.setdefault(Fields.ID, str(record_dict.get("OID", index)))
+                for source_field, target_field in field_map.items():
+                    if source_field in record_dict:
+                        record_dict[target_field] = record_dict.pop(source_field)
+                for key in [Fields.AUTHOR, Fields.EDITOR]:
+                    if isinstance(record_dict.get(key), list):
+                        record_dict[key] = " and ".join(record_dict[key])
+                if isinstance(record_dict.get(Fields.KEYWORDS), list):
+                    record_dict[Fields.KEYWORDS] = ", ".join(
+                        record_dict[Fields.KEYWORDS]
+                    )
+                record_dict.pop("OWN", None)
+                record_dict.pop("SO", None)
+                for key, value in list(record_dict.items()):
+                    record_dict[key] = str(value)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

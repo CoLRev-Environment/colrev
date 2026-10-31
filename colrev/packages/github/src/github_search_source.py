@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import logging
 import os
 import re
@@ -217,16 +215,15 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
             self._run_api_search(github_feed)
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            # TODO: source-package load() may need CoLRev pre/post-processing.
-            records = load_raw(self.search_source.search_results_path)
-            for record_dict in records:
-                if not record_dict.get(Fields.ID) and record_dict.get(Fields.URL):
-                    record_dict[Fields.ID] = str(record_dict[Fields.URL])
-            return index_records_by_id(records)
-        raise NotImplementedError
+    @classmethod
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Use GitHub URLs as IDs when exports omit them."""
+        for record_dict in records:
+            if not record_dict.get(Fields.ID) and record_dict.get(Fields.URL):
+                record_dict[Fields.ID] = str(record_dict[Fields.URL])
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

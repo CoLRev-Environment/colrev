@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
 from pathlib import Path
@@ -130,55 +128,49 @@ class WebOfScienceSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     @classmethod
-    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        def field_mapper(record_dict: dict) -> None:
-            for key in list(record_dict.keys()):
-                if key not in ["ID", "ENTRYTYPE"]:
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Map Web of Science-specific fields and extensions."""
+        for record_dict in records:
+            for key in list(record_dict):
+                if key not in [Fields.ID, Fields.ENTRYTYPE]:
                     record_dict[key.lower()] = record_dict.pop(key)
-            record_dict.pop("book_group_author", None)
-            record_dict.pop("organization", None)
-            record_dict.pop("researcherid_numbers", None)
             if "eissn" in record_dict:
                 if Fields.ISSN not in record_dict:
                     record_dict[Fields.ISSN] = record_dict.pop("eissn", "")
                 else:
                     record_dict[Fields.ISSN] += ";" + record_dict.pop("eissn", "")
-            if "note" in record_dict:
-                record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
-            if "earlyaccessdate" in record_dict:
-                record_dict[f"{cls.endpoint}.earlyaccessdate"] = record_dict.pop(
-                    "earlyaccessdate"
-                )
-            if "article_number" in record_dict:
-                record_dict[f"{cls.endpoint}.article-number"] = record_dict.pop(
-                    "article_number"
-                )
-            if "orcid_numbers" in record_dict:
-                orcid_numbers = record_dict.pop("orcid_numbers")
-                if isinstance(orcid_numbers, str):
-                    orcid_numbers = " ".join(orcid_numbers.split())
-                record_dict[f"{cls.endpoint}.orcid-numbers"] = orcid_numbers
-            if "unique_id" in record_dict:
-                record_dict[f"{cls.endpoint}.unique-id"] = record_dict.pop("unique_id")
-            if "book_author" in record_dict:
-                record_dict[f"{cls.endpoint}.book-author"] = record_dict.pop(
-                    "book_author"
-                )
-
-        # TODO: source-package load() may need CoLRev pre/post-processing.
-        records = load_raw(filename)
-        for record_dict in records:
-            field_mapper(record_dict)
-        return index_records_by_id(records)
-
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            return self._load_bib(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        raise NotImplementedError
+            for source_field, target_field in {
+                "note": f"{cls.endpoint}.note",
+                "earlyaccessdate": f"{cls.endpoint}.earlyaccessdate",
+                "early-access-date": f"{cls.endpoint}.earlyaccessdate",
+                "article_number": f"{cls.endpoint}.article-number",
+                "article-number": f"{cls.endpoint}.article-number",
+                "unique_id": f"{cls.endpoint}.unique-id",
+                "unique-id": f"{cls.endpoint}.unique-id",
+                "book_author": f"{cls.endpoint}.book-author",
+                "book-author": f"{cls.endpoint}.book-author",
+                "orcid_numbers": f"{cls.endpoint}.orcid-numbers",
+                "orcid-numbers": f"{cls.endpoint}.orcid-numbers",
+            }.items():
+                if source_field in record_dict:
+                    record_dict[target_field] = record_dict.pop(source_field)
+                    if target_field.endswith("orcid-numbers") and isinstance(
+                        record_dict[target_field], str
+                    ):
+                        record_dict[target_field] = " ".join(
+                            record_dict[target_field].split()
+                        )
+            for key in [
+                "book_group_author",
+                "book-group-author",
+                "organization",
+                "researcherid_numbers",
+                "researcherid-numbers",
+            ]:
+                record_dict.pop(key, None)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

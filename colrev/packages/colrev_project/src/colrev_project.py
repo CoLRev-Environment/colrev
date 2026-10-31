@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import logging
 import shutil
 import tempfile
@@ -285,23 +283,15 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         return result
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            # TODO: source-package load() may need CoLRev pre/post-processing.
-            records = index_records_by_id(
-                load_raw(self.search_source.search_results_path)
-            )
-            for record_id in records:
-                records[record_id] = {
-                    k: v
-                    for k, v in records[record_id].items()
-                    if k not in FieldSet.PROVENANCE_KEYS + [Fields.SCREENING_CRITERIA]
-                }
-
-            return records
-
-        raise NotImplementedError
+    @classmethod
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Remove project-local provenance from imported records."""
+        for record in records:
+            for key in FieldSet.PROVENANCE_KEYS + [Fields.SCREENING_CRITERIA]:
+                record.pop(key, None)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

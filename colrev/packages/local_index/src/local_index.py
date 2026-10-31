@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import difflib
 import logging
 import typing
@@ -261,46 +259,35 @@ class LocalIndexSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
         return search_source
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-
-            def field_mapper(record_dict: dict) -> None:
-                if "link" in record_dict:
-                    if "url" in record_dict:
-                        del record_dict["link"]
-                    else:
-                        record_dict[Fields.URL] = record_dict.pop("link")
-                for key in list(record_dict.keys()):
-                    if key not in FieldSet.STANDARDIZED_FIELD_KEYS:
-                        self.logger.debug(f"Field {key} not in standard field set")
-                        del record_dict[key]
-
-            # TODO: source-package load() may need CoLRev pre/post-processing.
-            records = index_records_by_id(
-                load_raw(self.search_source.search_results_path)
-            )
-            for record_dict in records.values():
-                field_mapper(record_dict)
-            for record_id in records:
-                record_dict = {
-                    k: v
-                    for k, v in records[record_id].items()
-                    if k not in FieldSet.PROVENANCE_KEYS + [Fields.SCREENING_CRITERIA]
-                }
-
-                if Fields.CURATION_ID in record_dict:
-                    record_dict[Fields.MD_PROV] = {
-                        FieldValues.CURATED: {
-                            "source": record_dict[Fields.CURATION_ID].split("#")[0],
-                            "note": "",
-                        }
+    @classmethod
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Filter local-index exports and reconstruct curated provenance."""
+        normalized_records = []
+        for record_dict in records:
+            if "link" in record_dict:
+                if "url" in record_dict:
+                    record_dict.pop("link")
+                else:
+                    record_dict[Fields.URL] = record_dict.pop("link")
+            record_dict = {
+                key: value
+                for key, value in record_dict.items()
+                if key in FieldSet.STANDARDIZED_FIELD_KEYS
+                and key not in FieldSet.PROVENANCE_KEYS + [Fields.SCREENING_CRITERIA]
+            }
+            if Fields.CURATION_ID in record_dict:
+                record_dict[Fields.MD_PROV] = {
+                    FieldValues.CURATED: {
+                        "source": record_dict[Fields.CURATION_ID].split("#")[0],
+                        "note": "",
                     }
-                records[record_id] = record_dict
-
-            return records
-
-        raise NotImplementedError
+                }
+            normalized_records.append(record_dict)
+        return super().normalize(
+            normalized_records, format=format, source_version=source_version
+        )
 
     def prepare(
         self,

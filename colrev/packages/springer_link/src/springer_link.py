@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 from colrev.loader.load_utils_name_formatter import parse_names_in_records
 import logging
 import os
@@ -444,7 +442,7 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     @classmethod
-    def _load_csv(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def _normalize_csv(cls, records: list[dict]) -> list[dict]:
         def entrytype_setter(record_dict: dict) -> None:
             if record_dict["Content Type"] == "Article":
                 record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
@@ -488,16 +486,11 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if value == "" or pd.isna(value):
                     del record_dict[key]
 
-        # TODO: source-package load() may need CoLRev pre/post-processing.
-        # TODO: e.g., format-names
-        records = load_raw(filename, normalize=False)
         for record_dict in records:
             entrytype_setter(record_dict)
             record_dict[Fields.ID] = str(record_dict.get("Item DOI", ""))
             field_mapper(record_dict)
-        indexed_records = index_records_by_id(records)
-        parse_names_in_records(indexed_records)
-        return indexed_records
+        return records
 
     def api_ui(self) -> None:
         """User API key insertion."""
@@ -573,26 +566,17 @@ class SpringerLinkSearchSource(base_classes.SearchSourcePackageBaseClass):
         os.environ["SPRINGER_API_KEY"] = input_key
 
     @classmethod
-    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        """Load bib file."""
-        # TODO: source-package load() may need CoLRev pre/post-processing.
-        records = index_records_by_id(load_raw(filename))
-        parse_names_in_records(records)
-        return records
-
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".csv":
-            return self._load_csv(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        if self.search_source.search_results_path.suffix == ".bib":
-            return self._load_bib(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        raise NotImplementedError
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Normalize Springer Link CSV or BibTeX exports."""
+        if format == "csv":
+            records = cls._normalize_csv(records)
+        indexed_records = super().normalize(
+            records, format=format, source_version=source_version
+        )
+        parse_names_in_records(indexed_records)
+        return indexed_records
 
     def prepare(
         self,

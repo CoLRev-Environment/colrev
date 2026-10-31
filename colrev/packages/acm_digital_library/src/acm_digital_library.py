@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
 from pathlib import Path
@@ -117,34 +115,22 @@ class ACMDigitalLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented."""
         return record
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-
-            def field_mapper(record_dict: dict) -> None:
-                record_dict.pop("url", None)
-                record_dict.pop("publisher", None)
-                record_dict.pop("numpages", None)
-                record_dict.pop("month", None)
-
-                if "issue_date" in record_dict:
-                    record_dict[f"{self.endpoint}.issue_date"] = record_dict.pop(
-                        "issue_date"
-                    )
-                if "location" in record_dict:
-                    record_dict[Fields.ADDRESS] = record_dict.pop("location", None)
-                if "articleno" in record_dict:
-                    record_dict[f"{self.endpoint}.articleno"] = record_dict.pop(
-                        "articleno"
-                    )
-
-            # TODO: source-package load() may need CoLRev pre/post-processing.
-            records = load_raw(self.search_source.search_results_path)
-            for record_dict in records:
-                field_mapper(record_dict)
-            return index_records_by_id(records)
-
-        raise NotImplementedError
+    @classmethod
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Map ACM-specific fields and discard export-only values."""
+        for record_dict in records:
+            for key in ["url", "publisher", "numpages", "month"]:
+                record_dict.pop(key, None)
+            for source_field, target_field in {
+                "issue_date": f"{cls.endpoint}.issue_date",
+                "location": Fields.ADDRESS,
+                "articleno": f"{cls.endpoint}.articleno",
+            }.items():
+                if source_field in record_dict:
+                    record_dict[target_field] = record_dict.pop(source_field)
+        return super().normalize(records, format=format, source_version=source_version)
 
     # pylint: disable=colrev-missed-constant-usage
     def prepare(

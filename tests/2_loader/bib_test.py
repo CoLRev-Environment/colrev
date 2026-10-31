@@ -11,7 +11,7 @@ from bibliography_io import load_raw
 from bibliography_io.exceptions import ParseError
 from bibliography_io.exceptions import UnsupportedFormatError
 
-import colrev.loader.bib
+import colrev.loader.load_utils_formatter
 
 # flake8: noqa
 
@@ -42,13 +42,15 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("data/search/bib_data.bib"),
     )
 
-    colrev.loader.bib.run_fix_bib_file(
+    colrev.loader.load_utils_formatter.run_fix_bib_file(
         Path("data/search/bib_data.bib"), logger=logging.getLogger(__name__)
     )
 
-    records_list = load_raw(Path("data/search/bib_data.bib"), normalize=False)
+    records_list = load_raw(Path("data/search/bib_data.bib"))
     records = {record["ID"]: record for record in records_list}
-    colrev.loader.bib.run_resolve_crossref(records, logger=logging.getLogger(__name__))
+    colrev.loader.load_utils_formatter.run_resolve_crossref(
+        records, logger=logging.getLogger(__name__)
+    )
 
     print(records)
     assert records == {
@@ -62,7 +64,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
             "volume": "99",
             "number": "299",
             "pages": "99--123",
-            "abstract": "This is a nice abstract.",
+            "abstract": "This is a nice \n   abstract.",
             "issn": "07654321",
             "keywords": "Dummy, Template, Void, Example",
             "language": "German",
@@ -75,7 +77,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
             "ID": "articlewriter_firstrandomword_2020a",
             "abstract": "This is a nice abstract.",
             "author": "Articlewriter, Laura",
-            "doi": "10.3333/XYZ.V4444.04A",
+            "doi": "10.3333/XYZ.V4444.04a",
             "issn": "07654321a",
             "journal": "Dummy Relations",
             "key_words": "Dummy, Template, Void, Example",
@@ -106,10 +108,10 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         "WOS:000072095400011": {
             "ID": "WOS:000072095400011",
             "ENTRYTYPE": "article",
-            "Author": "Andreica, D and Schmid, H",
-            "Title": "Magnetic properties and phase transitions of iron boracites, Fe3B7O13X (X = Cl, Br OR I)",
-            "Journal": "FERROELECTRICS",
-            "Year": "1997",
+            "author": "Andreica, D and\n   Schmid, H",
+            "title": "Magnetic properties and phase transitions of iron boracites,\n   Fe3B7O13X (X = Cl, Br OR I)",
+            "journal": "FERROELECTRICS",
+            "year": "1997",
         },
     }
 

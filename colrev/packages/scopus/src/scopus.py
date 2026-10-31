@@ -3,16 +3,15 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import logging
+import tempfile
 import typing
 from pathlib import Path
 from urllib.parse import urlparse
 
+
 from pydantic import Field
 
-import colrev.loader.bib
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
@@ -26,6 +25,7 @@ from colrev.ops.search_api_feed import create_api_source
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
 from colrev.packages.scopus.src import scopus_api
+import colrev.loader.load_utils_formatter
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -187,14 +187,29 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     @classmethod
-    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        colrev.loader.bib.run_fix_bib_file(filename, logger=logger)
-        # TODO: source-package load() may need CoLRev pre/post-processing.
-        records = load_raw(filename)
+    def preprocess(cls, text: str, *, format: str, source_version: str | None) -> str:
+        """Apply the existing Scopus BibTeX repair before parsing."""
+        if format != "bib":
+            return super().preprocess(
+                text, format=format, source_version=source_version
+            )
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "scopus.bib"
+            path.write_text(text, encoding="utf-8")
+            colrev.loader.load_utils_formatter.run_fix_bib_file(
+                path, logger=logging.getLogger(__name__)
+            )
+            return path.read_text(encoding="utf-8")
+
+    @classmethod
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Map Scopus document types and source-specific fields."""
         for record_dict in records:
             cls._set_entrytype_from_document_type(record_dict)
             cls._map_scopus_fields(record_dict)
-        return index_records_by_id(records)
+        return super().normalize(records, format=format, source_version=source_version)
 
     @staticmethod
     def _set_entrytype_from_document_type(record_dict: dict) -> None:
@@ -244,15 +259,6 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
                 ).replace(".0", "")
                 del record_dict["Start_Page"]
                 del record_dict["End_Page"]
-
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            return self._load_bib(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        raise NotImplementedError
 
     def prepare(
         self,

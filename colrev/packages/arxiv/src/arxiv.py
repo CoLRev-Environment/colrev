@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import logging
 import typing
 from multiprocessing import Lock
@@ -263,19 +261,14 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
                 rerun=rerun,
             )
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        # for API-based searches
-        if self.search_source.search_results_path.suffix == ".bib":
-            # TODO: source-package load() may need CoLRev pre/post-processing.
-            records = index_records_by_id(
-                load_raw(self.search_source.search_results_path)
-            )
-            for record in records.values():
-                record[Fields.INSTITUTION] = "ArXiv"
-            return records
-
-        raise NotImplementedError
+    @classmethod
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Add the ArXiv source institution to records."""
+        for record in records:
+            record[Fields.INSTITUTION] = "ArXiv"
+        return super().normalize(records, format=format, source_version=source_version)
 
     def load_fixes(
         self,

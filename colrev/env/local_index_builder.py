@@ -15,7 +15,7 @@ from threading import Timer
 
 import pandas as pd
 import requests_cache
-from bibliography_io import loads_raw
+from bibliography_io import loads
 from bibliography_io import to_string
 from tqdm import tqdm
 
@@ -138,12 +138,9 @@ class LocalIndexBuilder:
     ) -> None:
         """Adds layered fields to amend existing records."""
         item_record_dict = index_records_by_id(
-            loads_raw(
+            loads(
                 item_to_add[LocalIndexFields.BIBTEX],
                 format="bib",
-                normalize=False,
-                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
-                list_fields={Fields.ORIGIN},
             )
         )
         item_record_dict = adapt_bibliography_records(item_record_dict)

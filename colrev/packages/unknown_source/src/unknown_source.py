@@ -8,26 +8,23 @@ import re
 import typing
 from pathlib import Path
 
-from bibliography_io import load_raw
-import pandas as pd
+from bibliography_io import load as bibliography_io_load
 from pydantic import Field
 from rapidfuzz import fuzz
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
-from colrev.record.record_utils import index_records_by_id
-import colrev.loader.ris
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.record.record_prep
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import FieldSet
-from colrev.constants import FieldValues
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
-from colrev.ops.search_db import create_db_source
-from colrev.ops.search_db import run_db_search
+from colrev.constants import (
+    Fields,
+    FieldValues,
+    SearchSourceHeuristicStatus,
+    SearchType,
+)
+from colrev.ops.search_db import create_db_source, run_db_search
+from colrev.record.record_utils import index_records_by_id
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -117,271 +114,18 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     @classmethod
-    def _load_ris(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        def map_source_specific_fields(record_dict: dict) -> None:
-            """Apply core RIS defaults and legacy unknown-source extensions."""
-            colrev.loader.ris.map_fields(record_dict)
-            for ris_key, standard_key in (
-                ("fulltext", Fields.FULLTEXT),
-                ("PMID", Fields.PUBMED_ID),
-            ):
-                if ris_key in record_dict and standard_key not in record_dict:
-                    record_dict[standard_key] = record_dict.pop(ris_key)
-            if isinstance(record_dict.get(Fields.EDITOR), list):
-                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
-            for source_control_field in ("C1", "T3", "AD", "CY", "M3"):
-                record_dict.pop(source_control_field, None)
-
-        records = load_raw(filename, normalize=False)
-        for index, record_dict in enumerate(records, start=1):
-            if Fields.ENTRYTYPE not in record_dict:
-                colrev.loader.ris.set_entrytype(record_dict)
-            map_source_specific_fields(record_dict)
-            record_dict[Fields.ID] = str(index).zfill(6)
-        return index_records_by_id(records)
-
-    @classmethod
-    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        records = load_raw(filename, normalize=False)
-        for record_dict in records:
-            record_dict.setdefault(Fields.ENTRYTYPE, ENTRYTYPES.MISC)
-            record_dict[Fields.ENTRYTYPE] = record_dict[Fields.ENTRYTYPE].lower()
-            if record_dict[Fields.ENTRYTYPE] in ["www", "electronic"]:
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
-        return index_records_by_id(records)
-
-    # pylint: disable=colrev-missed-constant-usage
-    @classmethod
-    def _table_drop_fields(cls, *, record_dict: dict) -> None:
-        for key in list(record_dict.keys()):
-            if record_dict[key] in [f"no {key}", "", "nan"]:
-                del record_dict[key]
-        if (
-            record_dict.get("number_of_cited_references", "NA")
-            == "no Number-of-Cited-References"
-        ):
-            del record_dict["number_of_cited_references"]
-        if "no file" in record_dict.get("file_name", "NA"):
-            del record_dict["file_name"]
-
-        if record_dict.get("cited_by", "NA") in [
-            "no Times-Cited",
-        ]:
-            del record_dict["cited_by"]
-
-        if "author_count" in record_dict:
-            del record_dict["author_count"]
-        if "citation_key" in record_dict:
-            del record_dict["citation_key"]
-
-    @classmethod
-    def _table_entrytype_setter(cls, record_dict: dict) -> None:
-        if "type" in record_dict:
-            record_dict[Fields.ENTRYTYPE] = record_dict.pop("type")
-
-        if Fields.ENTRYTYPE not in record_dict:
-            if record_dict.get(Fields.JOURNAL, "") != "":
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-            elif record_dict.get(Fields.BOOKTITLE, "") != "":
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
-            else:
-                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
-
-        if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
-            if Fields.JOURNAL in record_dict and Fields.BOOKTITLE not in record_dict:
-                record_dict[Fields.BOOKTITLE] = record_dict.pop(Fields.JOURNAL)
-        elif record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-            if Fields.BOOKTITLE in record_dict and Fields.JOURNAL not in record_dict:
-                record_dict[Fields.JOURNAL] = record_dict.pop(Fields.BOOKTITLE)
-
-    @classmethod
-    def _table_field_mapper(cls, record_dict: dict) -> None:
-        # replace all keys with lower case
-        record_dict = {k.lower(): v for k, v in record_dict.items()}
-
-        if "id" in record_dict:
-            record_dict[Fields.ID] = record_dict.pop("id")
-        if "entrytype" in record_dict:
-            record_dict[Fields.ENTRYTYPE] = record_dict.pop("entrytype")
-        if "type" in record_dict:
-            record_dict[Fields.ENTRYTYPE] = record_dict.pop("type")
-        if "authors" in record_dict:
-            record_dict[Fields.AUTHOR] = record_dict.pop("authors", "")
-        if "publication" in record_dict:
-            record_dict[Fields.JOURNAL] = record_dict.pop("publication", "")
-
-        record_dict.pop("Category", None)
-        record_dict.pop("Affiliations", None)
-
-        if "issue" in record_dict and Fields.NUMBER not in record_dict:
-            record_dict[Fields.NUMBER] = record_dict.pop("issue")
-            if record_dict[Fields.NUMBER] == "no issue":
-                del record_dict[Fields.NUMBER]
-
-        if "publication_year" in record_dict and Fields.YEAR not in record_dict:
-            record_dict[Fields.YEAR] = record_dict.pop("publication_year")
-
-        # Note: this is a simple heuristic:
-        if (
-            "journal/book" in record_dict
-            and Fields.JOURNAL not in record_dict
-            and Fields.DOI in record_dict
-        ):
-            record_dict[Fields.JOURNAL] = record_dict.pop("journal/book")
-
-        if "author" in record_dict and ";" in record_dict["author"]:
-            record_dict["author"] = record_dict["author"].replace("; ", " and ")
-
-        cls._table_drop_fields(record_dict=record_dict)
-
-        for key in list(record_dict.keys()):
-            value = record_dict[key]
-            record_dict[key] = str(value)
-            if value == "" or pd.isna(value):
-                del record_dict[key]
-
-    @classmethod
-    def _table_id_labeler(cls, records: list[dict]) -> None:
-        """Labeler for IDs."""
-        for counter, record_dict in enumerate(records):
-            if Fields.ID not in record_dict:
-                record_dict[Fields.ID] = str(counter + 1).zfill(6)
-
-    @classmethod
-    def _load_table(cls, *, filename: Path, logger: logging.Logger) -> dict:
-
-        # TODO: source-package load() may need CoLRev pre/post-processing.
-        records = load_raw(filename, normalize=False)
-        cls._table_id_labeler(records)
-        for record_dict in records:
-            cls._table_entrytype_setter(record_dict)
-            cls._table_field_mapper(record_dict)
-        return index_records_by_id(records)
-
-    @classmethod
-    def _load_md(cls, *, filename: Path, logger: logging.Logger) -> dict:
-
-        # TODO: source-package load() may need CoLRev pre/post-processing.
-        return index_records_by_id(load_raw(filename, format="md"))
-
-    @classmethod
-    def _load_enl(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        def entrytype_setter(record_dict: dict) -> None:
-            if "0" not in record_dict:
-                keys_to_check = ["V", "N"]
-                if any(k in record_dict for k in keys_to_check):
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-                else:
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
-            else:
-                if record_dict["0"] == "Journal Article":
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-                elif record_dict["0"] == "Inproceedings":
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
-                else:
-                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
-
-        def field_mapper(record_dict: dict) -> None:
-
-            key_maps = {
-                ENTRYTYPES.ARTICLE: {
-                    "T": Fields.TITLE,
-                    "A": Fields.AUTHOR,
-                    "D": Fields.YEAR,
-                    "B": Fields.JOURNAL,
-                    "V": Fields.VOLUME,
-                    "N": Fields.NUMBER,
-                    "P": Fields.PAGES,
-                    "X": Fields.ABSTRACT,
-                    "U": Fields.URL,
-                    "8": "date",
-                    "0": "type",
-                },
-                ENTRYTYPES.INPROCEEDINGS: {
-                    "T": Fields.TITLE,
-                    "A": Fields.AUTHOR,
-                    "D": Fields.YEAR,
-                    "B": Fields.JOURNAL,
-                    "V": Fields.VOLUME,
-                    "N": Fields.NUMBER,
-                    "P": Fields.PAGES,
-                    "X": Fields.ABSTRACT,
-                    "U": Fields.URL,
-                    "8": "date",
-                    "0": "type",
-                },
-            }
-
-            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
-            for ris_key in list(record_dict.keys()):
-                if ris_key in key_map:
-                    standard_key = key_map[ris_key]
-                    record_dict[standard_key] = record_dict.pop(ris_key)
-
-            if Fields.AUTHOR in record_dict and isinstance(
-                record_dict[Fields.AUTHOR], list
-            ):
-                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
-            if Fields.EDITOR in record_dict and isinstance(
-                record_dict[Fields.EDITOR], list
-            ):
-                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
-            if Fields.KEYWORDS in record_dict and isinstance(
-                record_dict[Fields.KEYWORDS], list
-            ):
-                record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
-
-            record_dict.pop("type", None)
-
-            for key, value in record_dict.items():
-                record_dict[key] = str(value)
-
-        # TODO: source-package load() may need CoLRev pre/post-processing.
-        records = load_raw(filename, normalize=False)
-        for index, record_dict in enumerate(records, start=1):
-            entrytype_setter(record_dict)
-            record_dict.setdefault(Fields.ID, str(index))
-            field_mapper(record_dict)
-        return index_records_by_id(records)
-
-    @classmethod
     def ensure_append_only(cls, filename: Path) -> bool:
         """Ensure that the SearchSource file is append-only."""
         return filename.suffix in [".ris", ".csv", ".xlsx", ".xls", ".md"]
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if not self.search_source.search_results_path.is_file():
+    def load(self) -> dict[str, dict]:
+        """Load records using bibliography-io's generic normalization."""
+        source_path = self.search_source.search_results_path
+        if not source_path.is_file():
             return {}
 
-        __load_methods = {
-            ".ris": self._load_ris,
-            ".bib": self._load_bib,
-            ".csv": self._load_table,
-            ".xls": self._load_table,
-            ".xlsx": self._load_table,
-            ".md": self._load_md,
-            ".enl": self._load_enl,
-        }
-
-        if self.search_source.search_results_path.suffix not in __load_methods:
-            raise NotImplementedError
-
-        records = __load_methods[self.search_source.search_results_path.suffix](
-            filename=self.search_source.search_results_path, logger=self.logger
-        )
-        for record_id in records:
-            records[record_id] = {
-                k: v
-                for k, v in records[record_id].items()
-                if k not in FieldSet.PROVENANCE_KEYS + [Fields.SCREENING_CRITERIA]
-            }
-        for record in records.values():
-            for key in list(record.keys()):
-                if key not in FieldSet.STANDARDIZED_FIELD_KEYS:
-                    record[f"colrev.unknonwn_source.{key}"] = record.pop(key)
-
-        return records
+        records = bibliography_io_load(source_path)
+        return index_records_by_id(records)
 
     def _heuristically_fix_entrytypes(
         self, *, record: colrev.record.record_prep.PrepRecord
@@ -642,9 +386,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         # we may assign fields heuristically (e.g., to colrev.pubmed.pubmedid)
 
-        self._heuristically_fix_entrytypes(
-            record=record,
-        )
+        self._heuristically_fix_entrytypes(record=record)
 
         self._impute_missing_fields(record=record)
 

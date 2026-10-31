@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import logging
 import os
 import typing
@@ -231,7 +229,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     @classmethod
-    def _load_ris(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def _normalize_ris(cls, records: list[dict]) -> list[dict]:
         def entrytype_setter(record_dict: dict) -> None:
             if record_dict["TY"] == "JOUR":
                 record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
@@ -311,13 +309,11 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
             for key, value in record_dict.items():
                 record_dict[key] = str(value)
 
-        # TODO: source-package load() may need CoLRev pre/post-processing.
-        records = load_raw(filename, normalize=False)
         for index, record_dict in enumerate(records, start=1):
             entrytype_setter(record_dict)
             record_dict.setdefault(Fields.ID, f"{index:06d}")
             field_mapper(record_dict)
-        return index_records_by_id(records)
+        return records
 
     @classmethod
     def ensure_append_only(cls, filename: Path) -> bool:
@@ -325,7 +321,7 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
         return filename.suffix in [".ris"]
 
     @classmethod
-    def _load_csv(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def _normalize_csv(cls, records: list[dict]) -> list[dict]:
         def entrytype_setter(record_dict: dict) -> None:
             if record_dict["Category"] == "Magazine":
                 record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
@@ -354,28 +350,23 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if value == "" or pd.isna(value):
                     del record_dict[key]
 
-        # TODO: source-package load() may need CoLRev pre/post-processing.
-        records = load_raw(filename, normalize=False)
         for record_dict in records:
             entrytype_setter(record_dict)
             if not record_dict.get(Fields.ID):
                 record_dict[Fields.ID] = str(record_dict.get("DOI", ""))
             field_mapper(record_dict)
-        return index_records_by_id(records)
+        return records
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".ris":
-            return self._load_ris(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        if self.search_source.search_results_path.suffix == ".csv":
-            return self._load_csv(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        raise NotImplementedError
+    @classmethod
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Normalize RIS and CSV exports from IEEE."""
+        if format == "ris":
+            records = cls._normalize_ris(records)
+        elif format == "csv":
+            records = cls._normalize_csv(records)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 from colrev.loader.load_utils_name_formatter import parse_names_in_records
 import logging
 import re
@@ -100,33 +98,23 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     @classmethod
-    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        def field_mapper(record_dict: dict) -> None:
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Map Taylor & Francis fields and parse author names."""
+        for record_dict in records:
             if "note" in record_dict:
                 record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
             if "eprint" in record_dict:
                 record_dict[f"{cls.endpoint}.eprint"] = record_dict.pop("eprint")
-
-            for key in list(record_dict.keys()):
-                if key not in ["ID", "ENTRYTYPE"]:
+            for key in list(record_dict):
+                if key not in [Fields.ID, Fields.ENTRYTYPE]:
                     record_dict[key.lower()] = record_dict.pop(key)
-
-        # TODO: source-package load() may need CoLRev pre/post-processing.
-        records = load_raw(filename)
-        for record_dict in records:
-            field_mapper(record_dict)
-        indexed_records = index_records_by_id(records)
+        indexed_records = super().normalize(
+            records, format=format, source_version=source_version
+        )
         parse_names_in_records(indexed_records)
         return indexed_records
-
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            return self._load_bib(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        raise NotImplementedError
 
     def prepare(
         self,

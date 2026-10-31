@@ -17,35 +17,24 @@ from bibliography_io.exceptions import DuplicateRecordIDError
 from bibliography_io.exceptions import MissingRecordIDError
 from bibliography_io.exceptions import UnsupportedFormatError
 from colrev.record.bibliography import adapt_bibliography_records
+import colrev.loader.load_utils_formatter
 
-import colrev.loader.bib
-from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
-from colrev.dataset import (
-    _load_primary_bibliography,
-)
-from colrev.loader.loader import Loader
+from colrev.record.record_utils import index_records_by_id
 
 
-def test_missing_ids_error_explains_incremental_ids(tmp_path: Path) -> None:
-    """Test that the missing-ID error explains how to generate IDs."""
-    loader = Loader(
-        filename=tmp_path / "records.test",
-        entrytype_setter=lambda record: None,
-        field_mapper=lambda record: None,
-        id_labeler=lambda records: None,
-        unique_id_field="",
-        logger=logging.getLogger(__name__),
-    )
-    with pytest.raises(ValueError) as exc_info:
-        loader._set_ids([{"title": "Record without an ID"}])
+def test_index_records_by_id_rejects_missing_and_duplicate_ids() -> None:
+    with pytest.raises(MissingRecordIDError):
+        index_records_by_id([{"title": "No ID"}])
 
-    assert str(exc_info.value) == (
-        f'{Colors.ORANGE}ID not set in all records. Pass unique_id_field="INCREMENTAL" '
-        "to the CoLRev loader to generate sequential IDs."
-        f"{Colors.END}"
-    )
+    with pytest.raises(DuplicateRecordIDError):
+        index_records_by_id(
+            [
+                {Fields.ID: "same"},
+                {Fields.ID: "same"},
+            ]
+        )
 
 
 def test_dataset_adapter_restores_colrev_record_field_types() -> None:
@@ -55,6 +44,7 @@ def test_dataset_adapter_restores_colrev_record_field_types() -> None:
             Fields.STATUS: "md_imported",
             Fields.ORIGIN: "source.bib/1; other.bib/2;",
             Fields.MD_PROV: "title:provider;verified;",
+            Fields.D_PROV: "file:manual;",
         }
     }
 
@@ -65,6 +55,80 @@ def test_dataset_adapter_restores_colrev_record_field_types() -> None:
     assert converted["example"][Fields.MD_PROV] == {
         "title": {"source": "provider", "note": "verified"}
     }
+    assert converted["example"][Fields.D_PROV] == {
+        "file": {"source": "manual", "note": ""}
+    }
+
+
+def test_dataset_adapter_restores_structured_bibliography_fields(
+    tmp_path: Path,
+) -> None:
+    """Verify that structured bibliography fields survive BibTeX round-trips.
+
+    Serialize records to BibTeX and reload them through string, raw, and file
+    APIs. Confirm that the adapter consistently restores nested mappings,
+    sorted lists, and RecordState enums across all three paths.
+    """
+    records = {
+        "example": {
+            Fields.ID: "example",
+            Fields.ENTRYTYPE: "article",
+            Fields.ORIGIN: ["source.bib/1", "other.bib/2"],
+            Fields.MD_PROV: {"title": {"source": "provider", "note": "verified"}},
+            Fields.D_PROV: {"doi": {"source": "crossref", "note": ""}},
+            Fields.STATUS: "md_imported",
+        }
+    }
+    bibtex = to_string(
+        records,
+        format="bib",
+        mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+        list_fields={Fields.ORIGIN},
+    )
+
+    loaded = loads_primary(
+        bibtex,
+        format="bib",
+        mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+        list_fields={Fields.ORIGIN},
+    )
+    bibtex_path = tmp_path / "structured.bib"
+    write(
+        records,
+        path=bibtex_path,
+        mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+        list_fields={Fields.ORIGIN},
+    )
+    file_loaded = load_primary(
+        bibtex_path,
+        mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+        list_fields={Fields.ORIGIN},
+    )
+    file_converted = adapt_bibliography_records(file_loaded)
+    converted = adapt_bibliography_records(loaded)
+    raw_loaded = loads_raw(
+        bibtex,
+        format="bib",
+        mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+        list_fields={Fields.ORIGIN},
+    )
+    raw_converted = adapt_bibliography_records(
+        {record[Fields.ID]: record for record in raw_loaded}
+    )
+
+    expected = {
+        "example": {
+            Fields.ID: "example",
+            Fields.ENTRYTYPE: "article",
+            Fields.ORIGIN: ["other.bib/2", "source.bib/1"],
+            Fields.MD_PROV: {"title": {"source": "provider", "note": "verified"}},
+            Fields.D_PROV: {"doi": {"source": "crossref", "note": ""}},
+            Fields.STATUS: RecordState.md_imported,
+        }
+    }
+    assert converted == expected
+    assert raw_converted == expected
+    assert file_converted == expected
 
 
 def test_load(tmp_path, helpers) -> None:  # type: ignore
@@ -90,7 +154,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("data/search/bib_data.bib"),
     )
 
-    colrev.loader.bib.run_fix_bib_file(
+    colrev.loader.load_utils_formatter.run_fix_bib_file(
         Path("data/search/bib_data.bib"), logger=logging.getLogger(__name__)
     )
 

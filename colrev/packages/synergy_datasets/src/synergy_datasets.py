@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import datetime
 import logging
 import tempfile
@@ -351,20 +349,17 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented."""
         return record
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            # TODO: source-package load() may need CoLRev pre/post-processing.
-            records = load_raw(self.search_source.search_results_path)
-            for record in records:
-                if "pmid" in record:
-                    record["pubmedid"] = record["pmid"].replace(
-                        "https://pubmed.ncbi.nlm.nih.gov/", ""
-                    )
-                    del record["pmid"]
-            return index_records_by_id(records)
-
-        raise NotImplementedError
+    @classmethod
+    def normalize(
+        cls, records: list[dict], *, format: str, source_version: str | None
+    ) -> dict[str, dict]:
+        """Normalize PubMed IDs from Synergy dataset exports."""
+        for record in records:
+            if "pmid" in record:
+                record["pubmedid"] = record.pop("pmid").replace(
+                    "https://pubmed.ncbi.nlm.nih.gov/", ""
+                )
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,
