@@ -125,12 +125,11 @@ class SearchSourcePackageBaseClass(ABC):
         if not source_path.is_file():
             return {}
 
-        records = bibliography_io_load(
+        return bibliography_io_load(
             source_path,
             source=self.endpoint,
             source_version=self.search_source.version,
         )
-        return {str(record[Fields.ID]): record for record in records}
 
     @classmethod
     # pylint: disable=unused-argument

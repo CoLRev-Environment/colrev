@@ -15,7 +15,6 @@ from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import LocalIndexFields
 from colrev.record.bibliography import adapt_bibliography_records
-from colrev.record.record_utils import index_records_by_id
 
 # Note : records are indexed by id = hash(colrev_id)
 # to ensure that the indexing-ids do not exceed limits
@@ -89,11 +88,9 @@ class SQLiteIndex:
 
     def _get_record_from_row(self, row: dict) -> dict:
 
-        records_dict = index_records_by_id(
-            loads(
-                row[LocalIndexFields.BIBTEX],
-                format="bib",
-            )
+        records_dict = loads(
+            row[LocalIndexFields.BIBTEX],
+            format="bib",
         )
         records_dict = adapt_bibliography_records(records_dict)
 

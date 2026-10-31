@@ -34,7 +34,6 @@ from colrev.constants import Filepaths
 from colrev.constants import LocalIndexFields
 from colrev.env.local_index_prep import prepare_record_for_indexing
 from colrev.record.bibliography import adapt_bibliography_records
-from colrev.record.record_utils import index_records_by_id
 
 
 class LocalIndexBuilder:
@@ -137,11 +136,9 @@ class LocalIndexBuilder:
         curated_fields: list,
     ) -> None:
         """Adds layered fields to amend existing records."""
-        item_record_dict = index_records_by_id(
-            loads(
-                item_to_add[LocalIndexFields.BIBTEX],
-                format="bib",
-            )
+        item_record_dict = loads(
+            item_to_add[LocalIndexFields.BIBTEX],
+            format="bib",
         )
         item_record_dict = adapt_bibliography_records(item_record_dict)
         item_record = colrev.record.record.Record(list(item_record_dict.values())[0])

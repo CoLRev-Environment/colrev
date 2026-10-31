@@ -5,8 +5,6 @@ from pathlib import Path
 import pytest
 
 import colrev.search_file
-from bibliography_io.exceptions import DuplicateRecordIDError
-from bibliography_io.exceptions import MissingRecordIDError
 from colrev.constants import SearchType
 from colrev.packages.unknown_source.src.unknown_source import UnknownSearchSource
 
@@ -47,42 +45,25 @@ def test_load_unknown_source_indexes_records_from_library(
     assert records["sample2024"]["title"] == "A title"
 
 
-@pytest.mark.parametrize(
-    ("record", "error"),
-    [({}, MissingRecordIDError), ({"ID": " "}, MissingRecordIDError)],
-)
-def test_load_unknown_source_rejects_missing_ids(
+def test_load_unknown_source_returns_library_mapping_without_reindexing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
-    record: dict,
-    error: type[Exception],
 ) -> None:
-    """The CoLRev indexing contract rejects missing and blank IDs."""
+    """Normalized bibliography-io results are already keyed by record ID."""
     monkeypatch.chdir(tmp_path)
     source_file = Path("data/search/results.bib")
     source_file.parent.mkdir(parents=True)
     source_file.touch()
+    expected = {
+        "first": {"ID": "first", "title": "First"},
+        "second": {"ID": "second", "title": "Second"},
+    }
     monkeypatch.setattr(
         "colrev.packages.unknown_source.src.unknown_source.bibliography_io_load",
-        lambda path: [record],
+        lambda path: expected,
     )
 
-    with pytest.raises(error):
-        _unknown_source(source_file).load()
+    records = _unknown_source(source_file).load()
 
-
-def test_load_unknown_source_rejects_duplicate_ids(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """The CoLRev indexing contract rejects duplicate IDs."""
-    monkeypatch.chdir(tmp_path)
-    source_file = Path("data/search/results.bib")
-    source_file.parent.mkdir(parents=True)
-    source_file.touch()
-    monkeypatch.setattr(
-        "colrev.packages.unknown_source.src.unknown_source.bibliography_io_load",
-        lambda path: [{"ID": "same"}, {"ID": "same"}],
-    )
-
-    with pytest.raises(DuplicateRecordIDError):
-        _unknown_source(source_file).load()
+    assert records is expected
+    assert list(records) == ["first", "second"]

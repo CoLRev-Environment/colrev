@@ -24,7 +24,6 @@ from colrev.constants import (
     SearchType,
 )
 from colrev.ops.search_db import create_db_source, run_db_search
-from colrev.record.record_utils import index_records_by_id
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -124,8 +123,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         if not source_path.is_file():
             return {}
 
-        records = bibliography_io_load(source_path)
-        return index_records_by_id(records)
+        return bibliography_io_load(source_path)
 
     def _heuristically_fix_entrytypes(
         self, *, record: colrev.record.record_prep.PrepRecord
