@@ -4,7 +4,7 @@
 import logging
 import os
 from pathlib import Path
-
+import bibliography_io.loaders.bibtex
 import pytest
 from bibliography_io import get_nr_records
 from bibliography_io import load_primary
@@ -17,7 +17,6 @@ from bibliography_io.exceptions import DuplicateRecordIDError
 from bibliography_io.exceptions import MissingRecordIDError
 from bibliography_io.exceptions import UnsupportedFormatError
 from colrev.record.bibliography import adapt_bibliography_records
-import colrev.loader.load_utils_formatter
 
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -154,7 +153,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("data/search/bib_data.bib"),
     )
 
-    colrev.loader.load_utils_formatter.run_fix_bib_file(
+    bibliography_io.loaders.bibtex.run_fix_bib_file(
         Path("data/search/bib_data.bib"), logger=logging.getLogger(__name__)
     )
 

@@ -10,8 +10,7 @@ from bibliography_io import get_nr_records
 from bibliography_io import load_raw
 from bibliography_io.exceptions import ParseError
 from bibliography_io.exceptions import UnsupportedFormatError
-
-import colrev.loader.load_utils_formatter
+import bibliography_io.loaders.bibtex
 
 # flake8: noqa
 
@@ -42,13 +41,13 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("data/search/bib_data.bib"),
     )
 
-    colrev.loader.load_utils_formatter.run_fix_bib_file(
+    bibliography_io.loaders.bibtex.run_fix_bib_file(
         Path("data/search/bib_data.bib"), logger=logging.getLogger(__name__)
     )
 
     records_list = load_raw(Path("data/search/bib_data.bib"))
     records = {record["ID"]: record for record in records_list}
-    colrev.loader.load_utils_formatter.run_resolve_crossref(
+    bibliography_io.loaders.bibtex.run_resolve_crossref(
         records, logger=logging.getLogger(__name__)
     )
 
