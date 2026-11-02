@@ -10,8 +10,7 @@ from semanticscholar import Paper
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 import colrev.record.record_prep
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
+from colrev.constants import ENTRYTYPES, Fields
 
 # https://api.semanticscholar.org/api-docs
 
@@ -145,8 +144,7 @@ def _assign_book_fields(*, record_dict: dict) -> None:
 
 def _assign_inproc_fields(*, record_dict: dict) -> None:
     """Method to assign inproceedings specific details from item."""
-    if "journal" in record_dict:
-        del record_dict["journal"]
+    record_dict.pop("journal", None)
 
     venue = record_dict.get("venue", "")
     if venue:

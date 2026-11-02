@@ -6,9 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import colrev.process.operation
-from colrev.constants import Colors
-from colrev.constants import EndpointType
-from colrev.constants import OperationsType
+from colrev.constants import Colors, EndpointType, OperationsType
 
 
 def _get_endpoint_with_type(operation: colrev.process.operation.Operation) -> tuple:

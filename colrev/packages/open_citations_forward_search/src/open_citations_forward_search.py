@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import json
 import logging
-import typing
 from pathlib import Path
 
 from pydantic import Field
@@ -16,10 +15,7 @@ import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.search_file
-from colrev.constants import Fields
-from colrev.constants import RecordState
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import Fields, RecordState, SearchSourceHeuristicStatus, SearchType
 from colrev.packages.crossref.src.crossref_api import query_doi
 from colrev.packages.open_citations_forward_search.src import open_citations_api
 
@@ -45,7 +41,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -121,8 +117,8 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         return True
 
-    def _get_forward_search_records(self, *, record_dict: dict) -> typing.List[dict]:
-        forward_citations: typing.List[dict] = []
+    def _get_forward_search_records(self, *, record_dict: dict) -> list[dict]:
+        forward_citations: list[dict] = []
 
         url = f"https://opencitations.net/index/coci/api/v1/citations/{record_dict['doi']}"
 
@@ -219,7 +215,7 @@ class OpenCitationsSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint."""
         search_source = cls.get_default_source()

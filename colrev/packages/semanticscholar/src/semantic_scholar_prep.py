@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import json
 import logging
-import typing
 
 import requests
 from pydantic import Field
@@ -41,7 +40,7 @@ class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -97,9 +96,7 @@ class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Prepare a record based on metadata from SemanticScholar."""
         try:
@@ -122,6 +119,6 @@ class SemanticScholarPrep(base_classes.PrepPackageBaseClass):
                 default_source=retrieved_record.data[Fields.SEMANTIC_SCHOLAR_ID],
             )
 
-        except (requests.exceptions.RequestException,):
+        except requests.exceptions.RequestException:
             pass
         return record

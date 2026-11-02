@@ -10,11 +10,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.search_file
 from colrev import utils
-from colrev.constants import Colors
-from colrev.constants import EndpointType
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import SearchType
+from colrev.constants import Colors, EndpointType, Fields, OperationsType, SearchType
 from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import write_file
 
@@ -205,7 +201,7 @@ class Search(colrev.process.operation.Operation):
 
     def _apply_source_heuristics(
         self, *, filepath: Path, search_sources: dict
-    ) -> list[typing.Dict]:
+    ) -> list[dict]:
         """Apply heuristics to identify source."""
         data = ""
         try:

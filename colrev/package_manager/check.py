@@ -3,15 +3,15 @@
 
 from __future__ import annotations
 
+import re
+
 # subprocess is required for checking package installation status via pip.
 # Calls in this module must use shell=False and validated/static arguments.
 import subprocess  # nosec B404
 import sys
 import typing
-from importlib import import_module
-from importlib import util
+from importlib import import_module, util
 from pathlib import Path
-import re
 
 import toml
 
@@ -136,7 +136,7 @@ def _check_package_installed(data: dict) -> bool:
     return True
 
 
-def _check_key_exists(data: typing.Dict[str, typing.Any], key: str) -> bool:
+def _check_key_exists(data: dict[str, typing.Any], key: str) -> bool:
     keys = key.split(".")
     sub_data = data
     for k in keys:

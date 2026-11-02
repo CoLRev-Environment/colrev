@@ -15,8 +15,6 @@ import colrev.review_manager
 from colrev.constants import Filepaths
 from colrev.packages.unpaywall.src.unpaywall import Unpaywall
 
-# flake8: noqa: E501
-
 EnvTestConf = namedtuple(
     "EnvTestConf",
     "json_path expected_json yaml_path expected_yaml base_path test_repo backup",

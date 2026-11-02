@@ -6,13 +6,11 @@ from __future__ import annotations
 import logging
 import os
 import re
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 
 import inquirer
-from github import Auth
-from github import Github
+from github import Auth, Github
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
@@ -21,9 +19,7 @@ import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Fields
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import Fields, SearchSourceHeuristicStatus, SearchType
 from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.github.src import record_transformer
 
@@ -64,7 +60,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -98,7 +94,7 @@ class GitHubSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         cls._get_api_key()
