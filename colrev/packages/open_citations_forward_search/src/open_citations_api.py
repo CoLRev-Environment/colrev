@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-import typing
-
 import requests
 
 # pylint: disable=too-few-public-methods
@@ -20,13 +18,13 @@ class OpenCitationsAPI:
     def __init__(
         self,
         *,
-        session: typing.Optional[requests.Session] = None,
-        headers: typing.Optional[typing.Dict[str, str]] = None,
+        session: requests.Session | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         """Initialize the instance."""
         self.session = session or requests.Session()
         # headers = {"authorization": "YOUR-OPENCITATIONS-ACCESS-TOKEN"}
-        self.headers: typing.Dict[str, str] = headers or {}
+        self.headers: dict[str, str] = headers or {}
 
     def get(self, url: str, *, timeout: int) -> requests.Response:
         """Execute a GET request and raise a custom exception on failure."""

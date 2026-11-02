@@ -7,8 +7,7 @@ from pathlib import Path
 import pytest
 
 import colrev.loader.load_utils
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
+from colrev.constants import ENTRYTYPES, Fields
 
 
 def test_load_nbib_entries(tmp_path, helpers):  # type: ignore

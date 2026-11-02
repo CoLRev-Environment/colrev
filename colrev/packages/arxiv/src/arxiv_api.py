@@ -26,7 +26,7 @@ class ArxivAPI:
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        session: typing.Optional[requests.Session] = None,
+        session: requests.Session | None = None,
     ) -> None:
         """Initialize the instance."""
         self.session = session or requests.Session()
@@ -44,7 +44,7 @@ class ArxivAPI:
         except requests.exceptions.RequestException as exc:
             raise ArxivAPIError from exc
 
-    def _get_arxiv_ids(self, query: str, retstart: int) -> typing.List[dict]:
+    def _get_arxiv_ids(self, query: str, retstart: int) -> list[dict]:
         url = (
             "https://export.arxiv.org/api/query?search_query="
             + f"all:{query}&start={retstart}&max_results=20"

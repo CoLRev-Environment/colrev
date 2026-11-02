@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import logging
-import typing
 from pathlib import Path
 
 from pydantic import Field
@@ -14,8 +13,7 @@ import colrev.package_manager.package_settings
 import colrev.packages.dblp.src.dblp as dblp_connector
 import colrev.record.record
 import colrev.search_file
-from colrev.constants import Fields
-from colrev.constants import SearchType
+from colrev.constants import Fields, SearchType
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -38,7 +36,7 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -80,9 +78,7 @@ class DBLPMetadataPrep(base_classes.PrepPackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Prepare a record by retrieving its metadata from DBLP."""
         if any(

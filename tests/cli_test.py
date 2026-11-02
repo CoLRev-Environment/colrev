@@ -2,12 +2,12 @@
 
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
 import colrev.loader.load_utils
 import colrev.ui_cli.cli
 import colrev.writer.write_utils
-import pytest
 
 
 def _patch_conversion(
