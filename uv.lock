@@ -279,6 +279,7 @@ dependencies = [
     { name = "docker" },
     { name = "gitpython" },
     { name = "glom" },
+    { name = "grobid-tei" },
     { name = "imagehash" },
     { name = "inquirer" },
     { name = "jinja2" },
@@ -346,6 +347,7 @@ requires-dist = [
     { name = "docutils", marker = "extra == 'docs'", specifier = ">=0.21.2,<0.22" },
     { name = "gitpython", specifier = ">=3.1.29" },
     { name = "glom", specifier = ">=22.1.0" },
+    { name = "grobid-tei", git = "https://github.com/CoLRev-Environment/grobid-tei.git?rev=e444db627a5edaf1ed0f02c5020b6b14b3ded5b6" },
     { name = "imagehash", specifier = ">=4.3.1" },
     { name = "inquirer", specifier = ">=3.1.3" },
     { name = "jinja2", specifier = ">=3.1.2" },
@@ -638,6 +640,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/78/74/8387f95565ba7c30cd152a585b275ebb9a834d1d32782425c5d2fe0a102c/glom-25.12.0.tar.gz", hash = "sha256:1ae7da88be3693df40ad27bdf57a765a55c075c86c971bcddd67927403eb0069", size = 196128, upload-time = "2025-12-29T06:29:07.274Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/e6/4129d9a3baa72d747533bb33376543ccadd9a7f9944e5a6e3ae2e245f5d6/glom-25.12.0-py3-none-any.whl", hash = "sha256:b9f21e77f71a6576a43864e85066b8cc3f0f778d0d50961563f8981377a6dcb1", size = 103295, upload-time = "2025-12-29T06:29:06.074Z" },
+]
+
+[[package]]
+name = "grobid-tei"
+version = "0.1.0"
+source = { git = "https://github.com/CoLRev-Environment/grobid-tei.git?rev=e444db627a5edaf1ed0f02c5020b6b14b3ded5b6#e444db627a5edaf1ed0f02c5020b6b14b3ded5b6" }
+dependencies = [
+    { name = "defusedxml" },
+    { name = "requests" },
 ]
 
 [[package]]

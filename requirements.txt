@@ -52,6 +52,8 @@ gitpython==3.1.50
     # via colrev (pyproject.toml)
 glom==24.11.0
     # via colrev (pyproject.toml)
+grobid-tei @ git+https://github.com/CoLRev-Environment/grobid-tei.git@e444db627a5edaf1ed0f02c5020b6b14b3ded5b6
+    # via colrev (pyproject.toml)
 identify==2.6.9
     # via pre-commit
 idna==3.15

@@ -18,7 +18,7 @@ class GrobidService:
     GROBID_URL = "http://localhost:8070"
     # Important: do not use :latest versions or :SNAPSHOT versions
     # as they may change without notice
-    GROBID_IMAGE = "lfoppiano/grobid:0.8.2"
+    GROBID_IMAGE = "lfoppiano/grobid:0.9.0"
 
     def __init__(self) -> None:
         """Initialize the instance."""

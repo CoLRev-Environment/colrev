@@ -52,6 +52,7 @@ dependencies = [
     "pandas>=2.2,<3",
     "openpyxl>=3.1.2",                 # required by pandas for Excel
     "bibliography-io>=0.2.0",
+    "grobid-tei @ git+https://github.com/CoLRev-Environment/grobid-tei.git@e444db627a5edaf1ed0f02c5020b6b14b3ded5b6",
     "PyYAML>=6.0.0",
     "requests>=2.32.0",
     "requests-cache>=1.2.0",
@@ -113,6 +114,9 @@ colrev-hooks-update = "colrev.hooks.update:main"
 python_version = "3.12"
 warn_unused_configs = true
 ignore_missing_imports = true
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [[tool.mypy.overrides]]
 module = ["requests.*", "yaml.*", "pkg_resources.*"]
