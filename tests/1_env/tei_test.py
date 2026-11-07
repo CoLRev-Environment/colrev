@@ -141,13 +141,13 @@ def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
         {
             "surname": "Par",
             "forename": "Guy",
-            "emai": "guy.pare@hec.ca",
-            "ORCID": "0000-0001-7425-1994",
+            "email": "guy.pare@hec.ca",
+            "orcid": "0000-0001-7425-1994",
         },
         {
             "surname": "Paré",
             "forename": "Guy",
-            "ORCID": "0000-0001-7425-1994",
+            "orcid": "0000-0001-7425-1994",
         },
         {"surname": "Id", "forename": "Orcid"},
     ] == tei_doc.get_author_details()

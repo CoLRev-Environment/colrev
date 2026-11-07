@@ -209,25 +209,8 @@ class TEIParser:
         return self.document.keywords()
 
     def get_author_details(self) -> list:
-        """Get author details with the legacy keys and value formatting."""
-        author_details = []
-        for details in self.document.author_details():
-            forename = details.get("forename", "")
-            if len(forename) == 1:
-                forename += "."
-            converted = {
-                "surname": details.get("surname", ""),
-                "forename": forename,
-            }
-            if details.get("middlename"):
-                converted["middlename"] = " " + details["middlename"]
-            if "email" in details:
-                # Preserve the historic key spelling consumed by ColRev.
-                converted["emai"] = details["email"]
-            if "orcid" in details:
-                converted["ORCID"] = details["orcid"]
-            author_details.append(converted)
-        return author_details
+        """Return author details in grobid-tei's native dictionary format."""
+        return self.document.author_details()
 
     def get_references(self, *, add_intext_citation_count: bool = False) -> list:
         """Return references as ColRev record dictionaries."""

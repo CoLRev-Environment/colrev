@@ -82,10 +82,10 @@ def test_tei_constructor_and_colrev_field_adaptation(tmp_path: Path) -> None:
     assert parser.get_author_details() == [
         {
             "surname": "Writer",
-            "forename": "J.",
-            "middlename": " B",
-            "emai": "j@example.org",
-            "ORCID": "0000-0000",
+            "forename": "J",
+            "middlename": "B",
+            "email": "j@example.org",
+            "orcid": "0000-0000",
         }
     ]
     assert list(parser.iter_paragraphs()) == [
@@ -93,8 +93,10 @@ def test_tei_constructor_and_colrev_field_adaptation(tmp_path: Path) -> None:
     ]
 
 
-def test_absent_metadata_values_keep_colrev_return_shapes(tmp_path: Path) -> None:
-    """Library ``None`` and omitted author keys map to legacy ColRev values."""
+def test_absent_metadata_values_use_library_author_details(
+    tmp_path: Path,
+) -> None:
+    """Absent author fields follow grobid-tei's native return shape."""
     tei_path = tmp_path / "minimal.tei.xml"
     tei_path.write_bytes(MINIMAL_TEI)
     parser = colrev.env.tei_parser.TEIParser(tei_path=tei_path)
@@ -102,7 +104,7 @@ def test_absent_metadata_values_keep_colrev_return_shapes(tmp_path: Path) -> Non
     assert parser.get_grobid_version() == ""
     assert parser.get_abstract() == ""
     assert parser.get_paper_keywords() == []
-    assert parser.get_author_details() == [{"surname": "OnlySurname", "forename": ""}]
+    assert parser.get_author_details() == parser.document.author_details()
     assert parser.get_metadata()[Fields.ENTRYTYPE] == ENTRYTYPES.MISC
 
 
