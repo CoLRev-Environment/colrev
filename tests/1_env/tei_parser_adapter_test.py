@@ -75,9 +75,9 @@ def test_tei_constructor_and_colrev_field_adaptation(tmp_path: Path) -> None:
         Fields.TITLE: "Paper Title",
         Fields.YEAR: "2025",
         Fields.DOI: "10.1000/paper",
-        Fields.ID: "paper-id",
-        Fields.TEI_ID: "paper-id",
     }
+    assert Fields.ID not in parser.get_metadata()
+    assert Fields.TEI_ID not in parser.get_metadata()
     assert parser.get_paper_keywords() == ["keyword one", "keyword two"]
     assert parser.get_author_details() == [
         {
@@ -157,13 +157,16 @@ def test_mark_references_annotates_and_persists_library_document(
         },
     }
 
-    returned_root = parser.mark_references(records=records)
+    parser.mark_references(records=records)
 
-    assert returned_root is parser.root
+    assert not hasattr(parser, "root")
     serialized = tei_path.read_bytes()
     assert b'<biblStruct xml:id="ref-1" ID="LOCAL">' in serialized
     assert b'target="#ref-1" ID="LOCAL"' in serialized
     assert b"EXCLUDED" not in serialized
+    assert b'<biblStruct xml:id="ref-1" ID="LOCAL">' in parser.get_tei_str().encode(
+        "utf-8"
+    )
     reparsed = colrev.env.tei_parser.grobid_tei.TEIDocument.from_file(tei_path)
     assert reparsed.references()[0].tei_id == "ref-1"
 

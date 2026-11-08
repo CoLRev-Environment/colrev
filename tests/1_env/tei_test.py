@@ -5,6 +5,7 @@ import platform
 import re
 from difflib import unified_diff
 from pathlib import Path
+from xml.etree import ElementTree
 
 import pytest
 
@@ -191,6 +192,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
         Fields.TITLE: "Computational literature reviews: method, algorithms, and roadmap",
         Fields.YEAR: "2021",
         Fields.JOURNAL: "Organizational Research Methods",
+        Fields.PAGES: "1094428121991230",
         Fields.NR_INTEXT_CITATIONS: 2,
     }
 
@@ -252,11 +254,29 @@ def test_tei_mark_references(tei_doc, tmp_path) -> None:  # type: ignore
         }
     )
     actual = tei_doc.get_tei_str()
-    expected = 'xml:id="b118" ID="TEST_ID"'
-    assert expected in actual
+    root = ElementTree.fromstring(actual)
+    namespaces = {
+        "tei": "http://www.tei-c.org/ns/1.0",
+        "xml": "http://www.w3.org/XML/1998/namespace",
+    }
+    bibliography_reference = root.find(
+        ".//tei:biblStruct[@xml:id='b118']", namespaces=namespaces
+    )
+    assert bibliography_reference is not None
+    assert bibliography_reference.get("ID") == "TEST_ID"
+    reference = root.find(
+        ".//tei:ref[@type='bibr'][@target='#b118']", namespaces=namespaces
+    )
+    assert reference is not None
+    assert reference.get("ID") == "TEST_ID"
+    assert reference.text == "(Whetten, 1989)"
+    assert reference.tail is not None
+    assert ", which is critical" in " ".join(reference.tail.split())
 
-    expected = 'theoretical rationale <tei:ref type="bibr" target="#b118" ID="TEST_ID">(Whetten, 1989)</tei:ref>, which is critical '
-    assert expected in actual
+    parents = {child: parent for parent in root.iter() for child in parent}
+    paragraph = parents[reference]
+    paragraph_text = " ".join("".join(paragraph.itertext()).split())
+    assert "theoretical rationale (Whetten, 1989), which is critical" in paragraph_text
 
     assert "NO_TITLE" not in actual
 

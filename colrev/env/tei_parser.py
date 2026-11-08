@@ -6,9 +6,6 @@ from __future__ import annotations
 import re
 import typing
 from pathlib import Path
-from xml.etree.ElementTree import Element
-from xml.etree.ElementTree import register_namespace
-from xml.etree.ElementTree import tostring
 
 import grobid_tei
 import requests
@@ -26,14 +23,6 @@ from colrev.constants import RecordState
 class TEIParser:
     """ColRev-facing TEI API backed by :mod:`grobid_tei`."""
 
-    ns = {
-        "tei": "{http://www.tei-c.org/ns/1.0}",
-        "w3": "{http://www.w3.org/XML/1998/namespace}",
-    }
-    nsmap = {
-        "tei": "http://www.tei-c.org/ns/1.0",
-        "w3": "http://www.w3.org/XML/1998/namespace",
-    }
     _FIELD_MAP = {
         "author": Fields.AUTHOR,
         "title": Fields.TITLE,
@@ -114,11 +103,6 @@ class TEIParser:
 
     def _set_document(self, document: grobid_tei.TEIDocument) -> None:
         self.document = document
-        # ``root`` was exposed by TEIParser and mark_references() historically
-        # returned this Element. Keep that compatibility while delegating all
-        # parsing and mutation to grobid_tei.
-        # pylint: disable=protected-access
-        self.root: Element = document._root
 
     def _create_tei(
         self, *, consolidate_header: bool = False, consolidate_citations: bool = False
@@ -161,8 +145,7 @@ class TEIParser:
     def get_tei_str(self) -> str:
         """Return the TEI document as a Unicode string."""
         try:
-            register_namespace("tei", self.nsmap["tei"])
-            return tostring(self.root, encoding="unicode")
+            return self.document.to_bytes().decode("utf-8")
         except (TypeError, ValueError) as exc:  # pragma: no cover
             raise colrev_exceptions.TEIException() from exc
 
@@ -177,29 +160,11 @@ class TEIParser:
     def get_metadata(self) -> dict:
         """Return GROBID metadata using CoLRev's record field names.
 
-        Bibliographic values come from grobid_tei's public metadata API. Page
-        ranges and the document TEI ID retain their legacy TEI-specific
-        conversion because the generic metadata mapping does not expose them.
+        Bibliographic values come from grobid_tei's public metadata API.
         """
         metadata = self.document.metadata()
         record_dict = self._colrev_fields(metadata)
         record_dict.setdefault(Fields.ENTRYTYPE, ENTRYTYPES.MISC)
-
-        source_desc = self.root.find(f".//{self.ns['tei']}sourceDesc")
-        source_bibliography = (
-            source_desc.find(f".//{self.ns['tei']}biblStruct")
-            if source_desc is not None
-            else None
-        )
-        if source_bibliography is not None:
-            record_dict.pop(Fields.PAGES, None)
-            page_string = self._legacy_page_string(source_bibliography)
-            if page_string:
-                record_dict[Fields.PAGES] = page_string
-            tei_id = source_bibliography.get(self.ns["w3"] + "id")
-            if tei_id:
-                record_dict[Fields.ID] = tei_id
-                record_dict[Fields.TEI_ID] = tei_id
         return {key: value for key, value in record_dict.items() if value != ""}
 
     def get_paper_keywords(self) -> list:
@@ -216,20 +181,8 @@ class TEIParser:
             include_citation_counts=add_intext_citation_count
         )
         reference_record_dicts = []
-        tei_references = [
-            reference_node
-            for bibliography in self.root.iter(f"{self.ns['tei']}listBibl")
-            for reference_node in bibliography
-        ]
-        for reference, tei_reference in zip(references, tei_references):
+        for reference in references:
             record_dict = self._colrev_fields(reference.bibliographic_fields)
-            # The legacy parser only accepted page-scope ``from``/``to``
-            # attributes. grobid_tei also returns free-form page text, so keep
-            # ColRev's previous absent-value behavior at this adapter boundary.
-            record_dict.pop(Fields.PAGES, None)
-            page_string = self._legacy_page_string(tei_reference)
-            if page_string:
-                record_dict[Fields.PAGES] = page_string
             record_dict.setdefault(Fields.ENTRYTYPE, ENTRYTYPES.MISC)
             if reference.tei_id:
                 record_dict[Fields.ID] = reference.tei_id
@@ -240,21 +193,6 @@ class TEIParser:
                 )
             reference_record_dicts.append(record_dict)
         return reference_record_dicts
-
-    def _legacy_page_string(self, reference: Element) -> str:
-        """Format attributed page ranges using the historic ColRev convention."""
-        page_string = ""
-        pages = reference.findall(
-            f"{self.ns['tei']}monogr/{self.ns['tei']}imprint/"
-            f"{self.ns['tei']}biblScope[@unit='page']"
-        )
-        for page in pages:
-            for name, value in sorted(page.attrib.items()):
-                if name == "from":
-                    page_string += value
-                elif name == "to":
-                    page_string += "--" + value
-        return page_string
 
     def get_citations_per_section(self) -> dict:
         """Get section names mapped to their cited TEI IDs."""
@@ -278,7 +216,7 @@ class TEIParser:
             min_chars=min_chars, exclude_sections=tuple(exclude_sections)
         )
 
-    def mark_references(self, *, records: dict) -> Element:
+    def mark_references(self, *, records: dict) -> None:
         """Match references using ColRev and annotate the corresponding TEI IDs."""
         record_ids_by_tei_id = {}
         for reference_dict in self.get_references():
@@ -308,7 +246,6 @@ class TEIParser:
         self.document.annotate_reference_ids(record_ids_by_tei_id)
         if self.tei_path is not None:
             self.tei_path.write_bytes(self.document.to_bytes())
-        return self.root
 
 
 def _add_doi_from_pdf_if_not_available(record_dict: dict) -> None:
