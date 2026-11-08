@@ -131,6 +131,7 @@ class TEIParser:
             grobid_client = grobid_tei.GrobidClient(
                 service_url=grobid_service.GROBID_URL, timeout=180
             )
+            grobid_client.check_compatibility()
             tei_bytes = grobid_client.process_fulltext(
                 self.pdf_path,
                 consolidate_header=consolidate_header,

@@ -192,6 +192,7 @@ def test_pdf_constructor_keeps_grobid_service_in_colrev(
     service.assert_called_once_with()
     service.return_value.start.assert_not_called()
     client.assert_called_once_with(service_url="http://grobid.test", timeout=180)
+    client.return_value.check_compatibility.assert_called_once_with()
     client.return_value.process_fulltext.assert_called_once_with(
         pdf_path, consolidate_header=True, consolidate_citations=True
     )
