@@ -9,7 +9,7 @@ import typing
 from pathlib import Path
 from urllib.parse import urlparse
 
-import bibliography_io.loaders.bibtex
+import bibliography_io
 from pydantic import Field
 
 import colrev.ops.search_api_feed
@@ -195,9 +195,7 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         with tempfile.TemporaryDirectory() as temporary_directory:
             path = Path(temporary_directory) / "scopus.bib"
             path.write_text(text, encoding="utf-8")
-            bibliography_io.loaders.bibtex.run_fix_bib_file(
-                path, logger=logging.getLogger(__name__)
-            )
+            bibliography_io.fix_bib_file(path, logger=logging.getLogger(__name__))
             return path.read_text(encoding="utf-8")
 
     @classmethod
