@@ -7,6 +7,7 @@ import logging
 import time
 
 import docker
+import grobid_tei
 import requests
 
 import colrev.env.docker_manager
@@ -33,15 +34,27 @@ class GrobidService:
         self.start()
 
     def _ensure_correct_version(self) -> None:
-        response = requests.get(self.GROBID_URL + "/api/version", timeout=10)
-        running_version = response.json()["version"]
+        client = grobid_tei.GrobidClient(
+            service_url=self.GROBID_URL,
+            timeout=10,
+            skip_version=True,
+        )
+        try:
+            running_version = client.version()
+        except grobid_tei.GrobidServiceError as exc:
+            raise requests.exceptions.ConnectionError(
+                f"Could not verify GROBID version at {self.GROBID_URL}: {exc}"
+            ) from exc
         if running_version != self.GROBID_IMAGE.split(":")[1]:
             LOGGER.warning(
                 "GROBID version mismatch. Expected: %s, currently running: %s",
                 self.GROBID_IMAGE.split(":")[1],
                 running_version,
             )
-            raise Exception  # pylint: disable=broad-exception-raised
+            raise RuntimeError(
+                f"GROBID version mismatch: expected "
+                f"{self.GROBID_IMAGE.split(':')[1]}, got {running_version}"
+            )
 
     def check_grobid_availability(
         self, *, wait: bool = True, timeout: float = STARTUP_TIMEOUT
@@ -50,19 +63,16 @@ class GrobidService:
         deadline = time.monotonic() + timeout
         while True:
             try:
-                response = requests.get(
-                    self.GROBID_URL + "/api/isalive",
+                grobid_client = grobid_tei.GrobidClient(
+                    service_url=self.GROBID_URL,
                     timeout=self.HEALTHCHECK_TIMEOUT,
+                    skip_version=True,
                 )
-                if response.text.strip().lower() == "true":
-                    # When GROBID is running, it may not be the same version as expected
-                    # in self.GROBID_IMAGE, possibly leading to failing tests.
+                if grobid_client.is_available():
+                    # Ensure the started image matches the pinned image before use.
                     self._ensure_correct_version()
                     return True
-            except (
-                requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout,
-            ):
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
                 pass
             if not wait:
                 return False

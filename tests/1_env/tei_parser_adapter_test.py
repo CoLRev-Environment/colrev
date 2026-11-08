@@ -171,10 +171,10 @@ def test_mark_references_annotates_and_persists_library_document(
     assert reparsed.references()[0].tei_id == "ref-1"
 
 
-def test_pdf_constructor_keeps_grobid_service_in_colrev(
+def test_pdf_constructor_keeps_service_lifecycle_in_colrev(
     tmp_path: Path, mocker: Any
 ) -> None:
-    """PDF construction submits to ColRev's service and persists returned TEI."""
+    """CoLRev starts GROBID; grobid_tei submits the PDF and parses its TEI."""
     pdf_path = tmp_path / "paper.pdf"
     pdf_path.write_bytes(b"pdf data")
     tei_path = tmp_path / "nested" / "paper.tei.xml"

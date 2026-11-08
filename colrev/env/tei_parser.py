@@ -92,8 +92,8 @@ class TEIParser:
             except grobid_tei.TEIParsingError as exc:
                 raise colrev_exceptions.TEIException() from exc
         elif pdf_path is not None:
-            # Keep GROBID lifecycle and PDF submission in ColRev. The service
-            # constructor starts GROBID; the library only parses returned TEI.
+            # CoLRev owns service lifecycle; grobid_tei owns GROBID requests and
+            # TEI parsing.
             self._create_tei(
                 consolidate_header=consolidate_header,
                 consolidate_citations=consolidate_citations,
@@ -107,7 +107,7 @@ class TEIParser:
     def _create_tei(
         self, *, consolidate_header: bool = False, consolidate_citations: bool = False
     ) -> None:
-        """Create TEI by submitting the PDF to ColRev's GROBID service."""
+        """Create TEI through grobid_tei using CoLRev's managed service."""
         grobid_service = colrev.env.grobid_service.GrobidService()
 
         try:
