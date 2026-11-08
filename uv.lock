@@ -98,11 +98,7 @@ wheels = [
 [[package]]
 name = "bibliography-io"
 version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/2a/bc/83687a60b758a82a24bf5f13162b6b394dd428e2794db21e60800447c047/bibliography_io-0.2.0.tar.gz", hash = "sha256:d0381e80f7d30f6606c6aa8cf7433cf767a45c196defcd4274b010761a26dc7e", size = 581276, upload-time = "2026-10-31T13:34:17.318Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a8/58/ffa4429937bcee3401ae7a330d96e1c5494da82ab7687d21a6b531c3a983/bibliography_io-0.2.0-py3-none-any.whl", hash = "sha256:cf03d60ad93bcd5fe4d15723b70b60c3ca4bbe21b7d44a834e83927ddc84250b", size = 37008, upload-time = "2026-10-31T13:34:15.983Z" },
-]
+source = { git = "https://github.com/CoLRev-Environment/bibliography-io.git?rev=0c169f0267ecedfb5fdc81a10d377f42045fe3aa#0c169f0267ecedfb5fdc81a10d377f42045fe3aa" }
 
 [[package]]
 name = "blessed"
@@ -336,7 +332,7 @@ docs = [
 requires-dist = [
     { name = "beautifulsoup4", marker = "extra == 'docs'", specifier = ">=4.11.1" },
     { name = "bib-dedupe", specifier = ">=0.11.0" },
-    { name = "bibliography-io", specifier = ">=0.2.0" },
+    { name = "bibliography-io", git = "https://github.com/CoLRev-Environment/bibliography-io.git?rev=0c169f0267ecedfb5fdc81a10d377f42045fe3aa" },
     { name = "click", specifier = ">=8.1.6" },
     { name = "click-repl", specifier = ">=0.3.0" },
     { name = "coverage", extras = ["toml"], marker = "extra == 'dev'", specifier = ">=7.3.2" },
