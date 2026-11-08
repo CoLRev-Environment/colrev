@@ -79,8 +79,8 @@ class AISeLAPI:
         # Note: the following writes the enl to the feed file (bib).
         # This file is replaced by ais_feed.save()
 
-        # TODO: source-package load() may need CoLRev pre/post-processing.
-        records = loads_raw(response.text, format="enl", normalize=False)
+        # TODO: load() may need CoLRev pre/post-processing around loads_raw().  # pylint: disable=fixme
+        records = loads_raw(response.text, format="enl")
         ais_load_utils.enl_id_labeler(records)
         for record_dict in records:
             ais_load_utils.enl_entrytype_setter(record_dict)
