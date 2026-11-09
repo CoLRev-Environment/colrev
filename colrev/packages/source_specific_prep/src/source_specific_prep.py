@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import logging
-import typing
 from pathlib import Path
 
 from pydantic import Field
@@ -13,8 +12,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
-from colrev.constants import EndpointType
-from colrev.constants import Fields
+from colrev.constants import EndpointType, Fields
 from colrev.package_manager.package_manager import PackageManager
 
 # pylint: disable=duplicate-code
@@ -35,7 +33,7 @@ class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -47,9 +45,7 @@ class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Prepare the record by applying source-specific fixes."""
         # Note : we take the first origin (ie., the source-specific prep should
@@ -78,7 +74,7 @@ class SourceSpecificPrep(base_classes.PrepPackageBaseClass):
                 else:
                     print(f"error: {source.platform}")
             except colrev_exceptions.MissingDependencyError as exc:
-                self.logger.warn(exc)
+                self.logger.warning(exc)
 
         if "howpublished" in record.data and Fields.URL not in record.data:
             if Fields.URL in record.data["howpublished"]:

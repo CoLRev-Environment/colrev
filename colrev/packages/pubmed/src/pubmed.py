@@ -4,11 +4,9 @@
 from __future__ import annotations
 
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
-from urllib.parse import parse_qs
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import pandas as pd
 from pydantic import Field
@@ -23,14 +21,9 @@ import colrev.record.record_prep
 import colrev.record.record_similarity
 import colrev.search_file
 import colrev.utils
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import RecordState
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import ENTRYTYPES, Fields, RecordState, SearchSourceHeuristicStatus, SearchType
 from colrev.ops.search_api_feed import create_api_source
-from colrev.ops.search_db import create_db_source
-from colrev.ops.search_db import run_db_search
+from colrev.ops.search_db import create_db_source, run_db_search
 from colrev.packages.pubmed.src import pubmed_api
 
 # pylint: disable=unused-argument
@@ -60,7 +53,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -133,7 +126,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
@@ -318,7 +311,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                     pass
 
                 return record
-            except (colrev_exceptions.NotFeedIdentifiableException,):
+            except colrev_exceptions.NotFeedIdentifiableException:
                 try:
                     self.pubmed_lock.release()
                 except ValueError:
@@ -551,9 +544,7 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for Pubmed."""
         if "colrev.pubmed.first_author" in record.data:

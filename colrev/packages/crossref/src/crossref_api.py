@@ -19,9 +19,7 @@ from rapidfuzz import fuzz
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record_prep
 import colrev.utils
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import Filepaths
+from colrev.constants import Colors, Fields, Filepaths
 from colrev.packages.crossref.src import record_transformer
 
 LIMIT = 1000
@@ -84,7 +82,7 @@ class HTTPRequest:
         self,
         endpoint: str,
         headers: dict,
-        data: typing.Optional[dict] = None,
+        data: dict | None = None,
         only_headers: bool = False,
         skip_throttle: bool = False,
     ) -> requests.Response:
@@ -134,7 +132,7 @@ class Endpoint:
         if not request_url.startswith(CrossrefAPI._api_url):
             raise AssertionError(f"Unexpected URL: {request_url}")
         self.request_url = request_url
-        self.request_params: typing.Dict[str, str] = {}
+        self.request_params: dict[str, str] = {}
         self.timeout = 60
 
     @property
@@ -198,7 +196,7 @@ class Endpoint:
 
         return int(result["message"].get("total-results", 0))
 
-    def get_dois(self) -> typing.List[str]:
+    def get_dois(self) -> list[str]:
         """Retrieve the dois resulting from a query."""
         request_params = dict(self.request_params)
         request_url = str(self.request_url)
@@ -329,7 +327,7 @@ class CrossrefAPI:
         url: str,
         email: str = "my@email.edu",
         rerun: bool = False,
-        cache: typing.Optional[bool] = None,
+        cache: bool | None = None,
     ):
         """Initialize the instance."""
         if not url.startswith(self._api_url):
@@ -580,7 +578,7 @@ class CrossrefAPI:
 
         return records
 
-    def _get_next_endpoint_item(self, *, endpoint: Endpoint) -> typing.Optional[dict]:
+    def _get_next_endpoint_item(self, *, endpoint: Endpoint) -> dict | None:
         try:
             return next(iter(endpoint), None)
         except requests.exceptions.RequestException as exc:
@@ -590,7 +588,7 @@ class CrossrefAPI:
 
     def _parse_record(
         self, *, item: dict
-    ) -> typing.Optional[colrev.record.record.Record]:
+    ) -> colrev.record.record.Record | None:
         try:
             return record_transformer.json_to_record(item=item)
         except colrev_exceptions.RecordNotParsableException:
@@ -619,7 +617,7 @@ class CrossrefAPI:
     def _prepare_top_n_results(
         self, *, candidates: list[colrev.record.record.Record], top_n: int
     ) -> list[colrev.record.record_prep.PrepRecord]:
-        best_by_doi: typing.Dict[str, colrev.record.record.Record] = {}
+        best_by_doi: dict[str, colrev.record.record.Record] = {}
         for rec in candidates:
             key = self._norm_doi(doi=rec.data["doi"])
             if key not in best_by_doi or rec.data.get(

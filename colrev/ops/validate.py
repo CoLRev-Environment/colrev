@@ -13,9 +13,7 @@ from tqdm import tqdm
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
+from colrev.constants import Fields, OperationsType, RecordState
 from colrev.writer.write_utils import write_file
 
 
@@ -276,7 +274,7 @@ class Validate(colrev.process.operation.Operation):
 
         report["dedupe"] = change_diff
 
-    def _get_changed_records(self, *, target_commit: str) -> typing.List[dict]:
+    def _get_changed_records(self, *, target_commit: str) -> list[dict]:
         """Get the records that changed in a selected commit."""
         dataset = self.review_manager.dataset
         git_repo = dataset.git_repo.repo
@@ -292,7 +290,7 @@ class Validate(colrev.process.operation.Operation):
             )
         )
         found = False
-        records: typing.Dict[str, typing.Any] = {}
+        records: dict[str, typing.Any] = {}
         prior_records = {}
         for commit, filecontents in list(revlist):
             if found:  # load the records_file_relative in the following commit
@@ -327,7 +325,7 @@ class Validate(colrev.process.operation.Operation):
         return list(records.values())
 
     def _load_changed_records(
-        self, *, commit_sha: typing.Optional[str] = None
+        self, *, commit_sha: str | None = None
     ) -> list[dict]:
         """Load the records that were changed in the target commit."""
         if commit_sha is None:
@@ -350,7 +348,7 @@ class Validate(colrev.process.operation.Operation):
 
         cur_sha = git_repo.head.commit.hexsha
         cur_branch = git_repo.active_branch.name
-        report: typing.Dict[str, typing.Any] = {}
+        report: dict[str, typing.Any] = {}
 
         if git_repo.is_dirty() and not commit_sha == cur_sha:
             self.review_manager.logger.error(
@@ -437,8 +435,8 @@ class Validate(colrev.process.operation.Operation):
         if scope in ["general"]:
             # detect transition types in the respective commit and
             # use them to calculate the report
-            records: typing.Dict[str, typing.Dict] = {}
-            hist_records: typing.Dict[str, typing.Dict] = {}
+            records: dict[str, dict] = {}
+            hist_records: dict[str, dict] = {}
             for recs in self.review_manager.dataset.load_records_from_history(
                 commit_sha
             ):
@@ -624,7 +622,7 @@ class Validate(colrev.process.operation.Operation):
         }
 
     def _get_contributor_validation(self, *, scope: str) -> dict:
-        report: typing.Dict[str, typing.Any] = {"contributor_commits": []}
+        report: dict[str, typing.Any] = {"contributor_commits": []}
         valid_options = []
         git_repo = self.review_manager.dataset.git_repo.repo
         for commit in git_repo.iter_commits():
@@ -740,7 +738,7 @@ class Validate(colrev.process.operation.Operation):
         if filter_setting == "merge":  # for git branches (not colrev dedupe)
             return self._validate_merge_changes()
 
-        report: typing.Dict[str, typing.Any] = {}
+        report: dict[str, typing.Any] = {}
         if filter_setting in ["prepare", "all"]:
             self._validate_prep_changes(report=report)
         if filter_setting in ["dedupe", "all"]:

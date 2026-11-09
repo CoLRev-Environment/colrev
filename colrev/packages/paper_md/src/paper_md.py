@@ -16,8 +16,7 @@ from threading import Timer
 import docker
 import requests
 from docker.errors import DockerException
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 import colrev.env.docker_manager
 import colrev.env.environment_manager
@@ -26,9 +25,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 from colrev import utils
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import Filepaths
+from colrev.constants import Colors, Fields, Filepaths
 from colrev.writer.write_utils import write_file
 
 
@@ -92,7 +89,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -439,7 +436,7 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
         self,
         *,
         synthesized_record_status_matrix: dict,
-        records: typing.Dict,
+        records: dict,
     ) -> None:
         # pylint: disable=consider-using-with
 
@@ -620,10 +617,10 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
     def update_paper(
         self,
         *,
-        records: typing.Dict,
+        records: dict,
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
-    ) -> typing.Dict:
+    ) -> dict:
         """Update the paper (add new records after the NEW_RECORD_SOURCE_TAG)."""
         review_manager = self.review_manager
 

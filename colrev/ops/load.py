@@ -14,13 +14,7 @@ import colrev.loader.load_utils_formatter
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.process.operation
 import colrev.record.record
-from colrev.constants import Colors
-from colrev.constants import EndpointType
-from colrev.constants import Fields
-from colrev.constants import FieldSet
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
-from colrev.constants import SearchType
+from colrev.constants import Colors, EndpointType, Fields, FieldSet, OperationsType, RecordState, SearchType
 from colrev.package_manager.package_manager import PackageManager
 
 

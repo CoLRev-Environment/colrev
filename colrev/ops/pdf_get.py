@@ -15,12 +15,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record_pdf
 from colrev import utils
-from colrev.constants import Colors
-from colrev.constants import EndpointType
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import PDFPathType
-from colrev.constants import RecordState
+from colrev.constants import Colors, EndpointType, Fields, OperationsType, PDFPathType, RecordState
 from colrev.package_manager.package_manager import PackageManager
 from colrev.writer.write_utils import write_file
 
@@ -41,7 +36,7 @@ def relink_pdfs_in_source(
 
     home_path = pdf_dir.parent.parent
 
-    pdf_candidates: typing.Dict[str, Path] = {}
+    pdf_candidates: dict[str, Path] = {}
 
     source_records_dict = colrev.loader.load_utils.load(
         filename=source.search_results_path,
@@ -111,8 +106,8 @@ def _relink_pdf_record(
     home_path: Path,
     logger: logging.Logger,
     pdf_dir: Path,
-    pdf_candidates: typing.Dict[str, Path],
-) -> typing.Dict[str, Path]:
+    pdf_candidates: dict[str, Path],
+) -> dict[str, Path]:
     if Fields.FILE not in record:
         return pdf_candidates
     source_rec = _get_source_record(
@@ -457,7 +452,7 @@ class PDFGet(colrev.process.operation.Operation):
         for file in unlinked_pdfs:
             msg = f"Check unlinked PDF: {file.relative_to(self.review_manager.path)}"
             self.review_manager.logger.info(msg)
-            if file.stem not in records.keys():
+            if file.stem not in records:
                 tei = colrev.env.tei_parser.TEIParser(pdf_path=file)
                 pdf_record = tei.get_metadata()
 
@@ -542,9 +537,7 @@ class PDFGet(colrev.process.operation.Operation):
             if corrected_path.is_file():
                 file = corrected_path
 
-        if file.is_file():
-            shutil.move(str(file), str(new_filename))
-        elif file.is_symlink():
+        if file.is_file() or file.is_symlink():
             shutil.move(str(file), str(new_filename))
 
         record_dict[Fields.FILE] = str(new_filename)

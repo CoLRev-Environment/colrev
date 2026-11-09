@@ -9,8 +9,7 @@ import typing
 from pathlib import Path
 
 import colrev.loader.loader
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
+from colrev.constants import ENTRYTYPES, Fields
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-arguments

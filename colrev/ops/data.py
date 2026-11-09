@@ -3,18 +3,13 @@
 
 from __future__ import annotations
 
-import typing
 from pathlib import Path
 
 import colrev.env.tei_parser
 import colrev.packages.grobid_tei.src.grobid_tei
 import colrev.process.operation
 from colrev import utils
-from colrev.constants import Colors
-from colrev.constants import EndpointType
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
+from colrev.constants import Colors, EndpointType, Fields, OperationsType, RecordState
 from colrev.package_manager.package_manager import PackageManager
 
 
@@ -198,8 +193,8 @@ class Data(colrev.process.operation.Operation):
     def main(
         self,
         *,
-        selection_list: typing.Optional[list] = None,
-        records: typing.Optional[dict] = None,
+        selection_list: list | None = None,
+        records: dict | None = None,
         silent_mode: bool = False,
     ) -> dict:
         """Data operation (main entrypoint).

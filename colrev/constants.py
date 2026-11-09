@@ -5,9 +5,7 @@
 # pylint: disable=colrev-missed-constant-usage
 import importlib.util
 import re
-import typing
-from enum import Enum
-from enum import EnumMeta
+from enum import Enum, EnumMeta
 from pathlib import Path
 
 
@@ -457,7 +455,7 @@ class RecordState(Enum):
         ]
 
     @classmethod
-    def get_post_x_states(cls, *, state: "RecordState") -> typing.Set["RecordState"]:
+    def get_post_x_states(cls, *, state: "RecordState") -> set["RecordState"]:
         """Get the states after state x (passed as a parameter)."""
         # pylint: disable=too-many-return-statements
         if state == RecordState.md_prepared:
@@ -616,7 +614,7 @@ class IDPattern(Enum):
     three_authors_year = "three_authors_year"
 
     @classmethod
-    def get_options(cls) -> typing.List[str]:
+    def get_options(cls) -> list[str]:
         """Get the options."""
         # pylint: disable=no-member
         return cls._member_names_
@@ -626,7 +624,7 @@ class SortedEnumMeta(EnumMeta):
     """SortedEnumMeta."""
 
     def __init__(
-        cls, name: str, bases: typing.Tuple[type, ...], classdict: dict
+        cls, name: str, bases: tuple[type, ...], classdict: dict
     ) -> None:
         """Initialize the instance."""
         super().__init__(name, bases, classdict)
@@ -650,7 +648,7 @@ class SearchType(Enum, metaclass=SortedEnumMeta):
     MD = "MD"
 
     @classmethod
-    def get_options(cls) -> typing.List[str]:
+    def get_options(cls) -> list[str]:
         """Get the options."""
         # pylint: disable=no-member
         return cls._member_names_
@@ -688,7 +686,7 @@ class PDFPathType(Enum):
     copy = "copy"
 
     @classmethod
-    def get_options(cls) -> typing.List[str]:
+    def get_options(cls) -> list[str]:
         """Get the options."""
         # pylint: disable=no-member
         return cls._member_names_
@@ -702,7 +700,7 @@ class ScreenCriterionType(Enum):
     exclusion_criterion = "exclusion_criterion"
 
     @classmethod
-    def get_options(cls) -> typing.List[str]:
+    def get_options(cls) -> list[str]:
         """Get the options."""
         # pylint: disable=no-member
         return cls._member_names_
@@ -722,7 +720,7 @@ class ShareStatReq(Enum):
     completed = "completed"
 
     @classmethod
-    def get_options(cls) -> typing.List[str]:
+    def get_options(cls) -> list[str]:
         """Get the options."""
         # pylint: disable=no-member
         return cls._member_names_
