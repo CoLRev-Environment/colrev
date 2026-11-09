@@ -4,14 +4,10 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
-from typing import Dict
+from datetime import datetime, timedelta, timezone
 
 from github import Github
-from github.GithubException import GithubException
-from github.GithubException import UnknownObjectException
+from github.GithubException import GithubException, UnknownObjectException
 
 import colrev.record.record
 import colrev.record.record_prep
@@ -20,7 +16,7 @@ from colrev.constants import Fields
 
 def _set_title(*, record_dict: dict, citation_data: str) -> None:
     """Set repository title."""
-    title = re.search(r"^\s*title:\s*(.+)\s*$", citation_data, re.M)
+    title = re.search(r"^\s*title:\s*(.+)\s*$", citation_data, re.MULTILINE)
     if title:
         record_dict[Fields.TITLE] = title.group(1).strip().replace('"', "")
 
@@ -30,7 +26,7 @@ def _set_authors(*, record_dict: dict, citation_data: str) -> None:
     authors = re.findall(
         r'- family-names:\s*"(.+)"\s*\n\s*given-names:\s*"(.+)"',
         citation_data,
-        re.M,
+        re.MULTILINE,
     )
     record_dict[Fields.AUTHOR] = (
         colrev.record.record_prep.PrepRecord.format_author_field(
@@ -41,14 +37,14 @@ def _set_authors(*, record_dict: dict, citation_data: str) -> None:
 
 def _set_url(*, record_dict: dict, citation_data: str) -> None:
     """Set repository URL."""
-    url = re.search(r"^\s*url:\s*(.+)\s*$", citation_data, re.M)
+    url = re.search(r"^\s*url:\s*(.+)\s*$", citation_data, re.MULTILINE)
     if url:
         record_dict[Fields.URL] = url.group(1).strip().replace('"', "")
 
 
 def _set_year_and_release_date(*, record_dict: dict, citation_data: str) -> None:
     """Set release date."""
-    release_date = re.search(r"^\s*date-released:\s*(.+)\s*$", citation_data, re.M)
+    release_date = re.search(r"^\s*date-released:\s*(.+)\s*$", citation_data, re.MULTILINE)
     if release_date:
         record_dict[Fields.DATE] = release_date.group(1).strip()
         record_dict[Fields.YEAR] = record_dict[Fields.DATE][:4]
@@ -56,7 +52,7 @@ def _set_year_and_release_date(*, record_dict: dict, citation_data: str) -> None
 
 def _set_version(record_dict: dict, citation_data: str) -> None:
     """Set current software version."""
-    version = re.search(r"^\s*version:\s*(.+)\s*$", citation_data, re.M)
+    version = re.search(r"^\s*version:\s*(.+)\s*$", citation_data, re.MULTILINE)
     if version:
         record_dict[Fields.GITHUB_VERSION] = version.group(1).strip()
 
@@ -162,7 +158,7 @@ def _set_latest_release_date(
         pass
 
 
-def _calc_language_percentages(repo: Github.Repository.Repository) -> Dict[str, float]:
+def _calc_language_percentages(repo: Github.Repository.Repository) -> dict[str, float]:
     try:
         lang_bytes = repo.get_languages()
         total = sum(lang_bytes.values()) or 0

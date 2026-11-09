@@ -5,12 +5,12 @@ from __future__ import annotations
 
 import datetime
 import logging
-import typing
 from multiprocessing import Lock
 from pathlib import Path
 
 import inquirer
 from pydantic import Field
+
 import colrev.env.environment_manager
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
@@ -22,11 +22,7 @@ import colrev.record.record_prep
 import colrev.record.record_similarity
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import Fields, FieldValues, RecordState, SearchSourceHeuristicStatus, SearchType
 from colrev.ops.search_api_feed import create_api_source
 from colrev.packages.crossref.src import crossref_api
 from colrev.packages.crossref.src.crossref_api import query_doi
@@ -58,7 +54,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -149,9 +145,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
     def _select_search_type(cls, params_dict: dict) -> SearchType:
         if list(params_dict) == ["scope"]:
             search_type = SearchType.TOC
-        elif "query" in params_dict:
-            search_type = SearchType.API
-        elif Fields.URL in params_dict:
+        elif "query" in params_dict or Fields.URL in params_dict:
             search_type = SearchType.API
         else:
             search_type = colrev.utils.select_search_type(
@@ -202,7 +196,7 @@ class CrossrefSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint."""
         params_dict = cls._parse_params(params)

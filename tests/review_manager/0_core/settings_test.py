@@ -5,11 +5,7 @@ import os
 from pathlib import Path
 
 import colrev.settings
-from colrev.constants import IDPattern
-from colrev.constants import PDFPathType
-from colrev.constants import ScreenCriterionType
-
-# flake8: noqa: E501
+from colrev.constants import IDPattern, PDFPathType, ScreenCriterionType
 
 # expected_printout: in settings-expected-printout.txt
 

@@ -2,13 +2,7 @@
 """Tests for the status stats"""
 
 import colrev.process.status
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
-from colrev.constants import ScreenCriterionType
-
-# flake8: noqa: E501
+from colrev.constants import Colors, Fields, OperationsType, RecordState, ScreenCriterionType
 
 
 def compare(

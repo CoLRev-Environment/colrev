@@ -17,12 +17,7 @@ from PIL import Image
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-from colrev.constants import Colors
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import FieldSet
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
+from colrev.constants import ENTRYTYPES, Colors, Fields, FieldSet, FieldValues, RecordState
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.record.record

@@ -7,20 +7,14 @@ from typing import Any
 
 import inquirer
 import pandas as pd
-from bib_dedupe.bib_dedupe import block
-from bib_dedupe.bib_dedupe import cluster
-from bib_dedupe.bib_dedupe import match
-from bib_dedupe.bib_dedupe import merge
-from bib_dedupe.bib_dedupe import prep
+from bib_dedupe.bib_dedupe import block, cluster, match, merge, prep
 
 import colrev.ops.check
 import colrev.ops.search_api_feed
 import colrev.record.record
 import colrev.review_manager
 import colrev.search_file
-from colrev.constants import Fields
-from colrev.constants import RecordState
-from colrev.constants import SearchType
+from colrev.constants import Fields, RecordState, SearchType
 
 # TODO : clarify difference between the different imports of merge:
 # TODO : bib_dedupe docs: not mentioning merge_functions !?

@@ -51,17 +51,7 @@ def _save_field_dict(*, input_dict: dict, input_key: str) -> list:
     list_to_return = []
     if input_key not in [Fields.MD_PROV, Fields.D_PROV]:
         raise AssertionError(f"Unexpected input key: {input_key}")
-    if input_key == Fields.MD_PROV:
-        for key, value in input_dict.items():
-            if isinstance(value, dict):
-                formated_note = ",".join(
-                    sorted(e for e in value["note"].split(",") if "" != e)
-                )
-                formated_note = _sanitize_string_for_dict(formated_note)
-                formatted_source = _sanitize_string_for_dict(value["source"])
-                list_to_return.append(f"{key}:{formatted_source};{formated_note};")
-
-    elif input_key == Fields.D_PROV:
+    if input_key == Fields.MD_PROV or input_key == Fields.D_PROV:
         for key, value in input_dict.items():
             if isinstance(value, dict):
                 formated_note = ",".join(
