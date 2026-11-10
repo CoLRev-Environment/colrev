@@ -8,23 +8,24 @@ import typing
 from copy import deepcopy
 from pathlib import Path
 
+from bibliography_io import loads_primary
+from bibliography_io import to_string
+from bibliography_io import write
+
 import colrev.exceptions as colrev_exceptions
 import colrev.git_repo
-import colrev.loader.load_utils
-import colrev.loader.load_utils_formatter
+import colrev.record.record_formatter
 import colrev.record.record_merger
 import colrev.utils
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import EndpointType
-from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import SearchType
 from colrev.package_manager.package_manager import PackageManager
-from colrev.writer.write_utils import to_string
-from colrev.writer.write_utils import write_file
 
 
 def create_api_source(
@@ -104,7 +105,7 @@ class SearchAPIFeed:
         # (otherwise, fields in recent records would be more up-to-date)
 
         self.logger = logger
-        self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
+        self.record_formatter = colrev.record.record_formatter.RecordFormatter()
 
         self.origin_prefix = self.source.get_origin_prefix()
 
@@ -139,10 +140,11 @@ class SearchAPIFeed:
             self._next_incremental_id = 1
             self.feed_records = {}
             return
-        self.feed_records = colrev.loader.load_utils.loads(
-            load_string=self.feed_file.read_text(encoding="utf8"),
-            implementation="bib",
-            logger=self.logger,
+        self.feed_records = loads_primary(
+            self.feed_file.read_text(encoding="utf8"),
+            format="bib",
+            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+            list_fields={Fields.ORIGIN},
         )
         self._available_ids = {
             x[self.source_identifier]: x[Fields.ID]
@@ -228,13 +230,17 @@ class SearchAPIFeed:
         def tostr_and_load(record: colrev.record.record.Record) -> dict:
             record_dict = deepcopy(record.data)
             bibtex_str = to_string(
-                records_dict={record_dict[Fields.ID]: record_dict}, implementation="bib"
+                {record_dict[Fields.ID]: record_dict},
+                format="bib",
+                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                list_fields={Fields.ORIGIN},
             )
             record_dict = list(
-                colrev.loader.load_utils.loads(
-                    load_string=bibtex_str,
-                    implementation="bib",
-                    logger=self.logger,
+                loads_primary(
+                    bibtex_str,
+                    format="bib",
+                    mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                    list_fields={Fields.ORIGIN},
                 ).values()
             )[0]
             return record_dict
@@ -397,7 +403,7 @@ class SearchAPIFeed:
         main_record = self._get_main_record(colrev_origin)
 
         # For consistency (with ops/load):
-        self.load_formatter.run(retrieved_record)
+        self.record_formatter.run(retrieved_record)
 
         self._update_record_fields(
             record=retrieved_record,
@@ -516,7 +522,12 @@ class SearchAPIFeed:
 
         if len(self.feed_records) > 0:
             self.feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-            write_file(records_dict=self.feed_records, filename=self.feed_file)
+            write(
+                self.feed_records,
+                path=self.feed_file,
+                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                list_fields={Fields.ORIGIN},
+            )
 
         if not skip_print:
             self._nr_added = 0

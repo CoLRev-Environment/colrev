@@ -11,11 +11,11 @@ from pathlib import Path
 
 import git
 from git.exc import GitCommandError
+from bibliography_io import load_primary
 
 import colrev.env.environment_manager
 import colrev.env.local_index_sqlite
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.load_utils
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -76,8 +76,10 @@ class LocalIndex:
                     str(target_path),
                     depth=1,
                 )
-            ret = colrev.loader.load_utils.load(
-                filename=target_path / Path("data/records.bib"),
+            ret = load_primary(
+                target_path / Path("data/records.bib"),
+                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                list_fields={Fields.ORIGIN},
             )
 
         except GitCommandError:

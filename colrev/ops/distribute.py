@@ -6,6 +6,8 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
+from bibliography_io import load
+from bibliography_io import write
 
 import colrev.env.tei_parser
 import colrev.process.operation
@@ -15,7 +17,6 @@ from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import SearchType
 from colrev.env.environment_manager import EnvironmentManager
-from colrev.writer.write_utils import write_file
 
 
 class Distribute(colrev.process.operation.Operation):
@@ -99,12 +100,7 @@ class Distribute(colrev.process.operation.Operation):
                 target_bib_file = target / Path("data/search/local_import.bib")
                 self.review_manager.logger.info(f"target_bib_file: {target_bib_file}")
                 if target_bib_file.is_file():
-
-                    import_records_dict = colrev.loader.load_utils.load(
-                        filename=target_bib_file,
-                        logger=self.review_manager.logger,
-                    )
-                    import_records = list(import_records_dict.values())
+                    import_records = load(target_bib_file)
 
                 else:
                     import_records = []
@@ -131,6 +127,6 @@ class Distribute(colrev.process.operation.Operation):
 
                 import_records_dict = {r[Fields.ID]: r for r in import_records}
 
-                write_file(records_dict=import_records_dict, filename=target_bib_file)
+                write(import_records_dict, path=target_bib_file)
 
                 self.review_manager.dataset.git_repo.add_changes(target_bib_file)

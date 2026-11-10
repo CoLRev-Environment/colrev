@@ -98,21 +98,19 @@ class WileyOnlineLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented."""
         return record
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-                unique_id_field="ID",
-            )
-            for record_dict in records.values():
-                if "eprint" not in record_dict:
-                    continue
+    @classmethod
+    def normalize(
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
+    ) -> dict[str, dict]:
+        """Map Wiley-specific full-text links and index records."""
+        for record_dict in records:
+            if "eprint" in record_dict:
                 record_dict[Fields.FULLTEXT] = record_dict.pop("eprint")
-            return records
-
-        raise NotImplementedError
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

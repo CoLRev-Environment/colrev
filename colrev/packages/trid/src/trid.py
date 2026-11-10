@@ -102,7 +102,18 @@ class TransportResearchInternationalDocumentation(
         return record
 
     @classmethod
-    def _load_ris(cls, *, filename: Path, logger: logging.Logger) -> dict:
+    def normalize(
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
+    ) -> dict[str, dict]:
+        if format != "ris":
+            return super().normalize(
+                records, format=format, source_version=source_version
+            )
+
         def entrytype_setter(record_dict: dict) -> None:
             if record_dict["TY"] in ["JOUR", "ABST"]:
                 record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
@@ -194,24 +205,12 @@ class TransportResearchInternationalDocumentation(
             for key, value in record_dict.items():
                 record_dict[key] = str(value)
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            unique_id_field="AN",
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
-            logger=logger,
-        )
-
-        return records
-
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".ris":
-            return self._load_ris(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        raise NotImplementedError
+        for index, record_dict in enumerate(records, start=1):
+            entrytype_setter(record_dict)
+            if not record_dict.get(Fields.ID):
+                record_dict[Fields.ID] = str(record_dict.get("AN", index))
+            field_mapper(record_dict)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

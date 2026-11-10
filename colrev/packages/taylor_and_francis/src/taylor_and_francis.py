@@ -17,6 +17,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
+from colrev.record.name_parser import parse_names_in_records
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -97,34 +98,27 @@ class TaylorAndFrancisSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     @classmethod
-    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        def field_mapper(record_dict: dict) -> None:
+    def normalize(
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
+    ) -> dict[str, dict]:
+        """Map Taylor & Francis fields and parse author names."""
+        for record_dict in records:
             if "note" in record_dict:
                 record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
             if "eprint" in record_dict:
                 record_dict[f"{cls.endpoint}.eprint"] = record_dict.pop("eprint")
-
-            for key in list(record_dict.keys()):
-                if key not in ["ID", "ENTRYTYPE"]:
+            for key in list(record_dict):
+                if key not in [Fields.ID, Fields.ENTRYTYPE]:
                     record_dict[key.lower()] = record_dict.pop(key)
-
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            logger=logger,
-            unique_id_field="ID",
-            field_mapper=field_mapper,
-            format_names=True,
+        indexed_records = super().normalize(
+            records, format=format, source_version=source_version
         )
-        return records
-
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            return self._load_bib(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        raise NotImplementedError
+        parse_names_in_records(indexed_records)
+        return indexed_records
 
     def prepare(
         self,

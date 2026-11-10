@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.10, <3.14"
 resolution-markers = [
     "python_full_version >= '3.12'",
@@ -93,6 +93,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a8/27/c17aed45c04a5a5c43662af47d88dd3a9615c0c5348187d03f4b51ed2f32/bib_dedupe-0.11.0.tar.gz", hash = "sha256:d61c26575e5f054e5207d8cea933c112a8b9e0151a8265ec8e9d0969325a95bf", size = 405045, upload-time = "2025-11-21T19:36:56.988Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9e/e7/5528c262f460baee7ce7a3121cc065339bde62bf1ad6f7aeabfab5ef4da7/bib_dedupe-0.11.0-py3-none-any.whl", hash = "sha256:acc4f20f7ead74f88fba1a8e194e8cff8a79f6e99fbe5233c6aba38dda4a98e0", size = 69209, upload-time = "2025-11-21T19:36:55.706Z" },
+]
+
+[[package]]
+name = "bibliography-io"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/53/81/be798f59fab92596590a04232f13c5870eebaec7d3bd5d1198551b41df28/bibliography_io-0.4.0.tar.gz", hash = "sha256:c3dd3318ef9269f6e2bba856ee53db96db175304486c28b35454d56dc437a0e1", size = 585647, upload-time = "2026-11-08T19:55:40.029Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/21/bf/bf11fa35991f4da88efd8bccdb2708224c092264da259c529ef0f4ba0cae/bibliography_io-0.4.0-py3-none-any.whl", hash = "sha256:7d6a47fad0ec410a04b2aedf3e91cff384e0e3cf9956ff16597d6d2ddf85628d", size = 38507, upload-time = "2026-11-08T19:55:38.531Z" },
 ]
 
 [[package]]
@@ -262,13 +271,14 @@ version = "0.16.2"
 source = { editable = "." }
 dependencies = [
     { name = "bib-dedupe" },
+    { name = "bibliography-io" },
     { name = "click" },
     { name = "click-repl" },
-    { name = "defusedxml" },
     { name = "dictdiffer" },
     { name = "docker" },
     { name = "gitpython" },
     { name = "glom" },
+    { name = "grobid-tei" },
     { name = "imagehash" },
     { name = "inquirer" },
     { name = "jinja2" },
@@ -303,6 +313,7 @@ dev = [
     { name = "pytest-skip-slow" },
     { name = "requests-mock" },
     { name = "types-click" },
+    { name = "types-toml" },
     { name = "uv" },
 ]
 docs = [
@@ -324,23 +335,24 @@ docs = [
 requires-dist = [
     { name = "beautifulsoup4", marker = "extra == 'docs'", specifier = ">=4.11.1" },
     { name = "bib-dedupe", specifier = ">=0.11.0" },
+    { name = "bibliography-io", specifier = "==0.4.0" },
     { name = "click", specifier = ">=8.1.6" },
     { name = "click-repl", specifier = ">=0.3.0" },
     { name = "coverage", extras = ["toml"], marker = "extra == 'dev'", specifier = ">=7.3.2" },
     { name = "coverage-badge", marker = "extra == 'dev'", specifier = ">=1.1.0" },
-    { name = "defusedxml", specifier = ">=0.7.1" },
     { name = "dictdiffer", specifier = ">=0.9.0" },
     { name = "docker", specifier = "==7.1.0" },
     { name = "docutils", marker = "extra == 'docs'", specifier = ">=0.21.2,<0.22" },
     { name = "gitpython", specifier = ">=3.1.29" },
     { name = "glom", specifier = ">=22.1.0" },
+    { name = "grobid-tei", specifier = "==0.3.0" },
     { name = "imagehash", specifier = ">=4.3.1" },
     { name = "inquirer", specifier = ">=3.1.3" },
     { name = "jinja2", specifier = ">=3.1.2" },
     { name = "lingua-language-detector", specifier = ">=2.1.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.12.0" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=2.0" },
-    { name = "nameparser", specifier = ">=1.1.2" },
+    { name = "nameparser", specifier = ">=1.1.2,<1.2" },
     { name = "number-parser", specifier = ">=0.3.2" },
     { name = "openpyxl", specifier = ">=3.1.2" },
     { name = "packaging", specifier = ">=24.0" },
@@ -370,6 +382,7 @@ requires-dist = [
     { name = "toml", specifier = ">=0.10.2" },
     { name = "tqdm", specifier = ">=4.64.1" },
     { name = "types-click", marker = "extra == 'dev'", specifier = ">=7.1.8" },
+    { name = "types-toml", marker = "extra == 'dev'" },
     { name = "uv", marker = "extra == 'dev'", specifier = ">=0.7.0" },
 ]
 provides-extras = ["docs", "dev"]
@@ -561,7 +574,7 @@ name = "exceptiongroup"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
 wheels = [
@@ -625,6 +638,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/78/74/8387f95565ba7c30cd152a585b275ebb9a834d1d32782425c5d2fe0a102c/glom-25.12.0.tar.gz", hash = "sha256:1ae7da88be3693df40ad27bdf57a765a55c075c86c971bcddd67927403eb0069", size = 196128, upload-time = "2025-12-29T06:29:07.274Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/e6/4129d9a3baa72d747533bb33376543ccadd9a7f9944e5a6e3ae2e245f5d6/glom-25.12.0-py3-none-any.whl", hash = "sha256:b9f21e77f71a6576a43864e85066b8cc3f0f778d0d50961563f8981377a6dcb1", size = 103295, upload-time = "2025-12-29T06:29:06.074Z" },
+]
+
+[[package]]
+name = "grobid-tei"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "defusedxml" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/52/80/f67c2a1a4acd567b14fa2d09f4c0264edc0c5a4e713a99dc97f641c884d2/grobid_tei-0.3.0.tar.gz", hash = "sha256:5b159c83d1c3505d3571e4802ccc1d0966380e9942413dd36c73bcd8881935cb", size = 751431, upload-time = "2026-11-06T20:40:39.825Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4e/a7/c15075b81aea520fdd4502984e9c3125ccf46a638af49a40a92973182710/grobid_tei-0.3.0-py3-none-any.whl", hash = "sha256:60ef756b5d6ccc5c951f1c875ccba478f918642e85bbdd9e8e94fde890f4378e", size = 12685, upload-time = "2026-11-06T20:40:38.484Z" },
 ]
 
 [[package]]
@@ -721,7 +747,7 @@ name = "jinxed"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ansicon", marker = "sys_platform == 'win32'" },
+    { name = "ansicon" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/cb/eb/8821ce6e7386e96355f2c6be83944925b4a0870572896fd33a4e61b8aa5a/jinxed-2.0.0.tar.gz", hash = "sha256:64b960b8f8d9966e1b2e7cb57ea2b1aa0a8d7e68045b96dc7ef58201e43a1209", size = 127118, upload-time = "2026-05-08T21:25:25.917Z" }
 wheels = [
@@ -1553,7 +1579,7 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" } },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/48/45/bfaaab38545a33a9f06c61211fc3bea2e23e8a8e00fedeb8e57feda722ff/pywavelets-1.8.0.tar.gz", hash = "sha256:f3800245754840adc143cbc29534a1b8fc4b8cff6e9d403326bd52b7bb5c35aa", size = 3935274, upload-time = "2024-12-04T19:54:20.593Z" }
 wheels = [
@@ -1605,7 +1631,7 @@ resolution-markers = [
     "python_full_version == '3.11.*'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.4.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "numpy", version = "2.4.4", source = { registry = "https://pypi.org/simple" } },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/5a/75/50581633d199812205ea8cdd0f6d52f12a624886b74bf1486335b67f01ff/pywavelets-1.9.0.tar.gz", hash = "sha256:148d12203377772bea452a59211d98649c8ee4a05eff019a9021853a36babdc8", size = 3938340, upload-time = "2025-08-04T16:20:04.978Z" }
 wheels = [
@@ -1849,7 +1875,7 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" } },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/0f/37/6964b830433e654ec7485e45a00fc9a27cf868d622838f6b6d9c5ec0d532/scipy-1.15.3.tar.gz", hash = "sha256:eae3cf522bc7df64b42cad3925c876e1b0b6c35c1337c93e12c0f366f55b0eaf", size = 59419214, upload-time = "2025-05-08T16:13:05.955Z" }
 wheels = [
@@ -1909,7 +1935,7 @@ resolution-markers = [
     "python_full_version == '3.11.*'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.4.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "numpy", version = "2.4.4", source = { registry = "https://pypi.org/simple" } },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7a/97/5a3609c4f8d58b039179648e62dd220f89864f56f7357f5d4f45c29eb2cc/scipy-1.17.1.tar.gz", hash = "sha256:95d8e012d8cb8816c226aef832200b1d45109ed4464303e997c5b13122b297c0", size = 30573822, upload-time = "2026-02-23T00:26:24.851Z" }
 wheels = [
@@ -2095,7 +2121,7 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 dependencies = [
-    { name = "sphinx", marker = "python_full_version < '3.11'" },
+    { name = "sphinx" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2b/69/b34e0cb5336f09c6866d53b4a19d76c227cdec1bbc7ac4de63ca7d58c9c7/sphinx_design-0.6.1.tar.gz", hash = "sha256:b44eea3719386d04d765c1a8257caca2b3e6f8421d7b3a5e742c0fd45f84e632", size = 2193689, upload-time = "2024-08-02T13:48:44.277Z" }
 wheels = [
@@ -2111,7 +2137,7 @@ resolution-markers = [
     "python_full_version == '3.11.*'",
 ]
 dependencies = [
-    { name = "sphinx", marker = "python_full_version >= '3.11'" },
+    { name = "sphinx" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/13/7b/804f311da4663a4aecc6cf7abd83443f3d4ded970826d0c958edc77d4527/sphinx_design-0.7.0.tar.gz", hash = "sha256:d2a3f5b19c24b916adb52f97c5f00efab4009ca337812001109084a740ec9b7a", size = 2203582, upload-time = "2026-01-19T13:12:53.297Z" }
 wheels = [
@@ -2298,6 +2324,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/00/ff/0e6a56108d45c80c61cdd4743312d0304d8192482aea4cce96c554aaa90d/types-click-7.1.8.tar.gz", hash = "sha256:b6604968be6401dc516311ca50708a0a28baa7a0cb840efd7412f0dbbff4e092", size = 10015, upload-time = "2021-11-23T12:28:01.701Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ee/ad/607454a5f991c5b3e14693a7113926758f889138371058a5f72f567fa131/types_click-7.1.8-py3-none-any.whl", hash = "sha256:8cb030a669e2e927461be9827375f83c16b8178c365852c060a34e24871e7e81", size = 12929, upload-time = "2021-11-23T12:27:59.493Z" },
+]
+
+[[package]]
+name = "types-toml"
+version = "0.10.8.20260518"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4b/11/6ece999e91f2ccb848ab4420f3f4816e78ac0541f739e6864affdaaa5737/types_toml-0.10.8.20260518.tar.gz", hash = "sha256:80e10facd24fdeda9d5c672187d72be3ac284843788d67f5aae59e3e016db6fe", size = 9419, upload-time = "2026-05-18T06:02:16.719Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/91/25/489751806bf5c95e4007f8e17409199c54d31e49ffbea07c5729b1286c8e/types_toml-0.10.8.20260518-py3-none-any.whl", hash = "sha256:0e564ab05f6fde62a315b3b5a9b6624fda569399795d30a37e64705a70459303", size = 9669, upload-time = "2026-05-18T06:02:15.86Z" },
 ]
 
 [[package]]

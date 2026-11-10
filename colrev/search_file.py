@@ -11,6 +11,7 @@ from pathlib import Path
 import search_query
 
 import colrev.exceptions as colrev_exceptions
+import colrev.env.utils
 import colrev.git_repo
 from colrev.constants import SearchType
 
@@ -129,9 +130,10 @@ class ExtendedSearchFile(search_query.SearchFile):
             raise ValueError(
                 "No search_history_path provided and no previous search_history_path stored."
             )
+        mod_dict = self.to_dict()
+        mod_dict.pop("search_history_path", None)
+        mod_dict = colrev.env.utils.custom_asdict_factory(mod_dict)
         with open(path, "w", encoding="utf-8") as f:
-            mod_dict = self.to_dict()
-            mod_dict.pop("search_history_path", None)
             json.dump(mod_dict, f, indent=4, ensure_ascii=False)
         if git_repo:
             git_repo.add_changes(path)

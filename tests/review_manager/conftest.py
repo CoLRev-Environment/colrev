@@ -10,6 +10,7 @@ from pathlib import Path
 
 import git
 import pytest
+from bibliography_io import load_primary
 
 import colrev.env.local_index
 import colrev.env.local_index_builder
@@ -24,6 +25,7 @@ from colrev.constants import Fields
 from colrev.constants import SearchType
 from colrev.process.model import ProcessModel
 from unittest import mock
+from colrev.record.bibliography import adapt_bibliography_records
 
 # Note : the following produces different relative paths locally/on github.
 # Path(colrev.__file__).parents[1]
@@ -137,10 +139,12 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
             test_records_dict[Path(file_path.name)] = {}
 
         for path in test_records_dict:
-            test_records_dict[path] = colrev.loader.load_utils.load(
-                filename=bib_files_to_index.joinpath(path),
-                logger=review_manager.logger,
-                unique_id_field="ID",
+            test_records_dict[path] = adapt_bibliography_records(
+                load_primary(
+                    bib_files_to_index.joinpath(path),
+                    mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                    list_fields={Fields.ORIGIN},
+                )
             )
 
         return test_records_dict
@@ -356,9 +360,12 @@ def get_local_index_test_records_dict(  # type: ignore
         local_index_test_records_dict[Path(file_path.name)] = {}
 
     for path in local_index_test_records_dict:
-        loaded_records = colrev.loader.load_utils.load(
-            filename=bib_files_to_index.joinpath(path),
-            unique_id_field="ID",
+        loaded_records = adapt_bibliography_records(
+            load_primary(
+                bib_files_to_index.joinpath(path),
+                mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+                list_fields={Fields.ORIGIN},
+            )
         )
 
         # Note : we only select one example for the TEI-indexing

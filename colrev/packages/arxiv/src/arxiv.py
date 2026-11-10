@@ -261,19 +261,18 @@ class ArXivSource(base_classes.SearchSourcePackageBaseClass):
                 rerun=rerun,
             )
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        # for API-based searches
-        if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-            )
-            for record in records.values():
-                record[Fields.INSTITUTION] = "ArXiv"
-            return records
-
-        raise NotImplementedError
+    @classmethod
+    def normalize(
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
+    ) -> dict[str, dict]:
+        """Add the ArXiv source institution to records."""
+        for record in records:
+            record[Fields.INSTITUTION] = "ArXiv"
+        return super().normalize(records, format=format, source_version=source_version)
 
     def load_fixes(
         self,

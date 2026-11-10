@@ -18,6 +18,7 @@ from bib_dedupe.merge import merge
 from pydantic import Field
 from rapidfuzz import fuzz
 from tqdm import tqdm
+from bibliography_io import load_primary
 
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
@@ -399,7 +400,11 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         self.logger.info("Scope: %s", self.search_source.search_parameters["scope"])
 
-        records = colrev.loader.load_utils.load(filename=Path("data/records.bib"))
+        records = load_primary(
+            Path("data/records.bib"),
+            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+            list_fields={Fields.ORIGIN},
+        )
 
         if not records:
             self.logger.info("No records imported. Cannot run backward search yet.")
@@ -526,7 +531,11 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         # Assuming there's a function to create an overview, it would be called here.
         # For example: cls.create_min_intext_citations_overview(params)
 
-        records = colrev.loader.load_utils.load(filename=Path("data/records.bib"))
+        records = load_primary(
+            Path("data/records.bib"),
+            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+            list_fields={Fields.ORIGIN},
+        )
         selected_records = {
             record_id: record
             for record_id, record in records.items()
@@ -599,18 +608,18 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
         return search_source
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-            )
-            for record_dict in records.values():
-                record_dict.pop("bw_search_origins")
-            return records
-
-        raise NotImplementedError
+    @classmethod
+    def normalize(
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
+    ) -> dict[str, dict]:
+        """Drop internal backward-search origin data."""
+        for record_dict in records:
+            record_dict.pop("bw_search_origins", None)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prep_link_md(
         self,

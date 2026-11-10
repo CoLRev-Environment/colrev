@@ -14,7 +14,6 @@ from pathlib import Path
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.load_utils
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.packages.prospero.src.prospero_api
@@ -176,29 +175,6 @@ class ProsperoSearchSource(base_classes.SearchSourcePackageBaseClass):
     ) -> colrev.record.record.Record:
         """Empty method as requested."""
         return record
-
-    @classmethod
-    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        """Helper to load from .bib file using CoLRev's load_utils."""
-        return colrev.loader.load_utils.load(
-            filename=filename,
-            logger=logger,
-            unique_id_field="ID",
-        )
-
-    # pylint: disable=unused-argument
-    def load(self) -> dict:
-        """The interface requires a load method.
-        We only handle .bib files here,
-        so we raise NotImplementedError for other formats.
-        """
-        if self.search_source.search_results_path.suffix == ".bib":
-            return self._load_bib(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-        raise NotImplementedError(
-            "Only .bib loading is implemented for ProsperoSearchSource."
-        )
 
     # pylint: disable=unused-argument
     def prepare(

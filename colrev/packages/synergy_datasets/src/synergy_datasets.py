@@ -349,22 +349,21 @@ class SYNERGYDatasetsSearchSource(base_classes.SearchSourcePackageBaseClass):
         """Not implemented."""
         return record
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-            )
-            for record in records.values():
-                if "pmid" in record:
-                    record["pubmedid"] = record["pmid"].replace(
-                        "https://pubmed.ncbi.nlm.nih.gov/", ""
-                    )
-                    del record["pmid"]
-            return records
-
-        raise NotImplementedError
+    @classmethod
+    def normalize(
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
+    ) -> dict[str, dict]:
+        """Normalize PubMed IDs from Synergy dataset exports."""
+        for record in records:
+            if "pmid" in record:
+                record["pubmedid"] = record.pop("pmid").replace(
+                    "https://pubmed.ncbi.nlm.nih.gov/", ""
+                )
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

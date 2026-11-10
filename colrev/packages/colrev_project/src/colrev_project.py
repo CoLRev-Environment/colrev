@@ -283,23 +283,19 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         return result
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-            )
-            for record_id in records:
-                records[record_id] = {
-                    k: v
-                    for k, v in records[record_id].items()
-                    if k not in FieldSet.PROVENANCE_KEYS + [Fields.SCREENING_CRITERIA]
-                }
-
-            return records
-
-        raise NotImplementedError
+    @classmethod
+    def normalize(
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
+    ) -> dict[str, dict]:
+        """Remove project-local provenance from imported records."""
+        for record in records:
+            for key in FieldSet.PROVENANCE_KEYS + [Fields.SCREENING_CRITERIA]:
+                record.pop(key, None)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

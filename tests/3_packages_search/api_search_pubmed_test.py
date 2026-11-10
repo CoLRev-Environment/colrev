@@ -9,8 +9,8 @@ from typing_extensions import Protocol
 
 import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.load_utils
 import colrev.search_file
+from bibliography_io import load_primary
 from colrev.constants import Fields
 from colrev.constants import SearchType
 from colrev.packages.pubmed.src.pubmed import PubMedSearchSource
@@ -228,10 +228,7 @@ def test_pubmed_search_persists_api_results(
     search_results_path = Path(search_file.search_results_path)
     assert search_results_path.is_file()
 
-    saved_records = colrev.loader.load_utils.load(
-        filename=search_results_path,
-        unique_id_field=Fields.ID,
-    )
+    saved_records = load_primary(search_results_path)
 
     assert len(saved_records) == 1
     saved_record = next(iter(saved_records.values()))

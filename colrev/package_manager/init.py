@@ -370,6 +370,44 @@ def _generate_method_signatures(module_path: str, class_name: str) -> str:
         method_signatures.append(f"""    def {name}{sig}:
         \"\"\"{docstring}\"\"\"\n""")
 
+    if class_name == "SearchSourcePackageBaseClass":
+        method_signatures.extend(
+            [
+                '''    @classmethod
+    def preprocess(
+        cls, text: str, *, format: str, source_version: typing.Optional[str]
+    ) -> str:
+        """Preprocess source text before parsing, when needed."""
+        return text
+''',
+                '''    @classmethod
+    def preprocess_file(
+        cls,
+        path: Path,
+        *,
+        format: str,
+        source_version: typing.Optional[str],
+        output_dir: Path,
+    ) -> Path:
+        """Preprocess a source file before parsing, when needed."""
+        return path
+''',
+                '''    @classmethod
+    def normalize(
+        cls,
+        records: list[dict],
+        *,
+        format: str,
+        source_version: typing.Optional[str],
+    ) -> dict[str, dict]:
+        """Normalize parsed records, when needed."""
+        return super().normalize(
+            records, format=format, source_version=source_version
+        )
+''',
+            ]
+        )
+
     return "\n".join(method_signatures)
 
 
@@ -379,7 +417,8 @@ def _get_package_imports(plugin: str) -> str:
     if plugin == "review_type":
         return "import colrev.ops.data"
     if plugin == "search_source":
-        return """import colrev.search_file"""
+        return """from pathlib import Path
+import colrev.search_file"""
     if plugin == "prep":
         return "import colrev.ops.prep"
     if plugin == "prep_man":

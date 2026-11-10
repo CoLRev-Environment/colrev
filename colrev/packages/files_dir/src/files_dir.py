@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pymupdf
 from pydantic import Field
+from bibliography_io import load_raw
+from bibliography_io import write
 
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
@@ -31,7 +33,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.pdf_get import relink_pdfs_in_source
 from colrev.packages.crossref.src.crossref_api import query_doi
-from colrev.writer.write_utils import write_file
+from colrev.record.record_utils import index_records_by_id
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -137,10 +139,8 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         if not self.search_source.search_results_path.is_file():
             return
 
-        search_rd = colrev.loader.load_utils.load(
-            filename=self.search_source.search_results_path,
-            logger=self.logger,
-            unique_id_field="ID",
+        search_rd = index_records_by_id(
+            load_raw(self.search_source.search_results_path)
         )
 
         records = self.review_manager.dataset.load_records_dict()
@@ -171,9 +171,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         if len(search_rd.values()) != 0:
 
-            write_file(
-                records_dict=search_rd, filename=self.search_source.search_results_path
-            )
+            write(search_rd, path=self.search_source.search_results_path)
 
         if records:
             for record_dict in records.values():
@@ -765,30 +763,21 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         except (colrev_exceptions.RecordNotFoundInPrepSourceException,):
             pass
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-
-            def field_mapper(record_dict: dict) -> None:
-                if "note" in record_dict:
-                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
-
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                unique_id_field="ID",
-                field_mapper=field_mapper,
-                logger=self.logger,
-            )
-
-            for record_dict in records.values():
-                if Fields.GROBID_VERSION in record_dict:
-                    del record_dict[Fields.GROBID_VERSION]
-
-                self._update_based_on_doi(record_dict=record_dict)
-
-            return records
-
-        raise NotImplementedError
+    @classmethod
+    def normalize(
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
+    ) -> dict[str, dict]:
+        """Normalize metadata extracted from files in the source directory."""
+        for record_dict in records:
+            if "note" in record_dict:
+                record_dict[f"{cls.endpoint}.note"] = record_dict.pop("note")
+            record_dict.pop(Fields.GROBID_VERSION, None)
+            cls._update_based_on_doi(record_dict=record_dict)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def _fix_special_chars(self, *, record: colrev.record.record.Record) -> None:
         # We may also apply the following upon loading tei content

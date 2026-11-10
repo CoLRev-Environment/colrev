@@ -9,7 +9,6 @@ from pathlib import Path
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.load_utils
 import colrev.ops.prep
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
@@ -284,18 +283,6 @@ class PlosSearchSource(base_classes.SearchSourcePackageBaseClass):
             )
         else:
             raise NotImplementedError
-
-    def load(self) -> dict:
-        """Load records from the SearchSource (and convert to .bib)."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-                unique_id_field="ID",
-            )
-            return records
-
-        raise NotImplementedError
 
     def prepare(
         self,

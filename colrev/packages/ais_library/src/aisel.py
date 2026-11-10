@@ -13,7 +13,6 @@ from urllib.parse import urlparse
 from pydantic import Field
 
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.load_utils
 import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
@@ -320,43 +319,23 @@ class AISeLibrarySearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     @classmethod
-    def _load_enl(cls, *, filename: Path, logger: logging.Logger) -> dict:
-
-        return colrev.loader.load_utils.load(
-            filename=filename,
-            id_labeler=ais_load_utils.enl_id_labeler,
-            entrytype_setter=ais_load_utils.enl_entrytype_setter,
-            field_mapper=ais_load_utils.enl_field_mapper,
-            logger=logger,
-        )
-
-    @classmethod
-    def _load_bib(cls, *, filename: Path, logger: logging.Logger) -> dict:
-
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            logger=logger,
-            field_mapper=ais_load_utils.bib_field_mapper,
-            unique_id_field="ID",
-        )
-
-        return records
-
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        # pylint: disable=colrev-missed-constant-usage
-        if self.search_source.search_results_path.suffix in [".txt", ".enl"]:
-            return self._load_enl(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        # for API-based searches
-        if self.search_source.search_results_path.suffix == ".bib":
-            return self._load_bib(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        raise NotImplementedError
+    def normalize(
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
+    ) -> dict[str, dict]:
+        """Normalize AIS BibTeX and tagged text exports."""
+        if format in {"txt", "enl"}:
+            ais_load_utils.enl_id_labeler(records)
+            for record_dict in records:
+                ais_load_utils.enl_entrytype_setter(record_dict)
+                ais_load_utils.enl_field_mapper(record_dict)
+        elif format == "bib":
+            for record_dict in records:
+                ais_load_utils.bib_field_mapper(record_dict)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def _fix_entrytype(
         self,

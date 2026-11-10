@@ -159,17 +159,6 @@ class UnpaywallSearchSource(base_classes.SearchSourcePackageBaseClass):
         else:
             raise NotImplementedError
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-            )
-            return records
-
-        raise NotImplementedError
-
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,

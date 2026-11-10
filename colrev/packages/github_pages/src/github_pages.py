@@ -10,6 +10,7 @@ from pathlib import Path
 import git
 from pydantic import BaseModel
 from pydantic import Field
+from bibliography_io import write
 
 import colrev.env.utils
 import colrev.package_manager.package_base_classes as base_classes
@@ -19,7 +20,6 @@ from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
-from colrev.writer.write_utils import write_file
 
 
 class GHPagesSettings(
@@ -168,7 +168,12 @@ class GithubPages(base_classes.DataPackageBaseClass):
                     del included_record[key]
 
         data_file = Path("data.bib")
-        write_file(records_dict=included_records, filename=data_file)
+        write(
+            included_records,
+            path=data_file,
+            mapping_fields={Fields.MD_PROV, Fields.D_PROV},
+            list_fields={Fields.ORIGIN},
+        )
 
         self.review_manager.dataset.git_repo.add_changes(data_file)
 

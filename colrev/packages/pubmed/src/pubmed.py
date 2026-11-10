@@ -473,9 +473,18 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
             raise NotImplementedError
 
     @classmethod
-    def _load_csv(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        def entrytype_setter(record_dict: dict) -> None:
-            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+    def normalize(
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
+    ) -> dict[str, dict]:
+        """Normalize CSV exports from PubMed."""
+        if format != "csv":
+            return super().normalize(
+                records, format=format, source_version=source_version
+            )
 
         def field_mapper(record_dict: dict) -> None:
             record_dict[Fields.TITLE] = record_dict.pop("Title", "")
@@ -523,30 +532,11 @@ class PubMedSearchSource(base_classes.SearchSourcePackageBaseClass):
                 if value == "" or pd.isna(value):
                     del record_dict[key]
 
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            unique_id_field="PMID",
-            entrytype_setter=entrytype_setter,
-            field_mapper=field_mapper,
-            logger=logger,
-        )
-        return records
-
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".csv":
-            return self._load_csv(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-            )
-            return records
-
-        raise NotImplementedError
+        for record_dict in records:
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            record_dict[Fields.ID] = str(record_dict.get("PMID", ""))
+            field_mapper(record_dict)
+        return super().normalize(records, format=format, source_version=source_version)
 
     def prepare(
         self,

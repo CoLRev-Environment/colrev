@@ -3,12 +3,14 @@
 
 from __future__ import annotations
 
+
 import logging
 import re
 import typing
 from pathlib import Path
 
 from pydantic import Field
+from bibliography_io import write
 
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
@@ -18,7 +20,6 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
-from colrev.writer.write_utils import write_file
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -120,7 +121,7 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
                 logger.info(f" remove duplicate {rid}")
                 del records[rid]
 
-            write_file(records_dict=records, filename=filename)
+            write(records, path=filename)
 
     def prep_link_md(
         self,
@@ -264,34 +265,45 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls._stringify_ris_values(record_dict)
 
     @classmethod
-    def _load_ris(cls, filename: Path, logger: logging.Logger) -> dict:
-        return colrev.loader.load_utils.load(
-            filename=filename,
-            id_labeler=cls._ris_id_labeler,
-            entrytype_setter=cls._ris_entrytype_setter,
-            field_mapper=cls._ris_field_mapper,
-            logger=logger,
+    def normalize(
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
+    ) -> dict[str, dict]:
+        """Normalize ProQuest RIS records and remove duplicate BibTeX entries."""
+        if format == "ris":
+            cls._ris_id_labeler(records)
+            for record_dict in records:
+                cls._ris_entrytype_setter(record_dict)
+                cls._ris_field_mapper(record_dict)
+
+        indexed_records = super().normalize(
+            records, format=format, source_version=source_version
         )
-
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-                unique_id_field="ID",
-            )
-            self._remove_duplicates(
-                records=records,
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-            )
-            return records
-
-        if self.search_source.search_results_path.suffix == ".ris":
-            return self._load_ris(self.search_source.search_results_path, self.logger)
-
-        raise NotImplementedError
+        # Note: ABI-ÍNFORM returns duplicates, but they should be resolved
+        # in the dedupe step.
+        # if format == "bib":
+        #     to_delete = []
+        #     for record in indexed_records.values():
+        #         if not re.search(r"-\d{1,2}$", record[Fields.ID]):
+        #             continue
+        #         original_record_id = re.sub(r"-\d{1,2}$", "", record[Fields.ID])
+        #         original_record = indexed_records.get(original_record_id)
+        #         if original_record is None:
+        #             continue
+        #         if (
+        #             colrev.record.record.Record.get_record_similarity(
+        #                 record_a=colrev.record.record.Record(record),
+        #                 record_b=colrev.record.record.Record(original_record),
+        #             )
+        #             >= 0.9
+        #         ):
+        #             to_delete.append(record[Fields.ID])
+        #     for record_id in to_delete:
+        #         indexed_records.pop(record_id, None)
+        return indexed_records
 
     def prepare(
         self,

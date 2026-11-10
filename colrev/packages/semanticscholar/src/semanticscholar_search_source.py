@@ -403,19 +403,6 @@ class SemanticScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         return result
 
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        # Not yet implemented
-
-        if self.search_source.search_results_path.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.search_results_path,
-                logger=self.logger,
-            )
-            return records
-
-        raise NotImplementedError
-
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,

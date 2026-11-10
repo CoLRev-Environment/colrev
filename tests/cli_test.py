@@ -4,9 +4,8 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-import colrev.loader.load_utils
+import bibliography_io
 import colrev.ui_cli.cli
-import colrev.writer.write_utils
 import pytest
 
 
@@ -14,14 +13,14 @@ def _patch_conversion(
     monkeypatch: pytest.MonkeyPatch, converted_files: list[Path]
 ) -> None:
     monkeypatch.setattr(
-        colrev.loader.load_utils,
-        "load",
+        bibliography_io,
+        "load_primary",
         lambda input_file: {"record": {"ID": "record"}},
     )
     monkeypatch.setattr(
-        colrev.writer.write_utils,
-        "write_file",
-        lambda *, records_dict, filename: converted_files.append(filename),
+        bibliography_io,
+        "write",
+        lambda records, *, path, **kwargs: converted_files.append(path),
     )
 
 

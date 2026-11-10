@@ -102,16 +102,22 @@ class JSTORSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     @classmethod
-    def _load_ris(cls, *, filename: Path, logger: logging.Logger) -> dict:
-        records = colrev.loader.load_utils.load(
-            filename=filename,
-            id_labeler=cls.__id_labeler,
-            entrytype_setter=cls.__entrytype_setter,
-            field_mapper=cls.__field_mapper,
-            logger=logger,
-        )
-
-        return records
+    def normalize(
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
+    ) -> dict[str, dict]:
+        if format == "ris":
+            cls.__id_labeler(records)
+            for record_dict in records:
+                cls.__entrytype_setter(record_dict)
+                cls.__field_mapper(record_dict)
+            return super().normalize(
+                records, format=format, source_version=source_version
+            )
+        return super().normalize(records, format=format, source_version=source_version)
 
     @staticmethod
     def __id_labeler(records: list) -> None:
@@ -220,15 +226,6 @@ class JSTORSearchSource(base_classes.SearchSourcePackageBaseClass):
                 "PB": Fields.PUBLISHER,
             },
         }
-
-    def load(self) -> dict:
-        """Load the records from the SearchSource file."""
-        if self.search_source.search_results_path.suffix == ".ris":
-            return self._load_ris(
-                filename=self.search_source.search_results_path, logger=self.logger
-            )
-
-        raise NotImplementedError
 
     def prepare(
         self,
