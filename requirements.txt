@@ -10,7 +10,7 @@ attrs==25.3.0
     #   requests-cache
 bib-dedupe==0.11.0
     # via colrev (pyproject.toml)
-bibliography-io==0.3.0
+bibliography-io==0.4.0
     # via colrev (pyproject.toml)
 blessed==1.20.0
     # via inquirer

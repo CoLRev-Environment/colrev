@@ -44,7 +44,7 @@ def relink_pdfs_in_source(
 
     pdf_candidates: typing.Dict[str, Path] = {}
 
-    source_records = load_raw(source.search_results_path)
+    source_records = load_raw(source.search_results_path, missing_ok=True)
     if len(source_records) == 0:
         logger.info("No records to relink")
         return
