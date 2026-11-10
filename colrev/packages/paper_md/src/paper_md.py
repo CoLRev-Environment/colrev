@@ -191,10 +191,8 @@ class PaperMarkdown(base_classes.DataPackageBaseClass):
                 old_string=f'csl: "{csl_link}"',
                 new_string=f'csl: "{csl_filename}"',
             )
-            self.review_manager.dataset.git_repo.repo.add_changes(
-                self.settings.paper_path
-            )
-            self.review_manager.dataset.git_repo.repo.add_changes(Path(csl_filename))
+            self.review_manager.dataset.git_repo.add_changes(self.settings.paper_path)
+            self.review_manager.dataset.git_repo.add_changes(Path(csl_filename))
             self.logger.debug("Downloaded csl file for offline use")
 
     def _check_new_record_source_tag(

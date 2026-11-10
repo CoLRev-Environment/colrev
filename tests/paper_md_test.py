@@ -15,6 +15,36 @@ from colrev.record.record_utils import index_records_by_id
 from colrev.packages.paper_md.src.paper_md import PaperMarkdown
 
 
+def test_retrieve_default_csl_stages_paper_and_downloaded_style(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    paper_path = tmp_path / "paper.md"
+    paper_path.write_text(
+        'csl: "https://example.com/styles/apa.csl"\n', encoding="utf-8"
+    )
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    changes: list[Path] = []
+    paper = cast(Any, object.__new__(PaperMarkdown))
+    paper.logger = logging.getLogger(__name__)
+    paper.settings = SimpleNamespace(paper_path=paper_path)
+    paper.review_manager = SimpleNamespace(
+        paths=SimpleNamespace(DATA_DIR=data_dir),
+        dataset=SimpleNamespace(git_repo=SimpleNamespace(add_changes=changes.append)),
+    )
+    monkeypatch.setattr(
+        "colrev.packages.paper_md.src.paper_md.requests.get",
+        lambda *args, **kwargs: SimpleNamespace(content=b"csl style"),
+    )
+
+    paper._retrieve_default_csl()
+
+    csl_path = data_dir / "apa.csl"
+    assert csl_path.read_bytes() == b"csl style"
+    assert f'csl: "{csl_path}"' in paper_path.read_text(encoding="utf-8")
+    assert changes == [paper_path, csl_path]
+
+
 def test_append_to_non_sample_references_uses_bibliography_io(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
