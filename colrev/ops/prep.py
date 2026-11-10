@@ -20,10 +20,12 @@ from pathlib import Path
 import git
 from requests.exceptions import ConnectionError as requests_ConnectionError
 from requests.exceptions import ReadTimeout
+from bibliography_io import load_primary
+from bibliography_io import to_string
+from bibliography_io import write
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-from bibliography_io import load_primary
 import colrev.process.operation
 import colrev.record.record_prep
 from colrev import utils
@@ -35,8 +37,6 @@ from colrev.constants import FieldSet
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.package_manager.package_manager import PackageManager
-from bibliography_io import to_string
-from bibliography_io import write
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.package_manager.package_base_classes as base_classes

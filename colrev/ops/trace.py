@@ -7,10 +7,10 @@ import time
 import typing
 
 import dictdiffer
+from bibliography_io import loads_primary
 
 import colrev.process.operation
 import colrev.utils
-from bibliography_io import loads_primary
 from colrev.constants import Colors
 from colrev.constants import OperationsType
 from colrev.record.bibliography import adapt_bibliography_records

@@ -12,6 +12,7 @@ from pathlib import Path
 import inquirer
 from pydantic import BaseModel
 from pydantic import Field
+from bibliography_io import write
 
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_manager
@@ -20,7 +21,6 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import RecordState
-from bibliography_io import write
 
 
 class BibFormats(Enum):

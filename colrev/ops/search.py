@@ -6,10 +6,12 @@ from __future__ import annotations
 import typing
 from pathlib import Path
 
+from bibliography_io import load_primary
+from bibliography_io import write
+
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.search_file
-from bibliography_io import load_primary
 from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
@@ -17,7 +19,6 @@ from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import SearchType
 from colrev.package_manager.package_manager import PackageManager
-from bibliography_io import write
 
 
 class Search(colrev.process.operation.Operation):

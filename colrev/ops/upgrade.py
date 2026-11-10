@@ -14,18 +14,18 @@ import git
 import pandas as pd
 from tqdm import tqdm
 from yaml import safe_load
+from bibliography_io import load_primary
+from bibliography_io import to_string
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
-from bibliography_io import load_primary
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
-from bibliography_io import to_string
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=line-too-long

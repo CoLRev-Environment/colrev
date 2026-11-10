@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pymupdf
 from pydantic import Field
+from bibliography_io import load_raw
+from bibliography_io import write
 
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
@@ -17,8 +19,6 @@ import colrev.ops.search_api_feed
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.packages.pdf_backward_search.src.pdf_backward_search as bws
 import colrev.record.record
-from bibliography_io import load_raw
-from colrev.record.record_utils import index_records_by_id
 import colrev.record.record_pdf
 import colrev.record.record_prep
 import colrev.record.record_similarity
@@ -33,7 +33,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.pdf_get import relink_pdfs_in_source
 from colrev.packages.crossref.src.crossref_api import query_doi
-from bibliography_io import write
+from colrev.record.record_utils import index_records_by_id
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -765,7 +765,11 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def normalize(
-        cls, records: list[dict], *, format: str, source_version: str | None
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
     ) -> dict[str, dict]:
         """Normalize metadata extracted from files in the source directory."""
         for record_dict in records:

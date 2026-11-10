@@ -18,6 +18,7 @@ from bib_dedupe.merge import merge
 from pydantic import Field
 from rapidfuzz import fuzz
 from tqdm import tqdm
+from bibliography_io import load_primary
 
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
@@ -26,7 +27,6 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.search_file
-from bibliography_io import load_primary
 from colrev import utils
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -610,7 +610,11 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def normalize(
-        cls, records: list[dict], *, format: str, source_version: str | None
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
     ) -> dict[str, dict]:
         """Drop internal backward-search origin data."""
         for record_dict in records:

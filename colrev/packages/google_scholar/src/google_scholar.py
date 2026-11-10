@@ -174,7 +174,11 @@ class GoogleScholarSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def normalize(
-        cls, records: list[dict], *, format: str, source_version: str | None
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
     ) -> dict[str, dict]:
         """Normalize BibTeX and JSON exports from Google Scholar."""
         for index, record_dict in enumerate(records, start=1):

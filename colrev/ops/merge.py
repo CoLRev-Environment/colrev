@@ -7,10 +7,10 @@ import copy
 
 from dictdiffer import diff
 from git.exc import GitCommandError
+from bibliography_io import loads_primary
 
 import colrev.process.operation
 import colrev.utils
-from bibliography_io import loads_primary
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import OperationsType

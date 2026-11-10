@@ -5,11 +5,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import colrev.process.operation
 from bibliography_io import load_primary
+from bibliography_io import write
+
+import colrev.process.operation
 from colrev.constants import Fields
 from colrev.constants import OperationsType
-from bibliography_io import write
 
 
 class Remove(colrev.process.operation.Operation):

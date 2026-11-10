@@ -103,7 +103,11 @@ class TransportResearchInternationalDocumentation(
 
     @classmethod
     def normalize(
-        cls, records: list[dict], *, format: str, source_version: str | None
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
     ) -> dict[str, dict]:
         if format != "ris":
             return super().normalize(

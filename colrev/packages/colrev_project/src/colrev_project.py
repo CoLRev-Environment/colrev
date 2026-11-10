@@ -285,7 +285,11 @@ class ColrevProjectSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def normalize(
-        cls, records: list[dict], *, format: str, source_version: str | None
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
     ) -> dict[str, dict]:
         """Remove project-local provenance from imported records."""
         for record in records:

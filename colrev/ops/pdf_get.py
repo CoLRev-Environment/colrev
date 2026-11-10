@@ -9,12 +9,13 @@ import typing
 from glob import glob
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
+from bibliography_io import load_raw
+from bibliography_io import write
 
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record_pdf
-from bibliography_io import load_raw
 from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import EndpointType
@@ -23,7 +24,6 @@ from colrev.constants import OperationsType
 from colrev.constants import PDFPathType
 from colrev.constants import RecordState
 from colrev.package_manager.package_manager import PackageManager
-from bibliography_io import write
 
 
 def relink_pdfs_in_source(

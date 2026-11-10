@@ -3,12 +3,13 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_primary
-
 import logging
 import platform
 import typing
 from pathlib import Path
+
+from bibliography_io import load_primary
+from bibliography_io import write
 
 import pandas as pd
 import pymupdf
@@ -23,7 +24,6 @@ from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
-from bibliography_io import write
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods

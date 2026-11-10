@@ -45,6 +45,7 @@ from colrev.record.bibliography import adapt_bibliography_records
 #     return new_hex.decode("utf-8")
 
 
+# pylint: disable=too-few-public-methods
 class SQLiteIndex:
     """The SQLiteIndex class implements indexing and retrieval of records locally."""
 

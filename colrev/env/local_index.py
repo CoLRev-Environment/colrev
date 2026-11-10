@@ -11,11 +11,11 @@ from pathlib import Path
 
 import git
 from git.exc import GitCommandError
+from bibliography_io import load_primary
 
 import colrev.env.environment_manager
 import colrev.env.local_index_sqlite
 import colrev.exceptions as colrev_exceptions
-from bibliography_io import load_primary
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields

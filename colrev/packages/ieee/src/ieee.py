@@ -359,7 +359,11 @@ class IEEEXploreSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def normalize(
-        cls, records: list[dict], *, format: str, source_version: str | None
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
     ) -> dict[str, dict]:
         """Normalize RIS and CSV exports from IEEE."""
         if format == "ris":

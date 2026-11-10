@@ -186,7 +186,13 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
         return record
 
     @classmethod
-    def preprocess(cls, text: str, *, format: str, source_version: str | None) -> str:
+    def preprocess(
+        cls,
+        text: str,
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
+    ) -> str:
         """Apply the existing Scopus BibTeX repair before parsing."""
         if format != "bib":
             return super().preprocess(
@@ -200,7 +206,11 @@ class ScopusSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def normalize(
-        cls, records: list[dict], *, format: str, source_version: str | None
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
     ) -> dict[str, dict]:
         """Map Scopus document types and source-specific fields."""
         for record_dict in records:

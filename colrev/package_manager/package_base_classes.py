@@ -134,7 +134,11 @@ class SearchSourcePackageBaseClass(ABC):
     @classmethod
     # pylint: disable=unused-argument
     def preprocess(
-        cls, text: str, *, format: str, source_version: typing.Optional[str]
+        cls,
+        text: str,
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: typing.Optional[str],
     ) -> str:
         """Preprocess source text before parsing it.
 
@@ -150,7 +154,7 @@ class SearchSourcePackageBaseClass(ABC):
         cls,
         path: Path,
         *,
-        format: str,
+        format: str,  # pylint: disable=redefined-builtin
         source_version: typing.Optional[str],
         output_dir: Path,
     ) -> Path:
@@ -167,7 +171,11 @@ class SearchSourcePackageBaseClass(ABC):
     @classmethod
     # pylint: disable=unused-argument
     def normalize(
-        cls, records: list[dict], *, format: str, source_version: typing.Optional[str]
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: typing.Optional[str],
     ) -> dict[str, dict]:
         """Normalize parsed records and return them indexed by unique ID.
 

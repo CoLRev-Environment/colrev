@@ -10,6 +10,7 @@ import typing
 from pathlib import Path
 
 from pydantic import Field
+from bibliography_io import write
 
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.record.record
@@ -19,7 +20,6 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.search_db import create_db_source
 from colrev.ops.search_db import run_db_search
-from bibliography_io import write
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -266,7 +266,11 @@ class ABIInformProQuestSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     @classmethod
     def normalize(
-        cls, records: list[dict], *, format: str, source_version: str | None
+        cls,
+        records: list[dict],
+        *,
+        format: str,  # pylint: disable=redefined-builtin
+        source_version: str | None,
     ) -> dict[str, dict]:
         """Normalize ProQuest RIS records and remove duplicate BibTeX entries."""
         if format == "ris":

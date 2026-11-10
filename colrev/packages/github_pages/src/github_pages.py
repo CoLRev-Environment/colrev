@@ -10,6 +10,7 @@ from pathlib import Path
 import git
 from pydantic import BaseModel
 from pydantic import Field
+from bibliography_io import write
 
 import colrev.env.utils
 import colrev.package_manager.package_base_classes as base_classes
@@ -19,7 +20,6 @@ from colrev import utils
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
-from bibliography_io import write
 
 
 class GHPagesSettings(

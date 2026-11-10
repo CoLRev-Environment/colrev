@@ -6,17 +6,17 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
+from bibliography_io import load_raw
+from bibliography_io import write
 
 import colrev.env.tei_parser
 import colrev.process.operation
 import colrev.search_file
 import colrev.utils
-from bibliography_io import load_raw
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import SearchType
 from colrev.env.environment_manager import EnvironmentManager
-from bibliography_io import write
 
 
 class Distribute(colrev.process.operation.Operation):

@@ -3,11 +3,11 @@
 
 from __future__ import annotations
 
-from bibliography_io import load_primary
 import logging
 import pprint
 import typing
 
+from bibliography_io import load_primary
 import requests
 from pydantic import Field
 

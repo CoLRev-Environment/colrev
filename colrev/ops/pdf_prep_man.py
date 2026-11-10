@@ -7,12 +7,13 @@ from pathlib import Path
 
 import pandas as pd
 import pymupdf
+from bibliography_io import load_raw
+from bibliography_io import write
 
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
 import colrev.record.record_pdf
-from bibliography_io import load_raw
 from colrev import utils
 from colrev.constants import EndpointType
 from colrev.constants import Fields
@@ -20,7 +21,6 @@ from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.package_manager.package_manager import PackageManager
-from bibliography_io import write
 
 
 class PDFPrepMan(colrev.process.operation.Operation):
