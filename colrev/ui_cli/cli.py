@@ -111,7 +111,8 @@ def _add_screen_criterion_interactively(
     if add != "add_interactively":
         if add.count(",") != 2:
             raise click.BadParameter(
-                "Expected add argument in format: criterion_name,criterion_type,criterion_explanation"
+                "Expected add argument in format: "
+                "criterion_name,criterion_type,criterion_explanation"
             )
         (
             criterion_name,

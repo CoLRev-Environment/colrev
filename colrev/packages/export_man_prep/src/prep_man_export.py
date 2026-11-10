@@ -380,7 +380,7 @@ class ExportManPrep(base_classes.PrepManPackageBaseClass):
         print(f"Once completed, run {Colors.ORANGE}colrev prep-man{Colors.END} again.")
 
     def prepare_manual(self, records: dict) -> dict:
-        """Prepare records manually by extracting the subset of records to a separate BiBTex file."""
+        """Export a subset of records to a separate BibTeX file for manual preparation."""
         if not self.prep_man_bib_path.is_file():
             self._create_info_dataframe(records=records)
             self._export_prep_man(records=records)

@@ -364,7 +364,8 @@ class DBLPSearchSource(base_classes.SearchSourcePackageBaseClass):
                 raise NotImplementedError
         except colrev_exceptions.ServiceNotAvailableException:
             self.logger.warning(
-                "Skipping DBLP search: DBLP API is currently not available or returned an invalid response"
+                "Skipping DBLP search: DBLP API is currently not available "
+                "or returned an invalid response"
             )
 
     @classmethod

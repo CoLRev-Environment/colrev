@@ -15,6 +15,7 @@ import re
 
 import toml
 
+import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 from colrev.constants import Colors
 from colrev.package_manager.package import Package
@@ -114,7 +115,8 @@ def _validate_package_name(package_name: str) -> str:
         raise ValueError("Invalid package name: package name must not start with '-'.")
     if not re.match(r"^[A-Za-z0-9][A-Za-z0-9._-]*$", package_name):
         raise ValueError(
-            "Invalid package name: only letters, digits, dots, underscores, and hyphens are allowed."
+            "Invalid package name: only letters, digits, dots, underscores, "
+            "and hyphens are allowed."
         )
     return package_name
 
@@ -230,7 +232,7 @@ def _check_colrev_discovers_package(data: dict) -> bool:
 
     try:
         Package(package_name)
-    except Exception as exc:  # noqa: BLE001
+    except colrev_exceptions.MissingDependencyError as exc:
         print(
             f"{Colors.RED}CoLRev could not discover the package '{package_name}': "
             f"{exc}{Colors.END}"

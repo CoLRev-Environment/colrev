@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import typing
+import logging
 
 from astroid import InferenceError
 from astroid import nodes
@@ -14,8 +15,6 @@ from pylint.checkers.utils import only_required_for_messages
 if typing.TYPE_CHECKING:  # pragma: no cover
     from pylint.lint import PyLinter
 
-
-import logging
 
 LOGGER = logging.getLogger(__name__)
 # pylint: disable=broad-exception-caught

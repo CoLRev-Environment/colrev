@@ -11,6 +11,7 @@ from pathlib import Path
 from bibliography_io import load_primary
 from bibliography_io import loads_primary
 from bibliography_io import write
+from bibliography_io.exceptions import BibliographyIOError
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
@@ -496,12 +497,10 @@ class Repare(colrev.process.operation.Operation):
         for source in self.review_manager.settings.sources:
             try:
                 prefix = source.get_origin_prefix()  # e.g., "crossref.bib"
-                search_path = (
-                    source.search_results_path
-                )  # e.g., data/search/crossref.bib
-            except Exception as exc:  # very defensive
+            except AssertionError as exc:
                 self.review_manager.logger.warning("Could not inspect source (%s)", exc)
                 continue
+            search_path = source.search_results_path  # e.g., data/search/crossref.bib
 
             try:
                 feed_records = load_primary(
@@ -517,7 +516,7 @@ class Repare(colrev.process.operation.Operation):
                     search_path,
                     prefix,
                 )
-            except Exception as exc:
+            except (OSError, UnicodeError, ValueError, BibliographyIOError) as exc:
                 self.review_manager.logger.warning(
                     "Could not load search results (%s): %s. "
                     "Keeping origins for prefix '%s' unchanged.",

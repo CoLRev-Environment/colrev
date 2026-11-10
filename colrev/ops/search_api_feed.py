@@ -182,7 +182,7 @@ class SearchAPIFeed:
         record: colrev.record.record.Record,
         prev_feed_record: colrev.record.record.Record,
     ) -> bool:
-        """Add a record to the feed and set its colrev_origin."""
+        """Add or update the feed entry without updating the primary record."""
         self._set_id(record)
         if Fields.ENTRYTYPE not in record.data:
             record.data[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
@@ -479,9 +479,8 @@ class SearchAPIFeed:
             if provenance_key in retrieved_record.data:
                 del retrieved_record.data[provenance_key]
 
-    # TODO : difference to add_record_to_feed ??
     def add_update_record(self, retrieved_record: colrev.record.record.Record) -> bool:
-        """Add or update a record in the api_search_feed and records."""
+        """Update the feed and, outside prep mode, the corresponding primary record."""
         self._prep_retrieved_record(retrieved_record)
         prev_feed_record = self.get_prev_feed_record(retrieved_record)
 

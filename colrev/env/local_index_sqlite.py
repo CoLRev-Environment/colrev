@@ -142,7 +142,9 @@ class SQLiteIndexRecord(SQLiteIndex):
 
     SELECT_KEY_QUERIES = {
         # nosec B608: INDEX_NAME/field names are internal constants; values use sqlite placeholders.
-        LocalIndexFields.ID: f"SELECT * FROM {INDEX_NAME} WHERE {LocalIndexFields.ID}=?",  # nosec B608
+        LocalIndexFields.ID: (
+            f"SELECT * FROM {INDEX_NAME} WHERE {LocalIndexFields.ID}=?"
+        ),  # nosec B608
         Fields.COLREV_ID: f"SELECT * FROM {INDEX_NAME} WHERE {Fields.COLREV_ID}=?",  # nosec B608
         Fields.DOI: f"SELECT * FROM {INDEX_NAME} where {Fields.DOI}=?",  # nosec B608
         Fields.DBLP_KEY: f"SELECT * FROM {INDEX_NAME} WHERE {Fields.DBLP_KEY}=?",  # nosec B608
@@ -347,8 +349,12 @@ class SQLiteIndexTOC(SQLiteIndex):
             query = f"{self.SELECT_ALL_QUERY} {LocalIndexFields.TOC_KEY} LIKE ?"
             argument = partial_toc_key + "%"
         elif toc_key != "":
-            # nosec B608: INDEX_NAME/field names are internal constants; toc_key is bound via placeholder.
-            query = f"SELECT * FROM {self.INDEX_NAME} WHERE {LocalIndexFields.TOC_KEY}=?"  # nosec B608
+            # nosec B608: INDEX_NAME/field names are internal constants;
+            # toc_key is bound via placeholder.
+            query = (
+                f"SELECT * FROM {self.INDEX_NAME} "
+                f"WHERE {LocalIndexFields.TOC_KEY}=?"
+            )  # nosec B608
             argument = toc_key
         else:
             raise NotImplementedError

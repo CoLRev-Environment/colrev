@@ -89,21 +89,41 @@ class OSFApiQuery:
                 names.extend(page_names)
                 id_fallbacks.extend(page_ids)
                 links = js.get("links") or {}
+                if not isinstance(links, dict):
+                    raise ValueError("OSF response links must be an object")
                 url = links.get("next", "")
-        except Exception:
+                if not isinstance(url, str):
+                    raise ValueError("OSF response next link must be a string")
+        except (requests.exceptions.RequestException, ValueError):
             return [], self._resolve_fallback_ids(href)
 
         return names, id_fallbacks
 
+    @staticmethod
+    def _response_items(js: object) -> list[dict]:
+        if not isinstance(js, dict):
+            raise ValueError("OSF response must be an object")
+        items = js.get("data", [])
+        if not isinstance(items, list) or not all(
+            isinstance(item, dict) for item in items
+        ):
+            raise ValueError("OSF response data must be a list of objects")
+        return items
+
     def _extract_page_author_data(self, js: dict) -> tuple[list[str], list[str]]:
         names: list[str] = []
         id_fallbacks: list[str] = []
-        for item in js.get("data", []):
+        for item in self._response_items(js):
             attr = item.get("attributes") or {}
+            if not isinstance(attr, dict):
+                raise ValueError("OSF contributor attributes must be an object")
             if attr.get("bibliographic") is False:
                 continue
 
-            name = (attr.get("unregistered_contributor") or "").strip()
+            raw_name = attr.get("unregistered_contributor") or ""
+            if not isinstance(raw_name, str):
+                raise ValueError("OSF contributor name must be a string")
+            name = raw_name.strip()
             if not name:
                 uid = self._get_contributor_user_id(item)
                 if uid:
@@ -117,7 +137,12 @@ class OSFApiQuery:
         return names, id_fallbacks
 
     def _get_contributor_user_id(self, item: dict) -> typing.Optional[str]:
-        rel = (item.get("relationships") or {}).get("users") or {}
+        relationships = item.get("relationships") or {}
+        if not isinstance(relationships, dict):
+            raise ValueError("OSF relationships must be an object")
+        rel = relationships.get("users") or {}
+        if not isinstance(rel, dict):
+            raise ValueError("OSF user relationship must be an object")
         rel_data = rel.get("data") or {}
         return rel_data.get("id") if isinstance(rel_data, dict) else None
 
@@ -153,14 +178,17 @@ class OSFApiQuery:
         try:
             js = json.loads(self._query_api(href))
             ids = []
-            for item in js.get("data", []):
-                if (item.get("attributes") or {}).get("bibliographic") is False:
+            for item in self._response_items(js):
+                attr = item.get("attributes") or {}
+                if not isinstance(attr, dict):
+                    raise ValueError("OSF contributor attributes must be an object")
+                if attr.get("bibliographic") is False:
                     continue
                 uid = self._get_contributor_user_id(item)
                 if uid:
                     ids.append(uid)
             return ids
-        except Exception:
+        except (requests.exceptions.RequestException, ValueError):
             return []
 
     def retrieve_records(self) -> typing.Generator:

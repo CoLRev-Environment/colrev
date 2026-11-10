@@ -8,6 +8,8 @@ import textwrap
 import typing
 from pathlib import Path
 
+from bibliography_io import load_primary
+from bibliography_io import write
 from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
@@ -164,9 +166,7 @@ class CoLRevCLIPrescreen(base_classes.PrescreenPackageBaseClass):
 
 
 def cli() -> None:
-    from bibliography_io import load_primary
-    from bibliography_io import write
-
+    """Run the interactive command-line prescreen."""
     # TODO: allow custom file selection
     filename = Path("records.bib")
     records_dict = load_primary(
@@ -205,9 +205,13 @@ def cli() -> None:
         inclusion = "yes" == inclusion_decision_str
 
         if inclusion:
-            record_dict["colrev_status"] = RecordState.rev_synthesized
+            colrev.record.record.Record(record_dict).set_status(
+                RecordState.rev_synthesized
+            )
         else:
-            record_dict["colrev_status"] = RecordState.rev_excluded
+            colrev.record.record.Record(record_dict).set_status(
+                RecordState.rev_excluded
+            )
 
     write(
         records_dict,

@@ -238,6 +238,7 @@ def open_file(filepath: str, *, prefer_vscode: bool = False) -> None:
 
     if sys.platform.startswith("win"):
         # Reviewed: opens an existing local path with the Windows file association.
+        # pylint: disable=no-member
         os.startfile(str(checked_filepath))  # type: ignore[attr-defined]  # nosec B606
         return
 

@@ -584,7 +584,7 @@ class DocRegistryManager:
         if response.status_code == 200:
 
             soup = BeautifulSoup(response.text, "html.parser")
-            package_snippets = soup.find_all("a", class_="package-snippet")
+            package_snippets = list(soup.find_all("a", class_="package-snippet"))
             search_results = []
             for package_snippet in package_snippets:
                 span_elems = package_snippet.find_all("span")

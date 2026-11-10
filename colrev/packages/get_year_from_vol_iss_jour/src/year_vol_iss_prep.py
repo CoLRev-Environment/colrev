@@ -8,6 +8,7 @@ import pprint
 import typing
 
 from bibliography_io import load_primary
+from bibliography_io.exceptions import BibliographyIOError
 import requests
 from pydantic import Field
 
@@ -107,13 +108,14 @@ class YearVolIssPrep(base_classes.PrepPackageBaseClass):
                         "mapping_fields": {Fields.MD_PROV, Fields.D_PROV},
                         "list_fields": {Fields.ORIGIN},
                     }
-                records = load_primary(source.search_results_path, **load_options)
-                for record in records.values():
-                    _index_record(record, vol_nr_dict)
-            # TODO: AssertionError should be temporary
-            # (until meaningful exceptions are raised)
-            except AssertionError:
-                pass
+                source_records = load_primary(
+                    source.search_results_path, **load_options
+                )
+            except (OSError, UnicodeError, ValueError, BibliographyIOError):
+                continue
+
+            for record in source_records.values():
+                _index_record(record, vol_nr_dict)
 
         for _, mapping_yvn in vol_nr_dict.items():
             mapping_yvn.pop("UNKNOWN", None)

@@ -590,7 +590,8 @@ class BackwardSearchSource(base_classes.SearchSourcePackageBaseClass):
         else:
             if not params_dict["min_intext_citations"].isdigit():
                 raise ValueError(
-                    f"min_intext_citations must be numeric, got {params_dict['min_intext_citations']!r}"
+                    "min_intext_citations must be numeric, got "
+                    f"{params_dict['min_intext_citations']!r}"
                 )
             if not params_dict["min_ref_freq"].isdigit():
                 raise ValueError(

@@ -163,7 +163,8 @@ def main() -> None:
             unknown = [rid for rid in target_ids if rid not in records]
             if unknown:
                 questionary.print(
-                    f"Warning: {len(unknown)} ID(s) not found and will be ignored: {', '.join(unknown)}",
+                    f"Warning: {len(unknown)} ID(s) not found and will be ignored: "
+                    f"{', '.join(unknown)}",
                     style="bold fg:yellow",
                 )
                 target_ids = [rid for rid in target_ids if rid in records]

@@ -254,37 +254,24 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
         return True
 
     def validate_name(answers: list, name: str) -> bool:
-        if name == "":  # Accept default package name
-            return True
+        error_message = None
+        if name != "":  # Accept default package name
+            installed_packages = {
+                dist.metadata["Name"].lower() for dist in distributions()
+            }
+            # Check if the name corresponds to a currently installed python package
+            if name in installed_packages:
+                error_message = "The package name is already installed."
+            elif built_in and not name.startswith("colrev."):
+                error_message = "The built-in package name must start with 'colrev.'"
+            elif built_in and not re.match(r"^[a-zA-Z_]*\.[a-zA-Z0-9_]*$", name):
+                error_message = "The package name is not a valid python package name."
+            elif not built_in and not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
+                error_message = "The package name is not a valid python package name."
 
-        installed_packages = {dist.metadata["Name"].lower() for dist in distributions()}
-        # Check if the name corresponds to a currently installed python package
-        if name in installed_packages:
-            print(f"  {Colors.RED}The package name is already installed.{Colors.END}")
+        if error_message:
+            print(f"  {Colors.RED}{error_message}{Colors.END}")
             return False
-
-        if built_in:
-            if not name.startswith("colrev."):
-                print(
-                    f"  {Colors.RED}The built-in package name must start with 'colrev.'{Colors.END}"
-                )
-                return False
-            if not re.match(r"^[a-zA-Z_]*\.[a-zA-Z0-9_]*$", name):
-                print(
-                    f"  {Colors.RED}"
-                    "The package name is not a valid python package name."
-                    f"{Colors.END}"
-                )
-                return False
-            return True
-
-        # Check if the name is a valid python package name
-        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
-            print(
-                f"  {Colors.RED}The package name is not a valid python package name.{Colors.END}"
-            )
-            return False
-
         return True
 
     questions = [

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Upgrades CoLRev projects."""
 
+# pylint: disable=too-many-lines
+
 from __future__ import annotations
 
 import json

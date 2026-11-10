@@ -131,7 +131,8 @@ def _relink_pdf_record(
     if not source_file_exists:
         logger.info(
             f"Source record ({source.search_results_path}{source_rec[Fields.ID]}) "
-            f"of {record[Fields.ID]}: Broken file path {Colors.RED}{source_rec[Fields.FILE]}{Colors.END}"
+            f"of {record[Fields.ID]}: Broken file path "
+            f"{Colors.RED}{source_rec[Fields.FILE]}{Colors.END}"
         )
     if primary_file_exists and source_file_exists:
         if record[Fields.FILE] != source_rec[Fields.FILE]:
@@ -156,7 +157,8 @@ def _relink_pdf_record(
             record[Fields.FILE] = str(pdf_candidate)
         else:
             logger.warning(
-                f"{Colors.RED}- Primary record: Did not find the PDF file based on CPID.{Colors.END}"
+                f"{Colors.RED}- Primary record: Did not find the PDF file "
+                f"based on CPID.{Colors.END}"
             )
         return pdf_candidates
     id_named_pdf = "data/pdfs/" + record[Fields.ID] + ".pdf"

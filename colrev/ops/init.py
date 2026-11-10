@@ -9,12 +9,15 @@ import logging
 import os
 import platform
 import shutil
+import sys
 from importlib.metadata import version
 from pathlib import Path
 from subprocess import CalledProcessError  # nosec
 from subprocess import check_call  # nosec
 from subprocess import DEVNULL  # nosec
 from subprocess import STDOUT  # nosec
+from types import TracebackType
+from typing import Callable
 
 import git
 from git.exc import InvalidGitRepositoryError
@@ -32,8 +35,6 @@ from colrev.constants import EndpointType
 from colrev.constants import SearchType
 from colrev.env.environment_manager import EnvironmentManager
 from colrev.package_manager.package_manager import PackageManager
-from types import TracebackType
-from typing import Callable
 
 # pylint: disable=too-few-public-methods
 
@@ -43,9 +44,23 @@ def _remove_readonly(
     path: str,
     exc_info: tuple[type[BaseException], BaseException, TracebackType | None],
 ) -> None:
-    """Remove a read-only file on Windows during directory cleanup."""
-    if not isinstance(exc_info[1], PermissionError):
-        raise exc_info[1]
+    """Handle a read-only-file error from rmtree() on Python 3.10–3.11."""
+    _retry_readonly_removal(func=func, path=path, exception=exc_info[1])
+
+
+def _remove_readonly_onexc(
+    func: Callable[..., object], path: str, exception: BaseException
+) -> None:
+    """Handle a read-only-file error from rmtree() on Python 3.12+."""
+    _retry_readonly_removal(func=func, path=path, exception=exception)
+
+
+def _retry_readonly_removal(
+    *, func: Callable[..., object], path: str, exception: BaseException
+) -> None:
+    """Make a read-only path writable and retry its removal."""
+    if not isinstance(exception, PermissionError):
+        raise exception
 
     os.chmod(path, stat.S_IWRITE)
     func(path)
@@ -195,7 +210,13 @@ class Initializer:
 
         for child in self.target_path.iterdir():
             if child.is_dir():
-                shutil.rmtree(child, onerror=_remove_readonly)
+                if sys.version_info >= (3, 12):
+                    shutil.rmtree(child, onexc=_remove_readonly_onexc)
+                else:
+                    # The legacy callback is required for Python 3.10–3.11.
+                    shutil.rmtree(  # pylint: disable=deprecated-argument
+                        child, onerror=_remove_readonly
+                    )
             else:
                 child.unlink()
 
