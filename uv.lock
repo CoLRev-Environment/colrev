@@ -97,11 +97,11 @@ wheels = [
 
 [[package]]
 name = "bibliography-io"
-version = "0.3.0"
+version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/5a/78/61c6845d19a998647b7935568bc35a423d92d595b6ec6608937bf236733f/bibliography_io-0.3.0.tar.gz", hash = "sha256:ae5a46010293ae6ea675512e9109560ccbfd23c69addb73c2fddeb3394ed3798", size = 584839, upload-time = "2026-11-08T16:38:31.795Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/53/81/be798f59fab92596590a04232f13c5870eebaec7d3bd5d1198551b41df28/bibliography_io-0.4.0.tar.gz", hash = "sha256:c3dd3318ef9269f6e2bba856ee53db96db175304486c28b35454d56dc437a0e1", size = 585647, upload-time = "2026-11-08T19:55:40.029Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a7/34/9fb753b18071c83f364b30fa46109a15557bcc71fda36bef700f93469aae/bibliography_io-0.3.0-py3-none-any.whl", hash = "sha256:6d9a4c176553b95c9bc56e3cbd215b757dcb3b935658a59ddb255cc939ad34af", size = 38351, upload-time = "2026-11-08T16:38:30.23Z" },
+    { url = "https://files.pythonhosted.org/packages/21/bf/bf11fa35991f4da88efd8bccdb2708224c092264da259c529ef0f4ba0cae/bibliography_io-0.4.0-py3-none-any.whl", hash = "sha256:7d6a47fad0ec410a04b2aedf3e91cff384e0e3cf9956ff16597d6d2ddf85628d", size = 38507, upload-time = "2026-11-08T19:55:38.531Z" },
 ]
 
 [[package]]
@@ -336,7 +336,7 @@ docs = [
 requires-dist = [
     { name = "beautifulsoup4", marker = "extra == 'docs'", specifier = ">=4.11.1" },
     { name = "bib-dedupe", specifier = ">=0.11.0" },
-    { name = "bibliography-io", specifier = "==0.3.0" },
+    { name = "bibliography-io", specifier = "==0.4.0" },
     { name = "click", specifier = ">=8.1.6" },
     { name = "click-repl", specifier = ">=0.3.0" },
     { name = "coverage", extras = ["toml"], marker = "extra == 'dev'", specifier = ">=7.3.2" },
