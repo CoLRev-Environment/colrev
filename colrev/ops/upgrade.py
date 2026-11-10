@@ -234,6 +234,12 @@ class Upgrade(colrev.process.operation.Operation):
                 "script": self._migrate_0_16_0,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.16.0"),
+                "target_version": CoLRevVersion("0.17.0"),
+                "script": self._migrate_0_17_0,
+                "released": True,
+            },
         ]
         self.review_manager.logger.info(
             "Colrev version installed:           %s", installed_colrev_version
@@ -970,6 +976,9 @@ class Upgrade(colrev.process.operation.Operation):
         return self.repo.is_dirty()
 
     def _migrate_0_16_0(self) -> bool:
+        return False
+
+    def _migrate_0_17_0(self) -> bool:
         return False
 
 

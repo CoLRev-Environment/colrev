@@ -332,10 +332,9 @@ class PackageDoc:
             ):
                 table_rows = [self._markdown_table_cells(line)]
                 line_index += 2  # Skip the header separator row.
-                while (
-                    line_index < len(source_lines)
-                    and source_lines[line_index].strip().startswith("|")
-                ):
+                while line_index < len(source_lines) and source_lines[
+                    line_index
+                ].strip().startswith("|"):
                     table_rows.append(
                         self._markdown_table_cells(source_lines[line_index])
                     )

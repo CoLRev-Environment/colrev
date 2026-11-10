@@ -5,17 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
-<!--
-## Unreleased
-
-### Added
+## 0.17.0 - 2026-11-10
 
 ### Changed
 
+- Extract bibliography I/O and GROBID TEI handling into the `bibliography-io` and `grobid-tei` packages.
+
 ### Removed
 
-### Fixed
--->
+- Remove the in-tree `colrev.loader` and `colrev.writer` modules; their functionality is provided by the extracted bibliography I/O package.
 
 ## 0.16.2 - 2026-02-24
 

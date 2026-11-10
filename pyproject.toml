@@ -1,6 +1,6 @@
 [project]
 name = "colrev"
-version = "0.16.2"
+version = "0.17.0"
 description = "CoLRev: An open-source environment for collaborative reviews"
 authors = [
     { name = "Gerit Wagner", email = "g.wagner@fs.de" },
