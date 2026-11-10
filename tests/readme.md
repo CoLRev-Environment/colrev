@@ -19,9 +19,9 @@ coverage-badge -o tests/coverage.svg
 pytest --durations=5
 
 # Run individual test modules
-pytest tests/0_core/record_test.py
+pytest tests/0_record/record_test.py
 # Run individual test methods
-pytest tests/0_core/record_test.py -k "test_update_metadata_status"
+pytest tests/0_record/record_test.py -k "test_set_status"
 ```
 
 Note: after each test, `conf.run_around_tests()` restores the state of the repository (even if tests fail!). For debugging, it may be helpful to deactivate the code temporarily.
