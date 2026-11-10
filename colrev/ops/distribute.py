@@ -6,7 +6,7 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
-from bibliography_io import load_raw
+from bibliography_io import load
 from bibliography_io import write
 
 import colrev.env.tei_parser
@@ -100,9 +100,7 @@ class Distribute(colrev.process.operation.Operation):
                 target_bib_file = target / Path("data/search/local_import.bib")
                 self.review_manager.logger.info(f"target_bib_file: {target_bib_file}")
                 if target_bib_file.is_file():
-
-                    # TODO: source-package loading may require CoLRev preprocessing.
-                    import_records = load_raw(target_bib_file)
+                    import_records = load(target_bib_file)
 
                 else:
                     import_records = []

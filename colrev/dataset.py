@@ -161,7 +161,6 @@ class Dataset:
 
         if header_only:
             # Note : currently not parsing screening_criteria to settings.ScreeningCriterion
-            # TODO: should the parsing of status also occur in bibliography-io???
             records = load_primary(
                 self.review_manager.paths.records,
                 header_only=True,
