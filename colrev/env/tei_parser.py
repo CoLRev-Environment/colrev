@@ -108,16 +108,19 @@ class TEIParser:
         self, *, consolidate_header: bool = False, consolidate_citations: bool = False
     ) -> None:
         """Create TEI through grobid_tei using CoLRev's managed service."""
+        pdf_path = self.pdf_path
+        if pdf_path is None:
+            raise RuntimeError("pdf_path is required to create TEI")
+
         grobid_service = colrev.env.grobid_service.GrobidService()
 
         try:
-            assert self.pdf_path is not None
             grobid_client = grobid_tei.GrobidClient(
                 service_url=grobid_service.GROBID_URL, timeout=180
             )
             grobid_client.check_compatibility()
             tei_bytes = grobid_client.process_fulltext(
-                self.pdf_path,
+                pdf_path,
                 consolidate_header=consolidate_header,
                 consolidate_citations=consolidate_citations,
             )

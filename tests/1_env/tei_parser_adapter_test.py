@@ -219,6 +219,18 @@ def test_pdf_consolidation_options_default_to_false(
     )
 
 
+def test_create_tei_requires_pdf_path(tmp_path: Path, mocker: Any) -> None:
+    tei_path = tmp_path / "paper.tei.xml"
+    tei_path.write_bytes(MINIMAL_TEI)
+    parser = colrev.env.tei_parser.TEIParser(tei_path=tei_path)
+    service = mocker.patch("colrev.env.grobid_service.GrobidService")
+
+    with pytest.raises(RuntimeError, match="pdf_path is required to create TEI"):
+        parser._create_tei()
+
+    service.assert_not_called()
+
+
 def test_existing_tei_takes_precedence_over_pdf(tmp_path: Path, mocker: Any) -> None:
     """An existing TEI is loaded without starting GROBID, even with a PDF path."""
     pdf_path = tmp_path / "paper.pdf"
