@@ -3,13 +3,15 @@
 import logging
 from pathlib import Path
 
+import pytest
+
 import colrev.search_file
 from colrev.constants import SearchType
 from colrev.ops.pdf_get import relink_pdfs_in_source
 
 
 def test_relink_pdfs_in_source_missing_search_results(
-    tmp_path: Path, monkeypatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A files-dir source may not have a results file before its first search."""
     monkeypatch.chdir(tmp_path)
