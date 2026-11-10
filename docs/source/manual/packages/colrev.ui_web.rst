@@ -22,6 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
+
 colrev.ui_web
 =============
 
@@ -29,9 +30,9 @@ colrev.ui_web
 
 |MAINTAINER| Maintainer: Jessica Petry Klarmann, Katharina Maria Ernst, Luca Rita Ossendorf, Simon Mühlbauer, Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/ui_web>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/ui_web>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,6 +43,7 @@ colrev.ui_web
      - Add
    * - na
      - |MATURING|
+     - N/A
 
 Summary
 -------

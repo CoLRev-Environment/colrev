@@ -40,8 +40,9 @@ colrev-sync
    * - Endpoint
      - Status
      - Add
-   * - na
-     - |EXPERIMENTAL|
+    * - na
+      - |EXPERIMENTAL|
+      - N/A
 
 Summary
 -------

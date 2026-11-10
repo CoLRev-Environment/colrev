@@ -78,6 +78,7 @@ analysis/__pycache__/*
 
 # Sphinx autosummary outputs
 docs/**/_autosummary/
+/docs/source/manual/packages/_package_readmes/
 
 \# unignore the web build
 !/colrev/ui\_web/build

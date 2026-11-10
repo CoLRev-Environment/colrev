@@ -22,6 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
+
 colrev.narrative_review
 =======================
 
@@ -29,9 +30,9 @@ colrev.narrative_review
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/narrative_review>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/narrative_review>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +43,7 @@ colrev.narrative_review
      - Add
    * - review_type
      - |STABLE|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev init --type colrev.narrative_review
@@ -58,11 +59,18 @@ Characteristics
 ---------------
 
 
-| Dimension                  | Description                                                                                   |
-|----------------------------|-----------------------------------------------------------------------------------------------|
-| Goal with regard to theory | Describing                                                                                    |
-| Scope of questions         | Broad                                                                                         |
-| Methods                    | Not necessarily reported                                                                      |
+.. list-table::
+   :header-rows: 1
+
+   * - Dimension
+     - Description
+   * - Goal with regard to theory
+     - Describing
+   * - Scope of questions
+     - Broad
+   * - Methods
+     - Not necessarily reported
+
 
 Data extraction, analysis, and synthesis
 ----------------------------------------

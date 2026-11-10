@@ -88,9 +88,7 @@ This documentation provides an overview of the CLI commands and the correspondin
    :prog: colrev push
    :nested: full
 
-.. click:: colrev.ui_cli.cli:sync
-   :prog: colrev sync
-   :nested: full
+The separate ``colrev-sync`` command is documented on the :doc:`colrev-sync package page </manual/packages/colrev-sync>`.
 
 .. click:: colrev.ui_cli.cli:distribute
    :prog: colrev distribute

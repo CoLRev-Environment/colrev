@@ -695,7 +695,7 @@ class Validate(colrev.process.operation.Operation):
         )
 
     def remove_md_origins(self, origins_to_remove: dict) -> None:
-        """Remove origin records for md_ files."""
+        """Remove origin records for ``md_`` files."""
         records = self.review_manager.dataset.load_records_dict()
         origins_in_use = [
             o for record in records.values() for o in record[Fields.ORIGIN]

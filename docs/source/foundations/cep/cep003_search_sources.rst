@@ -14,14 +14,14 @@ CEP003 - SearchSources
 Table of contents
 ------------------------------
 
-- :any:`summary`
+- :any:`cep003-summary`
 - :any:`search_source_data`
 - :any:`methods`
 - :any:`documentation`
 - :any:`roadmap`
 - :any:`references`
 
-.. _summary:
+.. _cep003-summary:
 
 Abstract
 ------------------------------
@@ -119,30 +119,9 @@ Methods
 ..
   Each source can have its unique preparation steps, and restricting the scope of preparation rules allows us to prevent side effects on other records originating from high-quality sources.
 
-.. list-table:: Load utilities
-   :widths: 40 60
-   :header-rows: 1
-
-   * - Format
-     - Utility
-   * - BibTeX
-     - :doc:`colrev.loader.bib </dev_docs/_autosummary/colrev.loader.bib>`
-   * - CSV/XLSX
-     - :doc:`colrev.loader.table </dev_docs/_autosummary/colrev.loader.table>`
-   * - ENL
-     - :doc:`colrev.loader.enl </dev_docs/_autosummary/colrev.loader.enl>`
-   * - Markdown (reference section as unstructured text)
-     - :doc:`colrev.loader.md </dev_docs/_autosummary/colrev.loader.md>`
-   * - NBIB
-     - :doc:`colrev.loader.nbib </dev_docs/_autosummary/colrev.loader.nbib>`
-   * - RIS
-     - :doc:`colrev.loader.ris </dev_docs/_autosummary/colrev.loader.ris>`
-   * - JSON
-     - :doc:`colrev.loader.json </dev_docs/_autosummary/colrev.loader.json>`
-   * - CSL
-     - TODO
-   * - XML
-     - TODO
+The load operation delegates parsing and source-specific normalization to the
+configured SearchSource package. See the :doc:`load operation
+</manual/metadata_retrieval/load>` for details.
 
 
 **prep**

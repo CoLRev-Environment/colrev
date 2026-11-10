@@ -22,6 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
+
 colrev.critical_review
 ======================
 
@@ -29,9 +30,9 @@ colrev.critical_review
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/critical_review>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/critical_review>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +43,7 @@ colrev.critical_review
      - Add
    * - review_type
      - |STABLE|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev init --type colrev.critical_review
@@ -60,11 +61,18 @@ Characteristics
 ---------------
 
 
-| Dimension                  | Description                                    |
-|----------------------------|------------------------------------------------|
-| Goal with regard to theory | Understanding                                  |
-| Scope of questions         | Broad                                          |
-| Nature of sources          | Conceptual and  empirical papers               |
+.. list-table::
+   :header-rows: 1
+
+   * - Dimension
+     - Description
+   * - Goal with regard to theory
+     - Understanding
+   * - Scope of questions
+     - Broad
+   * - Nature of sources
+     - Conceptual and  empirical papers
+
 
 Data extraction, analysis, and synthesis
 ----------------------------------------

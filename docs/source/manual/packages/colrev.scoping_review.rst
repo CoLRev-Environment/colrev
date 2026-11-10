@@ -22,6 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
+
 colrev.scoping_review
 =====================
 
@@ -29,9 +30,9 @@ colrev.scoping_review
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/scoping_review>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/scoping_review>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,7 +43,7 @@ colrev.scoping_review
      - Add
    * - review_type
      - |STABLE|
-     - .. code-block::
+     - .. code-block:: 
 
 
          colrev init --type colrev.scoping_review
@@ -58,12 +59,20 @@ Characteristics
 ---------------
 
 
-| Dimension                  | Description                                                                                   |
-|----------------------------|-----------------------------------------------------------------------------------------------|
-| Goal with regard to theory | Understanding                                                                                 |
-| Scope of questions         | Broad                                                                                         |
-| Focus                      | Emergent topics (with 3-5 or 10 years of research)                                             |
-| Nature of sources          | Conceptual, empirical, and grey literature (quality appraisal is not essential)                |
+.. list-table::
+   :header-rows: 1
+
+   * - Dimension
+     - Description
+   * - Goal with regard to theory
+     - Understanding
+   * - Scope of questions
+     - Broad
+   * - Focus
+     - Emergent topics (with 3-5 or 10 years of research)
+   * - Nature of sources
+     - Conceptual, empirical, and grey literature (quality appraisal is not essential)
+
 
 Data extraction, analysis, and synthesis
 ----------------------------------------

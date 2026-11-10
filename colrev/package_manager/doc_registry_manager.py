@@ -212,6 +212,7 @@ class PackageDoc:
         )
         header_info += "   :width: 15\n"
         header_info += "   :alt: Documentation\n"
+        header_info += "\n"
 
         header_info += f"{self.package_id}\n"
         header_info += "=" * len(self.package_id) + "\n\n"
@@ -266,6 +267,8 @@ class PackageDoc:
                     header_info += f"     - .. code-block:: \n\n\n         colrev screen --add {self.package_id}\n\n"
                 elif endpoint_type == EndpointType.data:
                     header_info += f"     - .. code-block:: \n\n\n         colrev data --add {self.package_id}\n\n"
+                elif endpoint_type == EndpointType.na:
+                    header_info += "     - N/A\n"
 
         return header_info
 
@@ -290,8 +293,11 @@ class PackageDoc:
         converted_lines = []
         in_fenced_code_block = False
         fenced_code_language = ""
+        source_lines = markdown_content.splitlines()
+        line_index = 0
 
-        for line in markdown_content.splitlines():
+        while line_index < len(source_lines):
+            line = source_lines[line_index]
             fence_match = re.match(r"^```(\w+)?\s*$", line)
             if fence_match:
                 if not in_fenced_code_block:
@@ -308,6 +314,7 @@ class PackageDoc:
                     in_fenced_code_block = False
                     fenced_code_language = ""
                     converted_lines.append("")
+                line_index += 1
                 continue
 
             if in_fenced_code_block:
@@ -315,6 +322,26 @@ class PackageDoc:
                     converted_lines.append("")
                 else:
                     converted_lines.append(f"   {line}")
+                line_index += 1
+                continue
+
+            if (
+                line.strip().startswith("|")
+                and line_index + 1 < len(source_lines)
+                and self._is_markdown_table_separator(source_lines[line_index + 1])
+            ):
+                table_rows = [self._markdown_table_cells(line)]
+                line_index += 2  # Skip the header separator row.
+                while (
+                    line_index < len(source_lines)
+                    and source_lines[line_index].strip().startswith("|")
+                ):
+                    table_rows.append(
+                        self._markdown_table_cells(source_lines[line_index])
+                    )
+                    line_index += 1
+
+                converted_lines.extend(self._markdown_table_to_rst(table_rows))
                 continue
 
             heading_match = re.match(r"^(#{1,6})\s+(.+?)\s*$", line)
@@ -325,14 +352,37 @@ class PackageDoc:
                 converted_lines.append(title)
                 converted_lines.append(underline_char * len(title))
                 converted_lines.append("")
+                line_index += 1
                 continue
 
             line = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"`\1 <\2>`_", line)
             line = re.sub(r"^\s*-\s+`([^`]+)\s+<([^>]+)>`_\s*$", r"* `\1 <\2>`_", line)
             line = re.sub(r"``([^`]+)```\1`", r"``\1``", line)
             converted_lines.append(line)
+            line_index += 1
 
         return "\n".join(converted_lines).rstrip() + "\n"
+
+    @staticmethod
+    def _markdown_table_cells(line: str) -> list[str]:
+        """Split a Markdown table row into its cell contents."""
+        return [cell.strip() for cell in line.strip().strip("|").split("|")]
+
+    @classmethod
+    def _is_markdown_table_separator(cls, line: str) -> bool:
+        """Return whether a line is the separator row of a Markdown table."""
+        cells = cls._markdown_table_cells(line)
+        return bool(cells) and all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells)
+
+    @staticmethod
+    def _markdown_table_to_rst(rows: list[list[str]]) -> list[str]:
+        """Convert Markdown table rows to a reStructuredText list-table."""
+        rst_lines = [".. list-table::", "   :header-rows: 1", ""]
+        for row in rows:
+            rst_lines.append(f"   * - {row[0] if row else ''}")
+            rst_lines.extend(f"     - {cell}" for cell in row[1:])
+        rst_lines.append("")
+        return rst_lines
 
     def _copy_readme_for_myst_include(self) -> Path:
         """Copy the package README to a generated docs folder for MyST inclusion."""
@@ -546,6 +596,7 @@ class DocRegistryManager:
                 break
 
         # append new links
+        seen_doc_paths = set()
         for endpoint_type in [x.value for x in EndpointType]:
             new_doc.append("")
             new_doc.append("")
@@ -555,7 +606,11 @@ class DocRegistryManager:
                 if doc_item == "NotImplemented":
                     print(doc_item["path"])
                     continue
-                new_doc.append(f"   packages/{doc_item['path']}")
+                doc_path = f"packages/{doc_item['path']}"
+                if doc_path in seen_doc_paths:
+                    continue
+                seen_doc_paths.add(doc_path)
+                new_doc.append(f"   {doc_path}")
 
         with open(self.docs_packages_index_path, "w", encoding="utf-8") as file:
             for line in new_doc:

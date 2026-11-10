@@ -64,6 +64,4 @@ The package interfaces are documented :doc:`here </dev_docs/packages>`.
    colrev.logger
    colrev.exceptions
    colrev.paths
-   colrev.loader
-   colrev.writer
    colrev.record

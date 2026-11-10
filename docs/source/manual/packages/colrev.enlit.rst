@@ -22,6 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
+
 colrev.enlit
 ============
 
@@ -29,9 +30,9 @@ colrev.enlit
 
 |MAINTAINER| Maintainer: Gerit Wagner
 
-|LICENSE| License: MIT
+|LICENSE| License: MIT  
 
-|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/enlit>`_
+|GIT_REPO| Repository: `CoLRev-Environment/colrev <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages/enlit>`_ 
 
 .. list-table::
    :header-rows: 1
@@ -42,6 +43,7 @@ colrev.enlit
      - Add
    * - na
      - |EXPERIMENTAL|
+     - N/A
 
 Summary
 -------
