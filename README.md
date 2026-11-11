@@ -5,7 +5,7 @@
 
 <div align="center">
 
-[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.18762354-blue)](https://doi.org/10.5281/zenodo.18762354)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.24119567-blue)](https://doi.org/10.5281/zenodo.24119567)
 [![PyPI - Version](https://img.shields.io/pypi/v/colrev?color=blue)](https://pypi.org/project/colrev/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/colrev)
 [![License](https://img.shields.io/github/license/CoLRev-Environment/colrev.svg)](https://github.com/CoLRev-Environment/colrev/releases/)
@@ -187,4 +187,4 @@ If you contribute to the project, you agree to share your contribution following
 
 Please cite the project as follows:
 
-Wagner, G. and Prester, J. (2026) CoLRev - An open-source environment for Collaborative Literature Reviews. Available at <https://github.com/CoLRev-Environment/colrev>. doi:[10.5281/zenodo.11668338](https://dx.doi.org/10.5281/zenodo.11668338)
+Wagner, G. and Prester, J. (2026) CoLRev - An open-source environment for Collaborative Literature Reviews. Available at <https://github.com/CoLRev-Environment/colrev>. doi:[10.5281/zenodo.24119567](https://doi.org/10.5281/zenodo.24119567)
