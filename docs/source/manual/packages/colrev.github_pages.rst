@@ -22,6 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
+
 colrev.github_pages
 ===================
 
@@ -64,4 +65,5 @@ Links
 -----
 
 
+- Example: `literature-search-resources <https://github.com/digital-work-lab/literature-search-resources>`_ and the `GitHub page of literature-search-resources <https://digital-work-lab.github.io/literature-search-resources/>`_
 * `GitHub pages <https://pages.github.com/>`_
