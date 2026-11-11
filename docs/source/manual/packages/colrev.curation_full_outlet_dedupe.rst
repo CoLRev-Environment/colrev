@@ -22,6 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
+
 colrev.curation_full_outlet_dedupe
 ==================================
 

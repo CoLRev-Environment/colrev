@@ -98,9 +98,9 @@ Packages
    packages/colrev.wiley.rst
 
 
-    packages/colrev.add_journal_ranking.rst
-    packages/colrev.colrev_curation.rst
-    packages/colrev.exclude_collections.rst
+   packages/colrev.add_journal_ranking.rst
+   packages/colrev.colrev_curation.rst
+   packages/colrev.exclude_collections.rst
    packages/colrev.exclude_complementary_materials.rst
    packages/colrev.exclude_languages.rst
    packages/colrev.exclude_non_latin_alphabets.rst
@@ -109,9 +109,9 @@ Packages
    packages/colrev.get_masterdata_from_citeas.rst
    packages/colrev.get_masterdata_from_doi.rst
    packages/colrev.get_year_from_vol_iss_jour.rst
-    packages/colrev.remove_broken_ids.rst
-    packages/colrev.remove_urls_with_500_errors.rst
-    packages/colrev.source_specific_prep.rst
+   packages/colrev.remove_broken_ids.rst
+   packages/colrev.remove_urls_with_500_errors.rst
+   packages/colrev.source_specific_prep.rst
 
 
    packages/colrev.cli_prep_man.rst
@@ -131,8 +131,8 @@ Packages
    packages/colrev.scope_prescreen.rst
 
 
-    packages/colrev.download_from_website.rst
-    packages/colrev.website_screenshot.rst
+   packages/colrev.download_from_website.rst
+   packages/colrev.website_screenshot.rst
 
 
    packages/colrev.colrev_cli_pdf_get_man.rst
@@ -147,13 +147,12 @@ Packages
    packages/colrev.colrev_cli_pdf_prep_man.rst
 
 
-    packages/colrev.colrev_cli_screen.rst
-    packages/colrev.genai.rst
-    packages/colrev.screen_table.rst
+   packages/colrev.colrev_cli_screen.rst
+   packages/colrev.screen_table.rst
 
 
-    packages/colrev.bibliography_export.rst
-    packages/colrev.github_pages.rst
+   packages/colrev.bibliography_export.rst
+   packages/colrev.github_pages.rst
    packages/colrev.obsidian.rst
    packages/colrev.paper_md.rst
    packages/colrev.prisma.rst
