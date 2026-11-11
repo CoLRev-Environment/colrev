@@ -2,7 +2,7 @@ Package development
 =====================
 
 CoLRev packages are Python packages that extend CoLRev by relying on its shared data structure and standard process.
-Specifically, a CoLRev package can extend package base classes, such as the `ReviewTypePackageBaseClass <packages/package_base_classes.html>`_, or the `SearchSourcePackageBaseClass <packages/package_base_classes.html>`_, to implement custom functionality for a specific task or data source.
+Specifically, a CoLRev package can extend package base classes, such as :class:`ReviewTypePackageBaseClass <colrev.package_manager.package_base_classes.ReviewTypePackageBaseClass>` or :class:`SearchSourcePackageBaseClass <colrev.package_manager.package_base_classes.SearchSourcePackageBaseClass>`, to implement custom functionality for a specific task or data source.
 In addition, packages can provide complementary functionalities (e.g., for ad-hoc data exploration and visualization) without extending a specific base class.
 
 The following guide explains how to develop built-in packages, i.e., packages that reside in the `packages <https://github.com/CoLRev-Environment/colrev/tree/main/colrev/packages>`_ directory. Built-in packages should also be registered as a dependency in the `pyproject.toml <https://github.com/CoLRev-Environment/colrev/blob/main/pyproject.toml>`_.
@@ -204,29 +204,29 @@ The following endpoint - abstract base class pairs are available:
    * - Endpoint
      - Abstract base class
    * - review_type
-     - `ReviewTypePackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.ReviewTypePackageBaseClass>`_
+     - :class:`ReviewTypePackageBaseClass <colrev.package_manager.package_base_classes.ReviewTypePackageBaseClass>`
    * - search_source
-     - `SearchSourcePackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.SearchSourcePackageBaseClass>`_
+     - :class:`SearchSourcePackageBaseClass <colrev.package_manager.package_base_classes.SearchSourcePackageBaseClass>`
    * - prep
-     - `PrepPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.PrepPackageBaseClass>`_
+     - :class:`PrepPackageBaseClass <colrev.package_manager.package_base_classes.PrepPackageBaseClass>`
    * - prep_man
-     - `PrepManPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.PrepManPackageBaseClass>`_
+     - :class:`PrepManPackageBaseClass <colrev.package_manager.package_base_classes.PrepManPackageBaseClass>`
    * - dedupe
-     - `DedupePackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.DedupePackageBaseClass>`_
+     - :class:`DedupePackageBaseClass <colrev.package_manager.package_base_classes.DedupePackageBaseClass>`
    * - prescreen
-     - `PrescreenPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.PrescreenPackageBaseClass>`_
+     - :class:`PrescreenPackageBaseClass <colrev.package_manager.package_base_classes.PrescreenPackageBaseClass>`
    * - pdf_get
-     - `PDFGetPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.PDFGetPackageBaseClass>`_
+     - :class:`PDFGetPackageBaseClass <colrev.package_manager.package_base_classes.PDFGetPackageBaseClass>`
    * - pdf_get_man
-     - `PDFGetManPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.PDFGetManPackageBaseClass>`_
+     - :class:`PDFGetManPackageBaseClass <colrev.package_manager.package_base_classes.PDFGetManPackageBaseClass>`
    * - pdf_prep
-     - `PDFPrepPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.PDFPrepPackageBaseClass>`_
+     - :class:`PDFPrepPackageBaseClass <colrev.package_manager.package_base_classes.PDFPrepPackageBaseClass>`
    * - pdf_prep_man
-     - `PDFPrepManPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.PDFPrepManPackageBaseClass>`_
+     - :class:`PDFPrepManPackageBaseClass <colrev.package_manager.package_base_classes.PDFPrepManPackageBaseClass>`
    * - screen
-     - `ScreenPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.ScreenPackageBaseClass>`_
+     - :class:`ScreenPackageBaseClass <colrev.package_manager.package_base_classes.ScreenPackageBaseClass>`
    * - data
-     - `DataPackageBaseClass <packages/package_base_classes.html#colrev.package_manager.package_base_classes.DataPackageBaseClass>`_
+     - :class:`DataPackageBaseClass <colrev.package_manager.package_base_classes.DataPackageBaseClass>`
 
 Documentation
 -----------------

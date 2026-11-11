@@ -96,4 +96,4 @@ Links
 
 
 * `OpenAlex <https://openalex.org/>`_
-* `License <https://docs.openalex.org/additional-help/faq#how-is-openalex-licensed>`_
+* `License (CC0) <https://openalex.org/about>`_

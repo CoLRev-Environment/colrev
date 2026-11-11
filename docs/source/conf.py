@@ -119,6 +119,15 @@ linkcheck_ignore = [
     + r"|https://www.acpjournals.org/doi/.*"
     + r"|https://journals.sagepub.com/doi/10.1057/palgrave.jit.2000109"
     + r"|https://aisel.aisnet.org/ecis2020_rp/44/"
+    + r"|https://doi.org/10.1057/palgrave.jit.2000109"
+    + r"|https://doi.org/10.1080/.*"
+    + r"|https://doi.org/10.1136/.*"
+    + r"|https://doi.org/10.1177/.*"
+    + r"|https://doi.org/10.2307/.*"
+    + r"|https://doi.org/10.7326/.*"
+    + r"|https://europepmc.org/.*"
+    + r"|https://stackoverflow.com/questions"
+    + r"|https://tex.stackexchange.com/questions/.*"
 ]
 
 

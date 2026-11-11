@@ -99,4 +99,3 @@ Links
 
 * `bib-dedupe <https://github.com/CoLRev-Environment/bib-dedupe>`_
 * `Documentation <https://colrev-environment.github.io/bib-dedupe/>`_
-* `Evaluation <https://colrev-environment.github.io/bib-dedupe/evaluation.html>`_

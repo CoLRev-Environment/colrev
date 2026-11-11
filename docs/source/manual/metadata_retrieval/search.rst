@@ -27,7 +27,7 @@ Two steps are necessary to add a SearchSource and run a search:
     colrev search --select
 
 ..
-    For search result files, `heuristics <../../dev_docs/packages/package_base_classes.html#colrev.package_manager.package_base_classes.SearchSourcePackageBaseClass.heuristic>`_ are used to identify the SearchSource (e.g., GoogleScholar or Web of Science) and users are asked to provide the corresponding search parameters, which are stored in the ``settings.json``.
+    For search result files, :meth:`heuristic <colrev.package_manager.package_base_classes.SearchSourcePackageBaseClass.heuristic>` is used to identify the SearchSource (e.g., GoogleScholar or Web of Science) and users are asked to provide the corresponding search parameters, which are stored in the ``settings.json``.
 
 Updating the search is very easy: simply run `colrev search` again. API searches will be updated automatically, and instructions will be given to update DB searches.
 
