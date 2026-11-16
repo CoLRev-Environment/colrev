@@ -4,27 +4,17 @@
 from __future__ import annotations
 
 import logging
-import typing
 from copy import deepcopy
 from pathlib import Path
 
-from bibliography_io import loads_primary
-from bibliography_io import to_string
-from bibliography_io import write
+from bibliography_io import loads_primary, to_string, write
 
 import colrev.exceptions as colrev_exceptions
 import colrev.git_repo
 import colrev.record.record_formatter
 import colrev.record.record_merger
 import colrev.utils
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Colors
-from colrev.constants import DefectCodes
-from colrev.constants import EndpointType
-from colrev.constants import Fields
-from colrev.constants import FieldSet
-from colrev.constants import FieldValues
-from colrev.constants import SearchType
+from colrev.constants import ENTRYTYPES, Colors, DefectCodes, EndpointType, Fields, FieldSet, FieldValues, SearchType
 from colrev.package_manager.package_manager import PackageManager
 
 
@@ -82,7 +72,7 @@ class SearchAPIFeed:
         logger: logging.Logger,
         prep_mode: bool = False,
         verbose_mode: bool = False,
-        records: typing.Optional[dict] = None,
+        records: dict | None = None,
     ):
         """Initialize the instance."""
         self.source = search_source

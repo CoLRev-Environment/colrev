@@ -10,11 +10,7 @@ import colrev.packages.conditional_prescreen.src.conditional_prescreen
 import colrev.packages.prescreen_table.src.prescreen_table
 import colrev.process.operation
 import colrev.record.record
-from colrev.constants import Colors
-from colrev.constants import EndpointType
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
+from colrev.constants import Colors, EndpointType, Fields, OperationsType, RecordState
 from colrev.package_manager.package_manager import PackageManager
 
 ConditionalPrescreen = (
@@ -182,7 +178,7 @@ class Prescreen(colrev.process.operation.Operation):
             f"({nrecs} each)"
         )
 
-        for _ in range(0, create_split):
+        for _ in range(create_split):
             added: list[str] = []
             while len(added) < nrecs:
                 added.append(next(data["items"])[Fields.ID])

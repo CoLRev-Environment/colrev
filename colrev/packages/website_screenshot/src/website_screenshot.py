@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 import time
-import typing
 from datetime import datetime
 from pathlib import Path
 
@@ -19,8 +18,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Fields, RecordState
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
@@ -38,7 +36,7 @@ class WebsiteScreenshot(base_classes.PDFGetPackageBaseClass):
         *,
         pdf_get_operation: colrev.ops.pdf_get.PDFGet,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)

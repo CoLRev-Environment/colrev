@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 import re
-import typing
 from pathlib import Path
 
 from bibliography_io import load as bibliography_io_load
@@ -57,7 +56,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -76,7 +75,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         params_dict = {}
@@ -374,9 +373,7 @@ class UnknownSearchSource(base_classes.SearchSourcePackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Source-specific preparation for unknown sources."""
         if not record.has_quality_defects() or record.masterdata_is_curated():

@@ -2,11 +2,11 @@
 
 from pathlib import Path
 
+import bibliography_io
+import pytest
 from click.testing import CliRunner
 
-import bibliography_io
 import colrev.ui_cli.cli
-import pytest
 
 
 def _patch_conversion(

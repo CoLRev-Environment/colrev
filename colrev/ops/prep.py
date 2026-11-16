@@ -10,32 +10,22 @@ import random
 import shutil
 import typing
 from copy import deepcopy
-from datetime import datetime
-from datetime import timedelta
-from multiprocessing import Lock
-from multiprocessing import Value
+from datetime import datetime, timedelta
+from multiprocessing import Lock, Value
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
 import git
+from bibliography_io import load_primary, to_string, write
 from requests.exceptions import ConnectionError as requests_ConnectionError
 from requests.exceptions import ReadTimeout
-from bibliography_io import load_primary
-from bibliography_io import to_string
-from bibliography_io import write
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record_prep
 from colrev import utils
-from colrev.constants import Colors
-from colrev.constants import DefectCodes
-from colrev.constants import EndpointType
-from colrev.constants import Fields
-from colrev.constants import FieldSet
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
+from colrev.constants import Colors, DefectCodes, EndpointType, Fields, FieldSet, OperationsType, RecordState
 from colrev.package_manager.package_manager import PackageManager
 
 if typing.TYPE_CHECKING:  # pragma: no cover
@@ -115,7 +105,7 @@ class Prep(colrev.process.operation.Operation):
             FIELDS_TO_KEEP + self.review_manager.settings.prep.fields_to_keep
         )
 
-        self._stats: typing.Dict[str, typing.List[timedelta]] = {}
+        self._stats: dict[str, list[timedelta]] = {}
 
         self.temp_prep_lock = Lock()
         self.current_temp_records = self.review_manager.path / Path(
@@ -427,9 +417,7 @@ class Prep(colrev.process.operation.Operation):
         if self.last_round and not self.polish:
             if self._status_to_prepare(record):
                 for key in list(record.data.keys()):
-                    if key not in self.fields_to_keep:
-                        record.remove_field(key=key)
-                    elif record.data[key] in ["", "NA"]:
+                    if key not in self.fields_to_keep or record.data[key] in ["", "NA"]:
                         record.remove_field(key=key)
                 record.update_by_record(preparation_record)
 

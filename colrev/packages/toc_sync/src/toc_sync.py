@@ -56,16 +56,11 @@ import os
 import re
 import sys
 import typing
-from collections import defaultdict
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Tuple
 
 import inquirer
 import yaml
@@ -106,7 +101,7 @@ def _authors_to_str(authors_field: str) -> str:
     return _safe(authors_field)
 
 
-def _sort_key_num_str(val: str) -> Tuple[int, str]:
+def _sort_key_num_str(val: str) -> tuple[int, str]:
     # Sort primarily numeric if possible (e.g., "45"), then lexicographically.
     try:
         return (0, f"{int(val):06d}")
@@ -114,7 +109,7 @@ def _sort_key_num_str(val: str) -> Tuple[int, str]:
         return (1, (val or "~").lower())
 
 
-def _pair_sort_key(vol: str, iss: str) -> Tuple[Tuple[int, str], Tuple[int, str]]:
+def _pair_sort_key(vol: str, iss: str) -> tuple[tuple[int, str], tuple[int, str]]:
     return (_sort_key_num_str(vol), _sort_key_num_str(iss))
 
 
@@ -127,21 +122,21 @@ def _pair_sort_key(vol: str, iss: str) -> Tuple[Tuple[int, str], Tuple[int, str]
 class TocConfig:
     """TocConfig."""
 
-    issns: List[str]
+    issns: list[str]
     include_forthcoming: bool = False
-    pdfs_dir: Optional[Path] = None
+    pdfs_dir: Path | None = None
     fmt: str = "title_author_doi"
 
 
 def _group_records(
-    records: List[colrev.record.record.Record], include_forthcoming: bool
-) -> Dict[str, Dict[str, List[dict]]]:
+    records: list[colrev.record.record.Record], include_forthcoming: bool
+) -> dict[str, dict[str, list[dict]]]:
     """Group by volume -> issue(number) -> list of records.
 
     If include_forthcoming is True, records missing volume/number are grouped into
     a dedicated "Forthcoming" section (internal keys FORTHCOMING_VOL/ISS).
     """
-    grouped: Dict[str, Dict[str, List[dict]]] = defaultdict(lambda: defaultdict(list))
+    grouped: dict[str, dict[str, list[dict]]] = defaultdict(lambda: defaultdict(list))
     seen_dois = set()
 
     for rec in records:
@@ -164,10 +159,10 @@ def _group_records(
         grouped[vol][num].append(data)
 
     # Order volumes and issues
-    ordered: Dict[str, Dict[str, List[dict]]] = OrderedDict()
+    ordered: dict[str, dict[str, list[dict]]] = OrderedDict()
     for vol in sorted(grouped.keys(), key=_sort_key_num_str, reverse=False):
         issue_map = grouped[vol]
-        ordered_issue_map: Dict[str, List[dict]] = OrderedDict()
+        ordered_issue_map: dict[str, list[dict]] = OrderedDict()
         for iss in sorted(issue_map.keys(), key=_sort_key_num_str, reverse=False):
             # Within each issue, sort by first page / title as fallback
             ordered_issue_map[iss] = sorted(
@@ -186,7 +181,7 @@ def _group_records(
 # -----------------------------
 
 
-def _find_local_pdf(doi: str, pdfs_dir: Optional[Path]) -> Optional[str]:
+def _find_local_pdf(doi: str, pdfs_dir: Path | None) -> str | None:
     if not doi or not pdfs_dir:
         return None
     token = doi.replace("/", "_")  # Make a plausible filename token
@@ -210,8 +205,8 @@ def _record_to_md_line(d: dict, cfg: TocConfig) -> str:
     pages = _safe(d.get(Fields.PAGES, ""))
 
     # Only format currently supported
-    parts: List[str] = [f"**{title}**"]
-    meta_bits: List[str] = []
+    parts: list[str] = [f"**{title}**"]
+    meta_bits: list[str] = []
     if authors:
         meta_bits.append(authors)
     if year:
@@ -236,9 +231,9 @@ def _record_to_md_line(d: dict, cfg: TocConfig) -> str:
 
 
 def _iter_pairs_desc(
-    grouped: Dict[str, Dict[str, List[dict]]],
-) -> List[Tuple[str, str]]:
-    pairs: List[Tuple[str, str]] = []
+    grouped: dict[str, dict[str, list[dict]]],
+) -> list[tuple[str, str]]:
+    pairs: list[tuple[str, str]] = []
     for vol, issues in grouped.items():
         for iss in issues.keys():
             pairs.append((vol, iss))
@@ -259,7 +254,7 @@ _HEADING_ISSUE_RE = re.compile(
 _HEADING_FORTHCOMING_RE = re.compile(r"^##\s+Forthcoming\s*$")
 
 
-def _find_forthcoming_block(lines: List[str]) -> Optional[Tuple[int, int]]:
+def _find_forthcoming_block(lines: list[str]) -> tuple[int, int] | None:
     """Return (start_idx, end_idx_exclusive) of the Forthcoming section, or None."""
     start = None
     for i, ln in enumerate(lines):
@@ -278,7 +273,7 @@ def _find_forthcoming_block(lines: List[str]) -> Optional[Tuple[int, int]]:
 
 
 # Treat legacy "## Volume Forthcoming - Number NA" as the Forthcoming section and normalize it
-def _normalize_legacy_forthcoming(lines: List[str]) -> List[str]:
+def _normalize_legacy_forthcoming(lines: list[str]) -> list[str]:
     out = []
     i = 0
     while i < len(lines):
@@ -303,11 +298,11 @@ def _normalize_legacy_forthcoming(lines: List[str]) -> List[str]:
 
 def _parse_existing_headings(
     lines: Iterable[str],
-) -> Tuple[
-    set[Tuple[str, str]], Optional[Tuple[Tuple[int, str], Tuple[int, str]]], bool
+) -> tuple[
+    set[tuple[str, str]], tuple[tuple[int, str], tuple[int, str]] | None, bool
 ]:
-    present: set[Tuple[str, str]] = set()
-    latest_key: Optional[Tuple[Tuple[int, str], Tuple[int, str]]] = None
+    present: set[tuple[str, str]] = set()
+    latest_key: tuple[tuple[int, str], tuple[int, str]] | None = None
     has_forthcoming = False
 
     for ln in lines:
@@ -327,7 +322,7 @@ def _parse_existing_headings(
     return present, latest_key, has_forthcoming
 
 
-def _render_forthcoming_block(records: List[dict], cfg: TocConfig) -> List[str]:
+def _render_forthcoming_block(records: list[dict], cfg: TocConfig) -> list[str]:
     lines = ["## Forthcoming\n\n"]
     for d in records:
         lines.append(_record_to_md_line(d, cfg) + "\n")
@@ -336,8 +331,8 @@ def _render_forthcoming_block(records: List[dict], cfg: TocConfig) -> List[str]:
 
 
 def _render_issue_block(
-    vol: str, iss: str, items: List[dict], cfg: TocConfig
-) -> List[str]:
+    vol: str, iss: str, items: list[dict], cfg: TocConfig
+) -> list[str]:
     lines = [f"## Volume {vol} - Number {iss}\n\n"]
     for d in items:
         lines.append(_record_to_md_line(d, cfg) + "\n")
@@ -346,19 +341,18 @@ def _render_issue_block(
 
 
 def _write_forthcoming_section(
-    f: typing.TextIO, records: List[dict], cfg: TocConfig
+    f: typing.TextIO, records: list[dict], cfg: TocConfig
 ) -> None:
     f.write("## Forthcoming\n\n")
-    for d in records:
-        f.write(_record_to_md_line(d, cfg) + "\n")
+    f.writelines(_record_to_md_line(d, cfg) + "\n" for d in records)
     f.write("\n")
 
 
 def _write_full_markdown(
-    grouped: Dict[str, Dict[str, List[dict]]], out_path: Path, cfg: TocConfig
+    grouped: dict[str, dict[str, list[dict]]], out_path: Path, cfg: TocConfig
 ) -> None:
     # Preserve header before first "## ..." heading
-    header_lines: List[str] = []
+    header_lines: list[str] = []
     if out_path.exists():
         with out_path.open("r", encoding="utf-8") as f:
             lines = f.readlines()
@@ -395,7 +389,7 @@ def _write_full_markdown(
 
 
 def _append_incremental(
-    grouped: Dict[str, Dict[str, List[dict]]], out_path: Path, cfg: TocConfig
+    grouped: dict[str, dict[str, list[dict]]], out_path: Path, cfg: TocConfig
 ) -> None:
     """Incremental update that:
     - Removes any existing 'Forthcoming' block and re-inserts a fresh one
@@ -413,7 +407,7 @@ def _append_incremental(
     _, latest_existing, _has_forthcoming = _parse_existing_headings(lines)
 
     # ---- Build insertion block (to be placed after header)
-    insertion: List[str] = []
+    insertion: list[str] = []
 
     # 1) Always refresh Forthcoming (when configured and available)
     forthcoming_records = None
@@ -434,7 +428,7 @@ def _append_incremental(
         insertion.extend(_render_forthcoming_block(forthcoming_records, cfg))
 
     # 2) Determine strictly newer numbered issues
-    all_pairs_sorted: List[Tuple[str, str]] = []
+    all_pairs_sorted: list[tuple[str, str]] = []
     for vol, issues in grouped.items():
         for iss in issues.keys():
             if vol == FORTHCOMING_VOL and iss == FORTHCOMING_ISS:
@@ -443,7 +437,7 @@ def _append_incremental(
     # sort ASC by (vol, iss)
     all_pairs_sorted.sort(key=lambda p: _pair_sort_key(*p))
 
-    to_add: List[Tuple[str, str]] = []
+    to_add: list[tuple[str, str]] = []
     for vol, iss in all_pairs_sorted:
         if latest_existing is None:
             to_add.append((vol, iss))
@@ -483,11 +477,11 @@ def _append_incremental(
 # -----------------------------
 
 
-def fetch_records_for_issns(issns: List[str]) -> List[Any]:
+def fetch_records_for_issns(issns: list[str]) -> list[Any]:
     """Use colrev CrossrefAPI to iterate all works for the given ISSNs.
     We use the 'journals/{issn}/works' endpoint for each ISSN and merge.
     """
-    all_records: List[Any] = []
+    all_records: list[Any] = []
     for issn in issns:
         issn = issn.strip()
         if not issn:
@@ -507,7 +501,7 @@ def fetch_records_for_issns(issns: List[str]) -> List[Any]:
 _YAML_FENCE = re.compile(r"^---\s*$")
 
 
-def _read_yaml_front_matter(path: Path) -> Tuple[Optional[dict], int]:
+def _read_yaml_front_matter(path: Path) -> tuple[dict | None, int]:
     """Return (yaml_dict_or_None, end_line_index_of_front_matter_or_-1).
     If there is no front matter, returns (None, -1).
     """
@@ -527,7 +521,7 @@ def _read_yaml_front_matter(path: Path) -> Tuple[Optional[dict], int]:
     return None, -1
 
 
-def _is_toc_file(meta: Optional[dict]) -> bool:
+def _is_toc_file(meta: dict | None) -> bool:
     if not isinstance(meta, dict):
         return False
     if "issn" not in meta:
@@ -553,11 +547,11 @@ def _cfg_from_meta(meta: dict) -> TocConfig:
 
 
 def create_new_toc(
-    out_path: Optional[str] = None,
+    out_path: str | None = None,
     include_forthcoming: bool = True,
-    pdfs_dir: Optional[str] = None,
+    pdfs_dir: str | None = None,
     fmt: str = "title_author_doi",
-) -> Optional[Path]:
+) -> Path | None:
     """Create a new toc file."""
     j_name = input("Enter journal name to lookup the ISSN: ").strip()
     if not j_name:
@@ -725,7 +719,7 @@ def main() -> None:
         return
 
     # Otherwise update/append existing TOCs
-    paths: List[Path]
+    paths: list[Path]
     if args.only:
         paths = [Path(p) for p in glob.glob(args.only)]
     else:

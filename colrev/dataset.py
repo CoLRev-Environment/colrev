@@ -7,19 +7,14 @@ import typing
 from functools import cached_property
 from pathlib import Path
 
-from bibliography_io import update
-from bibliography_io import load_primary
-from bibliography_io import loads_primary
-from bibliography_io import to_string
+from bibliography_io import load_primary, loads_primary, to_string, update
 from bibliography_io.exceptions import ParseError as BibliographyParseError
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
 import colrev.record.record_id_setter
 import colrev.record.record_prep
-from colrev.constants import ExitCodes
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import ExitCodes, Fields, RecordState
 from colrev.git_repo import GitRepo
 from colrev.record.bibliography import adapt_bibliography_records
 
@@ -288,7 +283,7 @@ class Dataset:
 
         return False
 
-    def set_ids(self, selected_ids: typing.Optional[list] = None) -> dict:
+    def set_ids(self, selected_ids: list | None = None) -> dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex.
         """

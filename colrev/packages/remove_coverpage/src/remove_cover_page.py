@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 import shutil
-import typing
 from pathlib import Path
 
 import pymupdf
@@ -13,8 +12,7 @@ from pydantic import Field
 
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
-from colrev.constants import Fields
-from colrev.constants import Filepaths
+from colrev.constants import Fields, Filepaths
 
 # pylint: disable=duplicate-code
 
@@ -34,7 +32,7 @@ class PDFCoverPage(base_classes.PDFPrepPackageBaseClass):
         *,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -128,8 +126,8 @@ class PDFCoverPage(base_classes.PDFPrepPackageBaseClass):
 
     def _get_coverpages(
         self, record: colrev.record.record_pdf.PDFRecord
-    ) -> typing.List[int]:
-        coverpages: typing.List[int] = []
+    ) -> list[int]:
+        coverpages: list[int] = []
 
         doc = pymupdf.Document(str(record.data[Fields.FILE]))
 

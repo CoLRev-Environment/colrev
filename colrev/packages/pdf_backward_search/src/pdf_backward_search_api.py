@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-import typing
-
 import requests
 
 # pylint: disable=too-few-public-methods
@@ -20,8 +18,8 @@ class PDFBackwardSearchAPI:
     def __init__(
         self,
         *,
-        session: typing.Optional[requests.Session] = None,
-        headers: typing.Optional[typing.Dict[str, str]] = None,
+        session: requests.Session | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         """Initialize the instance."""
         self.session = session or requests.Session()

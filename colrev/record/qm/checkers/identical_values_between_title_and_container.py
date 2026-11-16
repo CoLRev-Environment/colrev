@@ -4,9 +4,7 @@
 from __future__ import annotations
 
 import colrev.record.qm.quality_model
-from colrev.constants import DefectCodes
-from colrev.constants import Fields
-from colrev.constants import FieldValues
+from colrev.constants import DefectCodes, Fields, FieldValues
 
 # pylint: disable=too-few-public-methods
 

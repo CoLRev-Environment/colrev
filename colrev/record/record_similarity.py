@@ -8,14 +8,11 @@ import typing
 
 import bib_dedupe.exception as bib_dedupe_exception
 import pandas as pd
-from bib_dedupe.bib_dedupe import block
-from bib_dedupe.bib_dedupe import match
-from bib_dedupe.bib_dedupe import prep
+from bib_dedupe.bib_dedupe import block, match, prep
 from rapidfuzz import fuzz
 
 import colrev.env.utils
-from colrev.constants import Fields
-from colrev.constants import FieldValues
+from colrev.constants import Fields, FieldValues
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.record.record

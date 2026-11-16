@@ -8,10 +8,7 @@ from pathlib import Path
 
 import colrev.process.operation
 import colrev.utils
-from colrev.constants import Colors
-from colrev.constants import EndpointType
-from colrev.constants import Fields
-from colrev.constants import OperationsType
+from colrev.constants import Colors, EndpointType, Fields, OperationsType
 from colrev.package_manager.package_manager import PackageManager
 
 
