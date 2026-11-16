@@ -3,8 +3,7 @@
 
 import pytest
 
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
+from colrev.constants import OperationsType, RecordState
 from colrev.process.model import ProcessModel
 
 

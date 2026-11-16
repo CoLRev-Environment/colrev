@@ -10,8 +10,8 @@ from typing import cast
 import pytest
 
 import colrev.review_manager
-from colrev.ops import repare
 from colrev.constants import Fields
+from colrev.ops import repare
 
 
 def _repare_with_sources(sources: list) -> repare.Repare:

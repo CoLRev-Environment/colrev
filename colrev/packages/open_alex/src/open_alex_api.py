@@ -8,9 +8,7 @@ from pyalex import Works
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record_prep
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import FieldValues
+from colrev.constants import ENTRYTYPES, Fields, FieldValues
 
 # pylint: disable=too-few-public-methods
 
@@ -95,7 +93,7 @@ class OpenAlexAPI:
         # pylint: disable=colrev-missed-constant-usage
         if "language" in item and item["language"] is not None:
             record_dict[Fields.LANGUAGE] = item["language"]
-        if "is_retracted" in item and item["is_retracted"]:
+        if item.get("is_retracted"):
             record_dict[FieldValues.RETRACTED] = item["is_retracted"]
         if "doi" in item and item["doi"] is not None:
             record_dict[Fields.DOI] = (

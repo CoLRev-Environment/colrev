@@ -8,9 +8,7 @@ import requests
 
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import ENTRYTYPES, Fields, RecordState
 
 TEI_XML = b"""<TEI xmlns="http://www.tei-c.org/ns/1.0">
   <teiHeader>

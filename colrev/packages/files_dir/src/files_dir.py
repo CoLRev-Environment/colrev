@@ -5,13 +5,11 @@ from __future__ import annotations
 
 import logging
 import re
-import typing
 from pathlib import Path
 
 import pymupdf
+from bibliography_io import load_raw, write
 from pydantic import Field
-from bibliography_io import load_raw
-from bibliography_io import write
 
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
@@ -24,13 +22,7 @@ import colrev.record.record_prep
 import colrev.record.record_similarity
 import colrev.search_file
 from colrev import utils
-from colrev.constants import Colors
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
-from colrev.constants import SearchSourceHeuristicStatus
-from colrev.constants import SearchType
+from colrev.constants import ENTRYTYPES, Colors, Fields, FieldValues, RecordState, SearchSourceHeuristicStatus, SearchType
 from colrev.ops.pdf_get import relink_pdfs_in_source
 from colrev.packages.crossref.src.crossref_api import query_doi
 from colrev.record.record_utils import index_records_by_id
@@ -59,7 +51,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         self,
         *,
         search_file: colrev.search_file.ExtendedSearchFile,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         verbose_mode: bool = False,
     ) -> None:
         """Initialize the instance."""
@@ -145,7 +137,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        to_remove: typing.List[str] = []
+        to_remove: list[str] = []
         files_removed = []
         for record_dict in search_rd.values():
             x_file_path = self.review_manager.path / Path(record_dict[Fields.FILE])
@@ -585,7 +577,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
 
     def _get_file_batches(self) -> list:
         types = ("**/*.pdf", "**/*.mp4")
-        files_grabbed: typing.List[Path] = []
+        files_grabbed: list[Path] = []
         for suffix in types:
             files_grabbed.extend(self.pdfs_path.glob(suffix))
 
@@ -717,7 +709,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
         cls,
         params: str,
         path: Path,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> colrev.search_file.ExtendedSearchFile:
         """Add SearchSource as an endpoint (based on query provided to colrev search --add )."""
         filename = utils.get_unique_filename(
@@ -760,7 +752,7 @@ class FilesSearchSource(base_classes.SearchSourcePackageBaseClass):
             ]:
                 if key in retrieved_record.data:
                     record_dict[key] = retrieved_record.data[key]
-        except (colrev_exceptions.RecordNotFoundInPrepSourceException,):
+        except colrev_exceptions.RecordNotFoundInPrepSourceException:
             pass
 
     @classmethod

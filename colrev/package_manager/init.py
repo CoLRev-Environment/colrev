@@ -264,9 +264,7 @@ def _get_package_data(default_package_name: str, built_in: bool) -> dict:
                 error_message = "The package name is already installed."
             elif built_in and not name.startswith("colrev."):
                 error_message = "The built-in package name must start with 'colrev.'"
-            elif built_in and not re.match(r"^[a-zA-Z_]*\.[a-zA-Z0-9_]*$", name):
-                error_message = "The package name is not a valid python package name."
-            elif not built_in and not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
+            elif built_in and not re.match(r"^[a-zA-Z_]*\.[a-zA-Z0-9_]*$", name) or not built_in and not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
                 error_message = "The package name is not a valid python package name."
 
         if error_message:

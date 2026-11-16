@@ -8,9 +8,7 @@ import re
 import shutil
 from pathlib import Path
 
-from bibliography_io import load_primary
-from bibliography_io import loads_primary
-from bibliography_io import write
+from bibliography_io import load_primary, loads_primary, write
 from bibliography_io.exceptions import BibliographyIOError
 
 import colrev.env.local_index
@@ -19,13 +17,7 @@ import colrev.ops.search_api_feed
 import colrev.process.operation
 import colrev.record.record_formatter
 import colrev.record.record_similarity
-from colrev.constants import DefectCodes
-from colrev.constants import Fields
-from colrev.constants import FieldSet
-from colrev.constants import FieldValues
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
-from colrev.constants import SearchType
+from colrev.constants import DefectCodes, Fields, FieldSet, FieldValues, OperationsType, RecordState, SearchType
 
 
 class Repare(colrev.process.operation.Operation):
