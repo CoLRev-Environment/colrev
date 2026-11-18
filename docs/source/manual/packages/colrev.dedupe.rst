@@ -22,6 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
+
 colrev.dedupe
 =============
 
@@ -99,3 +100,4 @@ Links
 
 * `bib-dedupe <https://github.com/CoLRev-Environment/bib-dedupe>`_
 * `Documentation <https://colrev-environment.github.io/bib-dedupe/>`_
+* `Evaluation <https://colrev-environment.github.io/bib-dedupe/evaluation.html>`_
