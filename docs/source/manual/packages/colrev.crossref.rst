@@ -22,6 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
+
 colrev.crossref
 ===============
 
@@ -150,6 +151,6 @@ Links
 
 
 * `Crossref <https://www.crossref.org/>`_
-* `License <https://www.crossref.org/documentation/schema-library/markup-guide-metadata-segments/license-information/>`_
+* `License <https://www.crossref.org/documentation/retrieve-metadata/rest-api/rest-api-metadata-license-information/>`_
 * `Crossref types <https://api.crossref.org/types>`_
 * `Issue: AND Operators not yet supported <https://github.com/fabiobatalha/crossrefapi/issues/20>`_
