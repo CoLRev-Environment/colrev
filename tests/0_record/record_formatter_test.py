@@ -3,9 +3,7 @@
 
 import unittest
 
-from colrev.record.record import Fields
-from colrev.record.record import Record
-from colrev.record.record import RecordState
+from colrev.record.record import Fields, Record, RecordState
 from colrev.record.record_formatter import RecordFormatter
 
 

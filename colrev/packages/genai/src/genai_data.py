@@ -5,18 +5,15 @@ from __future__ import annotations
 
 import logging
 import re
-import typing
 from pathlib import Path
 
 from litellm import completion
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record_pdf
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Fields, RecordState
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -45,7 +42,7 @@ class GenAIData(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -86,7 +83,7 @@ class GenAIData(base_classes.DataPackageBaseClass):
             self.summary_path.read_text() if self.summary_path.exists() else ""
         )
         records = self.review_manager.dataset.load_records_dict()
-        existing_concepts: typing.List[str] = []
+        existing_concepts: list[str] = []
         counter = 0
         for record_dict in records.values():
             if record_dict[Fields.STATUS] not in [

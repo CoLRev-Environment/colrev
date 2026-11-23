@@ -9,8 +9,7 @@ from defusedxml import ElementTree as DefusedET
 
 import colrev.env.language_service
 import colrev.record.record_prep
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
+from colrev.constants import ENTRYTYPES, Fields
 
 # pylint: disable=too-few-public-methods
 

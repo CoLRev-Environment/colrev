@@ -5,19 +5,15 @@ from __future__ import annotations
 
 import os
 import shutil
-import typing
 from pathlib import Path
 
 import pandas as pd
-from bib_dedupe.bib_dedupe import block
-from bib_dedupe.bib_dedupe import match
-from bib_dedupe.bib_dedupe import prep
+from bib_dedupe.bib_dedupe import block, match, prep
 
 import colrev.env.tei_parser
 import colrev.ops.check
 import colrev.review_manager
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Fields, RecordState
 
 
 def load_df(
@@ -151,7 +147,7 @@ def add_from_tei(
     records_df: pd.DataFrame,
     *,
     project_path: str = "",
-    fields: typing.Optional[typing.List[str]] = None,
+    fields: list[str] | None = None,
 ) -> None:
     """This function adds data from TEI files to the given DataFrame.
 
@@ -265,6 +261,6 @@ def save(records_df: pd.DataFrame) -> None:
             if isinstance(record[key], (list, dict)):
                 continue
             if pd.isnull(record[key]) or record[key] == "":
-                records[rec_id].pop(key)
+                record.pop(key)
 
     review_manager.dataset.save_records_dict(records)

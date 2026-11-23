@@ -2,8 +2,7 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import colrev.search_file
-from colrev.constants import Fields
-from colrev.constants import SearchType
+from colrev.constants import Fields, SearchType
 from colrev.packages.ais_library.src.aisel_api import AISeLAPI
 
 

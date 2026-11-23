@@ -9,8 +9,7 @@ import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.process.operation
 import colrev.record.record
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Fields, RecordState
 
 # pylint: disable=too-few-public-methods
 

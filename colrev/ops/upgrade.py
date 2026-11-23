@@ -14,20 +14,14 @@ from pathlib import Path
 
 import git
 import pandas as pd
+from bibliography_io import load_primary, to_string
 from tqdm import tqdm
 from yaml import safe_load
-from bibliography_io import load_primary
-from bibliography_io import to_string
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import Filepaths
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
+from colrev.constants import Colors, Fields, FieldValues, Filepaths, OperationsType, RecordState
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=line-too-long
@@ -130,7 +124,7 @@ class Upgrade(colrev.process.operation.Operation):
         installed_colrev_version = CoLRevVersion(version("colrev"))
 
         # version: indicates from which version on the migration should be applied
-        migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
+        migration_scripts: list[dict[str, typing.Any]] = [
             {
                 "version": CoLRevVersion("0.7.0"),
                 "target_version": CoLRevVersion("0.7.1"),
@@ -492,8 +486,7 @@ class Upgrade(colrev.process.operation.Operation):
 
     def _delete_top_level_fields_for_0_8_3(self, *, record_dict: dict) -> None:
         for field in ("cited_by_file", "cited_by_id", "tei_id"):
-            if field in record_dict:
-                del record_dict[field]
+            record_dict.pop(field, None)
 
     def _delete_dprov_fields_for_0_8_3(self, *, record_dict: dict) -> None:
         if Fields.D_PROV not in record_dict:

@@ -8,12 +8,7 @@ import pytest
 
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
-from colrev.constants import ExitCodes
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import RecordState
-
-# flake8: noqa: E501
+from colrev.constants import ExitCodes, Fields, OperationsType, RecordState
 
 
 def test_invalid_git_repository_error(

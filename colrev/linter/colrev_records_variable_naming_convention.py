@@ -3,11 +3,10 @@
 
 from __future__ import annotations
 
-import typing
 import logging
+import typing
 
-from astroid import InferenceError
-from astroid import nodes
+from astroid import InferenceError, nodes
 from astroid.util import Uninferable
 from pylint import checkers
 from pylint.checkers.utils import only_required_for_messages

@@ -5,15 +5,13 @@ from __future__ import annotations
 
 import copy
 
+from bibliography_io import loads_primary
 from dictdiffer import diff
 from git.exc import GitCommandError
-from bibliography_io import loads_primary
 
 import colrev.process.operation
 import colrev.utils
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import OperationsType
+from colrev.constants import Colors, Fields, OperationsType
 from colrev.record.bibliography import adapt_bibliography_records
 
 # pylint: disable=too-few-public-methods

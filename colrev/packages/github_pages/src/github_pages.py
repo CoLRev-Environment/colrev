@@ -4,22 +4,18 @@
 from __future__ import annotations
 
 import logging
-import typing
 from pathlib import Path
 
 import git
-from pydantic import BaseModel
-from pydantic import Field
 from bibliography_io import write
+from pydantic import BaseModel, Field
 
 import colrev.env.utils
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev import utils
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import RecordState
+from colrev.constants import Colors, Fields, RecordState
 
 
 class GHPagesSettings(
@@ -56,7 +52,7 @@ class GithubPages(base_classes.DataPackageBaseClass):
         *,
         data_operation: colrev.ops.data.Data,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)

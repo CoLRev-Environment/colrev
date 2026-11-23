@@ -1,15 +1,8 @@
 from pathlib import Path
 
 import pytest
-from bibliography_io import load_df
-from bibliography_io import load_primary
-from bibliography_io import loads
-from bibliography_io import loads_primary
-from bibliography_io import loads_raw
-from bibliography_io import to_string
-from bibliography_io import write
-from bibliography_io.exceptions import DuplicateRecordIDError
-from bibliography_io.exceptions import MissingRecordIDError
+from bibliography_io import load_df, load_primary, loads, loads_primary, loads_raw, to_string, write
+from bibliography_io.exceptions import DuplicateRecordIDError, MissingRecordIDError
 
 from colrev.constants import Fields, RecordState
 from colrev.record.bibliography import adapt_bibliography_records
