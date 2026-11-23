@@ -1,9 +1,7 @@
 """Tests for parsing personal names in bibliographic records."""
 
 from colrev.constants import Fields
-from colrev.record.name_parser import parse_names
-from colrev.record.name_parser import parse_names_in_records
-from colrev.record.name_parser import split_tex_string
+from colrev.record.name_parser import parse_names, parse_names_in_records, split_tex_string
 
 
 def test_split_tex_string_does_not_split_inside_braces() -> None:

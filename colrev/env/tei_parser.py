@@ -14,10 +14,7 @@ import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 import colrev.record.record_pdf
-from colrev.constants import ENTRYTYPES
-from colrev.constants import Fields
-from colrev.constants import FieldsRegex
-from colrev.constants import RecordState
+from colrev.constants import ENTRYTYPES, Fields, FieldsRegex, RecordState
 
 
 class TEIParser:
@@ -61,8 +58,8 @@ class TEIParser:
     def __init__(
         self,
         *,
-        pdf_path: typing.Optional[typing.Union[Path, str]] = None,
-        tei_path: typing.Optional[typing.Union[Path, str]] = None,
+        pdf_path: Path | str | None = None,
+        tei_path: Path | str | None = None,
         consolidate_header: bool = False,
         consolidate_citations: bool = False,
     ):
@@ -272,7 +269,7 @@ def get_record_from_pdf(file_path: Path, *, add_doi_from_pdf: bool = False) -> d
     if file_path.suffix != ".pdf":
         raise ValueError
 
-    record_dict: typing.Dict[str, typing.Any] = {
+    record_dict: dict[str, typing.Any] = {
         Fields.FILE: str(file_path),
         Fields.ENTRYTYPE: ENTRYTYPES.MISC,
     }

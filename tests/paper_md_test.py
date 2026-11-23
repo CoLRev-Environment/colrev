@@ -3,16 +3,14 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any
-from typing import cast
+from typing import Any, cast
 
-from bibliography_io import load_raw
-from bibliography_io import write
 import pytest
+from bibliography_io import load_raw, write
 
 import colrev.env.utils
-from colrev.record.record_utils import index_records_by_id
 from colrev.packages.paper_md.src.paper_md import PaperMarkdown
+from colrev.record.record_utils import index_records_by_id
 
 
 def test_retrieve_default_csl_stages_paper_and_downloaded_style(

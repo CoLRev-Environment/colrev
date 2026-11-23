@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import logging
 import os
-import typing
 from pathlib import Path
 
 import git
@@ -29,8 +28,7 @@ import colrev.ops.checker
 import colrev.record.qm.quality_model
 import colrev.settings
 import colrev.utils
-from colrev.constants import Colors
-from colrev.constants import OperationsType
+from colrev.constants import Colors, OperationsType
 from colrev.env.environment_manager import EnvironmentManager
 from colrev.paths import PathManager
 
@@ -44,7 +42,7 @@ class ReviewManager:
     # pylint: disable=too-many-public-methods
     # pylint: disable=too-many-arguments
 
-    notified_next_operation: typing.Optional[OperationsType] = None
+    notified_next_operation: OperationsType | None = None
     """ReviewManager was notified for the upcoming process and
     will provide access to the Dataset"""
 
@@ -59,7 +57,7 @@ class ReviewManager:
     def __init__(
         self,
         *,
-        path_str: typing.Optional[str] = None,
+        path_str: str | None = None,
         force_mode: bool = False,
         verbose_mode: bool = False,
         high_level_operation: bool = False,
@@ -134,7 +132,7 @@ class ReviewManager:
         self.report_logger = report_logger
         self.logger = logger
 
-    def get_loggers(self) -> typing.Tuple[logging.Logger, logging.Logger]:
+    def get_loggers(self) -> tuple[logging.Logger, logging.Logger]:
         """Return loggers."""
         if self.verbose_mode:
             return colrev.logger.setup_report_logger(
@@ -170,7 +168,7 @@ class ReviewManager:
         msg: str,
         manual_author: bool = False,
         script_call: str = "",
-        saved_args: typing.Optional[dict] = None,
+        saved_args: dict | None = None,
         skip_status_yaml: bool = False,
         skip_hooks: bool = True,
     ) -> bool:
@@ -220,7 +218,7 @@ class ReviewManager:
         return checker.get_colrev_versions()
 
     def update_status_yaml(
-        self, *, add_to_git: bool = True, records: typing.Optional[dict] = None
+        self, *, add_to_git: bool = True, records: dict | None = None
     ) -> None:
         """Update the STATUS_FILE."""
         status_stats = self.get_status_stats(records=records)
@@ -285,7 +283,7 @@ class ReviewManager:
         )
 
     def get_status_stats(
-        self, *, records: typing.Optional[dict] = None
+        self, *, records: dict | None = None
     ) -> colrev.process.status.StatusStats:  # pragma: no cover
         """Get a status stats object."""
         import colrev.process.status
@@ -499,7 +497,7 @@ class ReviewManager:
     def get_connecting_review_manager(
         self,
         *,
-        path_str: typing.Optional[str] = None,
+        path_str: str | None = None,
         force_mode: bool = False,
         verbose_mode: bool = False,
     ) -> ReviewManager:  # pragma: no cover

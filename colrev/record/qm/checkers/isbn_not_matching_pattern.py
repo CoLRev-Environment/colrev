@@ -6,8 +6,7 @@ from __future__ import annotations
 import re
 import typing
 
-from colrev.constants import DefectCodes
-from colrev.constants import Fields
+from colrev.constants import DefectCodes, Fields
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.record.qm.quality_model

@@ -6,16 +6,14 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
-from bibliography_io import load
-from bibliography_io import write
+
+from bibliography_io import load, write
 
 import colrev.env.tei_parser
 import colrev.process.operation
 import colrev.search_file
 import colrev.utils
-from colrev.constants import Fields
-from colrev.constants import OperationsType
-from colrev.constants import SearchType
+from colrev.constants import Fields, OperationsType, SearchType
 from colrev.env.environment_manager import EnvironmentManager
 
 

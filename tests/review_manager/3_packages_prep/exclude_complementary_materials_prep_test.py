@@ -7,10 +7,7 @@ import pytest
 
 import colrev.ops.prep
 import colrev.packages.exclude_complementary_materials.src.exclude_complementary_materials
-from colrev.constants import Fields
-from colrev.constants import RecordState
-
-# flake8: noqa: E501
+from colrev.constants import Fields, RecordState
 
 ECMPrep = (
     colrev.packages.exclude_complementary_materials.src.exclude_complementary_materials.ExcludeComplementaryMaterialsPrep

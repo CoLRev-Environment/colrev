@@ -6,7 +6,6 @@ from __future__ import annotations
 import collections
 import io
 import os
-import typing
 from copy import deepcopy
 from datetime import timedelta
 from multiprocessing import Lock
@@ -15,8 +14,7 @@ from threading import Timer
 
 import pandas as pd
 import requests_cache
-from bibliography_io import loads
-from bibliography_io import to_string
+from bibliography_io import loads, to_string
 from tqdm import tqdm
 
 import colrev.env.environment_manager
@@ -28,10 +26,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
 import colrev.record.record
 import colrev.review_manager
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import Filepaths
-from colrev.constants import LocalIndexFields
+from colrev.constants import Colors, Fields, Filepaths, LocalIndexFields
 from colrev.env.local_index_prep import prepare_record_for_indexing
 from colrev.record.bibliography import adapt_bibliography_records
 
@@ -188,7 +183,7 @@ class LocalIndexBuilder:
     ) -> None:
         """Index a CoLRev project."""
         recs_to_index = []
-        toc_to_index: typing.Dict[str, str] = {}
+        toc_to_index: dict[str, str] = {}
         for record_dict in tqdm(records.values()):
             copy_for_toc_index = deepcopy(record_dict)
             toc_item = colrev.record.record.Record(copy_for_toc_index).get_toc_key()

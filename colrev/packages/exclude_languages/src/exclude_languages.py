@@ -6,7 +6,6 @@ from __future__ import annotations
 import logging
 import re
 import statistics
-import typing
 
 from pydantic import Field
 
@@ -14,9 +13,7 @@ import colrev.env.language_service
 import colrev.package_manager.package_base_classes as base_classes
 import colrev.package_manager.package_settings
 import colrev.record.record
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-from colrev.constants import RecordState
+from colrev.constants import Fields, FieldValues, RecordState
 
 # pylint: disable=too-few-public-methods
 
@@ -36,7 +33,7 @@ class ExcludeLanguagesPrep(base_classes.PrepPackageBaseClass):
         *,
         prep_operation: colrev.ops.prep.Prep,
         settings: dict,
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialize the instance."""
         self.logger = logger or logging.getLogger(__name__)
@@ -81,9 +78,7 @@ class ExcludeLanguagesPrep(base_classes.PrepPackageBaseClass):
     def prepare(
         self,
         record: colrev.record.record_prep.PrepRecord,
-        quality_model: typing.Optional[
-            colrev.record.qm.quality_model.QualityModel
-        ] = None,
+        quality_model: colrev.record.qm.quality_model.QualityModel | None = None,
     ) -> colrev.record.record.Record:
         """Prepare the record by excluding records whose metadata is not in English."""
         # Note : other languages are not yet supported
