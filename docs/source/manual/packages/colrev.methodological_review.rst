@@ -22,6 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
+
 colrev.methodological_review
 ============================
 
@@ -64,4 +65,4 @@ Methods papers
 --------------
 
 
-Aguinis, H., Ramani, R. S., & Alabduljader, N. (2023). Best-practice recommendations for producers, evaluators, and users of methodological literature reviews. Organizational Research Methods, 26(1), 46-76. doi:`10.1177/1094428120943281 <https://doi.org/10.1177/1094428120943281>`_
+Aguinis, H., Ramani, R. S., & Alabduljader, N. (2023). Best-practice recommendations for producers, evaluators, and users of methodological literature reviews. Organizational Research Methods, 26(1), 46-76. doi:`10.1177/109442812094328 <https://doi.org/10.1177/109442812094328>`_

@@ -22,6 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
+
 colrev.literature_review
 ========================
 
@@ -54,7 +55,7 @@ Summary
 
 This ReviewType contains a basic setup for literature reviews. It is a good choice to try the CoLRev system. Similar to the other packages for review types, it can be used to complete a review project and report each step for a standalone review paper.
 
-For standalone review papers, it is recommended to use a specific review type, such as a :doc:`scoping review </manual/packages/colrev.scoping_review>` or a :doc:`qualitative systematic review </manual/packages/colrev.qualitative_systematic_review>`.
+For standalone review papers, it is recommended to use a specific review type, such as a `scoping review <colrev.scoping_review.html>`_ or a `qualitative systematic review <colrev.qualitative_systematic_review.html>`_.
 
 Characteristics
 ---------------
@@ -66,7 +67,7 @@ Data extraction, analysis, and synthesis
 ----------------------------------------
 
 
-- For the synthesis, :doc:`colrev.paper_md </manual/packages/colrev.paper_md>` is activated, which creates the ``data/data/paper.md`` file. This file can be used to keep notes, draft a review protocol, and to write a synthesis. Based on the ``paper.md``, the ``output/paper.docx`` is generated automatically.
+- For the synthesis, the `colrev.paper_md <colrev.paper_md.html>`_ is activated, which creates the ``data/data/paper.md`` file. This file can be used to keep notes, draft a review protocol, and to write a synthesis. Based on the ``paper.md``, the ``output/paper.docx`` is generated automatically.
 - To extract structured data, or conduct other forms of analysis and synthesis, other `data packages <https://colrev-environment.github.io/colrev/manual/data/data.html>`_ can be activated.
 
 Textbooks

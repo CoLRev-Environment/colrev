@@ -22,6 +22,7 @@
 .. |DOCUMENTATION| image:: /_static/svg/iconmonstr-book-17.svg
    :width: 15
    :alt: Documentation
+
 colrev.open_alex
 ================
 
@@ -96,4 +97,4 @@ Links
 
 
 * `OpenAlex <https://openalex.org/>`_
-* `License (CC0) <https://openalex.org/about>`_
+* `License <https://docs.openalex.org/additional-help/faq#how-is-openalex-licensed>`_
